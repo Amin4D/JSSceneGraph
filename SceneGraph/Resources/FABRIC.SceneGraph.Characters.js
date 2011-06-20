@@ -92,6 +92,14 @@ FABRIC.SceneGraph.registerNodeType('CharacterSkeleton',
       }
       return result;
     };
+    characterSkeletonNode.pub.getBoneNamesMap = function(skeletonId) {
+      var result = {};
+      var bones = characterSkeletonNode.pub.getBones();
+      for (var i = 0; i < bones.length; i++) {
+        result[bones[i].name] = i;
+      }
+      return result;
+    };
     characterSkeletonNode.pub.getReferencePose = function(skeletonId) {
       var result = [];
       var bones = characterSkeletonNode.pub.getBones();

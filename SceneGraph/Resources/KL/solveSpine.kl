@@ -72,16 +72,21 @@ operator solveSpine(
 
 operator solveInvSpine(
   io Xfo pose[],
-  io Xfo local[],
   io Bone bones[],
+
   io Integer start,
   io Integer end,
-  io Integer vertebraIndices[],
+
   io Xfo startlocalXfo,
-  io Xfo endlocalXfo,
-  io Scalar uvalues[],
-  io Scalar startTangent,
-  io Scalar endTangent
+  io Xfo endlocalXfo
 ) {
-  // TODO
+  // basically we just copy the transforms out!
+  if(bones[start].parent != -1){
+    var Xfo rootXfo = pose[bones[start].parent];
+    startlocalXfo = rootXfo.invProject(pose[start]);
+    endlocalXfo = rootXfo.invProject(pose[end]);
+  }else{
+    startlocalXfo = pose[start];
+    endlocalXfo = pose[end];
+  }
 }

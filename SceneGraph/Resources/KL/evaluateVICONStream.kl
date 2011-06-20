@@ -98,6 +98,8 @@ operator viconProjectBones(
         target /= Scalar(infos[i].targetIDs.size());
       }
       target -= root;
+      if(infos[i].invertTarget)
+        target = target.neg();
 
       // compute the upvector of the bone
       if (infos[i].upvectorIDs.size() == 1) {
@@ -109,6 +111,8 @@ operator viconProjectBones(
         upvector /= Scalar(infos[i].upvectorIDs.size());
       }
       upvector -= root;
+      if(infos[i].invertUpvector)
+        upvector = upvector.neg();
 
       // compute the cross products!
       helper = target.cross(upvector);

@@ -55,7 +55,6 @@ operator solveInvFKHierarchy(
   io Xfo local[]
 ) {
   for (var Integer i = 0; i < indices.size(); i++) {
-    report("running inv fk hierarchy for bone "+indices[i]);
     if (bones[indices[i]].parent == - 1) {
       local[i] = pose[indices[i]];
     }

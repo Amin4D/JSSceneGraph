@@ -476,7 +476,14 @@ FABRIC.SceneGraph.registerNodeType('CharacterRig',
       // check if we have a sourceRigNode
       if (!solverOptions.sourceRigNode) {
         throw ('You need to specify a valid sourceRigNode!');
-        }
+      }
+      
+      // also create a dependency on the variables node to the rig and skeleton
+      var sourceRig = scene.getPrivateInterface(solverOptions.sourceRigNode);
+      var sourceSkeleton = scene.getPrivateInterface(solverOptions.sourceRigNode.getSkeletonNode());
+      variablesNode.getDGNode().addDependency(sourceRig.getDGNode(),'invrig');
+      variablesNode.getDGNode().addDependency(sourceSkeleton.getDGNode(),'invskeleton');
+      variablesNode.getDGNode().addDependency(constantsNode.getDGNode(),'constants');
 
       // if we don't have a bonemapping,
       // we will assume that all bones exist

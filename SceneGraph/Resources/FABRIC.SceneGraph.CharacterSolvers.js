@@ -172,7 +172,7 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('CharacterSolver',
         boneIDs[name] = name2id[options.bones[name]];
       }
     }
-    
+
     return solver;
 });
 
@@ -180,37 +180,44 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('FKHierarchySolver',
   function(options, scene) {
 
     var solver,
-      parameterBinding,
-      bindToRig;
-      
+    parameterBinding,
+    bindToRig;
+
     // ensure to have a full set
-    if(options.rigNode && !options.bones){
+    if (options.rigNode && !options.bones) {
       options.bones = {};
       options.bones.bones = options.rigNode.getSkeletonNode().getBoneNames();
     }
-    options.identifiers= [['bones']];
+    options.identifiers = [['bones']];
 
     solver = FABRIC.SceneGraph.CharacterSolvers.constructSolver('CharacterSolver', options, scene);
 
     bindToRig = function() {
 
       var rigNode = options.rigNode,
-        constantsNode = scene.getPrivateInterface(rigNode.getConstantsNode()),
-        variablesNode = scene.getPrivateInterface(rigNode.getVariablesNode()),
-        skeletonNode = rigNode.getSkeletonNode(),
-        bones = skeletonNode.getBones(),
-        referenceLocalPose = skeletonNode.getReferencePose(),
-        boneIDs = solver.getBoneIDs(),
-        size,
-        name = options.name;
+      constantsNode = scene.getPrivateInterface(rigNode.getConstantsNode()),
+      variablesNode = scene.getPrivateInterface(rigNode.getVariablesNode()),
+      skeletonNode = rigNode.getSkeletonNode(),
+      bones = skeletonNode.getBones(),
+      referenceLocalPose = skeletonNode.getReferencePose(),
+      boneIDs = solver.getBoneIDs(),
+      size,
+      name = options.name;
 
       var boneIndices = solver.getBoneIDs().bones;
-      constantsNode.pub.addMember(name + 'boneIndices', 'Integer[]', boneIndices);
-
-      if (options.localxfoMemberName == undefined) {
-        var localXfos = [];
-        for (var i = 0; i < boneIndices.length; i++) {
-          localXfos.push(referenceLocalPose[boneIndices[i]]);
+      
+      // determine if we need to create the
+      // positive or inverse operator!
+      if(!options.inverse){
+        constantsNode.pub.addMember(name + 'boneIndices', 'Integer[]', boneIndices);
+  
+        if (options.localxfoMemberName == undefined) {
+          var localXfos = [];
+          for (var i = 0; i < boneIndices.length; i++) {
+            localXfos.push(referenceLocalPose[boneIndices[i]]);
+          }
+          variablesNode.pub.addMember(name + 'localXfos', 'Xfo[]', localXfos);
+          options.localxfoMemberName = name + 'localXfos';
         }
   
         // insert at the previous to last position to ensure that we keep the last operator
@@ -245,22 +252,22 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('ReferencePoseSolver',
     bindToRig;
 
     // ensure to have a full set
-    if(options.rigNode && !options.bones){
+    if (options.rigNode && !options.bones) {
       options.bones = {};
       options.bones.bones = options.rigNode.getSkeletonNode().getBoneNames();
     }
-    options.identifiers= [['bones']];
+    options.identifiers = [['bones']];
 
     solver = FABRIC.SceneGraph.CharacterSolvers.constructSolver('CharacterSolver', options, scene);
 
     bindToRig = function() {
 
       var rigNode = options.rigNode,
-        constantsNode = scene.getPrivateInterface(rigNode.getConstantsNode()),
-        skeletonNode = rigNode.getSkeletonNode(),
-        bones = skeletonNode.getBones(),
-        name = options.name,
-        boneIndices = solver.getBoneIDs().bones;
+      constantsNode = scene.getPrivateInterface(rigNode.getConstantsNode()),
+      skeletonNode = rigNode.getSkeletonNode(),
+      bones = skeletonNode.getBones(),
+      name = options.name,
+      boneIndices = solver.getBoneIDs().bones;
 
       constantsNode.pub.addMember(name + 'boneIndices', 'Integer[]', boneIndices);
 
@@ -300,11 +307,11 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('FKChainSolver',
     bindToRig;
 
     // ensure to have a full set
-    if(options.rigNode && !options.bones){
+    if (options.rigNode && !options.bones) {
       options.bones = {};
       options.bones.bones = options.rigNode.getSkeletonNode().getBoneNames();
     }
-    options.identifiers= [['bones']];
+    options.identifiers = [['bones']];
 
     solver = FABRIC.SceneGraph.CharacterSolvers.constructSolver('CharacterSolver', options, scene);
 

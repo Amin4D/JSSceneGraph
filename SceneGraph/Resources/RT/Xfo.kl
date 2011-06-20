@@ -35,8 +35,8 @@ function Xfo Xfo.invProject(in Xfo xf) {
 
   var Xfo result;
   result.tr = inv_ori.transform(selfInv.sc * (xf.tr + selfInv.tr));
-  result.ori = glb_ori * inv_ori;
-  //  result.ori = inv_ori * glb_ori;
+  //result.ori = glb_ori * inv_ori;
+  result.ori = inv_ori * glb_ori;
   result.ori.setUnit();
   result.sc = selfInv.sc * xf.sc;
   return result;

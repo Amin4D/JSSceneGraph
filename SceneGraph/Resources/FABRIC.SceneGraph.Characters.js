@@ -38,7 +38,7 @@ FABRIC.SceneGraph.registerNodeType('CharacterMesh',
     }));
 
     return characterMeshNode;
-  });
+});
 
 FABRIC.SceneGraph.registerNodeType('CharacterSkeleton',
   function(options, scene) {
@@ -47,7 +47,7 @@ FABRIC.SceneGraph.registerNodeType('CharacterSkeleton',
       calcReferenceGlobalPose: false,
       calcInvMatricies: true,
       calcReferencePoseFromInverseBindPose: false
-      });
+    });
     options.dgnodenames.push('DGNode');
 
     var characterSkeletonNode = scene.constructNode('SceneGraphNode', options);
@@ -68,7 +68,7 @@ FABRIC.SceneGraph.registerNodeType('CharacterSkeleton',
         if (bones[i].name == name)
           return i;
       }
-      return -1;
+      return - 1;
     };
     characterSkeletonNode.pub.getNumBones = function(skeletonId) {
       return characterSkeletonNode.pub.getBones().length;
@@ -124,7 +124,7 @@ FABRIC.SceneGraph.registerNodeType('CharacterSkeleton',
     };
     characterSkeletonNode.pub.addBone = function(boneOptions, sliceid) {
       var bones = characterSkeletonNode.pub.getBones(),
-        boneMap = {};
+      boneMap = {};
       for (var i = 0; i < bones.length; i++) {
         boneMap[bones[i].name] = i;
       }
@@ -132,19 +132,19 @@ FABRIC.SceneGraph.registerNodeType('CharacterSkeleton',
       // Note: this function was very expensive because of the number of times it accessed the core.
       if (boneOptions.name === undefined || boneMap[boneOptions.name]) {
         throw ('Invalid bone name specified: ' + boneOptions.name);
-      }
+        }
 
       if (boneOptions.parent && typeof boneOptions.parent === 'string') {
         var parentIndex = boneMap[boneOptions.parent];
-        if (parentIndex == -1) {
+        if (parentIndex == - 1) {
           throw ('Bone parent ' + boneOptions.parent + ' not found in skeleton.');
-        }
+          }
         boneOptions.parent = parentIndex;
       }
 
       // compute global from local or vice versa
       if (boneOptions.referencePose && !boneOptions.referenceLocalPose) {
-        if (boneOptions.parent == -1) {
+        if (boneOptions.parent == - 1) {
           boneOptions.referenceLocalPose = boneOptions.referencePose;
         }
         else {
@@ -153,7 +153,7 @@ FABRIC.SceneGraph.registerNodeType('CharacterSkeleton',
         }
       }
       else if (!boneOptions.referencePose && boneOptions.referenceLocalPose) {
-        if (boneOptions.parent == -1) {
+        if (boneOptions.parent == - 1) {
           boneOptions.referencePose = boneOptions.referenceLocalPose;
         }
         else {
@@ -163,7 +163,9 @@ FABRIC.SceneGraph.registerNodeType('CharacterSkeleton',
 
       var bone = new FABRIC.Characters.Bone(boneOptions);
       bones.push(bone);
-      dgnode.setSliceBulkData(sliceid ? sliceid : 0, { bones: bones });
+      dgnode.setSliceBulkData(sliceid ? sliceid : 0, {
+        bones: bones
+      });
       return bone;
     };
     characterSkeletonNode.pub.setBones = function(boneOptions, sliceid) {
@@ -171,10 +173,14 @@ FABRIC.SceneGraph.registerNodeType('CharacterSkeleton',
       for (var i = 0; i < boneOptions.length; i++) {
         bones.push(new FABRIC.Characters.Bone(boneOptions[i]));
       }
-      dgnode.setSliceBulkData(sliceid ? sliceid : 0, { bones: bones });
+      dgnode.setSliceBulkData(sliceid ? sliceid : 0, {
+        bones: bones
+      });
     };
     characterSkeletonNode.pub.setInvMatrices = function(invmatrices) {
-      dgnode.setSliceBulkData(0, { 'invmatrices': invmatrices });
+      dgnode.setSliceBulkData(0, {
+        'invmatrices': invmatrices
+      });
     };
 
     if (options.calcReferencePoseFromInverseBindPose) {
@@ -234,7 +240,7 @@ FABRIC.SceneGraph.registerNodeType('CharacterSkeleton',
     }
 
     return characterSkeletonNode;
-  });
+});
 
 FABRIC.SceneGraph.registerNodeType('CharacterSkeletonDebug',
   function(options, scene) {
@@ -243,10 +249,10 @@ FABRIC.SceneGraph.registerNodeType('CharacterSkeletonDebug',
       boneradius: 1.0,
       color: FABRIC.RT.rgba(1.0, 1.0, 1.0, 1.0),
       drawOverlayed: true
-      });
+    });
 
     var rigNode,
-      instanceNode;
+    instanceNode;
 
     var characterSkeletonDebug = scene.constructNode('Lines', options);
 
@@ -263,18 +269,18 @@ FABRIC.SceneGraph.registerNodeType('CharacterSkeletonDebug',
 
       // now append the operator to create the lines
       characterSkeletonDebug.getAttributesDGNode().bindings.append(scene.constructOperator({
-          operatorName: 'generateSkeletonOp',
-          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/generateSkeleton.kl',
-          entryFunctionName: 'generateSkeleton',
-          parameterBinding: [
-            'skeleton.bones',
-            'rig.pose',
-            'self.positions[]',
-            'uniforms.indices',
-            'uniforms.boneradius',
-            'uniforms.offsetpose'
-          ]
-        }));
+        operatorName: 'generateSkeletonOp',
+        srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/generateSkeleton.kl',
+        entryFunctionName: 'generateSkeleton',
+        parameterBinding: [
+          'skeleton.bones',
+          'rig.pose',
+          'self.positions[]',
+          'uniforms.indices',
+          'uniforms.boneradius',
+          'uniforms.offsetpose'
+        ]
+      }));
     };
     characterSkeletonDebug.pub.getRigNode = function() {
       return scene.getPublicInterface(rigNode);
@@ -288,29 +294,30 @@ FABRIC.SceneGraph.registerNodeType('CharacterSkeletonDebug',
     }
 
     instanceNode = scene.constructNode('Instance', {
-        geometryNode: characterSkeletonDebug.pub,
-        materialNode: scene.constructNode('FlatMaterial', { color: options.color }).pub
-      });
+      geometryNode: characterSkeletonDebug.pub,
+      materialNode: scene.constructNode('FlatMaterial', {
+        color: options.color
+      }).pub
+    });
 
     // setup the postdescend operators for disable and enable zbuffer
     // PT - This could be done at the shader/material stage
     if (options.drawOverlayed) {
       instanceNode.getRedrawEventHandler().preDescendBindings.insert(scene.constructOperator({
-          operatorName: 'disableZBuffer',
-          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/drawAttributes.kl',
-          entryFunctionName: 'disableZBuffer',
-          parameterBinding: []
-        }), 0);
+        operatorName: 'disableZBuffer',
+        srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/drawAttributes.kl',
+        entryFunctionName: 'disableZBuffer',
+        parameterBinding: []
+      }), 0);
       instanceNode.getRedrawEventHandler().postDescendBindings.append(scene.constructOperator({
-          operatorName: 'popAttribs',
-          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/drawAttributes.kl',
-          entryFunctionName: 'popAttribs',
-          parameterBinding: []
-        }));
+        operatorName: 'popAttribs',
+        srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/drawAttributes.kl',
+        entryFunctionName: 'popAttribs',
+        parameterBinding: []
+      }));
     }
     return characterSkeletonDebug;
-  });
-
+});
 
 FABRIC.SceneGraph.registerNodeType('CharacterVariables',
   function(options, scene) {
@@ -344,9 +351,9 @@ FABRIC.SceneGraph.registerNodeType('CharacterVariables',
     };
 
     return characterVariablesNode;
-  });
+});
 
-  /*
+/*
 // TODO: Come back to this one.
 
 // This node represents a branch in an animation graph
@@ -389,25 +396,25 @@ FABRIC.SceneGraph.registerNodeType('CharacterConstants',
 
     var characterConstantsNode = scene.constructNode('CharacterVariables', options);
     return characterConstantsNode;
-  });
+});
 
 // The character rig computes the pose of a character
 FABRIC.SceneGraph.registerNodeType('CharacterRig',
   function(options, scene) {
     scene.assignDefaults(options, {
-      });
+    });
 
     if (!options.skeletonNode) {
       throw ('skeletonNode must be specified.');
-    }
+      }
     options.dgnodenames.push('DGNode');
 
     var characterRigNode = scene.constructNode('SceneGraphNode', options);
     var dgnode = characterRigNode.getDGNode();
     var skeletonNode,
-      variablesNode,
-      constantsNode,
-      solvers = [];
+    variablesNode,
+    constantsNode,
+    solvers = [];
 
     // extend the public interface
     characterRigNode.pub.getPose = function() {
@@ -420,7 +427,7 @@ FABRIC.SceneGraph.registerNodeType('CharacterRig',
     characterRigNode.pub.setVariablesNode = function(node) {
       if (!node || !node.isTypeOf('CharacterVariables')) {
         throw ('Incorrect type assignment. Must assign a CharacterVariables');
-      }
+        }
       node = scene.getPrivateInterface(node);
       dgnode.addDependency(node.getDGNode(), 'variables');
       variablesNode = node;
@@ -431,7 +438,7 @@ FABRIC.SceneGraph.registerNodeType('CharacterRig',
     characterRigNode.pub.setConstantsNode = function(node) {
       if (!node.isTypeOf('CharacterConstants')) {
         throw ('Incorrect type assignment. Must assign a CharacterConstants');
-      }
+        }
       node = scene.getPrivateInterface(node);
       dgnode.addDependency(node.getDGNode(), 'constants');
       constantsNode = node;
@@ -448,17 +455,44 @@ FABRIC.SceneGraph.registerNodeType('CharacterRig',
       });
       for (var i = 0; i < solvers.length; i++) {
         if (solvers[i].name == name) {
-          throw (" Solver names must be unique. Solver '" + name +
-                 "' already applied to :" + characterRigNode.pub.getName());
+          throw (' Solver names must be unique. Solver "' + name +
+            '" already applied to :' + characterRigNode.pub.getName());
         }
       }
       solverOptions.name = name;
-      var solver = FABRIC.SceneGraph.CharacterSolvers.createSolver(type, solverOptions, scene);
+      var solver = FABRIC.SceneGraph.CharacterSolvers.constructSolver(type, solverOptions, scene);
       solvers.push(solver);
       return solver;
     };
     characterRigNode.pub.getSolvers = function() {
       return solvers;
+    };
+    characterRigNode.pub.applyInverseSolvers = function(solverOptions) {
+      solverOptions = scene.assignDefaults(solverOptions, {
+        sourceRigNode: undefined,
+        boneMapping: undefined
+      });
+
+      // check if we have a sourceRigNode
+      if (!solverOptions.sourceRigNode) {
+        throw ('You need to specify a valid sourceRigNode!');
+        }
+
+      // if we don't have a bonemapping,
+      // we will assume that all bones exist
+      if (!solverOptions.boneMapping) {
+        solverOptions.boneMapping = {};
+        var boneNames = characterRigNode.pub.getSkeletonNode().getBoneNames();
+        for (var i = 0; i < boneNames.length; i++) {
+          solverOptions.boneMapping[boneNames[i]] = boneNames[i];
+        }
+      }
+
+      // for each solver construct the inverse solver
+      for (var i = 0; i < solvers.length; i++) {
+        solvers[i].constructInverseSolver(solverOptions)
+      }
+      return;
     };
     //////////////////////////////////////////
     characterRigNode.pub.addMember = function(name, type, value) {
@@ -487,7 +521,7 @@ FABRIC.SceneGraph.registerNodeType('CharacterRig',
     var setSkeletonNode = function(node) {
       if (!node.isTypeOf('CharacterSkeleton')) {
         throw ('Incorrect type assignment. Must assign a CharacterSkeleton');
-      }
+        }
       node = scene.getPrivateInterface(node);
 
       dgnode.addDependency(node.getDGNode(), 'skeleton');
@@ -500,11 +534,11 @@ FABRIC.SceneGraph.registerNodeType('CharacterRig',
 
       // create the operators that converts the pose to matrices
       dgnode.bindings.append(scene.constructOperator({
-          operatorName: 'calcSkinningMatrices',
-          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/characterRig.kl',
-          entryFunctionName: 'calcSkinningMatrices',
-          parameterBinding: ['self.pose', 'skeleton.invmatrices', 'self.boneMatrices']
-        }));
+        operatorName: 'calcSkinningMatrices',
+        srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/characterRig.kl',
+        entryFunctionName: 'calcSkinningMatrices',
+        parameterBinding: ['self.pose', 'skeleton.invmatrices', 'self.boneMatrices']
+      }));
     }
     setSkeletonNode(options.skeletonNode);
 
@@ -522,29 +556,26 @@ FABRIC.SceneGraph.registerNodeType('CharacterRig',
       characterRigNode.pub.setConstantsNode(scene.constructNode('CharacterConstants').pub);
     }
     return characterRigNode;
-  });
-
-
+});
 
 // The character rig computes the pose of a character
 FABRIC.SceneGraph.registerNodeType('FKCharacterRig',
   function(options, scene) {
     scene.assignDefaults(options, {
-      });
+    });
 
-
-  });
+});
 
 // The character rig computes the pose of a character
 FABRIC.SceneGraph.registerNodeType('GlobalCharacterRig',
   function(options, scene) {
     scene.assignDefaults(options, {
-      });
+    });
 
     var globalCharacterRigNode = scene.constructNode('CharacterRig', options);
     globalCharacterRigNode.pub.addSolver('solveGlobalPose', 'ReferencePoseSolver');
     return globalCharacterRigNode;
-  });
+});
 
 FABRIC.SceneGraph.registerNodeType('CharacterRigDebug',
   function(options, scene) {
@@ -555,11 +586,11 @@ FABRIC.SceneGraph.registerNodeType('CharacterRigDebug',
       size: 5.0,
       offsetpose: FABRIC.RT.xfo(),
       constructInstanceNode: true
-      });
+    });
 
     var characterRigDebugNode = scene.constructNode('Points', options);
     var rigNode,
-      instanceNode;
+    instanceNode;
 
     // extend public interface
     characterRigDebugNode.pub.setRigNode = function(node) {
@@ -576,32 +607,31 @@ FABRIC.SceneGraph.registerNodeType('CharacterRigDebug',
 
       // now append the operator to create the lines
       var operators = characterRigDebugNode.getUniformsDGNode().bindings;
-      operators.append(scene.constructOperator(
-        {
-          operatorName: 'clearDebugXfos',
-          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/characterDebug.kl',
-          entryFunctionName: 'clearDebugXfos',
-          parameterBinding: [
-            'self.debugpose'
-          ]
-        }));
+      operators.append(scene.constructOperator({
+        operatorName: 'clearDebugXfos',
+        srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/characterDebug.kl',
+        entryFunctionName: 'clearDebugXfos',
+        parameterBinding: [
+          'self.debugpose'
+        ]
+      }));
 
-    //  var debugOperators = rigNode.getConstantsNode().getDebugOperators();
-    //  for(var i=0;i<debugOperators.length;i++)
-    //    operators.append(debugOperators[i]);
+      //  var debugOperators = rigNode.getConstantsNode().getDebugOperators();
+      //  for(var i=0;i<debugOperators.length;i++)
+      //    operators.append(debugOperators[i]);
 
       characterRigDebugNode.getAttributesDGNode().bindings.append(scene.constructOperator({
-          operatorName: 'generateDebugPoints',
-          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/characterDebug.kl',
-          entryFunctionName: 'generateDebugPoints',
-          parameterBinding: [
-            'uniforms.debugpose',
-            'uniforms.offsetpose',
-            'self.positions[]',
-            'self.vertexColors[]',
-            'uniforms.singlecolor'
-          ]
-        }));
+        operatorName: 'generateDebugPoints',
+        srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/characterDebug.kl',
+        entryFunctionName: 'generateDebugPoints',
+        parameterBinding: [
+          'uniforms.debugpose',
+          'uniforms.offsetpose',
+          'self.positions[]',
+          'self.vertexColors[]',
+          'uniforms.singlecolor'
+        ]
+      }));
     };
     characterRigDebugNode.pub.getRigNode = function() {
       return rigNode;
@@ -619,9 +649,9 @@ FABRIC.SceneGraph.registerNodeType('CharacterRigDebug',
       });
 
       instanceNode = scene.constructNode('Instance', {
-          geometryNode: characterRigDebugNode.pub,
-          materialNode: material
-        });
+        geometryNode: characterRigDebugNode.pub,
+        materialNode: material
+      });
       return instanceNode;
     };
     characterRigDebugNode.pub.getInstanceNode = function() {
@@ -638,13 +668,13 @@ FABRIC.SceneGraph.registerNodeType('CharacterRigDebug',
     }
 
     return characterRigDebugNode;
-  });
+});
 
 // The character instance draws a deformed mesh on screen.
 FABRIC.SceneGraph.registerNodeType('CharacterInstance',
   function(options, scene) {
     scene.assignDefaults(options, {
-      });
+    });
 
     var characterInstanceNode = scene.constructNode('Instance', options);
     var rigNode;
@@ -657,33 +687,33 @@ FABRIC.SceneGraph.registerNodeType('CharacterInstance',
     characterInstanceNode.pub.setRigNode = function(node) {
       if (!node.isTypeOf('CharacterRig')) {
         throw ('Incorrect type assignment. Must assign a CharacterRig');
-      }
+        }
       rigNode = scene.getPrivateInterface(node);
       characterInstanceNode.getRedrawEventHandler().addScope('rig', rigNode.getDGNode());
 
       characterInstanceNode.getRedrawEventHandler().postDescendBindings.append(scene.constructOperator({
-          operatorName: 'drawCharacterInstance',
-          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/drawCharacterInstance.kl',
-          preProcessorDefinitions: {
-            BONE_MATRICIES_ATTRIBUTE_ID: FABRIC.shaderAttributeTable.boneMatrices.id,
-            MODELMATRIX_ATTRIBUTE_ID: FABRIC.shaderAttributeTable.modelMatrix.id,
-            VIEWMATRIX_ATTRIBUTE_ID: FABRIC.shaderAttributeTable.viewMatrix.id,
-            PROJECTIONMATRIX_ATTRIBUTE_ID: FABRIC.shaderAttributeTable.projectionMatrix.id,
-            PROJECTIONMATRIXINV_ATTRIBUTE_ID: FABRIC.shaderAttributeTable.projectionMatrixInv.id,
-            NORMALMATRIX_ATTRIBUTE_ID: FABRIC.shaderAttributeTable.normalMatrix.id,
-            MODELVIEW_MATRIX_ATTRIBUTE_ID: FABRIC.shaderAttributeTable.modelViewMatrix.id,
-            MODELVIEWPROJECTION_MATRIX_ATTRIBUTE_ID: FABRIC.shaderAttributeTable.modelViewProjectionMatrix.id
-          },
-          entryFunctionName: 'drawCharacterInstance',
-          parameterBinding: [
-            'shader.uniformValues',
-            'rig.boneMatrices',
-            'camera.cameraMat44',
-            'camera.projectionMat44',
-            'instance.indicesBufferID',
-            'instance.elementCount'
-          ]
-        }));
+        operatorName: 'drawCharacterInstance',
+        srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/drawCharacterInstance.kl',
+        preProcessorDefinitions: {
+          BONE_MATRICIES_ATTRIBUTE_ID: FABRIC.shaderAttributeTable.boneMatrices.id,
+          MODELMATRIX_ATTRIBUTE_ID: FABRIC.shaderAttributeTable.modelMatrix.id,
+          VIEWMATRIX_ATTRIBUTE_ID: FABRIC.shaderAttributeTable.viewMatrix.id,
+          PROJECTIONMATRIX_ATTRIBUTE_ID: FABRIC.shaderAttributeTable.projectionMatrix.id,
+          PROJECTIONMATRIXINV_ATTRIBUTE_ID: FABRIC.shaderAttributeTable.projectionMatrixInv.id,
+          NORMALMATRIX_ATTRIBUTE_ID: FABRIC.shaderAttributeTable.normalMatrix.id,
+          MODELVIEW_MATRIX_ATTRIBUTE_ID: FABRIC.shaderAttributeTable.modelViewMatrix.id,
+          MODELVIEWPROJECTION_MATRIX_ATTRIBUTE_ID: FABRIC.shaderAttributeTable.modelViewProjectionMatrix.id
+        },
+        entryFunctionName: 'drawCharacterInstance',
+        parameterBinding: [
+          'shader.uniformValues',
+          'rig.boneMatrices',
+          'camera.cameraMat44',
+          'camera.projectionMat44',
+          'instance.indicesBufferID',
+          'instance.elementCount'
+        ]
+      }));
     };
     characterInstanceNode.pub.getRigNode = function() {
       return scene.getPublicInterface(rigNode);
@@ -692,18 +722,17 @@ FABRIC.SceneGraph.registerNodeType('CharacterInstance',
     characterInstanceNode.pub.setGeometryNode = function(node) {
       if (!node.isTypeOf('CharacterMesh')) {
         throw ('Incorrect type assignment. Must assign a CharacterMesh.');
-      }
+        }
       parentSetGeometryNode(node);
     };
     characterInstanceNode.pub.getTransformNode = function() {
     };
     characterInstanceNode.pub.setTransformNode = function(node, member) {
-      throw 'Character Instance does not support the transformNode';
-    };
+      throw'Character Instance does not support the transformNode';
+      };
 
     if (options.rigNode) {
       characterInstanceNode.pub.setRigNode(options.rigNode);
     }
     return characterInstanceNode;
-  });
-
+});

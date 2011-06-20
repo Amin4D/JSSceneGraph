@@ -18,6 +18,20 @@ operator solveFKBone(
   }
 }
 
+operator solveInvFKBone(
+  io Xfo pose[],
+  io Bone bones[],
+  io Integer index,
+  io Xfo local
+) {
+  if (bones[index].parent == - 1) {
+    local = pose[index];
+  }
+  else {
+    local = pose[bones[index].parent].invProject(pose[index]);
+  }
+}
+
 operator solveFKHierarchy(
   io Xfo pose[],
   io Bone bones[],
@@ -30,6 +44,22 @@ operator solveFKHierarchy(
     }
     else {
       pose[indices[i]] = pose[bones[indices[i]].parent].project(local[indices[i]]);
+    }
+  }
+}
+
+operator solveInvFKHierarchy(
+  io Xfo pose[],
+  io Bone bones[],
+  io Integer indices[],
+  io Xfo local[]
+) {
+  for (var Integer i = 0; i < indices.size(); i++) {
+    if (bones[indices[i]].parent == - 1) {
+      local[indices[i]] = pose[indices[i]];
+    }
+    else {
+      local[indices[i]] = pose[bones[indices[i]].parent].invProject(pose[indices[i]]);
     }
   }
 }
@@ -57,17 +87,26 @@ operator solveChain(
   }
 }
 
-operator solveInvParentList(
+operator solveInvChain(
   io Xfo pose[],
+  io Xfo chainpose[],
   io Bone bones[],
   io Integer indices[],
   io Xfo local[]
 ) {
-  local.resize(pose.size());
+  if (indices.size() != local.size() || indices.size() != chainpose.size()) {
+    report('solveChain Error: indices.size() != local.size() || indices.size() != chainpose.size()');
+    return;
+  }
+
   for (var Integer i = 0; i < indices.size(); i++) {
-    if (bones[indices[i]].parent == - 1)
-      local[indices[i]] = pose[indices[i]];
-    else
-      local[indices[i]] = pose[bones[indices[i]].parent].invProject(pose[indices[i]]);
+    chainpose[i] = pose[indices[i]];
+    if (bones[indices[i]].parent == - 1) {
+      local[i] = chainpose[i];
+    }
+    else {
+      local[i] = pose[bones[indices[i]].parent].invProject(chainpose[i]);
+    }
   }
 }
+

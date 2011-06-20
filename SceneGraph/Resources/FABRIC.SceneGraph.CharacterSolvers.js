@@ -20,7 +20,7 @@ FABRIC.SceneGraph.CharacterSolvers = {
     if (!this.solvers[type]) {
       throw ('CharacterSolver "' + type + '" is not registered.');
     }
-    options.type = type;
+    options.type = options.type ? options.type : type;
     var solver = this.solvers[type](options, scene);
     solver.type = type;
     return solver;
@@ -109,14 +109,22 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('CharacterSolver',
             newOptions.bones[boneGroup] = [];
             for(var i=0;i<bones[boneGroup].length;i++){
               if(typeof bones[boneGroup][i] == 'number') {
+                if(solverOptions.boneMapping[targetBoneNames[bones[boneGroup][i]]] == undefined)
+                  throw('Bone "'+targetBoneNames[bones[boneGroup][i]]+'" is missing in the boneMapping.');
                 newOptions.bones[boneGroup].push(solverOptions.boneMapping[targetBoneNames[bones[boneGroup][i]]]);
               }else{
+                if(solverOptions.boneMapping[bones[boneGroup][i]] == undefined)
+                  throw('Bone "'+bones[boneGroup][i]+'" is missing in the boneMapping.');
                 newOptions.bones[boneGroup].push(solverOptions.boneMapping[bones[boneGroup][i]]);
               }
             }
           }else if(typeof bones[boneGroup] == 'number') {
+            if(solverOptions.boneMapping[targetBoneNames[bones[boneGroup]]] == undefined)
+              throw('Bone "'+targetBoneNames[bones[boneGroup]]+'" is missing in the boneMapping.');
             newOptions.bones[boneGroup] = solverOptions.boneMapping[targetBoneNames[bones[boneGroup]]];
           }else{
+            if(solverOptions.boneMapping[bones[boneGroup]] == undefined)
+              throw('Bone "'+bones[boneGroup]+'" is missing in the boneMapping.');
             newOptions.bones[boneGroup] = solverOptions.boneMapping[bones[boneGroup]];
           }
         }
@@ -138,7 +146,11 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('CharacterSolver',
 
     // create a temp map for boneName 2 id
     var name2id = {};
-    var boneNames = options.rigNode.getSkeletonNode().getBoneNames();
+    var boneNames = [];
+    if(options.inverse)
+      boneNames = options.sourceRigNode.getSkeletonNode().getBoneNames();
+    else
+      boneNames = options.rigNode.getSkeletonNode().getBoneNames();
     for (var i = 0; i < boneNames.length; i++) {
       name2id[boneNames[i]] = i;
     }
@@ -234,8 +246,23 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('FKHierarchySolver',
               ])
           }),
         opBindings.getLength() - 1);
+      
       }else{
-        
+        constantsNode.pub.addMember(name + 'invBoneIndices', 'Integer[]', boneIndices);
+      
+        // insert at the previous to last position to ensure that we keep the last operator
+        var opBindings = variablesNode.getDGNode().bindings;
+        opBindings.append(scene.constructOperator({
+              operatorName: 'solveInvFKHierarchy',
+              srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/solveFKHierarchy.kl',
+              entryFunctionName: 'solveInvFKHierarchy',
+              parameterBinding: solver.setParameterBinding([
+                'invrig.pose',
+                'invskeleton.bones',
+                'constants.' + name + 'invBoneIndices',
+                'self.' + options.localxfoMemberName
+              ])
+          }));
       }
     };
 

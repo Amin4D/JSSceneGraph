@@ -8,6 +8,9 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
   var assetNodes = {};
   var animationChannels = {};
   var characterRigs = {};
+  
+  // option defaults
+  options.createFKHierarchySolver = options.createFKHierarchySolver != undefined ? options.createFKHierarchySolver : true
 
   // prepare the namemap
   var nameMap = {};
@@ -379,7 +382,7 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
             else {
               // we have one, so we have animation
               // let's create a solver for the rig
-              createFKHierarchySolver = true;
+              createFKHierarchySolver = options.createFKHierarchySolver;
             }
 
             rigNode = scene.constructNode('CharacterRig', {

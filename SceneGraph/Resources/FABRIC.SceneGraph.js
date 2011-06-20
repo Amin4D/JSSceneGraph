@@ -1144,8 +1144,8 @@ FABRIC.SceneGraph.registerNodeType('Viewport',
       }
 
       var mouseMoveFn = function(evt) {
-        fireEvent('mousemove', evt);
-        if (cameraNode && propagateEvent && viewPortRayCastDgNode && options.mouseMoveEvents) {
+        propagateEvent = true;
+        if (cameraNode && viewPortRayCastDgNode && options.mouseMoveEvents) {
           var raycastResult = viewportNode.pub.rayCast(evt);
           if (raycastResult.closestNode) {
             // TODO: Log a bug. We should be getting the pub interfae here
@@ -1177,14 +1177,17 @@ FABRIC.SceneGraph.registerNodeType('Viewport',
             }
           }
         }
+        if(propagateEvent){
+          fireEvent('mousemove', evt);
+        }
         if (options.redrawOnMouseMove && propagateEvent) {
         //  viewportNode.redraw();
         }
       };
 
       var mouseDownFn = function(evt) {
-        fireEvent('mousedown', evt);
-        if (cameraNode && propagateEvent && viewPortRayCastDgNode) {
+        propagateEvent = true;
+        if (cameraNode && viewPortRayCastDgNode) {
           var raycastResult = viewportNode.pub.rayCast(evt);
           if (raycastResult.closestNode) {
             var hitNode = raycastResult.closestNode.node.pub.sceneGraphNode;
@@ -1193,11 +1196,14 @@ FABRIC.SceneGraph.registerNodeType('Viewport',
             fireGeomEvent('mousedown_geom', evt, hitNode);
           }
         }
+        if(propagateEvent){
+          fireEvent('mousedown', evt);
+        }
       };
 
       var mouseUpFn = function(evt) {
-        fireEvent('mouseup', evt);
-        if (cameraNode && propagateEvent && viewPortRayCastDgNode && options.mouseUpEvents) {
+        propagateEvent = true;
+        if (cameraNode && viewPortRayCastDgNode && options.mouseUpEvents) {
           var raycastResult = viewportNode.pub.rayCast(evt);
           if (raycastResult.closestNode) {
             var hitNode = raycastResult.closestNode.node.pub.sceneGraphNode;
@@ -1205,6 +1211,9 @@ FABRIC.SceneGraph.registerNodeType('Viewport',
             evt.hitData = raycastResult;
             fireGeomEvent('mouseup_geom', evt, hitNode);
           }
+        }
+        if(propagateEvent){
+          fireEvent('mouseup', evt);
         }
       };
 

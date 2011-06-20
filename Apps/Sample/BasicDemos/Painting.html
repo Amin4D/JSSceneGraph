@@ -89,7 +89,7 @@ $(document).ready(function() {
       target: FABRIC.RT.vec3(-0.03, 0.06, -0.03)
     });
 
-  scene.constructNode('CameraManipulator', { targetNode: camera });
+  var cameraManipulator = scene.constructNode('CameraManipulator', { targetNode: camera });
 
   viewport.setCameraNode(camera);
 
@@ -108,7 +108,8 @@ $(document).ready(function() {
   // Set up the painting manipulator
   var brushSize = 0.1;
   var paintManipulator = scene.constructNode('PaintManipulator', {
-      brushSize: brushSize
+      brushSize: brushSize,
+      enabled:false
       });
   paintManipulator.addPaintableNode(instanceNode);
   var onBeginPaintFn = function(evt) {
@@ -144,13 +145,27 @@ $(document).ready(function() {
 
   paintManipulator.addEventListener('onbeginpaint', onBeginPaintFn);
   paintManipulator.addEventListener('onpaint', onPaintFn);
+  
+  // Switch to painting when the 'P' key is pressed
+  window.onkeydown = function(evt) {
+      if(String.fromCharCode(evt.keyCode) == 'P'){
+        cameraManipulator.disable();
+        paintManipulator.enable();
+      }
+    };
+  window.onkeyup = function(evt) {
+      if(String.fromCharCode(evt.keyCode) == 'P'){
+        cameraManipulator.enable();
+        paintManipulator.disable();
+      }
+    };
 
   var errors = scene.getErrors();
   if (errors.length > 0) {
     throw (errors.toString());
   }
   else {
-    var brushColor = FABRIC.RT.rgb(0.3, 0.6, 0.8);
+    var brushColor = FABRIC.RT.rgb(0.8, 0.0, 0.0);
     paintManipulator.brushColor = brushColor;
     $('#brushColor').ColorPicker({
         flat: true,
@@ -187,7 +202,9 @@ $(document).ready(function() {
               The painting interface is built using event hanlders, and it very similar to ray casting.
               With ray casting, we return the intersection data back to JavaScript, whereas with painting,
               we return all points within range of the brush. Any data in the scene can be modified,
-              and in this example, we simply modify the vertex colors. 
+              and in this example, we simply modify the vertex colors.<br><br>
+              Hold 'P' to go into paint mode.<br>
+              Use the mouse wheel while in 'Paint' mode to resize the brush.
             </div><!--content-->
           </div><!--box-->
 

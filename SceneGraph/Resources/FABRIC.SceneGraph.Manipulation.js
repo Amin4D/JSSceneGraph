@@ -7,7 +7,8 @@ FABRIC.SceneGraph.registerNodeType('CameraManipulator',
   function(options, scene) {
     scene.assignDefaults(options, {
         trackRate: 0.1,
-        orbitRate: 0.25
+        orbitRate: 0.25,
+        enabled: true
       });
 
     if (!options.targetNode) {
@@ -16,20 +17,28 @@ FABRIC.SceneGraph.registerNodeType('CameraManipulator',
 
     var cameraNode = options.targetNode;
     var cameraManipulatorNode = scene.constructNode('SceneGraphNode', options);
+    var enabled = options.enabled;
+    cameraManipulatorNode.pub.enable = function(){
+      enabled = true;
+    }
+    cameraManipulatorNode.pub.disable = function(){
+      enabled = false;
+    }
 
     var zoomFn = function(evt) {
-      if (evt.altKey) {
-        var zoomDist = cameraNode.focalDistance * options.trackRate * evt.wheelDelta * -0.005;
-        var cameraXfo = cameraNode.getTransformNode().globalXfo;
-        var cameraZoom = cameraXfo.ori.getZaxis().mulInPlace(zoomDist);
-        cameraXfo.tr.addInPlace(cameraZoom);
-        cameraNode.getTransformNode().globalXfo = cameraXfo;
-        if (!cameraNode.getTransformNode().target) {
-          cameraNode.focalDistance = cameraNode.focalDistance - zoomDist;
-        }
-        evt.viewportNode.redraw();
-        evt.stopPropagation();
+      if(!enabled){
+        return;
       }
+      var zoomDist = cameraNode.focalDistance * options.trackRate * evt.wheelDelta * -0.005;
+      var cameraXfo = cameraNode.getTransformNode().globalXfo;
+      var cameraZoom = cameraXfo.ori.getZaxis().mulInPlace(zoomDist);
+      cameraXfo.tr.addInPlace(cameraZoom);
+      cameraNode.getTransformNode().globalXfo = cameraXfo;
+      if (!cameraNode.getTransformNode().target) {
+        cameraNode.focalDistance = cameraNode.focalDistance - zoomDist;
+      }
+      evt.viewportNode.redraw();
+      evt.stopPropagation();
     }
     cameraNode.addEventListener('mousewheel', zoomFn, false);
 
@@ -48,19 +57,22 @@ FABRIC.SceneGraph.registerNodeType('CameraManipulator',
       cameraTarget = cameraPos.add(cameraOffset);
     }
     var mouseDownFn = function(evt) {
-      if (evt.altKey && evt.button === 0) {
+      if(!enabled){
+        return;
+      }
+      if (evt.button === 0) {
         getCameraValues(evt);
         document.addEventListener('mousemove', dragOrbitFn, true);
         document.addEventListener('mouseup', releaseOrbitFn, true);
         evt.stopPropagation();
       }
-      else if (evt.altKey && evt.button === 1) {
+      else if (evt.button === 1) {
         getCameraValues(evt);
         document.addEventListener('mousemove', dragPanFn, true);
         document.addEventListener('mouseup', releasePanFn, true);
         evt.stopPropagation();
       }
-      else if (evt.altKey && evt.button === 2) {
+      else if (evt.button === 2) {
         getCameraValues(evt);
         document.addEventListener('mousemove', dragZoomFn, true);
         document.addEventListener('mouseup', releaseZoomFn, true);
@@ -70,6 +82,9 @@ FABRIC.SceneGraph.registerNodeType('CameraManipulator',
     cameraNode.addEventListener('mousedown', mouseDownFn);
 
     var dragOrbitFn = function(evt) {
+      if(!enabled){
+        return;
+      }
       var mouseDragScreenPos = FABRIC.RT.vec2(evt.screenX, evt.screenY);
       var mouseDragScreenDelta = mouseDragScreenPos.subtract(mouseDownScreenPos);
 
@@ -94,6 +109,9 @@ FABRIC.SceneGraph.registerNodeType('CameraManipulator',
       document.removeEventListener('mouseup', releaseOrbitFn, true);
     }
     var dragPanFn = function(evt) {
+      if(!enabled){
+        return;
+      }
       var mouseDragScreenPos = FABRIC.RT.vec2(evt.screenX, evt.screenY);
       var mouseDragScreenDelta = mouseDragScreenPos.subtract(mouseDownScreenPos);
       var dragDist = upaxis.multiply(mouseDragScreenDelta.y)
@@ -116,6 +134,9 @@ FABRIC.SceneGraph.registerNodeType('CameraManipulator',
 
 
     var dragZoomFn = function(evt) {
+      if(!enabled){
+        return;
+      }
       var mouseDragScreenPos = FABRIC.RT.vec2(evt.screenX, evt.screenY);
       var mouseDragScreenDelta = mouseDragScreenPos.subtract(mouseDownScreenPos);
       cameraNode.position = cameraPos.add(cameraPos.subtract(cameraTarget)
@@ -137,7 +158,8 @@ FABRIC.SceneGraph.registerNodeType('PaintManipulator',
   function(options, scene) {
     scene.assignDefaults(options, {
       brushSize: 0.1,
-      brushScaleSpeed: 1.0
+      brushScaleSpeed: 1.0,
+      enabled:true
       });
 
     options.dgnodenames.push('RayCastDGNode');
@@ -154,8 +176,11 @@ FABRIC.SceneGraph.registerNodeType('PaintManipulator',
       projectionMatrix,
       aspectRatio,
       paintableNodes = [],
-      paintableNodePaintHandlers = [];
+      paintableNodePaintHandlers = [],
+      enabled = options.enabled;
 
+    scene.addEventHandlingFunctions(paintManipulatorNode);
+    
     collectPointsDgNode.addMember('cameraMatrix', 'Mat44');
     collectPointsDgNode.addMember('projectionMatrix', 'Mat44');
     collectPointsDgNode.addMember('aspectRatio', 'Scalar');
@@ -186,7 +211,8 @@ FABRIC.SceneGraph.registerNodeType('PaintManipulator',
     var brushInstance = scene.constructNode('Instance', {
         transformNode: brushShapeTransform.pub,
         geometryNode: scene.constructNode('Circle', { radius: 1.0 }).pub,
-        materialNode: brushMaterial.pub
+        materialNode: brushMaterial.pub,
+        enableDrawing: false
       });
 
     var collectPoints = function() {
@@ -198,6 +224,9 @@ FABRIC.SceneGraph.registerNodeType('PaintManipulator',
     };
 
     var resizePaintBrushFn = function(evt) {
+      if(!enabled){
+        return;
+      }
       options.brushSize += evt.wheelDelta * 0.0001 * options.brushScaleSpeed;
       options.brushSize = Math.max(options.brushSize, 0.01);
       collectPointsDgNode.setData('brushSize', options.brushSize);
@@ -220,6 +249,9 @@ FABRIC.SceneGraph.registerNodeType('PaintManipulator',
     }
 
     var mouseMoveFn = function(evt) {
+      if(!enabled){
+        return;
+      }
       viewportNode = evt.viewportNode;
       moveBrush(evt);
       viewportNode.redraw();
@@ -227,6 +259,9 @@ FABRIC.SceneGraph.registerNodeType('PaintManipulator',
     scene.pub.addEventListener('mousemove', mouseMoveFn);
 
     var paintFn = function(evt) {
+      if(!enabled){
+        return;
+      }
       moveBrush(evt);
       var points = collectPoints();
 
@@ -237,6 +272,9 @@ FABRIC.SceneGraph.registerNodeType('PaintManipulator',
     }
 
     var mouseDownFn = function(evt) {
+      if(!enabled){
+        return;
+      }
       if (evt.button === 0) {
         // Paint
         cameraMatrix = viewportNode.getCameraNode().cameraMat44;
@@ -301,7 +339,16 @@ FABRIC.SceneGraph.registerNodeType('PaintManipulator',
       paintableNodePaintHandlers.push(paintInstanceEventHandler);
     };
 
-    scene.addEventHandlingFunctions(paintManipulatorNode);
+    paintManipulatorNode.pub.enable = function(){
+      enabled = true;
+      brushInstance.pub.drawToggle = true;
+      scene.pub.redrawAllWindows();
+    }
+    paintManipulatorNode.pub.disable = function(){
+      enabled = false;
+      brushInstance.pub.drawToggle = false;
+      scene.pub.redrawAllWindows();
+    }
 
     return paintManipulatorNode;
   });

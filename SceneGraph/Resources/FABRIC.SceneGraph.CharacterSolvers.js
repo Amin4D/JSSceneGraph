@@ -121,7 +121,7 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('CharacterSolver',
         boneIDs[name] = name2id[options.bones[name]];
       }
     }
-
+    
     return solver;
   });
 
@@ -131,9 +131,13 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('FKHierarchySolver',
     var solver,
       parameterBinding,
       bindToRig;
-
-    options.bones = [];
-    options.identifiers = [];
+      
+    // ensure to have a full set
+    if(options.rigNode && !options.bones){
+      options.bones = {};
+      options.bones.bones = options.rigNode.getSkeletonNode().getBoneNames();
+    }
+    options.identifiers= [['bones']];
 
     solver = FABRIC.SceneGraph.CharacterSolvers.createSolver('CharacterSolver', options, scene);
 
@@ -149,16 +153,7 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('FKHierarchySolver',
         size,
         name = options.name;
 
-      // if no id list is specified,
-      // create a complete one
-      var boneIndices = options.boneIndices;
-      if (!boneIndices) {
-        boneIndices = [];
-        for (var i = 0; i < bones.length; i++) {
-          boneIndices.push(i);
-        }
-      }
-
+      var boneIndices = solver.getBoneIDs().bones;
       constantsNode.pub.addMember(name + 'boneIndices', 'Integer[]', boneIndices);
 
       if (options.localxfoMemberName == undefined) {
@@ -198,8 +193,12 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('ReferencePoseSolver',
       parameterBinding,
       bindToRig;
 
-    options.bones = [];
-    options.identifiers = [];
+    // ensure to have a full set
+    if(options.rigNode && !options.bones){
+      options.bones = {};
+      options.bones.bones = options.rigNode.getSkeletonNode().getBoneNames();
+    }
+    options.identifiers= [['bones']];
 
     solver = FABRIC.SceneGraph.CharacterSolvers.createSolver('CharacterSolver', options, scene);
 
@@ -210,16 +209,7 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('ReferencePoseSolver',
         skeletonNode = rigNode.getSkeletonNode(),
         bones = skeletonNode.getBones(),
         name = options.name,
-        boneIndices = options.boneIndices;
-
-      // if no id list is specified,
-      // create a complete one
-      if (!boneIndices) {
-        boneIndices = [];
-        for (var i = 0; i < bones.length; i++) {
-          boneIndices.push(i);
-        }
-      }
+        boneIndices = solver.getBoneIDs().bones;
 
       constantsNode.pub.addMember(name + 'boneIndices', 'Integer[]', boneIndices);
 
@@ -258,7 +248,12 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('FKChainSolver',
       parameterBinding,
       bindToRig;
 
-    options.identifiers = [['bones']];
+    // ensure to have a full set
+    if(options.rigNode && !options.bones){
+      options.bones = {};
+      options.bones.bones = options.rigNode.getSkeletonNode().getBoneNames();
+    }
+    options.identifiers= [['bones']];
 
     solver = FABRIC.SceneGraph.CharacterSolvers.createSolver('CharacterSolver', options, scene);
 

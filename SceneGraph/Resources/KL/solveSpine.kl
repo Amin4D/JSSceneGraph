@@ -23,8 +23,12 @@ operator solveSpine(
     return;
   }
 
-  Xfo baseXfo = startlocalXfo * pose[bones[vertebraIndices[0]].parent];
-  Xfo tipXfo = endlocalXfo * pose[bones[vertebraIndices[0]].parent];
+  Xfo baseXfo = startlocalXfo;
+  Xfo tipXfo = endlocalXfo;
+  if(bones[vertebraIndices[0]].parent != -1){
+    baseXfo = pose[bones[vertebraIndices[0]].parent].project(baseXfo);
+    tipXfo = pose[bones[vertebraIndices[0]].parent].project(tipXfo);
+  }
 
   var Vec3 p1 = baseXfo.tr;
   var Vec3 p4 = tipXfo.tr;
@@ -67,7 +71,6 @@ operator solveSpine(
 
   pose[end].ori = tipXfo.ori;
   pose[end].tr = curvePoints[vertebraIndices.size()];
-
 }
 
 operator solveInvSpine(
@@ -82,9 +85,8 @@ operator solveInvSpine(
 ) {
   // basically we just copy the transforms out!
   if(bones[start].parent != -1){
-    var Xfo rootXfo = pose[bones[start].parent];
-    startlocalXfo = rootXfo.invProject(pose[start]);
-    endlocalXfo = rootXfo.invProject(pose[end]);
+    startlocalXfo = pose[bones[start].parent].invProject(pose[start]);
+    endlocalXfo = pose[bones[start].parent].invProject(pose[end]);
   }else{
     startlocalXfo = pose[start];
     endlocalXfo = pose[end];

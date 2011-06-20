@@ -253,3 +253,10 @@ function Quat(in Mat33 mat) {
   }
   self.setUnit();
 }
+
+function Quat directionToQuat(in Vec3 direction, in Vec3 upvector) {
+  var Vec3 xAxis = direction;
+  var Vec3 zAxis = direction.cross(upvector);
+  var Vec3 yAxis = zAxis.cross(xAxis);
+  return Mat33(xAxis.unit(),yAxis.unit(),zAxis.unit()).transpose();
+}

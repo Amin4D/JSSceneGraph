@@ -64,67 +64,63 @@ FABRIC = (function() {
     contextIDs.push(context.getContextID());
 
     context.createWindow = function(element, options) {
-        if (!options)
-          options = {};
+      if (!options)
+        options = {};
 
-        var embedTag = document.createElement('embed');
-        embedTag.setAttributeNS(null, 'type', 'application/fabric');
-        embedTag.setAttributeNS(null, 'width', element.offsetWidth);
-        embedTag.setAttributeNS(null, 'height', element.offsetHeight);
-        embedTag.setAttributeNS(null, 'windowType', '3d');
-        embedTag.setAttributeNS(null, 'contextID', this.getContextID());
+      var embedTag = document.createElement('embed');
+      embedTag.setAttributeNS(null, 'type', 'application/fabric');
+      embedTag.setAttributeNS(null, 'width', element.offsetWidth);
+      embedTag.setAttributeNS(null, 'height', element.offsetHeight);
+      embedTag.setAttributeNS(null, 'windowType', '3d');
+      embedTag.setAttributeNS(null, 'contextID', this.getContextID());
 
-        if (options.windowType)
-          embedTag.setAttributeNS(null, 'viewPortType', options.windowType);
-        if (options.windowType == 'empty') {
-          // [pzion 20110208] This is really stupid.  We should really hide this, but
-          // if you do so then Chrome disables the plugin.
-          //embedTag.style.display = 'none';
+      if (options.windowType)
+        embedTag.setAttributeNS(null, 'viewPortType', options.windowType);
+      if (options.windowType == 'empty') {
+        // [pzion 20110208] This is really stupid.  We should really hide this, but
+        // if you do so then Chrome disables the plugin.
+        //embedTag.style.display = 'none';
+      }
+      element.appendChild(embedTag);
+
+      var onDOMWindowResize = function() {
+        if (options.aspectRatio) {
+          embedTag.width = element.offsetWidth;
+          embedTag.height = element.offsetWidth * options.aspectRatio;
+        } else {
+          embedTag.width = element.offsetWidth;
+          embedTag.height = element.offsetHeight;
         }
-        element.appendChild(embedTag);
-
-        var onDOMWindowResize = function() {
-          if (options.aspectRatio) {
-            embedTag.width = element.offsetWidth;
-            embedTag.height = element.offsetWidth * options.aspectRatio;
-          } else {
-            embedTag.width = element.offsetWidth;
-            embedTag.height = element.offsetHeight;
-          }
-        };
-        onDOMWindowResize();
-        window.addEventListener('resize', onDOMWindowResize, false);
-
-        var result = {
-          RT: context.RT,
-          RegisteredTypesManager: context.RT,
-          DG: context.DG,
-          DependencyGraph: context.DG,
-          getContextID: function() {
-            return context.getContextID();
-          },
-          domElement: embedTag,
-          windowNode: context.VP.viewPort.getWindowNode(),
-          redrawEvent: context.VP.viewPort.getRedrawEvent(),
-          needsRedraw: function() {
-            context.VP.viewPort.needsRedraw();
-          },
-          setRedrawFinishedCallback: function(callback) {
-            context.VP.viewPort.setRedrawFinishedCallback(function() {
-              if (callback)
-                callback();
-            });
-          }
-        };
-        result.__defineGetter__('fps', function() {
-          return context.VP.viewPort.getFPS();
-        });
-        return result;
       };
+      onDOMWindowResize();
+      window.addEventListener('resize', onDOMWindowResize, false);
 
-    // In my opinion, the file IO stuff shouldn't be tied to a constext.
-    // Here I make it accessible anywhere.
-    FABRIC.IO = context.IO;
+      var result = {
+        RT: context.RT,
+        RegisteredTypesManager: context.RT,
+        DG: context.DG,
+        DependencyGraph: context.DG,
+        getContextID: function() {
+          return context.getContextID();
+        },
+        domElement: embedTag,
+        windowNode: context.VP.viewPort.getWindowNode(),
+        redrawEvent: context.VP.viewPort.getRedrawEvent(),
+        needsRedraw: function() {
+          context.VP.viewPort.needsRedraw();
+        },
+        setRedrawFinishedCallback: function(callback) {
+          context.VP.viewPort.setRedrawFinishedCallback(function() {
+            if (callback)
+              callback();
+          });
+        }
+      };
+      result.__defineGetter__('fps', function() {
+        return context.VP.viewPort.getFPS();
+      });
+      return result;
+    };
 
     return context;
   };

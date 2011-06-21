@@ -559,7 +559,6 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('IK2BoneSolver',
         throw ('Cannot solve IK2Bone for bone ' + bones[boneIDs.boneB].name + ', because it has length == 0.');
         }
 
-
       if(!options.inverse){
 
         var localXfo = referencePose[bones[boneIDs.boneA].parent].multiplyInv(referencePose[boneIDs.boneA]);
@@ -799,6 +798,7 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('SpineSolver',
               color: FABRIC.RT.rgb(1, 0, 0)
             });
           }
+
           solver.constructManipulator(name + 'endRotation', 'RotationManipulator', {
             targetNode: variablesNode.pub,
             targetMember: name + 'endlocalXfo',

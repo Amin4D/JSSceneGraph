@@ -604,15 +604,36 @@ FABRIC.SceneGraph.registerNodeType('CharacterRigDebug',
 
       rigNode = scene.getPrivateInterface(node);
 
-      characterRigDebugNode.pub.addVertexAttributeValue('vertexColors', 'Color');
+      // get the count
+      var count = 0;
+      var memberNames = [];
+      var parentIndices = [];
+      var solvers = rigNode.pub.getSolvers();
+      for(var i=0;i<solvers.length;i++){
+        var debugMembers = solvers[i].getDebugMembers();
+        for(var debugMember in debugMembers){
+          memberNames.push(debugMember);
+          parentIndices.push(debugMembers[debugMember]);
+          count++;
+        }
+      }
+      
+      // if we have no members
+      if(count == 0){
+        rigNode = undefined;
+        throw("The specified characterRigNode has no solvers with debugMembers applied!");
+        return;
+      }
+      
+      // setup the dg nodes
+      var variablesNode = scene.getPrivateInterface(node.getVariablesNode());
+      characterRigDebugNode.pub.setAttributeDynamic('positions');
       characterRigDebugNode.getUniformsDGNode().addDependency(rigNode.getDGNode(), 'rig');
-      characterRigDebugNode.getUniformsDGNode().addDependency(rigNode.getConstantsNode().getDGNode(), 'constants');
-      characterRigDebugNode.getUniformsDGNode().addDependency(rigNode.getVariablesNode().getDGNode(), 'variables');
-      characterRigDebugNode.pub.addUniformValue('debugpose', 'Xfo[]');
-      characterRigDebugNode.pub.addUniformValue('singlecolor', 'Color', options.color);
-      characterRigDebugNode.pub.addUniformValue('offsetpose', 'Xfo', options.offsetpose);
+      characterRigDebugNode.getUniformsDGNode().addDependency(variablesNode.getDGNode(), 'variables');
+      characterRigDebugNode.pub.addUniformValue("debugpose","Xfo[]");
+      characterRigDebugNode.getAttributesDGNode().setCount(count);
 
-      // now append the operator to create the lines
+      // first clear the debugpose
       var operators = characterRigDebugNode.getUniformsDGNode().bindings;
       operators.append(scene.constructOperator({
         operatorName: 'clearDebugXfos',
@@ -623,20 +644,30 @@ FABRIC.SceneGraph.registerNodeType('CharacterRigDebug',
         ]
       }));
 
-      //  var debugOperators = rigNode.getConstantsNode().getDebugOperators();
-      //  for(var i=0;i<debugOperators.length;i++)
-      //    operators.append(debugOperators[i]);
+      // then, for each member, define the parent index and map if
+      for(var i=0;i<count;i++){
+        characterRigDebugNode.pub.addUniformValue("debugParentIndex"+i,"Integer",parentIndices[i]);
+        operators.append(scene.constructOperator({
+          operatorName: 'pushDebugXfo'+i,
+          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/characterDebug.kl',
+          entryFunctionName: 'pushDebugXfo',
+          parameterBinding: [
+            'self.debugpose',
+            'variables.'+memberNames[i],
+            'rig.pose',
+            'self.debugParentIndex'+i
+          ]
+        }));
+      }
 
+      // finally, copy the points over
       characterRigDebugNode.getAttributesDGNode().bindings.append(scene.constructOperator({
         operatorName: 'generateDebugPoints',
         srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/characterDebug.kl',
         entryFunctionName: 'generateDebugPoints',
         parameterBinding: [
           'uniforms.debugpose',
-          'uniforms.offsetpose',
-          'self.positions[]',
-          'self.vertexColors[]',
-          'uniforms.singlecolor'
+          'self.positions[]'
         ]
       }));
     };
@@ -649,23 +680,20 @@ FABRIC.SceneGraph.registerNodeType('CharacterRigDebug',
       if (!rigNode)
         return undefined;
 
-      var material = scene.constructNode('VertexColorMaterial', {
-        prototypeMaterialType: 'PointMaterial',
-        pointSize: 10.0,
-        color: FABRIC.RT.rgb(0.8, 0, 0, 1)
+      var materialNode = scene.constructNode('FlatMaterial', {
+        color: options.color,
+        prototypeMaterialType: 'PointMaterial'
       });
 
       instanceNode = scene.constructNode('Instance', {
         geometryNode: characterRigDebugNode.pub,
-        materialNode: material
+        materialNode: materialNode.pub
       });
       return instanceNode;
     };
     characterRigDebugNode.pub.getInstanceNode = function() {
       return scene.getPublicInterface(instanceNode);
     };
-
-    characterRigDebugNode.pub.characterRigDebugNode.setAttributeDynamic('positions');
 
     if (options.characterRigNode) {
       characterRigDebugNode.pub.setRigNode(options.characterRigNode);

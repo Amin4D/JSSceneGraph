@@ -10,11 +10,13 @@ operator solveIK2Bone(
   io Integer boneB,
   io Integer targetParent,
   io Integer upvectorParent,
+  io Xfo local,
   io Xfo target,
   io Xfo upvector
 ) {
+
   if (bones[boneA].parent != - 1) {
-    pose[boneA] = bones[boneA].referenceLocalPose * pose[bones[boneA].parent];
+    pose[boneA] = local * pose[bones[boneA].parent];
   }
 
   pose[boneB] = bones[boneB].referenceLocalPose * pose[boneA];
@@ -24,7 +26,7 @@ operator solveIK2Bone(
   var Vec3 upvectorPos = pose[upvectorParent].transform(upvector.tr);
 
   // compute the sides of the triangles and their lengths
-  var Vec3 sideA = upvectorPos - pose[boneA].tr;
+  var Vec3 sideA = upvectorPos - (pose[boneA].tr + targetPos) * 0.5;
   var Vec3 sideC = targetPos - pose[boneA].tr;
   var Scalar lengthA = bones[boneA].length;
   var Scalar lengthB = bones[boneB].length;
@@ -35,7 +37,6 @@ operator solveIK2Bone(
   var Vec3 zAxis = sideA.cross(sideC).unit();
   if (lengthC < lengthA + lengthB) {
     var Scalar angle = - acos((lengthA * lengthA + lengthC * lengthC - lengthB * lengthB) / (2.0 * lengthA * lengthC));
-    report(angle * 180 / 3.14);
     var Quat q = axisAndAngleToQuat(zAxis, angle);
     xAxis = q.transform(sideC).unit();
   } else {
@@ -57,16 +58,18 @@ operator solveInvIK2Bone(
   io Integer boneB,
   io Integer targetParent,
   io Integer upvectorParent,
+  io Xfo local,
   io Xfo target,
   io Xfo upvector
 ) {
-  // compute the target
+  local = pose[bones[boneA].parent].invProject(pose[boneA]);
   target = pose[boneB];
   target.tr = target.transform(Vec3(bones[boneB].length, 0.0, 0.0));
-  target = pose[targetParent].invProject(target);
-
-  // compute the upvector
   upvector = pose[boneB];
-  upvector.tr = pose[boneA].transform(Vec3(bones[boneA].length, bones[boneA].length, 0.0));
+  upvector.tr = (target.tr + pose[boneA].tr) * 0.5;
+  upvector.tr = (pose[boneB].tr -  upvector.tr).unit() * bones[boneA].length + pose[boneB].tr;
+  
+  // project into parent spaces
+  target = pose[targetParent].invProject(target);
   upvector = pose[upvectorParent].invProject(upvector);
 }

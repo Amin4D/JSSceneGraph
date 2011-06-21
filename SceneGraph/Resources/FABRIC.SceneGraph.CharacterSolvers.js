@@ -45,9 +45,13 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('CharacterSolver',
     var parameterBinding;
 
     var boneIDs = {},
-    manipulators = {};
+    manipulators = {},
+    debugMembers = {};
 
     var solver = {
+      getType: function() {
+        return options.type;
+      },
       getBoneIDs: function() {
         return boneIDs;
       },
@@ -132,8 +136,14 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('CharacterSolver',
         // finally, create the inverse solver
         return FABRIC.SceneGraph.CharacterSolvers.constructSolver(newOptions.type, newOptions, scene);
       },
+      setDebugMember: function(memberName, parentIndex){
+        debugMembers[memberName] = parentIndex;
+      },
+      getDebugMembers: function(){
+        return debugMembers;
+      }
     };
-
+    
     /////////////////////////////////////////////////
     // Now define the mapping between the named bones,
     // and the bone ids.
@@ -551,6 +561,9 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('IK2BoneSolver',
 
 
       if(!options.inverse){
+
+        var localXfo = referencePose[bones[boneIDs.boneA].parent].multiplyInv(referencePose[boneIDs.boneA]);
+
         // compute the target
         targetPos = referencePose[boneIDs.boneB].transform(new FABRIC.RT.Vec3(bones[boneIDs.boneB].length, 0, 0));
         targetXfo = referencePose[boneIDs.targetParent].multiplyInv(FABRIC.RT.xfo({
@@ -576,8 +589,14 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('IK2BoneSolver',
         constantsNode.pub.addMember(name + 'targetParent', 'Integer', boneIDs.targetParent);
         constantsNode.pub.addMember(name + 'upvectorParent', 'Integer', boneIDs.upvectorParent);
   
+        variablesNode.pub.addMember(name + 'local', 'Xfo', localXfo);
         variablesNode.pub.addMember(name + 'target', 'Xfo', targetXfo);
         variablesNode.pub.addMember(name + 'upvector', 'Xfo', upvector);
+
+        // mark members for debugging
+        solver.setDebugMember(name + 'local',bones[boneIDs.boneA].parent);
+        solver.setDebugMember(name + 'target',boneIDs.targetParent);
+        solver.setDebugMember(name + 'upvector',boneIDs.upvectorParent);
   
         // insert at the previous to last position to ensure that we keep the last operator
         var opBindings = rigNode.getDGNode().bindings;
@@ -593,6 +612,7 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('IK2BoneSolver',
             'constants.' + name + 'targetParent',
             'constants.' + name + 'upvectorParent',
   
+            'variables.' + name + 'local',
             'variables.' + name + 'target',
             'variables.' + name + 'upvector',
           ])
@@ -626,9 +646,9 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('IK2BoneSolver',
         
         var opBindings = variablesNode.getDGNode().bindings;
         opBindings.append(scene.constructOperator({
-          operatorName: 'solveIK2Bone',
+          operatorName: 'solveInvIK2Bone',
           srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/solveIK2Bone.kl',
-          entryFunctionName: 'solveIK2Bone',
+          entryFunctionName: 'solveInvIK2Bone',
           parameterBinding: solver.setParameterBinding([
             'invrig.pose',
             'invskeleton.bones',
@@ -637,6 +657,7 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('IK2BoneSolver',
             'constants.' + name + 'invtargetParent',
             'constants.' + name + 'invupvectorParent',
   
+            'self.' + name + 'local',
             'self.' + name + 'target',
             'self.' + name + 'upvector',
           ])
@@ -709,7 +730,11 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('SpineSolver',
   
         variablesNode.pub.addMember(name + 'startlocalXfo', 'Xfo', startlocalXfo);
         variablesNode.pub.addMember(name + 'endlocalXfo', 'Xfo', endlocalXfo);
-  
+        
+        // mark members for debugging
+        solver.setDebugMember(name + 'startlocalXfo',skeletonNode.getParentId(baseVertebreIndex));
+        solver.setDebugMember(name + 'endlocalXfo',skeletonNode.getParentId(baseVertebreIndex));
+
         // insert at the previous to last position to ensure that we keep the last operator
         var opBindings = rigNode.getDGNode().bindings;
         opBindings.insert(scene.constructOperator({

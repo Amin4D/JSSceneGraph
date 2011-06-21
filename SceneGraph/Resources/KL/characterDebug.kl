@@ -11,11 +11,11 @@ operator pushDebugXfo(io Xfo debugPose[], io Xfo xf, io Xfo pose[], io Integer p
   debugPose.push(pose[parent].project(xf));
 }
 
-operator generateDebugPoints(io Xfo debugPose[], io Xfo offset, io Vec3 positions[], io Color colors[], io Color color) {
-  positions.resize(debugPose.size());
-  colors.resize(debugPose.size());
-  for (var Integer i = 0; i < debugPose.size(); i++) {
-    positions[i] = offset.transform(debugPose[i].tr);
-    colors[i] = color;
+operator generateDebugPoints(io Xfo debugPose[], io Vec3 positions[]) {
+  if(debugPose.size() != positions.size()){
+    report('debugPose and position count does not match!');
+  }else{
+    for (var Integer i = 0; i < debugPose.size(); i++)
+      positions[i] = debugPose[i].tr;
   }
 }

@@ -584,12 +584,21 @@ FABRIC.SceneGraph.registerNodeType('Material',
 
     operators = redrawEventHandler.preDescendBindings;
     if (options.autoSetProgram) {
-      operators.append(scene.constructOperator({
-        operatorName: 'useProgramOp',
-        srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadShader.kl',
-        entryFunctionName: 'useProgram',
-        parameterBinding: ['self.program']
-      }));
+      if (options.separateShaderNode) {
+        operators.append(scene.constructOperator({
+          operatorName: 'useProgramOp',
+          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadShader.kl',
+          entryFunctionName: 'useProgram',
+          parameterBinding: ['shader.program']
+        }));
+      }else{
+        operators.append(scene.constructOperator({
+          operatorName: 'useProgramOp',
+          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadShader.kl',
+          entryFunctionName: 'useProgram',
+          parameterBinding: ['self.program']
+        }));
+      }
     }
 
     /////////////////////////////////

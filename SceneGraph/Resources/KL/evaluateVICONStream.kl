@@ -42,10 +42,11 @@ operator viconOffsetPositions(
   io Vec3 positions[],
   io ViconOffsetInfo infos[]
 ) {
+
   for(var Integer i=0;i<infos.size();i++){
     if(infos[i].index == -1 || infos[i].start == -1 || infos[i].target == -1)
       continue;
-    
+      
     var Vec3 dir = positions[infos[i].target] - positions[infos[i].start];
     positions[infos[i].index] += infos[i].factor * dir;
   }

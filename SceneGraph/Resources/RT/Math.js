@@ -3,7 +3,6 @@
 // Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
 //
 
-// TODO: rename this file to 'RT.js', and rename the namespace to RT.
 /**
  * The basic math module.
  */

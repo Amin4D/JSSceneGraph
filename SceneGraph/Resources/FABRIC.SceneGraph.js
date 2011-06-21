@@ -978,12 +978,8 @@ FABRIC.SceneGraph.registerNodeType('Viewport',
     };
     viewportNode.pub.setBackgroundTextureImage = function(textureNode) {
       if (!textureStubdgnode) {
-        // TODO: once we can propagate redraw evet data to child handlers, finish this code off.
-      //  textureStub.addMember(textureName, "Integer", textureUnit);
-        textureStubdgnode = scene.constructDependencyGraphNode(options.name + '_backgroundTextureStubDgNode');
-        textureStubdgnode.addMember('textureUnit', 'Integer', 0);
-        textureStub.addScope('textureStub', textureStubdgnode);
-
+        textureStub.setBindingName('textureStub');
+        textureStub.addMember('textureUnit', 'Integer', 0);
         textureStub.addMember('program', 'Integer', 0);
         textureStub.postDescendBindings.append(
           scene.constructOperator({
@@ -991,7 +987,7 @@ FABRIC.SceneGraph.registerNodeType('Viewport',
               srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/OffscreenRendering.kl',
               entryFunctionName: 'renderTextureToView',
               parameterBinding: [
-                'textureStub.textureUnit',
+                'self.textureUnit',
                 'self.program'
               ]
             }

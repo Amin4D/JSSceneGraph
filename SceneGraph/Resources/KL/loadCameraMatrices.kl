@@ -19,14 +19,14 @@ operator loadCameraMatrices(
     Mat44 modelMatrix, modelViewMatrix, projectionMatrixInv, modelViewProjectionMatrix;
     switch (uniform.id) {
       case MODELMATRIX_ATTRIBUTE_ID:
-          modelMatrix = modelXfo;
+        modelMatrix = modelXfo;
         glUniformMatrix4fv(uniform.location, 1, false, modelMatrix.data());
         break;
       case VIEWMATRIX_ATTRIBUTE_ID:
-          glUniformMatrix4fv(uniform.location, 1, false, cameraMatrix.data());
+        glUniformMatrix4fv(uniform.location, 1, false, cameraMatrix.data());
         break;
       case PROJECTIONMATRIX_ATTRIBUTE_ID:
-          glUniformMatrix4fv(uniform.location, 1, false, projectionMatrix.data());
+        glUniformMatrix4fv(uniform.location, 1, false, projectionMatrix.data());
         break;
       case NORMALMATRIX_ATTRIBUTE_ID:
           modelMatrix = modelXfo;
@@ -35,16 +35,16 @@ operator loadCameraMatrices(
         glUniformMatrix3fv(uniform.location, 1, false, normalMatrix.data());
         break;
       case PROJECTIONMATRIXINV_ATTRIBUTE_ID:
-          projectionMatrixInv = projectionMatrix.inverse();
+        projectionMatrixInv = projectionMatrix.inverse();
         glUniformMatrix4fv(uniform.location, 1, false, projectionMatrixInv.data());
         break;
       case MODELVIEW_MATRIX_ATTRIBUTE_ID:
-          modelMatrix = modelXfo;
+        modelMatrix = modelXfo;
         modelViewMatrix = modelMatrix * cameraMatrix;
         glUniformMatrix4fv(uniform.location, 1, false, modelViewMatrix.data());
         break;
       case MODELVIEWPROJECTION_MATRIX_ATTRIBUTE_ID:
-          modelMatrix = modelXfo;
+        modelMatrix = modelXfo;
         modelViewProjectionMatrix = modelMatrix * cameraMatrix * projectionMatrix;
         glUniformMatrix4fv(uniform.location, 1, false, modelViewProjectionMatrix.data());
         break;

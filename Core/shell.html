@@ -3,11 +3,24 @@
 <html style='height: 100%'>
   <head>
     <title>Fabric Plugin Example</title>
+    <script type="text/javascript" src="../ThirdParty/jQuery/jquery-1.4.2.min.js"></script>
     <script type="text/javascript" src="FABRIC.Wrappers.js"></script>
     <script type="text/javascript" src="FABRIC.js"></script>
   </head>
-  <body style='height: 100%' onload="FABRIC = FABRIC.createContext();">
+  <body style='height: 100%'>
     <h1>Fabric Shell</h1>
 	<div id="fabricWindowContainer"></div>
+    <script type="text/javascript">
+$(document).ready(function() {
+  
+  var context = FABRIC.createContext();
+
+  // [pzion 20110620] Make FABRIC the context object, but hang on to some "global" resources
+  var oldFABRIC = FABRIC;
+  FABRIC = context;
+  FABRIC.loadResourceURL = oldFABRIC.loadResourceURL;
+  
+}); 
+    </script>
   </body>
 </HTML>

@@ -51,7 +51,7 @@ operator viconOffsetPositions(
     positions[infos[i].index] += infos[i].factor * dir;
   }
 }
-/*
+
 operator viconProjectBones(
   io Bone bones[],
   io ViconBoneInfo infos[],
@@ -61,49 +61,20 @@ operator viconProjectBones(
 
     // start at 1 to skip root
     for (var Integer i = 1; i < bones.size(); i++) {
-      var Vec3 root(0.0, 0.0, 0.0);
-      var Vec3 target(0.0, 0.0, 0.0);
-      var Vec3 upvector(0.0, 0.0, 0.0);
-      var Vec3 helper(0.0, 0.0, 0.0);
+      var Vec3 root = points[infos[i].root];
+      var Vec3 target = points[infos[i].target];
+      var Vec3 upvector = points[infos[i].upvector];
 
-      // compute the position of the bone
-      if (infos[i].rootIDs.size() == 1) {
-        root = points[infos[i].rootIDs[0]];
-      }else if (infos[i].rootIDs.size() > 0) {
-        for (var Integer j = 0; j < infos[i].rootIDs.size(); j++) {
-          root += points[infos[i].rootIDs[j]];
-        }
-        root /= Scalar(infos[i].rootIDs.size());
-      }
-
-      // compute the target of the bone
-      if (infos[i].targetIDs.size() == 1) {
-        target = points[infos[i].targetIDs[0]];
-      }else if (infos[i].targetIDs.size() > 0) {
-        for (var Integer j = 0; j < infos[i].targetIDs.size(); j++) {
-          target += points[infos[i].targetIDs[j]];
-        }
-        target /= Scalar(infos[i].targetIDs.size());
-      }
       target -= root;
-      if(infos[i].invertTarget)
-        target = target.neg();
-
-      // compute the upvector of the bone
-      if (infos[i].upvectorIDs.size() == 1) {
-        upvector = points[infos[i].upvectorIDs[0]];
-      }else if (infos[i].upvectorIDs.size() > 0) {
-        for (var Integer j = 0; j < infos[i].upvectorIDs.size(); j++) {
-          upvector += points[infos[i].upvectorIDs[j]];
-        }
-        upvector /= Scalar(infos[i].upvectorIDs.size());
-      }
       upvector -= root;
-      if(infos[i].invertUpvector)
+
+      if(infos[i].negateTarget)
+        target = target.neg();
+      if(infos[i].negateUpvector)
         upvector = upvector.neg();
 
       // compute the cross products!
-      helper = target.cross(upvector);
+      var Vec3 helper = target.cross(upvector);
       upvector = helper.cross(target);
 
       // assign to the bone data
@@ -114,4 +85,4 @@ operator viconProjectBones(
       bones[i].radius = 0.05; //upvector.norm() * 0.33;
     }
   }
-}*/
+}

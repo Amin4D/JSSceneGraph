@@ -299,6 +299,10 @@ FABRIC.SceneGraph.registerNodeType('CharacterSkeletonDebug',
         color: options.color
       }).pub
     });
+    
+    characterSkeletonDebug.pub.getInstanceNode = function() {
+      return scene.getPublicInterface(instanceNode);
+    };
 
     // setup the postdescend operators for disable and enable zbuffer
     // PT - This could be done at the shader/material stage

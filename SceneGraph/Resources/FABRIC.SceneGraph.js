@@ -159,8 +159,7 @@ FABRIC.SceneGraph = {
       return newobj;
     };
     scene.loadResourceURL = function(url) {
-      var data = FABRIC.loadResourceURL(url);
-      return data;
+      return FABRIC.loadResourceURL(url);
     };
     //////////////////////////////////////////////////
     // Timers.
@@ -581,7 +580,7 @@ FABRIC.SceneGraph = {
 
     scene.pub.displayDebugger = function() {
       var debuggerWindow = window.open(
-        'FABRIC_ROOT/Core/Debugger/FABRIC.Debugger.html?id=' + context.getContextID() , 'Fabric Debugger');
+        FABRIC.processURL('FABRIC_ROOT/Core/Debugger/FABRIC.Debugger.html') + '?id=' + context.getContextID() , 'Fabric Debugger');
       debuggerWindow.context = context;
       debuggerWindow.scene = scene;
     };

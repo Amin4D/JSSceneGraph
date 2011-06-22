@@ -35,7 +35,8 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('CharacterSolver',
       highlightcolor: FABRIC.RT.rgb(0.8, 0.8, 0.8, 1),
       rigNode: undefined,
       createManipulators: true,
-      inverse: false
+      inverse: false,
+      allowInverse: true
     });
 
     if (!options.rigNode) {
@@ -58,6 +59,12 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('CharacterSolver',
       getBoneIndex: function(name) {
         return boneIDs[name];
       },
+      getInvBoneIDs: function() {
+        return options.invBoneIDs ? options.invBoneIDs : {};
+      },
+      getInvBoneIndex: function(name) {
+        return options.invBoneIDs ? options.invBoneIDs[name] : undefined;
+      },
       constructManipulator: function(name, manipulatorType, options) {
         if (manipulators[name]) {
           throw (' Manipulator names must be unique. Solver "' + name + '" already contains :"' + name + '"');
@@ -77,53 +84,55 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('CharacterSolver',
         return parameterBinding;
       },
       constructInverseSolver: function(solverOptions) {
-        if (!solverOptions.sourceRigNode) {
-          throw ('You need to specify a valid sourceRigNode!');
+        if (!solverOptions.srcRigNode) {
+          throw ('You need to specify a valid srcRigNode!');
           }
         if (!solverOptions.boneMapping) {
           throw ('You need to specify a valid boneMapping!');
           }
+        if(!options.allowInverse)
+          return undefined;
 
         // create the new options!
         var newOptions = {};
         for (var option in options) {
           newOptions[option] = options[option];
         }
-        // copy the source character rig node and the bone mapping
-        newOptions.sourceRigNode = solverOptions.sourceRigNode;
+        // copy the src character rig node and the bone mapping
+        newOptions.srcRigNode = solverOptions.srcRigNode;
         newOptions.inverse = true;
+        newOptions.invBoneIDs = boneIDs;
 
         // get both name maps
-        var targetBoneNames = options.rigNode.getSkeletonNode().getBoneNamesMap();
-        var sourceBoneNames = solverOptions.sourceRigNode.getSkeletonNode().getBoneNamesMap();
+        var tgtBoneNames = options.rigNode.getSkeletonNode().getBoneNamesMap();
+        var srcBoneNames = solverOptions.srcRigNode.getSkeletonNode().getBoneNamesMap();
 
         // ensure that all bones exist
         for (var boneName in solverOptions.boneMapping) {
-          if (targetBoneNames[boneName] == undefined)
-            throw ('Bone "' + boneName + '" does not exist on target rigNode.')
-          if (sourceBoneNames[solverOptions.boneMapping[boneName]] == undefined)
-            throw ('Bone "' + solverOptions.boneMapping[boneName] + '" does not exist on source rigNode.')
+          if (tgtBoneNames[boneName] == undefined)
+            throw ('Bone "' + boneName + '" does not exist on tgt rigNode.')
+          if (srcBoneNames[solverOptions.boneMapping[boneName]] == undefined)
+            throw ('Bone "' + solverOptions.boneMapping[boneName] + '" does not exist on src rigNode.')
         }
 
         // now remap the bones
         var bones = newOptions.bones;
         newOptions.bones = {};
-        newOptions.invBoneIDs = {};
         for (var boneGroup in bones) {
           if (bones[boneGroup].constructor.name === 'Array') {
             newOptions.bones[boneGroup] = [];
-            newOptions.invBoneIDs[boneGroup] = [];
+            newOptions.bones['inv'+boneGroup] = [];
             for(var i=0;i<bones[boneGroup].length;i++){
               if(solverOptions.boneMapping[bones[boneGroup][i]] == undefined)
                 continue;
               newOptions.bones[boneGroup].push(solverOptions.boneMapping[bones[boneGroup][i]]);
-              newOptions.invBoneIDs[boneGroup].push(sourceBoneNames[bones[boneGroup][i]]);
+              newOptions.bones['inv'+boneGroup].push(bones[boneGroup][i]);
             }
           }else{
             if(solverOptions.boneMapping[bones[boneGroup]] == undefined)
               continue;
             newOptions.bones[boneGroup] = solverOptions.boneMapping[bones[boneGroup]];
-            newOptions.invBoneIDs[boneGroup].push(sourceBoneNames[bones[boneGroup][i]]);
+            newOptions.bones['inv'+boneGroup] = bones[boneGroup][i];
           }
         }
         
@@ -152,7 +161,7 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('CharacterSolver',
     var name2id = {};
     var boneNames = [];
     if(options.inverse)
-      boneNames = options.sourceRigNode.getSkeletonNode().getBoneNames();
+      boneNames = options.srcRigNode.getSkeletonNode().getBoneNames();
     else
       boneNames = options.rigNode.getSkeletonNode().getBoneNames();
     for (var i = 0; i < boneNames.length; i++) {
@@ -198,6 +207,10 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('FKHierarchySolver',
     var solver,
     parameterBinding,
     bindToRig;
+
+    scene.assignDefaults(options, {
+      reprojectInverse: true
+    });
 
     // ensure to have a full set
     if (options.rigNode && !options.bones) {
@@ -253,21 +266,10 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('FKHierarchySolver',
       
       }else{
         
-        constantsNode.pub.addMember(name + 'invBoneIndices', 'Integer[]', boneIndices);
-
-        // we need to compute an offset for each bone
-        var invBoneIndices = options.invBoneIDs.bones;
-        var offsets = [];
-        for(var i=0;i<boneIndices.length;i++){
-          var bone = bones[boneIndices];
-          if(bone.parent == -1){
-            offset.push(FABRIC.RT.xfo());
-            continue;
-          }
-          
-          // compute the local offset of both rigs
-        }
-      
+        constantsNode.pub.addMember(name + 'invSrcBoneIndices', 'Integer[]', boneIndices);
+        constantsNode.pub.addMember(name + 'invTgtBoneIndices', 'Integer[]', solver.getInvBoneIDs().bones);
+        constantsNode.pub.addMember(name + 'invReproject', 'Boolean', !(!options.reprojectInverse));
+        
         // insert at the previous to last position to ensure that we keep the last operator
         var opBindings = variablesNode.getDGNode().bindings;
         opBindings.append(scene.constructOperator({
@@ -275,9 +277,12 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('FKHierarchySolver',
               srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/solveFKHierarchy.kl',
               entryFunctionName: 'solveInvFKHierarchy',
               parameterBinding: solver.setParameterBinding([
-                'invrig.pose',
-                'invskeleton.bones',
-                'constants.' + name + 'invBoneIndices',
+                'srcrig.pose',
+                'srcskeleton.bones',
+                'skeleton.bones',
+                'constants.' + name + 'invSrcBoneIndices',
+                'constants.' + name + 'invTgtBoneIndices',
+                'constants.' + name + 'invReproject',
                 'self.' + options.localxfoMemberName
               ])
           }));
@@ -358,8 +363,8 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('GlobalSolver',
               srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/solveFKHierarchy.kl',
               entryFunctionName: 'solveInvGlobalPose',
               parameterBinding: solver.setParameterBinding([
-                'invrig.pose',
-                'invskeleton.bones',
+                'srcrig.pose',
+                'srcskeleton.bones',
                 'constants.' + name + 'invBoneIndices',
                 'self.' + options.globalxfoMemberName
               ])
@@ -631,6 +636,7 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('IK2BoneSolver',
         constantsNode.pub.addMember(name + 'boneB', 'Integer', boneIDs.boneB);
         constantsNode.pub.addMember(name + 'targetParent', 'Integer', boneIDs.targetParent);
         constantsNode.pub.addMember(name + 'upvectorParent', 'Integer', boneIDs.upvectorParent);
+        constantsNode.pub.addMember(name + 'flipUpvector', 'Boolean', !(!options.flipUpvector));
   
         variablesNode.pub.addMember(name + 'local', 'Xfo', localXfo);
         variablesNode.pub.addMember(name + 'target', 'Xfo', targetXfo);
@@ -654,6 +660,7 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('IK2BoneSolver',
             'constants.' + name + 'boneB',
             'constants.' + name + 'targetParent',
             'constants.' + name + 'upvectorParent',
+            'constants.' + name + 'flipUpvector',
   
             'variables.' + name + 'local',
             'variables.' + name + 'target',
@@ -682,10 +689,12 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('IK2BoneSolver',
         }
       }else{
 
-        constantsNode.pub.addMember(name + 'invboneA', 'Integer', boneIDs.boneA);
-        constantsNode.pub.addMember(name + 'invboneB', 'Integer', boneIDs.boneB);
-        constantsNode.pub.addMember(name + 'invtargetParent', 'Integer', boneIDs.targetParent);
-        constantsNode.pub.addMember(name + 'invupvectorParent', 'Integer', boneIDs.upvectorParent);
+        constantsNode.pub.addMember(name + 'srcBoneA', 'Integer', boneIDs.boneA);
+        constantsNode.pub.addMember(name + 'srcBoneB', 'Integer', boneIDs.boneB);
+        constantsNode.pub.addMember(name + 'tgtBoneA', 'Integer', solver.getInvBoneIDs().boneA);
+        constantsNode.pub.addMember(name + 'tgtBoneB', 'Integer', solver.getInvBoneIDs().boneB);
+        constantsNode.pub.addMember(name + 'srcTargetParent', 'Integer', boneIDs.targetParent);
+        constantsNode.pub.addMember(name + 'srcUpvectorParent', 'Integer', boneIDs.upvectorParent);
         
         var opBindings = variablesNode.getDGNode().bindings;
         opBindings.append(scene.constructOperator({
@@ -693,12 +702,15 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('IK2BoneSolver',
           srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/solveIK2Bone.kl',
           entryFunctionName: 'solveInvIK2Bone',
           parameterBinding: solver.setParameterBinding([
-            'invrig.pose',
-            'invskeleton.bones',
-            'constants.' + name + 'invboneA',
-            'constants.' + name + 'invboneB',
-            'constants.' + name + 'invtargetParent',
-            'constants.' + name + 'invupvectorParent',
+            'srcrig.pose',
+            'srcskeleton.bones',
+            'skeleton.bones',
+            'constants.' + name + 'srcBoneA',
+            'constants.' + name + 'srcBoneB',
+            'constants.' + name + 'tgtBoneA',
+            'constants.' + name + 'tgtBoneB',
+            'constants.' + name + 'srcTargetParent',
+            'constants.' + name + 'srcUpvectorParent',
   
             'self.' + name + 'local',
             'self.' + name + 'target',
@@ -883,8 +895,11 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('SpineSolver',
       }else{
         
         // we will have different ids here
-        constantsNode.pub.addMember(name + 'invStart', 'Integer', boneIDs.vertebra[0]);
-        constantsNode.pub.addMember(name + 'invEnd', 'Integer', boneIDs.end);
+        var tgtBoneIDs = solver.getInvBoneIDs();
+        constantsNode.pub.addMember(name + 'srcStart', 'Integer', boneIDs.vertebra[0]);
+        constantsNode.pub.addMember(name + 'srcEnd', 'Integer', boneIDs.end);
+        constantsNode.pub.addMember(name + 'tgtStart', 'Integer', tgtBoneIDs.vertebra[0]);
+        constantsNode.pub.addMember(name + 'tgtEnd', 'Integer', tgtBoneIDs.end);
 
         // inverse computation step
         var opBindings = variablesNode.getDGNode().bindings;
@@ -893,10 +908,13 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('SpineSolver',
           srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/solveSpine.kl',
           entryFunctionName: 'solveInvSpine',
           parameterBinding: solver.setParameterBinding([
-            'invrig.pose',
-            'invskeleton.bones',
-            'constants.' + name + 'invStart',
-            'constants.' + name + 'invEnd',
+            'srcrig.pose',
+            'srcskeleton.bones',
+            'skeleton.bones',
+            'constants.' + name + 'srcStart',
+            'constants.' + name + 'srcEnd',
+            'constants.' + name + 'tgtStart',
+            'constants.' + name + 'tgtEnd',
             'self.' + name + 'startlocalXfo',
             'self.' + name + 'endlocalXfo'
           ])

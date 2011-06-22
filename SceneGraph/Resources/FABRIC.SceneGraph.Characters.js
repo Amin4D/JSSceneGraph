@@ -473,27 +473,28 @@ FABRIC.SceneGraph.registerNodeType('CharacterRig',
     };
     characterRigNode.pub.applyInverseSolvers = function(solverOptions) {
       solverOptions = scene.assignDefaults(solverOptions, {
-        sourceRigNode: undefined,
+        srcRigNode: undefined,
         boneMapping: undefined
       });
 
-      // check if we have a sourceRigNode
-      if (!solverOptions.sourceRigNode) {
-        throw ('You need to specify a valid sourceRigNode!');
+      // check if we have a srcRigNode
+      if (!solverOptions.srcRigNode) {
+        throw ('You need to specify a valid srcRigNode!');
       }
       
       // also create a dependency on the variables node to the rig and skeleton
-      var sourceRig = scene.getPrivateInterface(solverOptions.sourceRigNode);
-      var sourceSkeleton = scene.getPrivateInterface(solverOptions.sourceRigNode.getSkeletonNode());
-      variablesNode.getDGNode().addDependency(sourceRig.getDGNode(),'invrig');
-      variablesNode.getDGNode().addDependency(sourceSkeleton.getDGNode(),'invskeleton');
+      var srcRig = scene.getPrivateInterface(solverOptions.srcRigNode);
+      var srcSkeleton = scene.getPrivateInterface(solverOptions.srcRigNode.getSkeletonNode());
+      variablesNode.getDGNode().addDependency(srcRig.getDGNode(),'srcrig');
+      variablesNode.getDGNode().addDependency(skeletonNode.getDGNode(),'skeleton');
+      variablesNode.getDGNode().addDependency(srcSkeleton.getDGNode(),'srcskeleton');
       variablesNode.getDGNode().addDependency(constantsNode.getDGNode(),'constants');
 
       // if we don't have a bonemapping,
       // we will assume that all bones exist
       if (!solverOptions.boneMapping) {
         solverOptions.boneMapping = {};
-        var boneNames = characterRigNode.pub.getSkeletonNode().getBoneNames();
+        var boneNames = skeletonNode.pub.getBoneNames();
         for (var i = 0; i < boneNames.length; i++) {
           solverOptions.boneMapping[boneNames[i]] = boneNames[i];
         }

@@ -52,6 +52,22 @@ operator viconOffsetPositions(
   }
 }
 
+operator viconProjectLength(
+  io Bone bones[],
+  io ViconBoneInfo infos[],
+  io Vec3 points[]
+) {
+  if (bones.size() == infos.size()) {
+
+    for (var Integer i = 0; i < bones.size(); i++) {
+      var Vec3 root = points[infos[i].root];
+      var Vec3 target = points[infos[i].target];
+      target -= root;
+      bones[i].length = target.norm();
+    }
+  }
+}
+
 operator viconProjectPose(
   io Xfo global[],
   io ViconBoneInfo infos[],

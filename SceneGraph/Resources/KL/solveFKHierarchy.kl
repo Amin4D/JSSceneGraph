@@ -49,17 +49,29 @@ operator solveFKHierarchy(
 }
 
 operator solveInvFKHierarchy(
-  io Xfo pose[],
-  io Bone bones[],
-  io Integer indices[],
+  io Xfo srcpose[],
+  io Bone srcbones[],
+  io Bone tgtbones[],
+  io Integer srcIndices[],
+  io Integer tgtIndices[],
+  io Boolean invReproject,
   io Xfo local[]
 ) {
-  for (var Integer i = 0; i < indices.size(); i++) {
-    if (bones[indices[i]].parent == - 1) {
-      local[i] = pose[indices[i]];
+  for (var Integer i = 0; i < srcIndices.size(); i++) {
+    var Bone srcBone = srcbones[srcIndices[i]];
+    var Bone tgtBone = tgtbones[tgtIndices[i]];
+    if (srcBone.parent == - 1) {
+      local[i] = srcpose[srcIndices[i]];
     }
     else {
-      local[i] = pose[bones[indices[i]].parent].invProject(pose[indices[i]]);
+      local[i] = srcpose[srcBone.parent].invProject(srcpose[srcIndices[i]]);
+    }
+    
+    // we need to compensate for hierarchical offsets
+    // when mapping from one skeleton to another
+    if(tgtBone.parent != -1 && invReproject){
+      var Xfo offset = srcBone.referenceLocalPose.invProject(tgtBone.referenceLocalPose);
+      local[i] = local[i].project(offset);
     }
   }
 }

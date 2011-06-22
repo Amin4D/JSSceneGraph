@@ -74,21 +74,35 @@ operator solveSpine(
 }
 
 operator solveInvSpine(
-  io Xfo pose[],
-  io Bone bones[],
+  io Xfo srcpose[],
+  io Bone srcbones[],
+  io Bone tgtbones[],
 
-  io Integer start,
-  io Integer end,
+  io Integer srcstart,
+  io Integer srcend,
+  io Integer tgtstart,
+  io Integer tgtend,
 
   io Xfo startlocalXfo,
   io Xfo endlocalXfo
 ) {
+  var Bone srcStartBone = srcbones[srcstart];
+  var Bone srcEndBone = srcbones[srcend];
+  var Bone tgtStartBone = tgtbones[tgtstart];
+  var Bone tgtEndBone = tgtbones[tgtend];
+  
   // basically we just copy the transforms out!
-  if(bones[start].parent != -1){
-    startlocalXfo = pose[bones[start].parent].invProject(pose[start]);
-    endlocalXfo = pose[bones[start].parent].invProject(pose[end]);
+  if(tgtStartBone.parent != -1){
+    startlocalXfo = srcpose[srcStartBone.parent].invProject(srcpose[srcstart]);
+    endlocalXfo = srcpose[srcStartBone.parent].invProject(srcpose[srcend]);
   }else{
-    startlocalXfo = pose[start];
-    endlocalXfo = pose[end];
+    startlocalXfo = srcpose[srcstart];
+    endlocalXfo = srcpose[srcend];
   }
+
+  // apply the differentiating offset between the two spines
+  var Xfo srcoffset = srcStartBone.referencePose.invProject(srcEndBone.referencePose);
+  var Xfo tgtoffset = tgtStartBone.referencePose.invProject(tgtEndBone.referencePose);
+  var Xfo offset = srcoffset.invProject(tgtoffset);
+  endlocalXfo = endlocalXfo.project(offset);
 }

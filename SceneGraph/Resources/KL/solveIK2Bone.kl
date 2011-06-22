@@ -10,6 +10,7 @@ operator solveIK2Bone(
   io Integer boneB,
   io Integer targetParent,
   io Integer upvectorParent,
+  io Boolean flipUpvector,
   io Xfo local,
   io Xfo target,
   io Xfo upvector
@@ -45,6 +46,8 @@ operator solveIK2Bone(
     
   // orient bones
   var Vec3 yAxis = upvectorPos - targetPos;
+  if(flipUpvector)
+    yAxis = yAxis.neg();
   pose[boneA].ori = directionToQuat(xAxis,yAxis);
   pose[boneB].tr = pose[boneA].tr + xAxis * bones[boneA].length;
   xAxis = targetPos - pose[boneB].tr;
@@ -52,24 +55,40 @@ operator solveIK2Bone(
 }
 
 operator solveInvIK2Bone(
-  io Xfo pose[],
-  io Bone bones[],
-  io Integer boneA,
-  io Integer boneB,
-  io Integer targetParent,
-  io Integer upvectorParent,
+  io Xfo srcpose[],
+  io Bone srcbones[],
+  io Bone tgtbones[],
+  io Integer srcBoneA,
+  io Integer srcBoneB,
+  io Integer tgtBoneA,
+  io Integer tgtBoneB,
+  io Integer tgtTargetParent,
+  io Integer tgtUpvectorParent,
   io Xfo local,
   io Xfo target,
   io Xfo upvector
 ) {
-  local = pose[bones[boneA].parent].invProject(pose[boneA]);
-  target = pose[boneB];
-  target.tr = target.transform(Vec3(bones[boneB].length, 0.0, 0.0));
-  upvector = pose[boneB];
-  upvector.tr = (target.tr + pose[boneA].tr) * 0.5;
-  upvector.tr = (pose[boneB].tr -  upvector.tr).unit() * bones[boneA].length + pose[boneB].tr;
+  var Bone srcA = srcbones[srcBoneA];
+  var Bone srcB = srcbones[srcBoneB];
+  
+  local = srcpose[srcBoneA];
+  if(srcA.parent != -1)
+    local = srcpose[srcA.parent].invProject(local);
+
+  // now also project this properly into the target    
+  target = srcpose[srcBoneB];
+  target.tr = target.transform(Vec3(srcB.length, 0.0, 0.0));
+  upvector = srcpose[srcBoneB];
+  
+  // let's compute the orthogonal centerpoint
+  var Vec3 adjacent = (target.tr - srcpose[srcBoneA].tr);
+  var Vec3 hypotenuse = (srcpose[srcBoneB].tr - srcpose[srcBoneA].tr);
+  var Scalar angle = adjacent.unit().angle(hypotenuse.unit());
+  var Scalar length = cos(angle) * hypotenuse.norm();
+  adjacent = adjacent.unit() * length + srcpose[srcBoneA].tr;
+  upvector.tr = (srcpose[srcBoneB].tr - adjacent) * 2.0 + srcpose[srcBoneB].tr;
   
   // project into parent spaces
-  target = pose[targetParent].invProject(target);
-  upvector = pose[upvectorParent].invProject(upvector);
+  target = srcpose[tgtTargetParent].invProject(target);
+  upvector = srcpose[tgtUpvectorParent].invProject(upvector);
 }

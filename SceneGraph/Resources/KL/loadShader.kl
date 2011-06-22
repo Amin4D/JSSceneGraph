@@ -18,13 +18,13 @@ function Integer fglCreateAndCompileShader(String shaderName, Integer type, Stri
   // Check the compile status
   var Integer compiled;
   glGetShaderiv(shaderID, GL_COMPILE_STATUS, compiled);
-
   if (!compiled)
     report(shaderName + ' : Shader compilation failed:');
 
   var Integer infoLen = 0;
   glGetShaderiv(shaderID, GL_INFO_LOG_LENGTH, infoLen);
-  if (infoLen > 0) {
+
+  if (infoLen > 1) {
     if (compiled) {
       report(shaderName + ' : Shader compilation succeeded with warnings:');
     }
@@ -85,7 +85,8 @@ function Integer fglCreateProgramFromShaders(
 
       var Integer infoLen = 0;
       glGetProgramiv(programID, GL_INFO_LOG_LENGTH, infoLen);
-      if (infoLen > 0) {
+
+      if (infoLen > 1) {
         if (linked) {
           report(shaderName + ' : Program linking succeeded, with warnings:');
         }

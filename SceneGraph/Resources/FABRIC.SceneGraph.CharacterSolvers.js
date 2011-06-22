@@ -108,28 +108,22 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('CharacterSolver',
         // now remap the bones
         var bones = newOptions.bones;
         newOptions.bones = {};
+        newOptions.invBoneIDs = {};
         for (var boneGroup in bones) {
           if (bones[boneGroup].constructor.name === 'Array') {
             newOptions.bones[boneGroup] = [];
+            newOptions.invBoneIDs[boneGroup] = [];
             for(var i=0;i<bones[boneGroup].length;i++){
-              if(typeof bones[boneGroup][i] == 'number') {
-                if(solverOptions.boneMapping[targetBoneNames[bones[boneGroup][i]]] == undefined)
-                  continue;
-                newOptions.bones[boneGroup].push(solverOptions.boneMapping[targetBoneNames[bones[boneGroup][i]]]);
-              }else{
-                if(solverOptions.boneMapping[bones[boneGroup][i]] == undefined)
-                  continue;
-                newOptions.bones[boneGroup].push(solverOptions.boneMapping[bones[boneGroup][i]]);
-              }
+              if(solverOptions.boneMapping[bones[boneGroup][i]] == undefined)
+                continue;
+              newOptions.bones[boneGroup].push(solverOptions.boneMapping[bones[boneGroup][i]]);
+              newOptions.invBoneIDs[boneGroup].push(sourceBoneNames[bones[boneGroup][i]]);
             }
-          }else if(typeof bones[boneGroup] == 'number') {
-            if(solverOptions.boneMapping[targetBoneNames[bones[boneGroup]]] == undefined)
-              continue;
-            newOptions.bones[boneGroup] = solverOptions.boneMapping[targetBoneNames[bones[boneGroup]]];
           }else{
             if(solverOptions.boneMapping[bones[boneGroup]] == undefined)
               continue;
             newOptions.bones[boneGroup] = solverOptions.boneMapping[bones[boneGroup]];
+            newOptions.invBoneIDs[boneGroup].push(sourceBoneNames[bones[boneGroup][i]]);
           }
         }
         
@@ -258,7 +252,21 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('FKHierarchySolver',
         opBindings.getLength() - 1);
       
       }else{
+        
         constantsNode.pub.addMember(name + 'invBoneIndices', 'Integer[]', boneIndices);
+
+        // we need to compute an offset for each bone
+        var invBoneIndices = options.invBoneIDs.bones;
+        var offsets = [];
+        for(var i=0;i<boneIndices.length;i++){
+          var bone = bones[boneIndices];
+          if(bone.parent == -1){
+            offset.push(FABRIC.RT.xfo());
+            continue;
+          }
+          
+          // compute the local offset of both rigs
+        }
       
         // insert at the previous to last position to ensure that we keep the last operator
         var opBindings = variablesNode.getDGNode().bindings;

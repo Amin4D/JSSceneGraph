@@ -86,7 +86,7 @@ operator solveInvIK2Bone(
   var Scalar angle = adjacent.unit().angle(hypotenuse.unit());
   var Scalar length = cos(angle) * hypotenuse.norm();
   adjacent = adjacent.unit() * length + srcpose[srcBoneA].tr;
-  upvector.tr = (srcpose[srcBoneB].tr - adjacent) * 2.0 + srcpose[srcBoneB].tr;
+  upvector.tr = (srcpose[srcBoneB].tr - adjacent).unit() * srcA.length + srcpose[srcBoneB].tr;
   
   // project into parent spaces
   target = srcpose[tgtTargetParent].invProject(target);

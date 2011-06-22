@@ -38,22 +38,25 @@ function loadImageFromRawData(
   io Color imageHDR[],
   io RGBA imageLDR[]
 ) {
+  if(rawImageDataSize == 0)
+    return;
+  
   var Boolean haveHDR;
   switch (decoder) {
     case'png':
-        FabricPNGDecode(rawImageData, rawImageDataSize, imageWidth, imageHeight, imageLDR);
+      FabricPNGDecode(rawImageData, rawImageDataSize, imageWidth, imageHeight, imageLDR);
       haveHDR = false;
       break;
     case'tga':
-        FabricTGADecode(rawImageData, rawImageDataSize, imageWidth, imageHeight, imageLDR);
+      FabricTGADecode(rawImageData, rawImageDataSize, imageWidth, imageHeight, imageLDR);
       haveHDR = false;
       break;
     case'hdr':
-        FabricHDRDecode(rawImageData, rawImageDataSize, imageWidth, imageHeight, imageHDR);
+      FabricHDRDecode(rawImageData, rawImageDataSize, imageWidth, imageHeight, imageHDR);
       haveHDR = true;
       break;
     case'exr':
-        FabricHDRDecode(rawImageData, rawImageDataSize, imageWidth, imageHeight, imageHDR);
+      FabricHDRDecode(rawImageData, rawImageDataSize, imageWidth, imageHeight, imageHDR);
       haveHDR = true;
       break;
   }

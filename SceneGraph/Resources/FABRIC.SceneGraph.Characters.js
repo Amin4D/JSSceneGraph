@@ -584,7 +584,13 @@ FABRIC.SceneGraph.registerNodeType('GlobalCharacterRig',
     });
 
     var globalCharacterRigNode = scene.constructNode('CharacterRig', options);
-    globalCharacterRigNode.pub.addSolver('solveGlobalPose', 'ReferencePoseSolver');
+    globalCharacterRigNode.pub.addSolver('globalSolver', 'GlobalSolver');
+    
+    // extend the public interface
+    globalCharacterRigNode.pub.getGlobalMemberName = function(){
+      return "globalSolverglobalXfos";
+    };
+    
     return globalCharacterRigNode;
 });
 

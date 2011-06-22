@@ -281,7 +281,7 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('FKHierarchySolver',
     return solver;
 });
 
-FABRIC.SceneGraph.CharacterSolvers.registerSolver('ReferencePoseSolver',
+FABRIC.SceneGraph.CharacterSolvers.registerSolver('GlobalSolver',
   function(options, scene) {
 
     var solver,
@@ -301,26 +301,62 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('ReferencePoseSolver',
 
       var rigNode = options.rigNode,
       constantsNode = scene.getPrivateInterface(rigNode.getConstantsNode()),
+      variablesNode = scene.getPrivateInterface(rigNode.getVariablesNode()),
       skeletonNode = rigNode.getSkeletonNode(),
       bones = skeletonNode.getBones(),
-      name = options.name,
-      boneIndices = solver.getBoneIDs().bones;
+      referencePose = skeletonNode.getReferencePose(),
+      boneIDs = solver.getBoneIDs(),
+      size,
+      name = options.name;
 
-      constantsNode.pub.addMember(name + 'boneIndices', 'Integer[]', boneIndices);
-
-      // insert at the previous to last position to ensure that we keep the last operator
-      var opBindings = scene.getPrivateInterface(rigNode).getDGNode().bindings;
-      opBindings.insert(scene.constructOperator({
-            operatorName: 'solveReferencePose',
-            srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/solveReferencePose.kl',
-            entryFunctionName: 'solveReferencePose',
-            parameterBinding: solver.setParameterBinding([
-              'self.pose',
-              'skeleton.bones',
-              'constants.' + name + 'boneIndices'
-            ])
-        }),
-      opBindings.getLength() - 1);
+      var boneIndices = solver.getBoneIDs().bones;
+      
+      // determine if we need to create the
+      // positive or inverse operator!
+      if(!options.inverse){
+        constantsNode.pub.addMember(name + 'boneIndices', 'Integer[]', boneIndices);
+  
+        if (options.globalxfoMemberName == undefined) {
+          var globalXfos = [];
+          for (var i = 0; i < boneIndices.length; i++) {
+            globalXfos.push(referencePose[boneIndices[i]]);
+          }
+          variablesNode.pub.addMember(name + 'globalXfos', 'Xfo[]', globalXfos);
+          options.globalxfoMemberName = name + 'globalXfos';
+        }
+  
+        // insert at the previous to last position to ensure that we keep the last operator
+        var opBindings = scene.getPrivateInterface(rigNode).getDGNode().bindings;
+        opBindings.insert(scene.constructOperator({
+              operatorName: 'solveGlobalPose',
+              srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/solveFKHierarchy.kl',
+              entryFunctionName: 'solveGlobalPose',
+              parameterBinding: solver.setParameterBinding([
+                'self.pose',
+                'skeleton.bones',
+                'constants.' + name + 'boneIndices',
+                'variables.' + options.globalxfoMemberName
+              ])
+          }),
+        opBindings.getLength() - 1);
+      
+      }else{
+        constantsNode.pub.addMember(name + 'invBoneIndices', 'Integer[]', boneIndices);
+      
+        // insert at the previous to last position to ensure that we keep the last operator
+        var opBindings = variablesNode.getDGNode().bindings;
+        opBindings.append(scene.constructOperator({
+              operatorName: 'solveInvGlobalPose',
+              srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/solveFKHierarchy.kl',
+              entryFunctionName: 'solveInvGlobalPose',
+              parameterBinding: solver.setParameterBinding([
+                'invrig.pose',
+                'invskeleton.bones',
+                'constants.' + name + 'invBoneIndices',
+                'self.' + options.globalxfoMemberName
+              ])
+          }));
+      }
     };
 
     bindToRig();

@@ -221,7 +221,7 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('FKHierarchySolver',
       variablesNode = scene.getPrivateInterface(rigNode.getVariablesNode()),
       skeletonNode = rigNode.getSkeletonNode(),
       bones = skeletonNode.getBones(),
-      referenceLocalPose = skeletonNode.getReferencePose(),
+      referenceLocalPose = skeletonNode.getReferenceLocalPose(),
       boneIDs = solver.getBoneIDs(),
       size,
       name = options.name;

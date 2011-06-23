@@ -23,8 +23,14 @@ operator solveIK2Bone(
   pose[boneB] = bones[boneB].referenceLocalPose * pose[boneA];
 
   // compute the manipulator positions
-  var Vec3 targetPos = pose[targetParent].transform(target.tr);
-  var Vec3 upvectorPos = pose[upvectorParent].transform(upvector.tr);
+  var Vec3 targetPos = target.tr;
+  var Vec3 upvectorPos = upvector.tr;
+  if(targetParent != -1)
+    targetPos = pose[targetParent].transform(targetPos);
+  if(upvectorParent != -1)
+    upvectorPos = pose[upvectorParent].transform(upvectorPos);
+
+  report('< '+targetPos);
 
   // compute the sides of the triangles and their lengths
   var Vec3 sideA = upvectorPos - (pose[boneA].tr + targetPos) * 0.5;
@@ -89,6 +95,10 @@ operator solveInvIK2Bone(
   upvector.tr = (srcpose[srcBoneB].tr - adjacent).unit() * srcA.length + srcpose[srcBoneB].tr;
   
   // project into parent spaces
-  target = srcpose[tgtTargetParent].invProject(target);
-  upvector = srcpose[tgtUpvectorParent].invProject(upvector);
+  if(tgtTargetParent != -1)
+    target = srcpose[tgtTargetParent].invProject(target);
+  if(tgtUpvectorParent != -1)
+    upvector = srcpose[tgtUpvectorParent].invProject(upvector);
+    
+  report('> '+target.tr);
 }

@@ -129,6 +129,12 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('CharacterSolver',
               newOptions.bones['inv'+boneGroup].push(bones[boneGroup][i]);
             }
           }else{
+            // check if this is a invalid definition (id == -1)
+            if(bones[boneGroup] == -1){
+              newOptions.bones[boneGroup] = -1;
+              newOptions.bones['inv'+boneGroup] = -1;
+              continue;
+            }
             if(solverOptions.boneMapping[bones[boneGroup]] == undefined)
               continue;
             newOptions.bones[boneGroup] = solverOptions.boneMapping[bones[boneGroup]];
@@ -191,6 +197,10 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('CharacterSolver',
         if (!options.bones[name]) {
           throw ('"' + name + '" were not specified.');
           }
+        if(options.bones[name] == -1){
+          boneIDs[name] = -1;
+          continue;
+        }
         if (name2id[options.bones[name]] == undefined) {
           throw ('Bone ' + options.bones[name] + ' is not part of the skeleton.');
           }
@@ -614,9 +624,12 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('IK2BoneSolver',
 
         // compute the target
         targetPos = referencePose[boneIDs.boneB].transform(new FABRIC.RT.Vec3(bones[boneIDs.boneB].length, 0, 0));
-        targetXfo = referencePose[boneIDs.targetParent].multiplyInv(FABRIC.RT.xfo({
+        targetXfo = FABRIC.RT.xfo({
           tr: targetPos
-        }));
+        });
+        if(boneIDs.targetParent != -1){
+          targetXfo = referencePose[boneIDs.targetParent].multiplyInv(targetXfo);
+        }
   
         // compute the upvector
         targetPos.subInPlace(referencePose[boneIDs.boneA].tr);
@@ -628,9 +641,12 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('IK2BoneSolver',
   
         height = referencePose[boneIDs.boneB].tr.subtract(center);
         upvectorPos = referencePose[boneIDs.boneB].tr.add(height).add(height);
-        upvector = referencePose[boneIDs.upvectorParent].multiplyInv(FABRIC.RT.xfo({
+        upvector = FABRIC.RT.xfo({
           tr: upvectorPos
-        }));
+        });
+        if(boneIDs.upvectorParent != -1){
+          upvector = referencePose[boneIDs.upvectorParent].multiplyInv(upvector);
+        }
   
         constantsNode.pub.addMember(name + 'boneA', 'Integer', boneIDs.boneA);
         constantsNode.pub.addMember(name + 'boneB', 'Integer', boneIDs.boneB);

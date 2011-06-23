@@ -130,17 +130,14 @@ FABRIC = (function() {
   var appendOnCreateContextCallback = function(callback) {
     onCreateContextCallbacks.push(callback);
   };
-
-  var loadResourceURL = function(url, mimeType) {
-    if (!url) {
-      throw 'missing URL';
-    }
-
+  
+  
+  var processURL = function(url) {
     // TEMP: This will be removed once we start hosting our IDE files.
     // Then projects can access these files via an absolute URL.
     // Until then we prefix with "FABRIC_ROOT", and generate a URL
     if (url.split('/')[0] === 'FABRIC_ROOT') {
-        // Remove the "FabricIDE"
+        // Remove the "FABRIC_ROOT"
       url = url.split('/').splice(1).join('/');
       var urlSections = document.location.href.split('/');
       do {
@@ -152,6 +149,15 @@ FABRIC = (function() {
       }
       url = urlSections.join('/') + '/' + url;
     }
+    return url;
+  };
+
+  var loadResourceURL = function(url, mimeType) {
+    if (!url) {
+      throw 'missing URL';
+    }
+
+    url = processURL(url);
 
     var result = null;
     var xhreq = new XMLHttpRequest();
@@ -196,6 +202,7 @@ FABRIC = (function() {
     createContext: createContext,
     getContextIDs: function() { return contextIDs; },
     appendOnCreateContextCallback: appendOnCreateContextCallback,
+    processURL: processURL,
     loadResourceURL: loadResourceURL,
     convertImageURLToDataURL: convertImageURLToDataURL
   };

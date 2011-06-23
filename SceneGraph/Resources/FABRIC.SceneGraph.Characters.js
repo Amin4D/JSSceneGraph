@@ -737,7 +737,7 @@ FABRIC.SceneGraph.registerNodeType('CharacterInstance',
       rigNode = scene.getPrivateInterface(node);
       characterInstanceNode.getRedrawEventHandler().addScope('rig', rigNode.getDGNode());
 
-      characterInstanceNode.getRedrawEventHandler().postDescendBindings.append(scene.constructOperator({
+      characterInstanceNode.getRedrawEventHandler().postDescendBindings.insert(scene.constructOperator({
         operatorName: 'drawCharacterInstance',
         srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/drawCharacterInstance.kl',
         preProcessorDefinitions: {
@@ -759,7 +759,7 @@ FABRIC.SceneGraph.registerNodeType('CharacterInstance',
           'instance.indicesBufferID',
           'instance.elementCount'
         ]
-      }));
+      }),0);
     };
     characterInstanceNode.pub.getRigNode = function() {
       return scene.getPublicInterface(rigNode);

@@ -64,9 +64,4 @@ operator drawCharacterInstance(
         break;
     }
   }
-
-  Data NULL;
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indicesBufferID);
-  glDrawElements(GL_TRIANGLES, indicesCount, GL_UNSIGNED_INT, NULL);
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }

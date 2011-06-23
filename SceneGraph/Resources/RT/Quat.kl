@@ -127,6 +127,23 @@ function Quat slerp(in Quat a, in Quat b, in Scalar t) {
   return r.unit();
 }
 
+// Note: a and b should be unit Quaternions
+function Quat nlerp(in Quat a, in Quat b, in Scalar t) {
+
+  var Quat q;
+  var Quat q1 = a;
+  var Quat q2 = b;
+  var Scalar angle = q1.dot(q2);
+  if (angle < 0.0) {
+    q2.v = q2.v.neg();
+    q2.w *= - 1.0;
+  }
+  var Scalar p1 = 1.0 - t;
+  q.v = q1.v * p1 + q2.v * t;
+  q.w = (q1.w * p1) + (q2.w * t);
+  return q.unit();
+}
+
 function Quat axisAndAngleToQuat(in Vec3 axis, in Scalar angle) {
   var Scalar halfAngle = angle / 2.0;
   return Quat(cos(halfAngle), sin(halfAngle) * axis.unit());

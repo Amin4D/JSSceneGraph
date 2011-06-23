@@ -11,15 +11,18 @@ operator solveIK2Bone(
   io Integer targetParent,
   io Integer upvectorParent,
   io Boolean flipUpvector,
+  io Boolean globalRoot,
   io Xfo local,
   io Xfo target,
-  io Xfo upvector
+  io Xfo upvector,
+  io Xfo root
 ) {
 
-  if (bones[boneA].parent != - 1) {
+  if(globalRoot){
+    pose[boneA] = root;
+  }else if (bones[boneA].parent != - 1) {
     pose[boneA] = local * pose[bones[boneA].parent];
   }
-
   pose[boneB] = bones[boneB].referenceLocalPose * pose[boneA];
 
   // compute the manipulator positions
@@ -29,8 +32,6 @@ operator solveIK2Bone(
     targetPos = pose[targetParent].transform(targetPos);
   if(upvectorParent != -1)
     upvectorPos = pose[upvectorParent].transform(upvectorPos);
-
-  report('< '+targetPos);
 
   // compute the sides of the triangles and their lengths
   var Vec3 sideA = upvectorPos - (pose[boneA].tr + targetPos) * 0.5;
@@ -72,7 +73,8 @@ operator solveInvIK2Bone(
   io Integer tgtUpvectorParent,
   io Xfo local,
   io Xfo target,
-  io Xfo upvector
+  io Xfo upvector,
+  io Xfo root
 ) {
   var Bone srcA = srcbones[srcBoneA];
   var Bone srcB = srcbones[srcBoneB];
@@ -93,6 +95,7 @@ operator solveInvIK2Bone(
   var Scalar length = cos(angle) * hypotenuse.norm();
   adjacent = adjacent.unit() * length + srcpose[srcBoneA].tr;
   upvector.tr = (srcpose[srcBoneB].tr - adjacent).unit() * srcA.length + srcpose[srcBoneB].tr;
+  upvector.tr += (target.tr - srcpose[srcBoneA].tr) * 0.25;
   
   // project into parent spaces
   if(tgtTargetParent != -1)
@@ -100,5 +103,6 @@ operator solveInvIK2Bone(
   if(tgtUpvectorParent != -1)
     upvector = srcpose[tgtUpvectorParent].invProject(upvector);
     
-  report('> '+target.tr);
+  // store also the root of the chain
+  root = srcpose[srcBoneA];
 }

@@ -18,13 +18,19 @@ operator solveBlendBones(
     report('Error: blendBones count does not match blendWeights count');
     return;
   }
-
+  
   Xfo baseXfo = pose[base];
   Xfo endXfo = pose[end];
+  Xfo bone;
 
   for (var Integer i = 0; i < blendBones.size(); i++) {
-    pose[blendBones[i]].tr = baseXfo.transformVector(bones[blendBones[i]].referenceLocalPose.tr);
-    pose[blendBones[i]].ori = slerp(baseXfo.ori, endXfo.ori, blendWeights[i]);
+    if(bones[blendBones[i]].parent == -1)
+      bone = bones[blendBones[i]].referencePose;
+    else
+      bone = pose[bones[blendBones[i]].parent].project(bones[blendBones[i]].referenceLocalPose);
+
+    bone.ori = nlerp(baseXfo.ori, endXfo.ori, blendWeights[i]);
+    pose[blendBones[i]] = bone.project(blendBoneOffsets[i]);
   }
 }
 
@@ -33,6 +39,7 @@ operator solveTwistBones(
   io Bone bones[],
   io Integer base,
   io Integer end,
+  io Quat endOffset,
   io Integer twistBones[],
   io Scalar twistWeights[]
 ) {
@@ -44,13 +51,17 @@ operator solveTwistBones(
 
   Xfo baseXfo = pose[base];
   Xfo endXfo = pose[end];
+  endXfo.ori = endOffset * endXfo.ori;
 
   Vec3 baseVec = (endXfo.tr - baseXfo.tr).unit();
   Vec3 endVec = endXfo.ori.getXaxis();
   endXfo.ori = makeQuatFrom2Vectors(endVec, baseVec) * endXfo.ori;
 
   for (var Integer i = 0; i < twistBones.size(); i++) {
-    pose[twistBones[i]].tr = baseXfo.transformVector(bones[twistBones[i]].referenceLocalPose.tr);
-    pose[twistBones[i]].ori = slerp(baseXfo.ori, endXfo.ori, twistWeights[i]);
+    if(bones[twistBones[i]].parent == -1)
+      pose[twistBones[i]] = bones[twistBones[i]].referencePose;
+    else
+      pose[twistBones[i]] = pose[bones[twistBones[i]].parent].project(bones[twistBones[i]].referenceLocalPose);
+    pose[twistBones[i]].ori = nlerp(baseXfo.ori, endXfo.ori, twistWeights[i]);
   }
 }

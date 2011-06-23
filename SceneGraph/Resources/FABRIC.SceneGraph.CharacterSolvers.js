@@ -583,6 +583,8 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('RootBoneSolver',
 FABRIC.SceneGraph.CharacterSolvers.registerSolver('IK2BoneSolver',
   function(options, scene) {
     scene.assignDefaults(options, {
+      globalRoot: false,
+      flipUpvector: false
     });
     var solver,
     parameterBinding,
@@ -653,10 +655,12 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('IK2BoneSolver',
         constantsNode.pub.addMember(name + 'targetParent', 'Integer', boneIDs.targetParent);
         constantsNode.pub.addMember(name + 'upvectorParent', 'Integer', boneIDs.upvectorParent);
         constantsNode.pub.addMember(name + 'flipUpvector', 'Boolean', !(!options.flipUpvector));
+        constantsNode.pub.addMember(name + 'globalRoot', 'Boolean', !(!options.globalRoot));
   
         variablesNode.pub.addMember(name + 'local', 'Xfo', localXfo);
         variablesNode.pub.addMember(name + 'target', 'Xfo', targetXfo);
         variablesNode.pub.addMember(name + 'upvector', 'Xfo', upvector);
+        variablesNode.pub.addMember(name + 'root', 'Xfo', referencePose[bones[boneIDs.boneA]]);
 
         // mark members for debugging
         solver.setDebugMember(name + 'local',bones[boneIDs.boneA].parent);
@@ -677,10 +681,12 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('IK2BoneSolver',
             'constants.' + name + 'targetParent',
             'constants.' + name + 'upvectorParent',
             'constants.' + name + 'flipUpvector',
+            'constants.' + name + 'globalRoot',
   
             'variables.' + name + 'local',
             'variables.' + name + 'target',
             'variables.' + name + 'upvector',
+            'variables.' + name + 'root',
           ])
         }), opBindings.getLength() - 1);
   
@@ -731,6 +737,7 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('IK2BoneSolver',
             'self.' + name + 'local',
             'self.' + name + 'target',
             'self.' + name + 'upvector',
+            'self.' + name + 'root',
           ])
         }));
       }
@@ -950,6 +957,14 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('TwistBoneSolver',
     parameterBinding,
     bindToRig;
 
+    // this solver is not invertable
+    if(options.inverse)
+      return;
+
+    scene.assignDefaults(options, {
+      compensateEndOffset: true
+    });
+
     options.identifiers = ['start', 'end', ['twistBones']];
 
     solver = FABRIC.SceneGraph.CharacterSolvers.constructSolver('CharacterSolver', options, scene);
@@ -969,6 +984,12 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('TwistBoneSolver',
       // first, we will compute the local transform of the end inside the start's space
       var startXfo = referencePose[boneIDs.start];
       var endXfo = referencePose[boneIDs.end];
+      
+      // compute the offset
+      var endOffset = FABRIC.RT.quat();
+      if(options.compensateEndOffset){
+        endOffset = startXfo.projectInv(startXfo).ori;
+      }
 
       // check if we know the U values
       var uValues = options.uValues;
@@ -986,6 +1007,7 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('TwistBoneSolver',
       }
       constantsNode.pub.addMember(name + 'start', 'Integer', boneIDs.start);
       constantsNode.pub.addMember(name + 'end', 'Integer', boneIDs.end);
+      constantsNode.pub.addMember(name + 'endoffset', 'Quat', endOffset);
       constantsNode.pub.addMember(name + 'twistBones', 'Integer[]', boneIDs.twistBones);
       constantsNode.pub.addMember(name + 'uvalues', 'Scalar[]', uValues);
 
@@ -1000,6 +1022,7 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('TwistBoneSolver',
           'skeleton.bones',
           'constants.' + name + 'start',
           'constants.' + name + 'end',
+          'constants.' + name + 'endoffset',
           'constants.' + name + 'twistBones',
           'constants.' + name + 'uvalues'
         ]
@@ -1017,6 +1040,10 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('BlendBoneSolver',
     var solver,
     parameterBinding,
     bindToRig;
+    
+    // this solver is not invertable
+    if(options.inverse)
+      return;
 
     options.identifiers = ['start', 'end', ['blendBones']];
 
@@ -1047,10 +1074,11 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('BlendBoneSolver',
 
       var blendBoneOffsets = [];
       for (var i = 0; i < boneIDs.blendBones.length; i++) {
-        var blendedXfo = startXfo.clone();
-        blendedXfo.ori = FABRIC.RT.Quat.makeSlerp(startXfo.ori, startXfo.ori, options.blendWeights[i]);
-        blendBoneOffsets.push(startXfo.projectInv(blendedXfo));
+        var blendedXfo = referencePose[boneIDs.blendBones[i]].clone();
+        blendedXfo.ori = FABRIC.RT.Quat.makeNlerp(startXfo.ori, endXfo.ori, options.blendWeights[i]);
+        blendBoneOffsets.push(blendedXfo.projectInv(referencePose[boneIDs.blendBones[i]]));
       }
+      
       constantsNode.pub.addMember(name + 'start', 'Integer', boneIDs.start);
       constantsNode.pub.addMember(name + 'end', 'Integer', boneIDs.end);
       constantsNode.pub.addMember(name + 'blendBones', 'Integer[]', boneIDs.blendBones);
@@ -1090,6 +1118,10 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('FishingRodSolver',
     var solver,
     parameterBinding,
     bindToRig;
+
+    // this solver is not invertable
+    if(options.inverse)
+      return;
 
     options.identifiers = ['rod'];
 

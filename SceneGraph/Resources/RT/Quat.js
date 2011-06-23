@@ -118,7 +118,7 @@ FABRIC.RT.Quat.makeNlerp = function(q1, q2, t) {
     q2.w *= - 1.0;
   }
   var p1 = 1.0 - t;
-  q.v = q1.v.multiply(p1) + q2.v.multiply(t);
+  q.v = q1.v.multiply(p1).add(q2.v.multiply(t));
   q.w = (q1.w * p1) + (q2.w * t);
   q.normalize();
   return q;

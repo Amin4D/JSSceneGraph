@@ -753,7 +753,8 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('SpineSolver',
       createBaseManipulators: true,
       manipulatorSize: undefined,
       startTangent: 0.3,
-      endTangent: 0.3
+      endTangent: 0.3,
+      globalStart: false
     });
 
     var solver,
@@ -780,11 +781,17 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('SpineSolver',
       if(!options.inverse){
 
         // first, we will compute the local transform of the end inside the start's space
+        var startlocalXfo,endlocalXfo;
         var rootXfo = referencePose[skeletonNode.getParentId(baseVertebreIndex)];
         var startXfo = referencePose[baseVertebreIndex];
-        var startlocalXfo = rootXfo ? rootXfo.projectInv(startXfo) : startXfo;
         var endXfo = referencePose[boneIDs.end];
-        var endlocalXfo = rootXfo ? rootXfo.projectInv(endXfo) : startXfo.projectInv(endXfo);
+        if(options.globalStart){
+          startlocalXfo = startXfo;
+          endlocalXfo = startXfo.projectInv(endXfo);
+        }else{
+          startlocalXfo = rootXfo ? rootXfo.projectInv(startXfo) : startXfo;
+          endlocalXfo = rootXfo ? rootXfo.projectInv(endXfo) : startXfo.projectInv(endXfo);
+        }
 
         // check if we know the U values
         var uValues = [0];
@@ -805,6 +812,7 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('SpineSolver',
         constantsNode.pub.addMember(name + 'uvalues', 'Scalar[]', uValues);
         constantsNode.pub.addMember(name + 'startTangent', 'Scalar', options.startTangent);
         constantsNode.pub.addMember(name + 'endTangent', 'Scalar', options.endTangent);
+        constantsNode.pub.addMember(name + 'globalStart', 'Boolean', options.globalStart);
   
         variablesNode.pub.addMember(name + 'startlocalXfo', 'Xfo', startlocalXfo);
         variablesNode.pub.addMember(name + 'endlocalXfo', 'Xfo', endlocalXfo);
@@ -828,6 +836,7 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('SpineSolver',
             'constants.' + name + 'uvalues',
             'constants.' + name + 'startTangent',
             'constants.' + name + 'endTangent',
+            'constants.' + name + 'globalStart',
   
             'variables.' + name + 'startlocalXfo',
             'variables.' + name + 'endlocalXfo'
@@ -938,6 +947,7 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('SpineSolver',
             'constants.' + name + 'srcEnd',
             'constants.' + name + 'tgtStart',
             'constants.' + name + 'tgtEnd',
+            'constants.' + name + 'globalStart',
             'self.' + name + 'startlocalXfo',
             'self.' + name + 'endlocalXfo'
           ])

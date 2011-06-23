@@ -817,10 +817,6 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('SpineSolver',
         variablesNode.pub.addMember(name + 'startlocalXfo', 'Xfo', startlocalXfo);
         variablesNode.pub.addMember(name + 'endlocalXfo', 'Xfo', endlocalXfo);
         
-        // mark members for debugging
-        solver.setDebugMember(name + 'startlocalXfo',skeletonNode.getParentId(baseVertebreIndex));
-        solver.setDebugMember(name + 'endlocalXfo',skeletonNode.getParentId(baseVertebreIndex));
-
         // insert at the previous to last position to ensure that we keep the last operator
         var opBindings = rigNode.getDGNode().bindings;
         opBindings.insert(scene.constructOperator({

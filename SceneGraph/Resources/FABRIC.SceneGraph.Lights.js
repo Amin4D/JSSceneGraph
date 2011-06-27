@@ -35,7 +35,7 @@ FABRIC.SceneGraph.registerNodeType('Light',
     var redrawEventHandler;
     var dgnode = lightNode.getDGNode();
     dgnode.addMember('type', 'Integer', options.lightType);
-    dgnode.addMember('lightMat44', 'Mat44');
+    dgnode.addMember('cameraMat44', 'Mat44');
     dgnode.addMember('color', 'Color', options.color);
 
     lightNode.getRedrawEventHandler = function () {
@@ -62,7 +62,7 @@ FABRIC.SceneGraph.registerNodeType('Light',
         'light.type',
         'light.color',
         'camera.cameraMat44',
-        'light.lightMat44'
+        'light.cameraMat44'
       ]
       }));
 
@@ -98,7 +98,7 @@ FABRIC.SceneGraph.registerNodeType('Light',
         entryFunctionName: 'loadLightXfo',
         parameterBinding: [
           'transform.' + transformNodeMember,
-          'self.lightMat44'
+          'self.cameraMat44'
         ]
       }));
     }
@@ -215,7 +215,7 @@ FABRIC.SceneGraph.registerNodeType('DirectionalLight',
         parameterBinding: [
           'shader.uniformValues',
           'camera.cameraMat44',
-          'light.lightMat44'
+          'light.cameraMat44'
         ]
       }));
 
@@ -329,7 +329,7 @@ FABRIC.SceneGraph.registerNodeType('SpotLight',
             'shader.uniformValues',
             'light.coneAngle',
             'camera.cameraMat44',
-            'light.lightMat44'
+            'light.cameraMat44'
           ]
         }));
 
@@ -414,7 +414,7 @@ FABRIC.SceneGraph.registerNodeType('SpotLight',
             'self.nearDistance',
             'self.farDistance',
             'self.coneAngle',
-            'self.lightMat44',
+            'self.cameraMat44',
             'self.projectionMat44',
             'self.shadowMat44'
           ]

@@ -95,9 +95,10 @@ FABRIC.RT.Quat.makeFrom2Vectors = function (vec1, vec2, arbitraryIfAmbiguous) {
     // the vectors pointed in opposite directions OR they are not unit vectors.
     // creating the quaterion is ambiguous (many answers)
     if (arbitraryIfAmbiguous === true) {
-      //take any orthogonal vector as an intermediate step
+      //Take any orthogonal vector as an intermediate step
       var ortho = new FABRIC.RT.Vec3(vec1.y, vec1.z, vec1.x).cross(vec1).unit();
-      return FABRIC.RT.Quat.makeFrom2Vectors(vec1, ortho).multiply(FABRIC.RT.Quat.makeFrom2Vectors(ortho, vec2)); //Important: arbitraryIfAmbiguous !== true, else it could recurse infinitely if vec1 or vec2 was (0,0,0)
+      //Important: arbitraryIfAmbiguous !== true, else it could recurse infinitely if vec1 or vec2 was (0,0,0)
+      return FABRIC.RT.Quat.makeFrom2Vectors(vec1, ortho).multiply(FABRIC.RT.Quat.makeFrom2Vectors(ortho, vec2));
     }
     return q;
   }

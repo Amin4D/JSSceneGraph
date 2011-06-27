@@ -6,7 +6,8 @@
 FABRIC.SceneGraph.registerNodeType('CameraManipulator',
   function(options, scene) {
     scene.assignDefaults(options, {
-        trackRate: 0.1,
+        mouseWheelZoomRate: 0.3,
+        mouseDragZoomRate:0.001,
         orbitRate: 0.25,
         enabled: true
       });
@@ -25,11 +26,11 @@ FABRIC.SceneGraph.registerNodeType('CameraManipulator',
       enabled = false;
     }
 
-    var zoomFn = function(evt) {
+    var mouseWheelZoomFn = function(evt) {
       if(!enabled){
         return;
       }
-      var zoomDist = cameraNode.focalDistance * options.trackRate * evt.wheelDelta * -0.005;
+      var zoomDist = cameraNode.focalDistance * options.mouseWheelZoomRate * evt.wheelDelta * -0.001;
       var cameraXfo = cameraNode.getTransformNode().globalXfo;
       var cameraZoom = cameraXfo.ori.getZaxis().mulInPlace(zoomDist);
       cameraXfo.tr.addInPlace(cameraZoom);
@@ -40,7 +41,7 @@ FABRIC.SceneGraph.registerNodeType('CameraManipulator',
       evt.viewportNode.redraw();
       evt.stopPropagation();
     }
-    cameraNode.addEventListener('mousewheel', zoomFn, false);
+    cameraNode.addEventListener('mousewheel', mouseWheelZoomFn, false);
 
     var cameraPos, cameraTarget, cameraOffset, cameraXfo, upaxis, swaxis, focalDist;
     var mouseDownScreenPos, viewportNode;
@@ -137,10 +138,9 @@ FABRIC.SceneGraph.registerNodeType('CameraManipulator',
       if(!enabled){
         return;
       }
-      var mouseDragScreenPos = FABRIC.RT.vec2(evt.screenX, evt.screenY);
-      var mouseDragScreenDelta = mouseDragScreenPos.subtract(mouseDownScreenPos);
+      var mouseDragScreenDelta = evt.screenX - mouseDownScreenPos.x;
       cameraNode.position = cameraPos.add(cameraPos.subtract(cameraTarget)
-                                     .mulInPlace(mouseDragScreenDelta.length() * 0.0001));
+                                     .mulInPlace(mouseDragScreenDelta * options.mouseDragZoomRate));
       viewportNode.redraw();
       evt.stopPropagation();
     }

@@ -12,15 +12,17 @@ FABRIC.SceneGraph.Lights = {
   types: {
     'PointLight': 0,
     'DirectionalLight': 1,
-    'SpotLight': 1
+    'SpotLight': 2
   }
 };
 
 FABRIC.SceneGraph.registerNodeType('Light',
-  function(options, scene) {
+  function (options, scene) {
     scene.assignDefaults(options, {
-        color: FABRIC.RT.rgb(1.0, 1.0, 1.0)
-      });
+      color: FABRIC.RT.rgb(1.0, 1.0, 1.0),
+      transformNode: 'Transform',
+      transformNodeMember: 'globalXfo'
+    });
 
     if (options.lightType == undefined) {
       throw ': Lights must define a type';
@@ -28,71 +30,20 @@ FABRIC.SceneGraph.registerNodeType('Light',
 
     options.dgnodenames.push('DGNode');
     var lightNode = scene.constructNode('SceneGraphNode', options);
-
+    var transformNode;
+    var transformNodeMember;
     var redrawEventHandler;
     var dgnode = lightNode.getDGNode();
     dgnode.addMember('type', 'Integer', options.lightType);
+    dgnode.addMember('lightMat44', 'Mat44');
     dgnode.addMember('color', 'Color', options.color);
 
-    scene.addMemberInterface(lightNode, dgnode, 'color', true);
-
-    lightNode.getRedrawEventHandler = function() {
+    lightNode.getRedrawEventHandler = function () {
       if (redrawEventHandler) {
         return redrawEventHandler;
       }
       redrawEventHandler = scene.constructEventHandlerNode(options.name + '_render');
       redrawEventHandler.addScope('light', dgnode);
-
-      var operators = redrawEventHandler.preDescendBindings;
-
-      operators.append(scene.constructOperator({
-        operatorName: 'loadLight',
-        srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/lights.kl',
-        preProcessorDefinitions: {
-          LIGHTTYPE_ATTRIBUTE_ID: FABRIC.shaderAttributeTable['lightType'].id,
-          LIGHTCOLOR_ATTRIBUTE_ID: FABRIC.shaderAttributeTable['lightColor'].id,
-          LIGHTPOS_ATTRIBUTE_ID: FABRIC.shaderAttributeTable['lightPosition'].id,
-          LIGHTDIR_ATTRIBUTE_ID: FABRIC.shaderAttributeTable['lightDir'].id,
-          LIGHTCOSCUTOFF_ATTRIBUTE_ID: FABRIC.shaderAttributeTable['lightCosCutoff'].id,
-          LIGHTVIEWMATRIX_ATTRIBUTE_ID: FABRIC.shaderAttributeTable['lightShadowMapMatrix'].id
-        },
-        entryFunctionName: 'loadLight',
-        parameterBinding: [
-          'shader.uniformValues',
-          'light.type',
-          'light.color'
-        ]
-      }));
-
-      return redrawEventHandler;
-    };
-
-    // the operator stack functions enable the ligth properties to be animated.
-    scene.addMemberAndOperatorStackFunctions(lightNode, dgnode);
-
-    return lightNode;
-  });
-
-
-FABRIC.SceneGraph.registerNodeType('PointLight',
-  function(options, scene) {
-    scene.assignDefaults(options, {
-        position: FABRIC.RT.vec3(420.0, 1000.0, 600.0)
-      });
-    options.lightType = FABRIC.SceneGraph.Lights.types.PointLight;
-    var pointLightNode = scene.constructNode('Light', options);
-    var dgnode = pointLightNode.getDGNode();
-
-    dgnode.addMember('position', 'Vec3', options.position);
-    scene.addMemberInterface(pointLightNode, dgnode, 'position', true);
-
-    var redrawEventHandlerConfigured = false;
-    var parentGetRedrawEventHandler = pointLightNode.getRedrawEventHandler;
-    pointLightNode.getRedrawEventHandler = function() {
-      var redrawEventHandler = parentGetRedrawEventHandler();
-      if (redrawEventHandlerConfigured) {
-        return redrawEventHandler;
-      }
 
       redrawEventHandler.preDescendBindings.append(scene.constructOperator({
         operatorName: 'loadLight',
@@ -107,54 +58,139 @@ FABRIC.SceneGraph.registerNodeType('PointLight',
         },
         entryFunctionName: 'loadLight',
         parameterBinding: [
-          'shader.uniformValues',
-          'light.type',
-          'light.color'
-        ]
+        'shader.uniformValues',
+        'light.type',
+        'light.color',
+        'camera.cameraMat44',
+        'light.lightMat44'
+      ]
       }));
 
-      redrawEventHandlerConfigured = true;
       return redrawEventHandler;
     };
 
+    // public interface
+    // TODO: try to have base class with input transform (would share with cameraNode)
+    lightNode.pub.getTransformNode = function () {
+      return transformNode.pub;
+    };
+    lightNode.pub.setTransformNode = function (node, member) {
+      if (member) {
+        transformNodeMember = member;
+      }
+      else {
+        transformNodeMember = 'globalXfo';
+      }
+
+      node = scene.getPrivateInterface(node);
+      if (!(node.getDGNode() && node.getDGNode().getMembers()[transformNodeMember])) {
+        var message = 'Error in Transform node assignement on :' + node.name +
+          ' \n member not found :' + transformNodeMember + '\n\n';
+        message += 'Members:' + JSON.stringify(node.getDGNode().getMembers());
+        throw (message);
+      }
+      transformNode = node;
+      dgnode.addDependency(transformNode.getDGNode(), 'transform');
+
+      dgnode.bindings.append(scene.constructOperator({
+        operatorName: 'loadLightXfo',
+        srcCode: 'operator loadLightXfo(io Xfo xfo, io Mat44 mat44){ mat44 = xfo; }',
+        entryFunctionName: 'loadLightXfo',
+        parameterBinding: [
+          'transform.' + transformNodeMember,
+          'self.lightMat44'
+        ]
+      }));
+    }
+
+    scene.addMemberInterface(lightNode, dgnode, 'color', true);
+    scene.addMemberInterface(lightNode, dgnode, 'cameraMat44');
+
+    if (typeof options.transformNode == 'string') {
+      lightNode.pub.setTransformNode(scene.constructNode(options.transformNode, { hierarchical: false }).pub);
+    } else {
+      lightNode.pub.setTransformNode(options.transformNode, options.transformNodeMember);
+    }
+
+    // the operator stack functions enable the light properties to be animated.
+    scene.addMemberAndOperatorStackFunctions(lightNode, dgnode);
+
+    return lightNode;
+  });
+
+
+  FABRIC.SceneGraph.registerNodeType('PointLight',
+  function (options, scene) {
+
+    if (!options.transformNode) {
+      scene.assignDefaults(options, {
+        position: FABRIC.RT.vec3(420.0, 1000.0, 600.0),
+        displaySize: 5
+      });
+    }
+
+    options.lightType = FABRIC.SceneGraph.Lights.types.PointLight;
+    var pointLightNode = scene.constructNode('Light', options);
+    var dgnode = pointLightNode.getDGNode();
+
+    if (options.position) {
+      var xfo = pointLightNode.pub.getTransformNode().globalXfo;
+      xfo.tr = new FABRIC.RT.Vec3(options.position);
+      pointLightNode.pub.getTransformNode().globalXfo = xfo;
+    }
 
     if (options.display === true) {
-      // TODO: lights should probably be bound to transforms,
-      // rather than just having position values.
+      //Ideally we should merge all these line segments together... or have a meta-geometry generator in kl (able to create circles, lines, etc)?
+      var materialNode = scene.pub.constructNode('FlatMaterial', {
+          color: FABRIC.RT.color(0.2, 0.5, 0.8, 1.0)
+      });
+      var circleNode = scene.pub.constructNode('Circle', {
+          radius: options.displaySize/2
+      });
       scene.pub.constructNode('Instance', {
-        transformNode: scene.pub.createNode('Transform', {
-          hierarchical: false,
-          globalXfo: FABRIC.RT.xfo({ tr: options.position })
-        }),
-        geometryNode: scene.pub.createNode('Circle', {
-          radius: 7
-        }),
-        materialNode: scene.pub.createNode('FlatMaterial', {
-          color: FABRIC.RT.rgb(0.2, 0.5, 0.8)
-        })
+        transformNode: pointLightNode.pub.getTransformNode(),
+        geometryNode: circleNode,
+        materialNode: materialNode
       });
 
+      scene.pub.constructNode('Instance', {
+        transformNode: scene.pub.constructNode('Transform', {
+          hierarchical: true,
+          parentTransformNode: pointLightNode.pub.getTransformNode(),
+          localXfo: FABRIC.RT.xfo({ ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.Vec3.xAxis, 90) })
+        }),
+        geometryNode: circleNode,
+        materialNode: materialNode
+      });
+
+      scene.pub.constructNode('Instance', {
+        transformNode: scene.pub.constructNode('Transform', {
+          hierarchical: true,
+          parentTransformNode: pointLightNode.pub.getTransformNode(),
+          localXfo: FABRIC.RT.xfo({ ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.Vec3.zAxis, 90) })
+        }),
+        geometryNode: circleNode,
+        materialNode: materialNode
+      });
     }
 
     return pointLightNode;
   });
 
 FABRIC.SceneGraph.registerNodeType('DirectionalLight',
-  function(options, scene) {
-    scene.assignDefaults(options, {
-        position: FABRIC.RT.vec3(420.0, 1000.0, 600.0),
-        direction: FABRIC.RT.vec3(0.0, 0.737, 0.737)
+  function (options, scene) {
+
+    if (!options.transformNode) {
+      scene.assignDefaults(options, {
+        direction: FABRIC.RT.vec3(0.0, 0.737, 0.737),
+        position: FABRIC.RT.vec3(100.0, 100.0, 100.0),
+        displaySize: 5
       });
+    }
 
     options.lightType = FABRIC.SceneGraph.Lights.types.DirectionalLight;
     var directionalLightNode = scene.constructNode('Light', options);
     var dgnode = directionalLightNode.getDGNode();
-
-    dgnode.addMember('direction', 'Vec3', options.direction);
-    scene.addMemberInterface(directionalLightNode, dgnode, 'direction', true);
-
-    dgnode.addMember('position', 'Vec3', options.position);
-    scene.addMemberInterface(directionalLightNode, dgnode, 'direction', true);
 
     var redrawEventHandlerConfigured = false;
     var parentGetRedrawEventHandler = directionalLightNode.getRedrawEventHandler;
@@ -178,15 +214,65 @@ FABRIC.SceneGraph.registerNodeType('DirectionalLight',
         entryFunctionName: 'loadDirectionalLight',
         parameterBinding: [
           'shader.uniformValues',
-          'light.position',
-          'light.dir',
-          'camera.cameraMat44'
+          'camera.cameraMat44',
+          'light.lightMat44'
         ]
       }));
 
       redrawEventHandlerConfigured = true;
       return redrawEventHandler;
     };
+
+    if (options.position) {
+      //The position is not used for directionalLight's lighting, but might be used for displaying the light
+      var xfo = directionalLightNode.pub.getTransformNode().globalXfo;
+      xfo.tr = new FABRIC.RT.Vec3(options.position);
+      directionalLightNode.pub.getTransformNode().globalXfo = xfo;
+    }
+    if (options.direction) {
+      var xfo = directionalLightNode.pub.getTransformNode().globalXfo;
+      xfo.ori = FABRIC.RT.Quat.makeFrom2Vectors(new FABRIC.RT.Vec3(1.0, 0.0, 0.0), new FABRIC.RT.Vec3(options.direction).unit(), true);
+      directionalLightNode.pub.getTransformNode().globalXfo = xfo;
+    }
+
+    if (options.display === true) {
+      //Ideally we should merge all these line segments together... or have a meta-geometry generator in kl (able to create circles, lines, etc)?
+      var materialNode = scene.pub.constructNode('FlatMaterial', {
+          color: FABRIC.RT.color(0.2, 0.5, 0.8, 1.0)
+      });
+      var circleNode = scene.pub.constructNode('Circle', {
+          radius: options.displaySize/2
+      });
+      scene.pub.constructNode('Instance', {
+        transformNode: scene.pub.constructNode('Transform', {
+          hierarchical: true,
+          parentTransformNode: directionalLightNode.pub.getTransformNode(),
+          localXfo: FABRIC.RT.xfo({ ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.Vec3.zAxis, 90) })
+        }),
+        geometryNode: circleNode,
+        materialNode: materialNode
+      });
+
+      scene.pub.constructNode('Instance', {
+        transformNode: scene.pub.constructNode('Transform', {
+          hierarchical: true,
+          parentTransformNode: directionalLightNode.pub.getTransformNode(),
+          localXfo: FABRIC.RT.xfo({ ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.Vec3.zAxis, 90), tr: FABRIC.RT.vec3(options.displaySize, 0, 0) })
+        }),
+        geometryNode: circleNode,
+        materialNode: materialNode
+      });
+
+      scene.pub.constructNode('Instance', {
+        transformNode: scene.pub.constructNode('Transform', {
+          hierarchical: true,
+          parentTransformNode: directionalLightNode.pub.getTransformNode(),
+          localXfo: FABRIC.RT.xfo({ ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.Vec3.zAxis, 90), tr: FABRIC.RT.vec3(options.displaySize*0.8, 0, 0) })
+        }),
+        geometryNode: circleNode,
+        materialNode: materialNode
+      });
+    }
 
     return directionalLightNode;
   });
@@ -195,25 +281,25 @@ FABRIC.SceneGraph.registerNodeType('DirectionalLight',
 FABRIC.SceneGraph.registerNodeType('SpotLight',
   function(options, scene) {
     scene.assignDefaults(options, {
-        position: FABRIC.RT.vec3(100.0, 100.0, 100.0),
-        target: FABRIC.RT.vec3(0.0, 0.0, 0.0),
         coneAngle: 60 * FABRIC.RT.degToRad,
         nearDistance: 1,
         farDistance: 1000,
         color: FABRIC.RT.rgb(1.0, 1.0, 1.0),
         castShadows: true,
-        resolution: 1024
+        resolution: 1024,
+        displaySize: 50
       });
+
+      if (!options.transformNode) {
+        scene.assignDefaults(options, {
+          position: FABRIC.RT.vec3(100.0, 100.0, 100.0),
+          target: FABRIC.RT.vec3(0.0, 0.0, 0.0),
+        });
+      }
 
     options.lightType = FABRIC.SceneGraph.Lights.types.SpotLight;
     var spotLightNode = scene.constructNode('Light', options);
     var dgnode = spotLightNode.getDGNode();
-
-    dgnode.addMember('position', 'Vec3', options.position);
-    scene.addMemberInterface(spotLightNode, dgnode, 'position', true);
-
-    dgnode.addMember('target', 'Vec3', options.target);
-    scene.addMemberInterface(spotLightNode, dgnode, 'target', true);
 
     dgnode.addMember('coneAngle', 'Scalar', options.coneAngle);
     scene.addMemberInterface(spotLightNode, dgnode, 'coneAngle', true);
@@ -241,10 +327,9 @@ FABRIC.SceneGraph.registerNodeType('SpotLight',
           entryFunctionName: 'loadSpotLight',
           parameterBinding: [
             'shader.uniformValues',
-            'light.position',
-            'light.target',
             'light.coneAngle',
-            'camera.cameraMat44'
+            'camera.cameraMat44',
+            'light.lightMat44'
           ]
         }));
 
@@ -305,7 +390,6 @@ FABRIC.SceneGraph.registerNodeType('SpotLight',
 
       var shadowRenderEventHandler = scene.constructEventHandlerNode(options.name + '_renderDepthBuffer');
 
-      dgnode.addMember('cameraMat44', 'Mat44');
       // Projection Values
       dgnode.addMember('nearDistance', 'Scalar', options.nearDistance);
       dgnode.addMember('farDistance', 'Scalar', options.farDistance);
@@ -327,12 +411,10 @@ FABRIC.SceneGraph.registerNodeType('SpotLight',
           srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/shadowMaps.kl',
           entryFunctionName: 'calcLightProjectionMatricies',
           parameterBinding: [
-            'self.position',
-            'self.target',
             'self.nearDistance',
             'self.farDistance',
             'self.coneAngle',
-            'self.cameraMat44',
+            'self.lightMat44',
             'self.projectionMat44',
             'self.shadowMat44'
           ]
@@ -364,43 +446,49 @@ FABRIC.SceneGraph.registerNodeType('SpotLight',
         }));
 
       scene.registerShadowCastingLightSourceHandler(shadowRenderEventHandler);
-
     }
 
-    // the operator stack functions enable the ligth properties to be animated.
+    // the operator stack functions enable the light properties to be animated.
     scene.addMemberAndOperatorStackFunctions(spotLightNode, dgnode);
 
+    if (options.position) {
+      var xfo = spotLightNode.pub.getTransformNode().globalXfo;
+      xfo.tr = new FABRIC.RT.Vec3(options.position);
+      spotLightNode.pub.getTransformNode().globalXfo = xfo;
+    }
+    if (options.target) {
+      var xfo = spotLightNode.pub.getTransformNode().globalXfo;
+      xfo.ori = FABRIC.RT.Quat.makeFrom2Vectors(new FABRIC.RT.Vec3(1.0, 0.0, 0.0), new FABRIC.RT.Vec3(options.target).subtract(options.position).unit(), true);
+      spotLightNode.pub.getTransformNode().globalXfo = xfo;
+    }
 
     if (options.display === true) {
-      // TODO: lights should probably be bound to transforms,
-      // rather than just having position values.
       // tan(theta) = o/a
       // tan(theta)/a = o
-      var coneDist = options.position.dist(options.target);
-      var coneRadius = Math.tan(options.coneAngle * FABRIC.RT.degToRad * 0.5) * coneDist;
+      var coneDist = options.displaySize;
+      var coneRadius = Math.tan(options.coneAngle * 0.5) * coneDist;
       var lightMaterial = scene.pub.constructNode('FlatMaterial', { color: FABRIC.RT.rgb(1.0, 0.7, 0.4) });
       var crossGeometry = scene.pub.constructNode('Cross', { size: coneDist * 0.05 });
 
       scene.pub.constructNode('Instance', {
+        transformNode: spotLightNode.pub.getTransformNode(),
+        geometryNode: crossGeometry,
+        materialNode: lightMaterial
+      });
+      scene.pub.constructNode('Instance', {
         transformNode: scene.pub.constructNode('Transform', {
-          hierarchical: false,
-          globalXfo: FABRIC.RT.xfo({ tr: options.position })
+          hierarchical: true,
+          parentTransformNode: spotLightNode.pub.getTransformNode(),
+          localXfo: FABRIC.RT.xfo({ tr: FABRIC.RT.vec3(options.displaySize, 0, 0) })
         }),
         geometryNode: crossGeometry,
         materialNode: lightMaterial
       });
       scene.pub.constructNode('Instance', {
         transformNode: scene.pub.constructNode('Transform', {
-          hierarchical: false,
-          globalXfo: FABRIC.RT.xfo({ tr: options.target })
-        }),
-        geometryNode: crossGeometry,
-        materialNode: lightMaterial
-      });
-      scene.pub.constructNode('Instance', {
-        transformNode: scene.pub.constructNode('Transform', {
-          hierarchical: false,
-          globalXfo: FABRIC.RT.xfo({ tr: options.target })
+          hierarchical: true,
+          parentTransformNode: spotLightNode.pub.getTransformNode(),
+          localXfo: FABRIC.RT.xfo({ ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.Vec3.zAxis, 90), tr: FABRIC.RT.vec3(options.displaySize, 0, 0) })
         }),
         geometryNode: scene.pub.constructNode('Circle', {
           radius: coneRadius

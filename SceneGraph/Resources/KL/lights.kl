@@ -8,7 +8,9 @@
 operator loadLight(
   io ShaderValue uniformValues[],
   io Integer type,
-  io Color color
+  io Color color,
+  io Mat44 cameraMatrix,
+  io Mat44 lightMatrix
 ) {
   Size nbUniforms = uniformValues.size();
   for (Size i = 0; i < nbUniforms; i++) {
@@ -16,35 +18,19 @@ operator loadLight(
 
     switch (uniform.id) {
       case LIGHTTYPE_ATTRIBUTE_ID:
-          if (uniform.location != - 1)
+        if (uniform.location != - 1)
           glUniform1i(uniform.location, type);
         else
           report('spotLight: lightType Location uniform not defined');
         break;
       case LIGHTCOLOR_ATTRIBUTE_ID:
-          if (uniform.location != - 1)
+        if (uniform.location != - 1)
           glUniform4f(uniform.location, color.r, color.g, color.b, color.a);
         else
           report('spotLight: lightColor Location uniform not defined');
         break;
-    }
-  }
-}
-
-operator pointLight(
-  io ShaderValue uniformValues[],
-  io Integer type,
-  io Vec3 position,
-  io Color color,
-  io Mat44 cameraMatrix
-) {
-  Size nbUniforms = uniformValues.size();
-  for (Size i = 0; i < nbUniforms; i++) {
-    var ShaderValue uniform = uniformValues[i];
-
-    switch (uniform.id) {
       case LIGHTPOS_ATTRIBUTE_ID:
-          var Vec4 viewPos = Vec4(position.x, position.y, position.z, 1.0) * cameraMatrix;
+        var Vec4 viewPos = lightMatrix.row3 * cameraMatrix;
         if (uniform.location != - 1)
           glUniform4f(uniform.location, viewPos.x, viewPos.y, viewPos.z, viewPos.t);
         else
@@ -56,24 +42,17 @@ operator pointLight(
 
 operator loadDirectionalLight(
   io ShaderValue uniformValues[],
-  io Vec3 position,
-  io Vec3 direction,
-  io Mat44 cameraMatrix
+  io Mat44 cameraMatrix,
+  io Mat44 lightMatrix
 ) {
   Size nbUniforms = uniformValues.size();
   for (Size i = 0; i < nbUniforms; i++) {
     var ShaderValue uniform = uniformValues[i];
 
     switch (uniform.id) {
-      case LIGHTPOS_ATTRIBUTE_ID:
-          var Vec4 viewPos = Vec4(position.x, position.y, position.z, 1.0) * cameraMatrix;
-        if (uniform.location != - 1)
-          glUniform4f(uniform.location, viewPos.x, viewPos.y, viewPos.z, viewPos.t);
-        else
-          report('pointLight: lightPosition Location uniform not defined');
-        break;
       case LIGHTDIR_ATTRIBUTE_ID:
-          var Vec3 viewDir = cameraMatrix.upperLeft().transpose() * direction;
+        var Vec3 viewDir = Vec3(1.0, 0.0, 0.0) * lightMatrix.upperLeft() * cameraMatrix.upperLeft();
+		viewDir = viewDir.unit(); //lightMatrix might have scaling
         if (uniform.location != - 1)
           glUniform3f(uniform.location, viewDir.x, viewDir.y, viewDir.z);
         else
@@ -85,34 +64,26 @@ operator loadDirectionalLight(
 
 operator loadSpotLight(
   io ShaderValue uniformValues[],
-  io Vec3 position,
-  io Vec3 target,
   io Scalar coneAngle,
-  io Mat44 cameraMatrix
+  io Mat44 cameraMatrix,
+  io Mat44 lightMatrix
 ) {
   Size nbUniforms = uniformValues.size();
   for (Size i = 0; i < nbUniforms; i++) {
     var ShaderValue uniform = uniformValues[i];
 
     switch (uniform.id) {
-      case LIGHTPOS_ATTRIBUTE_ID:
-          Vec3 viewPos = position * cameraMatrix;
-        if (uniform.location != - 1)
-          glUniform4f(uniform.location, viewPos.x, viewPos.y, viewPos.z, 1.0);
-        else
-          report('pointLight: lightPosition Location uniform not defined');
-        break;
       case LIGHTDIR_ATTRIBUTE_ID:
-          Vec3 direction = target - position;
-        Vec3 viewDir = (cameraMatrix.upperLeft().transpose() * direction).unit();
+        var Vec3 viewDir = Vec3(1.0, 0.0, 0.0) * lightMatrix.upperLeft() * cameraMatrix.upperLeft();
+		viewDir = viewDir.unit(); //lightMatrix might have scaling
         if (uniform.location != - 1)
           glUniform3f(uniform.location, viewDir.x, viewDir.y, viewDir.z);
         else
           report('spotLight: lightDir Location uniform not defined');
         break;
       case LIGHTCOSCUTOFF_ATTRIBUTE_ID:
-          if (uniform.location != - 1)
-          glUniform1f(uniform.location, acos(coneAngle * 0.5));
+        if (uniform.location != - 1)
+          glUniform1f(uniform.location, cos(coneAngle * 0.5));
         else
           report('spotLight: lightCosCutoff Location uniform not defined');
         break;

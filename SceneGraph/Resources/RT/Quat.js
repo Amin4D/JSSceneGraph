@@ -88,12 +88,17 @@ FABRIC.RT.Quat.makeFromAxisAndAngle = function(vec, degrees) {
  * @param {object} vec2 A Vec3 object defining the target direction.
  * @return {object} The converted quaternion object.
  */
-FABRIC.RT.Quat.makeFrom2Vectors = function(vec1, vec2) {
+FABRIC.RT.Quat.makeFrom2Vectors = function (vec1, vec2, arbitraryIfAmbiguous) {
   var q = new FABRIC.RT.Quat();
   var val = vec1.dot(vec2) + 1;
-  if (val <= 0.001) {
-    // the vectors pointed in opposite directions.
-    // creating the quaterion is impossible
+  if (val <= 0.00001) {
+    // the vectors pointed in opposite directions OR they are not unit vectors.
+    // creating the quaterion is ambiguous (many answers)
+    if (arbitraryIfAmbiguous === true) {
+      //take any orthogonal vector as an intermediate step
+      var ortho = new FABRIC.RT.Vec3(vec1.y, vec1.z, vec1.x).cross(vec1).unit();
+      return FABRIC.RT.Quat.makeFrom2Vectors(vec1, ortho).multiply(FABRIC.RT.Quat.makeFrom2Vectors(ortho, vec2)); //Important: arbitraryIfAmbiguous !== true, else it could recurse infinitely if vec1 or vec2 was (0,0,0)
+    }
     return q;
   }
   val = Math.sqrt(val * 2);

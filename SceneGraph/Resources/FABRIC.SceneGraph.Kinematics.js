@@ -93,7 +93,7 @@ FABRIC.SceneGraph.registerNodeType('Transform',
         };
 
       if (options.parentTransformNode) {
-        transformNode.setParentNode(options.parentTransformNode);
+        transformNode.pub.setParentNode(options.parentTransformNode);
       }
     }else {
       transformNode.pub.__defineSetter__('globalXfo', function(val) {

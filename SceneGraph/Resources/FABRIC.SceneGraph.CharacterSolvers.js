@@ -36,7 +36,8 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('CharacterSolver',
       rigNode: undefined,
       createManipulators: true,
       inverse: false,
-      allowInverse: true
+      allowInverse: true,
+      disableZBuffer: false
     });
 
     if (!options.rigNode) {
@@ -473,7 +474,8 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('FKChainSolver',
             parentMemberIndex: (i > 0 ? i - 1 : bones[boneIDs.bones[i]].parent),
             childManipulator: (options.chainManipulators ? childManipulator : undefined),
             length: bones[boneIDs.bones[i]].length,
-            color: FABRIC.RT.rgb(0, 0, 1)
+            color: FABRIC.RT.rgb(0, 0, 1),
+            disableZBuffer: options.disableZBuffer
           });
 
           if (options.twistManipulators == true || options.twistManipulators[i] == true) {
@@ -489,7 +491,8 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('FKChainSolver',
               }),
               color: FABRIC.RT.rgb(0, .5, 0),
               radius: (options.twistManipulatorRadius ?
-                options.twistManipulatorRadius : bones[boneIDs.bones[i]].length * 0.25)
+                options.twistManipulatorRadius : bones[boneIDs.bones[i]].length * 0.25),
+              disableZBuffer: options.disableZBuffer
             });
           }
         }
@@ -552,7 +555,8 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('RootBoneSolver',
             bboxmin: FABRIC.RT.vec3(size * - 0.3, size * - 0.5, size * - 0.5),
             bboxmax: FABRIC.RT.vec3(size * 0.3, size * 0.5, size * 0.5)
           }),
-          color: FABRIC.RT.rgb(1, 0, 0)
+          color: FABRIC.RT.rgb(1, 0, 0),
+          disableZBuffer: options.disableZBuffer
         });
 
         solver.constructManipulator(name + 'Twist', 'RotationManipulator', {
@@ -562,7 +566,8 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('RootBoneSolver',
             ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(0, 0, 1), 90)
           }),
           color: FABRIC.RT.rgb(0, .5, 0),
-          radius: size
+          radius: size,
+          disableZBuffer: options.disableZBuffer
         });
 
         solver.constructManipulator(name + 'Alignment', 'BoneManipulator', {
@@ -570,7 +575,8 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('RootBoneSolver',
           parentMember: name + 'rootXfo',
           length: size * 1.5,
           boneVector: FABRIC.RT.vec3(1, 0, 0),
-          color: FABRIC.RT.rgb(0, 0, 1)
+          color: FABRIC.RT.rgb(0, 0, 1),
+          disableZBuffer: options.disableZBuffer
         });
       }
     }
@@ -698,7 +704,8 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('IK2BoneSolver',
             parentNode: rigNode.pub,
             parentMember: 'pose',
             parentMemberIndex: boneIDs['targetParent'],
-            color: options.color
+            color: options.color,
+            disableZBuffer: options.disableZBuffer
           });
           solver.constructManipulator(name + 'upvectorScreen', 'ScreenTranslationManipulator', {
             targetNode: variablesNode.pub,
@@ -706,7 +713,8 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('IK2BoneSolver',
             parentNode: rigNode.pub,
             parentMember: 'pose',
             parentMemberIndex: boneIDs['upvectorParent'],
-            color: options.color
+            color: options.color,
+            disableZBuffer: options.disableZBuffer
           });
         }
       }else{
@@ -854,7 +862,8 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('SpineSolver',
                 ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(0, 0, 1), 90)
               }),
               color: FABRIC.RT.rgb(0, .5, 0),
-              radius: size
+              radius: size,
+              disableZBuffer: options.disableZBuffer
             });
   
             solver.constructManipulator(name + 'startBoneRotation', 'BoneManipulator', {
@@ -865,7 +874,8 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('SpineSolver',
               parentMemberIndex: skeletonNode.getParentId(baseVertebreIndex),
               length: size * 1.5,
               boneVector: FABRIC.RT.vec3(1, 0, 0),
-              color: FABRIC.RT.rgb(0, 0, 1)
+              color: FABRIC.RT.rgb(0, 0, 1),
+              disableZBuffer: options.disableZBuffer
             });
   
             // add two translations for the start and end as well
@@ -879,7 +889,8 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('SpineSolver',
                 bboxmin: FABRIC.RT.vec3(size * - 0.3, size * - 0.5, size * - 0.5),
                 bboxmax: FABRIC.RT.vec3(size * 0.3, size * 0.5, size * 0.5)
               }),
-              color: FABRIC.RT.rgb(1, 0, 0)
+              color: FABRIC.RT.rgb(1, 0, 0),
+              disableZBuffer: options.disableZBuffer
             });
           }
 
@@ -893,7 +904,8 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('SpineSolver',
               ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(0, 0, 1), 90)
             }),
             color: FABRIC.RT.rgb(0, .5, 0),
-            radius: size
+            radius: size,
+            disableZBuffer: options.disableZBuffer
           });
   
           solver.constructManipulator(name + 'endBoneRotation', 'BoneManipulator', {
@@ -904,7 +916,8 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('SpineSolver',
             parentMemberIndex: skeletonNode.getParentId(baseVertebreIndex),
             length: size * 1.5,
             boneVector: FABRIC.RT.vec3(-1, 0, 0),
-            color: FABRIC.RT.rgb(0, 0, 1)
+            color: FABRIC.RT.rgb(0, 0, 1),
+            disableZBuffer: options.disableZBuffer
           });
   
           solver.constructManipulator(name + 'endTranslation', 'ScreenTranslationManipulator', {
@@ -917,7 +930,8 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('SpineSolver',
               bboxmin: FABRIC.RT.vec3(size * - 0.3, size * - 0.5, size * - 0.5),
               bboxmax: FABRIC.RT.vec3(size * 0.3, size * 0.5, size * 0.5)
             }),
-            color: FABRIC.RT.rgb(1, 0, 0)
+            color: FABRIC.RT.rgb(1, 0, 0),
+            disableZBuffer: options.disableZBuffer
           });
         }
       }else{
@@ -1185,7 +1199,8 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('FishingRodSolver',
         // add a manipulation for target and upvector
         solver.constructManipulator(name + 'targetScreen', 'ScreenTranslationManipulator', {
           parentNode: variablesNode.pub,
-          parentMember: name + 'target'
+          parentMember: name + 'target',
+          disableZBuffer: options.disableZBuffer
         });
       }
     }
@@ -1262,7 +1277,8 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('NCFIKSolver',
           targetMember: name + 'target',
           parentNode: rigNode.pub,
           parentMember: 'pose',
-          parentMemberIndex: boneIDs.targetParent
+          parentMemberIndex: boneIDs.targetParent,
+          disableZBuffer: options.disableZBuffer
         });
       }
     }
@@ -1356,14 +1372,16 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('ArmSolver',
             ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(0, 0, 1), 90)
           }),
           color: FABRIC.RT.rgb(0, .5, 0),
-          radius: size
+          radius: size,
+          disableZBuffer: options.disableZBuffer
         });
 
         solver.constructManipulator(name + 'WristRollRotation', 'RotationManipulator', {
           parentNode: variablesNode.pub,
           parentMember: name + 'handControlXfo',
           color: FABRIC.RT.rgb(0, .5, 0),
-          radius: size
+          radius: size,
+          disableZBuffer: options.disableZBuffer
         });
 
         solver.constructManipulator(name + 'WristRotation', 'BoneManipulator', {
@@ -1371,7 +1389,8 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('ArmSolver',
           parentMember: name + 'handControlXfo',
           length: size,
           boneVector: FABRIC.RT.vec3(1, 0, 0),
-          color: FABRIC.RT.rgb(0, 0, 1)
+          color: FABRIC.RT.rgb(0, 0, 1),
+          disableZBuffer: options.disableZBuffer
         });
 
         // add a manipulation for target and upvector
@@ -1382,7 +1401,8 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('ArmSolver',
             bboxmin: FABRIC.RT.vec3(size * - 0.8, size * - 0.7, size * - 0.4),
             bboxmax: FABRIC.RT.vec3(size * 0.8, size * 0.7, size * 0.4)
           }),
-          color: FABRIC.RT.rgb(1, 0, 0)
+          color: FABRIC.RT.rgb(1, 0, 0),
+          disableZBuffer: options.disableZBuffer
         });
       }
     }
@@ -1484,7 +1504,8 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('LegSolver',
           geometryNode: scene.pub.constructNode('Cross', {
             size: bones[ankleIndex].length * 0.5
           }),
-          color: FABRIC.RT.rgb(1, 0, 0)
+          color: FABRIC.RT.rgb(1, 0, 0),
+          disableZBuffer: options.disableZBuffer
         });
 
         solver.constructManipulator(name + 'FootRotate', 'PivotRotationManipulator', {
@@ -1495,7 +1516,8 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('LegSolver',
             length: bones[ankleIndex].length * 2,
             width: bones[ankleIndex].length
           }),
-          color: FABRIC.RT.rgb(0, 0, 1)
+          color: FABRIC.RT.rgb(0, 0, 1),
+          disableZBuffer: options.disableZBuffer
         });
 
         solver.constructManipulator(name + 'AnkleRotate', 'BoneManipulator', {
@@ -1504,7 +1526,8 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('LegSolver',
           parentMember: name + 'footPlatformXfo',
           length: bones[ankleIndex].length * 2.0,
           boneVector: FABRIC.RT.vec3(-1, 0, 0),
-          color: FABRIC.RT.rgb(0, 0, 1)
+          color: FABRIC.RT.rgb(0, 0, 1),
+          disableZBuffer: options.disableZBuffer
         });
 
       }

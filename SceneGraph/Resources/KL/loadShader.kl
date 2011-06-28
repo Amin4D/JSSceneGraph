@@ -11,25 +11,26 @@ function Integer fglCreateAndCompileShader(String shaderName, Integer type, Stri
   }
 
   // Load and compile the shader source
-  var Integer notused;
-  glShaderSource(shaderID, 1, src, notused);
+  var Integer strlen[1];
+  strlen[0] = src.length();
+  glShaderSource(shaderID, 1, src, strlen.data());
   glCompileShader(shaderID);
 
   // Check the compile status
   var Integer compiled;
-  glGetShaderiv(shaderID, GL_COMPILE_STATUS, compiled);
+  glGetShaderiv(shaderID, GL_COMPILE_STATUS, compiled.data());
   if (!compiled)
     report(shaderName + ' : Shader compilation failed:');
 
-  var Integer infoLen = 0;
-  glGetShaderiv(shaderID, GL_INFO_LOG_LENGTH, infoLen);
+  var Integer infoLen;
+  glGetShaderiv(shaderID, GL_INFO_LOG_LENGTH, infoLen.data());
 
   if (infoLen > 1) {
     if (compiled) {
       report(shaderName + ' : Shader compilation succeeded with warnings:');
     }
     var String infoLog;
-    glGetShaderInfoLog(shaderID, infoLen, notused, infoLog);
+    glGetShaderInfoLog(shaderID, infoLen, infoLen.data(), infoLog);
 
     report(infoLog);
   }
@@ -78,13 +79,13 @@ function Integer fglCreateProgramFromShaders(
       glLinkProgram(programID);
 
       var Integer linked = 0;
-      glGetProgramiv(programID, GL_LINK_STATUS, linked);
+      glGetProgramiv(programID, GL_LINK_STATUS, linked.data());
       if (!linked) {
         report(shaderName + ' : Program linking failed:');
       }
 
       var Integer infoLen = 0;
-      glGetProgramiv(programID, GL_INFO_LOG_LENGTH, infoLen);
+      glGetProgramiv(programID, GL_INFO_LOG_LENGTH, infoLen.data());
 
       if (infoLen > 1) {
         if (linked) {
@@ -92,7 +93,7 @@ function Integer fglCreateProgramFromShaders(
         }
         var Integer notused;
         var String infoLog;
-        glGetProgramInfoLog(programID, infoLen, notused, infoLog);
+        glGetProgramInfoLog(programID, infoLen, notused.data(), infoLog);
         report(infoLog);
       }
       else if (!linked) {
@@ -156,9 +157,10 @@ operator validateShaderBindings(
   }
 
   var Integer nbUniforms;
-  glGetProgramiv(program, GL_ACTIVE_UNIFORMS, nbUniforms);
+  glGetProgramiv(program, GL_ACTIVE_UNIFORMS, nbUniforms.data());
   for (i = 0; i < nbUniforms; i++) {
-    glGetActiveUniform(program, i, size, type, name);
+    var Integer nbReceived;
+    glGetActiveUniform(program, i, 1024, nbReceived.data(), size.data(), type.data(), name);
     //  report( "P: " + i + " - " + size + " - " + type + " - " + name );
 
     Boolean found = false;
@@ -174,9 +176,10 @@ operator validateShaderBindings(
   }
 
   var Integer nbAttribs;
-  glGetProgramiv(program, GL_ACTIVE_ATTRIBUTES, nbAttribs);
+  glGetProgramiv(program, GL_ACTIVE_ATTRIBUTES, nbAttribs.data());
   for (i = 0; i < nbAttribs; i++) {
-    glGetActiveAttrib(program, i, size, type, name);
+    var Integer nbReceived;
+    glGetActiveAttrib(program, i, 1024, nbReceived.data(), size.data(), type.data(), name);
     //  report( "A: " + i + " - " + size + " - " + type + " - " + name );
 
     Boolean found = false;

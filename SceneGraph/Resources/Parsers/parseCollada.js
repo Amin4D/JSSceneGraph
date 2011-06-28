@@ -11,6 +11,7 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
   
   // option defaults
   options.createFKHierarchySolver = options.createFKHierarchySolver != undefined ? options.createFKHierarchySolver : true
+  options.createInstanceNodes = options.createInstanceNodes != undefined ? options.createInstanceNodes : true
 
   // prepare the namemap
   var nameMap = {};
@@ -412,13 +413,6 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
             }
           }
 
-          // create a character instance!
-          var characterNode = scene.constructNode('CharacterInstance', {
-              geometryNode: geometryNode,
-              rigNode: rigNode
-            });
-
-
           // eventually we need to flatten the data as well
           var skinningData = {};
           skinningData.boneIdsArray = skin.weights.ids;
@@ -456,7 +450,13 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
           geometryNode.loadGeometryData(finalData);
 
           // Store the created CharacterInstance in the returned assets map.
-          assetNodes[assetData.id + 'Instance'] = characterNode;
+          // create a character instance!
+          if(options.createInstanceNodes){
+            assetNodes[assetData.id + 'Instance'] = scene.constructNode('CharacterInstance', {
+                geometryNode: geometryNode,
+                rigNode: rigNode
+            });
+          }
         }
       }
 

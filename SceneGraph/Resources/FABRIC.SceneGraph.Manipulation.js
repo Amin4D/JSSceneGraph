@@ -1096,14 +1096,13 @@ FABRIC.SceneGraph.registerNodeType('BoneManipulator',
         childManipulator.beginManipulation(manipulatorNode);
       }
     };
-var redFlatMaterial = scene.constructNode('FlatMaterial', {
-    color: FABRIC.RT.rgb(0.8, 0, 0)
-  }).pub;
+
     var dragHandlerFn = function(evt, ray) {
       var dragVec,
         vec2,
         angle,
         movement,
+        parentXfo,
         dragXfo,
         normal,
         dist,
@@ -1112,72 +1111,55 @@ var redFlatMaterial = scene.constructNode('FlatMaterial', {
       ray2 = ray;
       if (evt.ctrlKey) {
         normal = localAxis;
-        hitPoint2 = ray2.intersectPlane(planePoint, localAxis).point;
       }
       else {
         normal = planeNormal;
-        hitPoint2 = ray2.intersectPlane(planePoint, planeNormal).point;
       }
+      hitPoint1 = ray1.intersectPlane(planePoint, normal).point;
+      hitPoint2 = ray2.intersectPlane(planePoint, normal).point;
       
-      dragVec = hitPoint2.subtract(planePoint);
+      dragVec = hitPoint2.subtract(hitPoint1);
       vec1 = normal.cross(vec1.cross(normal)).unit();
+      vec2 = hitPoint2.subtract(planePoint);
+      
+      dragXfo = dragStartXFo.clone();
+      
+      if(parentManipulator && childManipulator){
+        parentXfo = parentManipulator.counterRotateParent(dragVec);
+        dragXfo.tr = parentXfo.tr;
+      }else{
+        parentXfo = manipulatorNode.getParentXfo();
+        dragXfo.tr.addInPlace(dragVec);
+      }
 
-      dist = dragVec.length();
-      lengthRatio = (dist-(options.length* 0.2))/(options.length * 0.6);
-      lengthRatio = 0;//(lengthRatio < 0.0 ? 0.0 : (lengthRatio > 1.0 ? 1.0 : lengthRatio));
-      translationRatio = (Math.cos(lengthRatio * Math.PI * 0.5) + 1.0) * 0.5;
-      /*
-        // Cross
-  scene.constructNode('Instance', {
-      transformNode: scene.constructNode('Transform', {
-        hierarchical: false,
-        globalXfo: FABRIC.RT.xfo({ tr: planePoint.add(vec1) })
-      }).pub,
-      geometryNode: scene.constructNode('Cross', {
-        size: 7.0
-      }).pub,
-      materialNode: redFlatMaterial
-    });
-      */
-      var angle1 = -(vec1.negate().getAngleTo(hitPoint2.subtract(planePoint.add(vec1.scale(options.length)))));
-      var angle2 = vec1.getAngleTo(dragVec);// (1.0 - translationRatio);
-      angle = angle1;
-
+      var angle1 = -(vec1.negate().getAngleTo(dragXfo.tr.subtract(planePoint.add(vec1.scale(options.length)))));
+      var angle2 = vec1.getAngleTo(vec2);
+      
+      if(childManipulator){
+        angle = angle1;
+      }else{
+        angle = angle2;
+      }
       if (evt.shiftKey) {
         angle = Math.round(angle / 5.0) * 5.0;
       }
-
-      if (vec1.cross(dragVec).dot(normal) < 0) {
+      if (vec1.cross(vec2).dot(normal) < 0) {
         angle = -angle;
       }
       
-      dragXfo = dragStartXFo.clone();
       dragXfo.ori.postMultiplyInPlace(FABRIC.RT.Quat.makeFromAxisAndAngle(normal, angle));
       
-      if(!parentManipulator){
-        dragXfo.tr = dragVec.scale(translationRatio);
-        manipulatorNode.setTargetGlobalOri(dragXfo.ori);
+      if(parentManipulator){
+        manipulatorNode.setTargetOri(dragXfo.ori.postMultiply(parentXfo.ori.invert()));
       }else{
-        movement = dragVec.scale(translationRatio);
-        var parentXfo = parentManipulator.counterRotateParent(movement);
-        manipulatorNode.setTargetOri(dragXfo.multiply(parentXfo.invert()).ori);
-        dragXfo.tr = parentXfo.tr;
+        manipulatorNode.setTargetGlobalXfo(dragXfo);
       }
       
       if (childManipulator) {
         movement = dragXfo.tr.add(dragXfo.ori.rotateVector(options.boneVector).scale(options.length)).subtract(
               dragStartXFo.tr.add(dragStartXFo.ori.rotateVector(options.boneVector).scale(options.length)));
         childManipulator.counterRotateChild(movement, dragXfo);
-
-        if (dist > options.length) {
-          // At this point we want to start passing the events to the child
-          // Manipulator. This Manipulator will recieve the events, but will
-          // pass them on directly.
-    //      childManipulator.beginManipulation(planeNormal, localAxis);
-    //      currDragHandlerFn = childManipulator.getDragHandlerFn();
-        }
       }
-
     };
     
     var dragFn = function(evt) {

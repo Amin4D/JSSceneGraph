@@ -505,6 +505,12 @@ FABRIC.SceneGraph.registerNodeType('Manipulator',
       }
     }
 
+    var setTargetOri = function(ori) {
+      var xfo = getTargetXfo();
+      xfo.ori = ori;
+      setTargetXfo(xfo);
+    }
+
     var manipulatorNode = scene.constructNode('Instance', {
           name: options.name,
           enableRaycasting: true,
@@ -537,6 +543,11 @@ FABRIC.SceneGraph.registerNodeType('Manipulator',
     //  return transformNode.localXfo.multiply(this.getTargetGlobalXfo());
       return this.getTargetGlobalXfo().multiply(transformNode.localXfo);
     };
+    
+    manipulatorNode.getParentXfo = function() {
+      return getParentXfo();
+    };
+    
     manipulatorNode.getTargetGlobalXfo = function() {
       var parent = getParentXfo();
       if (!compensation)
@@ -554,6 +565,17 @@ FABRIC.SceneGraph.registerNodeType('Manipulator',
       }
       else {
         setTargetXfo(getParentXfo().multiplyInv(xfo));
+      }
+    };
+    manipulatorNode.setTargetOri = function(ori) {
+      setTargetOri(ori);
+    };
+    manipulatorNode.setTargetGlobalOri = function(ori) {
+      if (!compensation) {
+        setTargetOri(xfo);
+      }
+      else {
+        setTargetOri(getParentXfo().ori.invert().postMultiply(ori));
       }
     };
 
@@ -608,6 +630,36 @@ FABRIC.SceneGraph.registerNodeType('Manipulator',
         evt.stopPropagation();
         viewportNode.redraw();
       });
+    
+    manipulatorNode.findClosestLocalAxis = function(vec) {
+      var manipulationSpaceOri = this.getManipulationSpaceXfo().ori,
+        localX = manipulationSpaceOri.rotateVector(FABRIC.RT.vec3(1, 0, 0)),
+        localY = manipulationSpaceOri.rotateVector(FABRIC.RT.vec3(0, 1, 0)),
+        localZ = manipulationSpaceOri.rotateVector(FABRIC.RT.vec3(0, 0, 1)),
+        deltaX = vec.getAngleTo(localX),
+        deltaY = vec.getAngleTo(localY),
+        deltaZ = vec.getAngleTo(localZ);
+
+      if (deltaX > 90.0) {
+        deltaX = 180 - deltaX;
+        localX.negateInPlace();
+      }
+      if (deltaY > 90.0) {
+        deltaY = 180 - deltaY;
+        localY.negateInPlace();
+      }
+      if (deltaZ > 90.0) {
+        deltaZ = 180 - deltaZ;
+        localZ.negateInPlace();
+      }
+      if (deltaX < deltaY && deltaX < deltaZ) {
+        return localX;
+      }
+      else if (deltaY < deltaX && deltaY < deltaZ) {
+        return localY;
+      }
+      return localZ;
+    }
 
     return manipulatorNode;
   });
@@ -936,36 +988,6 @@ FABRIC.SceneGraph.registerNodeType('PivotRotationManipulator',
 
     var manipulatorNode = scene.constructNode('Manipulator', options);
 
-    var findClosestLocalAxis = function(vec) {
-      var manipulationSpaceOri = manipulatorNode.getManipulationSpaceXfo().ori,
-        localX = manipulationSpaceOri.rotateVector(FABRIC.RT.vec3(1, 0, 0)),
-        localY = manipulationSpaceOri.rotateVector(FABRIC.RT.vec3(0, 1, 0)),
-        localZ = manipulationSpaceOri.rotateVector(FABRIC.RT.vec3(0, 0, 1)),
-        deltaX = vec.getAngleTo(localX),
-        deltaY = vec.getAngleTo(localY),
-        deltaZ = vec.getAngleTo(localZ);
-
-      if (deltaX > 90.0) {
-        deltaX = 180 - deltaX;
-        localX.negateInPlace();
-      }
-      if (deltaY > 90.0) {
-        deltaY = 180 - deltaY;
-        localY.negateInPlace();
-      }
-      if (deltaZ > 90.0) {
-        deltaZ = 180 - deltaZ;
-        localZ.negateInPlace();
-      }
-      if (deltaX < deltaY && deltaX < deltaZ) {
-        return localX;
-      }
-      else if (deltaY < deltaX && deltaY < deltaZ) {
-        return localY;
-      }
-      return localZ;
-    }
-
     var viewportNode;
     var dragStartXFo, vec1, ray1, ray2, planePoint, planeNormal, hitPoint1;
     var pivotPoint, hitPoint2, localAxis, globalAxis;
@@ -976,7 +998,7 @@ FABRIC.SceneGraph.registerNodeType('PivotRotationManipulator',
 
       planePoint = dragStartXFo.tr;
       planeNormal = ray1.direction.negate();
-      localAxis = findClosestLocalAxis(ray1.direction);
+      localAxis = manipulatorNode.findClosestLocalAxis(ray1.direction);
     }
     manipulatorNode.pub.addEventListener('dragstart', dragStartFn);
 
@@ -1039,47 +1061,21 @@ FABRIC.SceneGraph.registerNodeType('BoneManipulator',
   function(options, scene) {
     scene.assignDefaults(options, {
         name: 'BoneManipulator',
+        parentManipulator: undefined,
         childManipulator: undefined,
         length: 35,
         boneVector: FABRIC.RT.vec3(1, 0, 0)
       });
-    var childManipulator = options.childManipulator,
-       viewportNode,
-       dragStartXFo, vec1, ray1, ray2, planePoint, planeNormal, hitPoint1, hitPoint2, localAxis, globalAxis,
-       currDragHandlerFn, dragXfo;
-
+    
     options.geometryNode = scene.pub.constructNode('LineVector', { to: options.boneVector.scale(options.length) });
     options.compensation = false;
-
-    var findClosestLocalAxis = function(vec) {
-      var manipulationSpaceOri = manipulatorNode.getManipulationSpaceXfo().ori,
-        localX = manipulationSpaceOri.rotateVector(FABRIC.RT.vec3(1, 0, 0)),
-        localY = manipulationSpaceOri.rotateVector(FABRIC.RT.vec3(0, 1, 0)),
-        localZ = manipulationSpaceOri.rotateVector(FABRIC.RT.vec3(0, 0, 1)),
-        deltaX = vec.getAngleTo(localX),
-        deltaY = vec.getAngleTo(localY),
-        deltaZ = vec.getAngleTo(localZ);
-
-      if (deltaX > 90.0) {
-        deltaX = 180 - deltaX;
-        localX.negateInPlace();
-      }
-      if (deltaY > 90.0) {
-        deltaY = 180 - deltaY;
-        localY.negateInPlace();
-      }
-      if (deltaZ > 90.0) {
-        deltaZ = 180 - deltaZ;
-        localZ.negateInPlace();
-      }
-      if (deltaX < deltaY && deltaX < deltaZ) {
-        return localX;
-      }
-      else if (deltaY < deltaX && deltaY < deltaZ) {
-        return localY;
-      }
-      return localZ;
-    }
+    
+    var manipulatorNode = scene.constructNode('Manipulator', options),
+      parentManipulator = options.parentManipulator,
+      childManipulator = options.childManipulator,
+      viewportNode,
+      dragStartXFo, vec1, ray1, ray2, planePoint, planeNormal, hitPoint1, hitPoint2, localAxis, globalAxis,
+      currDragHandlerFn, dragXfo;
 
     var dragStartFn = function(evt) {
       viewportNode = evt.viewportNode;
@@ -1088,23 +1084,31 @@ FABRIC.SceneGraph.registerNodeType('BoneManipulator',
 
       planePoint = dragStartXFo.tr;
       planeNormal = ray1.direction.negate();
-      localAxis = findClosestLocalAxis(ray1.direction);
+      localAxis = manipulatorNode.findClosestLocalAxis(ray1.direction);
 
       vec1 = manipulatorNode.getManipulationSpaceXfo().ori.rotateVector(options.boneVector);
       currDragHandlerFn = dragHandlerFn;
 
-      if (childManipulator) {
-        childManipulator.beginManipulation(viewportNode, planeNormal, localAxis);
+      if (parentManipulator) {
+        parentManipulator.beginManipulation(manipulatorNode);
       }
-    }
-
+      if (childManipulator) {
+        childManipulator.beginManipulation(manipulatorNode);
+      }
+    };
+var redFlatMaterial = scene.constructNode('FlatMaterial', {
+    color: FABRIC.RT.rgb(0.8, 0, 0)
+  }).pub;
     var dragHandlerFn = function(evt, ray) {
-      var vec2,
+      var dragVec,
+        vec2,
         angle,
         movement,
         dragXfo,
         normal,
-        dist;
+        dist,
+        lengthRatio = 0,
+        translationRatio = 0;
       ray2 = ray;
       if (evt.ctrlKey) {
         normal = localAxis;
@@ -1114,64 +1118,100 @@ FABRIC.SceneGraph.registerNodeType('BoneManipulator',
         normal = planeNormal;
         hitPoint2 = ray2.intersectPlane(planePoint, planeNormal).point;
       }
-
+      
+      dragVec = hitPoint2.subtract(planePoint);
       vec1 = normal.cross(vec1.cross(normal)).unit();
-      vec2 = hitPoint2.subtract(planePoint);
 
-
-      dist = vec2.length();
-      vec2.scaleInPlace(1.0 / dist);
-      angle = vec1.getAngleTo(vec2);
+      dist = dragVec.length();
+      lengthRatio = (dist-(options.length* 0.2))/(options.length * 0.6);
+      lengthRatio = 0;//(lengthRatio < 0.0 ? 0.0 : (lengthRatio > 1.0 ? 1.0 : lengthRatio));
+      translationRatio = (Math.cos(lengthRatio * Math.PI * 0.5) + 1.0) * 0.5;
+      /*
+        // Cross
+  scene.constructNode('Instance', {
+      transformNode: scene.constructNode('Transform', {
+        hierarchical: false,
+        globalXfo: FABRIC.RT.xfo({ tr: planePoint.add(vec1) })
+      }).pub,
+      geometryNode: scene.constructNode('Cross', {
+        size: 7.0
+      }).pub,
+      materialNode: redFlatMaterial
+    });
+      */
+      var angle1 = -(vec1.negate().getAngleTo(hitPoint2.subtract(planePoint.add(vec1.scale(options.length)))));
+      var angle2 = vec1.getAngleTo(dragVec);// (1.0 - translationRatio);
+      angle = angle1;
 
       if (evt.shiftKey) {
         angle = Math.round(angle / 5.0) * 5.0;
       }
 
-      if (vec1.cross(vec2).dot(normal) < 0) {
+      if (vec1.cross(dragVec).dot(normal) < 0) {
         angle = -angle;
       }
-
+      
       dragXfo = dragStartXFo.clone();
       dragXfo.ori.postMultiplyInPlace(FABRIC.RT.Quat.makeFromAxisAndAngle(normal, angle));
-      manipulatorNode.setTargetGlobalXfo(dragXfo);
-
+      
+      if(!parentManipulator){
+        dragXfo.tr = dragVec.scale(translationRatio);
+        manipulatorNode.setTargetGlobalOri(dragXfo.ori);
+      }else{
+        movement = dragVec.scale(translationRatio);
+        var parentXfo = parentManipulator.counterRotateParent(movement);
+        manipulatorNode.setTargetOri(dragXfo.multiply(parentXfo.invert()).ori);
+        dragXfo.tr = parentXfo.tr;
+      }
+      
       if (childManipulator) {
-        movement = vec2.scale(options.length).subtract(vec1.scale(options.length));
-        childManipulator.counterRotate(movement, dragXfo);
+        movement = dragXfo.tr.add(dragXfo.ori.rotateVector(options.boneVector).scale(options.length)).subtract(
+              dragStartXFo.tr.add(dragStartXFo.ori.rotateVector(options.boneVector).scale(options.length)));
+        childManipulator.counterRotateChild(movement, dragXfo);
 
         if (dist > options.length) {
           // At this point we want to start passing the events to the child
           // Manipulator. This Manipulator will recieve the events, but will
           // pass them on directly.
-          childManipulator.beginManipulation(planeNormal, localAxis);
-          currDragHandlerFn = childManipulator.getDragHandlerFn();
+    //      childManipulator.beginManipulation(planeNormal, localAxis);
+    //      currDragHandlerFn = childManipulator.getDragHandlerFn();
         }
       }
-    }
+
+    };
+    
     var dragFn = function(evt) {
       currDragHandlerFn(evt, viewportNode.calcRayFromMouseEvent(evt));
-    }
+    };
 
     var dragendFn = function(evt) {
-    }
+    };
 
-    var manipulatorNode = scene.constructNode('Manipulator', options);
-      // Private
-    manipulatorNode.beginManipulation = function(planeNormalIn, localAxisIn) {
+    // Private
+    manipulatorNode.beginManipulation = function(chainedManipulator) {
       dragStartXFo = manipulatorNode.getTargetGlobalXfo();
+      vec1 = this.getManipulationSpaceXfo().ori.rotateVector(options.boneVector);
 
-      planePoint = dragStartXFo.tr;
-      planeNormal = planeNormalIn;
-      localAxis = localAxisIn;
-
-      vec1 = this.getManipulationSpaceXfo().ori.rotateVector(FABRIC.RT.vec3(1, 0, 0));
-      pivotPoint = planePoint;
-
-      if (childManipulator) {
-        childManipulator.beginManipulation(planeNormalIn, localAxisIn);
+      if (parentManipulator && parentManipulator !== chainedManipulator) {
+        parentManipulator.beginManipulation(manipulatorNode);
       }
-    },
-    manipulatorNode.counterRotate = function(movement, parentXfo) {
+      if (childManipulator && childManipulator !== chainedManipulator) {
+        childManipulator.beginManipulation(manipulatorNode);
+      }
+    };
+    
+    manipulatorNode.counterRotateParent = function(movement) {
+      var dragXfo = dragStartXFo.clone(),
+        newVec1 = movement.add(vec1.scale(options.length)),
+        newVec1Length = newVec1.norm(),
+        counterRotation = FABRIC.RT.Quat.makeFrom2Vectors(vec1, newVec1.scale(1.0 / newVec1Length));
+
+      dragXfo.ori.postMultiplyInPlace(counterRotation);
+      this.setTargetGlobalOri(dragXfo.ori);
+      dragXfo.tr.addInPlace(dragXfo.ori.rotateVector(options.boneVector).scale(options.length));
+      return dragXfo;
+    };
+    manipulatorNode.counterRotateChild = function(movement, parentXfo) {
       var dragXfo = dragStartXFo.clone(),
         newVec1 = movement.add(vec1.scale(-options.length)),
         newVec1Length = newVec1.norm(),
@@ -1179,13 +1219,14 @@ FABRIC.SceneGraph.registerNodeType('BoneManipulator',
 
       dragXfo.tr.addInPlace(movement);
       dragXfo.ori.postMultiplyInPlace(counterRotation);
-
-      this.setTargetXfo(parentXfo.multiplyInv(dragXfo));
+      this.setTargetOri(dragXfo.ori.postMultiply(parentXfo.ori.invert()));
+     // this.setTargetOri(parentXfo.multiplyInv(dragXfo).ori);
 
       if (childManipulator) {
-        childManipulator.counterRotate(newVec1.scale((newVec1Length - options.length) / newVec1Length), dragXfo);
+        childManipulator.counterRotateChild(newVec1.scale((newVec1Length - options.length) / newVec1Length), dragXfo);
       }
-    },
+    };
+    
     manipulatorNode.getDragHandlerFn = function() {
       return dragHandlerFn;
     };
@@ -1193,6 +1234,22 @@ FABRIC.SceneGraph.registerNodeType('BoneManipulator',
     manipulatorNode.pub.addEventListener('dragstart', dragStartFn);
     manipulatorNode.pub.addEventListener('drag', dragFn);
     manipulatorNode.pub.addEventListener('dragend', dragendFn);
+    
+    manipulatorNode.setParentManipulatorNode = function(node) {
+      if (!node.isTypeOf('BoneManipulator')) {
+        throw ('Incorrect type assignment. Must assign a BoneManipulator');
+      }
+      parentManipulator = scene.getPrivateInterface(node);
+    };
+    manipulatorNode.setChildManipulatorNode = function(node) {
+      if (!node.isTypeOf('BoneManipulator')) {
+        throw ('Incorrect type assignment. Must assign a BoneManipulator');
+      }
+      childManipulator = scene.getPrivateInterface(node);
+    };
+    manipulatorNode.getBoneLength = function() {
+      return options.length;
+    }
 
     return manipulatorNode;
   });

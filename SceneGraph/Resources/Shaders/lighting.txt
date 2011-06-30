@@ -52,8 +52,18 @@ vec4 phong_shading(
 			final_color += specularColor * lightColor * specular;
 		}
 	}
-	else if( lightType == 1 ){	// Spot Light
-		if( dot( Ln, -lightDir ) > lightCosCutoff ){
+	else if( lightType == 1 ){	// Directional Light
+		float lambertTerm = -dot(Nn,lightDir) * lightFactor;
+		if ( lambertTerm > 0.0 ){
+			final_color += diffuseColor * lightColor * lambertTerm;
+
+			vec3 Rn = reflect(lightDir, Nn);
+			float specular = pow( max(dot(Rn, Vn), 0.0), shininess );
+			final_color += specularColor * lightColor * specular;
+		}
+	}
+	else if( lightType == 2 ){	// Spot Light
+		if( -dot( Ln, lightDir ) > lightCosCutoff ){
 			float lambertTerm = dot(Nn,Ln) * lightFactor;
 			if ( lambertTerm > 0.0 ){
 				final_color += diffuseColor * lightColor * lambertTerm;

@@ -844,8 +844,7 @@ FABRIC.SceneGraph.registerNodeType('Viewport',
         enableRaycasting: false,
         mouseUpEvents: true,
         mouseMoveEvents: true,
-        redrawOnMouseMove: true, // This option is usefull on OsX where drawing is always a frame behind.
-        backgroundColor: FABRIC.RT.rgb(0.1, 0.1, 0.1),
+        backgroundColor: FABRIC.RT.rgb(0.5, 0.5, 0.5),
         postProcessEffect: undefined,
         rayIntersectionThreshold: 0.8
       });
@@ -1175,9 +1174,6 @@ FABRIC.SceneGraph.registerNodeType('Viewport',
         if(propagateEvent){
           fireEvent('mousemove', evt);
         }
-        if (options.redrawOnMouseMove && propagateEvent) {
-        //  viewportNode.redraw();
-        }
       };
 
       var mouseDownFn = function(evt) {
@@ -1368,51 +1364,20 @@ FABRIC.SceneGraph.registerNodeType('FreeCamera',
 FABRIC.SceneGraph.registerNodeType('TargetCamera',
   function(options, scene) {
     scene.assignDefaults(options, {
-        position: FABRIC.RT.vec3(1, 0, 0),
-        target: FABRIC.RT.vec3(0, 0, 0),
-        roll: 0.0
+        target: FABRIC.RT.vec3(0, 0, 0)
       });
 
-    var transformNodeOptions = {
+    options.transformNode = scene.pub.constructNode('AimTransform', {
+      globalXfo: options.globalXfo,
       position: options.position,
-      target: options.target,
-      roll: options.roll
-    };
-    var dirVec = options.target.subtract(options.position);
-    dirVec.y = 0;
-    dirVec.setUnit();
-    var angle = dirVec.getAngleTo(FABRIC.RT.vec3(0, 0, -1));
-    transformNodeOptions.globalXfo = new FABRIC.RT.xfo({
-      tr: options.position,
-      ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(0, 1, 0), angle)
+      target: options.target
     });
-    options.transformNode = scene.pub.constructNode('AimTransform', transformNodeOptions);
 
     var targetCameraNode = scene.constructNode('Camera', options);
 
-    // extend public interface
-    targetCameraNode.pub.__defineGetter__('position', function() {
-      freeCameraNode.pub.getTransformNode().globalXfo.tr;
-    });
-    targetCameraNode.pub.__defineSetter__('position', function(val) {
-      if (!val.getType || val.getType() !== 'FABRIC.RT.Vec3') {
-        throw ('Incorrect type assignment. Must assign a FABRIC.RT.Vec3');
-      }
-      var xfo = targetCameraNode.pub.getTransformNode().globalXfo;
-      xfo.tr = val;
-      targetCameraNode.pub.getTransformNode().globalXfo = xfo;
-    });
-    targetCameraNode.pub.__defineGetter__('target', function() {
-      return targetCameraNode.pub.getTransformNode().target;
-    });
-    targetCameraNode.pub.__defineSetter__('target', function(val) {
-      targetCameraNode.pub.getTransformNode().target = val;
-    });
-
     targetCameraNode.getDGNode().bindings.append(scene.constructOperator({
       operatorName: 'loadFocalDist',
-      srcCode: 'operator loadFocalDist(io Xfo xfo, io Vec3 target, io Scalar focalDist)' +
-      '{' +
+      srcCode: 'operator loadFocalDist(io Xfo xfo, io Vec3 target, io Scalar focalDist){' +
       '  focalDist = xfo.tr.dist(target);' +
       '}',
       entryFunctionName: 'loadFocalDist',

@@ -418,13 +418,13 @@ FABRIC.createSVGRootElem = function(domRootID) {
         addClasses: true,
         setCursor: true,
         cursor: 'move',
-        containment: null,
-        delegateTranslateObj: null, /*: The node that we apply the translate calls to instead of this */
+        containment: undefined,
+        delegateTranslateObj: undefined, /*: The node that we apply the translate calls to instead of this */
         preventDefault: true,
-        axis: null,
+        axis: undefined,
         snapSize: 0,
         mouseButton: -1, /* by default any mouse button will initite a drag */
-        snapTargets: null,
+        snapTargets: undefined,
         snapDistance: 10
       }, options, false);
 
@@ -507,41 +507,38 @@ FABRIC.createSVGRootElem = function(domRootID) {
 
       this.elem.addEventListener('mousedown',
         function(evt) {
-          if (options.mouseButton === -1 || evt.button === options.mouseButton)
-          {
+          if (options.mouseButton === -1 || evt.button === options.mouseButton) {
             if (options.mouseButton !== -1 && options.setCursor) {
               self.cursor(options.cursor);
             }
-      // if we have a right click happening,
-      // let's fake a mouse up event for the drag
-      if (evt.button === 2)
-      {
-        var evt = document.createEvent('MouseEvents');
-        evt.initMouseEvent('mouseup', true, true, window, 0,
-          evt.screenX, evt.screenY, evt.clientX, evt.clientY, false, false, false, false, evt.button, null);
-        self.elem.dispatchEvent(evt);
-        return;
-      }
+            // if we have a right click happening,
+            // let's fake a mouse up event for the drag
+            if (evt.button === 2) {
+              var mouseUpEvt = document.createEvent('MouseEvents');
+              mouseUpEvt.initMouseEvent('mouseup', true, true, window, 0,
+                evt.screenX, evt.screenY, evt.clientX, evt.clientY, false, false, false, false, evt.button, null);
+              self.elem.dispatchEvent(mouseUpEvt);
+              return;
+            }
 
             fireOnDragBeginCallbacks(evt);
             var pos;
             // We can use a delegate object when the event catcher is not the node we want transformed.
-            var dragNode = (options.delegateTranslateObj ? options.delegateTranslateObj : self);
-            var mouseDraggedStartPos = dragNode.screenToLocalPos(FABRIC.RT.vec2(evt.clientX, evt.clientY));
-            var draggedStartPos = dragNode.translate();
+            var dragNode = (options.delegateTranslateObj !== undefined ? options.delegateTranslateObj : self);
+            var mouseDraggedStartPos = dragNode ? dragNode.screenToLocalPos(FABRIC.RT.vec2(evt.clientX, evt.clientY)) : FABRIC.RT.vec2(evt.clientX, evt.clientY);
+            var draggedStartPos = dragNode ? dragNode.translate() : FABRIC.RT.vec2(0, 0);
 
             var dragFn = function(evt) {
-              if (options.mouseButton !== -1 && evt.button !== options.mouseButton)
-              {
+              if (options.mouseButton !== -1 && evt.button !== options.mouseButton) {
                 // the mouse went off the screen and we did not recieve a mouse up event.
                 // Fake one here.
-                var evt = document.createEvent('MouseEvents');
-                evt.initMouseEvent('mouseup', true, true, window, 0,
+                var mouseUpEvt = document.createEvent('MouseEvents');
+                mouseUpEvt.initMouseEvent('mouseup', true, true, window, 0,
                   evt.screenX, evt.screenY, evt.clientX, evt.clientY, false, false, false, false, evt.button, null);
-                self.elem.dispatchEvent(evt);
+                self.elem.dispatchEvent(mouseUpEvt);
                 return;
               }
-              var mousePos = dragNode.screenToLocalPos(FABRIC.RT.vec2(evt.clientX, evt.clientY));
+              var mousePos = dragNode ? dragNode.screenToLocalPos(FABRIC.RT.vec2(evt.clientX, evt.clientY)) : FABRIC.RT.vec2(evt.clientX, evt.clientY);
               var delta = mousePos.subtract(mouseDraggedStartPos);
               pos = draggedStartPos.add(delta);
               if (options.containment) {
@@ -572,13 +569,18 @@ FABRIC.createSVGRootElem = function(domRootID) {
                   }
                 }
               }
-
-              dragNode.translate(pos);
+              if(dragNode){
+                // There are cases where we catch and process drag events, but
+                // do not apply the dragging to any node. This is used in the
+                // curve editor for panning the graph, where thr graph is actually
+                // rebuilt.
+                dragNode.translate(pos);
+              }
               evt.preventDefault();
               evt.stopPropagation();
-
-              //  evt.globalpos = pos;
+              
               evt.localPos = pos;
+              evt.dragVec = pos.subtract(draggedStartPos);
               fireOnDragCallbacks(evt);
             }
             releaseFn = function(evt) {
@@ -607,7 +609,6 @@ FABRIC.createSVGRootElem = function(domRootID) {
         zoomRate: 0.800,
         delegateZoomObj: undefined
       }, options, false);
-
 
       // Callbacks
       // onZoom
@@ -708,11 +709,11 @@ FABRIC.createSVGRootElem = function(domRootID) {
         fireOnSelectCallbacks();
       }
       this.deselect = function() {
-          (options.highlightObj ? options.highlightObj : self).removeClass('Selected');
-          self.svgRoot.removeFromSelection(self);
-          selected = false;
-          fireOnDeselectCallbacks();
-        };
+        (options.highlightObj ? options.highlightObj : self).removeClass('Selected');
+        self.svgRoot.removeFromSelection(self);
+        selected = false;
+        fireOnDeselectCallbacks();
+      };
 
       var self = this;
         this.elem.addEventListener('mousedown',
@@ -896,8 +897,7 @@ FABRIC.createSVGRootElem = function(domRootID) {
       replaceChild: function(oldchild, newchild) {
         this.elem.replaceChild(oldchild.elem, newchild.elem);
       },
-      removeAllChildren: function()
-      {
+      removeAllChildren: function() {
         while (this.elem.firstChild) {
           this.elem.removeChild(this.elem.firstChild);
         }

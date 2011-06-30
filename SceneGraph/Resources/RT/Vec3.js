@@ -178,7 +178,8 @@ FABRIC.RT.Vec3.prototype = {
   },
 
   getAngleTo: function(v) {
-    return Math.acos(this.unit().dot(v.unit())) * FABRIC.RT.radToDeg;
+    var acosAngle = this.unit().dot(v.unit());
+    return Math.acos(Math.min(Math.max(acosAngle,-1.0), 1.0)) * FABRIC.RT.radToDeg;
   },
   dist: function(other) {
     return this.subtract(other).length();

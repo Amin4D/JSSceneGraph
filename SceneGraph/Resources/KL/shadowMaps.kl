@@ -15,8 +15,6 @@ function Mat44 symmetricFrustum(Scalar r, Scalar t, Scalar n, Scalar f) {
 }
 
 operator calcLightProjectionMatricies(
-  io Vec3 position,
-  io Vec3 target,
   io Scalar near,
   io Scalar far,
   io Scalar fovY,
@@ -25,18 +23,6 @@ operator calcLightProjectionMatricies(
   io Mat44 shadowMat
 ) {
   //  report( "calcLightProjectionMatricies" );
-
-  var Vec3 up(0.0, 1.0, 0.0);
-  var Vec3 forward = position - target;
-  forward.setUnit();
-  var Vec3 right = up.cross(forward).unit();
-  up = forward.cross(right);
-  lightMat.set(
-    right.x, up.x, forward.x, 0.0,
-    right.y, up.y, forward.y, 0.0,
-    right.z, up.z, forward.z, 0.0,
-    - position.dot(right), - position.dot(up), - position.dot(forward), 1.0
-  );
 
   //  report("lightMat:" + lightMat );
 

@@ -125,6 +125,16 @@ FABRIC.RT.Vec2.prototype = {
     return this;
   },
 
+  invert: function(v) {
+    return new FABRIC.RT.Vec2(1/this.x, 1/this.y);
+  },
+
+  invertInPlace: function(v) {
+    this.x = 1/this.x;
+    this.y = 1/this.y;
+    return this;
+  },
+
   // Returns the scalar product of the vector with the argument
   // Both vectors must have equal dimensionality
   dot: function(v) {

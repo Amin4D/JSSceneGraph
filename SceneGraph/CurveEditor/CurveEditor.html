@@ -60,10 +60,9 @@ $(document).ready(function() {
   svgRoot = FABRIC.createSVGRootElem('viewer');
 
   var graphBGRect = svgRoot.createRect().size(windowWidth, windowHeight).addClass('EventCatcher');
-  var graphCenterGroup = svgRoot.createGroup().id('graphCenterGroup');
-  var graphSclGroup = graphCenterGroup.createGroup().id('graphSclGroup');//.scale( controller.getGraphDefZoom() );
-  var graphPosGroup = graphSclGroup.createGroup().id('graphPosGroup');//.translate( controller.getGraphDefPan() );
-  var graphHolderGroup = graphPosGroup.createGroup().id('graphHolderGroup').translate(0, windowHeight * 0.5);
+  var graphCenterGroup = svgRoot.createGroup().id('graphCenterGroup').translate(0, windowHeight * 0.5);
+  var curvesHolderGroup = graphCenterGroup.createGroup().id('curvesHolderGroup')
+  var keysHolderGroup = graphCenterGroup.createGroup().id('keysHolderGroup');
   svgRoot.svgRoot = svgRoot;
   svgRoot.state = 'Normal';
   
@@ -71,58 +70,86 @@ $(document).ready(function() {
   var trackDisplayNodes = [];
   var trackCount = keyframeTrackNode.getTrackCount();
   var timeRange = FABRIC.RT.vec2(0, 0);
+  var yRange = FABRIC.RT.vec2(0, 0);
   var curvesData = [];
+  var trackCurves = [];
   for (var i = 0; i < trackCount; i++) {
-    var keys = keyframeTrackNode.getTrackKeys(i);
     var trackData = keyframeTrackNode.getTrackData(i);
-    if (timeRange.x > keys[0].time) {
-      timeRange.x = keys[0].time;
-    }
-    else if (timeRange.y < keys[keys.length - 1].time) {
-      timeRange.y = keys[keys.length - 1].time;
-    }
+    $('#keyframeTracks').append('<div style="margin-top:10px;">' + trackData.name + '</div>');
+    trackCurves[i] = curvesHolderGroup.createPath().addClass('CurvePath').stroke(trackData.color);
     trackDisplayNodes[i] = scene.constructNode('TrackDisplay', {
       animationTrackNode: keyframeTrackNode,
-      trackIndex: i,
-      timeRange: timeRange
+      trackIndex: i
     });
-    curvesData[i] = trackDisplayNodes[i].getCurveData();
-    $('#keyframeTracks').append('<div style="margin-top:10px;">' + trackData.name + '</div>');
   }
-  var yRange = FABRIC.RT.vec2(curvesData[0].value[0], curvesData[0].value[0]);
-  var getCurveYRange = function(curveData) {
-    for (var i = 1; i < curveData.time.length; i++) {
-      if (yRange.x > curveData.value[i]) {
-        yRange.x = curveData.value[i];
+  
+
+
+  var screenXfo = {
+    tr: FABRIC.RT.vec2(0, 0),
+    sc: FABRIC.RT.vec2(1, 1),
+    fitToScreen:function(){
+      for (var i = 0; i < trackCount; i++) {
+        var keys = keyframeTrackNode.getTrackKeys(i);
+        if (timeRange.x > keys[0].time) {
+          timeRange.x = keys[0].time;
+        }
+        if (timeRange.y < keys[keys.length - 1].time) {
+          timeRange.y = keys[keys.length - 1].time;
+        }
       }
-      else if (yRange.y < curveData.value[i]) {
-        yRange.y = curveData.value[i];
+      var getCurveYRange = function(curveData) {
+        for (var i = 1; i < curveData.time.length; i++) {
+          if (yRange.x > curveData.value[i]) {
+            yRange.x = curveData.value[i];
+          }
+          if (yRange.y < curveData.value[i]) {
+            yRange.y = curveData.value[i];
+          }
+        }
+      }
+      for (var i = 0; i < trackCount; i++) {
+        trackDisplayNodes[i].setTimeRange(timeRange);
+        curvesData[i] = trackDisplayNodes[i].getCurveData();
+        if(i==0){
+          yRange = FABRIC.RT.vec2(curvesData[0].value[0], curvesData[0].value[0]);
+        }
+        getCurveYRange(curvesData[i]);
+      }
+      this.sc = FABRIC.RT.vec2(windowWidth/(timeRange.y - timeRange.x), -(windowHeight - 40) / (yRange.y - yRange.x));
+      this.tr = FABRIC.RT.vec2(-timeRange.x, (yRange.y + yRange.x) * -0.5);
+    },
+    update: function(){
+      this.sc.x = windowWidth / (timeRange.y - timeRange.x);
+    },
+    toScreenSpace: function(val, local){
+      if(local){
+        return val.multiply(this.sc);
+      }else{
+        return val.add(this.tr).multiply(this.sc);
+      }
+    },
+    toGraphSpace: function(val, local){
+      if(local){
+        return val.multiply(this.sc.invert());
+      }else{
+        return val.multiply(this.sc.invert()).subtract(this.tr);
       }
     }
   }
-
-  for (var i = 0; i < trackCount; i++) {
-    getCurveYRange(curvesData[i]);
-  }
-  var scaleX = windowWidth / (timeRange.y - timeRange.x),
-    scaleY = -(windowHeight - 40) / (yRange.y - yRange.x),
-    scale = FABRIC.RT.vec2(scaleX, scaleX),
-    offsetY = (yRange.y + yRange.x) * -0.5,
-    offsetX = timeRange.x / scaleX;
+  screenXfo.fitToScreen();
   
   var drawTrackCurves = function(){
-    
     var drawTrackCurve = function(trackIndex) {
-      var trackData = keyframeTrackNode.getTrackData(trackIndex),
-        lineNode = graphHolderGroup.createPath().addClass('CurvePath').stroke(trackData.color);
-  
       var setPathCurveValues = function(curveData) {
-        var path = ['M', (curveData.time[0] + offsetX) * scaleX, (curveData.value[0] + offsetY) * scaleY, 'L', 100, 100, 300, 200];
+        var val = screenXfo.toScreenSpace(FABRIC.RT.vec2(curveData.time[0], curveData.value[0]))
+        var path = ['M', val.x, val.y, 'L', 100, 100, 300, 200];
         for (var i = 0; i < curveData.time.length; i++) {
-          path[(i * 2) + 4] = (curveData.time[i] + offsetX) * scaleX;
-          path[(i * 2) + 5] = (curveData.value[i] + offsetY) * scaleY;
+          val = screenXfo.toScreenSpace(FABRIC.RT.vec2(curveData.time[i], curveData.value[i]))
+          path[(i * 2) + 4] = val.x;
+          path[(i * 2) + 5] = val.y;
         }
-        lineNode.attr('d', path.join(' '));
+        trackCurves[trackIndex].attr('d', path.join(' '));
       }
       setPathCurveValues(curvesData[trackIndex]);
   
@@ -134,59 +161,60 @@ $(document).ready(function() {
       var drawKey = function(keyIndex, keyData) {
         if((keyData.time + keyData.intangent.x) < timeRange.y &&
            (keyData.time + keyData.outtangent.x) > timeRange.x ){
-  
-          var keyTime = (keyData.time + offsetX) * scaleX;
-          var keyValue = (keyData.value + offsetY) * scaleY;
-          var keyGroupNode = graphHolderGroup.createGroup().translate(keyTime, keyValue)
+          ///////////////////////////////////////////////
+          // Key
+          var keySsVal = screenXfo.toScreenSpace(FABRIC.RT.vec2(keyData.time, keyData.value));
+          var keyGroupNode = keysHolderGroup.createGroup().translate(keySsVal)
             .draggable({ mouseButton: 0 })
+            .addOnDragBeginCallback(
+              function(evt){
+              })
             .addOnDragCallback(
               function(evt) {
-                keyData.time = (evt.localPos.x / scaleX) - offsetX;
-                keyData.value = (evt.localPos.y / scaleY) - offsetY;
+                var keyGsVal = screenXfo.toGraphSpace(evt.localPos);
+                keyData.time = keyGsVal.x;
+                keyData.value = keyGsVal.y;
     
                 keyframeTrackNode.setKeyData(trackIndex, keyIndex, keyData);
                 updateCurve();
                 scene.redrawAllWindows();
               });
-            var keyNode = keyGroupNode.createRect().translate(-4, -4).size(8, 8).stroke(FABRIC.RT.rgb(1, 1, 1));
-        
+          var keyNode = keyGroupNode.createRect().translate(-4, -4).size(8, 8).stroke(FABRIC.RT.rgb(1, 1, 1));
+          
+          ///////////////////////////////////////////////
+          // In Tangent
           if(keyData.time > timeRange.x){
-            var keyInTangentX = keyData.intangent.x * scaleX;
-            var keyInTangentY = keyData.intangent.y * scaleY;
-            var keyInTangentNode = keyGroupNode.createRect()
-                                                .translate(keyInTangentX - 3, keyInTangentY - 3)
+            var inTanSsVal = screenXfo.toScreenSpace(keyData.intangent, true);
+            var inTanLineNode = keyGroupNode.createPath().addClass('KeyframeHandle');
+            inTanLineNode.attr('d', 'M 0 0 L ' + inTanSsVal.x + ' ' + inTanSsVal.y);
+            var inTanNode = keyGroupNode.createRect()
+                                                .translate(inTanSsVal.x - 3, inTanSsVal.y - 3)
                                                 .size(6, 6).stroke(FABRIC.RT.rgb(1, 1, 1));
-            var keyInTangentLineNode = keyGroupNode.createPath().addClass('KeyframeHandle');
-            keyInTangentLineNode.attr('d', 'M 0 0 L ' + keyInTangentX + ' ' + keyInTangentY);
-    
-            keyInTangentNode.draggable({ mouseButton: 0 })
+            inTanNode.draggable({ mouseButton: 0 })
               .addOnDragCallback(
                 function(evt) {
-                  keyInTangentLineNode.attr('d', 'M 0 0 L ' + (evt.localPos.x + 3) + ' ' + (evt.localPos.y + 3));
-                  keyData.intangent.x = evt.localPos.x / scaleX;
-                  keyData.intangent.y = evt.localPos.y / scaleY;
-    
-                  keyframeTrackNode.setKeyData(0, keyIndex, keyData);
+                  inTanLineNode.attr('d', 'M 0 0 L ' + (evt.localPos.x + 3) + ' ' + (evt.localPos.y + 3));
+                  keyData.intangent = screenXfo.toGraphSpace(evt.localPos, true);
+                  keyframeTrackNode.setKeyData(trackIndex, keyIndex, keyData);
                   updateCurve();
                   scene.redrawAllWindows();
                 });
           }
+          ///////////////////////////////////////////////
+          // Out Tangent
           if(keyData.time < timeRange.y){
-            var keyOutTangentX = keyData.outtangent.x * scaleX;
-            var keyOutTangentY = keyData.outtangent.y * scaleY;
-            var keyOutTangentNode = keyGroupNode.createRect()
-                                                 .translate(keyOutTangentX - 3, keyOutTangentY - 3)
+            var outTanSsVal = screenXfo.toScreenSpace(keyData.outtangent, true);
+            var outTanLineNode = keyGroupNode.createPath().addClass('KeyframeHandle');
+            outTanLineNode.attr('d', 'M 0 0 L ' + outTanSsVal.x + ' ' + outTanSsVal.y);
+            var outTanNode = keyGroupNode.createRect()
+                                                 .translate(outTanSsVal.x - 3, outTanSsVal.y - 3)
                                                  .size(6, 6).stroke(FABRIC.RT.rgb(1, 1, 1));
-            var keyOutTangentLineNode = keyGroupNode.createPath().addClass('KeyframeHandle');
-            keyOutTangentLineNode.attr('d', 'M 0 0 L ' + keyOutTangentX + ' ' + keyOutTangentY);
     
-            keyOutTangentNode.draggable({ mouseButton: 0 })
+            outTanNode.draggable({ mouseButton: 0 })
               .addOnDragCallback(
                 function(evt) {
-                  keyOutTangentLineNode.attr('d', 'M 0 0 L ' + (evt.localPos.x + 3) + ' ' + (evt.localPos.y + 3));
-                  keyData.outtangent.x = evt.localPos.x / scaleX;
-                  keyData.outtangent.y = evt.localPos.y / scaleY;
-    
+                  outTanLineNode.attr('d', 'M 0 0 L ' + (evt.localPos.x + 3) + ' ' + (evt.localPos.y + 3));
+                  keyData.outtangent = screenXfo.toGraphSpace(evt.localPos, true);
                   keyframeTrackNode.setKeyData(trackIndex, keyIndex, keyData);
                   updateCurve();
                   scene.redrawAllWindows();
@@ -195,6 +223,7 @@ $(document).ready(function() {
         }
       }
       if (window.drawKeys !== false) {
+        var trackData = keyframeTrackNode.getTrackData(trackIndex);
         for (var i = 0; i < trackData.keys.length; i++) {
           drawKey(i, trackData.keys[i]);
         }
@@ -204,22 +233,21 @@ $(document).ready(function() {
     for (var i = 0; i < trackCount; i++) {
       drawTrackCurve(i);
     }
-    
-    var timeStripeGroupNode = graphHolderGroup.createGroup()
-        .translate(scene.animation.time * scaleX, windowHeight * -0.5)
-        .draggable({ mouseButton: 0, axis: 'X' })
-        .addOnDragCallback(
-          function(evt) {
-            scene.animation.time = evt.localPos.x / scaleX;
-          });
-  
-    timeStripeGroupNode.createRect().size(10, windowHeight).addClass('EventCatcher');
-    timeStripeGroupNode.createPath().addClass('TimeStripePath')
-        .attr('d', 'M 5 0 L 5 ' + windowHeight);
-  
-    window.updateGraphTimeStripe = function() {
-      timeStripeGroupNode.translate(scene.animation.time * scaleX, windowHeight * -0.5);
-    }
+  }
+  var timeStripeGroupNode = graphCenterGroup.createGroup()
+      .translate((scene.animation.time + screenXfo.tr.x)  * screenXfo.sc.x, windowHeight * -0.5)
+      .draggable({ mouseButton: 0, axis: 'X' })
+      .addOnDragCallback(
+        function(evt) {
+          scene.animation.time = (evt.localPos.x / screenXfo.sc.x) - screenXfo.tr.x;
+        });
+
+  timeStripeGroupNode.createRect().size(10, windowHeight).addClass('EventCatcher');
+  var timeStripe = timeStripeGroupNode.createPath().addClass('TimeStripePath')
+      .attr('d', 'M 5 0 L 5 ' + windowHeight);
+
+  window.updateGraphTimeStripe = function() {
+    timeStripeGroupNode.translate((scene.animation.time + screenXfo.tr.x)  * screenXfo.sc.x, windowHeight * -0.5);
   }
   
   drawTrackCurves();
@@ -229,7 +257,8 @@ $(document).ready(function() {
       trackDisplayNodes[i].setTimeRange(timeRange);
       curvesData[i] = trackDisplayNodes[i].getCurveData();
     }
-    graphHolderGroup.removeAllChildren();
+    updateGraphTimeStripe();
+    keysHolderGroup.removeAllChildren();
     drawTrackCurves();
   }
   
@@ -237,11 +266,12 @@ $(document).ready(function() {
     var newWindowWidth = $('#viewer').width();
     var newWindowHeight = $('#viewer').height();
     
-    timeRange.y += ( newWindowWidth - windowWidth ) / scaleX;
+    timeRange.y += ( newWindowWidth - windowWidth ) / screenXfo.sc.x;
     windowWidth = newWindowWidth;
     windowHeight = newWindowHeight;
-    graphHolderGroup.translate(0, windowHeight * 0.5);
+    graphCenterGroup.translate(0, windowHeight * 0.5);
     graphBGRect.size(windowWidth, windowHeight);
+    timeStripe.attr('d', 'M 5 0 L 5 ' + windowHeight);
     
     updateTimeRange();
   }
@@ -250,23 +280,36 @@ $(document).ready(function() {
     fitCurveEditorToWindow();
   });
   var dragStartTimeRange;
-  var dragStartOffsetX;
-  var dragStartOffsetY;
+  var dragStartOffset;
   graphBGRect.draggable( {mouseButton:1, delegateTranslateObj:false, highlight:false } )
     .addOnDragBeginCallback(
       function(evt){
         dragStartTimeRange = timeRange.clone();
-        dragStartOffsetX = offsetX;
-        dragStartOffsetY = offsetY;
-      } )
+        dragStartOffset = screenXfo.tr.clone();
+    })
     .addOnDragCallback(
       function(evt){
-        timeRange.x = dragStartTimeRange.x - (evt.dragVec.x / scaleX);
-        timeRange.y = dragStartTimeRange.y - (evt.dragVec.x / scaleX);
-        offsetX = dragStartOffsetX + (evt.dragVec.x / scaleX);
-        offsetY = dragStartOffsetY + (evt.dragVec.y / scaleY);
+        timeRange.x = dragStartTimeRange.x - (evt.dragVec.x / screenXfo.sc.x);
+        timeRange.y = dragStartTimeRange.y - (evt.dragVec.x / screenXfo.sc.x);
+        screenXfo.tr = dragStartOffset.add(evt.dragVec.multiply(screenXfo.sc.invert()));
+      //  offsetX = dragStartOffsetX + (evt.dragVec.x / scaleX);
+      //  offsetY = dragStartOffsetY + (evt.dragVec.y / scaleY);
         updateTimeRange();
-      } );
+      });
+    
+  var mouseWheelZoomFn = function(evt) {
+    var zoomDist = evt.wheelDelta * 0.1;
+    timeRange.x += zoomDist / screenXfo.sc.x;
+    timeRange.y -= zoomDist / screenXfo.sc.x;
+    yRange.x -= zoomDist / screenXfo.sc.y;
+    yRange.y += zoomDist / screenXfo.sc.y;
+    screenXfo.sc.x = windowWidth/(timeRange.y - timeRange.x);
+    screenXfo.sc.y = -(windowHeight - 40) / (yRange.y - yRange.x)
+    screenXfo.tr.x = -timeRange.x;
+  // screenXfo.tr.y = (yRange.y + yRange.x) * -0.5;  
+    updateTimeRange();
+  }
+  document.addEventListener('mousewheel', mouseWheelZoomFn, false);
 });
 
 

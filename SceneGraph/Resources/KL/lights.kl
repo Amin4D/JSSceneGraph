@@ -48,10 +48,9 @@ operator loadDirectionalLight(
   Size nbUniforms = uniformValues.size();
   for (Size i = 0; i < nbUniforms; i++) {
     var ShaderValue uniform = uniformValues[i];
-
     switch (uniform.id) {
       case LIGHTDIR_ATTRIBUTE_ID:
-        var Vec3 viewDir = Vec3(1.0, 0.0, 0.0) * lightMatrix.upperLeft() * cameraMatrix.upperLeft();
+        var Vec3 viewDir = Vec3(0.0, 0.0, -1.0) * lightMatrix.upperLeft() * cameraMatrix.upperLeft();
 		viewDir = viewDir.unit(); //lightMatrix might have scaling
         if (uniform.location != - 1)
           glUniform3f(uniform.location, viewDir.x, viewDir.y, viewDir.z);
@@ -74,7 +73,7 @@ operator loadSpotLight(
 
     switch (uniform.id) {
       case LIGHTDIR_ATTRIBUTE_ID:
-        var Vec3 viewDir = Vec3(1.0, 0.0, 0.0) * lightMatrix.upperLeft() * cameraMatrix.upperLeft();
+        var Vec3 viewDir = Vec3(0.0, 0.0, -1.0) * lightMatrix.upperLeft() * cameraMatrix.upperLeft();
 		viewDir = viewDir.unit(); //lightMatrix might have scaling
         if (uniform.location != - 1)
           glUniform3f(uniform.location, viewDir.x, viewDir.y, viewDir.z);

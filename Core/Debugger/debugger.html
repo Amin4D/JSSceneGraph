@@ -1,0 +1,440 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd"> 
+<html>
+  <head>
+  <meta http-equiv="Content-Language" content="en" />
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>FABRIC Curve Editor</title>
+    
+    <meta charset="iso-8859-1"/>
+    <link href="../../themes/default/style.css" rel="stylesheet" type="text/css" />
+    <link href="../../themes/default/viewer.css" rel="stylesheet" type="text/css" />
+    
+    <script type="text/javascript" src="../../ThirdParty/jQuery/jquery-1.4.2.min.js"></script>
+    <script type="text/javascript" src="../../ThirdParty/jQuery/jquery-ui-1.8.5.custom.min.js"></script>
+
+    <link type="text/css" href="../../ThirdParty/jQuery/css/vader/jquery-ui-1.8.5.custom.css" rel="stylesheet" />
+
+    <script type="text/javascript" src="../FABRIC.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../FABRIC.Wrappers.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../SceneGraph/Resources/RT/Math.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../SceneGraph/Resources/RT/Vec2.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../SceneGraph/Resources/RT/Color.js" charset="utf-8"></script>
+    
+    <script type="text/javascript" src="../../SceneGraph/Resources/FABRIC.SVG.js"></script>
+    
+    <style type="text/css">
+    
+
+/*
+ *  Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
+ */
+
+
+rect.EditorButton {
+  fill:#808080;
+  stroke:white;
+  stroke-opacity:0.85;
+  stroke-width:0.5;
+}
+
+
+rect.EventCatcher {
+  fill-opacity:0.0;
+  stroke-opacity:0.0;
+}
+
+circle.EventCatcher {
+  fill-opacity:0.0;
+  stroke-opacity:0.0;
+  stroke-width:0.0;
+}
+
+
+rect.Shadow {
+  fill-opacity:0.25;
+  stroke-opacity:0;
+  stroke-width:0;
+}
+
+circle.Shadow {
+  fill-opacity:0.25;
+  stroke-opacity:0.25;
+}
+
+g.Pressed {
+  stroke:white;
+  stroke-width:2.5;
+}
+
+
+g.Button {
+  stroke:black;
+  stroke-opacity:0.75;
+  stroke-width:0.5;
+}
+
+
+text.ButtonLabel {
+  font-family:Helvetica;
+  font-size:8pt;
+  font-weight:normal;
+  text-anchor:middle;
+  fill: black;
+  fill-opacity:1.0;
+  stroke-opacity:0.0;
+  cursor:default;
+}
+
+
+/* ===================================================== */
+/* Nodes */
+
+rect.Node {
+  stroke:black;
+  stroke-opacity:0.75;
+  stroke-width:0.5;
+  fill-opacity:0.75;
+}
+
+
+
+text.NodeLabel {
+  font-family:Helvetica;
+  font-size:8pt;
+  font-weight:normal;
+  fill: black;
+  fill-opacity:1.0;
+  stroke-opacity:0.0;
+  cursor:move;
+}
+
+
+
+/* ===================================================== */
+/* Ports */
+
+text.PortLabel {
+  font-family:Helvetica;
+  font-size:7pt;
+  font-weight:normal;
+  fill: black;
+  fill-opacity:1.0;
+  stroke-opacity:0.0;
+  cursor:move;
+}
+
+
+circle.DFGNodePort {
+  fill-opacity:0.95;
+  stroke-opacity:0.4;
+  stroke:black;
+  stroke-width:1;
+}
+
+circle.Highlighted {
+  stroke:white;
+  stroke-opacity:0.6;
+}
+
+
+
+/* ===================================================== */
+/* Operators */
+rect.Operator {
+  stroke:black;
+  stroke-opacity:0.75;
+  stroke-width:0.5;
+  fill-opacity:0.75;
+}
+
+/* ===================================================== */
+/* Events */
+
+text.EventOperatorLabel {
+  font-family:Helvetica;
+  font-size:5pt;
+  font-weight:normal;
+  fill: black;
+  fill-opacity:1.0;
+  stroke-opacity:0.0;
+  cursor:move;
+}
+rect.EventOperator {
+  stroke:black;
+  stroke-opacity:0.75;
+  stroke-width:0.5;
+  fill-opacity:1.0;
+}
+
+/* ===================================================== */
+/* Connections */
+
+
+path.LineCore {
+  fill: none;
+  stroke-opacity:1.0;
+  stroke-width:2.5;
+}
+
+path.LineBorder {
+  fill: none;
+  stroke:black;
+  stroke-opacity:0.6;
+  stroke-width:3.5;
+}
+
+path.EventCatcher {
+  fill: none;
+  stroke:black;
+  stroke-opacity:0.0;
+  stroke-width:10;
+}
+
+path.Highlighted {
+  stroke:white;
+}
+
+
+
+/* ===================================================== */
+/* Highlighting */
+
+rect.Highlighted {
+  stroke:white;
+  stroke-opacity:0.85;
+  stroke-width:0.75;
+}
+g.Highlighted {
+  stroke:white;
+}
+
+  
+  </style>
+    <script type="text/javascript">
+
+
+$(document).ready(function() {
+  
+  var contextID = document.location.search.split('?id=')[1];
+  var context = FABRIC.createContext({ contextID:contextID  });
+  
+  var allNamedObjects = context.DG.getAllNamedObjects();
+  
+  var eventsMap = {};
+  var eventHandlersMap = {};
+  var nodesMap = {};
+  for(var i in allNamedObjects){
+    if(!allNamedObjects[ i ].getType){
+      continue;
+    }
+    var type = allNamedObjects[ i ].getType();
+    if(type === "Event"){
+      eventsMap[i] = allNamedObjects[ i ];
+    }
+    else if(type === "EventHandler"){
+      eventHandlersMap[i] = allNamedObjects[ i ];
+    }
+    if(type === "Node"){
+      nodesMap[i] = allNamedObjects[ i ];
+    }
+  }
+  
+  var columns = [];
+  
+  var layoutEventHandlers = function(children, childrenColumn){
+    if(children.length > 0){
+      if(!columns[childrenColumn]) columns[childrenColumn] = [];
+      for(var j=0; j < children.length; j++){
+        var eh = children[j];
+        if(eh.column ){
+          if( eh.column < childrenColumn){
+            // Re-assign the handler to the enw column;
+            var row = columns[eh.column].indexOf(eh);
+            columns[eh.column] = undefined;
+            columns[childrenColumn].push(eh);
+            eh.column = childrenColumn;
+          }
+        }else{
+          columns[childrenColumn].push(eh);
+          eh.column = childrenColumn;
+        }
+        layoutEventHandlers(eh.getChildEventHandlers(), childrenColumn+1)
+      }
+    }
+  }
+  
+  columns[0] = [];
+  for(var i in eventsMap){
+    var row = columns[1] ? columns[1].length : columns[0].length;
+    columns[0][row] = eventsMap[i];
+    layoutEventHandlers(eventsMap[i].getEventHandlers(), 1);
+  }
+
+  var windowWidth = $('#viewer').width();
+  var windowHeight = $('#viewer').height();
+
+  svgRoot = FABRIC.createSVGRootElem('viewer');
+
+  var graphBGRect = svgRoot.createRect().size(windowWidth, windowHeight).addClass('EventCatcher');
+  var graphHolderGroup = svgRoot.createGroup().translate(windowWidth * 0.5, windowHeight * 0.5);
+  var graphSclGroup = graphHolderGroup.createGroup().scale(1.0);
+  var graphPosGroup = graphSclGroup.createGroup().translate(windowWidth * -0.5, 0);
+  var curvesHolderGroup = graphPosGroup.createGroup();
+  var nodesHolderGroup = graphPosGroup.createGroup();
+  
+  svgRoot.setGraphHolderGroup(graphPosGroup);
+  svgRoot.setNodeHolderGroup(nodesHolderGroup);
+  svgRoot.setEdgeHolderGroup(curvesHolderGroup);
+  
+  svgRoot.draggable({mouseButton:1, delegateTranslateObj:graphPosGroup, highlight:false })
+    .zoomable({delegateZoomObj:graphSclGroup })
+    .addOnZoomCallback(
+      function(evt){
+    });
+  
+  $(window).resize(function () {
+    
+  });
+  
+  var displayEvent = function(name, pos){
+    var node = nodesHolderGroup.createNode({
+        text : name,
+        color:FABRIC.RT.rgb255(90,90,200),
+        height: 15,
+        createEditButton: true,
+        draggable: true,
+        shadow: FABRIC.RT.vec2(0,0)
+      })
+      .translate(pos);
+    node.addOutPort({
+        color: FABRIC.RT.rgb255(200,80,80),
+        allowMultipleConnections:true
+      });
+    return node;
+  }
+  
+  
+  var displayEventHandler = function(name, pos){
+    var dgnode = eventHandlersMap[name];
+    var node = nodesHolderGroup.createNode({
+        text : name,
+        color:FABRIC.RT.rgb255(90,200,90),
+        height: 15,
+        createEditButton: true,
+        draggable: true,
+        shadow: FABRIC.RT.vec2(0,0)
+      })
+      .translate(pos);
+    node.addInPort({
+        color: FABRIC.RT.rgb255(200,80,80),
+        allowMultipleConnections:false
+      });
+    node.addOutPort({
+        color: FABRIC.RT.rgb255(200,80,80),
+        allowMultipleConnections:true
+      });
+    var scopes = dgnode.getScopes();
+    for(var i in scopes){
+      node.addInPort({
+          text: i,
+          color: FABRIC.RT.rgb255(200,200,80),
+          allowMultipleConnections:false
+        });
+    }
+    return node;
+  }
+  
+  
+  var displayDGnode = function(name, pos){
+    var dgnode = nodesMap[name];
+    var node = nodesHolderGroup.createNode({
+        text : name,
+        color:FABRIC.RT.rgb255(90,90,200),
+        height: 15,
+        createEditButton: false,
+        draggable: true,
+        shadow: FABRIC.RT.vec2(0,0)
+      })
+      .translate(pos);
+    node.addInPort({
+        color: FABRIC.RT.rgb255(200,80,80),
+        allowMultipleConnections:false
+      });
+    node.addOutPort({
+        color: FABRIC.RT.rgb255(200,80,80),
+        allowMultipleConnections:true
+      });
+    return node;
+  }
+  
+  for(var i=0; i<columns.length; i++){
+    for(var j=0; j<columns[i].length; j++){
+      var dgnode = columns[i][j];
+      if(!columns[i][j]) continue;
+      if(i==0){
+        dgnode.debuggerNode = displayEvent(dgnode.getName(), FABRIC.RT.vec2(0,j*80));
+      }else{
+        dgnode.debuggerNode = displayEventHandler(dgnode.getName(), FABRIC.RT.vec2(i*240,j*80));
+      }
+    }
+  }
+  
+  for(var i in eventsMap){
+    var children = eventsMap[i].getEventHandlers();
+    for(var j=0; j<children.length; j++){
+      if(children[j].debuggerNode){
+        eventsMap[i].debuggerNode.getOutPort(0)
+          .connectTo(children[j].debuggerNode.getInPort(0),{
+            fireCallbacks: false,
+            connectable:false
+          });
+      }
+    }
+  }
+  for(var i in eventHandlersMap){
+    if(eventHandlersMap[i].debuggerNode){
+      var children = eventHandlersMap[i].getChildEventHandlers();
+      for(var j=0; j<children.length; j++){
+        if(children[j].debuggerNode){
+          eventHandlersMap[i].debuggerNode.getOutPort(0)
+            .connectTo(children[j].debuggerNode.getInPort(0),{
+              fireCallbacks: false,
+              connectable:false
+            });
+        }
+      }
+    }
+  }
+  
+ // textEvent.getOutPort(0).connectTo(testEH.getInPort(0),{ fireCallbacks: false, connectable:false });
+});
+
+
+
+    </script>
+
+
+
+  </head> 
+  <body>
+    <div id="wrapper">
+      <ul id="nav">
+        <li><a href="#" id="fabric-logo"><img src="../../themes/default/_img/projects/fabric-logo.png" /></a></li>
+      </ul>
+      <div id="editor">
+        
+        <div id="viewer">
+        </div><!--viewer-->
+        
+        <div id="sidebar">
+          <div class="box">
+            <h2>KEYFRAME TRACKS</h2>
+            <div class="content" id="keyframeTracks">
+            </div><!--content-->
+          </div><!--box-->
+        </div><!--sidebar-->
+        
+      </div> <!--editor-->
+    </div><!--wrapper-->
+  </body> 
+</html>

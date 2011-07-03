@@ -3,7 +3,7 @@
   <head>
   <meta http-equiv="Content-Language" content="en" />
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-  <title>FABRIC Curve Editor</title>
+  <title>FABRIC Debugger</title>
     
     <meta charset="iso-8859-1"/>
     <link href="../../themes/default/style.css" rel="stylesheet" type="text/css" />
@@ -250,7 +250,7 @@ $(document).ready(function() {
       if(dgnode.column > column){
         // Re-assign the node to the new column;
         var row = dgcolumns[dgnode.column].indexOf(dgnode);
-        dgcolumns[dgnode.column] = undefined;
+        dgcolumns[dgnode.column][row] = undefined;
         dgcolumns[column].push(dgnode);
         dgnode.column = column;
       }
@@ -264,24 +264,30 @@ $(document).ready(function() {
     }
   }
   
-  var layoutEventHandlers = function(children, column){
+  var layoutEventHandlers = function(children, column, parentrow){
     if(children.length > 0){
       if(!ehcolumns[column]) ehcolumns[column] = [];
       for(var j=0; j < children.length; j++){
         var eventHandler = children[j];
+        var row = 0;
         if(eventHandler.column ){
           if( eventHandler.column < column){
             // Re-assign the handler to the new column;
-            var row = ehcolumns[eventHandler.column].indexOf(eventHandler);
-            ehcolumns[eventHandler.column] = undefined;
+            row = ehcolumns[eventHandler.column].indexOf(eventHandler);
+            ehcolumns[eventHandler.column][row] = undefined;
+            row = ehcolumns[column].length;
             ehcolumns[column].push(eventHandler);
             eventHandler.column = column;
           }
         }else{
-          ehcolumns[column].push(eventHandler);
+          row = ehcolumns[column].length;
+          // ensure that in the event tree, child 
+          // nodes are inline with parent nodes. 
+          if(row<parentrow) row = parentrow;
+          ehcolumns[column][row] = eventHandler;
           eventHandler.column = column;
         }
-        layoutEventHandlers(eventHandler.getChildEventHandlers(), column+1);
+        layoutEventHandlers(eventHandler.getChildEventHandlers(), column+1, row);
         var scopes = eventHandler.getScopes();
         for(var i in scopes){
           layoutDGNodes(scopes[i], column-1)
@@ -294,7 +300,7 @@ $(document).ready(function() {
   for(var i in eventsMap){
     var row = ehcolumns[1] ? ehcolumns[1].length : ehcolumns[0].length;
     ehcolumns[0][row] = eventsMap[i];
-    layoutEventHandlers(eventsMap[i].getEventHandlers(), 1);
+    layoutEventHandlers(eventsMap[i].getEventHandlers(), 1, row);
   }
 
   var windowWidth = $('#viewer').width();
@@ -504,7 +510,14 @@ $(document).ready(function() {
     }
   }
   
- // textEvent.getOutPort(0).connectTo(testEH.getInPort(0),{ fireCallbacks: false, connectable:false });
+  $('#displayEventHandlers').button()
+      .click(function() {
+        }
+      });
+  $('#displayDependencyGraph').button()
+      .click(function() {
+        }
+      });
 });
 
 
@@ -526,8 +539,10 @@ $(document).ready(function() {
         
         <div id="sidebar">
           <div class="box">
-            <h2>KEYFRAME TRACKS</h2>
+            <h2>OPTIONS</h2>
             <div class="content" id="keyframeTracks">
+              <input type="checkbox" id="displayEventHandlers" /><label for="displayEventHandlers">Display Event Handlers</label>
+              <input type="checkbox" id="displayDependencyGraph"/><label for="displayDependencyGraph" style="margin-top:10px;" >Display Dependency Graph</label>
             </div><!--content-->
           </div><!--box-->
         </div><!--sidebar-->

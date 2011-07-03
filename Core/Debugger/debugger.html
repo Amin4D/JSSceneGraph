@@ -323,6 +323,15 @@ $(document).ready(function() {
     
   });
   
+  var displayOperatorList = function(node, operators){
+    for(var i=0; i<operators.getLength(); i++){
+      node.addOperator({
+          text: operators.getOperator(i).getName(),
+          color: FABRIC.RT.rgb255(80,200,200)
+        });
+    }
+  }
+  
   var displayEvent = function(name, pos){
     var node = nodesHolderGroup.createNode({
         text : name,
@@ -335,7 +344,8 @@ $(document).ready(function() {
       .translate(pos);
     node.addOutPort({
         color: FABRIC.RT.rgb255(200,80,80),
-        allowMultipleConnections:true
+        allowMultipleConnections:true,
+        createLabelEventCatcher:false
       });
     return node;
   }
@@ -354,34 +364,25 @@ $(document).ready(function() {
       .translate(pos);
     node.addInPort({
         color: FABRIC.RT.rgb255(200,80,80),
-        allowMultipleConnections:false
+        allowMultipleConnections:false,
+        createLabelEventCatcher:false
       });
     node.addOutPort({
         color: FABRIC.RT.rgb255(200,80,80),
-        allowMultipleConnections:true
+        allowMultipleConnections:true,
+        createLabelEventCatcher:false
       });
     var scopes = eventHandler.getScopes();
     for(var i in scopes){
       node.addInPort({
           text: i,
           color: FABRIC.RT.rgb255(200,200,80),
-          allowMultipleConnections:false
+          allowMultipleConnections:false,
+          createLabelEventCatcher:false
         });
     }
-    var preoperators = eventHandler.preDescendBindings;
-    for(var i=0; i<preoperators.getLength(); i++){
-      node.addOperator({
-          text: preoperators.getOperator(i).getName(),
-          color: FABRIC.RT.rgb255(80,200,200)
-        });
-    }
-    var postoperators = eventHandler.postDescendBindings;
-    for(var i=0; i<postoperators.getLength(); i++){
-      node.addOperator({
-          text: postoperators.getOperator(i).getName(),
-          color: FABRIC.RT.rgb255(80,200,200)
-        });
-    }
+    displayOperatorList(node, eventHandler.preDescendBindings);
+    displayOperatorList(node, eventHandler.postDescendBindings);
     return node;
   }
   
@@ -402,18 +403,22 @@ $(document).ready(function() {
     for(var i in dependencies){
       node.addInPort({
           text: i,
-          color: FABRIC.RT.rgb255(100,180,250),
-          allowMultipleConnections:false
+           color: FABRIC.RT.rgb255(100,180,250),
+          allowMultipleConnections:false,
+          createLabelEventCatcher:false
         });
     }
     node.addOutPort({
         color: FABRIC.RT.rgb255(200,200,80),
-        allowMultipleConnections:true
+        allowMultipleConnections:true,
+        createLabelEventCatcher:false
       });
     node.addOutPort({
         color: FABRIC.RT.rgb255(100,180,250),
-        allowMultipleConnections:true
+        allowMultipleConnections:true,
+        createLabelEventCatcher:false
       });
+    displayOperatorList(node, dgnode.bindings);
     return node;
   }
   
@@ -485,7 +490,17 @@ $(document).ready(function() {
   
   for(var i in nodesMap){
     if(nodesMap[i].debuggerNode){
-      
+      var dgnode = nodesMap[i];
+      var dependencies = dgnode.getDependencies();
+      var dependencyId = 0;
+      for(var i in dependencies){
+        dependencies[i].debuggerNode.getOutPort(1)
+          .connectTo(dgnode.debuggerNode.getInPort(dependencyId),{
+            fireCallbacks: false,
+            connectable: false
+          });
+        dependencyId++;
+      }
     }
   }
   

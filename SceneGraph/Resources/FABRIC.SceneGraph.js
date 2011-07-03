@@ -339,9 +339,9 @@ FABRIC.SceneGraph = {
       }
 
       uid = operatorDef.operatorName;
-      for (def in operatorDef.preProcessorDefinitions) {
-        uid = uid + def + operatorDef.preProcessorDefinitions[def];
-      }
+    //  for (def in operatorDef.preProcessorDefinitions) {
+    //    uid = uid + def + operatorDef.preProcessorDefinitions[def];
+    //  }
       if (operatorStore[uid]) {
         return constructBinding(operatorStore[uid]);
       }

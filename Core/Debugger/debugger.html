@@ -215,8 +215,10 @@ g.Highlighted {
 
 $(document).ready(function() {
   
-  var contextID = document.location.search.split('?id=')[1];
-  var context = FABRIC.createContext({ contextID:contextID  });
+  if(!window.context){
+    var contextID = document.location.search.split('?id=')[1];
+    window.context = FABRIC.createContext({ contextID:contextID  });
+  }
   
   var allNamedObjects = context.DG.getAllNamedObjects();
   
@@ -239,34 +241,59 @@ $(document).ready(function() {
     }
   }
   
-  var columns = [];
+  var ehcolumns = [];
+  var dgcolumns = [];
   
-  var layoutEventHandlers = function(children, childrenColumn){
+  var layoutDGNodes = function(dgnode, column){
+    if(!dgcolumns[column]) dgcolumns[column] = [];
+    if(dgnode.column){
+      if(dgnode.column > column){
+        // Re-assign the node to the new column;
+        var row = dgcolumns[dgnode.column].indexOf(dgnode);
+        dgcolumns[dgnode.column] = undefined;
+        dgcolumns[column].push(dgnode);
+        dgnode.column = column;
+      }
+    }else{
+      dgcolumns[column].push(dgnode);
+      dgnode.column = column;
+    }
+    var dependencies = dgnode.getDependencies();
+    for(var i in dependencies){
+      layoutDGNodes(dependencies[i], column-1)
+    }
+  }
+  
+  var layoutEventHandlers = function(children, column){
     if(children.length > 0){
-      if(!columns[childrenColumn]) columns[childrenColumn] = [];
+      if(!ehcolumns[column]) ehcolumns[column] = [];
       for(var j=0; j < children.length; j++){
-        var eh = children[j];
-        if(eh.column ){
-          if( eh.column < childrenColumn){
-            // Re-assign the handler to the enw column;
-            var row = columns[eh.column].indexOf(eh);
-            columns[eh.column] = undefined;
-            columns[childrenColumn].push(eh);
-            eh.column = childrenColumn;
+        var eventHandler = children[j];
+        if(eventHandler.column ){
+          if( eventHandler.column < column){
+            // Re-assign the handler to the new column;
+            var row = ehcolumns[eventHandler.column].indexOf(eventHandler);
+            ehcolumns[eventHandler.column] = undefined;
+            ehcolumns[column].push(eventHandler);
+            eventHandler.column = column;
           }
         }else{
-          columns[childrenColumn].push(eh);
-          eh.column = childrenColumn;
+          ehcolumns[column].push(eventHandler);
+          eventHandler.column = column;
         }
-        layoutEventHandlers(eh.getChildEventHandlers(), childrenColumn+1)
+        layoutEventHandlers(eventHandler.getChildEventHandlers(), column+1);
+        var scopes = eventHandler.getScopes();
+        for(var i in scopes){
+          layoutDGNodes(scopes[i], column-1)
+        }
       }
     }
   }
   
-  columns[0] = [];
+  ehcolumns[0] = [];
   for(var i in eventsMap){
-    var row = columns[1] ? columns[1].length : columns[0].length;
-    columns[0][row] = eventsMap[i];
+    var row = ehcolumns[1] ? ehcolumns[1].length : ehcolumns[0].length;
+    ehcolumns[0][row] = eventsMap[i];
     layoutEventHandlers(eventsMap[i].getEventHandlers(), 1);
   }
 
@@ -315,7 +342,7 @@ $(document).ready(function() {
   
   
   var displayEventHandler = function(name, pos){
-    var dgnode = eventHandlersMap[name];
+    var eventHandler = eventHandlersMap[name];
     var node = nodesHolderGroup.createNode({
         text : name,
         color:FABRIC.RT.rgb255(90,200,90),
@@ -333,12 +360,26 @@ $(document).ready(function() {
         color: FABRIC.RT.rgb255(200,80,80),
         allowMultipleConnections:true
       });
-    var scopes = dgnode.getScopes();
+    var scopes = eventHandler.getScopes();
     for(var i in scopes){
       node.addInPort({
           text: i,
           color: FABRIC.RT.rgb255(200,200,80),
           allowMultipleConnections:false
+        });
+    }
+    var preoperators = eventHandler.preDescendBindings;
+    for(var i=0; i<preoperators.getLength(); i++){
+      node.addOperator({
+          text: preoperators.getOperator(i).getName(),
+          color: FABRIC.RT.rgb255(80,200,200)
+        });
+    }
+    var postoperators = eventHandler.postDescendBindings;
+    for(var i=0; i<postoperators.getLength(); i++){
+      node.addOperator({
+          text: postoperators.getOperator(i).getName(),
+          color: FABRIC.RT.rgb255(80,200,200)
         });
     }
     return node;
@@ -349,33 +390,58 @@ $(document).ready(function() {
     var dgnode = nodesMap[name];
     var node = nodesHolderGroup.createNode({
         text : name,
-        color:FABRIC.RT.rgb255(90,90,200),
+        color:FABRIC.RT.rgb255(20,90,250),
         height: 15,
         createEditButton: false,
         draggable: true,
         shadow: FABRIC.RT.vec2(0,0)
       })
       .translate(pos);
-    node.addInPort({
-        color: FABRIC.RT.rgb255(200,80,80),
-        allowMultipleConnections:false
+      
+    var dependencies = dgnode.getDependencies();
+    for(var i in dependencies){
+      node.addInPort({
+          text: i,
+          color: FABRIC.RT.rgb255(100,180,250),
+          allowMultipleConnections:false
+        });
+    }
+    node.addOutPort({
+        color: FABRIC.RT.rgb255(200,200,80),
+        allowMultipleConnections:true
       });
     node.addOutPort({
-        color: FABRIC.RT.rgb255(200,80,80),
+        color: FABRIC.RT.rgb255(100,180,250),
         allowMultipleConnections:true
       });
     return node;
   }
   
-  for(var i=0; i<columns.length; i++){
-    for(var j=0; j<columns[i].length; j++){
-      var dgnode = columns[i][j];
-      if(!columns[i][j]) continue;
+  var maxrow = 0;
+  for(var i=0; i < ehcolumns.length; i++){
+    for(var j=0; j < ehcolumns[i].length; j++){
+      var dgnode = ehcolumns[i][j];
+      if(!ehcolumns[i][j]) continue;
+      var column = i;
+      var row = j;
       if(i==0){
-        dgnode.debuggerNode = displayEvent(dgnode.getName(), FABRIC.RT.vec2(0,j*80));
+        dgnode.debuggerNode = displayEvent(dgnode.getName(), FABRIC.RT.vec2(0, row*100));
       }else{
-        dgnode.debuggerNode = displayEventHandler(dgnode.getName(), FABRIC.RT.vec2(i*240,j*80));
+        dgnode.debuggerNode = displayEventHandler(dgnode.getName(), FABRIC.RT.vec2(column*240, row*100));
       }
+      if(j>maxrow) maxrow = j;
+    }
+  }
+  
+//  for(var i=0; i < dgcolumns.length; i++){
+  for(i in dgcolumns){
+    if(!dgcolumns[i]) continue;
+    for(var j=0; j < dgcolumns[i].length; j++){
+      var dgnode = dgcolumns[i][j];
+      if(!dgcolumns[i][j]) continue;
+      var column = i;//dgcolumns.length - i;
+      var row = maxrow + 1 + j;//dgcolumns[i].length - j;
+      dgnode.debuggerNode = displayDGnode(dgnode.getName(), FABRIC.RT.vec2(column*240, row*100));
     }
   }
   
@@ -386,12 +452,13 @@ $(document).ready(function() {
         eventsMap[i].debuggerNode.getOutPort(0)
           .connectTo(children[j].debuggerNode.getInPort(0),{
             fireCallbacks: false,
-            connectable:false
+            connectable: false
           });
       }
     }
   }
   for(var i in eventHandlersMap){
+    var eventHandler = eventHandlersMap[i];
     if(eventHandlersMap[i].debuggerNode){
       var children = eventHandlersMap[i].getChildEventHandlers();
       for(var j=0; j<children.length; j++){
@@ -399,10 +466,26 @@ $(document).ready(function() {
           eventHandlersMap[i].debuggerNode.getOutPort(0)
             .connectTo(children[j].debuggerNode.getInPort(0),{
               fireCallbacks: false,
-              connectable:false
+              connectable: false
             });
         }
       }
+      var scopes = eventHandler.getScopes();
+      var scropeId = 0;
+      for(var i in scopes){
+        scopes[i].debuggerNode.getOutPort(0)
+          .connectTo(eventHandler.debuggerNode.getInPort(scropeId+1),{
+            fireCallbacks: false,
+            connectable: false
+          });
+        scropeId++;
+      }
+    }
+  }
+  
+  for(var i in nodesMap){
+    if(nodesMap[i].debuggerNode){
+      
     }
   }
   

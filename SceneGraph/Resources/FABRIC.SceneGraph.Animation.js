@@ -77,7 +77,7 @@ FABRIC.SceneGraph.registerNodeType('AnimationTrack',
     // extend private interface
     animationTrackNode.getInterpolatorOperator = function() {
       return scene.constructOperator({
-          operatorName: 'evaluateKeyframeAnimationTrack',
+          operatorName: 'evaluate'+options.keyframetype+'KeyframeAnimationTrack',
           srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/evaluateKeyframeAnimationTrack.kl',
           preProcessorDefinitions: {
             KEYFRAMETYPE: options.keyframetype,
@@ -95,7 +95,7 @@ FABRIC.SceneGraph.registerNodeType('AnimationTrack',
     };
     animationTrackNode.getDrawOperator = function() {
       return scene.constructOperator({
-          operatorName: 'evaluateCurve',
+          operatorName: 'evaluate'+options.keyframetype+'Curve',
           srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/evaluateKeyframeAnimationTrack.kl',
           preProcessorDefinitions: {
             KEYFRAMETYPE: options.keyframetype,

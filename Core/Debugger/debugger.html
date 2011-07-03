@@ -1,5 +1,8 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd"> 
-<html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <!--
+    Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
+    -->
   <head>
   <meta http-equiv="Content-Language" content="en" />
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
@@ -24,12 +27,6 @@
     
     <style type="text/css">
     
-
-/*
- *  Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
- */
-
-
 rect.EditorButton {
   fill:#808080;
   stroke:white;
@@ -326,7 +323,9 @@ $(document).ready(function() {
     });
   
   $(window).resize(function () {
-    
+    windowWidth = $('#viewer').width();
+    windowHeight = $('#viewer').height();
+    graphBGRect.size(windowWidth, windowHeight);
   });
   
   var displayOperatorList = function(node, operators){
@@ -370,7 +369,7 @@ $(document).ready(function() {
       .translate(pos);
     node.addInPort({
         color: FABRIC.RT.rgb255(200,80,80),
-        allowMultipleConnections:false,
+        allowMultipleConnections:true,
         createLabelEventCatcher:false
       });
     node.addOutPort({
@@ -512,11 +511,9 @@ $(document).ready(function() {
   
   $('#displayEventHandlers').button()
       .click(function() {
-        }
       });
   $('#displayDependencyGraph').button()
       .click(function() {
-        }
       });
 });
 

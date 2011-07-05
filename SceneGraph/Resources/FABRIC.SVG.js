@@ -6,14 +6,14 @@
 // TODO: Move this function into a namespace. FABRIC.helpers possibly.
 function clone_obj(obj, deepclone) {
     var c = obj instanceof Array ? [] : {};
-    
+
     for (var i in obj) {
         var prop = obj[i];
-    
+
         if (deepclone == true && typeof prop == 'object') {
            if (prop instanceof Array) {
                c[i] = [];
-    
+
                for (var j = 0; j < prop.length; j++) {
                    if (typeof prop[j] != 'object') {
                        c[i].push(prop[j]);
@@ -28,7 +28,7 @@ function clone_obj(obj, deepclone) {
            c[i] = prop;
         }
     }
-    
+
     return c;
 }
 
@@ -58,7 +58,8 @@ FABRIC.createSVGRootElem = function(domRootID) {
 
   SVGFactory.prototype = {
     svgns: 'http://www.w3.org/2000/svg',
-    createSVGElement: function(type){
+    createSVGElement: function(type)
+    {
       return document.createElementNS(this.svgns, type);
     },
     appendTo: function(parentNode) {
@@ -150,7 +151,7 @@ FABRIC.createSVGRootElem = function(domRootID) {
       }
       return this;
     },
-    id: function() {
+    id: function(id) {
       if (arguments.length === 0) {
         return this.attr('id');
       }

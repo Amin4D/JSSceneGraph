@@ -569,6 +569,8 @@ FABRIC.SceneGraph.registerNodeType('Material',
       };
     }
     else {
+      // The shader and the material properties are stored in the same node.
+      // we simply extend the shader with the material paramters. 
       options.dgnodenames.push('DGNode');
       materialNode = scene.constructNode('Shader', options);
       dgnode = materialNode.getDGNode();
@@ -584,21 +586,14 @@ FABRIC.SceneGraph.registerNodeType('Material',
 
     operators = redrawEventHandler.preDescendBindings;
     if (options.autoSetProgram) {
-      if (options.separateShaderNode) {
-        operators.append(scene.constructOperator({
-          operatorName: 'useProgramOp',
-          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadShader.kl',
-          entryFunctionName: 'useProgram',
-          parameterBinding: ['shader.program']
-        }));
-      }else{
-        operators.append(scene.constructOperator({
-          operatorName: 'useProgramOp',
-          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadShader.kl',
-          entryFunctionName: 'useProgram',
-          parameterBinding: ['self.program']
-        }));
-      }
+      operators.append(scene.constructOperator({
+        operatorName: 'useProgramOp',
+        srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadShader.kl',
+        entryFunctionName: 'useProgram',
+        parameterBinding: [
+          (options.separateShaderNode ? 'shader.program' : 'self.program')
+        ]
+      }));
     }
 
     /////////////////////////////////
@@ -628,7 +623,7 @@ FABRIC.SceneGraph.registerNodeType('Material',
         },
         entryFunctionName: operatorFunction,
         parameterBinding: [
-          'shader.uniformValues',
+          (options.separateShaderNode ? 'shader.uniformValues' : 'self.uniformValues'),
           (uniform.owner === undefined ? 'material' : uniform.owner) + '.' + uniformName
         ]
       }));

@@ -63,7 +63,7 @@ $(document).ready(function() {
     });
 
   var numAgents, gridSize, cameraPos;
-  var sceneSize = 'massive';
+  var sceneSize = 'huge';
   if (sceneSize === 'tiny') {
     cameraPos = FABRIC.RT.vec3(20, 30, -40).scale(0.05);
     numAgents = 10;
@@ -85,7 +85,7 @@ $(document).ready(function() {
     gridSize = 250;
   }
   else if (sceneSize === 'massive') {
-    cameraPos = FABRIC.RT.vec3(20, 30, -40).scale(50);
+    cameraPos = FABRIC.RT.vec3(20, 30, -40).scale(10);
     numAgents = 160000;
     gridSize = 800;
   }

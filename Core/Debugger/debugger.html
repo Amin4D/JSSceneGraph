@@ -28,7 +28,18 @@
 /*
  *  Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
  */
+#graph{
+	position:absolute;
+	left:0;
+	right:251px;
+	top:0;
+	bottom:0;
+}
 
+svg.graph {
+  width:100%;
+  height:100%;
+}
 
 rect.EditorButton {
   fill:#808080;
@@ -303,15 +314,18 @@ $(document).ready(function() {
     layoutEventHandlers(eventsMap[i].getEventHandlers(), 1, row);
   }
 
-  var windowWidth = $('#viewer').width();
-  var windowHeight = $('#viewer').height();
+  var windowWidth = $('#graph').width();
+  var windowHeight = $('#graph').height();
 
-  svgRoot = FABRIC.createSVGRootElem('viewer');
+  svgRoot = FABRIC.createSVGRootElem('graph').id('graph');
 
-  var graphBGRect = svgRoot.createRect().size(windowWidth, windowHeight).addClass('EventCatcher');
-  var graphHolderGroup = svgRoot.createGroup().translate(windowWidth * 0.5, windowHeight * 0.5);
-  var graphSclGroup = graphHolderGroup.createGroup().scale(1.0);
-  var graphPosGroup = graphSclGroup.createGroup().translate(windowWidth * -0.5, 0);
+//  var graphBGRect = svgRoot.createRect().size(windowWidth, windowHeight).addClass('EventCatcher');
+  svgRoot.createCircle().radius(windowWidth*0.5).translate(windowWidth * 0.5, windowHeight * 0.5);
+  /*
+//  var graphHolderGroup = svgRoot.createGroup().translate(windowWidth * 0.5, windowHeight * 0.5);
+  var graphSclGroup = svgRoot.createGroup().scale(1.0);
+//  var graphCounterOffsetGroup = graphSclGroup.createGroup().translate(windowWidth * -0.5,  windowHeight * -0.5);
+  var graphPosGroup = graphSclGroup.createGroup().translate(0, 0);
   var curvesHolderGroup = graphPosGroup.createGroup();
   var nodesHolderGroup = graphPosGroup.createGroup();
   
@@ -319,14 +333,27 @@ $(document).ready(function() {
   svgRoot.setNodeHolderGroup(nodesHolderGroup);
   svgRoot.setEdgeHolderGroup(curvesHolderGroup);
   
+  
   svgRoot.draggable({mouseButton:1, delegateTranslateObj:graphPosGroup, highlight:false })
     .zoomable({delegateZoomObj:graphSclGroup })
     .addOnZoomCallback(
       function(evt){
-    });
+        var scale = graphSclGroup.scale();
+      //  graphCounterOffsetGroup.translate(windowWidth * -0.5 * scale,  windowHeight * -0.5 * scale);
+      });
   
   $(window).resize(function () {
+<<<<<<< Updated upstream
     
+=======
+    windowWidth = $('#viewer').width();
+    windowHeight = $('#viewer').height();
+    graphBGRect.size(windowWidth, windowHeight);
+    
+  //  graphHolderGroup.translate(windowWidth * 0.5, windowHeight * 0.5);
+    var scale = graphSclGroup.scale();
+  //  graphCounterOffsetGroup.translate(windowWidth * -0.5 * scale,  windowHeight * -0.5 * scale);
+>>>>>>> Stashed changes
   });
   
   var displayOperatorList = function(node, operators){
@@ -392,7 +419,6 @@ $(document).ready(function() {
     return node;
   }
   
-  
   var displayDGnode = function(name, pos){
     var dgnode = nodesMap[name];
     var node = nodesHolderGroup.createNode({
@@ -428,7 +454,11 @@ $(document).ready(function() {
     return node;
   }
   
+  var maxehrow = 0;
+  var tl = FABRIC.RT.vec2(0,0);
+  var br = FABRIC.RT.vec2(0,0);
   var maxrow = 0;
+  
   for(var i=0; i < ehcolumns.length; i++){
     for(var j=0; j < ehcolumns[i].length; j++){
       var dgnode = ehcolumns[i][j];
@@ -440,21 +470,35 @@ $(document).ready(function() {
       }else{
         dgnode.debuggerNode = displayEventHandler(dgnode.getName(), FABRIC.RT.vec2(column*240, row*100));
       }
-      if(j>maxrow) maxrow = j;
+      if(j>maxehrow) maxehrow = j;
+      if(tl.x > column) tl.x = column;
+      if(br.x < column) br.x = column;
+      if(br.y < row) br.y = row;
     }
   }
   
-//  for(var i=0; i < dgcolumns.length; i++){
   for(i in dgcolumns){
+    i = parseInt(i);
     if(!dgcolumns[i]) continue;
     for(var j=0; j < dgcolumns[i].length; j++){
       var dgnode = dgcolumns[i][j];
       if(!dgcolumns[i][j]) continue;
-      var column = i;//dgcolumns.length - i;
-      var row = maxrow + 1 + j;//dgcolumns[i].length - j;
+      var column = i;
+      var row = maxehrow + 1 + j;
       dgnode.debuggerNode = displayDGnode(dgnode.getName(), FABRIC.RT.vec2(column*240, row*100));
+      if(tl.x > column) tl.x = column;
+      if(br.x < column) br.x = column;
+      if(br.y < row) br.y = row;
     }
   }
+//  tl.mulInPlace(FABRIC.RT.vec2(240, 100));
+//  br.mulInPlace(FABRIC.RT.vec2(240, 100));
+//  console.log( "scale:"+ windowWidth/((br.x - tl.x) * 240));
+//  console.log( "translate:"+ windowHeight/((br.y - tl.y) * 100));
+  var scale = windowWidth /((br.x - tl.x) * 240);
+//  graphSclGroup.scale(scale);
+//  graphPosGroup.translate(0, windowHeight/((br.y - tl.y) * 100));
+//  graphCounterOffsetGroup.translate(windowWidth * -0.5 * scale,  windowHeight * -0.5 * scale);
   
   for(var i in eventsMap){
     var children = eventsMap[i].getEventHandlers();
@@ -518,6 +562,7 @@ $(document).ready(function() {
       .click(function() {
         }
       });
+  */
 });
 
 
@@ -534,7 +579,7 @@ $(document).ready(function() {
       </ul>
       <div id="editor">
         
-        <div id="viewer">
+        <div id="graph">
         </div><!--viewer-->
         
         <div id="sidebar">

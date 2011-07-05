@@ -232,12 +232,9 @@ $(document).ready(function() { var $globalTimeSlider = $('#globalTime').slider({
 
     $('#curveEditor').button()
       .click(function() {
-        var curveEditorWindow = window.open(
-            '../../../SceneGraph/CurveEditor/CurveEditor.html',
-            'Fabric Curve Editor'
-          );
-        curveEditorWindow.keyframeTrackNode = bezierKeyframeTrackNode;
-        curveEditorWindow.scene = scene;
+        var debuggerWindow = window.open('../../../SceneGraph/CurveEditor/CurveEditor.html', 'Fabric Curve Editor');
+        debuggerWindow.keyframeTrackNode = bezierKeyframeTrackNode;
+        debuggerWindow.scene = scene;
       });
   }
 });

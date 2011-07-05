@@ -339,9 +339,9 @@ FABRIC.SceneGraph = {
       }
 
       uid = operatorDef.operatorName;
-    //  for (def in operatorDef.preProcessorDefinitions) {
-    //    uid = uid + def + operatorDef.preProcessorDefinitions[def];
-    //  }
+      for (def in operatorDef.preProcessorDefinitions) {
+        uid = uid + def + operatorDef.preProcessorDefinitions[def];
+      }
       if (operatorStore[uid]) {
         return constructBinding(operatorStore[uid]);
       }
@@ -579,7 +579,10 @@ FABRIC.SceneGraph = {
       });
 
     scene.pub.displayDebugger = function() {
-      FABRIC.displayDebugger(context);
+      var debuggerWindow = window.open(
+        FABRIC.processURL('FABRIC_ROOT/Core/Debugger/FABRIC.Debugger.html') + '?id=' + context.getContextID() , 'Fabric Debugger');
+      debuggerWindow.context = context;
+      debuggerWindow.scene = scene;
     };
     scene.pub.getSceneGraphNode = function(name) {
       return sceneGraphNodes[name];

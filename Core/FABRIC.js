@@ -56,17 +56,6 @@ FABRIC = (function() {
     document.body.appendChild(embedTag);
 
     var context = bindContextToEmbedTag(embedTag);
-    
-    FABRIC.displayDebugger = function(ctx) {
-      if(!ctx) ctx = context;
-      var debuggerWindow = window.open(
-          FABRIC.processURL('FABRIC_ROOT/Core/Debugger/debugger.html') + '?id=' + context.getContextID() ,
-          'Fabric Debugger'
-        );
-      debuggerWindow.context = context;
-      debuggerWindow.scene = scene;
-    };
-    
     if(!contextID){
       // only fire the callbacks if a new context is being created.
       for (var i = 0; i < onCreateContextCallbacks.length; ++i)
@@ -144,9 +133,11 @@ FABRIC = (function() {
   
   
   var processURL = function(url) {
+    // TEMP: This will be removed once we start hosting our IDE files.
+    // Then projects can access these files via an absolute URL.
+    // Until then we prefix with "FABRIC_ROOT", and generate a URL
     if (url.split('/')[0] === 'FABRIC_ROOT') {
-        // Remove the "FABRIC_ROOT" and replace it with
-        // the path to the Fabric SDK.
+        // Remove the "FABRIC_ROOT"
       url = url.split('/').splice(1).join('/');
       var urlSections = document.location.href.split('/');
       do {

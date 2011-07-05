@@ -93,7 +93,8 @@ $(document).ready(function() {
 
   viewport.setCameraNode(camera);
 
-  var light = scene.constructNode('PointLight', { position: FABRIC.RT.vec3(420.0, 1000.0, 600.0) });
+  //constraint a pointLight to the camera
+  var light = scene.constructNode('PointLight', { transformNode: camera.getTransformNode() });
   var material = scene.constructNode('PhongVertexColorMaterial', { lightNode: light });
 
   var assets = scene.importAssetFile('Models/bunny.obj');

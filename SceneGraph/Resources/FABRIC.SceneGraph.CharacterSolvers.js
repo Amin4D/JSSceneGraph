@@ -275,7 +275,7 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('FKChainSolver',
         size,
         name = options.name,
         i,
-        childManipulator,
+        manipulators = [],
         chainLocalReferencePose = [],
         chainGlobalReferencePose = [];
 
@@ -315,18 +315,17 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('FKChainSolver',
         }), opBindings.getLength() - 1);
 
       if (options.createManipulators) {
-        for (i = (boneIDs.bones.length - 1); i >= 0; i--) {
-          childManipulator = solver.constructManipulator(name + 'FKChainManipulator' + i, 'BoneManipulator', {
+        for (i = 0; i < boneIDs.bones.length; i++) {
+          manipulators.push(solver.constructManipulator(name + 'FKChainManipulator' + i, 'BoneManipulator', {
             targetNode: variablesNode.pub,
             targetMember: name + 'localXfos',
             targetMemberIndex: i,
             parentNode: rigNode.pub,
             parentMember: (i > 0 ? name + 'globalXfos' : 'pose'),
             parentMemberIndex: (i > 0 ? i - 1 : bones[boneIDs.bones[i]].parent),
-            childManipulator: (options.chainManipulators ? childManipulator : undefined),
             length: bones[boneIDs.bones[i]].length,
             color: FABRIC.RT.rgb(0, 0, 1)
-          });
+          }));
 
           if (options.twistManipulators == true || options.twistManipulators[i] == true) {
             solver.constructManipulator(name + 'FKChainTwistManipulator' + i, 'RotationManipulator', {
@@ -343,6 +342,16 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('FKChainSolver',
               radius: (options.twistManipulatorRadius ?
                 options.twistManipulatorRadius : bones[boneIDs.bones[i]].length * 0.25)
             });
+          }
+        }
+        if(options.chainManipulators){
+          for (i = 0; i < manipulators.length; i++) {
+            if(i>0){
+              manipulators[i].setParentManipulatorNode( manipulators[i-1].pub );
+            }
+            if(i<manipulators.length-1){
+              manipulators[i].setChildManipulatorNode( manipulators[i+1].pub );
+            }
           }
         }
       }

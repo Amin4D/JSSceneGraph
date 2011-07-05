@@ -219,7 +219,6 @@ g.Highlighted {
   </style>
     <script type="text/javascript">
 
-
 $(document).ready(function() {
   
   if(!window.context){
@@ -251,66 +250,82 @@ $(document).ready(function() {
   
   var ehcolumns = [];
   var dgcolumns = [];
+  var layoutMap = {};
   
-  var layoutDGNodes = function(dgnode, column){
-    if(!dgcolumns[column]) dgcolumns[column] = [];
-    if(dgnode.column){
-      if(dgnode.column > column){
+  var maxehrow = 0;
+  var tl = FABRIC.vec2(0,0);
+  var br = FABRIC.vec2(0,0);
+  
+  var layoutDGNodes = function(dgnode, parentPos){
+    var name = dgnode.getName();
+    var pos = parentPos.subtract(FABRIC.vec2(1, 0));
+    if(!dgcolumns[pos.x]) dgcolumns[pos.x] = 0;
+    if(layoutMap[name]){
+      if(layoutMap[name].x > pos.x){
+        dgcolumns[pos.x]++;
         // Re-assign the node to the new column;
-        var row = dgcolumns[dgnode.column].indexOf(dgnode);
-        dgcolumns[dgnode.column][row] = undefined;
-        dgcolumns[column].push(dgnode);
-        dgnode.column = column;
+        layoutMap[name].x = pos.x;
+        layoutMap[name].y = dgcolumns[pos.x];
       }
+      pos = layoutMap[name];
     }else{
-      dgcolumns[column].push(dgnode);
-      dgnode.column = column;
+      dgcolumns[pos.x]++;
+      pos.y = dgcolumns[pos.x];
+      layoutMap[name] = pos;
     }
     var dependencies = dgnode.getDependencies();
     for(var i in dependencies){
-      layoutDGNodes(dependencies[i], column-1)
+      layoutDGNodes(dependencies[i], layoutMap[name])
     }
   }
   
-  var layoutEventHandlers = function(children, column, parentrow){
+  var layoutEventHandlers = function(children, parentPos){
     if(children.length > 0){
-      if(!ehcolumns[column]) ehcolumns[column] = [];
       for(var j=0; j < children.length; j++){
         var eventHandler = children[j];
-        var row = 0;
-        if(eventHandler.column ){
-          if( eventHandler.column < column){
+        var name = eventHandler.getName();
+        var pos = parentPos.add(FABRIC.vec2(1, 0));
+        if(!ehcolumns[pos.x]) ehcolumns[pos.x] = 0;
+        if(layoutMap[name]){
+          if( layoutMap[name].x < pos.x){
+            ehcolumns[pos.x]++;
             // Re-assign the handler to the new column;
-            row = ehcolumns[eventHandler.column].indexOf(eventHandler);
-            ehcolumns[eventHandler.column][row] = undefined;
-            row = ehcolumns[column].length;
-            ehcolumns[column].push(eventHandler);
-            eventHandler.column = column;
+            layoutMap[name].x = pos.x;
+            layoutMap[name].y = ehcolumns[pos.x];
           }
         }else{
-          row = ehcolumns[column].length;
-          // ensure that in the event tree, child 
           // nodes are inline with parent nodes. 
-          if(row<parentrow) row = parentrow;
-          ehcolumns[column][row] = eventHandler;
-          eventHandler.column = column;
+          if(ehcolumns[pos.x] < parentPos.y){
+            ehcolumns[pos.x] = parentPos.y;
+          }else{
+            ehcolumns[pos.x]++;
+          }
+          pos.y = ehcolumns[pos.x];
+          layoutMap[name] = pos;
         }
-        layoutEventHandlers(eventHandler.getChildEventHandlers(), column+1, row);
+        if(maxehrow < layoutMap[name].y){
+          maxehrow = layoutMap[name].y;
+        }
+        layoutEventHandlers(eventHandler.getChildEventHandlers(), layoutMap[name]);
         var scopes = eventHandler.getScopes();
         for(var i in scopes){
-          layoutDGNodes(scopes[i], column-1)
+          layoutDGNodes(scopes[i], layoutMap[name])
         }
       }
     }
   }
   
-  ehcolumns[0] = [];
+  ehcolumns[0] = 0;
   for(var i in eventsMap){
-    var row = ehcolumns[1] ? ehcolumns[1].length : ehcolumns[0].length;
-    ehcolumns[0][row] = eventsMap[i];
-    layoutEventHandlers(eventsMap[i].getEventHandlers(), 1, row);
+    ehcolumns[0]++;
+    var row = ehcolumns[0];
+    if( ehcolumns[1] && ehcolumns[1] > ehcolumns[0] ){
+      row = ehcolumns[1];
+    }
+    ehcolumns[0] = row;
+    layoutMap[i] = FABRIC.vec2(0, row);
+    layoutEventHandlers(eventsMap[i].getEventHandlers(), layoutMap[i]);
   }
-  
   
   var graphWidth = $('#graph').width();
   var graphHeight = $('#graph').height();
@@ -440,47 +455,37 @@ $(document).ready(function() {
     return node;
   }
   
-  var maxehrow = 0;
-  var tl = FABRIC.vec2(0,0);
-  var br = FABRIC.vec2(0,0);
-  var maxrow = 0;
+  var graphSpacing = FABRIC.vec2(240, 100);
   
-  for(var i=0; i < ehcolumns.length; i++){
-    for(var j=0; j < ehcolumns[i].length; j++){
-      var dgnode = ehcolumns[i][j];
-      if(!ehcolumns[i][j]) continue;
-      var column = i;
-      var row = j;
-      if(i==0){
-        dgnode.debuggerNode = displayEvent(dgnode.getName(), FABRIC.vec2(0, row*100));
-      }else{
-        dgnode.debuggerNode = displayEventHandler(dgnode.getName(), FABRIC.vec2(column*240, row*100));
-      }
-      if(maxehrow < (row+1)) maxehrow = (row+1);
-      if(tl.x > column) tl.x = column;
-      if(br.x < (column+1)) br.x = (column+1);
-      if(br.y < row) br.y = row;
+  for(var i in layoutMap){
+    var dgnode = allNamedObjects[i];
+    if(!layoutMap[i]){
+      console.warn("Missing Layout information:" + i);
+      continue;
     }
+    var name = dgnode.getName();
+    var type = dgnode.getType();
+    var pos = layoutMap[name];
+    if(type === "Event"){
+      dgnode.debuggerNode = displayEvent(name, pos.multiply(graphSpacing));
+    }
+    else if(type === "EventHandler"){
+      dgnode.debuggerNode = displayEventHandler(name, pos.multiply(graphSpacing));
+    }
+    if(type === "Node"){
+      pos.y += maxehrow;
+      dgnode.debuggerNode = displayDGnode(dgnode.getName(), pos.multiply(graphSpacing));
+    }
+    if(tl.x > pos.x) tl.x = pos.x;
+    if(br.x < pos.x) br.x = pos.x;
+    if(br.y < pos.y) br.y = pos.y;
   }
   
-  for(i in dgcolumns){
-    i = parseInt(i);
-    if(!dgcolumns[i]) continue;
-    for(var j=0; j < dgcolumns[i].length; j++){
-      var dgnode = dgcolumns[i][j];
-      if(!dgcolumns[i][j]) continue;
-      var column = i;
-      var row = maxehrow + j;
-      dgnode.debuggerNode = displayDGnode(dgnode.getName(), FABRIC.vec2(column*240, row*100));
-      if(tl.x > column) tl.x = column;
-      if(br.x < (column+1)) br.x = (column+1);
-      if(br.y < (row+1)) br.y = (row+1);
-    }
+  var scale = graphWidth /((br.x - tl.x) * graphSpacing.x);
+  if(scale < 1.0){
+    graphSclGroup.scale(scale);
+    graphPosGroup.translate(graphWidth - ((br.x - tl.x) * graphSpacing.x * 0.5), 0);//((br.y - tl.y) * graphSpacing.y * 0.25));
   }
-  
-  var scale = graphWidth /((br.x - tl.x) * 240);
-  graphSclGroup.scale(scale);
-  graphPosGroup.translate(graphWidth - ((br.x - tl.x - 2) * 240 * 0.5), graphHeight - ((br.y - tl.y + 2) * 100 * 0.5));
   
   for(var i in eventsMap){
     var children = eventsMap[i].getEventHandlers();
@@ -494,6 +499,7 @@ $(document).ready(function() {
       }
     }
   }
+  
   for(var i in eventHandlersMap){
     var eventHandler = eventHandlersMap[i];
     if(eventHandlersMap[i].debuggerNode){

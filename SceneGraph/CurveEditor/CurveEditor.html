@@ -71,8 +71,8 @@ $(document).ready(function() {
   ///////////////
   var trackDisplayNodes = [];
   var trackCount = keyframeTrackNode.getTrackCount();
-  var timeRange = FABRIC.RT.vec2(0, 0);
-  var yRange = FABRIC.RT.vec2(0, 0);
+  var timeRange = FABRIC.vec2(0, 0);
+  var yRange = FABRIC.vec2(0, 0);
   var curvesData = [];
   var trackCurves = [];
   for (var i = 0; i < trackCount; i++) {
@@ -88,8 +88,8 @@ $(document).ready(function() {
 
 
   var screenXfo = {
-    tr: FABRIC.RT.vec2(0, 0),
-    sc: FABRIC.RT.vec2(1, 1),
+    tr: FABRIC.vec2(0, 0),
+    sc: FABRIC.vec2(1, 1),
     fitToScreen:function(){
       for (var i = 0; i < trackCount; i++) {
         var keys = keyframeTrackNode.getTrackKeys(i);
@@ -114,12 +114,12 @@ $(document).ready(function() {
         trackDisplayNodes[i].setTimeRange(timeRange);
         curvesData[i] = trackDisplayNodes[i].getCurveData();
         if(i==0){
-          yRange = FABRIC.RT.vec2(curvesData[0].value[0], curvesData[0].value[0]);
+          yRange = FABRIC.vec2(curvesData[0].value[0], curvesData[0].value[0]);
         }
         getCurveYRange(curvesData[i]);
       }
-      this.sc = FABRIC.RT.vec2(windowWidth/(timeRange.y - timeRange.x), -(windowHeight - 40) / (yRange.y - yRange.x));
-      this.tr = FABRIC.RT.vec2(-timeRange.x, (yRange.y + yRange.x) * -0.5);
+      this.sc = FABRIC.vec2(windowWidth/(timeRange.y - timeRange.x), -(windowHeight - 40) / (yRange.y - yRange.x));
+      this.tr = FABRIC.vec2(-timeRange.x, (yRange.y + yRange.x) * -0.5);
     },
     update: function(){
       this.sc.x = windowWidth / (timeRange.y - timeRange.x);
@@ -144,10 +144,10 @@ $(document).ready(function() {
   var drawTrackCurves = function(){
     var drawTrackCurve = function(trackIndex) {
       var setPathCurveValues = function(curveData) {
-        var val = screenXfo.toScreenSpace(FABRIC.RT.vec2(curveData.time[0], curveData.value[0]))
+        var val = screenXfo.toScreenSpace(FABRIC.vec2(curveData.time[0], curveData.value[0]))
         var path = ['M', val.x, val.y, 'L', 100, 100, 300, 200];
         for (var i = 0; i < curveData.time.length; i++) {
-          val = screenXfo.toScreenSpace(FABRIC.RT.vec2(curveData.time[i], curveData.value[i]))
+          val = screenXfo.toScreenSpace(FABRIC.vec2(curveData.time[i], curveData.value[i]))
           path[(i * 2) + 4] = val.x;
           path[(i * 2) + 5] = val.y;
         }
@@ -165,7 +165,7 @@ $(document).ready(function() {
            (keyData.time + keyData.outtangent.x) > timeRange.x ){
           ///////////////////////////////////////////////
           // Key
-          var keySsVal = screenXfo.toScreenSpace(FABRIC.RT.vec2(keyData.time, keyData.value));
+          var keySsVal = screenXfo.toScreenSpace(FABRIC.vec2(keyData.time, keyData.value));
           // When keyframes are manipulated, we can maintain the tangent lengths
           // by storing the relative lengths, and gradients. Then, during manipulation
           // we maintain these relative lengths and gradients. This simplifies the
@@ -223,7 +223,7 @@ $(document).ready(function() {
                 updateCurve();
                 scene.redrawAllWindows();
               });
-          var keyNode = keyGroupNode.createRect().translate(-4, -4).size(8, 8).stroke(FABRIC.RT.rgb(1, 1, 1));
+          var keyNode = keyGroupNode.createRect().translate(-4, -4).size(8, 8).stroke(FABRIC.rgb(1, 1, 1));
           
           
           ///////////////////////////////////////////////
@@ -234,7 +234,7 @@ $(document).ready(function() {
             inTanLineNode.attr('d', 'M 0 0 L ' + inTanSsVal.x + ' ' + inTanSsVal.y);
             var inTanNode = keyGroupNode.createRect()
                                                 .translate(inTanSsVal.x - 3, inTanSsVal.y - 3)
-                                                .size(6, 6).stroke(FABRIC.RT.rgb(1, 1, 1));
+                                                .size(6, 6).stroke(FABRIC.rgb(1, 1, 1));
             inTanNode.draggable({ mouseButton: 0 })
               .addOnDragCallback(
                 function(evt) {
@@ -262,7 +262,7 @@ $(document).ready(function() {
             outTanLineNode.attr('d', 'M 0 0 L ' + outTanSsVal.x + ' ' + outTanSsVal.y);
             var outTanNode = keyGroupNode.createRect()
                                                  .translate(outTanSsVal.x - 3, outTanSsVal.y - 3)
-                                                 .size(6, 6).stroke(FABRIC.RT.rgb(1, 1, 1));
+                                                 .size(6, 6).stroke(FABRIC.rgb(1, 1, 1));
     
             outTanNode.draggable({ mouseButton: 0 })
               .addOnDragCallback(

@@ -164,22 +164,65 @@ $(document).ready(function() {
           ///////////////////////////////////////////////
           // Key
           var keySsVal = screenXfo.toScreenSpace(FABRIC.RT.vec2(keyData.time, keyData.value));
+          // When keyframes are manipulated, we can maintain the tangent lengths
+          // by storing the relative lengths, and gradients. Then, during manipulation
+          // we maintain these relative lengths and gradients. This simplifies the
+          // keyframes, by moving the complexity into the manipulation system.
+          var prevKey, nextKey, tangentNormalizedValues = [];
           var keyGroupNode = keysHolderGroup.createGroup().translate(keySsVal)
             .draggable({ mouseButton: 0 })
             .addOnDragBeginCallback(
               function(evt){
-              })
+                var deltat, i=0;
+                if(keyIndex>0){
+                  prevKey = trackData.keys[keyIndex-1];
+                  deltat = keyData.time - prevKey.time;
+                  tangentNormalizedValues[i++] = prevKey.outtangent.x / deltat;
+                  tangentNormalizedValues[i++] = prevKey.outtangent.y / prevKey.outtangent.x;
+                  tangentNormalizedValues[i++] = keyData.intangent.x / deltat;
+                  tangentNormalizedValues[i++] = keyData.intangent.y / keyData.intangent.x;
+                }
+                if(keyIndex<trackData.keys.length-1){
+                  nextKey = trackData.keys[keyIndex+1];
+                  deltat = nextKey.time - keyData.time;
+                  tangentNormalizedValues[i++] = keyData.outtangent.x / deltat;
+                  tangentNormalizedValues[i++] = keyData.outtangent.y / keyData.outtangent.x;
+                  tangentNormalizedValues[i++] = nextKey.intangent.x / deltat;
+                  tangentNormalizedValues[i++] = nextKey.intangent.y / nextKey.intangent.x;
+                }
+            })
             .addOnDragCallback(
               function(evt) {
                 var keyGsVal = screenXfo.toGraphSpace(evt.localPos);
                 keyData.time = keyGsVal.x;
                 keyData.value = keyGsVal.y;
     
+                var deltat, i=0;
+                if(keyIndex>0){
+                  deltat = keyData.time - prevKey.time;
+                  prevKey.outtangent.x = deltat * tangentNormalizedValues[i++];
+                  prevKey.outtangent.y = prevKey.outtangent.x * tangentNormalizedValues[i++];
+                  keyData.intangent.x = deltat * tangentNormalizedValues[i++];
+                  keyData.intangent.y = keyData.intangent.x * tangentNormalizedValues[i++];
+                  prevKey.setOutTan(prevKey.outtangent);
+                  keyData.setInTan(keyData.intangent);
+                }
+                if(keyIndex<trackData.keys.length){
+                  deltat = nextKey.time - keyData.time;
+                  keyData.outtangent.x = deltat * tangentNormalizedValues[i++];
+                  keyData.outtangent.y = keyData.outtangent.x * tangentNormalizedValues[i++];
+                  nextKey.intangent.x = deltat * tangentNormalizedValues[i++];
+                  nextKey.intangent.y = nextKey.intangent.x * tangentNormalizedValues[i++];
+                  keyData.setOutTan(keyData.outtangent);
+                  nextKey.setInTan(nextKey.intangent);
+                }
+                
                 keyframeTrackNode.setKeyData(trackIndex, keyIndex, keyData);
                 updateCurve();
                 scene.redrawAllWindows();
               });
           var keyNode = keyGroupNode.createRect().translate(-4, -4).size(8, 8).stroke(FABRIC.RT.rgb(1, 1, 1));
+          
           
           ///////////////////////////////////////////////
           // In Tangent
@@ -200,6 +243,15 @@ $(document).ready(function() {
                   scene.redrawAllWindows();
                 });
           }
+          keyData.setInTan = function(intangent){
+            keyData.intangent = intangent;
+            if(inTanNode){
+              var inTanSsVal = screenXfo.toScreenSpace(keyData.intangent, true);
+              inTanNode.translate(inTanSsVal.x - 3, inTanSsVal.y - 3)
+              inTanLineNode.attr('d', 'M 0 0 L ' + inTanSsVal.x + ' ' + inTanSsVal.y);
+            }
+            keyframeTrackNode.setKeyData(trackIndex, keyIndex, keyData);
+          }
           ///////////////////////////////////////////////
           // Out Tangent
           if(keyData.time < timeRange.y){
@@ -219,6 +271,15 @@ $(document).ready(function() {
                   updateCurve();
                   scene.redrawAllWindows();
                 });
+          }
+          keyData.setOutTan = function(outtangent){
+            keyData.outtangent = outtangent;
+            if(outTanNode){
+              var outTanSsVal = screenXfo.toScreenSpace(keyData.outtangent, true);
+              outTanNode.translate(outTanSsVal.x - 3, outTanSsVal.y - 3)
+              outTanLineNode.attr('d', 'M 0 0 L ' + outTanSsVal.x + ' ' + outTanSsVal.y);
+            }
+            keyframeTrackNode.setKeyData(trackIndex, keyIndex, keyData);
           }
         }
       }
@@ -292,8 +353,6 @@ $(document).ready(function() {
         timeRange.x = dragStartTimeRange.x - (evt.dragVec.x / screenXfo.sc.x);
         timeRange.y = dragStartTimeRange.y - (evt.dragVec.x / screenXfo.sc.x);
         screenXfo.tr = dragStartOffset.add(evt.dragVec.multiply(screenXfo.sc.invert()));
-      //  offsetX = dragStartOffsetX + (evt.dragVec.x / scaleX);
-      //  offsetY = dragStartOffsetY + (evt.dragVec.y / scaleY);
         updateTimeRange();
       });
     

@@ -344,7 +344,6 @@ FABRIC.createSVGRootElem = function(domRootID) {
       }, options, false);
       var self = this;
 
-
       // Callbacks
       // onHighlight
       var onHighlightCallbacks = [];
@@ -2246,6 +2245,10 @@ FABRIC.createSVGRootElem = function(domRootID) {
   };
 
   var svgRoot = new SVGFactory('svg');
+  svgRoot.svgRoot = svgRoot;
+  svgRoot.setGraphHolderGroup = function(grp){ this.graphHolderGroup = grp; }
+  svgRoot.setNodeHolderGroup = function(grp){ this.nodeHolderGroup = grp; }
+  svgRoot.setEdgeHolderGroup = function(grp){ this.edgeHolderGroup = grp; }
   document.getElementById(domRootID).appendChild(svgRoot.elem);
   return svgRoot;
 };

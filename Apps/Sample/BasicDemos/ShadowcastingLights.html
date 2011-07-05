@@ -27,6 +27,7 @@
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Xfo.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/RGBA.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Color.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Ray.js" charset="utf-8"></script>
 
     <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Geometry.js" charset="utf-8"></script>
@@ -48,7 +49,8 @@ $(document).ready(function() {
 
   var viewport = scene.constructNode('Viewport', {
     /*postProcessEffect:postProcessEffect,*/
-    windowElement: document.getElementById('FabricContainer')
+    windowElement: document.getElementById('FabricContainer'),
+    enableRaycasting: true
   });
 
   // Set the viewPort background to red
@@ -56,21 +58,24 @@ $(document).ready(function() {
 
   // Create a camera to draw the scene from
   var camera = scene.constructNode('TargetCamera', {
-      position: FABRIC.RT.vec3(32, 20, 0),
-      target: FABRIC.RT.vec3(2, 0, -3)
-    });
+    position: FABRIC.RT.vec3(30, 30, 0),
+    target: FABRIC.RT.vec3(2, 0, -3)
+  });
 
   scene.constructNode("CameraManipulator", { targetNode:camera } );
   viewport.setCameraNode(camera);
 
   var spotLightNode = scene.constructNode('SpotLight', {
-      position: FABRIC.RT.vec3(3, 20, 0),
-      target: FABRIC.RT.vec3(0, 2, -6),
-      coneAngle: 80.0 * FABRIC.RT.degToRad,
-      farDistance: 60,
-      castShadows: true,
-      display: false
-    });
+    position: FABRIC.RT.vec3(10, 20, 5),
+    target: FABRIC.RT.vec3(0, 2, -6),
+    coneAngle: 80.0 * FABRIC.RT.degToRad,
+    farDistance: 60,
+    castShadows: true,
+    display: false
+  });
+
+  var lightTrManip = scene.constructNode('3AxisTranslationManipulator', { parentNode: spotLightNode.getTransformNode(), size: 4 });
+  var lightOriManip = scene.constructNode('3AxisRotationManipulator', { parentNode: spotLightNode.getTransformNode(), radius: 3 });
 
   var bluePhongMaterial = scene.constructNode('ShadowReceivingPhongMaterial', {
     diffuseColor: FABRIC.RT.rgb(0, 0, 0.8),

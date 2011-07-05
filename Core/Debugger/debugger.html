@@ -221,10 +221,9 @@ g.Highlighted {
 
 $(document).ready(function() {
   
-  if(!window.context){
-    var contextID = document.location.search.split('?id=')[1];
-    window.context = FABRIC.createContext({ contextID:contextID  });
-  }
+  
+  var contextID = document.location.search.split('?id=')[1];
+  window.context = FABRIC.createContext({ contextID:contextID  });
   
   if(!window.context){
     alert("this page must be opened from a running demo, passing it the correct context, or embedding it in the URL");
@@ -361,12 +360,23 @@ $(document).ready(function() {
     graphCounterOffsetGroup.translate(graphWidth * -0.5,  graphHeight * -0.5);
   });
   
+  var displayOperator = function(node, operator){
+      node.addOperator({
+        text: operator.getName(),
+        color: FABRIC.rgb255(80,200,200)
+      }).getButton().addOnClickCallback(function(){
+        window.open(
+            FABRIC.processURL('FABRIC_ROOT/Core/OperatorEditor/operatorEditor.html')
+            + '?id=' + contextID
+            + '?operator=' + operator.getName(),
+            'Fabric Operator Editor:' + operator.getName()
+          );
+      });
+  }
+  
   var displayOperatorList = function(node, operators){
     for(var i=0; i<operators.getLength(); i++){
-      node.addOperator({
-          text: operators.getOperator(i).getName(),
-          color: FABRIC.rgb255(80,200,200)
-        });
+      displayOperator(node, operators.getOperator(i) );
     }
   }
   

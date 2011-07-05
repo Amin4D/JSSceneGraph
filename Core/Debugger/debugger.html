@@ -19,11 +19,10 @@
 
     <script type="text/javascript" src="../FABRIC.js" charset="utf-8"></script>
     <script type="text/javascript" src="../FABRIC.Wrappers.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../SceneGraph/Resources/RT/Math.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../SceneGraph/Resources/RT/Vec2.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../SceneGraph/Resources/RT/Color.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../Vec2.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../Color.js" charset="utf-8"></script>
     
-    <script type="text/javascript" src="../../SceneGraph/Resources/FABRIC.SVG.js"></script>
+    <script type="text/javascript" src="../FABRIC.SVG.js"></script>
     
     <style type="text/css">
     
@@ -233,6 +232,7 @@ $(document).ready(function() {
   var eventsMap = {};
   var eventHandlersMap = {};
   var nodesMap = {};
+  
   for(var i in allNamedObjects){
     if(!allNamedObjects[ i ].getType){
       continue;
@@ -346,7 +346,7 @@ $(document).ready(function() {
     for(var i=0; i<operators.getLength(); i++){
       node.addOperator({
           text: operators.getOperator(i).getName(),
-          color: FABRIC.RT.rgb255(80,200,200)
+          color: FABRIC.rgb255(80,200,200)
         });
     }
   }
@@ -354,15 +354,15 @@ $(document).ready(function() {
   var displayEvent = function(name, pos){
     var node = nodesHolderGroup.createNode({
         text : name,
-        color:FABRIC.RT.rgb255(90,90,200),
+        color:FABRIC.rgb255(90,90,200),
         height: 15,
         createEditButton: true,
         draggable: true,
-        shadow: FABRIC.RT.vec2(0,0)
+        shadow: FABRIC.vec2(0,0)
       })
       .translate(pos);
     node.addOutPort({
-        color: FABRIC.RT.rgb255(200,80,80),
+        color: FABRIC.rgb255(200,80,80),
         allowMultipleConnections:true,
         createLabelEventCatcher:false
       });
@@ -374,20 +374,20 @@ $(document).ready(function() {
     var eventHandler = eventHandlersMap[name];
     var node = nodesHolderGroup.createNode({
         text : name,
-        color:FABRIC.RT.rgb255(90,200,90),
+        color:FABRIC.rgb255(90,200,90),
         height: 15,
         createEditButton: true,
         draggable: true,
-        shadow: FABRIC.RT.vec2(0,0)
+        shadow: FABRIC.vec2(0,0)
       })
       .translate(pos);
     node.addInPort({
-        color: FABRIC.RT.rgb255(200,80,80),
+        color: FABRIC.rgb255(200,80,80),
         allowMultipleConnections:false,
         createLabelEventCatcher:false
       });
     node.addOutPort({
-        color: FABRIC.RT.rgb255(200,80,80),
+        color: FABRIC.rgb255(200,80,80),
         allowMultipleConnections:true,
         createLabelEventCatcher:false
       });
@@ -395,7 +395,7 @@ $(document).ready(function() {
     for(var i in scopes){
       node.addInPort({
           text: i,
-          color: FABRIC.RT.rgb255(200,200,80),
+          color: FABRIC.rgb255(200,200,80),
           allowMultipleConnections:false,
           createLabelEventCatcher:false
         });
@@ -409,11 +409,11 @@ $(document).ready(function() {
     var dgnode = nodesMap[name];
     var node = nodesHolderGroup.createNode({
         text : name,
-        color:FABRIC.RT.rgb255(20,90,250),
+        color:FABRIC.rgb255(20,90,250),
         height: 15,
         createEditButton: false,
         draggable: true,
-        shadow: FABRIC.RT.vec2(0,0)
+        shadow: FABRIC.vec2(0,0)
       })
       .translate(pos);
       
@@ -421,18 +421,18 @@ $(document).ready(function() {
     for(var i in dependencies){
       node.addInPort({
           text: i,
-           color: FABRIC.RT.rgb255(100,180,250),
+           color: FABRIC.rgb255(100,180,250),
           allowMultipleConnections:false,
           createLabelEventCatcher:false
         });
     }
     node.addOutPort({
-        color: FABRIC.RT.rgb255(200,200,80),
+        color: FABRIC.rgb255(200,200,80),
         allowMultipleConnections:true,
         createLabelEventCatcher:false
       });
     node.addOutPort({
-        color: FABRIC.RT.rgb255(100,180,250),
+        color: FABRIC.rgb255(100,180,250),
         allowMultipleConnections:true,
         createLabelEventCatcher:false
       });
@@ -441,8 +441,8 @@ $(document).ready(function() {
   }
   
   var maxehrow = 0;
-  var tl = FABRIC.RT.vec2(0,0);
-  var br = FABRIC.RT.vec2(0,0);
+  var tl = FABRIC.vec2(0,0);
+  var br = FABRIC.vec2(0,0);
   var maxrow = 0;
   
   for(var i=0; i < ehcolumns.length; i++){
@@ -452,9 +452,9 @@ $(document).ready(function() {
       var column = i;
       var row = j;
       if(i==0){
-        dgnode.debuggerNode = displayEvent(dgnode.getName(), FABRIC.RT.vec2(0, row*100));
+        dgnode.debuggerNode = displayEvent(dgnode.getName(), FABRIC.vec2(0, row*100));
       }else{
-        dgnode.debuggerNode = displayEventHandler(dgnode.getName(), FABRIC.RT.vec2(column*240, row*100));
+        dgnode.debuggerNode = displayEventHandler(dgnode.getName(), FABRIC.vec2(column*240, row*100));
       }
       if(maxehrow < (row+1)) maxehrow = (row+1);
       if(tl.x > column) tl.x = column;
@@ -471,7 +471,7 @@ $(document).ready(function() {
       if(!dgcolumns[i][j]) continue;
       var column = i;
       var row = maxehrow + j;
-      dgnode.debuggerNode = displayDGnode(dgnode.getName(), FABRIC.RT.vec2(column*240, row*100));
+      dgnode.debuggerNode = displayDGnode(dgnode.getName(), FABRIC.vec2(column*240, row*100));
       if(tl.x > column) tl.x = column;
       if(br.x < (column+1)) br.x = (column+1);
       if(br.y < (row+1)) br.y = (row+1);

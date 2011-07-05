@@ -1,6 +1,9 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd"> 
 <html>
   <head>
+/*
+ *  Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
+ */
   <meta http-equiv="Content-Language" content="en" />
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
   <title>FABRIC Debugger</title>
@@ -25,20 +28,13 @@
     <style type="text/css">
     
 
-/*
- *  Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
- */
+
 #graph{
 	position:absolute;
 	left:0;
 	right:251px;
 	top:0;
 	bottom:0;
-}
-
-svg.graph {
-  width:100%;
-  height:100%;
 }
 
 rect.EditorButton {
@@ -215,6 +211,7 @@ rect.Highlighted {
   stroke-opacity:0.85;
   stroke-width:0.75;
 }
+
 g.Highlighted {
   stroke:white;
 }
@@ -313,19 +310,18 @@ $(document).ready(function() {
     ehcolumns[0][row] = eventsMap[i];
     layoutEventHandlers(eventsMap[i].getEventHandlers(), 1, row);
   }
+  
+  
+  var graphWidth = $('#graph').width();
+  var graphHeight = $('#graph').height();
 
-  var windowWidth = $('#graph').width();
-  var windowHeight = $('#graph').height();
-
-  svgRoot = FABRIC.createSVGRootElem('graph').id('graph');
-
-//  var graphBGRect = svgRoot.createRect().size(windowWidth, windowHeight).addClass('EventCatcher');
-  svgRoot.createCircle().radius(windowWidth*0.5).translate(windowWidth * 0.5, windowHeight * 0.5);
-  /*
-//  var graphHolderGroup = svgRoot.createGroup().translate(windowWidth * 0.5, windowHeight * 0.5);
-  var graphSclGroup = svgRoot.createGroup().scale(1.0);
-//  var graphCounterOffsetGroup = graphSclGroup.createGroup().translate(windowWidth * -0.5,  windowHeight * -0.5);
-  var graphPosGroup = graphSclGroup.createGroup().translate(0, 0);
+  svgRoot = FABRIC.createSVGRootElem('graph');
+  
+  var graphHolderGroup = svgRoot.createGroup().translate(graphWidth * 0.5, graphHeight * 0.5);
+  var graphSclGroup = graphHolderGroup.createGroup().scale(1.0);
+  var graphCounterOffsetGroup = graphSclGroup.createGroup().translate(graphWidth * -0.5,  graphHeight * -0.5);
+  
+  var graphPosGroup = graphCounterOffsetGroup.createGroup().translate(0, 0);
   var curvesHolderGroup = graphPosGroup.createGroup();
   var nodesHolderGroup = graphPosGroup.createGroup();
   
@@ -335,25 +331,15 @@ $(document).ready(function() {
   
   
   svgRoot.draggable({mouseButton:1, delegateTranslateObj:graphPosGroup, highlight:false })
-    .zoomable({delegateZoomObj:graphSclGroup })
-    .addOnZoomCallback(
-      function(evt){
-        var scale = graphSclGroup.scale();
-      //  graphCounterOffsetGroup.translate(windowWidth * -0.5 * scale,  windowHeight * -0.5 * scale);
-      });
+    .zoomable({delegateZoomObj:graphSclGroup });
   
   $(window).resize(function () {
-<<<<<<< Updated upstream
+    graphWidth = $('#graph').width();
+    graphHeight = $('#graph').height();
     
-=======
-    windowWidth = $('#viewer').width();
-    windowHeight = $('#viewer').height();
-    graphBGRect.size(windowWidth, windowHeight);
-    
-  //  graphHolderGroup.translate(windowWidth * 0.5, windowHeight * 0.5);
+    graphHolderGroup.translate(graphWidth * 0.5, graphHeight * 0.5);
     var scale = graphSclGroup.scale();
-  //  graphCounterOffsetGroup.translate(windowWidth * -0.5 * scale,  windowHeight * -0.5 * scale);
->>>>>>> Stashed changes
+    graphCounterOffsetGroup.translate(graphWidth * -0.5,  graphHeight * -0.5);
   });
   
   var displayOperatorList = function(node, operators){
@@ -470,9 +456,9 @@ $(document).ready(function() {
       }else{
         dgnode.debuggerNode = displayEventHandler(dgnode.getName(), FABRIC.RT.vec2(column*240, row*100));
       }
-      if(j>maxehrow) maxehrow = j;
+      if(maxehrow < (row+1)) maxehrow = (row+1);
       if(tl.x > column) tl.x = column;
-      if(br.x < column) br.x = column;
+      if(br.x < (column+1)) br.x = (column+1);
       if(br.y < row) br.y = row;
     }
   }
@@ -484,21 +470,17 @@ $(document).ready(function() {
       var dgnode = dgcolumns[i][j];
       if(!dgcolumns[i][j]) continue;
       var column = i;
-      var row = maxehrow + 1 + j;
+      var row = maxehrow + j;
       dgnode.debuggerNode = displayDGnode(dgnode.getName(), FABRIC.RT.vec2(column*240, row*100));
       if(tl.x > column) tl.x = column;
-      if(br.x < column) br.x = column;
-      if(br.y < row) br.y = row;
+      if(br.x < (column+1)) br.x = (column+1);
+      if(br.y < (row+1)) br.y = (row+1);
     }
   }
-//  tl.mulInPlace(FABRIC.RT.vec2(240, 100));
-//  br.mulInPlace(FABRIC.RT.vec2(240, 100));
-//  console.log( "scale:"+ windowWidth/((br.x - tl.x) * 240));
-//  console.log( "translate:"+ windowHeight/((br.y - tl.y) * 100));
-  var scale = windowWidth /((br.x - tl.x) * 240);
-//  graphSclGroup.scale(scale);
-//  graphPosGroup.translate(0, windowHeight/((br.y - tl.y) * 100));
-//  graphCounterOffsetGroup.translate(windowWidth * -0.5 * scale,  windowHeight * -0.5 * scale);
+  
+  var scale = graphWidth /((br.x - tl.x) * 240);
+  graphSclGroup.scale(scale);
+  graphPosGroup.translate(graphWidth - ((br.x - tl.x - 2) * 240 * 0.5), graphHeight - ((br.y - tl.y + 2) * 100 * 0.5));
   
   for(var i in eventsMap){
     var children = eventsMap[i].getEventHandlers();
@@ -556,13 +538,10 @@ $(document).ready(function() {
   
   $('#displayEventHandlers').button()
       .click(function() {
-        }
       });
   $('#displayDependencyGraph').button()
       .click(function() {
-        }
       });
-  */
 });
 
 
@@ -580,7 +559,7 @@ $(document).ready(function() {
       <div id="editor">
         
         <div id="graph">
-        </div><!--viewer-->
+        </div><!--graph-->
         
         <div id="sidebar">
           <div class="box">

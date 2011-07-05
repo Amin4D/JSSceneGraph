@@ -122,6 +122,9 @@ FABRIC.SceneGraph = {
     scene.getContext = function() {
       return context;
     };
+    scene.pub.getContextId = function() {
+      return context.getContextID();
+    };
     scene.addWindow = function(element, options) {
       var fabricwindow = context.createWindow(element, options);
       windows.push(fabricwindow);

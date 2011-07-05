@@ -226,6 +226,10 @@ $(document).ready(function() {
     window.context = FABRIC.createContext({ contextID:contextID  });
   }
   
+  if(!window.context){
+    alert("this page must be opened from a running demo, passing it the correct context, or embedding it in the URL");
+  }
+  
   var allNamedObjects = context.DG.getAllNamedObjects();
   
   var eventsMap = {};

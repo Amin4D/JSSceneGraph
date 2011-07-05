@@ -52,6 +52,10 @@ rect.EventCatcher {
 
 $(document).ready(function() {
 
+  if(!keyframeTrackNode){
+    alert("this page must be opened from a running demo, passing it the correcrt keyframeTrackNode");
+  }
+
   var windowWidth = $('#viewer').width();
   var windowHeight = $('#viewer').height();
 

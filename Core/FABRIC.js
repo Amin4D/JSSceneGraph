@@ -64,7 +64,6 @@ FABRIC = (function() {
           'Fabric Debugger'
         );
       debuggerWindow.context = context;
-      debuggerWindow.scene = scene;
     };
     
     if(!contextID){

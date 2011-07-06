@@ -223,7 +223,9 @@ $(document).ready(function() {
   
   
   var contextID = document.location.search.split('?id=')[1];
-  window.context = FABRIC.createContext({ contextID:contextID  });
+  if(!window.context){
+    window.context = FABRIC.createContext({ contextID:contextID  });
+  }
   
   if(!window.context){
     alert("this page must be opened from a running demo, passing it the correct context, or embedding it in the URL");
@@ -253,11 +255,8 @@ $(document).ready(function() {
   
   var ehcolumns = [];
   var dgcolumns = [];
-  var layoutMap = {};
-  
   var maxehrow = 0;
-  var tl = FABRIC.vec2(0,0);
-  var br = FABRIC.vec2(0,0);
+  var layoutMap = {};
   
   var layoutDGNodes = function(dgnode, parentPos){
     var name = dgnode.getName();
@@ -340,12 +339,12 @@ $(document).ready(function() {
   var graphCounterOffsetGroup = graphSclGroup.createGroup().translate(graphWidth * -0.5,  graphHeight * -0.5);
   
   var graphPosGroup = graphCounterOffsetGroup.createGroup().translate(0, 0);
-  var curvesHolderGroup = graphPosGroup.createGroup();
+  var edgeHolderGroup = graphPosGroup.createGroup();
   var nodesHolderGroup = graphPosGroup.createGroup();
   
   svgRoot.setGraphHolderGroup(graphPosGroup);
   svgRoot.setNodeHolderGroup(nodesHolderGroup);
-  svgRoot.setEdgeHolderGroup(curvesHolderGroup);
+  svgRoot.setEdgeHolderGroup(edgeHolderGroup);
   
   
   svgRoot.draggable({mouseButton:1, delegateTranslateObj:graphPosGroup, highlight:false })
@@ -360,168 +359,189 @@ $(document).ready(function() {
     graphCounterOffsetGroup.translate(graphWidth * -0.5,  graphHeight * -0.5);
   });
   
-  var displayOperator = function(node, operator){
-      node.addOperator({
-        text: operator.getName(),
-        color: FABRIC.rgb255(80,200,200)
-      }).getButton().addOnClickCallback(function(){
-        window.open(
-            FABRIC.processURL('FABRIC_ROOT/Core/OperatorEditor/operatorEditor.html')
-            + '?id=' + contextID
-            + '?operator=' + operator.getName(),
-            'Fabric Operator Editor:' + operator.getName()
-          );
-      });
-  }
+
   
-  var displayOperatorList = function(node, operators){
-    for(var i=0; i<operators.getLength(); i++){
-      displayOperator(node, operators.getOperator(i) );
+  var displayGraph = function(displayEventHandlers, displayDependencyGraphNodes, clear){
+    
+    if(clear){
+      nodesHolderGroup.removeAllChildren();
+      edgeHolderGroup.removeAllChildren();
     }
-  }
-  
-  var displayEvent = function(name, pos){
-    var node = nodesHolderGroup.createNode({
-        text : name,
-        color:FABRIC.rgb255(90,90,200),
-        height: 15,
-        createEditButton: true,
-        draggable: true,
-        shadow: FABRIC.vec2(0,0)
-      })
-      .translate(pos);
-    node.addOutPort({
-        color: FABRIC.rgb255(200,80,80),
-        allowMultipleConnections:true,
-        createLabelEventCatcher:false
-      });
-    return node;
-  }
-  
-  
-  var displayEventHandler = function(name, pos){
-    var eventHandler = eventHandlersMap[name];
-    var node = nodesHolderGroup.createNode({
-        text : name,
-        color:FABRIC.rgb255(90,200,90),
-        height: 15,
-        createEditButton: true,
-        draggable: true,
-        shadow: FABRIC.vec2(0,0)
-      })
-      .translate(pos);
-    node.addInPort({
-        color: FABRIC.rgb255(200,80,80),
-        allowMultipleConnections:false,
-        createLabelEventCatcher:false
-      });
-    node.addOutPort({
-        color: FABRIC.rgb255(200,80,80),
-        allowMultipleConnections:true,
-        createLabelEventCatcher:false
-      });
-    var scopes = eventHandler.getScopes();
-    for(var i in scopes){
+    
+    var displayNodes = {};
+    var tl = FABRIC.vec2(0,0);
+    var br = FABRIC.vec2(0,0);
+    
+    var displayOperator = function(node, operator){
+        node.addOperator({
+          text: operator.getName(),
+          color: FABRIC.rgb255(80,200,200)
+        }).getButton().addOnClickCallback(function(){
+          window.open(
+              FABRIC.processURL('FABRIC_ROOT/Core/OperatorEditor/operatorEditor.html')
+              + '?id=' + contextID
+              + '?operator=' + operator.getName(),
+              'Fabric Operator Editor:' + operator.getName()
+            );
+        });
+    }
+    
+    var displayOperatorList = function(node, operators){
+      for(var i=0; i<operators.getLength(); i++){
+        displayOperator(node, operators.getOperator(i) );
+      }
+    }
+    
+    var displayEvent = function(name, pos){
+      var node = nodesHolderGroup.createNode({
+          text : name,
+          color:FABRIC.rgb255(90,90,200),
+          height: 15,
+          createEditButton: true,
+          draggable: true,
+          shadow: FABRIC.vec2(0,0)
+        })
+        .translate(pos);
+      node.addOutPort({
+          color: FABRIC.rgb255(200,80,80),
+          allowMultipleConnections:true,
+          createLabelEventCatcher:false
+        });
+      return node;
+    }
+    
+    
+    var displayEventHandler = function(name, pos){
+      var eventHandler = eventHandlersMap[name];
+      var node = nodesHolderGroup.createNode({
+          text : name,
+          color:FABRIC.rgb255(90,200,90),
+          height: 15,
+          createEditButton: true,
+          draggable: true,
+          shadow: FABRIC.vec2(0,0)
+        })
+        .translate(pos);
       node.addInPort({
-          text: i,
+          color: FABRIC.rgb255(200,80,80),
+          allowMultipleConnections:false,
+          createLabelEventCatcher:false
+        });
+      node.addOutPort({
+          color: FABRIC.rgb255(200,80,80),
+          allowMultipleConnections:true,
+          createLabelEventCatcher:false
+        });
+      var scopes = eventHandler.getScopes();
+      for(var i in scopes){
+        node.addInPort({
+            text: i,
+            color: FABRIC.rgb255(200,200,80),
+            allowMultipleConnections:false,
+            createLabelEventCatcher:false
+          });
+      }
+      displayOperatorList(node, eventHandler.preDescendBindings);
+      displayOperatorList(node, eventHandler.postDescendBindings);
+      return node;
+    }
+    
+    var displayDGnode = function(name, pos){
+      var dgnode = nodesMap[name];
+      var node = nodesHolderGroup.createNode({
+          text : name,
+          color:FABRIC.rgb255(20,90,250),
+          height: 15,
+          createEditButton: false,
+          draggable: true,
+          shadow: FABRIC.vec2(0,0)
+        })
+        .translate(pos);
+        
+      var dependencies = dgnode.getDependencies();
+      for(var i in dependencies){
+        node.addInPort({
+            text: i,
+             color: FABRIC.rgb255(100,180,250),
+            allowMultipleConnections:false,
+            createLabelEventCatcher:false
+          });
+      }
+      node.addOutPort({
           color: FABRIC.rgb255(200,200,80),
-          allowMultipleConnections:false,
+          allowMultipleConnections:true,
           createLabelEventCatcher:false
         });
-    }
-    displayOperatorList(node, eventHandler.preDescendBindings);
-    displayOperatorList(node, eventHandler.postDescendBindings);
-    return node;
-  }
-  
-  var displayDGnode = function(name, pos){
-    var dgnode = nodesMap[name];
-    var node = nodesHolderGroup.createNode({
-        text : name,
-        color:FABRIC.rgb255(20,90,250),
-        height: 15,
-        createEditButton: false,
-        draggable: true,
-        shadow: FABRIC.vec2(0,0)
-      })
-      .translate(pos);
-      
-    var dependencies = dgnode.getDependencies();
-    for(var i in dependencies){
-      node.addInPort({
-          text: i,
-           color: FABRIC.rgb255(100,180,250),
-          allowMultipleConnections:false,
+      node.addOutPort({
+          color: FABRIC.rgb255(100,180,250),
+          allowMultipleConnections:true,
           createLabelEventCatcher:false
         });
+      displayOperatorList(node, dgnode.bindings);
+      return node;
     }
-    node.addOutPort({
-        color: FABRIC.rgb255(200,200,80),
-        allowMultipleConnections:true,
-        createLabelEventCatcher:false
-      });
-    node.addOutPort({
-        color: FABRIC.rgb255(100,180,250),
-        allowMultipleConnections:true,
-        createLabelEventCatcher:false
-      });
-    displayOperatorList(node, dgnode.bindings);
-    return node;
-  }
-  
-  var graphSpacing = FABRIC.vec2(240, 100);
-  
-  for(var i in layoutMap){
-    var dgnode = allNamedObjects[i];
-    if(!layoutMap[i]){
-      console.warn("Missing Layout information:" + i);
-      continue;
+    
+    var graphSpacing = FABRIC.vec2(240, 100);
+    
+    for(var i in layoutMap){
+      var dgnode = allNamedObjects[i];
+      if(!layoutMap[i]){
+        console.warn("Missing Layout information:" + i);
+        continue;
+      }
+      var name = dgnode.getName();
+      var type = dgnode.getType();
+      var pos = layoutMap[name];
+      if(type === "Event" && displayEventHandlers){
+        displayNodes[name] = displayEvent(name, pos.multiply(graphSpacing));
+      }
+      else if(type === "EventHandler" && displayEventHandlers){
+        displayNodes[name] = displayEventHandler(name, pos.multiply(graphSpacing));
+      }
+      if(type === "Node" && displayDependencyGraphNodes){
+        displayNodes[name]= displayDGnode(dgnode.getName(), pos.add(FABRIC.vec2(0, maxehrow)).multiply(graphSpacing));
+      }
+      if(tl.x > pos.x) tl.x = pos.x;
+      if(br.x < pos.x) br.x = pos.x;
+      if(br.y < pos.y) br.y = pos.y;
     }
-    var name = dgnode.getName();
-    var type = dgnode.getType();
-    var pos = layoutMap[name];
-    if(type === "Event"){
-      dgnode.debuggerNode = displayEvent(name, pos.multiply(graphSpacing));
+    
+    if(!clear){
+      var scale = graphWidth /((br.x - tl.x) * graphSpacing.x);
+      if(scale < 1.0){
+        graphSclGroup.scale(scale);
+        graphPosGroup.translate(graphWidth - ((br.x - tl.x) * graphSpacing.x * 0.5), 0);//((br.y - tl.y) * graphSpacing.y * 0.25));
+      }
     }
-    else if(type === "EventHandler"){
-      dgnode.debuggerNode = displayEventHandler(name, pos.multiply(graphSpacing));
-    }
-    if(type === "Node"){
-      pos.y += maxehrow;
-      dgnode.debuggerNode = displayDGnode(dgnode.getName(), pos.multiply(graphSpacing));
-    }
-    if(tl.x > pos.x) tl.x = pos.x;
-    if(br.x < pos.x) br.x = pos.x;
-    if(br.y < pos.y) br.y = pos.y;
-  }
-  
-  var scale = graphWidth /((br.x - tl.x) * graphSpacing.x);
-  if(scale < 1.0){
-    graphSclGroup.scale(scale);
-    graphPosGroup.translate(graphWidth - ((br.x - tl.x) * graphSpacing.x * 0.5), 0);//((br.y - tl.y) * graphSpacing.y * 0.25));
-  }
-  
-  for(var i in eventsMap){
-    var children = eventsMap[i].getEventHandlers();
-    for(var j=0; j<children.length; j++){
-      if(children[j].debuggerNode){
-        eventsMap[i].debuggerNode.getOutPort(0)
-          .connectTo(children[j].debuggerNode.getInPort(0),{
+    
+    for(var i in eventsMap){
+      var event = eventsMap[i];
+      if(!displayNodes[event.getName()]){
+        continue;
+      }
+      var children = event.getEventHandlers();
+      for(var j=0; j<children.length; j++){
+        if(!displayNodes[children[j].getName()]){
+          continue;
+        }
+        displayNodes[event.getName()].getOutPort(0)
+          .connectTo(displayNodes[children[j].getName()].getInPort(0), {
             fireCallbacks: false,
             connectable: false
           });
       }
     }
-  }
-  
-  for(var i in eventHandlersMap){
-    var eventHandler = eventHandlersMap[i];
-    if(eventHandlersMap[i].debuggerNode){
-      var children = eventHandlersMap[i].getChildEventHandlers();
+    
+    for(var i in eventHandlersMap){
+      var eventHandler = eventHandlersMap[i];
+      if(!displayNodes[eventHandler.getName()]){
+        continue;
+      }
+      var children = eventHandler.getChildEventHandlers();
       for(var j=0; j<children.length; j++){
-        if(children[j].debuggerNode){
-          eventHandlersMap[i].debuggerNode.getOutPort(0)
-            .connectTo(children[j].debuggerNode.getInPort(0),{
+        if(displayNodes[children[j].getName()]){
+          displayNodes[eventHandler.getName()].getOutPort(0)
+            .connectTo(displayNodes[children[j].getName()].getInPort(0), {
               fireCallbacks: false,
               connectable: false
             });
@@ -530,38 +550,52 @@ $(document).ready(function() {
       var scopes = eventHandler.getScopes();
       var scropeId = 0;
       for(var i in scopes){
-        scopes[i].debuggerNode.getOutPort(0)
-          .connectTo(eventHandler.debuggerNode.getInPort(scropeId+1),{
+        if(!displayNodes[scopes[i].getName()]){
+          continue;
+        }
+        displayNodes[scopes[i].getName()].getOutPort(0)
+          .connectTo(displayNodes[eventHandler.getName()].getInPort(scropeId+1), {
             fireCallbacks: false,
             connectable: false
           });
         scropeId++;
       }
     }
-  }
-  
-  for(var i in nodesMap){
-    if(nodesMap[i].debuggerNode){
+    
+    for(var i in nodesMap){
       var dgnode = nodesMap[i];
+      if(!displayNodes[dgnode.getName()]){
+        continue;
+      }
       var dependencies = dgnode.getDependencies();
       var dependencyId = 0;
       for(var i in dependencies){
-        dependencies[i].debuggerNode.getOutPort(1)
-          .connectTo(dgnode.debuggerNode.getInPort(dependencyId),{
+        displayNodes[dependencies[i].getName()].getOutPort(1)
+          .connectTo(displayNodes[dgnode.getName()].getInPort(dependencyId), {
             fireCallbacks: false,
             connectable: false
           });
         dependencyId++;
       }
     }
+  
+  }
+  
+  var redisplayGraph = function(){
+    // TODO: figure out why I can't set the button to be checked by default.
+    displayGraph(!$('#displayEventHandlers').attr('checked'), !$('#displayDependencyGraph').attr('checked'), true)
   }
   
   $('#displayEventHandlers').button()
       .click(function() {
+        redisplayGraph();
       });
   $('#displayDependencyGraph').button()
       .click(function() {
+        redisplayGraph();
       });
+      
+  displayGraph(true, true);
 });
 
 

@@ -18,7 +18,7 @@ operator calcLightProjectionMatricies(
   io Scalar near,
   io Scalar far,
   io Scalar fovY,
-  io Mat44 lightMat,
+  io Mat44 lightInvMat,
   io Mat44 lightProjectionMat,
   io Mat44 shadowMat
 ) {
@@ -38,7 +38,7 @@ operator calcLightProjectionMatricies(
   biasMat.setDiagonal(0.5);
   biasMat.row3 = Vec4(0.5, 0.5, 0.5, 1.0);
 
-  shadowMat = lightMat * lightProjectionMat * biasMat;
+  shadowMat = lightInvMat * lightProjectionMat * biasMat;
 }
 
 function createDepthMap(io Integer textureId, io Integer mapsize) {
@@ -82,6 +82,7 @@ operator genAndBindShadowMapFBO(
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
+
     // Remove artefact on the edges of the shadowmap
     var Color border;
     border.r = border.g = border.b = border.a = 0.0;
@@ -95,7 +96,8 @@ operator genAndBindShadowMapFBO(
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
     glTexParameteri(GL_TEXTURE_2D, GL_DEPTH_TEXTURE_MODE, GL_INTENSITY);
 
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, mapsize, mapsize, 1, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+	//Having a border of > 0 length is not supported on some drivers; disabling for now. Todo: consider using Renderbuffer for depth info
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, mapsize, mapsize, 0 /*1 unsupported on some drivers*/, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
 
     // create a framebuffer object
     glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);

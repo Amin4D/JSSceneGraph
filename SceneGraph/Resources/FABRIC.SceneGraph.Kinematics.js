@@ -121,10 +121,10 @@ FABRIC.SceneGraph.registerNodeType('AimTransform',
       var dirVec = options.position.subtract(options.target);
       var vec1 = options.globalXfo.ori.getZaxis();
       var vec2 = dirVec.unit();
-      options.globalXfo.ori = FABRIC.RT.Quat.makeFrom2Vectors(FABRIC.RT.vec3(0, 0, 1) , vec2);
+      options.globalXfo.ori = FABRIC.RT.Quat.makeFrom2Vectors(FABRIC.RT.vec3(0, 0, 1) , vec2, true);
       vec1 = options.globalXfo.ori.getYaxis();
       vec2 = dirVec.cross(FABRIC.RT.vec3(0, 1, 0) ).cross(dirVec).unit();
-      options.globalXfo.ori.postMultiplyInPlace( FABRIC.RT.Quat.makeFrom2Vectors(vec1, vec2));
+      options.globalXfo.ori.postMultiplyInPlace( FABRIC.RT.Quat.makeFrom2Vectors(vec1, vec2, true));
       
 /*
       var zaxis = options.position.subtract(options.target).unit();
@@ -160,11 +160,11 @@ FABRIC.SceneGraph.registerNodeType('AimCameraTransform',
       var dirVec = options.globalXfo.tr.subtract(options.target);
       var vec1 = options.globalXfo.ori.getZaxis();
       var vec2 = dirVec.unit();
-      options.globalXfo.ori.postMultiplyInPlace(FABRIC.RT.Quat.makeFrom2Vectors(vec1, vec2));
+      options.globalXfo.ori.postMultiplyInPlace(FABRIC.RT.Quat.makeFrom2Vectors(vec1, vec2, true));
       var zaxis = options.globalXfo.ori.getZaxis();
       vec1 = options.globalXfo.ori.getYaxis();
       vec2 = zaxis.cross(FABRIC.RT.vec3(0, 1, 0) ).cross(zaxis).unit();
-      options.globalXfo.ori.postMultiplyInPlace( FABRIC.RT.Quat.makeFrom2Vectors(vec1, vec2));
+      options.globalXfo.ori.postMultiplyInPlace( FABRIC.RT.Quat.makeFrom2Vectors(vec1, vec2, true));
     }
    var aimCameraTransformNode = scene.constructNode('AimTransform', options);
     return aimCameraTransformNode;

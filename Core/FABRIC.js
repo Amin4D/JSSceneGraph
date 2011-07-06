@@ -60,8 +60,9 @@ FABRIC = (function() {
     FABRIC.displayDebugger = function(ctx) {
       if(!ctx) ctx = context;
       var debuggerWindow = window.open(
-          FABRIC.processURL('FABRIC_ROOT/Core/Debugger/debugger.html') + '?id=' + context.getContextID() ,
-          'Fabric Debugger'
+          FABRIC.processURL('FABRIC_ROOT/Core/Debugger/debugger.html') + '?id=' + context.getContextID(),
+          'Fabric Debugger',
+          'status=1,resizable=1,width='+window.innerWidth+',height=',+window.innerHeight
         );
       debuggerWindow.context = context;
     };

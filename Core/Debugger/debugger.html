@@ -362,7 +362,6 @@ $(document).ready(function() {
 
   
   var displayGraph = function(displayEventHandlers, displayDependencyGraphNodes, clear){
-    
     if(clear){
       nodesHolderGroup.removeAllChildren();
       edgeHolderGroup.removeAllChildren();
@@ -381,7 +380,8 @@ $(document).ready(function() {
               FABRIC.processURL('FABRIC_ROOT/Core/OperatorEditor/operatorEditor.html')
               + '?id=' + contextID
               + '?operator=' + operator.getName(),
-              'Fabric Operator Editor:' + operator.getName()
+              'Fabric Operator Editor:' + operator.getName(),
+              "status=1,resizable=1,width=550,height=650"
             );
         });
     }

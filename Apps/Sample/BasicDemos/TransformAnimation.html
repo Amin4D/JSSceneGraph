@@ -62,8 +62,8 @@ FABRIC.SceneGraph.registerNodeType('SwirleyMovementTransform',
     dgnode.addMember('baseXfo', 'Xfo', options.baseXfo);
     dgnode.addMember('id', 'Integer', options.objId);
     dgnode.addDependency(scene.getGlobalsNode(), 'globals');
-        
-    dgnode.bindings.append(scene.constructOperator({
+    
+    var op = scene.constructOperator({
       operatorName: 'swirleyMovementOp',
       srcFile: 'KL/swirleyMovementOp.kl',
       parameterBinding: [
@@ -73,8 +73,12 @@ FABRIC.SceneGraph.registerNodeType('SwirleyMovementTransform',
         'self.globalXfo'
       ],
       entryFunctionName: 'swirleyMovementOp'
-    }));
-
+    });
+    dgnode.bindings.append(op);
+    
+    swirleyMovementTransform.pub.getOperatorBinding = function(){
+      return op;
+    }
     return swirleyMovementTransform;
   });
 
@@ -125,15 +129,15 @@ FABRIC.SceneGraph.registerNodeType('SwirleyMovementTransform',
     xfo,
     transformNode;
 
-  for (k = 0; k < 5; k++) {
+  for (k = 0; k < 3; k++) {
     base1 = FABRIC.RT.vec3((k & 1) * 4.0, (k & 2) * 2.0, (k & 4)).scaleInPlace(scale);
     cube = scene.constructNode('Cuboid', { length: (i & 3) + 3, width: (j & 3) + 3.0, height: (k & 3) + 3.0 });
-    for (j = 0; j < 6; j++) {
+    for (j = 0; j < 4; j++) {
 
       base2 = FABRIC.RT.vec3((j & 1) * 2.0, (j & 2), (j & 4) / 2.0).scaleInPlace(scale);
       base = base2.add(base1);
 
-      for (i = 0; i < 7; i++) {
+      for (i = 0; i < 5; i++) {
         xfo = FABRIC.RT.xfo();
 
         xfo.tr = FABRIC.RT.vec3((i & 1), (i & 2) / 2.0, (i & 4) / 4.0).scaleInPlace(scale);
@@ -191,6 +195,19 @@ FABRIC.SceneGraph.registerNodeType('SwirleyMovementTransform',
         }
       });
 
+
+    $('#displayOperatorEditor').button()
+      .click(function() {
+        var binding = transformNode.getOperatorBinding();
+        var operatorEditorWindow = window.open(
+            FABRIC.processURL('FABRIC_ROOT/Core/OperatorEditor/operatorEditor.html')
+             + '?id=' + scene.getContextId()
+              + '?operator=' + binding.getOperator().getName(),
+            'Fabric Operator Editor:' + binding.getOperator().getName()
+          );
+      //  operatorEditorWindow.FABRIC = FABRIC;
+      //  operatorEditorWindow.operatorBinding = transformNode.getOperatorBinding();
+      });
   }
 
   var endTimeMS = (new Date).getTime();
@@ -225,6 +242,7 @@ FABRIC.SceneGraph.registerNodeType('SwirleyMovementTransform',
                     <h2>CONTROLS</h2>
                     <div class="content">
                  <button id="play" style="margin-top:10px;">Play</button>
+                 <button id="displayOperatorEditor" style="margin-top:10px;">Display Operator Editor</button>
                     </div><!--content-->
                 </div><!--box-->
             

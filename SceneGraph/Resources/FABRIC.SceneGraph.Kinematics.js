@@ -110,17 +110,33 @@ FABRIC.SceneGraph.registerNodeType('Transform',
 
 FABRIC.SceneGraph.registerNodeType('AimTransform',
   function(options, scene) {
-
     scene.assignDefaults(options, {
-        position: FABRIC.RT.vec3(1, 0, 0),
         target: FABRIC.RT.vec3(0, 0, 0),
         roll: 0.0
       });
+    
+    if(options.position && options.target){
+      options.globalXfo = FABRIC.RT.xfo({ tr: options.position });
+      
+      var dirVec = options.position.subtract(options.target);
+      var vec1 = options.globalXfo.ori.getZaxis();
+      var vec2 = dirVec.unit();
+      options.globalXfo.ori = FABRIC.RT.Quat.makeFrom2Vectors(FABRIC.RT.vec3(0, 0, 1) , vec2);
+      vec1 = options.globalXfo.ori.getYaxis();
+      vec2 = dirVec.cross(FABRIC.RT.vec3(0, 1, 0) ).cross(dirVec).unit();
+      options.globalXfo.ori.postMultiplyInPlace( FABRIC.RT.Quat.makeFrom2Vectors(vec1, vec2));
+      
+/*
+      var zaxis = options.position.subtract(options.target).unit();
+      var yaxis = zaxis.cross(FABRIC.RT.vec3(0, 1, 0) ).cross(zaxis).unit();
+      var xaxis = yaxis.cross(zaxis).unit();
+      options.globalXfo = FABRIC.RT.xfo({ tr: options.position });
+      options.globalXfo.ori.setFromMat33(FABRIC.RT.mat33(xaxis, yaxis, zaxis));
+*/  }
 
     var aimTransformNode = scene.constructNode('Transform', options);
     var dgnode = aimTransformNode.getDGNode();
     dgnode.addMember('target', 'Vec3', options.target);
-    dgnode.addMember('roll', 'Scalar', options.roll);
 
     dgnode.bindings.append(scene.constructOperator({
       operatorName: 'aimTransform',
@@ -128,17 +144,30 @@ FABRIC.SceneGraph.registerNodeType('AimTransform',
       entryFunctionName: 'aimTransform',
       parameterBinding: [
         'self.globalXfo',
-        'self.target',
-        'self.roll'
+        'self.target'
       ]
     }));
 
     scene.addMemberInterface(aimTransformNode, dgnode, 'target', true);
     scene.addMemberInterface(aimTransformNode, dgnode, 'roll', true);
-
+    
     return aimTransformNode;
   });
-
-
-
+/*
+FABRIC.SceneGraph.registerNodeType('AimCameraTransform',
+  function(options, scene) {
+    if(options.globalXfo && options.target){
+      var dirVec = options.globalXfo.tr.subtract(options.target);
+      var vec1 = options.globalXfo.ori.getZaxis();
+      var vec2 = dirVec.unit();
+      options.globalXfo.ori.postMultiplyInPlace(FABRIC.RT.Quat.makeFrom2Vectors(vec1, vec2));
+      var zaxis = options.globalXfo.ori.getZaxis();
+      vec1 = options.globalXfo.ori.getYaxis();
+      vec2 = zaxis.cross(FABRIC.RT.vec3(0, 1, 0) ).cross(zaxis).unit();
+      options.globalXfo.ori.postMultiplyInPlace( FABRIC.RT.Quat.makeFrom2Vectors(vec1, vec2));
+    }
+   var aimCameraTransformNode = scene.constructNode('AimTransform', options);
+    return aimCameraTransformNode;
+  });
+  */
 

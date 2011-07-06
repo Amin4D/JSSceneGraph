@@ -365,7 +365,6 @@ FABRIC.RT.Quat.prototype = {
   getZaxis: function() {
     var temp = FABRIC.RT.vec3();
     var xx = this.v.x * this.v.x; var xz = this.v.x * this.v.z; var xw = this.v.x * this.w;
-
     var yy = this.v.y * this.v.y; var yz = this.v.y * this.v.z; var yw = this.v.y * this.w;
 
     temp.x = 2 * (yw + xz);
@@ -373,6 +372,57 @@ FABRIC.RT.Quat.prototype = {
     temp.z = 1 - 2 * (yy + xx);
     return temp;
   },
+  
+  setFromMat33: function(m, ro) {
+    if (!FABRIC.RT.isMat33(m))
+      throw'Invalid matrix object for setFromMat33';
+
+    if (!FABRIC.RT.isRotationOrder(ro))
+      ro = new FABRIC.RT.RotationOrder();
+
+    var row0 = m.row0;
+    var row1 = m.row1;
+    var row2 = m.row2;
+
+    // Grab the X scale and normalize the first row
+    row0.normalize();
+
+    // Make the 2nd row orthogonal to the 1st
+    row1.subInPlace(row0.multiply(row0.dot(row1)));
+
+    // Grab the Y scale and normalize the 2nd row
+    row1.normalize();
+
+    // Make the 3rd row orthogonal to the 1st and 2nd
+    row2.subInPlace(row0.multiply(row0.dot(row2)));
+    row2.subInPlace(row1.multiply(row1.dot(row2)));
+
+    // Gnormalize the 2nd row
+    row2.normalize();
+
+    var rot = new FABRIC.RT.Vec3();
+    if (ro.isXYZ()) {
+      rot.y = Math.asin(row0.z);
+      if (Math.abs(row0.z) > 0.9995) {
+        rot.x = Math.atan2(row2.y, row1.y);
+        rot.y = (row0.z < 0.0 ? - rot.y : rot.y);
+        rot.z = 0.0;
+      }
+      else {
+        rot.x = Math.atan2(-row1.z, row2.z);
+        rot.z = Math.atan2(-row0.y, row0.x);
+      }
+    }
+    else {
+      throw'Xfo.setFromMat44 only implemented for XYZ rotation order';
+    }
+
+    var e = new FABRIC.RT.Euler(rot, ro);
+    var q = e.toQuat();
+    this.w = q.w;
+    this.v = q.v;
+  },
+  
   makeMatrix: function() {
     var temp = new FABRIC.RT.Mat33();
 

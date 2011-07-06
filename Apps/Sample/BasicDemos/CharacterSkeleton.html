@@ -64,14 +64,12 @@ $(document).ready(function() {
     windowElement: document.getElementById('FabricContainer')
   });
 
-  // Create a camera to draw the scene from
-  var camera = scene.constructNode('TargetCamera');
   var haveCameraManipulator = false;
-  camera.position = FABRIC.RT.vec3(20, 20, 20);
-  camera.target = FABRIC.RT.vec3(-10, 11, 10);
-  camera.roll = 0;
-  camera.nearDistance = 5;
-  camera.farDistance = 100;
+  // Create a camera to draw the scene from
+  var camera = scene.constructNode('TargetCamera', {
+    position: FABRIC.RT.vec3(30, 25, 30),
+    target: FABRIC.RT.vec3(-10, 5, 10)
+  });
 
   var assets = scene.importAssetFile('Models/mocap_01.dae', {
     buildSkeletonFromHierarchy: 'Biped_Nulls_UpperBody'

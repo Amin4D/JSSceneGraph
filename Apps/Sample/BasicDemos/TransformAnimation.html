@@ -36,8 +36,6 @@
     <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Manipulation.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Kinematics.js" charset="utf-8"></script>
     
-    <script type="text/javascript" src="../../../Core/Debugger/FABRIC.Debugger.Events.js" charset="utf-8"></script>
-    
     <script type="text/javascript">
 $(document).ready(function() { var startTimeMS = (new Date).getTime();
 
@@ -202,8 +200,9 @@ FABRIC.SceneGraph.registerNodeType('SwirleyMovementTransform',
         var operatorEditorWindow = window.open(
             FABRIC.processURL('FABRIC_ROOT/Core/OperatorEditor/operatorEditor.html')
              + '?id=' + scene.getContextId()
-              + '?operator=' + binding.getOperator().getName(),
-            'Fabric Operator Editor:' + binding.getOperator().getName()
+             + '?operator=' + binding.getOperator().getName(),
+            'Fabric Operator Editor:' + binding.getOperator().getName(),
+            'status=1,resizable=1,width=700,height=900'
           );
       //  operatorEditorWindow.FABRIC = FABRIC;
       //  operatorEditorWindow.operatorBinding = transformNode.getOperatorBinding();

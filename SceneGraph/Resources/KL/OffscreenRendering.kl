@@ -14,25 +14,35 @@ operator prepareOffscreenRendering(
   io Integer osDepthID
 ) {
   // report(">>>prepareOffscreenRendering");
-  glGetIntegerv(GL_FRAMEBUFFER_BINDING_EXT, osPrevFBO.data());
+  var Integer integers[];
+  integers.resize(1);
+  glGetIntegerv(GL_FRAMEBUFFER_BINDING_EXT, integers);
+  osPrevFBO = integers[0];
 
   glEnable(GL_TEXTURE_2D);
+  
+  var Size sizeArray[];
+  sizeArray.resize(2);
 
   if (osFBO > 0) {
     var Integer texWidth, texHeight;
 
     // Have the dimensions changed?
     glBindTexture(GL_TEXTURE_2D, osColorID);
-    glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, texWidth.data());
-    glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, texHeight.data());
+    glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, integers);
+    texWidth = integers[0];
+    glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, integers);
+    texHeight = integers[0];
 
     if (width != texWidth || height != texHeight) {
       // Textures need to be deleted first.
-      glDeleteTextures(1, osColorID.data());
-      glDeleteTextures(1, osDepthID.data());
+      sizeArray[0] = Size(osColorID);
+      sizeArray[1] = Size(osDepthID);
+      glDeleteTextures(2, sizeArray);
 
       glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
-      glDeleteFramebuffersEXT(1, osFBO.data());
+      sizeArray[0] = osFBO;
+      glDeleteFramebuffersEXT(1, sizeArray);
 
       osFBO = osColorID = osDepthID = 0;
     }
@@ -41,7 +51,10 @@ operator prepareOffscreenRendering(
   if (osFBO == 0) {
     var Data NULL;
 
-    glGenTextures(1, osColorID.data());
+    glGenTextures(2, sizeArray);
+    osColorID = sizeArray[0];
+    osDepthID = sizeArray[1];
+
     glBindTexture(GL_TEXTURE_2D, osColorID);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
@@ -52,7 +65,6 @@ operator prepareOffscreenRendering(
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F_ARB/* GL_RGBA8 */, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 
     // Try to use a texture depth component
-    glGenTextures(1, osDepthID.data());
     glBindTexture(GL_TEXTURE_2D, osDepthID);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
@@ -64,7 +76,8 @@ operator prepareOffscreenRendering(
 
     // create a framebuffer object
     glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
-    glGenFramebuffersEXT(1, osFBO.data());
+    glGenFramebuffersEXT(1, sizeArray);
+    osFBO = sizeArray[0];
     glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, osFBO);
 
     // attach the texture to FBO depth attachment point
@@ -76,7 +89,8 @@ operator prepareOffscreenRendering(
     if (status != GL_FRAMEBUFFER_COMPLETE_EXT) {
       report('prepareOffscreenRendering: GL_FRAMEBUFFER_COMPLETE_EXT failed, CANNOT use FBO\n');
 
-      glDeleteFramebuffersEXT(1, osFBO.data());
+      sizeArray[0] = Size(osFBO);
+      glDeleteFramebuffersEXT(1, sizeArray);
       osFBO = - 1;
     }
   }
@@ -109,9 +123,12 @@ operator renderOffscreenToView(
 
   glUseProgram(program);
 
-  var Integer posLocation = glGetAttribLocation(program, 'a_position');
-  var Integer texLocation = glGetAttribLocation(program, 'a_texCoord');
-  var Integer smpLocation = glGetUniformLocation(program, 'u_rgbaImage');
+  var String name = 'a_position';
+  var Integer posLocation = glGetAttribLocation(program, name);
+  name = 'a_texCoord';
+  var Integer texLocation = glGetAttribLocation(program, name);
+  name = 'u_rgbaImage';
+  var Integer smpLocation = glGetUniformLocation(program, name);
 
   // Set the sampler
   glEnable(GL_TEXTURE_2D);
@@ -134,27 +151,36 @@ operator renderOffscreenToView(
   idx[0] = 0; idx[1] = 2; idx[2] = 1;
   idx[3] = 0; idx[4] = 3; idx[5] = 2;
 
-  var Integer bufferID[3];
 
   var Data NULL;
 
-  glGenBuffers(3, bufferID.data());
+  var Size bufferID0;
+  var Size bufferID1;
+  var Size bufferID2;
+  var Size bufferIDArray[];
+  bufferIDArray.resize(1);
+  glGenBuffers(1, bufferIDArray);
+  bufferID0 = bufferIDArray[0];
+  glGenBuffers(1, bufferIDArray);
+  bufferID1 = bufferIDArray[0];
+  glGenBuffers(1, bufferIDArray);
+  bufferID2 = bufferIDArray[0];
 
-  glBindBuffer(GL_ARRAY_BUFFER, bufferID[0]);
+  glBindBuffer(GL_ARRAY_BUFFER, bufferID0);
   glBufferData(GL_ARRAY_BUFFER, p.dataSize(), p.data(), GL_STATIC_DRAW);
   glEnableVertexAttribArray(posLocation);
   glVertexAttribPointer(posLocation, 3, GL_FLOAT, GL_FALSE, 0, NULL);
 
-  glBindBuffer(GL_ARRAY_BUFFER, bufferID[1]);
+  glBindBuffer(GL_ARRAY_BUFFER, bufferID1);
   glBufferData(GL_ARRAY_BUFFER, t.dataSize(), t.data(), GL_STATIC_DRAW);
   glEnableVertexAttribArray(texLocation);
   glVertexAttribPointer(texLocation, 2, GL_FLOAT, GL_FALSE, 0, NULL);
 
-  glBindBuffer(GL_ARRAY_BUFFER, bufferID[2]);
+  glBindBuffer(GL_ARRAY_BUFFER, bufferID2);
   glBufferData(GL_ARRAY_BUFFER, idx.dataSize(), idx.data(), GL_STATIC_DRAW);
   glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, bufferID[2]);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, bufferID2);
   glDrawElements(GL_TRIANGLES, idx.size(), GL_UNSIGNED_INT, NULL);
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
@@ -162,7 +188,12 @@ operator renderOffscreenToView(
 
   glBindTexture(GL_TEXTURE_2D, 0);
 
-  glDeleteBuffers(3, bufferID.data());
+  bufferIDArray[0] = bufferID0;
+  glDeleteBuffers(1, bufferIDArray);
+  bufferIDArray[0] = bufferID1;
+  glDeleteBuffers(1, bufferIDArray);
+  bufferIDArray[0] = bufferID2;
+  glDeleteBuffers(1, bufferIDArray);
 
   glPopAttrib();
 
@@ -207,9 +238,12 @@ operator renderTextureToView(
 
   glUseProgram(program);
 
-  var Integer posLocation = glGetAttribLocation(program, 'a_position');
-  var Integer texLocation = glGetAttribLocation(program, 'a_texCoord');
-  var Integer smpLocation = glGetUniformLocation(program, 'u_rgbaImage');
+  var String name = 'a_position';
+  var Integer posLocation = glGetAttribLocation(program, name);
+  name = 'a_texCoord';
+  var Integer texLocation = glGetAttribLocation(program, name);
+  name = 'u_rgbaImage';
+  var Integer smpLocation = glGetUniformLocation(program, name);
 
   // Set the sampler
   glEnable(GL_TEXTURE_2D);
@@ -233,27 +267,35 @@ operator renderTextureToView(
   idx[0] = 0; idx[1] = 2; idx[2] = 1;
   idx[3] = 0; idx[4] = 3; idx[5] = 2;
 
-  var Integer bufferID[3];
-
   var Data NULL;
 
-  glGenBuffers(3, bufferID.data());
+  var Size bufferID0;
+  var Size bufferID1;
+  var Size bufferID2;
+  var Size bufferIDArray[];
+  bufferIDArray.resize(1);
+  glGenBuffers(1, bufferIDArray);
+  bufferID0 = bufferIDArray[0];
+  glGenBuffers(1, bufferIDArray);
+  bufferID1 = bufferIDArray[0];
+  glGenBuffers(1, bufferIDArray);
+  bufferID2 = bufferIDArray[0];
 
-  glBindBuffer(GL_ARRAY_BUFFER, bufferID[0]);
+  glBindBuffer(GL_ARRAY_BUFFER, bufferID0);
   glBufferData(GL_ARRAY_BUFFER, p.dataSize(), p.data(), GL_STATIC_DRAW);
   glEnableVertexAttribArray(posLocation);
   glVertexAttribPointer(posLocation, 3, GL_FLOAT, GL_FALSE, 0, NULL);
 
-  glBindBuffer(GL_ARRAY_BUFFER, bufferID[1]);
+  glBindBuffer(GL_ARRAY_BUFFER, bufferID1);
   glBufferData(GL_ARRAY_BUFFER, t.dataSize(), t.data(), GL_STATIC_DRAW);
   glEnableVertexAttribArray(texLocation);
   glVertexAttribPointer(texLocation, 2, GL_FLOAT, GL_FALSE, 0, NULL);
 
-  glBindBuffer(GL_ARRAY_BUFFER, bufferID[2]);
+  glBindBuffer(GL_ARRAY_BUFFER, bufferID2);
   glBufferData(GL_ARRAY_BUFFER, idx.dataSize(), idx.data(), GL_STATIC_DRAW);
   glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, bufferID[2]);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, bufferID2);
   glDrawElements(GL_TRIANGLES, idx.size(), GL_UNSIGNED_INT, NULL);
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 

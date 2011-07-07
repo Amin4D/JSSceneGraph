@@ -1262,9 +1262,9 @@ FABRIC.SceneGraph.registerNodeType('Camera',
     dgnode.addMember('farDistance', 'Scalar', options.farDistance);
     dgnode.addMember('fovY', 'Scalar', options.fovY * FABRIC.RT.degToRad);
     dgnode.addMember('focalDistance', 'Scalar', options.focalDistance);
-    dgnode.addMember('cameraMat44', 'Mat44');
+    dgnode.addMember('cameraMat44', 'Mat44[]');
     dgnode.addMember('orthographic', 'Boolean', options.orthographic);
-    dgnode.addMember('projectionMat44', 'Mat44');
+    dgnode.addMember('projectionMat44', 'Mat44[]');
 
     var redrawEventHandler = scene.constructEventHandlerNode(options.name + '_RedrawEventHandler');
     redrawEventHandler.addScope('camera', dgnode);
@@ -1313,7 +1313,7 @@ FABRIC.SceneGraph.registerNodeType('Camera',
 
       dgnode.bindings.append(scene.constructOperator({
         operatorName: 'loadXfo',
-        srcCode: 'operator loadXfo(io Xfo xfo, io Mat44 mat44){ mat44 = xfo; mat44 = mat44.inverse(); }',
+        srcCode: 'operator loadXfo(io Xfo xfo, io Mat44 mat44[]){ mat44.resize(1); mat44[0] = xfo; mat44[0] = mat44[0].inverse(); }',
         entryFunctionName: 'loadXfo',
         parameterBinding: [
           'transform.' + transformNodeMember,

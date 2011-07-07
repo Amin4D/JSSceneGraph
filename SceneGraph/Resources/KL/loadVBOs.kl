@@ -13,12 +13,9 @@ function genBuffer(
   if (bufferSize > 0) {
     if (bufferID == 0) {
       var Size buffers[];
+      buffers.push(Size(0));
       glGenBuffers(1, buffers);
-      if (buffers.size() > 0) {
-        bufferID = Integer(buffers[0]);
-      } else {
-        return;
-      }
+      bufferID = Integer(buffers[0]);
     }
     // Now fill the buffer with the data
     glBindBuffer(GL_ARRAY_BUFFER, bufferID);

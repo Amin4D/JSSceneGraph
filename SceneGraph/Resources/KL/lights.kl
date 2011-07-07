@@ -9,7 +9,7 @@ operator loadLight(
   io ShaderValue uniformValues[],
   io Integer type,
   io Color color,
-  io Mat44 cameraMatrix,
+  io Mat44 cameraMatrices[],
   io Mat44 lightMatrix
 ) {
   Size nbUniforms = uniformValues.size();
@@ -30,7 +30,7 @@ operator loadLight(
           report('spotLight: lightColor Location uniform not defined');
         break;
       case LIGHTPOS_ATTRIBUTE_ID:
-        var Vec4 viewPos = lightMatrix.row3 * cameraMatrix;
+        var Vec4 viewPos = lightMatrix.row3 * cameraMatrices[0];
         if (uniform.location != - 1)
           glUniform4f(uniform.location, viewPos.x, viewPos.y, viewPos.z, viewPos.t);
         else
@@ -42,7 +42,7 @@ operator loadLight(
 
 operator loadDirectionalLight(
   io ShaderValue uniformValues[],
-  io Mat44 cameraMatrix,
+  io Mat44 cameraMatrices[],
   io Mat44 lightMatrix
 ) {
   Size nbUniforms = uniformValues.size();
@@ -50,7 +50,7 @@ operator loadDirectionalLight(
     var ShaderValue uniform = uniformValues[i];
     switch (uniform.id) {
       case LIGHTDIR_ATTRIBUTE_ID:
-        var Vec3 viewDir = Vec3(0.0, 0.0, -1.0) * lightMatrix.upperLeft() * cameraMatrix.upperLeft();
+        var Vec3 viewDir = Vec3(0.0, 0.0, -1.0) * lightMatrix.upperLeft() * cameraMatrices[0].upperLeft();
 		viewDir = viewDir.unit(); //lightMatrix might have scaling
         if (uniform.location != - 1)
           glUniform3f(uniform.location, viewDir.x, viewDir.y, viewDir.z);
@@ -64,7 +64,7 @@ operator loadDirectionalLight(
 operator loadSpotLight(
   io ShaderValue uniformValues[],
   io Scalar coneAngle,
-  io Mat44 cameraMatrix,
+  io Mat44 cameraMatrices[],
   io Mat44 lightMatrix
 ) {
   Size nbUniforms = uniformValues.size();
@@ -73,7 +73,7 @@ operator loadSpotLight(
 
     switch (uniform.id) {
       case LIGHTDIR_ATTRIBUTE_ID:
-        var Vec3 viewDir = Vec3(0.0, 0.0, -1.0) * lightMatrix.upperLeft() * cameraMatrix.upperLeft();
+        var Vec3 viewDir = Vec3(0.0, 0.0, -1.0) * lightMatrix.upperLeft() * cameraMatrices[0].upperLeft();
 		viewDir = viewDir.unit(); //lightMatrix might have scaling
         if (uniform.location != - 1)
           glUniform3f(uniform.location, viewDir.x, viewDir.y, viewDir.z);
@@ -93,13 +93,14 @@ operator loadSpotLight(
 operator loadLightMatrixUniform(
   io ShaderValue uniformValues[],
   io Mat44 lightShadowMapMatrix,
-  io Mat44 cameraMatrix
+  io Mat44 cameraMatrices[]
 ) {
   for (Integer i = 0; i < uniformValues.size(); i++) {
     if (uniformValues[i].id == LIGHTVIEWMATRIX_ATTRIBUTE_ID) {
       if (uniformValues[i].location != - 1) {
-        var Mat44 lightViewShadowMapMatrix = cameraMatrix.inverse() * lightShadowMapMatrix;
-        glUniformMatrix4fv(uniformValues[i].location, 1, false, lightViewShadowMapMatrix);
+        var Mat44 lightViewShadowMapMatrices[];
+        lightViewShadowMapMatrices.push(cameraMatrices[0].inverse() * lightShadowMapMatrix);
+        glUniformMatrix4fv(uniformValues[i].location, 1, false, lightViewShadowMapMatrices);
       }
       return;
     }

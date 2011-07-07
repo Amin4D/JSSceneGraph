@@ -75,6 +75,7 @@ $(document).ready(function() {
     window.context = FABRIC.createContext({ contextID:contextID  });
   }
   var dgnode = context.DG.getAllNamedObjects()[nodeName];
+  document.title = 'FABRIC Node Inspector:' + nodeName;
   
   var displayNodeData = function(clear){
     var dataTable = '<table class="display" id="nodeDataTable">\n';

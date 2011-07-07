@@ -410,6 +410,23 @@ var wrapFabricClient = function(fabricClient, logCallback, debugLogCallback) {
 
         if ('diagnostics' in diff)
           result.diagnostics = diff.diagnostics;
+        
+        if ('mainThreadOnly' in diff)
+          result.mainThreadOnly = diff.mainThreadOnly;
+      };
+      
+      result.pub.getMainThreadOnly = function() {
+        if (!('mainThreadOnly' in result))
+          executeQueuedCommands();
+        return result.mainThreadOnly;
+      }
+      
+      result.pub.setMainThreadOnly = function(mainThreadOnly) {
+        var oldMainThreadOnly = result.mainThreadOnly;
+        result.mainThreadOnly = mainThreadOnly;
+        result.queueCommand('setMainThreadOnly', mainThreadOnly, function() {
+          result.mainThreadOnly = oldMainThreadOnly;
+        });
       };
 
       result.pub.getSourceCode = function() {

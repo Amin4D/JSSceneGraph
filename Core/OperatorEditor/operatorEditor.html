@@ -70,6 +70,7 @@ $(document).ready(function() {
     window.context = FABRIC.createContext({ contextID:contextID  });
   }
   var operator = context.DG.getAllNamedObjects()[operatorName];
+  document.title = 'FABRIC Operator Editor:' + operatorName;
   
   $('#recompile').button()
       .click(function() {

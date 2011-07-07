@@ -1,0 +1,146 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd"> 
+<html>
+  <head>
+/*
+ *  Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
+ */
+  <meta http-equiv="Content-Language" content="en" />
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>FABRIC Node Inspector</title>
+    
+    <meta charset="iso-8859-1"/>
+    <link href="../../themes/default/style.css" rel="stylesheet" type="text/css" />
+    <link href="../../themes/default/viewer.css" rel="stylesheet" type="text/css" />
+    
+    <script type="text/javascript" src="../../ThirdParty/jQuery/jquery-1.4.2.min.js"></script>
+    <script type="text/javascript" src="../../ThirdParty/jQuery/jquery-ui-1.8.5.custom.min.js"></script>
+    <script type="text/javascript" src="../../ThirdParty/jQuery/jquery.dataTables.min.js"></script>
+
+    <link type="text/css" href="../../ThirdParty/jQuery/css/vader/jquery-ui-1.8.5.custom.css" rel="stylesheet" />
+
+    <script type="text/javascript" src="../FABRIC.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../FABRIC.Wrappers.js" charset="utf-8"></script>  
+    
+    <style type="text/css">
+    
+
+#topToolbar{
+  position:absolute;
+  top:0;
+  right:0;
+  left:0;
+  height:50px;
+  background-color: #222;
+  border-left: solid 1px #111;
+  }
+  
+#refresh{
+  position:absolute;
+  right:10px;
+}
+
+
+#dataContainer{
+  position:absolute;
+  left:0px;
+  right:0px;
+  top:50px;
+  bottom:0px;
+}
+
+.tableData {
+  padding: 10px;
+  font: normal 13px/100% Arial, Helvetica, sans-serif;
+  color: #999;
+  line-height: 120%;
+  background-color: #111;
+  -moz-border-radius-bottomright: 6px;
+  -moz-border-radius-bottomleft: 6px;
+  -webkit-border-bottom-right-radius: 6px;
+  -webkit-border-bottom-left-radius: 6px;
+  -moz-box-shadow: rgba(0,0,0, 0.8) 0px 0px 3px;
+  -webkit-box-shadow: rgba(0, 0, 0, 0.8) 0px 0px 3px;
+  border: solid 1px #000;
+}
+
+  
+  </style>
+    <script type="text/javascript">
+
+$(document).ready(function() {
+  
+  if(!window.context){
+    var contextID = document.location.search.split('?')[1].split('=')[1];
+    window.nodeName = document.location.search.split('?')[2].split('=')[1];
+    window.context = FABRIC.createContext({ contextID:contextID  });
+  }
+  var dgnode = context.DG.getAllNamedObjects()[nodeName];
+  document.title = 'FABRIC Node Inspector:' + nodeName;
+  
+  var displayNodeData = function(clear){
+    var dataTable = '<table class="display" id="nodeDataTable">\n';
+    
+    // Define the table header
+    var members = dgnode.getMembers();
+    dataTable += '<thead>\n<tr>\n';
+      dataTable += '<th>slice Id</th>\n';
+    for(var memberName in members){
+      dataTable += '<th>'+memberName+'</th>\n';
+    }
+    dataTable += '</tr>\n</thead>\n<tbody class="tableData">\n';
+    // Define the body
+    var lines = Math.min(dgnode.getCount(), 100);
+    for(var i=0; i<lines; i++){
+      var slicedata = dgnode.getSliceBulkData(i);
+      dataTable += '<tr>\n';
+      dataTable += '<td>'+i+'</td>\n';
+      for(var memberName in members){
+        dataTable += '<td>'+JSON.stringify(slicedata[memberName])+'</td>\n';
+      }
+      dataTable += '</tr>\n';
+    }
+    
+    dataTable += '</tbody>\n';
+    console.log(dataTable);
+    
+    $('#dataContainer').html( dataTable );
+    $('#nodeDataTable').dataTable({
+      "bJQueryUI": true,
+      "bSort": false,
+      "bSearch": false,
+    });
+  }
+  
+  displayNodeData();
+  
+  $('#refresh').button()
+      .click(function() {
+        displayNodeData(true);
+      });
+  
+});
+
+
+    </script>
+
+
+
+  </head> 
+  <body>
+    <div id="wrapper">
+      <ul id="nav">
+        <li><a href="#" id="fabric-logo"><img src="../../themes/default/_img/projects/fabric-logo.png" /></a></li>
+      </ul>
+      <div id="editor">
+        
+        <div id="topToolbar">
+                 <button id="refresh">Refresh</button>
+        </div><!--bottomToolbar-->
+        
+        <div id="dataContainer">
+        </div><!--dataContainer-->
+        
+      </div> <!--editor-->
+    </div><!--wrapper-->
+  </body> 
+</html>

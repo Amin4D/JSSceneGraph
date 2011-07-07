@@ -81,7 +81,7 @@ FABRIC.RT.Mat22.prototype = {
       this.row0.x * that.row0.y + this.row0.y * that.row1.y,
       //
       this.row1.x * that.row0.x + this.row1.y * that.row1.x,
-      this.row1.x * that.row0.y + this.row1.y * that.row1.y,
+      this.row1.x * that.row0.y + this.row1.y * that.row1.y
     );
     else throw'Mat22.mul: incompatible type';
     },
@@ -115,7 +115,7 @@ FABRIC.appendOnCreateContextCallback(function(context) {
     members: {
       row0: 'Vec2',
       row1: 'Vec2'
-      
+    },
     constructor: FABRIC.RT.Mat22,
     kBindings: FABRIC.loadResourceURL('FABRIC_ROOT/SceneGraph/Resources/RT/Mat22.kl')
   });

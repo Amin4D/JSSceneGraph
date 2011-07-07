@@ -32,17 +32,17 @@ function Mat22.setDiagonal(in Vec2 v) {
   self.row1.y = v.y;
 }
 
-function Vec2 * (Vec2 Vec2, Mat22 mat22) {
+function Vec2 * (Vec2 vec2, Mat22 mat22) {
   return Vec2(
-    Vec2.x * mat22.row0.x + Vec2.y * mat22.row1.x,
-    Vec2.x * mat22.row0.y + Vec2.y * mat22.row1.y
+    vec2.x * mat22.row0.x + vec2.y * mat22.row1.x,
+    vec2.x * mat22.row0.y + vec2.y * mat22.row1.y
   );
 }
 
-function Vec2 * (Mat22 mat22, Vec2 Vec2) {
+function Vec2 * (Mat22 mat22, Vec2 vec2) {
   return Vec2(
-    mat22.row0.x * Vec2.x + mat22.row0.y * Vec2.y,
-    mat22.row1.x * Vec2.x + mat22.row1.y * Vec2.y
+    mat22.row0.x * vec2.x + mat22.row0.y * vec2.y,
+    mat22.row1.x * vec2.x + mat22.row1.y * vec2.y
   );
 }
 

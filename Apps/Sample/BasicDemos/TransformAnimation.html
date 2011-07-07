@@ -200,8 +200,9 @@ FABRIC.SceneGraph.registerNodeType('SwirleyMovementTransform',
         var operatorEditorWindow = window.open(
             FABRIC.processURL('FABRIC_ROOT/Core/OperatorEditor/operatorEditor.html')
              + '?id=' + scene.getContextId()
-              + '?operator=' + binding.getOperator().getName(),
-            'Fabric Operator Editor:' + binding.getOperator().getName()
+             + '?operator=' + binding.getOperator().getName(),
+            'Fabric Operator Editor:' + binding.getOperator().getName(),
+            'status=1,resizable=1,width=700,height=900'
           );
       //  operatorEditorWindow.FABRIC = FABRIC;
       //  operatorEditorWindow.operatorBinding = transformNode.getOperatorBinding();

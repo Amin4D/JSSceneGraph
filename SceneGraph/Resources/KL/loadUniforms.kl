@@ -109,7 +109,7 @@ operator loadMat33Uniform(
   for (Integer i = 0; i < uniformValues.size(); i++) {
     if (uniformValues[i].id == ATTRIBUTE_ID) {
       if (uniformValues[i].location != - 1) {
-        glUniformMatrix3fv(uniformValues[i].location, 1, false, value.data());
+        glUniformMatrix3fv(uniformValues[i].location, 1, false, value);
       }
       return;
     }
@@ -123,7 +123,7 @@ operator loadMat44Uniform(
   for (Integer i = 0; i < uniformValues.size(); i++) {
     if (uniformValues[i].id == ATTRIBUTE_ID) {
       if (uniformValues[i].location != - 1) {
-        glUniformMatrix4fv(uniformValues[i].location, 1, false, value.data());
+        glUniformMatrix4fv(uniformValues[i].location, 1, false, value);
       }
       return;
     }

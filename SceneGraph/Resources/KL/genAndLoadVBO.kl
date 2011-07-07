@@ -28,7 +28,9 @@ function genAndLoadVBOFn(
   Data NULL;
   if (bufferID <= 0 || dynamic || forceReload) {
     if (bufferID != 0 && (bufferData.size() != bufferDataCount || forceReload)) {
-      glDeleteBuffers(1, bufferID.data());
+      var Size buffers[];
+      buffers.push(Size(bufferID));
+      glDeleteBuffers(1, buffers);
       bufferID = 0;
     }
     //report("Generating VBO for: ATTRIBUTE_NAME" );

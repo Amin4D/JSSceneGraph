@@ -12,7 +12,13 @@ function genBuffer(
 ) {
   if (bufferSize > 0) {
     if (bufferID == 0) {
-      glGenBuffers(1, bufferID.data());
+      var Size buffers[];
+      glGenBuffers(1, buffers);
+      if (buffers.size() > 0) {
+        bufferID = Integer(buffers[0]);
+      } else {
+        return;
+      }
     }
     // Now fill the buffer with the data
     glBindBuffer(GL_ARRAY_BUFFER, bufferID);
@@ -50,7 +56,9 @@ operator genAndLoadIndicesVBOs(
 ) {
   //  report("genAndLoadIndicesVBOs:" + indicesBufferID );
   if (indicesBufferID != 0 && indices.size() != indicesCount) {
-    glDeleteBuffers(1, indicesBufferID.data());
+    var Size buffers[];
+    buffers.push(Size(indicesBufferID));
+    glDeleteBuffers(1, buffers);
     indicesBufferID = 0;
   }
 

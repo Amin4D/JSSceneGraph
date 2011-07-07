@@ -133,7 +133,9 @@ function createTextureFromImage(
 ) {
   //  report("createTextureFromImage  bufferID:"+bufferID + " textureUnit:"+textureUnit  );
   if (bufferID == 0 && nbPixels > 0) {
-    glGenTextures(1, bufferID.data());
+    var Size buffers[];
+    buffers.push(Size(bufferID));
+    glGenTextures(1, buffers);
     glActiveTexture(GL_TEXTURE0 + textureUnit);
     glBindTexture(GL_TEXTURE_2D, bufferID);
     //report("bufferID:"+bufferID);
@@ -204,7 +206,9 @@ operator createSpriteTexture(
       ty += dt;
     }
 
-    glGenTextures(1, bufferID.data());
+    var Size buffers[];
+    buffers.push(Size(bufferID));
+    glGenTextures(1, buffers);
     glActiveTexture(GL_TEXTURE0 + textureUnit);
     glBindTexture(GL_TEXTURE_2D, bufferID);
     glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, 1);
@@ -227,7 +231,9 @@ operator createErrorTexture(
     texData.resize(1);
     texData[0].r = 1.0;
     texData[0].g = texData[0].b = texData[0].a = 0.0;
-    glGenTextures(1, bufferID.data());
+    var Size buffers[];
+    buffers.push(Size(bufferID));
+    glGenTextures(1, buffers);
     glActiveTexture(GL_TEXTURE0 + textureUnit);
     glBindTexture(GL_TEXTURE_2D, bufferID);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, texData.data());

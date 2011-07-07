@@ -20,33 +20,33 @@ operator loadCameraMatrices(
     switch (uniform.id) {
       case MODELMATRIX_ATTRIBUTE_ID:
         modelMatrix = modelXfo;
-        glUniformMatrix4fv(uniform.location, 1, false, modelMatrix.data());
+        glUniformMatrix4fv(uniform.location, 1, false, modelMatrix);
         break;
       case VIEWMATRIX_ATTRIBUTE_ID:
-        glUniformMatrix4fv(uniform.location, 1, false, cameraMatrix.data());
+        glUniformMatrix4fv(uniform.location, 1, false, cameraMatrix);
         break;
       case PROJECTIONMATRIX_ATTRIBUTE_ID:
-        glUniformMatrix4fv(uniform.location, 1, false, projectionMatrix.data());
+        glUniformMatrix4fv(uniform.location, 1, false, projectionMatrix);
         break;
       case NORMALMATRIX_ATTRIBUTE_ID:
           modelMatrix = modelXfo;
         modelViewMatrix = modelMatrix * cameraMatrix;
         normalMatrix = modelViewMatrix.upperLeft().inverse().transpose();
-        glUniformMatrix3fv(uniform.location, 1, false, normalMatrix.data());
+        glUniformMatrix3fv(uniform.location, 1, false, normalMatrix);
         break;
       case PROJECTIONMATRIXINV_ATTRIBUTE_ID:
         projectionMatrixInv = projectionMatrix.inverse();
-        glUniformMatrix4fv(uniform.location, 1, false, projectionMatrixInv.data());
+        glUniformMatrix4fv(uniform.location, 1, false, projectionMatrixInv);
         break;
       case MODELVIEW_MATRIX_ATTRIBUTE_ID:
         modelMatrix = modelXfo;
         modelViewMatrix = modelMatrix * cameraMatrix;
-        glUniformMatrix4fv(uniform.location, 1, false, modelViewMatrix.data());
+        glUniformMatrix4fv(uniform.location, 1, false, modelViewMatrix);
         break;
       case MODELVIEWPROJECTION_MATRIX_ATTRIBUTE_ID:
         modelMatrix = modelXfo;
         modelViewProjectionMatrix = modelMatrix * cameraMatrix * projectionMatrix;
-        glUniformMatrix4fv(uniform.location, 1, false, modelViewProjectionMatrix.data());
+        glUniformMatrix4fv(uniform.location, 1, false, modelViewProjectionMatrix);
         break;
     }
   }

@@ -99,7 +99,7 @@ operator loadLightMatrixUniform(
     if (uniformValues[i].id == LIGHTVIEWMATRIX_ATTRIBUTE_ID) {
       if (uniformValues[i].location != - 1) {
         var Mat44 lightViewShadowMapMatrix = cameraMatrix.inverse() * lightShadowMapMatrix;
-        glUniformMatrix4fv(uniformValues[i].location, 1, false, lightViewShadowMapMatrix.data());
+        glUniformMatrix4fv(uniformValues[i].location, 1, false, lightViewShadowMapMatrix);
       }
       return;
     }

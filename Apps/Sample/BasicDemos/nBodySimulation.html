@@ -122,6 +122,38 @@ $(document).ready(function() { $('#play').button({
             ]
           }));
       nBodyGeometry.pub.setVertexCount(options.nBodies);
+      
+      var memberName = 'positions';
+      var memberType = 'Vec3';
+      var bufferIDMemberName = memberName + 'BufferID';
+      var countMemberName = memberName + 'Count';
+      var attributeNodeBinding = 'attributes';
+        
+      var reloadMemberName = memberName + 'Reload';
+      var dynamicMemberName = memberName + 'Dynamic';
+      
+      nBodyGeometry.pub.addUniformValue(bufferIDMemberName, 'Integer', 0);
+      nBodyGeometry.pub.addUniformValue(countMemberName, 'Size', 0);
+      nBodyGeometry.pub.addUniformValue(reloadMemberName, 'Boolean', false);
+      nBodyGeometry.pub.addUniformValue(dynamicMemberName, 'Boolean', false);
+
+      nBodySimulateNodeGPU.bindings.append(scene.constructOperator({
+            operatorName: 'gen' + memberName + 'OpenGLBuffer',
+            srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/genAndLoadVBO.kl',
+            preProcessorDefinitions: {
+              DATA_TYPE: memberType,
+              ATTRIBUTE_NAME: memberName,
+              ATTRIBUTE_ID: FABRIC.shaderAttributeTable[memberName].id
+            },
+            entryFunctionName: 'genVBOOp2',
+            parameterBinding: [
+              'self.' + memberName + '[]',
+              'uniforms.' + countMemberName,
+              'uniforms.' + dynamicMemberName,
+              'uniforms.' + reloadMemberName,
+              'uniforms.' + bufferIDMemberName
+            ]
+          }));
     
     
       deformationBuffer = nBodyGeometry.pub.addDeformationBuffer(['positions']);

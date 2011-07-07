@@ -49,7 +49,7 @@ FABRIC.RT.Xfo.prototype = {
     if (!FABRIC.RT.isMat44(m))
       throw'Invalid matrix object for setFromMat44';
 
-      if (!FABRIC.RT.isRotationOrder(ro))
+    if (!FABRIC.RT.isRotationOrder(ro))
       ro = new FABRIC.RT.RotationOrder();
 
     // We're going out on a limb and assuming this is a
@@ -98,7 +98,7 @@ FABRIC.RT.Xfo.prototype = {
     }
     else {
       throw'Xfo.setFromMat44 only implemented for XYZ rotation order';
-      }
+    }
 
     var e = new FABRIC.RT.Euler(rot, ro);
     this.ori = e.toQuat();

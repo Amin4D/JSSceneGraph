@@ -87,19 +87,18 @@ FABRIC.SceneGraph.registerNodeType('CameraManipulator',
         return;
       }
       var mouseDragScreenPos = FABRIC.RT.vec2(evt.screenX, evt.screenY);
-      var mouseDragScreenDelta = mouseDragScreenPos.subtract(mouseDownScreenPos);
-
-      var orbitAngle = mouseDragScreenDelta.length() * options.orbitRate;
-      mouseDragScreenDelta.normalize();
-      var dragDir = upaxis.multiply(mouseDragScreenDelta.y).add(swaxis.multiply(-mouseDragScreenDelta.x));
-      var orbitAxis = dragDir.cross(cameraOffset);
-      orbitAxis.normalize();
-
+      var mouseDragScreenDelta = mouseDownScreenPos.subtract(mouseDragScreenPos);
       var newcameraXfo = cameraXfo.clone();
-      var orbit = FABRIC.RT.Quat.makeFromAxisAndAngle(orbitAxis, orbitAngle);
-      var newCameraOffset = orbit.rotateVector(cameraOffset);
-      newcameraXfo.ori.postMultiplyInPlace(orbit);
+      var arbit = FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(0,1,0), mouseDragScreenDelta.x * options.orbitRate);
+      newcameraXfo.ori.postMultiplyInPlace(arbit);
+      
+      var pitch = FABRIC.RT.Quat.makeFromAxisAndAngle(newcameraXfo.ori.getXaxis(), mouseDragScreenDelta.y * options.orbitRate);
+      newcameraXfo.ori.postMultiplyInPlace(pitch);
+      
+      var newCameraOffset = arbit.rotateVector(cameraOffset);
+      newCameraOffset = pitch.rotateVector(newCameraOffset);
       newcameraXfo.tr = cameraTarget.subtract(newCameraOffset);
+      
       cameraNode.getTransformNode().globalXfo = newcameraXfo;
       viewportNode.redraw();
       evt.stopPropagation();

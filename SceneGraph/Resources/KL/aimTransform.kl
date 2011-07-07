@@ -3,7 +3,7 @@
 // Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
 //
 
-operator aimTransform(io Xfo xfo, io Vec3 target, io Scalar roll) {
+operator aimTransform(io Xfo xfo, io Vec3 target) {
   var Vec3 currforward = xfo.ori.getZaxis();
   var Vec3 newforward = xfo.tr - target;
   newforward.setUnit();

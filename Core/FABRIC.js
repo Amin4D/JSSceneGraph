@@ -62,7 +62,7 @@ FABRIC = (function() {
       var debuggerWindow = window.open(
           FABRIC.processURL('FABRIC_ROOT/Core/Debugger/debugger.html') + '?id=' + context.getContextID(),
           'Fabric Debugger',
-          'status=1,resizable=1,width='+window.innerWidth+',height=',+window.innerHeight
+          'status=1,resizable=1,width=1000,height=600'
         );
       debuggerWindow.context = context;
     };

@@ -88,7 +88,9 @@ $(document).ready(function() { var $globalTimeSlider = $('#globalTime').slider({
 
   ///////////////////////////////////////////////
   // LinearKeyAnimationTrack
-  var linearPosKeyframeTrackNode = scene.constructNode('LinearKeyAnimationTrack', { name:'LinearPos' } );
+  var linearPosKeyframeTrackNode = scene.constructNode('LinearKeyAnimationTrack', {
+    name:'LinearPosKeyAnimationTrack'
+  } );
   linearPosKeyframeTrackNode.setTrackCount(2);
   var key = FABRIC.Animation.linearKeyframe;
   linearPosKeyframeTrackNode.setTrackData(1, { name: 'PosX',
@@ -101,6 +103,7 @@ $(document).ready(function() { var $globalTimeSlider = $('#globalTime').slider({
                       });
 
   var linearAnimationEvaluatorNode = scene.constructNode('AnimationEvaluator', {
+    name:'LinearPosAnimationEvaluator' ,
     animationControllerNode: animationControllerNode,
     animationTrackNode: linearPosKeyframeTrackNode
   });
@@ -122,7 +125,9 @@ $(document).ready(function() { var $globalTimeSlider = $('#globalTime').slider({
 
   ///////////////////////////////////////////////
   // BezierKeyAnimationTrack
-  var bezierPosKeyframeTrackNode = scene.constructNode('BezierKeyAnimationTrack', { name:'BezierPos' } );
+  var bezierPosKeyframeTrackNode = scene.constructNode('BezierKeyAnimationTrack', {
+    name:'BezierPosKeyAnimationTrack'
+  } );
   bezierPosKeyframeTrackNode.setTrackCount(2);
   var key = FABRIC.Animation.bezierKeyframe;
   bezierPosKeyframeTrackNode.setTrackData(0, { name: 'PosX',
@@ -147,6 +152,7 @@ $(document).ready(function() { var $globalTimeSlider = $('#globalTime').slider({
                       });
 
   var bezierAnimationEvaluatorNode = scene.constructNode('AnimationEvaluator', {
+    name:'BezierPosKeyAnimationTrack' ,
     animationControllerNode: animationControllerNode,
     animationTrackNode: bezierPosKeyframeTrackNode
   });
@@ -168,7 +174,9 @@ $(document).ready(function() { var $globalTimeSlider = $('#globalTime').slider({
 
   ///////////////////////////////////////////////
   // EulerRotation
-  var bezierEulerKeyframeTrackNode = scene.constructNode('BezierKeyAnimationTrack', { name:'Euler' } );
+  var bezierEulerKeyframeTrackNode = scene.constructNode('BezierKeyAnimationTrack', {
+    name:'EulerBezierKeyAnimationTrack'
+  } );
   bezierEulerKeyframeTrackNode.setTrackCount(2);
   var key = FABRIC.Animation.bezierKeyframe;
   bezierEulerKeyframeTrackNode.setTrackData(0, { name: 'EulerX',
@@ -192,6 +200,7 @@ $(document).ready(function() { var $globalTimeSlider = $('#globalTime').slider({
                       });
 
   var bezierAnimationEvaluatorNode = scene.constructNode('AnimationEvaluator', {
+    name:'EulerBezierKeyAnimationTrack' ,
     animationControllerNode: animationControllerNode,
     animationTrackNode: bezierEulerKeyframeTrackNode
   });

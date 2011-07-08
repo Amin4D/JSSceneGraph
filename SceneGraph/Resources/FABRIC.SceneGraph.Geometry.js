@@ -554,6 +554,7 @@ FABRIC.SceneGraph.registerNodeType('Instance',
     scene.assignDefaults(options, {
         transformNode: undefined,
         transformNodeMember: 'globalXfo',
+        transformNodeIndex: undefined,
         geometryNode: undefined,
         enableRaycasting: false,
         enableDrawing: true,
@@ -561,7 +562,7 @@ FABRIC.SceneGraph.registerNodeType('Instance',
         constructDefaultTransformNode: true
       });
     // TODO: once the 'selector' system can be replaced with JavaScript event
-    // generation from KL, thenw e can eliminate this dgnode. It currently serves
+    // generation from KL, then we can eliminate this dgnode. It currently serves
     // no other purpose. 
     options.dgnodenames.push('DGNode');
     var instanceNode = scene.constructNode('SceneGraphNode', options),
@@ -586,20 +587,35 @@ FABRIC.SceneGraph.registerNodeType('Instance',
               MODELVIEW_MATRIX_ATTRIBUTE_ID: FABRIC.shaderAttributeTable.modelViewMatrix.id,
               MODELVIEWPROJECTION_MATRIX_ATTRIBUTE_ID: FABRIC.shaderAttributeTable.modelViewProjectionMatrix.id
             };
-            
-      redrawEventHandler.preDescendBindings.append(scene.constructOperator({
-          operatorName: 'loadModelProjectionMatrices',
-          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadModelProjectionMatrices.kl',
-          entryFunctionName: 'loadModelProjectionMatrices',
-          preProcessorDefinitions: preProcessorDefinitions,
-          parameterBinding: [
-            'shader.uniformValues',
-            'transform.' + transformNodeMember,
-            'camera.cameraMat44',
-            'camera.projectionMat44'
-          ]
-        }));
-
+      if(!options.transformNodeIndex){
+        redrawEventHandler.preDescendBindings.append(scene.constructOperator({
+            operatorName: 'loadModelProjectionMatrices',
+            srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadModelProjectionMatrices.kl',
+            entryFunctionName: 'loadModelProjectionMatrices',
+            preProcessorDefinitions: preProcessorDefinitions,
+            parameterBinding: [
+              'shader.uniformValues',
+              'transform.' + transformNodeMember,
+              'camera.cameraMat44',
+              'camera.projectionMat44'
+            ]
+          }));
+      }else{
+        redrawEventHandler.addMember('transformNodeIndex', 'Size', options.transformNodeIndex);
+        redrawEventHandler.preDescendBindings.append(scene.constructOperator({
+            operatorName: 'loadIndexedModelProjectionMatrices',
+            srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadModelProjectionMatrices.kl',
+            entryFunctionName: 'loadIndexedModelProjectionMatrices',
+            preProcessorDefinitions: preProcessorDefinitions,
+            parameterBinding: [
+              'shader.uniformValues',
+              'transform.' + transformNodeMember + '[]',
+              'self.transformNodeIndex',
+              'camera.cameraMat44',
+              'camera.projectionMat44'
+            ]
+          }));
+      }
       ///////////////////////////////////////////////
       // Ray Cast Event Handling
       if (scene.getSceneRaycastEventHandler() &&

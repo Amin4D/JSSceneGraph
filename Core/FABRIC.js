@@ -147,18 +147,26 @@ FABRIC = (function() {
   
   var processURL = function(url) {
     if (url.split('/')[0] === 'FABRIC_ROOT') {
-        // Remove the "FABRIC_ROOT" and replace it with
-        // the path to the Fabric SDK.
+      // Remove the "FABRIC_ROOT" and replace it with
+      // the path to the Fabric SDK. If the loaded HTML
+      // file under the Fabric URL, then it can locate
+      // it automaticaly. Otherwize it must be specified. 
       url = url.split('/').splice(1).join('/');
       var urlSections = document.location.href.split('/');
       do {
         urlSections.pop();
-      }while (urlSections[urlSections.length - 1].toLowerCase() !== 'fabric') {
-        if (!urlSections.length) {
-          throw ('Invalid document URL: ' + document.location.href + ". Missing 'Fabric' in the path.");
+      }while (urlSections.length > 0 &&
+              urlSections[urlSections.length - 1].toLowerCase() !== 'fabric');
+      
+      if (urlSections.length == 0) {
+        if( FABRIC.fabricSDKPath ){
+          return FABRIC.fabricSDKPath + '/' + url;
+        }else{
+          throw ('Fabric SDK Path not provided. \n\
+                 specify the location of the Fabric SDK by setting FABRIC.fabricSDKPath prior to constr');
         }
       }
-      url = urlSections.join('/') + '/' + url;
+      return urlSections.join('/') + '/' + url;
     }
     return url;
   };

@@ -574,7 +574,7 @@ FABRIC.SceneGraph.registerNodeType('Instance',
       materialNodes = [];
 
     redrawEventHandler.addMember('drawToggle', 'Boolean', options.enableDrawing);
-    redrawEventHandler.setBindingName('instance');
+    redrawEventHandler.setScopeName('instance');
 
     var bindToSceneGraph = function() {
       redrawEventHandler.addScope('transform', transformNode.getDGNode());

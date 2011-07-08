@@ -5,7 +5,7 @@
 
 
 
-operator loadCameraMatrices(
+operator loadModelProjectionMatrices(
   io ShaderValue uniformValues[],
   io Xfo modelXfo,
   io Mat44 cameraMatrix,
@@ -51,3 +51,4 @@ operator loadCameraMatrices(
     }
   }
 }
+

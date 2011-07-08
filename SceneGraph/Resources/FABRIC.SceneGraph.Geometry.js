@@ -589,7 +589,7 @@ FABRIC.SceneGraph.registerNodeType('Instance',
             
       redrawEventHandler.preDescendBindings.append(scene.constructOperator({
           operatorName: 'loadModelProjectionMatrices',
-          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadCameraMatrices.kl',
+          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadModelProjectionMatrices.kl',
           entryFunctionName: 'loadModelProjectionMatrices',
           preProcessorDefinitions: preProcessorDefinitions,
           parameterBinding: [

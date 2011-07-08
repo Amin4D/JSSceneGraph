@@ -440,7 +440,7 @@ FABRIC.SceneGraph.registerNodeType('Shader',
         options.geometryShader, FABRIC.SceneGraph.OpenGLConstants.GL_GEOMETRY_SHADER_EXT));
     }
 
-    redrawEventHandler.setBindingName('shader');
+    redrawEventHandler.setScopeName('shader');
     redrawEventHandler.addMember('shaderSources', 'ShaderSource[]', shaderSources);
     redrawEventHandler.addMember('name', 'String', options.name);
     redrawEventHandler.addMember('program', 'Integer', 0);
@@ -659,7 +659,7 @@ FABRIC.SceneGraph.registerNodeType('Material',
     if (options.textures) {
       addTextureInterface = function(textureName, textureDef, textureUnit) {
         var textureStub = scene.constructEventHandlerNode(options.name + textureName + '_stub');
-        textureStub.setBindingName('textureStub');
+        textureStub.setScopeName('textureStub');
         textureStub.addMember('textureUnit', 'Integer', textureUnit);
         redrawEventHandler.appendChildEventHandler(textureStub);
 

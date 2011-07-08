@@ -976,7 +976,7 @@ FABRIC.SceneGraph.registerNodeType('Viewport',
     };
     viewportNode.pub.setBackgroundTextureImage = function(textureNode) {
       if (!textureStubdgnode) {
-        textureStub.setBindingName('textureStub');
+        textureStub.setScopeName('textureStub');
         textureStub.addMember('textureUnit', 'Integer', 0);
         textureStub.addMember('program', 'Integer', 0);
         textureStub.postDescendBindings.append(

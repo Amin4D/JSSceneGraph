@@ -882,13 +882,13 @@ var wrapFabricClient = function(fabricClient, logCallback, debugLogCallback) {
         return 'EventHandler';
       };
 
-      result.pub.getBindingName = function() {
+      result.pub.getScopeName = function() {
         return result.bindingName;
       };
 
-      result.pub.setBindingName = function(bindingName) {
+      result.pub.setScopeName = function(bindingName) {
         var oldBindingName = result.bindingName;
-        result.queueCommand('setBindingName', bindingName, function() {
+        result.queueCommand('setScopeName', bindingName, function() {
           result.bindingName = oldBindingName;
         });
       };

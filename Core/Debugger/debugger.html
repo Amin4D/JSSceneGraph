@@ -222,6 +222,10 @@ g.Highlighted {
 $(document).ready(function() {
   
   
+  var contextID = document.location.search.split('?')[1].split('=')[1];
+  var openerWindowName = document.location.search.split('?')[2].split('=')[1];
+  document.title = 'FABRIC Debugger:' + openerWindowName;
+  
   var contextID = document.location.search.split('?id=')[1];
   if(!window.context){
     window.context = FABRIC.createContext({ contextID:contextID  });

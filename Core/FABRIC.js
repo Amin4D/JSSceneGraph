@@ -60,7 +60,9 @@ FABRIC = (function() {
     FABRIC.displayDebugger = function(ctx) {
       if(!ctx) ctx = context;
       var debuggerWindow = window.open(
-          FABRIC.processURL('FABRIC_ROOT/Core/Debugger/debugger.html') + '?id=' + context.getContextID(),
+          FABRIC.processURL('FABRIC_ROOT/Core/Debugger/debugger.html') +
+          '?id=' + context.getContextID() +
+          '?title=' + document.title.replace(/[^a-zA-Z\t0-9]+/g,''),
           'Fabric Debugger',
           'status=1,resizable=1,width=1000,height=600'
         );

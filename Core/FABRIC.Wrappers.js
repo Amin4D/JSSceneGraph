@@ -463,6 +463,7 @@ var wrapFabricClient = function(fabricClient, logCallback, debugLogCallback) {
 
       result.pub.setEntryFunctionName = function(entryFunctionName) {
         var oldEntryFunctionName = result.entryFunctionName;
+        result.entryFunctionName = entryFunctionName;
         result.queueCommand('setEntryFunctionName', entryFunctionName, function() {
           result.entryFunctionName = oldEntryFunctionName;
         });

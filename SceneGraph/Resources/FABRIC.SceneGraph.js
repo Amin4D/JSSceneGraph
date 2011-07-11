@@ -803,6 +803,10 @@ FABRIC.SceneGraph.registerNodeType('SceneGraphNode',
     var ehnodenames = options.ehnodenames ? options.ehnodenames : [];
     var ehnodes = {};
 
+    var capitalizeFirstLetter = function(str) {
+      return str[0].toUpperCase() + str.substr(1);
+    };
+    
     // ensure the name is unique
     var name = options.name ? options.name : options.type;
     if (scene.pub.getSceneGraphNode(name)) {
@@ -823,12 +827,10 @@ FABRIC.SceneGraph.registerNodeType('SceneGraphNode',
           return options.type;
         }
       },
-      addMemberInterface : function(corenode, memberName, createSetter) {
-        if(defineGetter===true){
-          var getterName = 'get' + capitalizeFirstLetter(memberName);
-          sceneGraphNode[getterName] = function(sliceIndex){
-            return corenode.getData(memberName, sliceIndex);
-          }
+      addMemberInterface : function(corenode, memberName, defineSetter) {
+        var getterName = 'get' + capitalizeFirstLetter(memberName);
+        sceneGraphNode[getterName] = function(sliceIndex){
+          return corenode.getData(memberName, sliceIndex);
         }
         if(defineSetter===true){
           var setterName = 'get' + capitalizeFirstLetter(memberName);
@@ -842,10 +844,6 @@ FABRIC.SceneGraph.registerNodeType('SceneGraphNode',
     // store it to the map
     scene.setSceneGraphNode(name, sceneGraphNode);
     
-    var capitalizeFirstLetter = function(str) {
-      return str[0].toUpperCase() + str.substr(1);
-    };
-
     // take care of the DG nodes
     var constructDGNode = function(dgnodename) {
       dgnodes[dgnodename] = scene.constructDependencyGraphNode(name + '_' + dgnodename);

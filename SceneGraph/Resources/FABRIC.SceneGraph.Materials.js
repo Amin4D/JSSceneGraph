@@ -638,7 +638,7 @@ FABRIC.SceneGraph.registerNodeType('Material',
         var lightStub, setterName, setLightNodeFn;
         lightStub = scene.constructEventHandlerNode(options.name + '_redraw_' + lightName);
         redrawEventHandler.appendChildEventHandler(lightStub);
-
+        
         setLightNodeFn = function(node) {
           if (!node.isTypeOf(lightDef.type)) {
             throw ('Incorrect type assignment. Must assign a ' + lightDef.type);

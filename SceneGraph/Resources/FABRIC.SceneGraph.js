@@ -702,8 +702,11 @@ FABRIC.SceneGraph = {
           ]
         }));
 
-        var animationTime = 0;
+        var isPlaying = false, animationTime = 0;
         var prevTime, playspeed = 1.0;
+        var timerange = FABRIC.RT.vec2(-1,-1);
+        var looping = false;
+        var onAdvanceCallback;
         var advanceTime = function() {
           if (sceneOptions.fixedTimeStep) {
             animationTime += sceneOptions.timeStep;
@@ -715,12 +718,18 @@ FABRIC.SceneGraph = {
             prevTime = currTime;
             scene.pub.animation.setTime(animationTime + (deltaTime * playspeed));
           }
+          if( onAdvanceCallback){
+            onAdvanceCallback.call();
+          }
         }
 
         /////////////////////////////////////////////////////////
         // Animation Interface
         scene.pub.animation = {
           setTime:function(t) {
+            if (looping && animationTime > duration.y){
+              t = duration.x;
+            }
             animationTime = t;
             globalsNode.setData('ms', t);
             scene.pub.redrawAllWindows();
@@ -734,20 +743,39 @@ FABRIC.SceneGraph = {
           getPlaybackSpeed:function() {
             return playspeed;
           },
+          setPlaybackTimeRange:function(speed) {
+            playspeed = speed;
+          },
+          getPlaybackTimeRange:function() {
+            return playspeed;
+          },
+          setLoop:function(loop) {
+            looping = loop;
+          },
+          getLoop:function() {
+            return looping;
+          },
           play: function(callback) {
             prevTime = (new Date).getTime();
+            isPlaying = true;
+            onAdvanceCallback = callback;
             // Note: this is a big ugly hack to work arround the fact that
             // we have zero or more windows. What happens when we have
             // multiple windows? Should the 'play' controls be moved to
             // Viewport?
-            windows[0].setRedrawFinishedCallback(callback ? callback : advanceTime);
+            windows[0].setRedrawFinishedCallback(advanceTime);
             scene.pub.redrawAllWindows();
           },
+          isPlaying: function(){
+            return isPlaying;
+          },
           pause: function() {
+            isPlaying = false;
             windows[0].setRedrawFinishedCallback(null);
             scene.pub.redrawAllWindows();
           },
           reset: function() {
+            isPlaying = false;
             animationTime = 0.0;
             globalsNode.setData('ms', 0.0);
             windows[0].setRedrawFinishedCallback(null);

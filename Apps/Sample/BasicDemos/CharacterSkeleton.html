@@ -54,7 +54,7 @@ $(document).ready(function() {
 
   // Create the scene.
   var scene = FABRIC.SceneGraph.createScene();
-  scene.animation.time = -1;
+  scene.animation.setTime(-1);
 
   var viewport = scene.constructNode('Viewport', {
     enableRaycasting: true,
@@ -120,7 +120,7 @@ $(document).ready(function() {
   $globalTimeSlider.slider('value', 0.0);
   $globalTimeSlider.bind('slide',
     function(event, ui) {
-      scene.animation.time = ui.value;
+      scene.animation.setTime(ui.value);
       scene.redrawAllWindows();
     });
 });

@@ -217,9 +217,9 @@ FABRIC.SceneGraph.registerNodeType('Circle',
 
     // getters and setters
     var uniforms = circleNode.getUniformsDGNode();
-    scene.addMemberInterface(circleNode, uniforms, 'radius', true);
-    scene.addMemberInterface(circleNode, uniforms, 'arcAngle', true);
-    scene.addMemberInterface(circleNode, uniforms, 'numSegments', true);
+    circleNode.addMemberInterface(uniforms, 'radius', true);
+    circleNode.addMemberInterface(uniforms, 'arcAngle', true);
+    circleNode.addMemberInterface(uniforms, 'numSegments', true);
 
     circleNode.setGeneratorOps([
       scene.constructOperator({
@@ -267,10 +267,10 @@ FABRIC.SceneGraph.registerNodeType('Plane',
 
     // getters and setters
     var uniforms = planeNode.getUniformsDGNode();
-    scene.addMemberInterface(planeNode, uniforms, 'length', true);
-    scene.addMemberInterface(planeNode, uniforms, 'width', true);
-    scene.addMemberInterface(planeNode, uniforms, 'lengthSections', true);
-    scene.addMemberInterface(planeNode, uniforms, 'widthSections', true);
+    planeNode.addMemberInterface(uniforms, 'length', true);
+    planeNode.addMemberInterface(uniforms, 'width', true);
+    planeNode.addMemberInterface(uniforms, 'lengthSections', true);
+    planeNode.addMemberInterface(uniforms, 'widthSections', true);
 
     planeNode.setGeneratorOps([
       scene.constructOperator({
@@ -325,9 +325,9 @@ FABRIC.SceneGraph.registerNodeType('Cuboid',
 
     // getters and setters
     var uniforms = cubeNode.getUniformsDGNode();
-    scene.addMemberInterface(cubeNode, uniforms, 'length', true);
-    scene.addMemberInterface(cubeNode, uniforms, 'width', true);
-    scene.addMemberInterface(cubeNode, uniforms, 'height', true);
+    cubeNode.addMemberInterface(uniforms, 'length', true);
+    cubeNode.addMemberInterface(uniforms, 'width', true);
+    cubeNode.addMemberInterface(uniforms, 'height', true);
 
     cubeNode.setGeneratorOps([
       scene.constructOperator({
@@ -363,8 +363,8 @@ FABRIC.SceneGraph.registerNodeType('Sphere',
 
     // getters and setters
     var uniforms = sphereNode.getUniformsDGNode();
-    scene.addMemberInterface(sphereNode, uniforms, 'radius', true);
-    scene.addMemberInterface(sphereNode, uniforms, 'detail', true);
+    sphereNode.addMemberInterface(uniforms, 'radius', true);
+    sphereNode.addMemberInterface(uniforms, 'detail', true);
 
     sphereNode.setGeneratorOps([
       scene.constructOperator({
@@ -410,9 +410,9 @@ FABRIC.SceneGraph.registerNodeType('Torus',
 
     // getters and setters
     var uniforms = torusNode.getUniformsDGNode();
-    scene.addMemberInterface(torusNode, uniforms, 'outer_radius', true);
-    scene.addMemberInterface(torusNode, uniforms, 'inner_radius', true);
-    scene.addMemberInterface(torusNode, uniforms, 'detail', true);
+    torusNode.addMemberInterface(uniforms, 'outer_radius', true);
+    torusNode.addMemberInterface(uniforms, 'inner_radius', true);
+    torusNode.addMemberInterface(uniforms, 'detail', true);
 
     torusNode.setGeneratorOps([
       scene.constructOperator({
@@ -462,10 +462,10 @@ FABRIC.SceneGraph.registerNodeType('Cone',
 
     // getters and setters
     var uniforms = coneNode.getUniformsDGNode();
-    scene.addMemberInterface(coneNode, uniforms, 'radius', true);
-    scene.addMemberInterface(coneNode, uniforms, 'height', true);
-    scene.addMemberInterface(coneNode, uniforms, 'cap', true);
-    scene.addMemberInterface(coneNode, uniforms, 'detail', true);
+    coneNode.addMemberInterface(uniforms, 'radius', true);
+    coneNode.addMemberInterface(uniforms, 'height', true);
+    coneNode.addMemberInterface(uniforms, 'cap', true);
+    coneNode.addMemberInterface(uniforms, 'detail', true);
 
     coneNode.setGeneratorOps([
       scene.constructOperator({
@@ -515,10 +515,10 @@ FABRIC.SceneGraph.registerNodeType('Cylinder',
 
     // getters and setters
     var uniforms = cylinderNode.getUniformsDGNode();
-    scene.addMemberInterface(cylinderNode, uniforms, 'radius', true);
-    scene.addMemberInterface(cylinderNode, uniforms, 'height', true);
-    scene.addMemberInterface(cylinderNode, uniforms, 'cap', true);
-    scene.addMemberInterface(cylinderNode, uniforms, 'detail', true);
+    cylinderNode.addMemberInterface(uniforms, 'radius', true);
+    cylinderNode.addMemberInterface(uniforms, 'height', true);
+    cylinderNode.addMemberInterface(uniforms, 'cap', true);
+    cylinderNode.addMemberInterface(uniforms, 'detail', true);
 
     cylinderNode.setGeneratorOps([
       scene.constructOperator({
@@ -565,8 +565,8 @@ FABRIC.SceneGraph.registerNodeType('Teapot',
 
     // getters and setters
     var uniforms = teapotNode.getUniformsDGNode();
-    scene.addMemberInterface(teapotNode, uniforms, 'size', true);
-    scene.addMemberInterface(teapotNode, uniforms, 'detail', true);
+    teapotNode.addMemberInterface(uniforms, 'size', true);
+    teapotNode.addMemberInterface(uniforms, 'detail', true);
 
     teapotNode.setGeneratorOps([
       scene.constructOperator({

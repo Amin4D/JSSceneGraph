@@ -105,8 +105,8 @@ FABRIC.SceneGraph.registerNodeType('Light',
       }));
     }
 
-    scene.addMemberInterface(lightNode, dgnode, 'color', true);
-    scene.addMemberInterface(lightNode, dgnode, 'cameraMat44');
+    lightNode.addMemberInterface(dgnode, 'color', true);
+    lightNode.addMemberInterface(dgnode, 'cameraMat44');
 
     if (typeof options.transformNode == 'string') {
       lightNode.pub.setTransformNode(scene.constructNode(options.transformNode, { hierarchical: false }).pub);
@@ -304,7 +304,7 @@ FABRIC.SceneGraph.registerNodeType('SpotLight',
     var dgnode = spotLightNode.getDGNode();
 
     dgnode.addMember('coneAngle', 'Scalar', options.coneAngle);
-    scene.addMemberInterface(spotLightNode, dgnode, 'coneAngle', true);
+    spotLightNode.addMemberInterface(dgnode, 'coneAngle', true);
 
     var redrawEventHandlerConfigured = false;
     var parentGetRedrawEventHandler = spotLightNode.getRedrawEventHandler;

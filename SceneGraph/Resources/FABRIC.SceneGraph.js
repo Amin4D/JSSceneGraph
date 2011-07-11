@@ -203,6 +203,7 @@ FABRIC.SceneGraph = {
       }
 
       options.dgnodenames = options.dgnodenames ? options.dgnodenames : [];
+      options.ehnodenames = options.ehnodenames ? options.ehnodenames : [];
 
       var sceneGraphNode = FABRIC.SceneGraph.nodeFactories[type].call(undefined, options, scene);
       if (!sceneGraphNode) {
@@ -500,29 +501,6 @@ FABRIC.SceneGraph = {
       };
       return sceneGraphNode;
     };
-    scene.addMemberInterface = function(sgnode, dgnode, memberName, createSetter) {
-      var pub = sgnode.pub;
-      pub.__defineGetter__(memberName, function() {
-        return dgnode.getData(memberName, 0);
-      });
-      if (createSetter) {
-        pub.__defineSetter__(memberName, function(val) {
-          dgnode.setData(memberName, 0, val);
-        });
-      }
-    };
-    scene.addMemberGetter = function(sgnode, dgnode, memberName) {
-      setCharAt = function(str, index, chr) {
-        if (index > str.length - 1) {
-          return str;
-        }
-        return str.substr(0, index) + chr + str.substr(index + 1);
-      };
-      var getterName = 'get' + setCharAt(memberName, 0, memberName[0].toUpperCase());
-      sgnode.pub[getterName] = function() {
-        return dgnode.getData(memberName, 0);
-      };
-    };
     scene.addEventHandlingFunctions = function(obj) {
       // We store a map of arrays of event listener functions.
       var eventListeners = {};
@@ -726,34 +704,34 @@ FABRIC.SceneGraph = {
 
         var animationTime = 0;
         var prevTime, playspeed = 1.0;
-        var advancePlayback = function() {
+        var advanceTime = function() {
           if (sceneOptions.fixedTimeStep) {
             animationTime += sceneOptions.timeStep;
-            scene.pub.animation.time = animationTime;
+            scene.pub.animation.setTime(animationTime);
           }
           else {
             var currTime = (new Date).getTime();
             var deltaTime = currTime - prevTime;
             prevTime = currTime;
-            scene.pub.animation.time = (animationTime + (deltaTime * playspeed));
+            scene.pub.animation.setTime(animationTime + (deltaTime * playspeed));
           }
         }
 
         /////////////////////////////////////////////////////////
         // Animation Interface
         scene.pub.animation = {
-          set time(t) {
+          setTime:function(t) {
             animationTime = t;
             globalsNode.setData('ms', t);
             scene.pub.redrawAllWindows();
           },
-          get time() {
+          getTime:function() {
             return animationTime;
           },
-          set playbackSpeed(speed) {
+          setPlaybackSpeed:function(speed) {
             playspeed = speed;
           },
-          get playbackSpeed() {
+          getPlaybackSpeed:function() {
             return playspeed;
           },
           play: function(callback) {
@@ -762,7 +740,7 @@ FABRIC.SceneGraph = {
             // we have zero or more windows. What happens when we have
             // multiple windows? Should the 'play' controls be moved to
             // Viewport?
-            windows[0].setRedrawFinishedCallback(callback ? callback : advancePlayback);
+            windows[0].setRedrawFinishedCallback(callback ? callback : advanceTime);
             scene.pub.redrawAllWindows();
           },
           pause: function() {
@@ -793,6 +771,9 @@ FABRIC.SceneGraph.registerNodeType('SceneGraphNode',
 
     var dgnodenames = options.dgnodenames ? options.dgnodenames : [];
     var dgnodes = {};
+    
+    var ehnodenames = options.ehnodenames ? options.ehnodenames : [];
+    var ehnodes = {};
 
     // ensure the name is unique
     var name = options.name ? options.name : options.type;
@@ -813,23 +794,77 @@ FABRIC.SceneGraph.registerNodeType('SceneGraphNode',
         getType: function() {
           return options.type;
         }
+      },
+      addMemberInterface : function(corenode, memberName, createSetter) {
+        if(defineGetter===true){
+          var getterName = 'get' + capitalizeFirstLetter(memberName);
+          sceneGraphNode[getterName] = function(sliceIndex){
+            return corenode.getData(memberName, sliceIndex);
+          }
+        }
+        if(defineSetter===true){
+          var setterName = 'get' + capitalizeFirstLetter(memberName);
+          sceneGraphNode[setterName] = function(value, sliceIndex){
+            return corenode.setData(memberName, sliceIndex, value);
+          }
+        }
       }
     };
     
     // store it to the map
     scene.setSceneGraphNode(name, sceneGraphNode);
+    
+    var capitalizeFirstLetter = function(str) {
+      return str[0].toUpperCase() + str.substr(1);
+    };
 
     // take care of the DG nodes
-    var addDGNodeInterface = function(dgnodename) {
+    var constructDGNode = function(dgnodename) {
       dgnodes[dgnodename] = scene.constructDependencyGraphNode(name + '_' + dgnodename);
       dgnodes[dgnodename].sceneGraphNode = sceneGraphNode;
       sceneGraphNode['get' + dgnodename] = function() {
         return dgnodes[dgnodename];
       };
+      sceneGraphNode['add' + dgnodename + 'Member'] = function(
+          memberName,
+          memberType,
+          defaultValue,
+          defineGetter,
+          defineSetter) {
+        dgnodes[dgnodename].addMember(memberName, memberType, defaultValue);
+        if(defineGetter){
+          sceneGraphNode.addMemberInterface(dgnodes[dgnodename], memberName, defineSetter);
+        };
+      };
     }
 
     for (var i = 0; i < dgnodenames.length; i++) {
-      addDGNodeInterface(dgnodenames[i]);
+      constructDGNode(dgnodenames[i]);
+    }
+
+    // take care of the DG nodes
+    var constructEventHandler = function(ehname) {
+      ehnodes[ehname] = scene.constructEventHandlerNode(name + '_' + ehname);
+      ehnodes[ehname].sceneGraphNode = sceneGraphNode;
+      sceneGraphNode['get' + ehname] = function() {
+        return ehnodes[ehname];
+      };
+      
+      sceneGraphNode['add' + ehname + 'Member'] = function(
+          memberName,
+          memberType,
+          defaultValue,
+          defineGetter,
+          defineSetter){
+        ehnodes[ehname].addMember(memberName, memberType, defaultValue);
+        if(defineGetter) {
+          sceneGraphNode.addMemberInterface(ehnodes[ehname], memberName, defineSetter);
+        }
+      };
+    }
+
+    for (var i = 0; i < ehnodenames.length; i++) {
+      constructEventHandler(ehnodenames[i]);
     }
 
     return sceneGraphNode;
@@ -960,7 +995,7 @@ FABRIC.SceneGraph.registerNodeType('Viewport',
     };
 
     // public interface
-    scene.addMemberInterface(viewportNode, dgnode, 'backgroundColor', true);
+    viewportNode.addMemberInterface(dgnode, 'backgroundColor', true);
     viewportNode.pub.setCameraNode = function(node) {
       if (!node || !node.isTypeOf('Camera')) {
         throw ('Incorrect type assignment. Must assign a Camera');
@@ -1326,12 +1361,12 @@ FABRIC.SceneGraph.registerNodeType('Camera',
         ]
       }));
     };
-    scene.addMemberInterface(cameraNode, dgnode, 'cameraMat44');
-    scene.addMemberInterface(cameraNode, dgnode, 'projectionMat44');
-    scene.addMemberInterface(cameraNode, dgnode, 'nearDistance', true);
-    scene.addMemberInterface(cameraNode, dgnode, 'farDistance', true);
-    scene.addMemberInterface(cameraNode, dgnode, 'fovY', true);
-    scene.addMemberInterface(cameraNode, dgnode, 'focalDistance', true);
+    cameraNode.addMemberInterface(dgnode, 'cameraMat44');
+    cameraNode.addMemberInterface(dgnode, 'projectionMat44');
+    cameraNode.addMemberInterface(dgnode, 'nearDistance', true);
+    cameraNode.addMemberInterface(dgnode, 'farDistance', true);
+    cameraNode.addMemberInterface(dgnode, 'fovY', true);
+    cameraNode.addMemberInterface(dgnode, 'focalDistance', true);
 
     scene.addEventHandlingFunctions(cameraNode);
 
@@ -1357,9 +1392,6 @@ FABRIC.SceneGraph.registerNodeType('FreeCamera',
     });
 
     var freeCameraNode = scene.constructNode('Camera', options);
-
-    // extend public interface
-    scene.addMemberInterface(freeCameraNode, freeCameraNode.getDGNode(), 'globalXfo', true);
 
     return freeCameraNode;
   });

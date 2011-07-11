@@ -184,14 +184,14 @@ FABRIC.SceneGraph.registerNodeType('PaintManipulator',
     collectPointsDgNode.addMember('projectionMatrix', 'Mat44');
     collectPointsDgNode.addMember('aspectRatio', 'Scalar');
     collectPointsDgNode.addMember('brushPos', 'Vec3');
+    
     collectPointsDgNode.addMember('brushSize', 'Scalar', options.brushSize);
-
-    scene.addMemberInterface(paintManipulatorNode, collectPointsDgNode, 'brushSize', true);
+    paintManipulatorNode.addMemberInterface(collectPointsDgNode, 'brushSize', true);
 
     // Note: this is not the intended design model for our brushing tools.
     // Adding the color here is just a hack to make the demo work well.
     collectPointsDgNode.addMember('brushColor', 'Color', options.brushColor);
-    scene.addMemberInterface(paintManipulatorNode, collectPointsDgNode, 'brushColor', true);
+    paintManipulatorNode.addMemberInterface(collectPointsDgNode, 'brushColor', true);
 
     paintEventHandler = scene.constructEventHandlerNode('Viewport_raycast');
     paintEventHandler.addScope('paintData', collectPointsDgNode);
@@ -419,18 +419,17 @@ FABRIC.SceneGraph.registerNodeType('Manipulator',
     // be driven by the target and the parent space
     // we are going to use a non hierarchical transfor
     // for that.
+    // TODO: review the following code. It seems unnecessary to
+    // define functions defined in 'Transform' here. 
     var transformNode = scene.constructNode('Transform', { hierarchical: false });
     var transformDGNode = transformNode.getDGNode();
     transformDGNode.addMember('localXfo', 'Xfo', options.localXfo);
-    transformNode.__defineGetter__('localXfo', function() {
-        return transformDGNode.getData('localXfo');
-      });
-    transformNode.__defineSetter__('localXfo', function(val) {
-        if (!val.getType || val.getType() !== 'FABRIC.RT.Xfo') {
-          throw ('Incorrect type assignment. Must assign a FABRIC.RT.Xfo');
-        }
-        transformDGNode.setData('localXfo', 0, val);
-      });
+    transformNode.getLocalXfo = function() {
+      return transformDGNode.getData('localXfo');
+    };
+    transformNode.setlocalXfo = function(val) {
+      transformDGNode.setData('localXfo', 0, val);
+    };
 
     transformDGNode.addDependency(parentNode.getDGNode(), 'parent');
     transformDGNode.addDependency(targetNode.getDGNode(), 'target');

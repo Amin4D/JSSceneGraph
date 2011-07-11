@@ -57,21 +57,7 @@ FABRIC.SceneGraph.registerNodeType('Geometry',
       // We could generate methods like this on the 'SceneGraphNode'. This would simplify
       // loads of code as we could add getters and setters as we add members.
       if (addGetterSetterInterface) {
-        setCharAt = function(str, index, chr) {
-          if (index > str.length - 1) {
-            return str;
-          }
-          return str.substr(0, index) + chr + str.substr(index + 1);
-        };
-
-        var getterName = 'get' + setCharAt(name, 0, name[0].toUpperCase());
-        geometryNode.pub[getterName] = function() {
-          return uniformsdgnode.getData(name, 0);
-        };
-        var setterName = 'set' + setCharAt(name, 0, name[0].toUpperCase());
-        geometryNode.pub[setterName] = function(val) {
-          return uniformsdgnode.setData(name, 0, val);
-        };
+        geometryNode.addMemberInterface(uniformsdgnode, name);
       }
     };
     geometryNode.pub.addVertexAttributeValue = function(name, type, defaultValue, dynamic) {
@@ -565,15 +551,16 @@ FABRIC.SceneGraph.registerNodeType('Instance',
     // generation from KL, then we can eliminate this dgnode. It currently serves
     // no other purpose. 
     options.dgnodenames.push('DGNode');
+    options.ehnodenames.push('RedrawEventHandler');
     var instanceNode = scene.constructNode('SceneGraphNode', options),
       dgnode = instanceNode.getDGNode(),
-      redrawEventHandler = scene.constructEventHandlerNode(options.name + 'InstanceDraw'),
+      redrawEventHandler = instanceNode.getRedrawEventHandler(),
       transformNode,
       transformNodeMember = options.transformNodeMember,
       geometryNode,
       materialNodes = [];
 
-    redrawEventHandler.addMember('drawToggle', 'Boolean', options.enableDrawing);
+    instanceNode.addRedrawEventHandlerMember('drawToggle', 'Boolean', options.enableDrawing, true, true);
     redrawEventHandler.setScopeName('instance');
 
     var bindToSceneGraph = function() {
@@ -736,13 +723,11 @@ FABRIC.SceneGraph.registerNodeType('Instance',
       materialNodes.splice(index, 1);
     };
 
-    scene.addMemberInterface(instanceNode, redrawEventHandler, 'drawToggle', true);
-
     // custom getter and setter for castShadows
-    instanceNode.pub.__defineGetter__('castShadows', function() {
-        return materialNodes.indexOf(scene.getShadowMapMaterial()) != -1;
-      });
-    instanceNode.pub.__defineSetter__('castShadows', function(val) {
+    instanceNode.pub.getIsShadowCasting = function() {
+      return materialNodes.indexOf(scene.getShadowMapMaterial()) != -1;
+    };
+    instanceNode.pub.getIsShadowCasting = function(val) {
       if (val) {
         if (options.shadowMappingMaterial) {
           instanceNode.pub.setMaterialNode(scene.pub.constructNode(options.shadowMappingMaterial));
@@ -754,7 +739,7 @@ FABRIC.SceneGraph.registerNodeType('Instance',
       else {
         instanceNode.pub.removeMaterialNode(scene.getShadowMapMaterial());
       }
-    });
+    };
 
     // Mouse events are fired on Instance nodes.
     // These events are generated using raycasting.

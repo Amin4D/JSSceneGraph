@@ -44,6 +44,11 @@ FABRIC.SceneGraph = {
     // data relating to this scene graph. A single HTML file can
     // define multiple scene graphs with separate contexts.
     var context = FABRIC.createContext();
+    
+    // [pzion 20110711] This is a bit of a hack: we populate the *global*
+    // OpenGL constants structure if it doesn't alrady exist.
+    if (!FABRIC.SceneGraph.OpenGLConstants)
+      FABRIC.SceneGraph.OpenGLConstants = JSON.parse(context.EX.getLoadedExts().FabricOGL.jsConstants);
 
     // [pzion 20110326] Add a context menu item for any windows
     // in the context that pops up a Fabric debugger for the context

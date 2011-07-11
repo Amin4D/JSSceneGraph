@@ -1071,6 +1071,57 @@ var wrapFabricClient = function(fabricClient, logCallback, debugLogCallback) {
   };
   var DG = createDG();
 
+  var createEX = function() {
+    var EX = {
+      loadedExts: {},
+      pub: {}
+    };
+
+    EX.patch = function(diff) {
+      for (var name in diff) {
+        if (diff[name])
+          EX.loadedExts[name] = diff[name];
+        else
+          delete EX.loadedExts[name];
+      }
+    };
+
+    EX.handleStateNotification = function(state) {
+      EX.loadedExts = {};
+      EX.patch(state);
+    };
+
+    EX.handle = function(cmd, arg) {
+      switch (cmd) {
+        case 'delta':
+          EX.patch(arg);
+          break;
+        default:
+          throw 'unrecognized';
+      }
+    };
+
+    EX.route = function(src, cmd, arg) {
+      if (src.length == 0) {
+        try {
+          EX.handle(cmd, arg);
+        }
+        catch (e) {
+          throw "command '" + cmd + "': " + e;
+        }
+      }
+      else
+        throw 'unroutable';
+    };
+
+    EX.pub.getLoadedExts = function() {
+      return EX.loadedExts;
+    };
+    
+    return EX;
+  };
+  var EX = createEX();
+
   var state = {
   };
 
@@ -1228,6 +1279,7 @@ var wrapFabricClient = function(fabricClient, logCallback, debugLogCallback) {
     patch(newState);
     DG.handleStateNotification(newState.DG);
     RT.handleStateNotification(newState.RT);
+    EX.handleStateNotification(newState.EX);
     if ('VP' in newState)
       VP.handleStateNotification(newState.VP);
   };
@@ -1268,6 +1320,14 @@ var wrapFabricClient = function(fabricClient, logCallback, debugLogCallback) {
           }
           catch (e) {
             throw 'DG: ' + e;
+          }
+          break;
+        case 'EX':
+          try {
+            EX.route(src, cmd, arg);
+          }
+          catch (e) {
+            throw 'EX: ' + e;
           }
           break;
         case 'VP':
@@ -1315,6 +1375,7 @@ var wrapFabricClient = function(fabricClient, logCallback, debugLogCallback) {
     RT: RT.pub,
     RegisteredTypesManager: RT.pub,
     DG: DG.pub,
+    EX: EX.pub,
     DependencyGraph: DG.pub,
     VP: VP.pub,
     getLicenses: function() {

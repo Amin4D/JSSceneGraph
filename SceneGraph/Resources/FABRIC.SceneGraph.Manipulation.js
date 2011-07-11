@@ -30,13 +30,13 @@ FABRIC.SceneGraph.registerNodeType('CameraManipulator',
       if(!enabled){
         return;
       }
-      var zoomDist = cameraNode.focalDistance * options.mouseWheelZoomRate * evt.wheelDelta * -0.001;
-      var cameraXfo = cameraNode.getTransformNode().globalXfo;
+      var zoomDist = cameraNode.getFocalDistance() * options.mouseWheelZoomRate * evt.wheelDelta * -0.001;
+      var cameraXfo = cameraNode.getTransformNode().getGlobalXfo();
       var cameraZoom = cameraXfo.ori.getZaxis().mulInPlace(zoomDist);
       cameraXfo.tr.addInPlace(cameraZoom);
-      cameraNode.getTransformNode().globalXfo = cameraXfo;
-      if (!cameraNode.getTransformNode().target) {
-        cameraNode.focalDistance = cameraNode.focalDistance - zoomDist;
+      cameraNode.getTransformNode().setGlobalXfo(cameraXfo);
+      if (!cameraNode.getTransformNode().getTarget) {
+        cameraNode.setFocalDistance(cameraNode.getFocalDistance() - zoomDist);
       }
       evt.viewportNode.redraw();
       evt.stopPropagation();
@@ -48,12 +48,12 @@ FABRIC.SceneGraph.registerNodeType('CameraManipulator',
     var getCameraValues = function(evt) {
       mouseDownScreenPos = FABRIC.RT.vec2(evt.screenX, evt.screenY);
       viewportNode = evt.viewportNode;
-      cameraXfo = evt.cameraNode.getTransformNode().globalXfo;
+      cameraXfo = evt.cameraNode.getTransformNode().getGlobalXfo();
       cameraPos = cameraXfo.tr;
       swaxis = cameraXfo.ori.getXaxis();
       upaxis = cameraXfo.ori.getYaxis();
 
-      focalDist = evt.cameraNode.focalDistance;
+      focalDist = evt.cameraNode.getFocalDistance();
       cameraOffset = cameraXfo.ori.getZaxis().scale(-focalDist);
       cameraTarget = cameraPos.add(cameraOffset);
     }
@@ -99,7 +99,7 @@ FABRIC.SceneGraph.registerNodeType('CameraManipulator',
       newCameraOffset = pitch.rotateVector(newCameraOffset);
       newcameraXfo.tr = cameraTarget.subtract(newCameraOffset);
       
-      cameraNode.getTransformNode().globalXfo = newcameraXfo;
+      cameraNode.getTransformNode().setGlobalXfo(newcameraXfo);
       viewportNode.redraw();
       evt.stopPropagation();
     }
@@ -119,9 +119,9 @@ FABRIC.SceneGraph.registerNodeType('CameraManipulator',
                            .mulInPlace(focalDist * 0.001);
       var newcameraXfo = cameraXfo.clone();
       newcameraXfo.tr.addInPlace(dragDist);
-      cameraNode.getTransformNode().globalXfo = newcameraXfo;
-      if (cameraNode.getTransformNode().target) {
-        cameraNode.getTransformNode().target = cameraTarget.add(dragDist);
+      cameraNode.getTransformNode().setGlobalXfo(newcameraXfo);
+      if (cameraNode.getTransformNode().getTarget) {
+        cameraNode.getTransformNode().setTarget(cameraTarget.add(dragDist));
       }
       viewportNode.redraw();
       evt.stopPropagation();
@@ -240,11 +240,11 @@ FABRIC.SceneGraph.registerNodeType('PaintManipulator',
       aspectRatio = width / height;
       brushPos = FABRIC.RT.vec3(((evt.offsetX / width) - 0.5) * 2.0, ((evt.offsetY / height) - 0.5) * -2.0, 0);
 
-      brushShapeTransform.pub.globalXfo = FABRIC.RT.xfo({
+      brushShapeTransform.pub.setGlobalXfo(FABRIC.RT.xfo({
           tr: brushPos,
           ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(1, 0, 0), 90),
           sc: FABRIC.RT.vec3(options.brushSize / aspectRatio, options.brushSize, options.brushSize)
-        });
+        }));
     }
 
     var mouseMoveFn = function(evt) {
@@ -479,7 +479,7 @@ FABRIC.SceneGraph.registerNodeType('Manipulator',
 
     var getParentXfo = function() {
       if (parentNode.pub.isTypeOf('Transform')) {
-        return parentNode.pub.globalXfo;
+        return parentNode.pub.getGlobalXfo();
       }else {
         return parentNode.pub.getData(parentMember, parentMemberIndex);
       }
@@ -857,7 +857,7 @@ FABRIC.SceneGraph.registerNodeType('ScreenTranslationManipulator',
       dragStartXFo = manipulatorNode.getTargetGlobalXfo();
       ray1 = evt.rayData;
       planePoint = dragStartXFo.tr;
-      planeNormal = evt.cameraNode.getTransformNode().globalXfo.ori.rotateVector(FABRIC.RT.vec3(0, 0, 1));
+      planeNormal = evt.cameraNode.getTransformNode().getGlobalXfo().ori.rotateVector(FABRIC.RT.vec3(0, 0, 1));
       hitPoint1 = ray1.intersectPlane(planePoint, planeNormal).point;
     }
     manipulatorNode.pub.addEventListener('dragstart', dragStartFn);

@@ -136,9 +136,9 @@ FABRIC.SceneGraph.registerNodeType('Light',
     var dgnode = pointLightNode.getDGNode();
 
     if (options.position) {
-      var xfo = pointLightNode.pub.getTransformNode().globalXfo;
+      var xfo = pointLightNode.pub.getTransformNode().getGlobalXfo();
       xfo.tr = new FABRIC.RT.Vec3(options.position);
-      pointLightNode.pub.getTransformNode().globalXfo = xfo;
+      pointLightNode.pub.getTransformNode().setGlobalXfo(xfo);
     }
 
     if (options.display === true) {
@@ -227,14 +227,14 @@ FABRIC.SceneGraph.registerNodeType('DirectionalLight',
 
     if (options.position) {
       //The position is not used for directionalLight's lighting, but might be used for displaying the light
-      var xfo = directionalLightNode.pub.getTransformNode().globalXfo;
+      var xfo = directionalLightNode.pub.getTransformNode().getGlobalXfo();
       xfo.tr = new FABRIC.RT.Vec3(options.position);
-      directionalLightNode.pub.getTransformNode().globalXfo = xfo;
+      directionalLightNode.pub.getTransformNode().setGlobalXfo(xfo);
     }
     if (options.direction) {
-      var xfo = directionalLightNode.pub.getTransformNode().globalXfo;
+      var xfo = directionalLightNode.pub.getTransformNode().getGlobalXfo();
       xfo.ori = FABRIC.RT.Quat.makeFrom2Vectors(new FABRIC.RT.Vec3(0.0, 0.0, -1.0), new FABRIC.RT.Vec3(options.direction).unit(), true);
-      directionalLightNode.pub.getTransformNode().globalXfo = xfo;
+      directionalLightNode.pub.getTransformNode().setGlobalXfo(xfo);
     }
 
     if (options.display === true) {
@@ -454,14 +454,14 @@ FABRIC.SceneGraph.registerNodeType('SpotLight',
     scene.addMemberAndOperatorStackFunctions(spotLightNode, dgnode);
 
     if (options.position) {
-      var xfo = spotLightNode.pub.getTransformNode().globalXfo;
+      var xfo = spotLightNode.pub.getTransformNode().getGlobalXfo();
       xfo.tr = new FABRIC.RT.Vec3(options.position);
-      spotLightNode.pub.getTransformNode().globalXfo = xfo;
+      spotLightNode.pub.getTransformNode().setGlobalXfo(xfo);
     }
     if (options.target) {
-      var xfo = spotLightNode.pub.getTransformNode().globalXfo;
+      var xfo = spotLightNode.pub.getTransformNode().getGlobalXfo();
       xfo.ori = FABRIC.RT.Quat.makeFrom2Vectors(new FABRIC.RT.Vec3(0.0, 0.0, -1.0), new FABRIC.RT.Vec3(options.target).subtract(options.position).unit(), true);
-      spotLightNode.pub.getTransformNode().globalXfo = xfo;
+      spotLightNode.pub.getTransformNode().setGlobalXfo(xfo);
     }
 
     if (options.display === true) {

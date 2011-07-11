@@ -727,8 +727,8 @@ FABRIC.SceneGraph = {
         // Animation Interface
         scene.pub.animation = {
           setTime:function(t) {
-            if (looping && animationTime > duration.y){
-              t = duration.x;
+            if (looping && animationTime > timerange.y){
+              t = timerange.x;
             }
             animationTime = t;
             globalsNode.setData('ms', t);
@@ -743,11 +743,20 @@ FABRIC.SceneGraph = {
           getPlaybackSpeed:function() {
             return playspeed;
           },
-          setPlaybackTimeRange:function(speed) {
-            playspeed = speed;
+          setTimeStep:function(val) {
+            sceneOptions.timeStep = val;
           },
-          getPlaybackTimeRange:function() {
-            return playspeed;
+          getTimeStep:function() {
+            return sceneOptions.timeStep;
+          },
+          setTimeRange:function(val) {
+            if (!val.getType || val.getType() !== 'FABRIC.RT.Vec2') {
+              throw ('Incorrect type assignment. Must assign a FABRIC.RT.Vec2');
+            }
+            timerange = val;
+          },
+          getTimeRange:function() {
+            return timerange;
           },
           setLoop:function(loop) {
             looping = loop;
@@ -829,13 +838,13 @@ FABRIC.SceneGraph.registerNodeType('SceneGraphNode',
       },
       addMemberInterface : function(corenode, memberName, defineSetter) {
         var getterName = 'get' + capitalizeFirstLetter(memberName);
-        sceneGraphNode[getterName] = function(sliceIndex){
+        sceneGraphNode.pub[getterName] = function(sliceIndex){
           return corenode.getData(memberName, sliceIndex);
         }
         if(defineSetter===true){
-          var setterName = 'get' + capitalizeFirstLetter(memberName);
-          sceneGraphNode[setterName] = function(value, sliceIndex){
-            return corenode.setData(memberName, sliceIndex, value);
+          var setterName = 'set' + capitalizeFirstLetter(memberName);
+          sceneGraphNode.pub[setterName] = function(value, sliceIndex){
+            corenode.setData(memberName, sliceIndex?sliceIndex:0, value);
           }
         }
       }

@@ -1060,7 +1060,7 @@ FABRIC.SceneGraph.defineEffectFromFile = function(effectfile) {
       };
       for (uniformName in effectParameters.shaderUniforms) {
         if (options[uniformName] !== undefined) {
-          materialNode.pub[uniformName] = options[uniformName];
+          materialNode.pub['set' + capitalizeFirstLetter(uniformName)](options[uniformName]);
         }
       }
       for (lightName in effectParameters.lights) {

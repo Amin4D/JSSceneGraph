@@ -22,10 +22,6 @@ FABRIC.SceneGraph.registerNodeType('Transform',
     transformNode = scene.constructNode('SceneGraphNode', options);
     dgnode = transformNode.getDGNode();
     dgnode.addMember('globalXfo', 'Xfo', options.globalXfo);
-    if (options.hierarchical) {
-      dgnode.addMember('localXfo', 'Xfo', options.localXfo);
-    }
-
     transformNode.addMemberInterface(dgnode, 'globalXfo');
 
     transformNode.getRedrawEventHandler = function() {
@@ -39,7 +35,7 @@ FABRIC.SceneGraph.registerNodeType('Transform',
     scene.addMemberAndOperatorStackFunctions(transformNode, dgnode);
 
     if (options.hierarchical) {
-
+      dgnode.addMember('localXfo', 'Xfo', options.localXfo);
       dgnode.bindings.append(scene.constructOperator( {
           operatorName: 'calcGlobalXfo',
           srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/calcGlobalXfo.kl',
@@ -59,7 +55,7 @@ FABRIC.SceneGraph.registerNodeType('Transform',
           throw ('Incorrect type assignment. Must assign a FABRIC.RT.Xfo');
         }
         if (parentTransformNode) {
-          var parentXfo = parentTransformNode.globalXfo;
+          var parentXfo = parentTransformNode.getGlobalXfo();
           parentXfo.invertInPlace();
           val.preMultiplyInPlace(parentXfo);
           dgnode.setData('localXfo', val);
@@ -96,12 +92,12 @@ FABRIC.SceneGraph.registerNodeType('Transform',
         transformNode.pub.setParentNode(options.parentTransformNode);
       }
     }else {
-      transformNode.pub.__defineSetter__('globalXfo', function(val) {
-          if (!val.getType || val.getType() !== 'FABRIC.RT.Xfo') {
-            throw ('Incorrect type assignment. Must assign a FABRIC.RT.Xfo');
-          }
-          dgnode.setData('globalXfo', 0, val);
-        });
+      transformNode.pub.setGlobalXfo = function(val) {
+        if (!val.getType || val.getType() !== 'FABRIC.RT.Xfo') {
+          throw ('Incorrect type assignment. Must assign a FABRIC.RT.Xfo');
+        }
+        dgnode.setData('globalXfo', 0, val);
+      };
     }
 
     return transformNode;

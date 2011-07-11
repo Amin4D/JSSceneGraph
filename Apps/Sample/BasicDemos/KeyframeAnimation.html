@@ -40,9 +40,6 @@
     <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Manipulation.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Animation.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Kinematics.js" charset="utf-8"></script>
-    
-    <script type="text/javascript" src="../../../Core/Debugger/FABRIC.Debugger.Events.js" charset="utf-8"></script>
-    
     <script type="text/javascript">
 $(document).ready(function() { var $globalTimeSlider = $('#globalTime').slider({
         min: 0.0,
@@ -93,21 +90,24 @@ $(document).ready(function() { var $globalTimeSlider = $('#globalTime').slider({
 
   ///////////////////////////////////////////////
   // LinearKeyAnimationTrack
-  var linearkeyframeTrackNode = scene.constructNode('LinearKeyAnimationTrack');
-  linearkeyframeTrackNode.setTrackCount(2);
+  var linearPosKeyframeTrackNode = scene.constructNode('LinearKeyAnimationTrack', {
+    name:'LinearPosKeyAnimationTrack'
+  } );
+  linearPosKeyframeTrackNode.setTrackCount(2);
   var key = FABRIC.Animation.linearKeyframe;
-  linearkeyframeTrackNode.setTrackData(1, { name: 'PosX',
+  linearPosKeyframeTrackNode.setTrackData(1, { name: 'PosX',
                         color: FABRIC.RT.rgb(1, 0, 0),
                         keys: [key(0, 0), key(10, 20), key(20, -5), key(50, -5), key(75, 50), key(100, 0)]
                       });
-  linearkeyframeTrackNode.setTrackData(0, { name: 'PosY',
+  linearPosKeyframeTrackNode.setTrackData(0, { name: 'PosY',
                         color: FABRIC.RT.rgb(1, 0, 0),
                         keys: [key(0, 0), key(50, 0), key(75, 20), key(100, 0)]
                       });
 
   var linearAnimationEvaluatorNode = scene.constructNode('AnimationEvaluator', {
+    name:'LinearPosAnimationEvaluator' ,
     animationControllerNode: animationControllerNode,
-    animationTrackNode: linearkeyframeTrackNode
+    animationTrackNode: linearPosKeyframeTrackNode
   });
 
   var xfo = FABRIC.RT.xfo({ tr: FABRIC.RT.vec3(-50, 0, 0) });
@@ -127,10 +127,12 @@ $(document).ready(function() { var $globalTimeSlider = $('#globalTime').slider({
 
   ///////////////////////////////////////////////
   // BezierKeyAnimationTrack
-  var bezierKeyframeTrackNode = scene.constructNode('BezierKeyAnimationTrack');
-  bezierKeyframeTrackNode.setTrackCount(2);
+  var bezierPosKeyframeTrackNode = scene.constructNode('BezierKeyAnimationTrack', {
+    name:'BezierPosKeyAnimationTrack'
+  } );
+  bezierPosKeyframeTrackNode.setTrackCount(2);
   var key = FABRIC.Animation.bezierKeyframe;
-  bezierKeyframeTrackNode.setTrackData(0, { name: 'PosX',
+  bezierPosKeyframeTrackNode.setTrackData(0, { name: 'PosX',
                         color: FABRIC.RT.rgb(1, 0, 0),
                         keys: [
                              key(0, -20, null, FABRIC.RT.vec2(3, 0)),
@@ -140,7 +142,7 @@ $(document).ready(function() { var $globalTimeSlider = $('#globalTime').slider({
                             key(75, -20, FABRIC.RT.vec2(-7, 0), null)
                           ]
                       });
-  bezierKeyframeTrackNode.setTrackData(1, { name: 'PosY',
+  bezierPosKeyframeTrackNode.setTrackData(1, { name: 'PosY',
                         color: FABRIC.RT.rgb(1, 0, 0),
                         keys: [
                              key(0, 0, null, FABRIC.RT.vec2(3, 0)),
@@ -152,8 +154,9 @@ $(document).ready(function() { var $globalTimeSlider = $('#globalTime').slider({
                       });
 
   var bezierAnimationEvaluatorNode = scene.constructNode('AnimationEvaluator', {
+    name:'BezierPosKeyAnimationTrack' ,
     animationControllerNode: animationControllerNode,
-    animationTrackNode: bezierKeyframeTrackNode
+    animationTrackNode: bezierPosKeyframeTrackNode
   });
 
   var xfo = FABRIC.RT.xfo({ tr: FABRIC.RT.vec3(0, 0, 0) });
@@ -173,10 +176,12 @@ $(document).ready(function() { var $globalTimeSlider = $('#globalTime').slider({
 
   ///////////////////////////////////////////////
   // EulerRotation
-  var bezierKeyframeTrackNode = scene.constructNode('BezierKeyAnimationTrack');
-  bezierKeyframeTrackNode.setTrackCount(2);
+  var bezierEulerKeyframeTrackNode = scene.constructNode('BezierKeyAnimationTrack', {
+    name:'EulerBezierKeyAnimationTrack'
+  } );
+  bezierEulerKeyframeTrackNode.setTrackCount(2);
   var key = FABRIC.Animation.bezierKeyframe;
-  bezierKeyframeTrackNode.setTrackData(0, { name: 'EulerX',
+  bezierEulerKeyframeTrackNode.setTrackData(0, { name: 'EulerX',
                         color: FABRIC.RT.rgb(1, 0, 0),
                         keys: [
                           key(0, 0, null, FABRIC.RT.vec2(3, 0)),
@@ -186,7 +191,7 @@ $(document).ready(function() { var $globalTimeSlider = $('#globalTime').slider({
                           key(75, 0, FABRIC.RT.vec2(-7, 0), null)
                         ]
                       });
-  bezierKeyframeTrackNode.setTrackData(1, { name: 'EulerY',
+  bezierEulerKeyframeTrackNode.setTrackData(1, { name: 'EulerY',
                         color: FABRIC.RT.rgb(0, 1, 0),
                         keys: [
                            key(0, 0, null, FABRIC.RT.vec2(3, 0)),
@@ -197,8 +202,9 @@ $(document).ready(function() { var $globalTimeSlider = $('#globalTime').slider({
                       });
 
   var bezierAnimationEvaluatorNode = scene.constructNode('AnimationEvaluator', {
+    name:'EulerBezierKeyAnimationTrack' ,
     animationControllerNode: animationControllerNode,
-    animationTrackNode: bezierKeyframeTrackNode
+    animationTrackNode: bezierEulerKeyframeTrackNode
   });
 
   var xfo = FABRIC.RT.xfo({ tr: FABRIC.RT.vec3(50, 0, 0) });
@@ -234,9 +240,7 @@ $(document).ready(function() { var $globalTimeSlider = $('#globalTime').slider({
 
     $('#curveEditor').button()
       .click(function() {
-        var debuggerWindow = window.open('../../../SceneGraph/CurveEditor/CurveEditor.html', 'Fabric Curve Editor');
-        debuggerWindow.keyframeTrackNode = bezierKeyframeTrackNode;
-        debuggerWindow.scene = scene;
+        bezierEulerKeyframeTrackNode.openCurveEditor();
       });
   }
 });
@@ -257,11 +261,11 @@ $(document).ready(function() { var $globalTimeSlider = $('#globalTime').slider({
           <div class="box">
             <h2>INFO</h2>
               <div class="content">
-              KeyFrame Animation.<br>
-              The three objects are driven by FABRIC's Animation Pipeline, using BezierKeyFrames.
-              Play with the slider to change the evaluated time. Note that FCurve evaluation can be
-              bound to any value in FABRIC, not only the time, like in this case, a slider value.
-            </div><!--content-->
+                KeyFrame Animation.<br>
+                The three objects are driven by FABRIC's Animation Pipeline, using BezierKeyFrames.
+                Play with the slider to change the evaluated time. Note that FCurve evaluation can be
+                bound to any value in FABRIC, not only the time, like in this case, a slider value.
+              </div><!--content-->
           </div><!--box-->
           
                   <div class="box">

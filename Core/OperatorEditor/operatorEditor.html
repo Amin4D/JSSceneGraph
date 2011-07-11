@@ -34,7 +34,7 @@
   bottom:55px;
 }
 
-#llvmbar{
+#bottomToolbar{
   position:absolute;
   bottom:0;
   right:0;
@@ -58,24 +58,20 @@
   bottom:10px;
 }
 
-
-
   
   </style>
     <script type="text/javascript">
 
-
 $(document).ready(function() {
-
   
   if(!window.context){
     var contextID = document.location.search.split('?')[1].split('=')[1];
-    operatorName = document.location.search.split('?')[2].split('=')[1];
+    window.operatorName = document.location.search.split('?')[2].split('=')[1];
     window.context = FABRIC.createContext({ contextID:contextID  });
   }
-	
-	var operator = context.DG.getAllNamedObjects()[operatorName];
-	
+  var operator = context.DG.getAllNamedObjects()[operatorName];
+  document.title = 'FABRIC Operator Editor:' + operatorName;
+  
   $('#recompile').button()
       .click(function() {
         var code = $("#code").val();
@@ -84,41 +80,48 @@ $(document).ready(function() {
         }catch(e){
           alert(e);
         }
-        
-      descDiags = function(fullCode, diags) {
-        var fullCodeLines = fullCode.split('\n');
-        var desc = 'Error compiling operator\n';
-        for (var i = 0; i < diags.length; ++i) {
-          if (i == 16) {
-            desc += '(' + (diags.length - i) + ' more diagnostic(s) omitted)\n';
-            break;
-          }
-          desc += diags[i].line + ':' + diags[i].column + ': ' + diags[i].level + ': ' + diags[i].desc + '\n';
-          var line = diags[i].line - 1;
-          for (var j = line - 6; j <= line + 6; ++j) {
-            if (j >= 0 && j < fullCodeLines.length) {
-              if (j == line)
-                desc += '>>>\t';
-              else
-                desc += '\t';
-              desc += '' + fullCodeLines[j] + '\n';
+          
+        descDiags = function(fullCode, diags) {
+          var fullCodeLines = fullCode.split('\n');
+          var desc = 'Error compiling operator\n';
+          for (var i = 0; i < diags.length; ++i) {
+            if (i == 16) {
+              desc += '(' + (diags.length - i) + ' more diagnostic(s) omitted)\n';
+              break;
+            }
+            desc += diags[i].line + ':' + diags[i].column + ': ' + diags[i].level + ': ' + diags[i].desc + '\n';
+            var line = diags[i].line - 1;
+            for (var j = line - 6; j <= line + 6; ++j) {
+              if (j >= 0 && j < fullCodeLines.length) {
+                if (j == line)
+                  desc += '>>>\t';
+                else
+                  desc += '\t';
+                desc += '' + fullCodeLines[j] + '\n';
+              }
             }
           }
-        }
-        return desc;
-      };
+          return desc;
+        };
 
         var diagnostics = operator.getDiagnostics();
         if (diagnostics.length > 0) {
-          alert( descDiags(operator.getFullSourceCode(), diagnostics) );
+					$( "#compliationErrors" ).text(descDiags(operator.getFullSourceCode(), diagnostics) );
+					prettyPrint();
+					$( "#compliationErrorDialog" ).dialog( "open" );
         }
       });
-
-	$("#code").text(operator.getSourceCode());
-
-
-		prettyPrint()
-
+  
+  $("#code").text(operator.getSourceCode());
+  
+	$("#compliationErrorDialog").dialog({
+			autoOpen: false,
+			width: window.innerWidth * 0.75,
+			height: window.innerHeight * 0.85,
+			modal: true
+		});
+	
+  //prettyPrint()
 });
 
 
@@ -136,8 +139,6 @@ $(document).ready(function() {
         
         <div id="codeContainer">
           <textarea id="code" cols="50" rows="5">
-text box with padding and margin inside a fixed width div.
-how do I made the text box auto-fit nicely inside the div?
           </textarea>
 <!--
 <pre class="prettyprint">
@@ -150,11 +151,19 @@ class Foo
 -->
         </div><!--code-->
         
-        <div id="llvmbar">
+        <div id="bottomToolbar">
                  <button id="recompile" style="margin-top:10px;">Recompile</button>
-        </div><!--titlebar-->
+        </div><!--bottomToolbar-->
 				
       </div> <!--editor-->
     </div><!--wrapper-->
+		
+		<div id="compliationErrorDialog" title="Compilation Error">
+			<pre id="compliationErrors" class="prettyprint"></pre>
+<!--
+			<p id="compliationErrors" class="content">This is the default dialog which is useful for displaying information. The dialog window can be moved, resized and closed with the 'x' icon.</p>
+-->
+		</div>
+
   </body> 
 </html>

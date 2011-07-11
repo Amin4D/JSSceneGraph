@@ -362,7 +362,6 @@ $(document).ready(function() {
 
   
   var displayGraph = function(displayEventHandlers, displayDependencyGraphNodes, clear){
-    
     if(clear){
       nodesHolderGroup.removeAllChildren();
       edgeHolderGroup.removeAllChildren();
@@ -372,8 +371,8 @@ $(document).ready(function() {
     var tl = FABRIC.vec2(0,0);
     var br = FABRIC.vec2(0,0);
     
-    var displayOperator = function(node, operator){
-        node.addOperator({
+    var displayOperator = function(svgnode, operator){
+        svgnode.addOperator({
           text: operator.getName(),
           color: FABRIC.rgb255(80,200,200)
         }).getButton().addOnClickCallback(function(){
@@ -381,39 +380,51 @@ $(document).ready(function() {
               FABRIC.processURL('FABRIC_ROOT/Core/OperatorEditor/operatorEditor.html')
               + '?id=' + contextID
               + '?operator=' + operator.getName(),
-              'Fabric Operator Editor:' + operator.getName()
+              'Fabric Operator Editor: ' + operator.getName(),
+              "status=1,resizable=1,width=550,height=650"
+            );
+        });
+    }
+    var addNodeInspectorCallback = function(svgnode, corenode){
+      svgnode.getButton().addOnClickCallback(function(){
+          window.open(
+              FABRIC.processURL('FABRIC_ROOT/Core/Debugger/nodeInspector.html')
+              + '?id=' + contextID
+              + '?node=' + corenode.getName(),
+              'Fabric Node Inspector: ' + corenode.getName(),
+              "status=1,resizable=1,width=550,height=350"
             );
         });
     }
     
-    var displayOperatorList = function(node, operators){
+    var displayOperatorList = function(svgnode, operators){
       for(var i=0; i<operators.getLength(); i++){
-        displayOperator(node, operators.getOperator(i) );
+        displayOperator(svgnode, operators.getOperator(i) );
       }
     }
     
     var displayEvent = function(name, pos){
-      var node = nodesHolderGroup.createNode({
+      var svgnode = nodesHolderGroup.createNode({
           text : name,
           color:FABRIC.rgb255(90,90,200),
           height: 15,
-          createEditButton: true,
+          createEditButton: false,
           draggable: true,
           shadow: FABRIC.vec2(0,0)
         })
         .translate(pos);
-      node.addOutPort({
+      svgnode.addOutPort({
           color: FABRIC.rgb255(200,80,80),
           allowMultipleConnections:true,
           createLabelEventCatcher:false
         });
-      return node;
+      return svgnode;
     }
     
     
     var displayEventHandler = function(name, pos){
       var eventHandler = eventHandlersMap[name];
-      var node = nodesHolderGroup.createNode({
+      var svgnode = nodesHolderGroup.createNode({
           text : name,
           color:FABRIC.rgb255(90,200,90),
           height: 15,
@@ -422,75 +433,77 @@ $(document).ready(function() {
           shadow: FABRIC.vec2(0,0)
         })
         .translate(pos);
-      node.addInPort({
+      addNodeInspectorCallback(svgnode, eventHandler);
+      svgnode.addInPort({
           color: FABRIC.rgb255(200,80,80),
           allowMultipleConnections:false,
           createLabelEventCatcher:false
         });
-      node.addOutPort({
+      svgnode.addOutPort({
           color: FABRIC.rgb255(200,80,80),
           allowMultipleConnections:true,
           createLabelEventCatcher:false
         });
       var scopes = eventHandler.getScopes();
       for(var i in scopes){
-        node.addInPort({
+        svgnode.addInPort({
             text: i,
             color: FABRIC.rgb255(200,200,80),
             allowMultipleConnections:false,
             createLabelEventCatcher:false
           });
       }
-      displayOperatorList(node, eventHandler.preDescendBindings);
-      displayOperatorList(node, eventHandler.postDescendBindings);
-      return node;
+      displayOperatorList(svgnode, eventHandler.preDescendBindings);
+      displayOperatorList(svgnode, eventHandler.postDescendBindings);
+      return svgnode;
     }
     
     var displayDGnode = function(name, pos){
       var dgnode = nodesMap[name];
-      var node = nodesHolderGroup.createNode({
+      var svgnode = nodesHolderGroup.createNode({
           text : name,
           color:FABRIC.rgb255(20,90,250),
           height: 15,
-          createEditButton: false,
+          createEditButton: true,
           draggable: true,
           shadow: FABRIC.vec2(0,0)
         })
         .translate(pos);
+      addNodeInspectorCallback(svgnode, dgnode);
         
       var dependencies = dgnode.getDependencies();
       for(var i in dependencies){
-        node.addInPort({
+        svgnode.addInPort({
             text: i,
              color: FABRIC.rgb255(100,180,250),
             allowMultipleConnections:false,
             createLabelEventCatcher:false
           });
       }
-      node.addOutPort({
+      svgnode.addOutPort({
           color: FABRIC.rgb255(200,200,80),
           allowMultipleConnections:true,
           createLabelEventCatcher:false
         });
-      node.addOutPort({
+      svgnode.addOutPort({
           color: FABRIC.rgb255(100,180,250),
           allowMultipleConnections:true,
           createLabelEventCatcher:false
         });
-      displayOperatorList(node, dgnode.bindings);
-      return node;
+      displayOperatorList(svgnode, dgnode.bindings);
+      return svgnode;
     }
     
     var graphSpacing = FABRIC.vec2(240, 100);
     
     for(var i in layoutMap){
-      var dgnode = allNamedObjects[i];
+      var corenode = allNamedObjects[i];
       if(!layoutMap[i]){
         console.warn("Missing Layout information:" + i);
         continue;
       }
-      var name = dgnode.getName();
-      var type = dgnode.getType();
+      var name = corenode.getName();
+      var type = corenode.getType();
       var pos = layoutMap[name];
       if(type === "Event" && displayEventHandlers){
         displayNodes[name] = displayEvent(name, pos.multiply(graphSpacing));
@@ -499,7 +512,7 @@ $(document).ready(function() {
         displayNodes[name] = displayEventHandler(name, pos.multiply(graphSpacing));
       }
       if(type === "Node" && displayDependencyGraphNodes){
-        displayNodes[name]= displayDGnode(dgnode.getName(), pos.add(FABRIC.vec2(0, maxehrow)).multiply(graphSpacing));
+        displayNodes[name]= displayDGnode(corenode.getName(), pos.add(FABRIC.vec2(0, maxehrow)).multiply(graphSpacing));
       }
       if(tl.x > pos.x) tl.x = pos.x;
       if(br.x < pos.x) br.x = pos.x;

@@ -6,7 +6,8 @@
 FABRIC.SceneGraph.registerNodeType('AnimationTrack',
   function(options, scene) {
     scene.assignDefaults(options, {
-        keyframetype: undefined
+        keyframetype: undefined,
+        name:'AnimationTrack'
       });
     options.dgnodenames.push('DGNode');
 
@@ -114,6 +115,18 @@ FABRIC.SceneGraph.registerNodeType('AnimationTrack',
           ]
         });
     };
+    
+    
+    animationTrackNode.pub.openCurveEditor = function() {
+        var curveEditorWindow = window.open(
+          FABRIC.processURL('FABRIC_ROOT/SceneGraph/CurveEditor/CurveEditor.html') + '?id=' + scene.pub.getContextId(),
+          '../../../SceneGraph/CurveEditor/CurveEditor.html',
+          'Fabric Curve Editor:' + options.name,
+          'status=1,resizable=1,width='+window.innerWidth+',height='+(window.innerHeight * 0.6)
+        );
+        curveEditorWindow.keyframeTrackNode = animationTrackNode.pub;
+        curveEditorWindow.scene = scene.pub;
+    }
     return animationTrackNode;
   });
 

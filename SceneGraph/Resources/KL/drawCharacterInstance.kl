@@ -15,12 +15,6 @@ operator drawCharacterInstance(
 ) {
   //  report("drawCharacterInstance");
 
-  Mat33 normalMatrices[];
-  normalMatrices.resize(1);
-  Mat44 modelMatrices[], modelViewMatrices[];
-  modelMatrices.resize(1);
-  modelViewMatrices.resize(1);
-
   for (Integer i = 0; i < uniformValues.size(); i++) {
     var ShaderValue uniform = uniformValues[i];
     switch (uniform.id) {
@@ -47,8 +41,9 @@ operator drawCharacterInstance(
         break;
       case NORMALMATRIX_ATTRIBUTE_ID:
         if (uniform.location != - 1) {
-          modelViewMatrices[0] = cameraMatrix;
-          normalMatrices[0] = modelViewMatrices[0].upperLeft().inverse().transpose();
+          Mat44 modelViewMatrix = cameraMatrix;
+          Mat33 normalMatrices[];
+          normalMatrices.push(modelViewMatrix.upperLeft().inverse().transpose());
           glUniformMatrix3fv(uniform.location, 1, false, normalMatrices);
         }
         break;

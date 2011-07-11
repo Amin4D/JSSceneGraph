@@ -1025,11 +1025,16 @@ FABRIC.SceneGraph.registerNodeType('Viewport',
       if (filterIndex == -1) {
         throw ('Filter not applied: ' + postProcessEffect.name);
       }
-      var parentEventHandler;
+      var parentEventHandler, childEventHandler;
       postProcessEffects.splice(filterIndex, 1);
-      postProcessEffect.getRedrawEventHandler().removeChildEventHandler(
-        filterIndex < postProcessEffects.length ? postProcessEffects[filterIndex] : propagationRedrawEventHandler);
-
+      if(filterIndex < postProcessEffects.length){
+        childEventHandler = postProcessEffects[filterIndex].getRedrawEventHandler();
+      }
+      else{
+        childEventHandler = propagationRedrawEventHandler;
+      }
+      postProcessEffect.getRedrawEventHandler().removeChildEventHandler(childEventHandler);
+      
       if (filterIndex > 0) {
         parentEventHandler = postProcessEffects[filterIndex - 1].getRedrawEventHandler();
       }

@@ -361,6 +361,9 @@ FABRIC.SceneGraph = {
       code = this.preProcessCode.call(this, code, operatorDef.preProcessorDefinitions, includedCodeSections);
 
       operator = context.DG.createOperator(uid);
+      
+      if (operatorDef.mainThreadOnly)
+        operator.setMainThreadOnly(true);
 
       descDiags = function(fullCode, diags) {
         var fullCodeLines = fullCode.split('\n');

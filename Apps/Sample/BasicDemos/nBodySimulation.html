@@ -139,6 +139,7 @@ $(document).ready(function() { $('#play').button({
 
       nBodySimulateNodeGPU.bindings.append(scene.constructOperator({
             operatorName: 'gen' + memberName + 'OpenGLBuffer',
+            mainThreadOnly: true,
             srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/genAndLoadVBO.kl',
             preProcessorDefinitions: {
               DATA_TYPE: memberType,
@@ -161,6 +162,7 @@ $(document).ready(function() { $('#play').button({
     
       deformationBuffer.assignOperator({
           operatorName: 'nBodySimulateGPUOp',
+          mainThreadOnly: true,
           entryFunctionName: 'nBodySimulateGPU',
           srcFile: 'KL/nBodyOpGPU.kl',
           parameterBinding: [

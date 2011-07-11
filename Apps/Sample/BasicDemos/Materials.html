@@ -38,7 +38,10 @@
     <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Kinematics.js" charset="utf-8"></script>
     
     <script type="text/javascript">
-$(document).ready(function() { var scene = FABRIC.SceneGraph.createScene();
+    
+$(document).ready(function() {
+  
+  var scene = FABRIC.SceneGraph.createScene();
   var viewport = scene.constructNode('Viewport', {
     windowElement: document.getElementById('FabricContainer'),
     backgroundColor: FABRIC.RT.rgb(0.0, 0.05, 0.15)

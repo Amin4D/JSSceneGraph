@@ -768,202 +768,211 @@ FABRIC.SceneGraph.registerNodeType('PostProcessEffect',
  * effect xml file.
  * @param {string} effectfile The path to the xml file.
  */
-FABRIC.SceneGraph.defineEffectFromFile = function(effectfile) {
-
-  var xmlText,
-    parser,
-    xmlDoc,
-    xmlRoot,
-    effectFilePathArray,
-    effectFilePath,
-    preprocessorDirectives = {},
-    effectParameters = {},
-    collectUniforms,
-    collectAttributes,
-    collectLights,
-    collectTextures,
-    collectProgramParams,
-    collectPreprocessorDirectives,
-    collectShaderSource,
-    len,
-    i,
-    childNode;
-
-  xmlText = FABRIC.loadResourceURL(effectfile, 'text/xml');
-  parser = new DOMParser();
-  xmlDoc = parser.parseFromString(xmlText, 'text/xml');
-  xmlRoot = xmlDoc.firstChild;
-  effectFilePathArray = effectfile.split('/');
-  effectFilePathArray.pop();
-  effectFilePath = effectFilePathArray.join('/') + '/';
-
-  if (xmlRoot.nodeName !== 'shader') {
-    throw ':XML file must define a shader.';
+FABRIC.SceneGraph.defineEffectFromFile = function(effectName, effectfile) {
+  
+  var preprocessorDirectives,
+      effectParameters;
+  
+  var parseEffectFile = function(){
+    var xmlText,
+      parser,
+      xmlDoc,
+      xmlRoot,
+      effectFilePathArray,
+      effectFilePath,
+      collectUniforms,
+      collectAttributes,
+      collectLights,
+      collectTextures,
+      collectProgramParams,
+      collectPreprocessorDirectives,
+      collectShaderSource,
+      len,
+      i,
+      childNode;
+      
+    preprocessorDirectives = {};
+    effectParameters = {};
+  
+    xmlText = FABRIC.loadResourceURL(effectfile, 'text/xml');
+    parser = new DOMParser();
+    xmlDoc = parser.parseFromString(xmlText, 'text/xml');
+    xmlRoot = xmlDoc.firstChild;
+    effectFilePathArray = effectfile.split('/');
+    effectFilePathArray.pop();
+    effectFilePath = effectFilePathArray.join('/') + '/';
+  
+    if (xmlRoot.nodeName !== 'shader') {
+      throw ':XML file must define a shader.';
+    }
+  
+    collectUniforms = function(node) {
+      var len, j, uniformNode, uniformName;
+      effectParameters.shaderUniforms = {};
+      len = node.childNodes.length;
+      for (j = 0; j < len; j++) {
+        if (node.childNodes[j].nodeName === '#text') {
+          continue;
+        }
+        uniformNode = node.childNodes[j];
+        uniformName = uniformNode.getAttribute('constant');
+        effectParameters.shaderUniforms[uniformName] = {
+          name: uniformNode.getAttribute('name')
+        };
+        if (uniformNode.getAttribute('defaultValue')) {
+          effectParameters.shaderUniforms[uniformName].defaultValue = eval(uniformNode.getAttribute('defaultValue'));
+        }
+        if (uniformNode.getAttribute('owner')) {
+          effectParameters.shaderUniforms[uniformName].owner = uniformNode.getAttribute('owner');
+        }
+        if (uniformNode.getAttribute('state')) {
+          effectParameters.shaderUniforms[uniformName].state = uniformNode.getAttribute('state');
+        }
+      }
+    };
+  
+    collectAttributes = function(node) {
+      var len, j, attributeNode;
+      effectParameters.shaderAttributes = {};
+      len = node.childNodes.length;
+      for (j = 0; j < len; j++) {
+        if (node.childNodes[j].nodeName === '#text') {
+          continue;
+        }
+        attributeNode = node.childNodes[j];
+        effectParameters.shaderAttributes[attributeNode.getAttribute('binding')] = {
+          name: attributeNode.getAttribute('name')
+        };
+      }
+    };
+  
+    collectLights = function(node) {
+      var len, j, lightNode;
+      effectParameters.lights = {};
+      len = node.childNodes.length;
+      for (j = 0; j < len; j++) {
+        if (node.childNodes[j].nodeName === '#text') {
+          continue;
+        }
+        lightNode = node.childNodes[j];
+        effectParameters.lights[lightNode.getAttribute('binding')] = {
+          type: lightNode.getAttribute('type')
+        };
+        if (lightNode.getAttribute('shadowMap')) {
+          effectParameters.lights[lightNode.getAttribute('binding')].shadowMap = lightNode.getAttribute('shadowMap');
+        }
+      }
+    };
+  
+    collectTextures = function(node) {
+      var len, j, textureNode;
+      effectParameters.textures = {};
+      len = node.childNodes.length;
+      for (j = 0; j < len; j++) {
+        if (node.childNodes[j].nodeName === '#text') {
+          continue;
+        }
+        textureNode = node.childNodes[j];
+        effectParameters.textures[textureNode.getAttribute('binding')] = {
+          name: textureNode.getAttribute('binding')
+        };
+      }
+    };
+  
+    collectProgramParams = function(node) {
+      var len, j, paramNode, paramValue;
+      effectParameters.programParams = {};
+      len = node.childNodes.length;
+      for (j = 0; j < len; j++) {
+        if (node.childNodes[j].nodeName === '#text') {
+          continue;
+        }
+        paramNode = node.childNodes[j];
+        paramValue = paramNode.getAttribute('value');
+        if (isNaN(parseInt(paramValue, 10))) {
+          effectParameters.programParams[paramNode.getAttribute('name')] = FABRIC.SceneGraph.OpenGLConstants[paramValue];
+        }
+        else {
+          effectParameters.programParams[paramNode.getAttribute('name')] = parseInt(paramValue, 10);
+        }
+      }
+    };
+  
+    collectPreprocessorDirectives = function(node) {
+      var len, j, directiveNode;
+      len = node.childNodes.length;
+      for (j = 0; j < len; j++) {
+        if (node.childNodes[j].nodeName === '#text') {
+          continue;
+        }
+        directiveNode = node.childNodes[j];
+        preprocessorDirectives[directiveNode.getAttribute('binding')] = directiveNode.getAttribute('name');
+      }
+    };
+  
+    collectShaderSource = function(node) {
+      var len, j, source = '';
+      len = node.childNodes.length;
+      for (j = 0; j < len; j++) {
+        if (node.childNodes[j].nodeName === 'source') {
+          source = source + node.childNodes[j].textContent;
+        }
+        if (node.childNodes[j].nodeName === 'include') {
+          // Included file paths are relative to the effect file.
+          source = source + FABRIC.loadResourceURL(
+            effectFilePath + node.childNodes[j].getAttribute('file'), 'text/plain');
+        }
+      }
+      return source;
+    };
+  
+    len = xmlRoot.childNodes.length;
+    for (i = 0; i < len; i++) {
+      childNode = xmlRoot.childNodes[i];
+      switch (childNode.nodeName) {
+        case '#text':
+          continue;
+        case 'name':
+          effectParameters.name = childNode.firstChild.data;
+          break;
+        case 'uniforms':
+          collectUniforms(childNode);
+          break;
+        case 'attributes':
+          collectAttributes(childNode);
+          break;
+        case 'lights':
+          collectLights(childNode);
+          break;
+        case 'textures':
+          collectTextures(childNode);
+          break;
+        case 'programParams':
+          collectProgramParams(childNode);
+          break;
+        case 'preprocessordirectives':
+          collectPreprocessorDirectives(childNode);
+          break;
+        case 'vertexshader':
+          effectParameters.vertexShader = collectShaderSource(childNode);
+          break;
+        case 'geometryshader':
+          effectParameters.geometryShader = collectShaderSource(childNode);
+          break;
+        case 'fragmentshader':
+          effectParameters.fragmentShader = collectShaderSource(childNode);
+          break;
+        default:
+          console.warn(effectfile + ': Unhandled Effect Parameter:' + childNode.nodeName);
+      }
+    }
   }
 
-  collectUniforms = function(node) {
-    var len, j, uniformNode, uniformName;
-    effectParameters.shaderUniforms = {};
-    len = node.childNodes.length;
-    for (j = 0; j < len; j++) {
-      if (node.childNodes[j].nodeName === '#text') {
-        continue;
-      }
-      uniformNode = node.childNodes[j];
-      uniformName = uniformNode.getAttribute('constant');
-      effectParameters.shaderUniforms[uniformName] = {
-        name: uniformNode.getAttribute('name')
-      };
-      if (uniformNode.getAttribute('defaultValue')) {
-        effectParameters.shaderUniforms[uniformName].defaultValue = eval(uniformNode.getAttribute('defaultValue'));
-      }
-      if (uniformNode.getAttribute('owner')) {
-        effectParameters.shaderUniforms[uniformName].owner = uniformNode.getAttribute('owner');
-      }
-      if (uniformNode.getAttribute('state')) {
-        effectParameters.shaderUniforms[uniformName].state = uniformNode.getAttribute('state');
-      }
-    }
-  };
-
-  collectAttributes = function(node) {
-    var len, j, attributeNode;
-    effectParameters.shaderAttributes = {};
-    len = node.childNodes.length;
-    for (j = 0; j < len; j++) {
-      if (node.childNodes[j].nodeName === '#text') {
-        continue;
-      }
-      attributeNode = node.childNodes[j];
-      effectParameters.shaderAttributes[attributeNode.getAttribute('binding')] = {
-        name: attributeNode.getAttribute('name')
-      };
-    }
-  };
-
-  collectLights = function(node) {
-    var len, j, lightNode;
-    effectParameters.lights = {};
-    len = node.childNodes.length;
-    for (j = 0; j < len; j++) {
-      if (node.childNodes[j].nodeName === '#text') {
-        continue;
-      }
-      lightNode = node.childNodes[j];
-      effectParameters.lights[lightNode.getAttribute('binding')] = {
-        type: lightNode.getAttribute('type')
-      };
-      if (lightNode.getAttribute('shadowMap')) {
-        effectParameters.lights[lightNode.getAttribute('binding')].shadowMap = lightNode.getAttribute('shadowMap');
-      }
-    }
-  };
-
-  collectTextures = function(node) {
-    var len, j, textureNode;
-    effectParameters.textures = {};
-    len = node.childNodes.length;
-    for (j = 0; j < len; j++) {
-      if (node.childNodes[j].nodeName === '#text') {
-        continue;
-      }
-      textureNode = node.childNodes[j];
-      effectParameters.textures[textureNode.getAttribute('binding')] = {
-        name: textureNode.getAttribute('binding')
-      };
-    }
-  };
-
-  collectProgramParams = function(node) {
-    var len, j, paramNode, paramValue;
-    effectParameters.programParams = {};
-    len = node.childNodes.length;
-    for (j = 0; j < len; j++) {
-      if (node.childNodes[j].nodeName === '#text') {
-        continue;
-      }
-      paramNode = node.childNodes[j];
-      paramValue = paramNode.getAttribute('value');
-      if (isNaN(parseInt(paramValue, 10))) {
-        effectParameters.programParams[paramNode.getAttribute('name')] = FABRIC.SceneGraph.OpenGLConstants[paramValue];
-      }
-      else {
-        effectParameters.programParams[paramNode.getAttribute('name')] = parseInt(paramValue, 10);
-      }
-    }
-  };
-
-  collectPreprocessorDirectives = function(node) {
-    var len, j, directiveNode;
-    len = node.childNodes.length;
-    for (j = 0; j < len; j++) {
-      if (node.childNodes[j].nodeName === '#text') {
-        continue;
-      }
-      directiveNode = node.childNodes[j];
-      preprocessorDirectives[directiveNode.getAttribute('binding')] = directiveNode.getAttribute('name');
-    }
-  };
-
-  collectShaderSource = function(node) {
-    var len, j, source = '';
-    len = node.childNodes.length;
-    for (j = 0; j < len; j++) {
-      if (node.childNodes[j].nodeName === 'source') {
-        source = source + node.childNodes[j].textContent;
-      }
-      if (node.childNodes[j].nodeName === 'include') {
-        // Included file paths are relative to the effect file.
-        source = source + FABRIC.loadResourceURL(
-          effectFilePath + node.childNodes[j].getAttribute('file'), 'text/plain');
-      }
-    }
-    return source;
-  };
-
-  len = xmlRoot.childNodes.length;
-  for (i = 0; i < len; i++) {
-    childNode = xmlRoot.childNodes[i];
-    switch (childNode.nodeName) {
-      case '#text':
-        continue;
-      case 'name':
-        effectParameters.name = childNode.firstChild.data;
-        break;
-      case 'uniforms':
-        collectUniforms(childNode);
-        break;
-      case 'attributes':
-        collectAttributes(childNode);
-        break;
-      case 'lights':
-        collectLights(childNode);
-        break;
-      case 'textures':
-        collectTextures(childNode);
-        break;
-      case 'programParams':
-        collectProgramParams(childNode);
-        break;
-      case 'preprocessordirectives':
-        collectPreprocessorDirectives(childNode);
-        break;
-      case 'vertexshader':
-        effectParameters.vertexShader = collectShaderSource(childNode);
-        break;
-      case 'geometryshader':
-        effectParameters.geometryShader = collectShaderSource(childNode);
-        break;
-      case 'fragmentshader':
-        effectParameters.fragmentShader = collectShaderSource(childNode);
-        break;
-      default:
-        console.warn(effectfile + ': Unhandled Effect Parameter:' + childNode.nodeName);
-    }
-  }
-
-  FABRIC.SceneGraph.registerNodeType(effectParameters.name,
+  FABRIC.SceneGraph.registerNodeType(effectName,
     function(options, scene) {
+      if(!effectParameters){
+        parseEffectFile();
+      }
       scene.pushTimer('constructMaterialAndShaderNode');
       scene.assignDefaults(options, {
           prototypeMaterialType: 'Material'
@@ -1035,22 +1044,22 @@ FABRIC.SceneGraph.defineEffectFromFile = function(effectfile) {
     });
 };
 
-FABRIC.SceneGraph.defineEffectFromFile('FABRIC_ROOT/SceneGraph/Resources/Shaders/FlatShader.xml');
-FABRIC.SceneGraph.defineEffectFromFile('FABRIC_ROOT/SceneGraph/Resources/Shaders/FlatScreenSpaceShader.xml');
-FABRIC.SceneGraph.defineEffectFromFile('FABRIC_ROOT/SceneGraph/Resources/Shaders/PhongShader.xml');
-FABRIC.SceneGraph.defineEffectFromFile('FABRIC_ROOT/SceneGraph/Resources/Shaders/ShadowMapShader.xml');
+FABRIC.SceneGraph.defineEffectFromFile('FlatMaterial', 'FABRIC_ROOT/SceneGraph/Resources/Shaders/FlatShader.xml');
+FABRIC.SceneGraph.defineEffectFromFile('FlatScreenSpaceMaterial', 'FABRIC_ROOT/SceneGraph/Resources/Shaders/FlatScreenSpaceShader.xml');
+FABRIC.SceneGraph.defineEffectFromFile('PhongMaterial', 'FABRIC_ROOT/SceneGraph/Resources/Shaders/PhongShader.xml');
+FABRIC.SceneGraph.defineEffectFromFile('ShadowMapMaterial', 'FABRIC_ROOT/SceneGraph/Resources/Shaders/ShadowMapShader.xml');
 
-FABRIC.SceneGraph.defineEffectFromFile('FABRIC_ROOT/SceneGraph/Resources/Shaders/NormalShader.xml');
-FABRIC.SceneGraph.defineEffectFromFile('FABRIC_ROOT/SceneGraph/Resources/Shaders/FlatTextureShader.xml');
-FABRIC.SceneGraph.defineEffectFromFile('FABRIC_ROOT/SceneGraph/Resources/Shaders/PhongTextureShader.xml');
-FABRIC.SceneGraph.defineEffectFromFile('FABRIC_ROOT/SceneGraph/Resources/Shaders/PhongBumpReflectShader.xml');
-FABRIC.SceneGraph.defineEffectFromFile('FABRIC_ROOT/SceneGraph/Resources/Shaders/PhongSkinningShader.xml');
+FABRIC.SceneGraph.defineEffectFromFile('FlatTextureMaterial', 'FABRIC_ROOT/SceneGraph/Resources/Shaders/FlatTextureShader.xml');
+FABRIC.SceneGraph.defineEffectFromFile('PhongTextureMaterial', 'FABRIC_ROOT/SceneGraph/Resources/Shaders/PhongTextureShader.xml');
+FABRIC.SceneGraph.defineEffectFromFile('PhongBumpReflectMaterial', 'FABRIC_ROOT/SceneGraph/Resources/Shaders/PhongBumpReflectShader.xml');
+FABRIC.SceneGraph.defineEffectFromFile('PhongSkinningMaterial', 'FABRIC_ROOT/SceneGraph/Resources/Shaders/PhongSkinningShader.xml');
 
-FABRIC.SceneGraph.defineEffectFromFile('FABRIC_ROOT/SceneGraph/Resources/Shaders/ShadowReceivingPhongShader.xml');
-FABRIC.SceneGraph.defineEffectFromFile('FABRIC_ROOT/SceneGraph/Resources/Shaders/PhongBumpReflectSkinningShader.xml');
+FABRIC.SceneGraph.defineEffectFromFile('ShadowReceivingPhongMaterial', 'FABRIC_ROOT/SceneGraph/Resources/Shaders/ShadowReceivingPhongShader.xml');
+FABRIC.SceneGraph.defineEffectFromFile('PhongBumpReflectSkinningMaterial', 'FABRIC_ROOT/SceneGraph/Resources/Shaders/PhongBumpReflectSkinningShader.xml');
 
-FABRIC.SceneGraph.defineEffectFromFile('FABRIC_ROOT/SceneGraph/Resources/Shaders/VertexColorShader.xml');
-FABRIC.SceneGraph.defineEffectFromFile('FABRIC_ROOT/SceneGraph/Resources/Shaders/PhongVertexColorShader.xml');
+FABRIC.SceneGraph.defineEffectFromFile('VertexColorMaterial', 'FABRIC_ROOT/SceneGraph/Resources/Shaders/VertexColorShader.xml');
+FABRIC.SceneGraph.defineEffectFromFile('PhongVertexColorMaterial', 'FABRIC_ROOT/SceneGraph/Resources/Shaders/PhongVertexColorShader.xml');
+FABRIC.SceneGraph.defineEffectFromFile('NormalMaterial', 'FABRIC_ROOT/SceneGraph/Resources/Shaders/NormalShader.xml');
 
 
 

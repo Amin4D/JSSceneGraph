@@ -336,7 +336,7 @@ FABRIC.SceneGraph.registerNodeType('SpotLight',
         }));
 
       if (options.castShadows) {
-        redrawEventHandler.addMember('shadowMap', 'Integer', 0);
+        redrawEventHandler.addMember('shadowMap', 'Size', 0);
 
         redrawEventHandler.preDescendBindings.append(
           scene.constructOperator({
@@ -399,10 +399,10 @@ FABRIC.SceneGraph.registerNodeType('SpotLight',
       dgnode.addMember('shadowMat44', 'Mat44');
 
       dgnode.addMember('shadowmapsize', 'Integer', options.resolution);
-      dgnode.addMember('shadowFBO', 'Integer', 0);
-      dgnode.addMember('prevFBO', 'Integer', 0);
-      dgnode.addMember('depthTextureID', 'Integer', 0);
-      dgnode.addMember('colorTextureID', 'Integer', 0);
+      dgnode.addMember('shadowFBO', 'Size', 0);
+      dgnode.addMember('prevFBO', 'Size', 0);
+      dgnode.addMember('depthTextureID', 'Size', 0);
+      dgnode.addMember('colorTextureID', 'Size', 0);
 
       // TODO: I think that the light projections matrices aren't correct.
       // the shadow map is clipped by the cone angle. The projection matrix,

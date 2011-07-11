@@ -8,8 +8,8 @@
 operator drawCharacterInstance(
   io ShaderValue uniformValues[],
   io Mat44 boneMatrices[],
-  io Mat44 cameraMatrices[],
-  io Mat44 projectionMatrices[],
+  io Mat44 cameraMatrix,
+  io Mat44 projectionMatrix,
   io Integer indicesBufferID,
   io Size indicesCount
 ) {
@@ -17,11 +17,9 @@ operator drawCharacterInstance(
 
   Mat33 normalMatrices[];
   normalMatrices.resize(1);
-  Mat44 modelMatrices[], modelViewMatrices[], projectionMatricesInv[], modelViewProjectionMatrices[];
+  Mat44 modelMatrices[], modelViewMatrices[];
   modelMatrices.resize(1);
   modelViewMatrices.resize(1);
-  projectionMatricesInv.resize(1);
-  modelViewProjectionMatrices.resize(1);
 
   for (Integer i = 0; i < uniformValues.size(); i++) {
     var ShaderValue uniform = uniformValues[i];
@@ -35,35 +33,43 @@ operator drawCharacterInstance(
         break;
       case VIEWMATRIX_ATTRIBUTE_ID:
         if (uniform.location != - 1) {
+          Mat44 cameraMatrices[];
+          cameraMatrices.push(cameraMatrix);
           glUniformMatrix4fv(uniform.location, 1, false, cameraMatrices);
         }
         break;
       case PROJECTIONMATRIX_ATTRIBUTE_ID:
         if (uniform.location != - 1) {
+          Mat44 projectionMatrices[];
+          projectionMatrices.push(projectionMatrix);
           glUniformMatrix4fv(uniform.location, 1, false, projectionMatrices);
         }
         break;
       case NORMALMATRIX_ATTRIBUTE_ID:
         if (uniform.location != - 1) {
-          modelViewMatrices[0] = cameraMatrices[0];
+          modelViewMatrices[0] = cameraMatrix;
           normalMatrices[0] = modelViewMatrices[0].upperLeft().inverse().transpose();
           glUniformMatrix3fv(uniform.location, 1, false, normalMatrices);
         }
         break;
       case PROJECTIONMATRIXINV_ATTRIBUTE_ID:
         if (uniform.location != - 1) {
-          projectionMatricesInv[0] = projectionMatrices[0].inverse();
+          Mat44 projectionMatricesInv[];
+          projectionMatricesInv.push(projectionMatrix.inverse());
           glUniformMatrix4fv(uniform.location, 1, false, projectionMatricesInv);
         }
         break;
       case MODELVIEW_MATRIX_ATTRIBUTE_ID:
         if (uniform.location != - 1) {
+          Mat44 cameraMatrices[];
+          cameraMatrices.push(cameraMatrix);
           glUniformMatrix4fv(uniform.location, 1, false, cameraMatrices);
         }
         break;
       case MODELVIEWPROJECTION_MATRIX_ATTRIBUTE_ID:
         if (uniform.location != - 1) {
-          modelViewProjectionMatrices[0] = cameraMatrices[0] * projectionMatrices[0];
+          Mat44 modelViewProjectionMatrices[];
+          modelViewProjectionMatrices.push(cameraMatrix * projectionMatrix);
           glUniformMatrix4fv(uniform.location, 1, false, modelViewProjectionMatrices);
         }
         break;

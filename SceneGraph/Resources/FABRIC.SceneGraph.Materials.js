@@ -1047,7 +1047,7 @@ FABRIC.SceneGraph.defineEffectFromFile = function(effectName, effectfile) {
 FABRIC.SceneGraph.defineEffectFromFile('FlatMaterial', 'FABRIC_ROOT/SceneGraph/Resources/Shaders/FlatShader.xml');
 FABRIC.SceneGraph.defineEffectFromFile('FlatScreenSpaceMaterial', 'FABRIC_ROOT/SceneGraph/Resources/Shaders/FlatScreenSpaceShader.xml');
 FABRIC.SceneGraph.defineEffectFromFile('PhongMaterial', 'FABRIC_ROOT/SceneGraph/Resources/Shaders/PhongShader.xml');
-FABRIC.SceneGraph.defineEffectFromFile('ShadowMapMaterial', 'FABRIC_ROOT/SceneGraph/Resources/Shaders/ShadowMapShader.xml');
+FABRIC.SceneGraph.defineEffectFromFile('ShadowMaterial', 'FABRIC_ROOT/SceneGraph/Resources/Shaders/ShadowMapShader.xml');
 
 FABRIC.SceneGraph.defineEffectFromFile('FlatTextureMaterial', 'FABRIC_ROOT/SceneGraph/Resources/Shaders/FlatTextureShader.xml');
 FABRIC.SceneGraph.defineEffectFromFile('PhongTextureMaterial', 'FABRIC_ROOT/SceneGraph/Resources/Shaders/PhongTextureShader.xml');

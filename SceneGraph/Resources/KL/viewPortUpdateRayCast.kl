@@ -4,8 +4,8 @@
 //
 
 operator viewPortUpdateRayCast(
-  io Mat44 camera[],
-  io Mat44 projection[],
+  io Mat44 camera,
+  io Mat44 projection,
   io Integer width,
   io Integer height,
   io Integer x,
@@ -23,14 +23,14 @@ operator viewPortUpdateRayCast(
   sy = (sy * 2.0) - 1.0;
 
   // Transform the origin from camera local to world space
-  var Mat44 camInv = camera[0].inverse();
+  var Mat44 camInv = camera.inverse();
 
   ray.start = Vec3(0.0, 0.0, 0.0) * camInv;
 
   // Get the projected window coordinate on the near plane
   // See http://www.songho.ca/opengl/gl_projectionmatrix.html
   // for details.
-  var Mat44 projInv = projection[0].inverse();
+  var Mat44 projInv = projection.inverse();
 
   ray.direction = Vec3(sx, - sy, - 1.0) * projInv;
 

@@ -50,15 +50,17 @@ function createFBO(io Integer fboId, io Integer textureId) {
 }
 
 operator genAndBindShadowMapFBO(
-  io Integer shadowFBO,
-  io Integer prevFBO,
-  io Integer depthTextureID,
-  io Integer colorTextureID,
+  io Size shadowFBO,
+  io Size prevFBO,
+  io Size depthTextureID,
+  io Size colorTextureID,
   io Integer mapsize
 ) {
   //  report("genAndBindShadowMapFBO");
-
-  glGetIntegerv(GL_FRAMEBUFFER_BINDING_EXT, prevFBO.data());
+  Integer prevFBOs[];
+  prevFBOs.resize(1);
+  glGetIntegerv(GL_FRAMEBUFFER_BINDING_EXT, prevFBOs);
+  prevFBO = prevFBOs[0];
 
   if (depthTextureID == 0) {
     //    report("generatingFBO: "+mapsize);
@@ -66,8 +68,12 @@ operator genAndBindShadowMapFBO(
     var Data NULL;
 
     glEnable(GL_TEXTURE_2D);
-    glGenTextures(1, colorTextureID.data());
+    Size colorTextureIDs[];
+    colorTextureIDs.resize(1);
+    glGenTextures(1, colorTextureIDs);
+    colorTextureID = colorTextureIDs[0];
     glBindTexture(GL_TEXTURE_2D, colorTextureID);
+    
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -76,7 +82,11 @@ operator genAndBindShadowMapFBO(
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, mapsize, mapsize, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 
     // Try to use a texture depth component
-    glGenTextures(1, depthTextureID.data());
+    Size depthTextureIDs[];
+    depthTextureIDs.resize(1);
+    glGenTextures(1, depthTextureIDs);
+    depthTextureID = depthTextureIDs[0];
+    
     glBindTexture(GL_TEXTURE_2D, depthTextureID);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -84,9 +94,9 @@ operator genAndBindShadowMapFBO(
 
 
     // Remove artefact on the edges of the shadowmap
-    var Color border;
-    border.r = border.g = border.b = border.a = 0.0;
-    glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, border.data());
+    var Scalar border[];
+    border.resize(4);
+    glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, border);
 
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
@@ -96,12 +106,15 @@ operator genAndBindShadowMapFBO(
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
     glTexParameteri(GL_TEXTURE_2D, GL_DEPTH_TEXTURE_MODE, GL_INTENSITY);
 
-	//Having a border of > 0 length is not supported on some drivers; disabling for now. Todo: consider using Renderbuffer for depth info
+    //Having a border of > 0 length is not supported on some drivers; disabling for now. Todo: consider using Renderbuffer for depth info
     glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, mapsize, mapsize, 0 /*1 unsupported on some drivers*/, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
 
     // create a framebuffer object
     glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
-    glGenFramebuffersEXT(1, shadowFBO.data());
+    Size shadowFBOs[];
+    shadowFBOs.resize(1);
+    glGenFramebuffersEXT(1, shadowFBOs);
+    shadowFBO = shadowFBOs[0];
     glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, shadowFBO);
 
     // attach the texture to FBO depth attachment point
@@ -135,7 +148,7 @@ operator genAndBindShadowMapFBO(
 }
 
 operator unbindFBO(
-  io Integer prevFBO,
+  io Size prevFBO,
 ) {
   //  report("unbindFBO");
 
@@ -151,19 +164,19 @@ operator unbindFBO(
 }
 
 operator bindShadowMapBuffer(
-  io Integer textureIndex,
-  io Integer depthTextureID
+  io Size textureIndex,
+  io Size depthTextureID
 ) {
   glActiveTexture(GL_TEXTURE0 + textureIndex);
   glBindTexture(GL_TEXTURE_2D, depthTextureID);
 }
 
 operator debugShadowMapBuffer(
-  io Integer colorTextureID
+  io Size colorTextureID
 ) {
   // report( "debugBuffer" );
   // Create a simple shader for drawing
-
+/*
   ShaderSource vertexShader;
   vertexShader.type = GL_VERTEX_SHADER;
   vertexShader.code = '\
@@ -223,20 +236,20 @@ operator debugShadowMapBuffer(
 
   var Data NULL;
 
-  glGenBuffers(3, bufferID.data());
+  glGenBuffers(3, bufferID);
 
   glBindBuffer(GL_ARRAY_BUFFER, bufferID[0]);
-  glBufferData(GL_ARRAY_BUFFER, p.dataSize(), p.data(), GL_STATIC_DRAW);
+  glBufferData(GL_ARRAY_BUFFER, p.dataSize(), p, GL_STATIC_DRAW);
   glEnableVertexAttribArray(posLocation);
   glVertexAttribPointer(posLocation, 3, GL_FLOAT, GL_FALSE, 0, NULL);
 
   glBindBuffer(GL_ARRAY_BUFFER, bufferID[1]);
-  glBufferData(GL_ARRAY_BUFFER, t.dataSize(), t.data(), GL_STATIC_DRAW);
+  glBufferData(GL_ARRAY_BUFFER, t.dataSize(), t, GL_STATIC_DRAW);
   glEnableVertexAttribArray(texLocation);
   glVertexAttribPointer(texLocation, 2, GL_FLOAT, GL_FALSE, 0, NULL);
 
   glBindBuffer(GL_ARRAY_BUFFER, bufferID[2]);
-  glBufferData(GL_ARRAY_BUFFER, idx.dataSize(), idx.data(), GL_STATIC_DRAW);
+  glBufferData(GL_ARRAY_BUFFER, idx.dataSize(), idx, GL_STATIC_DRAW);
   glBindBuffer(GL_ARRAY_BUFFER, 0);
 
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, bufferID[2]);
@@ -246,5 +259,6 @@ operator debugShadowMapBuffer(
   glFinish();
 
   glDeleteProgram(programID);
-  glDeleteBuffers(3, bufferID.data());
+  glDeleteBuffers(3, bufferID);
+  */
 }

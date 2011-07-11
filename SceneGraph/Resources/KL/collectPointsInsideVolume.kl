@@ -8,8 +8,8 @@ operator collectPointsInsideBrush(
   io Boolean select,
   io CollectedPoints collectedPoints,
 
-  io Mat44 cameraMatrices[],
-  io Mat44 projectionMatrices[],
+  io Mat44 cameraMatrix,
+  io Mat44 projectionMatrix,
   io Scalar aspectRatio,
 
   io Vec3 brushPos,
@@ -26,7 +26,7 @@ operator collectPointsInsideBrush(
 
   //  select = true;
   Mat44 modelMatrix = globalXfo;
-  Mat44 modelViewProjectionMatrix = modelMatrix * cameraMatrices[0] * projectionMatrices[0];
+  Mat44 modelViewProjectionMatrix = modelMatrix * cameraMatrix * projectionMatrix;
   Mat33 normalMatrix = modelViewProjectionMatrix.upperLeft().inverse().transpose();
 
   for (var Integer i = 0; i < positions.size(); i++) {

@@ -63,23 +63,30 @@ function Mat44 symmetricOrthographicFrustum(
   return result;
 }
 
-operator updateCameraProjection(io Mat44 projectionMat44[], io Integer width, io Integer height, io Scalar near, io Scalar far, io Scalar fovY, io Boolean orthographic) {
+operator updateCameraProjection(
+  io Mat44 projectionMat44,
+  io Integer width,
+  io Integer height,
+  io Scalar near,
+  io Scalar far,
+  io Scalar fovY,
+  io Boolean orthographic
+) {
   //  report( "updateProjectionMat44\n" );
 
   if (width < 1) width = 1;
-    if (height < 1) height = 1;
+  if (height < 1) height = 1;
 
-    var Scalar aspectRatio = (Scalar) width / (Scalar) height;
+  var Scalar aspectRatio = (Scalar) width / (Scalar) height;
 
-  projectionMat44.resize(1);
   if (!orthographic) {
     var Scalar frustumH = (tan(fovY / 2) * near) * 2.0;
     var Scalar frustumW = frustumH * aspectRatio;
-    projectionMat44[0] = symmetricPerspectiveFrustum(frustumW, frustumH, near, far);
+    projectionMat44 = symmetricPerspectiveFrustum(frustumW, frustumH, near, far);
   }
   else {
     var Scalar frustumH = (tan(fovY / 2) * near) * 30.0; // [PT] this value was 150.0, but I have no idea why. It made my orthoraphic camers zoom right out. I changed it for the Google demo.
     var Scalar frustumW = frustumH * aspectRatio;
-    projectionMat44[0] = symmetricOrthographicFrustum(frustumW, frustumH, near, far);
+    projectionMat44 = symmetricOrthographicFrustum(frustumW, frustumH, near, far);
   }
 }

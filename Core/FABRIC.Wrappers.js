@@ -861,7 +861,7 @@ var wrapFabricClient = function(fabricClient, logCallback, debugLogCallback) {
           result.preDescendBindings.patch(diff.preDescendBindings);
 
         if ('postDescendBindings' in diff)
-          result.bindings.patch(diff.postDescendBindings);
+          result.postDescendBindings.patch(diff.postDescendBindings);
       };
 
       var parentRoute = result.route;

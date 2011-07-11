@@ -366,6 +366,9 @@ FABRIC.SceneGraph = {
       code = this.preProcessCode.call(this, code, operatorDef.preProcessorDefinitions, includedCodeSections);
 
       operator = context.DG.createOperator(uid);
+      
+      if (operatorDef.mainThreadOnly)
+        operator.setMainThreadOnly(true);
 
       descDiags = function(fullCode, diags) {
         var fullCodeLines = fullCode.split('\n');
@@ -981,7 +984,7 @@ FABRIC.SceneGraph.registerNodeType('Viewport',
     };
     viewportNode.pub.setBackgroundTextureImage = function(textureNode) {
       if (!textureStubdgnode) {
-        textureStub.setBindingName('textureStub');
+        textureStub.setScopeName('textureStub');
         textureStub.addMember('textureUnit', 'Integer', 0);
         textureStub.addMember('program', 'Integer', 0);
         textureStub.postDescendBindings.append(

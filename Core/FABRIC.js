@@ -67,6 +67,10 @@ FABRIC = (function() {
       debuggerWindow.context = context;
     };
     
+    FABRIC.flush = function() {
+      context.flush();
+    };
+    
     if(!contextID){
       // only fire the callbacks if a new context is being created.
       for (var i = 0; i < onCreateContextCallbacks.length; ++i)

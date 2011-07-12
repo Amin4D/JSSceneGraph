@@ -180,8 +180,8 @@ FABRIC.SceneGraph.registerNodeType('PaintManipulator',
 
     scene.addEventHandlingFunctions(paintManipulatorNode);
     
-    collectPointsDgNode.addMember('cameraMatrix', 'Mat44[]');
-    collectPointsDgNode.addMember('projectionMatrix', 'Mat44[]');
+    collectPointsDgNode.addMember('cameraMatrix', 'Mat44');
+    collectPointsDgNode.addMember('projectionMatrix', 'Mat44');
     collectPointsDgNode.addMember('aspectRatio', 'Scalar');
     collectPointsDgNode.addMember('brushPos', 'Vec3');
     collectPointsDgNode.addMember('brushSize', 'Scalar', options.brushSize);

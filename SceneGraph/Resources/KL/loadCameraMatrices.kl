@@ -14,18 +14,11 @@ operator loadCameraMatrices(
   Size nbUniforms = uniformValues.size();
   for (Size i = 0; i < nbUniforms; i++) {
     var ShaderValue uniform = uniformValues[i];
-
-    Mat33 normalMatrices[];
-    normalMatrices.resize(1);
-    Mat44 modelMatrices[], modelViewMatrices[], projectionMatricesInv[], modelViewProjectionMatrices[];
-    modelMatrices.resize(1);
-    modelViewMatrices.resize(1);
-    projectionMatricesInv.resize(1);
-    modelViewProjectionMatrices.resize(1);
     
     switch (uniform.id) {
       case MODELMATRIX_ATTRIBUTE_ID:
-        modelMatrices[0] = modelXfo;
+        Mat44 modelMatrices[];
+        modelMatrices.push(Mat44(modelXfo));
         glUniformMatrix4fv(uniform.location, 1, false, modelMatrices);
         break;
       case VIEWMATRIX_ATTRIBUTE_ID:
@@ -39,23 +32,24 @@ operator loadCameraMatrices(
         glUniformMatrix4fv(uniform.location, 1, false, projectionMatrices);
         break;
       case NORMALMATRIX_ATTRIBUTE_ID:
-        modelMatrices[0] = modelXfo;
-        modelViewMatrices[0] = modelMatrices[0] * cameraMatrix;
-        normalMatrices[0] = modelViewMatrices[0].upperLeft().inverse().transpose();
+        Mat44 modelViewMatrix = Mat44(modelXfo) * cameraMatrix;
+        Mat33 normalMatrices[];
+        normalMatrices.push(modelViewMatrix.upperLeft().inverse().transpose());
         glUniformMatrix3fv(uniform.location, 1, false, normalMatrices);
         break;
       case PROJECTIONMATRIXINV_ATTRIBUTE_ID:
-        projectionMatricesInv[0] = projectionMatrix.inverse();
+        Mat44 projectionMatricesInv[];
+        projectionMatricesInv.push(projectionMatrix.inverse());
         glUniformMatrix4fv(uniform.location, 1, false, projectionMatricesInv);
         break;
       case MODELVIEW_MATRIX_ATTRIBUTE_ID:
-        modelMatrices[0] = modelXfo;
-        modelViewMatrices[0] = modelMatrices[0] * cameraMatrix;
+        Mat44 modelViewMatrices[];
+        modelViewMatrices.push(Mat44(modelXfo) * cameraMatrix);
         glUniformMatrix4fv(uniform.location, 1, false, modelViewMatrices);
         break;
       case MODELVIEWPROJECTION_MATRIX_ATTRIBUTE_ID:
-        modelMatrices[0] = modelXfo;
-        modelViewProjectionMatrices[0] = modelMatrices[0] * cameraMatrix * projectionMatrix;
+        Mat44 modelViewProjectionMatrices[];
+        modelViewProjectionMatrices.push(Mat44(modelXfo) * cameraMatrix * projectionMatrix);
         glUniformMatrix4fv(uniform.location, 1, false, modelViewProjectionMatrices);
         break;
     }

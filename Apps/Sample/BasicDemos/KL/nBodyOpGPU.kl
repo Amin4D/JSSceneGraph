@@ -19,23 +19,29 @@ function initOpenCL
     var cl_platform_id clPlatformIDs[];
     clErr = clGetPlatformIDs(1, clPlatformIDs);
 
-    // [pzion 20110711] FIXME: We are assuming that the context is bound to the
-    // first OpenGL device; we should actually query the context to know what
-    // devices were bound.
-    var cl_device_id clDeviceIDs[];
-    clErr = clGetDeviceIDs(clPlatformIDs[0], CL_DEVICE_TYPE_GPU, clDeviceIDs);
-    var cl_device_id clDeviceID = clDeviceIDs[0];
+    cl_device_id clContextDeviceIDs[];
+    clErr = clGetContextDevices(clContext, clContextDeviceIDs);
+    report "clGetContextDevices: " + clErr;
+    
+    cl_device_id clDeviceID = clContextDeviceIDs[0];
+    report "clDeviceID = " + clDeviceID + " (" + (Boolean)clDeviceID + ")";
+    cl_device_id clDeviceIDs[];
+    clDeviceIDs.push(clDeviceID);
 
     clCommandQueue = clCreateCommandQueue(clContext, clDeviceID, 0, clErr);
+    report "clCreateCommandQueue: " + clErr;
+    report "clCommandQueue = " + clCommandQueue + " (" + (Boolean)clCommandQueue + ")";
   
     var cl_program clProgram = clCreateProgramWithSource(clContext, kernelSrc, clErr);
+    report "clCreateProgramWithSource: " + clErr;
+    report "clProgram = " + clProgram + " (" + (Boolean)clProgram + ")";
+    
     clErr = clBuildProgram(clProgram, clDeviceIDs, '');
+    report "clBuildProgram: " + clErr;
     if (clErr) {
-      for (var Size di = 0; di < clDeviceIDs.size(); di++) {
-        var String infoStr;
-        clGetProgramBuildInfoStr(clProgram, clDeviceIDs[di], CL_PROGRAM_BUILD_LOG, infoStr);
-        report('...OpenCL build failed: ' + infoStr);
-      }
+      var String infoStr;
+      clGetProgramBuildInfoStr(clProgram, clDeviceID, CL_PROGRAM_BUILD_LOG, infoStr);
+      report('...OpenCL build failed: ' + infoStr);
     }
 
     clKernel = clCreateKernel(clProgram, 'integrateBodies_MT', clErr);
@@ -94,23 +100,32 @@ operator nBodySimulateGPU(
       }
       var Size memSize = clPointCount * 4 * 4; // float * 4
       // TODO: Always check the error values.
+      report 'posOpenGLBufferID = ' + posOpenGLBufferID;
       posCurrent = clCreateFromGLBuffer(clContext, CL_MEM_READ_WRITE, posOpenGLBufferID, clErr);
+      report 'clCreateFromGLBuffer: ' + clErr;
+      Size posCurrentSize;
+      clErr = clGetMemObjectSize(posCurrent, posCurrentSize);
+      report 'posCurrentSize = ' + posCurrentSize;
+      report 'posCurrent = ' + posCurrent + '(' + (Boolean)posCurrent + ')';
       velCurrent = clCreateBuffer(clContext, CL_MEM_READ_WRITE, memSize, NULL, clErr);
+      Size velCurrentSize;
+      clErr = clGetMemObjectSize(velCurrent, velCurrentSize);
+      report 'velCurrentSize = ' + velCurrentSize;
       posPrev = clCreateBuffer(clContext, CL_MEM_READ_WRITE, memSize, NULL, clErr);
       velPrev = clCreateBuffer(clContext, CL_MEM_READ_WRITE, memSize, NULL, clErr);
     }
 
-  var Vec4 writeData[];
+    var Vec4 writeData[];
 
-  writeData.resize(clPointCount);
+    writeData.resize(clPointCount);
 
-  for (var Size i = 0; i < clPointCount; i++) {
-    writeData[i].x = posInit[i].x;
-    writeData[i].y = posInit[i].y;
-    writeData[i].z = posInit[i].z;
-    writeData[i].t = massInit[i];
-  }
-  clErr = clEnqueueWriteBuffer(clCommandQueue, posPrev, CL_TRUE, 0, writeData.dataSize, writeData.data, eventWaitList, event);
+    for (var Size i = 0; i < clPointCount; i++) {
+      writeData[i].x = posInit[i].x;
+      writeData[i].y = posInit[i].y;
+      writeData[i].z = posInit[i].z;
+      writeData[i].t = massInit[i];
+    }
+    clErr = clEnqueueWriteBuffer(clCommandQueue, posPrev, CL_TRUE, 0, writeData.dataSize, writeData.data, eventWaitList, event);
 
     for (var Size i = 0; i < clPointCount; i++) {
       writeData[i].x = velInit[i].x;
@@ -161,5 +176,7 @@ operator nBodySimulateGPU(
   globalWorkSize[1] = q;
 
   clErr = clEnqueueNDRangeKernel(clCommandQueue, clKernel, 2, NULL, globalWorkSize.data, localWorkSize.data, eventWaitList, event);
+  report "clEnqueueNDRangeKernel: " + clErr;
   clErr = clFinish(clCommandQueue);
+  report "clFinish: " + clErr;
 }

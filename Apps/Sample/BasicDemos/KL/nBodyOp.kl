@@ -19,7 +19,6 @@ operator nBodyInit(
   io Scalar positionScale,
   io Scalar velocityScale
 ) {
-   report ("nBodyInit" );
   var Integer seed = Integer(index);
   rand(seed);
 

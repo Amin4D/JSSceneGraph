@@ -222,6 +222,10 @@ g.Highlighted {
 $(document).ready(function() {
   
   
+  var contextID = document.location.search.split('?')[1].split('=')[1];
+  var openerWindowName = document.location.search.split('?')[2].split('=')[1];
+  document.title = 'FABRIC Debugger:' + openerWindowName;
+  
   var contextID = document.location.search.split('?id=')[1];
   if(!window.context){
     window.context = FABRIC.createContext({ contextID:contextID  });
@@ -233,101 +237,115 @@ $(document).ready(function() {
   
   var allNamedObjects = context.DG.getAllNamedObjects();
   
-  var eventsMap = {};
-  var eventHandlersMap = {};
-  var nodesMap = {};
+  var eventsMap,
+      eventHandlersMap,
+      nodesMap,
+      ehcolumns,
+      dgcolumns,
+      maxehrow,
+      layoutMap;
   
-  for(var i in allNamedObjects){
-    if(!allNamedObjects[ i ].getType){
-      continue;
-    }
-    var type = allNamedObjects[ i ].getType();
-    if(type === "Event"){
-      eventsMap[i] = allNamedObjects[ i ];
-    }
-    else if(type === "EventHandler"){
-      eventHandlersMap[i] = allNamedObjects[ i ];
-    }
-    if(type === "Node"){
-      nodesMap[i] = allNamedObjects[ i ];
-    }
-  }
+  var loadCoreObjects = function(){
+    
+    eventsMap = {};
+    eventHandlersMap = {};
+    nodesMap = {};
   
-  var ehcolumns = [];
-  var dgcolumns = [];
-  var maxehrow = 0;
-  var layoutMap = {};
-  
-  var layoutDGNodes = function(dgnode, parentPos){
-    var name = dgnode.getName();
-    var pos = parentPos.subtract(FABRIC.vec2(1, 0));
-    if(!dgcolumns[pos.x]) dgcolumns[pos.x] = 0;
-    if(layoutMap[name]){
-      if(layoutMap[name].x > pos.x){
+    ehcolumns = [];
+    dgcolumns = [];
+    maxehrow = 0;
+    layoutMap = {};
+      
+    for(var i in allNamedObjects){
+      if(!allNamedObjects[ i ].getType){
+        continue;
+      }
+      var type = allNamedObjects[ i ].getType();
+      if(type === "Event"){
+        eventsMap[i] = allNamedObjects[ i ];
+      }
+      else if(type === "EventHandler"){
+        eventHandlersMap[i] = allNamedObjects[ i ];
+      }
+      if(type === "Node"){
+        nodesMap[i] = allNamedObjects[ i ];
+      }
+    }
+    
+    
+    var layoutDGNodes = function(dgnode, parentPos){
+      var name = dgnode.getName();
+      var pos = parentPos.subtract(FABRIC.vec2(1, 0));
+      if(!dgcolumns[pos.x]) dgcolumns[pos.x] = 0;
+      if(layoutMap[name]){
+        if(layoutMap[name].x > pos.x){
+          dgcolumns[pos.x]++;
+          // Re-assign the node to the new column;
+          layoutMap[name].x = pos.x;
+          layoutMap[name].y = dgcolumns[pos.x];
+        }
+        pos = layoutMap[name];
+      }else{
         dgcolumns[pos.x]++;
-        // Re-assign the node to the new column;
-        layoutMap[name].x = pos.x;
-        layoutMap[name].y = dgcolumns[pos.x];
+        pos.y = dgcolumns[pos.x];
+        layoutMap[name] = pos;
       }
-      pos = layoutMap[name];
-    }else{
-      dgcolumns[pos.x]++;
-      pos.y = dgcolumns[pos.x];
-      layoutMap[name] = pos;
+      var dependencies = dgnode.getDependencies();
+      for(var i in dependencies){
+        layoutDGNodes(dependencies[i], layoutMap[name])
+      }
     }
-    var dependencies = dgnode.getDependencies();
-    for(var i in dependencies){
-      layoutDGNodes(dependencies[i], layoutMap[name])
-    }
-  }
-  
-  var layoutEventHandlers = function(children, parentPos){
-    if(children.length > 0){
-      for(var j=0; j < children.length; j++){
-        var eventHandler = children[j];
-        var name = eventHandler.getName();
-        var pos = parentPos.add(FABRIC.vec2(1, 0));
-        if(!ehcolumns[pos.x]) ehcolumns[pos.x] = 0;
-        if(layoutMap[name]){
-          if( layoutMap[name].x < pos.x){
-            ehcolumns[pos.x]++;
-            // Re-assign the handler to the new column;
-            layoutMap[name].x = pos.x;
-            layoutMap[name].y = ehcolumns[pos.x];
-          }
-        }else{
-          // nodes are inline with parent nodes. 
-          if(ehcolumns[pos.x] < parentPos.y){
-            ehcolumns[pos.x] = parentPos.y;
+    
+    var layoutEventHandlers = function(children, parentPos){
+      if(children.length > 0){
+        for(var j=0; j < children.length; j++){
+          var eventHandler = children[j];
+          var name = eventHandler.getName();
+          var pos = parentPos.add(FABRIC.vec2(1, 0));
+          if(!ehcolumns[pos.x]) ehcolumns[pos.x] = 0;
+          if(layoutMap[name]){
+            if( layoutMap[name].x < pos.x){
+              ehcolumns[pos.x]++;
+              // Re-assign the handler to the new column;
+              layoutMap[name].x = pos.x;
+              layoutMap[name].y = ehcolumns[pos.x];
+            }
           }else{
-            ehcolumns[pos.x]++;
+            // nodes are inline with parent nodes. 
+            if(ehcolumns[pos.x] < parentPos.y){
+              ehcolumns[pos.x] = parentPos.y;
+            }else{
+              ehcolumns[pos.x]++;
+            }
+            pos.y = ehcolumns[pos.x];
+            layoutMap[name] = pos;
           }
-          pos.y = ehcolumns[pos.x];
-          layoutMap[name] = pos;
-        }
-        if(maxehrow < layoutMap[name].y){
-          maxehrow = layoutMap[name].y;
-        }
-        layoutEventHandlers(eventHandler.getChildEventHandlers(), layoutMap[name]);
-        var scopes = eventHandler.getScopes();
-        for(var i in scopes){
-          layoutDGNodes(scopes[i], layoutMap[name])
+          if(maxehrow < layoutMap[name].y){
+            maxehrow = layoutMap[name].y;
+          }
+          layoutEventHandlers(eventHandler.getChildEventHandlers(), layoutMap[name]);
+          var scopes = eventHandler.getScopes();
+          for(var i in scopes){
+            layoutDGNodes(scopes[i], layoutMap[name])
+          }
         }
       }
     }
+    
+    ehcolumns[0] = 0;
+    for(var i in eventsMap){
+      ehcolumns[0]++;
+      var row = ehcolumns[0];
+      if( ehcolumns[1] && ehcolumns[1] > ehcolumns[0] ){
+        row = ehcolumns[1];
+      }
+      ehcolumns[0] = row;
+      layoutMap[i] = FABRIC.vec2(0, row);
+      layoutEventHandlers(eventsMap[i].getEventHandlers(), layoutMap[i]);
+    }
   }
   
-  ehcolumns[0] = 0;
-  for(var i in eventsMap){
-    ehcolumns[0]++;
-    var row = ehcolumns[0];
-    if( ehcolumns[1] && ehcolumns[1] > ehcolumns[0] ){
-      row = ehcolumns[1];
-    }
-    ehcolumns[0] = row;
-    layoutMap[i] = FABRIC.vec2(0, row);
-    layoutEventHandlers(eventsMap[i].getEventHandlers(), layoutMap[i]);
-  }
+  loadCoreObjects();
   
   var graphWidth = $('#graph').width();
   var graphHeight = $('#graph').height();
@@ -436,7 +454,7 @@ $(document).ready(function() {
       addNodeInspectorCallback(svgnode, eventHandler);
       svgnode.addInPort({
           color: FABRIC.rgb255(200,80,80),
-          allowMultipleConnections:false,
+          allowMultipleConnections:true,
           createLabelEventCatcher:false
         });
       svgnode.addOutPort({
@@ -599,6 +617,11 @@ $(document).ready(function() {
     displayGraph(!$('#displayEventHandlers').attr('checked'), !$('#displayDependencyGraph').attr('checked'), true)
   }
   
+  $('#rebuild').button()
+      .click(function() {
+        loadCoreObjects();
+        redisplayGraph();
+      });
   $('#displayEventHandlers').button()
       .click(function() {
         redisplayGraph();
@@ -632,7 +655,8 @@ $(document).ready(function() {
           <div class="box">
             <h2>OPTIONS</h2>
             <div class="content" id="keyframeTracks">
-              <input type="checkbox" id="displayEventHandlers" /><label for="displayEventHandlers">Display Event Handlers</label>
+              <button id="rebuild" style="margin-top:10px;">Rebuild</button>
+              <input type="checkbox" id="displayEventHandlers" /><label for="displayEventHandlers" style="margin-top:10px;" >Display Event Handlers</label>
               <input type="checkbox" id="displayDependencyGraph"/><label for="displayDependencyGraph" style="margin-top:10px;" >Display Dependency Graph</label>
             </div><!--content-->
           </div><!--box-->

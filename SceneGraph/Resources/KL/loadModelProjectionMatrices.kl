@@ -5,7 +5,7 @@
 
 
 
-operator loadCameraMatrices(
+function loadModelProjectionMatricesFn(
   io ShaderValue uniformValues[],
   io Xfo modelXfo,
   io Mat44 cameraMatrix,
@@ -50,4 +50,32 @@ operator loadCameraMatrices(
         break;
     }
   }
+}
+
+operator loadModelProjectionMatrices(
+  io ShaderValue uniformValues[],
+  io Xfo modelXfo,
+  io Mat44 cameraMatrix,
+  io Mat44 projectionMatrix
+) {
+  loadModelProjectionMatricesFn(
+    uniformValues,
+    modelXfo,
+    cameraMatrix,
+    projectionMatrix
+  );
+}
+operator loadIndexedModelProjectionMatrices(
+  io ShaderValue uniformValues[],
+  io Xfo modelXfos[],
+  io Size modelXfoIndex,
+  io Mat44 cameraMatrix,
+  io Mat44 projectionMatrix
+) {
+  loadModelProjectionMatricesFn(
+    uniformValues,
+    modelXfos[modelXfoIndex],
+    cameraMatrix,
+    projectionMatrix
+  );
 }

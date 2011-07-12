@@ -224,9 +224,7 @@ $(document).ready(function() {
   
   var contextID = document.location.search.split('?')[1].split('=')[1];
   var openerWindowName = document.location.search.split('?')[2].split('=')[1];
-  document.title = 'FABRIC Debugger:' + openerWindowName;
   
-  var contextID = document.location.search.split('?id=')[1];
   if(!window.context){
     window.context = FABRIC.createContext({ contextID:contextID  });
   }
@@ -234,6 +232,8 @@ $(document).ready(function() {
   if(!window.context){
     alert("this page must be opened from a running demo, passing it the correct context, or embedding it in the URL");
   }
+  
+  document.title = 'FABRIC Debugger:' + openerWindowName;
   
   var allNamedObjects = context.DG.getAllNamedObjects();
   

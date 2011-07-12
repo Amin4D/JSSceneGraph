@@ -52,7 +52,7 @@ function initOpenCL
 
 operator nBodySimulateGPU(
   io Scalar time,
-  io Vec3 posInit[],
+  io Vec4 posInit[],
   io Vec3 velInit[],
   io Scalar massInit[],
 
@@ -69,9 +69,7 @@ operator nBodySimulateGPU(
 
   io Scalar timeStep,
   io Scalar softening,
-  io Scalar damping,
-
-  io Vec3 posDraw[],
+  io Scalar damping
 ) {
   var Data NULL;
   var Integer clErr;

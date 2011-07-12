@@ -11,7 +11,7 @@ function Scalar rand(io Integer seed) {
 operator nBodyInit(
   in Size index,
   in Size size,
-  io Vec3 pos,
+  io Vec4 posV4,
   io Vec3 vel,
   io Scalar mass,
   io Color color,
@@ -21,6 +21,7 @@ operator nBodyInit(
 ) {
   var Integer seed = Integer(index);
   rand(seed);
+  Vec3 pos;
 
   if (systemType == 0)// Random
   {
@@ -102,6 +103,10 @@ operator nBodyInit(
   color.g = rand(seed) * 0.6 + 0.4;
   color.b = rand(seed) * 0.6 + 0.4;
   color.a = 255;
+  
+  posV4.x = pos.x;
+  posV4.y = pos.y;
+  posV4.z = pos.z;
 }
 
 operator nBodySimulateInit(

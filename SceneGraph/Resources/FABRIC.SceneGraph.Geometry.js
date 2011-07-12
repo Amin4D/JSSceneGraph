@@ -243,14 +243,27 @@ FABRIC.SceneGraph.registerNodeType('Geometry',
         bufferIDMemberName = memberName + 'BufferID';
         redrawEventHandler.addMember(bufferIDMemberName, 'Integer', 0);
         
-        if(uniformValues[bufferIDMemberName]){
+        countMemberName = memberName + 'Count';
+        redrawEventHandler.addMember(countMemberName, 'Size', 0);
+        
+        if(uniformValues[bufferIDMemberName] && uniformValues[countMemberName]){
           redrawEventHandler.preDescendBindings.append(scene.constructOperator({
             operatorName: 'copyBufferID',
-            srcCode: 'operator copyBufferID(io Integer dgbufferID, io Integer ehbufferID){ dgbufferID = dgbufferID; }',
+            srcCode: 'operator copyBufferID(\
+    io Integer dgbufferID,\
+    io Size dgbufferCount,\
+    io Integer ehbufferID,\
+    io Size ehbufferCount){\
+      report("copyBufferID:"+dgbufferID);\
+      ehbufferID = dgbufferID;\
+      ehbufferCount = dgbufferCount;\
+    }',
             entryFunctionName: 'copyBufferID',
             parameterBinding: [
               'uniforms.' + bufferIDMemberName,
-              'self.' + bufferIDMemberName
+              'uniforms.' + countMemberName,
+              'self.' + bufferIDMemberName,
+              'self.' + countMemberName
             ]
           }));
           continue;
@@ -265,9 +278,6 @@ FABRIC.SceneGraph.registerNodeType('Geometry',
           }
         }
         
-        countMemberName = memberName + 'Count';
-        redrawEventHandler.addMember(countMemberName, 'Size', 0);
-
         /*
         if(dynamicMember){
           redrawEventHandler.preDescendBindings.append(scene.constructOperator({

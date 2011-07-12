@@ -126,7 +126,7 @@ $(document).ready(function() { $('#play').button({
       nBodyGeometry.pub.setVertexCount(options.nBodies);
       
       var memberName = 'positions';
-      var memberType = 'Vec3';
+      var memberType = 'Vec4';
       var bufferIDMemberName = memberName + 'BufferID';
       var countMemberName = memberName + 'Count';
       var attributeNodeBinding = 'attributes';
@@ -184,8 +184,7 @@ $(document).ready(function() { $('#play').button({
             'uniforms.pointCount',
             'uniforms.timeStep',
             'uniforms.softening',
-            'uniforms.damping',
-            'self.positions[]'
+            'uniforms.damping'
           ]
         });
   

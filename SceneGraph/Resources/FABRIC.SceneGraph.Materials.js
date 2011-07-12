@@ -377,7 +377,7 @@ FABRIC.shaderAttributeTable = {
   tesselationInner: { id: 253, type: 'Scalar' },
   tesselationOuter: { id: 254, type: 'Scalar' },
   tesselationDepthMin: { id: 255, type: 'Scalar' },
-  tesselationDepthMax: { id: 255, type: 'Scalar' }
+  tesselationDepthMax: { id: 256, type: 'Scalar' }
 };
 
 FABRIC.SceneGraph.registerNodeType('Shader',

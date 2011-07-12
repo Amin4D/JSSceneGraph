@@ -45,15 +45,6 @@ FABRIC.SceneGraph = {
     // define multiple scene graphs with separate contexts.
     var context = FABRIC.createContext();
 
-    // [pzion 20110326] Add a context menu item for any windows
-    // in the context that pops up a Fabric debugger for the context
-    context.addPopUpItem(
-      'Fabric debugger...',
-      function(arg) {
-        scene.displayDebugger();
-      },
-      null);
-
     // EAch Viewport creates a new fabricwindow which is the origin of
     // window redraw events.
     var windows = [];
@@ -127,6 +118,15 @@ FABRIC.SceneGraph = {
     };
     scene.addWindow = function(element, options) {
       var fabricwindow = context.createWindow(element, options);
+      // [pzion 20110326] Add a context menu item for any windows
+      // in the context that pops up a Fabric debugger for the context
+      fabricwindow.addPopUpMenuItem(
+        'display-core-debugger',
+        'Fabric debugger...',
+        function(arg) {
+          scene.pub.displayDebugger();
+        }
+      );
       windows.push(fabricwindow);
       return fabricwindow;
     };

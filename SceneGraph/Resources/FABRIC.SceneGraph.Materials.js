@@ -320,6 +320,7 @@ FABRIC.shaderAttributeTable = {
   normals: { id: 3, type: 'Vec3[]' },
   tangents: { id: 4, type: 'Vec4[]' },
   vertexColors: { id: 5, type: 'Color[]' },
+  positionsVec4: { id: 6, type: 'Vec4[]' },
 
   uvs0: { id: 15, type: 'Vec2[]' },
   uvs1: { id: 16, type: 'Vec2[]' },

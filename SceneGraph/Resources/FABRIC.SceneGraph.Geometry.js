@@ -26,7 +26,11 @@ FABRIC.SceneGraph.registerNodeType('Geometry',
     var geometryNode = scene.constructNode('SceneGraphNode', options);
     uniformsdgnode = geometryNode.getUniformsDGNode();
     attributesdgnode = geometryNode.getAttributesDGNode();
-    attributesdgnode.addMember('positions', 'Vec3');
+    if(options.positionsVec4 == true ){
+      attributesdgnode.addMember('positions', 'Vec4');
+    }else{
+      attributesdgnode.addMember('positions', 'Vec3');
+    }
     attributesdgnode.addDependency(uniformsdgnode, 'uniforms');
 
     var uniformsname = uniformsdgnode.getName();

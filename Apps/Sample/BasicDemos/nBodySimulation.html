@@ -77,7 +77,8 @@ $(document).ready(function() { $('#play').button({
       scene.assignDefaults(options, {
           nBodies: 1024
         });
-
+      options.positionsVec4 = true;
+      options.createBoundingBoxNode = false;
       var nBodyGeometry = scene.constructNode('Particles', options);
       
       // Add all the paramters, and add getters/setters at the same time.

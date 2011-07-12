@@ -195,6 +195,7 @@ FABRIC.SceneGraph.registerNodeType('Geometry',
         return redrawEventHandler;
       }
       var vertexAttributes,
+        uniformValues,
         memberName,
         memberType,
         bufferIDMemberName,
@@ -242,6 +243,7 @@ FABRIC.SceneGraph.registerNodeType('Geometry',
       }
 
       vertexAttributes = attributesdgnode.getMembers();
+      uniformValues = uniformsdgnode.getMembers();
       for (memberName in vertexAttributes) {
         if (!FABRIC.shaderAttributeTable[memberName]) {
           continue;
@@ -249,9 +251,22 @@ FABRIC.SceneGraph.registerNodeType('Geometry',
         memberType = vertexAttributes[memberName].type;
 
         bufferIDMemberName = memberName + 'BufferID';
-        countMemberName = memberName + 'Count';
+        redrawEventHandler.addMember(bufferIDMemberName, 'Integer', 0);
+        
+        if(uniformValues[bufferIDMemberName]){
+          redrawEventHandler.preDescendBindings.append(scene.constructOperator({
+            operatorName: 'copyBufferID',
+            srcCode: 'operator copyBufferID(io Integer dgbufferID, io Integer ehbufferID){ dgbufferID = dgbufferID; }',
+            entryFunctionName: 'copyBufferID',
+            parameterBinding: [
+              'uniforms.' + bufferIDMemberName,
+              'self.' + bufferIDMemberName
+            ]
+          }));
+          continue;
+        }
+        
         dynamicMember = options.dynamicMembers.indexOf(memberName) != -1;
-
         attributeNodeBinding = 'attributes';
         for (i = 0; i < deformationbufferinterfaces.length; i++) {
           if (deformationbufferinterfaces[i].getDGNode().getMembers()[memberName]) {
@@ -259,9 +274,8 @@ FABRIC.SceneGraph.registerNodeType('Geometry',
             dynamicMember = true;
           }
         }
-
-
-        redrawEventHandler.addMember(bufferIDMemberName, 'Integer', 0);
+        
+        countMemberName = memberName + 'Count';
         redrawEventHandler.addMember(countMemberName, 'Size', 0);
 
         /*

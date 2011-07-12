@@ -54,6 +54,7 @@ operator nBodySimulateGPU(
   io cl_command_queue clCommandQueue,
   io cl_kernel clKernel,
   io String kernelSrc,
+  io Integer posOpenGLBufferID,
   io cl_mem posCurrent,
   io cl_mem velCurrent,
   io cl_mem posPrev,
@@ -92,7 +93,8 @@ operator nBodySimulateGPU(
         clReleaseMemObject(velPrev);
       }
       var Size memSize = clPointCount * 4 * 4; // float * 4
-      posCurrent = clCreateBuffer(clContext, CL_MEM_READ_WRITE, memSize, NULL, clErr);
+      // TODO: Always check the error values.
+      posCurrent = clCreateFromGLBuffer(clContext, CL_MEM_READ_WRITE, posOpenGLBufferID, clErr);
       velCurrent = clCreateBuffer(clContext, CL_MEM_READ_WRITE, memSize, NULL, clErr);
       posPrev = clCreateBuffer(clContext, CL_MEM_READ_WRITE, memSize, NULL, clErr);
       velPrev = clCreateBuffer(clContext, CL_MEM_READ_WRITE, memSize, NULL, clErr);

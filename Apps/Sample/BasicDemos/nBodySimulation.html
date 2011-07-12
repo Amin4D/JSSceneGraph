@@ -138,6 +138,7 @@ $(document).ready(function() { $('#play').button({
       nBodyGeometry.pub.addUniformValue(reloadMemberName, 'Boolean', false);
       nBodyGeometry.pub.addUniformValue(dynamicMemberName, 'Boolean', false);
 
+      // TODO: Move this into the 'geometry' class and tidy up. 
       nBodySimulateNodeGPU.bindings.append(scene.constructOperator({
             operatorName: 'gen' + memberName + 'OpenGLBuffer',
             mainThreadOnly: true,
@@ -157,7 +158,6 @@ $(document).ready(function() { $('#play').button({
             ]
           }));
     
-    
       deformationBuffer = nBodyGeometry.pub.addDeformationBuffer(['positions']);
       deformationBuffer.addDependency(scene.getGlobalsNode(), 'globals');
     
@@ -175,6 +175,7 @@ $(document).ready(function() { $('#play').button({
             'uniforms.clCommandQueue',
             'uniforms.clKernel',
             'uniforms.kernelSrc',
+            'uniforms.' + bufferIDMemberName,
             'uniforms.positionMem',
             'uniforms.velocityMem',
             'uniforms.positionPrevMem',

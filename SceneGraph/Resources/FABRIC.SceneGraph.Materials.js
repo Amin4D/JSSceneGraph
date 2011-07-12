@@ -352,6 +352,7 @@ FABRIC.shaderAttributeTable = {
   spriteTexture: { id: 84, type: 'Integer' },
   fboTexture: { id: 85, type: 'Integer' },
   backgroundTexture: { id: 86, type: 'Integer' },
+  depthTexture: { id: 87, type: 'Integer' },
 
   boneMatrices: { id: 100, type: 'Mat44[]' },
   boneMatrixTexture: { id: 101, type: 'Integer' },
@@ -374,7 +375,9 @@ FABRIC.shaderAttributeTable = {
   wireOpacity: { id: 251, type: 'Scalar' },
   tesselationCount: { id: 252, type: 'Integer' },
   tesselationInner: { id: 253, type: 'Scalar' },
-  tesselationOuter: { id: 254, type: 'Scalar' }
+  tesselationOuter: { id: 254, type: 'Scalar' },
+  tesselationDepthMin: { id: 255, type: 'Scalar' },
+  tesselationDepthMax: { id: 255, type: 'Scalar' }
 };
 
 FABRIC.SceneGraph.registerNodeType('Shader',

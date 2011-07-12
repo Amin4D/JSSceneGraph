@@ -8,7 +8,9 @@ FABRIC.SceneGraph.registerNodeType('Geometry',
   function(options, scene) {
     scene.assignDefaults(options, {
         dynamicMembers: [],
-        createBoundingBoxNode: true
+        createBoundingBoxNode: true,
+        tesselationSupported: false,
+        tesselationVertices: 3
       });
     options.dgnodenames.push('UniformsDGNode');
     options.dgnodenames.push('AttributesDGNode');
@@ -21,7 +23,9 @@ FABRIC.SceneGraph.registerNodeType('Geometry',
       uniformsdgnode,
       attributesdgnode,
       bboxdgnode,
-      deformationbufferinterfaces = [];
+      deformationbufferinterfaces = [],
+      tesselationSupported = options.tesselationSupported,
+      tesselationVertices = options.tesselationVertices;
 
     var geometryNode = scene.constructNode('SceneGraphNode', options);
     uniformsdgnode = geometryNode.getUniformsDGNode();
@@ -96,6 +100,15 @@ FABRIC.SceneGraph.registerNodeType('Geometry',
     };
     geometryNode.pub.setVertexCount = function(count) {
       attributesdgnode.setCount(count);
+    };
+    geometryNode.pub.getTesselationSupported = function() {
+      return tesselationSupported;
+    };
+    geometryNode.pub.getTesselationVertices= function() {
+      return tesselationVertices;
+    };
+    geometryNode.pub.setTesselationSupported = function(enabled) {
+      tesselationSupported = enabled;
     };
     geometryNode.pub.loadGeometryData = function(data, datatype, sliceindex) {
       var i,
@@ -489,16 +502,29 @@ FABRIC.SceneGraph.registerNodeType('Triangles',
 
     // implement the geometry relevant interfaces
     trianglesNode.getDrawOperator = function() {
-      return scene.constructOperator({
-          operatorName: 'drawTriangles',
-          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/drawTriangles.kl',
-          parameterBinding: [
-            'instance.elementCount',
-            'instance.indicesBufferID',
-            'instance.drawToggle'
-          ],
-          entryFunctionName: 'drawTriangles'
-        });
+      if(trianglesNode.pub.getTesselationSupported()) {
+        return scene.constructOperator({
+            operatorName: 'drawPatches',
+            srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/drawPatches.kl',
+            parameterBinding: [
+              'instance.elementCount',
+              'instance.indicesBufferID',
+              'instance.drawToggle'
+            ],
+            entryFunctionName: 'drawPatches'
+          });
+      } else {
+        return scene.constructOperator({
+            operatorName: 'drawTriangles',
+            srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/drawTriangles.kl',
+            parameterBinding: [
+              'instance.elementCount',
+              'instance.indicesBufferID',
+              'instance.drawToggle'
+            ],
+            entryFunctionName: 'drawTriangles'
+          });
+      }
     };
     trianglesNode.getRayintersectionOperator = function(transformNodeMember) {
       return scene.constructOperator({
@@ -586,7 +612,7 @@ FABRIC.SceneGraph.registerNodeType('Instance',
     // we should move these members onto the event handler.
     dgnode.addMember('elementCount', 'Size', 0);
     dgnode.addMember('indicesBufferID', 'Integer', 0);
-
+    
     redrawEventHandler.addScope('instance', dgnode);
 
     var bindToSceneGraph = function() {
@@ -683,6 +709,7 @@ FABRIC.SceneGraph.registerNodeType('Instance',
         node.checkVBORequirements(materialNodes[i].getVBORequirements());
       }
       geometryNode = node;
+      
       redrawEventHandler.appendChildEventHandler(geometryNode.getRedrawEventHandler());
       if (transformNode) {
         bindToSceneGraph();

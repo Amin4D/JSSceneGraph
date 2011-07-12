@@ -19,7 +19,7 @@ operator nBodyInit(
   io Scalar positionScale,
   io Scalar velocityScale
 ) {
-  // report ("nBodyInit" );
+   report ("nBodyInit" );
   var Integer seed = Integer(index);
   rand(seed);
 
@@ -50,30 +50,30 @@ operator nBodyInit(
     var Scalar vscale = scale * velocityScale;
     var Scalar inner = 2.5 * scale, outer = 4.0 * scale;
 
-  var Vec3 point;
-  for (; ; ) {
-    point.x = rand(seed) * 2.0 - 1.0;
-    point.y = rand(seed) * 2.0 - 1.0;
-    point.z = rand(seed) * 2.0 - 1.0;
-    if (point.normSq() <= 1.0)
-      break;
-  }
-
-  point.setUnit();
-
-  var Vec3 jitter(rand(seed), rand(seed), rand(seed));
-  var Vec3 one(1.0, 1.0, 1.0);
-  pos = point * (one * inner + (outer - inner) * jitter);
-
-  var Vec3 axis(rand(seed) * 2.0 - 1.0, rand(seed) * 2.0 - 1.0, rand(seed) * 2.0 - 1.0);
-
-  axis.setUnit();
-  if ((1.0 - axis.dot(point)) < 0.0001) {
-    axis.x = point.y;
-    axis.y = point.x;
+    var Vec3 point;
+    for (; ; ) {
+      point.x = rand(seed) * 2.0 - 1.0;
+      point.y = rand(seed) * 2.0 - 1.0;
+      point.z = rand(seed) * 2.0 - 1.0;
+      if (point.normSq() <= 1.0)
+        break;
+    }
+  
+    point.setUnit();
+  
+    var Vec3 jitter(rand(seed), rand(seed), rand(seed));
+    var Vec3 one(1.0, 1.0, 1.0);
+    pos = point * (one * inner + (outer - inner) * jitter);
+  
+    var Vec3 axis(rand(seed) * 2.0 - 1.0, rand(seed) * 2.0 - 1.0, rand(seed) * 2.0 - 1.0);
+  
     axis.setUnit();
-  }
-  var Vec3 vv;
+    if ((1.0 - axis.dot(point)) < 0.0001) {
+      axis.x = point.y;
+      axis.y = point.x;
+      axis.setUnit();
+    }
+    var Vec3 vv;
 
     vel = (pos.cross(axis)) * vscale;
   }
@@ -84,14 +84,14 @@ operator nBodyInit(
       var Scalar scale = positionScale * sizeScale;
     var Scalar vscale = scale * velocityScale;
 
-  var Vec3 point;
-  for (; ; ) {
-    point.x = rand(seed) * 2.0 - 1.0;
-    point.y = rand(seed) * 2.0 - 1.0;
-    point.z = rand(seed) * 2.0 - 1.0;
-    if (point.normSq() <= 1.0)
-      break;
-  }
+    var Vec3 point;
+    for (; ; ) {
+      point.x = rand(seed) * 2.0 - 1.0;
+      point.y = rand(seed) * 2.0 - 1.0;
+      point.z = rand(seed) * 2.0 - 1.0;
+      if (point.normSq() <= 1.0)
+        break;
+    }
 
     pos = point * scale;
     vel = point * vscale;

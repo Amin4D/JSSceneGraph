@@ -162,21 +162,4 @@ operator nBodySimulateGPU(
 
   clErr = clEnqueueNDRangeKernel(clCommandQueue, clKernel, 2, NULL, globalWorkSize.data, localWorkSize.data, eventWaitList, event);
   clErr = clFinish(clCommandQueue);
-
-  // Read the simulated data back for display
-  // TBD: Use VBOs to avoid copying the data from the GPU
-{
-    var Vec4 readData[];
-
-  readData.resize(clPointCount);
-
-  clErr = clEnqueueReadBuffer(clCommandQueue, posCurrent, CL_TRUE, 0, readData.dataSize, readData.data, eventWaitList, event);
-
-    posDraw.resize(clPointCount);
-    for (var Size i = 0; i < clPointCount; i++) {
-      posDraw[i].x = readData[i].x;
-      posDraw[i].y = readData[i].y;
-      posDraw[i].z = readData[i].z;
-    }
-  }
 }

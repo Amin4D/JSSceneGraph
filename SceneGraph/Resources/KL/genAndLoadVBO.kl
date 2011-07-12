@@ -25,7 +25,6 @@ function genAndLoadVBOFn(
   Boolean reload,
   io Integer bufferID
 ) {
-  Data NULL;
   if (bufferID <= 0 || dynamic || reload) {
     if (bufferID != 0 && (bufferData.size() != bufferDataCount || reload)) {
       var Size bufferIDs[];
@@ -67,8 +66,7 @@ operator genVBOOp2(
   io Boolean reload,
   io Integer bufferID
 ) {
-  //  report("Loading ATTRIBUTE_NAME :" + bufferID + ":" + bufferDataCount );
-  Data NULL;
+ //  report("genVBOOp2 Loading ATTRIBUTE_NAME :" + bufferID + ":" + bufferData.size() );
   if (bufferID <= 0 || dynamic || reload) {
     if (bufferID != 0 && (bufferData.size() != bufferDataCount || reload)) {
       var Size bufferIDs[];
@@ -78,7 +76,7 @@ operator genVBOOp2(
     }
     //report("Generating VBO for: ATTRIBUTE_NAME" );
     // We should be able to gen buffers here. 
-  //  genBuffer(bufferData.data(), bufferData.dataSize(), dynamic, bufferID);
+    genBuffer(bufferData.data(), bufferData.dataSize(), dynamic, bufferID);
     var Size bufferIDs[];
     bufferIDs.push(Size(0));
     glGenBuffers(1, bufferIDs);

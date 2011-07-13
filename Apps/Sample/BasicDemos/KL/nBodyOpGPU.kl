@@ -11,8 +11,6 @@ function initOpenCL
   io Size clLocal,
   in String kernelSrc
 ) {
-  var Data NULL;
-
   if (!clContext) {
     var Integer clErr;
 
@@ -28,19 +26,20 @@ function initOpenCL
     clErr = clGetDeviceIDs(clPlatformIDs[0], CL_DEVICE_TYPE_GPU, clDeviceIDs);
     var cl_device_id clDeviceID = clDeviceIDs[0];
 
-  clCommandQueue = clCreateCommandQueue(clContext, clDeviceID, 0, clErr);
-
-  var cl_program clProgram = clCreateProgramWithSource(clContext, kernelSrc, clErr);
-  clErr = clBuildProgram(clProgram, clDeviceIDs, '');
-  if (clErr) {
-    for (var Size di = 0; di < clDeviceIDs.size(); di++) {
-      var String infoStr;
-      clGetProgramBuildInfoStr(clProgram, clDeviceIDs[di], CL_PROGRAM_BUILD_LOG, infoStr);
-      report('OpenCL build failed: ' + infoStr);
+    clCommandQueue = clCreateCommandQueue(clContext, clDeviceID, 0, clErr);
+  
+    var cl_program clProgram = clCreateProgramWithSource(clContext, kernelSrc, clErr);
+    clErr = clBuildProgram(clProgram, clDeviceIDs, '');
+    if (clErr) {
+      for (var Size di = 0; di < clDeviceIDs.size(); di++) {
+        var String infoStr;
+        clGetProgramBuildInfoStr(clProgram, clDeviceIDs[di], CL_PROGRAM_BUILD_LOG, infoStr);
+        report('...OpenCL build failed: ' + infoStr);
+      }
     }
-  }
 
     clKernel = clCreateKernel(clProgram, 'integrateBodies_MT', clErr);
+    var Data NULL;
     clGetKernelWorkGroupInfo(clKernel, clDeviceID, CL_KERNEL_WORK_GROUP_SIZE, clLocal.dataSize, clLocal.data, NULL);
   }
 }

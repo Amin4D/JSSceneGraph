@@ -77,7 +77,8 @@ $(document).ready(function() { $('#play').button({
       scene.assignDefaults(options, {
           nBodies: 1024
         });
-
+      options.positionsVec4 = true;
+      options.createBoundingBoxNode = false;
       var nBodyGeometry = scene.constructNode('Particles', options);
       
       // Add all the paramters, and add getters/setters at the same time.
@@ -125,7 +126,7 @@ $(document).ready(function() { $('#play').button({
       nBodyGeometry.pub.setVertexCount(options.nBodies);
       
       var memberName = 'positions';
-      var memberType = 'Vec3';
+      var memberType = 'Vec4';
       var bufferIDMemberName = memberName + 'BufferID';
       var countMemberName = memberName + 'Count';
       var attributeNodeBinding = 'attributes';
@@ -138,6 +139,7 @@ $(document).ready(function() { $('#play').button({
       nBodyGeometry.pub.addUniformValue(reloadMemberName, 'Boolean', false);
       nBodyGeometry.pub.addUniformValue(dynamicMemberName, 'Boolean', false);
 
+      // TODO: Move this into the 'geometry' class and tidy up. 
       nBodySimulateNodeGPU.bindings.append(scene.constructOperator({
             operatorName: 'gen' + memberName + 'OpenGLBuffer',
             mainThreadOnly: true,
@@ -147,7 +149,7 @@ $(document).ready(function() { $('#play').button({
               ATTRIBUTE_NAME: memberName,
               ATTRIBUTE_ID: FABRIC.shaderAttributeTable[memberName].id
             },
-            entryFunctionName: 'genVBOOp2',
+            entryFunctionName: 'genDGVBOOp',
             parameterBinding: [
               'self.' + memberName + '[]',
               'uniforms.' + countMemberName,
@@ -157,8 +159,7 @@ $(document).ready(function() { $('#play').button({
             ]
           }));
     
-    
-      deformationBuffer = nBodyGeometry.pub.addDeformationBuffer(['positions']);
+      deformationBuffer = nBodyGeometry.pub.addDeformationBuffer();//['positions']);
       deformationBuffer.addDependency(scene.getGlobalsNode(), 'globals');
     
       deformationBuffer.assignOperator({
@@ -175,6 +176,7 @@ $(document).ready(function() { $('#play').button({
             'uniforms.clCommandQueue',
             'uniforms.clKernel',
             'uniforms.kernelSrc',
+            'uniforms.' + bufferIDMemberName,
             'uniforms.positionMem',
             'uniforms.velocityMem',
             'uniforms.positionPrevMem',
@@ -182,8 +184,7 @@ $(document).ready(function() { $('#play').button({
             'uniforms.pointCount',
             'uniforms.timeStep',
             'uniforms.softening',
-            'uniforms.damping',
-            'self.positions[]'
+            'uniforms.damping'
           ]
         });
   
@@ -208,6 +209,8 @@ $(document).ready(function() { $('#play').button({
   var nBodyGeometry = scene.constructNode('NBodySimulation', { nBodies:7680 });
   var xformNode = scene.constructNode('Transform', { hierarchical: false });
 
+  document.getElementById('nbodiesDisp').childNodes[0].data = 'Num Bodies: ' +  + 7680;
+      
   var nBodyInstanceNode = scene.constructNode('Instance', {
       transformNode: xformNode,
       geometryNode: nBodyGeometry,
@@ -264,23 +267,24 @@ $(document).ready(function() { $('#play').button({
   $('#step').button()
     .click(function() {
       scene.animation.step();
-      if (useCPU)
-        nBodySimulateNodeCPU.evaluate();
     });
 
   $('#reset').button()
     .click(function() {
       resetSimulation();
     });
-
+    
+  setInterval(function() {
+      document.getElementById('frameRate').childNodes[0].data = 'Frame Rate:' + viewport.getFPS().toFixed(2);
+    }, 600);
+    
   $('#nbodies').slider('value', nBodyGeometry.getVertexCount());
   $('#nbodies').bind('slidechange',
     function(event, ui) {
       var count = ui.value;
       if (count < 1) count = 1;
-        nBodyGeometry.setVertexCount(count);
-      if (useCPU)
-        nBodySimulateNodeCPU.setCount(count);
+      nBodyGeometry.setVertexCount(count);
+      document.getElementById('nbodiesDisp').childNodes[0].data = 'Num Bodies: ' + count;
       resetSimulation();
     });
 
@@ -355,6 +359,7 @@ $(document).ready(function() { $('#play').button({
               <button id="play" style="margin-top:10px;">Play</button>
               <button id="step" style="margin-top:10px;">Step</button>
               <button id="reset" style="margin-top:10px;">Reset</button>
+              <div class="content" id="frameRate">Frame Rate:</div><p></p>
             </div><!--content-->
           </div><!--box-->
           <div class="box">
@@ -366,7 +371,7 @@ $(document).ready(function() { $('#play').button({
                 <option value="1">Shell</option>
                 <option value="2">Expand</option>
               </select></div>
-              <div>Number of Bodies:</div>
+              <div id="nbodiesDisp">Number of Bodies:</div><p></p>
               <div id='nbodies' style="margin-top:10px;"></div>
               <div>Cluster Scale:</div>
               <div id='clsscale' style="margin-top:10px;"></div>

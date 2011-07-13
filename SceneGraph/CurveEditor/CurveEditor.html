@@ -298,11 +298,11 @@ $(document).ready(function() {
     }
   }
   var timeStripeGroupNode = graphCenterGroup.createGroup()
-      .translate((scene.animation.time + screenXfo.tr.x)  * screenXfo.sc.x, windowHeight * -0.5)
+      .translate((scene.animation.getTime() + screenXfo.tr.x)  * screenXfo.sc.x, windowHeight * -0.5)
       .draggable({ mouseButton: 0, axis: 'X' })
       .addOnDragCallback(
         function(evt) {
-          scene.animation.time = (evt.localPos.x / screenXfo.sc.x) - screenXfo.tr.x;
+          scene.animation.setTime((evt.localPos.x / screenXfo.sc.x) - screenXfo.tr.x);
         });
 
   timeStripeGroupNode.createRect().size(10, windowHeight).addClass('EventCatcher');
@@ -310,7 +310,7 @@ $(document).ready(function() {
       .attr('d', 'M 5 0 L 5 ' + windowHeight);
 
   window.updateGraphTimeStripe = function() {
-    timeStripeGroupNode.translate((scene.animation.time + screenXfo.tr.x)  * screenXfo.sc.x, windowHeight * -0.5);
+    timeStripeGroupNode.translate((scene.animation.getTime() + screenXfo.tr.x)  * screenXfo.sc.x, windowHeight * -0.5);
   }
   
   drawTrackCurves();

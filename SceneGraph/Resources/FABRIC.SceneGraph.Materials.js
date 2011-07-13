@@ -39,8 +39,8 @@ FABRIC.SceneGraph.registerNodeType('Image',
     dgnode.addMember('height', 'Size');
     dgnode.addMember('pixels', (options.wantHDR ? 'Color' : (options.wantRGBA ? 'RGBA' : 'RGB')) + '[]');
 
-    scene.addMemberInterface(imageNode, dgnode, 'width', false);
-    scene.addMemberInterface(imageNode, dgnode, 'height', false);
+    imageNode.addMemberInterface(dgnode, 'width');
+    imageNode.addMemberInterface(dgnode, 'height');
 
     if (options.onLoadCallback) {
       onloadCallbacks.push(options.onLoadCallback);
@@ -149,11 +149,11 @@ FABRIC.SceneGraph.registerNodeType('Video',
     dgnode.addMember('fps', 'Scalar', 0);
     dgnode.addMember('loop', 'Boolean', true);
 
-    scene.addMemberGetter(videoNode, dgnode, 'filename');
-    scene.addMemberGetter(videoNode, dgnode, 'stream');
-    scene.addMemberGetter(videoNode, dgnode, 'duration');
-    scene.addMemberGetter(videoNode, dgnode, 'fps');
-    scene.addMemberInterface(videoNode, dgnode, 'loop');
+    videoNode.addMemberInterface(dgnode, 'filename');
+    videoNode.addMemberInterface(dgnode, 'stream');
+    videoNode.addMemberInterface(dgnode, 'duration');
+    videoNode.addMemberInterface(dgnode, 'fps');
+    videoNode.addMemberInterface(dgnode, 'loop');
 
     // make it dependent on the scene time
     dgnode.addDependency(scene.getGlobalsNode(), 'globals');
@@ -587,7 +587,7 @@ FABRIC.SceneGraph.registerNodeType('Material',
       uniformType = FABRIC.shaderAttributeTable[uniformName].type;
       if (uniform.owner === undefined) {
         dgnode.addMember(uniformName, uniformType, uniform.defaultValue);
-        scene.addMemberInterface(materialNode, dgnode, uniformName, true);
+        materialNode.addMemberInterface(dgnode, uniformName, true);
       }
       operatorFunction = 'load' + uniformType + 'Uniform';
       operators.append(scene.constructOperator({
@@ -613,7 +613,7 @@ FABRIC.SceneGraph.registerNodeType('Material',
         var lightStub, setterName, setLightNodeFn;
         lightStub = scene.constructEventHandlerNode(options.name + '_redraw_' + lightName);
         redrawEventHandler.appendChildEventHandler(lightStub);
-
+        
         setLightNodeFn = function(node) {
           if (!node.isTypeOf(lightDef.type)) {
             throw ('Incorrect type assignment. Must assign a ' + lightDef.type);
@@ -693,7 +693,7 @@ FABRIC.SceneGraph.registerNodeType('PointMaterial',
     var pointMaterial = scene.constructNode('Material', options);
     var dgnode = pointMaterial.getDGNode();
     dgnode.addMember('pointSize', 'Scalar', options.pointSize);
-    scene.addMemberInterface(pointMaterial, dgnode, 'pointSize', true);
+    pointMaterial.addMemberInterface(dgnode, 'pointSize', true);
 
     // Note: this method of setting the point size is probably obsolete.
     // TODO: Define a new effect and use material uniforms.
@@ -1056,7 +1056,7 @@ FABRIC.SceneGraph.defineEffectFromFile = function(effectName, effectfile) {
       };
       for (uniformName in effectParameters.shaderUniforms) {
         if (options[uniformName] !== undefined) {
-          materialNode.pub[uniformName] = options[uniformName];
+          materialNode.pub['set' + capitalizeFirstLetter(uniformName)](options[uniformName]);
         }
       }
       for (lightName in effectParameters.lights) {
@@ -1099,7 +1099,8 @@ FABRIC.SceneGraph.registerNodeType('PointSpriteMaterial',
   function(options, scene) {
 
     scene.assignDefaults(options, {
-        pointSize: 5
+        pointSize: 5,
+        positionsVec4:false
       });
 
     var pointSpriteTextureNode = options.spriteTextureNode;
@@ -1112,9 +1113,10 @@ FABRIC.SceneGraph.registerNodeType('PointSpriteMaterial',
       spriteTexture: { name: 'u_splatSampler', owner: 'texture' }
     };
     options.shaderAttributes = {
-      positions: { name: 'a_position' },
-      vertexColors: { name: 'a_color' }
+      vertexColors: { name: 'a_color' },
+      positions: { name: 'a_position' }
     };
+    
     options.textures = {
       spriteTexture: { node: pointSpriteTextureNode.pub }
     };
@@ -1125,7 +1127,7 @@ FABRIC.SceneGraph.registerNodeType('PointSpriteMaterial',
     var dgnode = pointSpriteMaterialNode.getDGNode();
 
     dgnode.addMember('pointSize', 'Scalar', options.pointSize);
-    scene.addMemberInterface(pointSpriteMaterialNode, dgnode, 'pointSize', true);
+    pointSpriteMaterialNode.addMemberInterface(dgnode, 'pointSize', true);
     
     pointSpriteMaterialNode.getRedrawEventHandler().preDescendBindings.append(scene.constructOperator({
         operatorName: 'preDrawSpritePoints',

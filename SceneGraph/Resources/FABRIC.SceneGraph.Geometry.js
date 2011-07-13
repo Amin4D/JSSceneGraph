@@ -509,8 +509,8 @@ FABRIC.SceneGraph.registerNodeType('Triangles',
             operatorName: 'drawPatches',
             srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/drawPatches.kl',
             parameterBinding: [
-              'instance.elementCount',
-              'instance.indicesBufferID',
+              'self.indicesCount',
+              'self.indicesBufferID',
               'instance.drawToggle'
             ],
             entryFunctionName: 'drawPatches'
@@ -520,8 +520,8 @@ FABRIC.SceneGraph.registerNodeType('Triangles',
             operatorName: 'drawTriangles',
             srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/drawTriangles.kl',
             parameterBinding: [
-              'instance.elementCount',
-              'instance.indicesBufferID',
+              'self.indicesCount',
+              'self.indicesBufferID',
               'instance.drawToggle'
             ],
             entryFunctionName: 'drawTriangles'
@@ -614,10 +614,6 @@ FABRIC.SceneGraph.registerNodeType('Instance',
       materialNodes = [];
 
     dgnode.addMember('drawToggle', 'Boolean', options.enableDrawing);
-    // TODO: once event handler data can be bound for child events, then
-    // we should move these members onto the event handler.
-    dgnode.addMember('elementCount', 'Size', 0);
-    dgnode.addMember('indicesBufferID', 'Integer', 0);
     
     redrawEventHandler.addScope('instance', dgnode);
 

@@ -1,9 +1,7 @@
+
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd"> 
 <html>
   <head>
-/*
- *  Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
- */
   <meta http-equiv="Content-Language" content="en" />
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
   <title>FABRIC Operator Editor</title>
@@ -19,49 +17,47 @@
 
     <script type="text/javascript" src="../FABRIC.js" charset="utf-8"></script>
     <script type="text/javascript" src="../FABRIC.Wrappers.js" charset="utf-8"></script>
-  
-    <link href="prettify.css" type="text/css" rel="stylesheet" />
-    <script type="text/javascript" src="prettify.js"></script>
     
+    <link rel="stylesheet" href="../../ThirdParty/CodeMirror-2.11/lib/codemirror.css">
+    <script src="../../ThirdParty/CodeMirror-2.11/lib/codemirror.js"></script>
+    <link rel="stylesheet" href="../../ThirdParty/CodeMirror-2.11/theme/default.css">
+    <script src="../../ThirdParty/CodeMirror-2.11/mode/javascript/javascript.js"></script>
+
     <style type="text/css">
+      .CodeMirror {
+        border-top: 1px solid black;
+        border-bottom: 1px solid black;
+        height: auto;
+        bottom:10px;
+        background: #f0fcff;
+      }
+      .CodeMirror-scroll {
+        height: auto;
+        overflow:visible;
+      }
+      .activeline {background: #f0fcff !important;}
+      
+      
+      #codeContainer{
+        position:absolute;
+        left:10px;
+        right:10px;
+        top:10px;
+        bottom:10px;
+      }
+      
+      
+      #recompile{
+        position:absolute;
+        right:10px;
+        bottom:10px;
+      }
+
+    </style>
+  </head>
+
+    <script>
     
-
-#codeContainer{
-  position:absolute;
-  left:0px;
-  right:0px;
-  top:0px;
-  bottom:55px;
-}
-
-#bottomToolbar{
-  position:absolute;
-  bottom:0;
-  right:0;
-  left:0;
-  height:50px;
-  background-color: #222;
-  border-left: solid 1px #111;
-  }
-
-#code{
-  position:absolute;
-  left:10px;
-  right:10px;
-  top:10px;
-  bottom:10px;
-}
-
-#recompile{
-  position:absolute;
-  right:10px;
-  bottom:10px;
-}
-
-  
-  </style>
-    <script type="text/javascript">
-
 $(document).ready(function() {
   
   if(!window.context){
@@ -72,9 +68,28 @@ $(document).ready(function() {
   var operator = context.DG.getAllNamedObjects()[operatorName];
   document.title = 'FABRIC Operator Editor:' + operatorName;
   
+  $("#code").text(operator.getSourceCode());
+  
+  var editor = CodeMirror.fromTextArea(document.getElementById("code"), {
+    mode: "javascript",
+    lineNumbers: true/*,
+    onCursorActivity: function() {
+      editor.setLineClass(hlLine, null);
+      hlLine = editor.setLineClass(editor.getCursor().line, "activeline");
+    }*/
+  });
+  //var hlLine = editor.setLineClass(0, "activeline");
+  
+  
+  var compliationErrors = CodeMirror.fromTextArea(document.getElementById("compliationErrors"), {
+    mode: "javascript",
+    lineNumbers: true
+  });
+
+
   $('#recompile').button()
       .click(function() {
-        var code = $("#code").val();
+        var code = editor.getValue();
         try{
           operator.setSourceCode(code);
           FABRIC.flush();
@@ -107,30 +122,24 @@ $(document).ready(function() {
 
         var diagnostics = operator.getDiagnostics();
         if (diagnostics.length > 0) {
-					$( "#compliationErrors" ).text(descDiags(operator.getFullSourceCode(), diagnostics) );
-					prettyPrint();
-					$( "#compliationErrorDialog" ).dialog( "open" );
+          var message = descDiags(operator.getFullSourceCode(), diagnostics);
+          alert(message);
+       //   compliationErrors.setValue(message);
+       //   $( "#compliationErrorDialog" ).dialog( "open" );
         }
       });
   
-  $("#code").text(operator.getSourceCode());
+  $("#compliationErrorDialog").dialog({
+      autoOpen: false,
+      width: window.innerWidth * 0.75,
+      height: window.innerHeight * 0.85,
+      modal: true
+    });
   
-	$("#compliationErrorDialog").dialog({
-			autoOpen: false,
-			width: window.innerWidth * 0.75,
-			height: window.innerHeight * 0.85,
-			modal: true
-		});
-	
-  //prettyPrint()
 });
 
+</script>
 
-    </script>
-
-
-
-  </head> 
   <body>
     <div id="wrapper">
       <ul id="nav">
@@ -139,32 +148,18 @@ $(document).ready(function() {
       <div id="editor">
         
         <div id="codeContainer">
-          <textarea id="code" cols="50" rows="5">
-          </textarea>
-<!--
-<pre class="prettyprint">
-// Some source code
-class Foo
-{
-   public int Bar { get; set; }
-}
-</pre>
--->
+        <textarea id="code" name="code"></textarea>
         </div><!--code-->
         
         <div id="bottomToolbar">
                  <button id="recompile" style="margin-top:10px;">Recompile</button>
         </div><!--bottomToolbar-->
-				
       </div> <!--editor-->
     </div><!--wrapper-->
-		
-		<div id="compliationErrorDialog" title="Compilation Error">
-			<pre id="compliationErrors" class="prettyprint"></pre>
-<!--
-			<p id="compliationErrors" class="content">This is the default dialog which is useful for displaying information. The dialog window can be moved, resized and closed with the 'x' icon.</p>
--->
+    <div id="compliationErrorDialog" title="Compilation Error">
+			<pre id="compliationErrors" class="content"></pre>
 		</div>
 
-  </body> 
+  </body>
+  
 </html>

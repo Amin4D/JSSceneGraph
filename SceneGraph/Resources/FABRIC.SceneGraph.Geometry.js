@@ -57,7 +57,7 @@ FABRIC.SceneGraph.registerNodeType('Geometry',
       // We could generate methods like this on the 'SceneGraphNode'. This would simplify
       // loads of code as we could add getters and setters as we add members.
       if (addGetterSetterInterface) {
-        geometryNode.addMemberInterface(uniformsdgnode, name);
+        geometryNode.addMemberInterface(uniformsdgnode, name, true);
       }
     };
     geometryNode.pub.addVertexAttributeValue = function(name, type, defaultValue, dynamic) {

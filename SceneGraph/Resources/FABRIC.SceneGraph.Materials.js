@@ -352,6 +352,7 @@ FABRIC.shaderAttributeTable = {
   spriteTexture: { id: 84, type: 'Integer' },
   fboTexture: { id: 85, type: 'Integer' },
   backgroundTexture: { id: 86, type: 'Integer' },
+  depthTexture: { id: 87, type: 'Integer' },
 
   boneMatrices: { id: 100, type: 'Mat44[]' },
   boneMatrixTexture: { id: 101, type: 'Integer' },
@@ -368,7 +369,15 @@ FABRIC.shaderAttributeTable = {
   width: { id: 200, type: 'Integer' },
   height: { id: 201, type: 'Integer' },
   colorMix: { id: 202, type: 'Scalar' },
-  blurSize: { id: 203, type: 'Scalar' }
+  blurSize: { id: 203, type: 'Scalar' },
+  
+  wireColor: { id: 250, type: 'Color' },
+  wireOpacity: { id: 251, type: 'Scalar' },
+  tesselationCount: { id: 252, type: 'Integer' },
+  tesselationInner: { id: 253, type: 'Scalar' },
+  tesselationOuter: { id: 254, type: 'Scalar' },
+  tesselationDepthMin: { id: 255, type: 'Scalar' },
+  tesselationDepthMax: { id: 256, type: 'Scalar' }
 };
 
 FABRIC.SceneGraph.registerNodeType('Shader',
@@ -390,6 +399,14 @@ FABRIC.SceneGraph.registerNodeType('Shader',
     if (options.vertexShader) {
       shaderSources.push(new FABRIC.RT.ShaderSource(
         options.vertexShader, FABRIC.SceneGraph.OpenGLConstants.GL_VERTEX_SHADER));
+    }
+    if (options.tessControlShader) {
+      shaderSources.push(new FABRIC.RT.ShaderSource(
+        options.tessControlShader, FABRIC.SceneGraph.OpenGLConstants.GL_TESS_CONTROL_SHADER));
+    }
+    if (options.tessEvalShader) {
+      shaderSources.push(new FABRIC.RT.ShaderSource(
+        options.tessEvalShader, FABRIC.SceneGraph.OpenGLConstants.GL_TESS_EVALUATION_SHADER));
     }
     if (options.geometryShader) {
       shaderSources.push(new FABRIC.RT.ShaderSource(
@@ -500,6 +517,8 @@ FABRIC.SceneGraph.registerNodeType('Material',
         name: shaderName,
         fragmentShader: options.fragmentShader,
         vertexShader: options.vertexShader,
+        tessControlShader: options.tessControlShader,
+        tessEvalShader: options.tessEvalShader,
         geometryShader: options.geometryShader,
         shaderUniforms: options.shaderUniforms,
         shaderAttributes: options.shaderAttributes,
@@ -956,6 +975,12 @@ FABRIC.SceneGraph.defineEffectFromFile = function(effectName, effectfile) {
         case 'vertexshader':
           effectParameters.vertexShader = collectShaderSource(childNode);
           break;
+        case 'tesscontrolshader':
+          effectParameters.tessControlShader = collectShaderSource(childNode);
+          break;
+        case 'tessevalshader':
+          effectParameters.tessEvalShader = collectShaderSource(childNode);
+          break;
         case 'geometryshader':
           effectParameters.geometryShader = collectShaderSource(childNode);
           break;
@@ -1005,6 +1030,12 @@ FABRIC.SceneGraph.defineEffectFromFile = function(effectName, effectfile) {
       if (preProcessCode) {
         if (effectParameters.vertexShader) {
           effectInstanceParameters.vertexShader = scene.preProcessCode(effectParameters.vertexShader, directives);
+        }
+        if (effectParameters.tessControlShader) {
+          effectInstanceParameters.tessControlShader = scene.preProcessCode(effectParameters.tessControlShader, directives);
+        }
+        if (effectParameters.tessEvalShader) {
+          effectInstanceParameters.tessEvalShader = scene.preProcessCode(effectParameters.tessEvalShader, directives);
         }
         if (effectParameters.geometryShader) {
           effectInstanceParameters.geometryShader = scene.preProcessCode(effectParameters.geometryShader, directives);
@@ -1061,6 +1092,7 @@ FABRIC.SceneGraph.defineEffectFromFile('VertexColorMaterial', 'FABRIC_ROOT/Scene
 FABRIC.SceneGraph.defineEffectFromFile('PhongVertexColorMaterial', 'FABRIC_ROOT/SceneGraph/Resources/Shaders/PhongVertexColorShader.xml');
 FABRIC.SceneGraph.defineEffectFromFile('NormalMaterial', 'FABRIC_ROOT/SceneGraph/Resources/Shaders/NormalShader.xml');
 
+FABRIC.SceneGraph.defineEffectFromFile('PhongTesselationMaterial', 'FABRIC_ROOT/SceneGraph/Resources/Shaders/PhongTesselationShader.xml');
 
 
 FABRIC.SceneGraph.registerNodeType('PointSpriteMaterial',

@@ -22,11 +22,7 @@ FABRIC.SceneGraph.registerNodeType('Transform',
     transformNode = scene.constructNode('SceneGraphNode', options);
     dgnode = transformNode.getDGNode();
     dgnode.addMember('globalXfo', 'Xfo', options.globalXfo);
-    if (options.hierarchical) {
-      dgnode.addMember('localXfo', 'Xfo', options.localXfo);
-    }
-
-    scene.addMemberInterface(transformNode, dgnode, 'globalXfo');
+    transformNode.addMemberInterface(dgnode, 'globalXfo');
 
     transformNode.getRedrawEventHandler = function() {
       if (redrawEventHandler) {
@@ -39,7 +35,7 @@ FABRIC.SceneGraph.registerNodeType('Transform',
     scene.addMemberAndOperatorStackFunctions(transformNode, dgnode);
 
     if (options.hierarchical) {
-
+      dgnode.addMember('localXfo', 'Xfo', options.localXfo);
       dgnode.bindings.append(scene.constructOperator( {
           operatorName: 'calcGlobalXfo',
           srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/calcGlobalXfo.kl',
@@ -51,57 +47,57 @@ FABRIC.SceneGraph.registerNodeType('Transform',
           entryFunctionName: 'calcGlobalXfo'
         }));
 
-      scene.addMemberInterface(transformNode, dgnode, 'localXfo', true, true);
+      transformNode.addMemberInterface(dgnode, 'localXfo', true, true);
 
       // use a custom getter
-      transformNode.pub.__defineSetter__('globalXfo', function(val) {
-          if (!val.getType || val.getType() !== 'FABRIC.RT.Xfo') {
-            throw ('Incorrect type assignment. Must assign a FABRIC.RT.Xfo');
-          }
-          if (parentTransformNode) {
-            var parentXfo = parentTransformNode.globalXfo;
-            parentXfo.invertInPlace();
-            val.preMultiplyInPlace(parentXfo);
-            dgnode.setData('localXfo', val);
-          }
-          else {
-            dgnode.setData('globalXfo', val);
-          }
-        });
+      transformNode.pub.setGlobalXfo = function(val) {
+        if (!val.getType || val.getType() !== 'FABRIC.RT.Xfo') {
+          throw ('Incorrect type assignment. Must assign a FABRIC.RT.Xfo');
+        }
+        if (parentTransformNode) {
+          var parentXfo = parentTransformNode.getGlobalXfo();
+          parentXfo.invertInPlace();
+          val.preMultiplyInPlace(parentXfo);
+          dgnode.setData('localXfo', val);
+        }
+        else {
+          dgnode.setData('globalXfo', val);
+        }
+      };
 
       transformNode.pub.getParentNode = function() {
-          return scene.getPublicInterface(parentTransformNode);
-        };
+        return scene.getPublicInterface(parentTransformNode);
+      };
       transformNode.pub.setParentNode = function(node, reciprocate) {
-          if (!node.isTypeOf('Transform')) {
-            throw ('Incorrect type assignment. Must assign a Transform');
-          }
-          parentTransformNode = scene.getPrivateInterface(node);
-          dgnode.addDependency(parentTransformNode.getDGNode(), 'parent');
-          if (reciprocate !== false && node.addChild) {
-            node.addChild(this, false);
-          }
-        };
+        if (!node.isTypeOf('Transform')) {
+          throw ('Incorrect type assignment. Must assign a Transform');
+        }
+        parentTransformNode = scene.getPrivateInterface(node);
+        dgnode.addDependency(parentTransformNode.getDGNode(), 'parent');
+        if (reciprocate !== false && node.addChild) {
+          node.addChild(this, false);
+        }
+      };
       transformNode.pub.addChild = function(node, reciprocate) {
-          children.push(node);
-          if (reciprocate !== false) {
-            node.setParentNode(this, false);
-          }
-        };
+        children.push(node);
+        if (reciprocate !== false) {
+          node.setParentNode(this, false);
+        }
+      };
       transformNode.pub.getChildren = function() {
-          return children;
-        };
+        return children;
+      };
 
       if (options.parentTransformNode) {
         transformNode.pub.setParentNode(options.parentTransformNode);
       }
     }else {
-      transformNode.pub.__defineSetter__('globalXfo', function(val) {
-          if (!val.getType || val.getType() !== 'FABRIC.RT.Xfo') {
-            throw ('Incorrect type assignment. Must assign a FABRIC.RT.Xfo');
-          }
-          dgnode.setData('globalXfo', 0, val);
-        });
+      transformNode.pub.setGlobalXfo = function(val) {
+        if (!val.getType || val.getType() !== 'FABRIC.RT.Xfo') {
+          throw ('Incorrect type assignment. Must assign a FABRIC.RT.Xfo');
+        }
+        dgnode.setData('globalXfo', 0, val);
+      };
     }
 
     return transformNode;
@@ -148,8 +144,8 @@ FABRIC.SceneGraph.registerNodeType('AimTransform',
       ]
     }));
 
-    scene.addMemberInterface(aimTransformNode, dgnode, 'target', true);
-    scene.addMemberInterface(aimTransformNode, dgnode, 'roll', true);
+    aimTransformNode.addMemberInterface(dgnode, 'target', true);
+    aimTransformNode.addMemberInterface(dgnode, 'roll', true);
     
     return aimTransformNode;
   });

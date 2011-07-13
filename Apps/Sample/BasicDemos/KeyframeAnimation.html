@@ -233,7 +233,7 @@ $(document).ready(function() { var $globalTimeSlider = $('#globalTime').slider({
     $globalTimeSlider.slider('value', 1.0);
     $globalTimeSlider.bind('slide',
       function(event, ui) {
-        scene.animation.time = ui.value;
+        scene.animation.setTime(ui.value);
         scene.redrawAllWindows();
       });
 

@@ -36,7 +36,32 @@ FABRIC.SceneGraph.registerNodeType('CharacterMesh',
         'self.boneWeights[]'
       ]
     }));
-
+    
+    characterMeshNode.getDrawOperator = function() {
+      return scene.constructOperator({
+          operatorName: 'drawCharacterInstance',
+          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/drawCharacterInstance.kl',
+          preProcessorDefinitions: {
+            BONE_MATRICIES_ATTRIBUTE_ID: FABRIC.shaderAttributeTable.boneMatrices.id,
+            MODELMATRIX_ATTRIBUTE_ID: FABRIC.shaderAttributeTable.modelMatrix.id,
+            VIEWMATRIX_ATTRIBUTE_ID: FABRIC.shaderAttributeTable.viewMatrix.id,
+            PROJECTIONMATRIX_ATTRIBUTE_ID: FABRIC.shaderAttributeTable.projectionMatrix.id,
+            PROJECTIONMATRIXINV_ATTRIBUTE_ID: FABRIC.shaderAttributeTable.projectionMatrixInv.id,
+            NORMALMATRIX_ATTRIBUTE_ID: FABRIC.shaderAttributeTable.normalMatrix.id,
+            MODELVIEW_MATRIX_ATTRIBUTE_ID: FABRIC.shaderAttributeTable.modelViewMatrix.id,
+            MODELVIEWPROJECTION_MATRIX_ATTRIBUTE_ID: FABRIC.shaderAttributeTable.modelViewProjectionMatrix.id
+          },
+          entryFunctionName: 'drawCharacterInstance',
+          parameterBinding: [
+            'shader.uniformValues',
+            'rig.boneMatrices',
+            'camera.cameraMat44',
+            'camera.projectionMat44',
+            'self.indicesBufferID',
+            'self.indicesCount'
+          ]
+        });
+    }
     return characterMeshNode;
   });
 
@@ -652,30 +677,6 @@ FABRIC.SceneGraph.registerNodeType('CharacterInstance',
       }
       rigNode = scene.getPrivateInterface(node);
       characterInstanceNode.getRedrawEventHandler().addScope('rig', rigNode.getDGNode());
-
-      characterInstanceNode.getRedrawEventHandler().postDescendBindings.append(scene.constructOperator({
-          operatorName: 'drawCharacterInstance',
-          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/drawCharacterInstance.kl',
-          preProcessorDefinitions: {
-            BONE_MATRICIES_ATTRIBUTE_ID: FABRIC.shaderAttributeTable.boneMatrices.id,
-            MODELMATRIX_ATTRIBUTE_ID: FABRIC.shaderAttributeTable.modelMatrix.id,
-            VIEWMATRIX_ATTRIBUTE_ID: FABRIC.shaderAttributeTable.viewMatrix.id,
-            PROJECTIONMATRIX_ATTRIBUTE_ID: FABRIC.shaderAttributeTable.projectionMatrix.id,
-            PROJECTIONMATRIXINV_ATTRIBUTE_ID: FABRIC.shaderAttributeTable.projectionMatrixInv.id,
-            NORMALMATRIX_ATTRIBUTE_ID: FABRIC.shaderAttributeTable.normalMatrix.id,
-            MODELVIEW_MATRIX_ATTRIBUTE_ID: FABRIC.shaderAttributeTable.modelViewMatrix.id,
-            MODELVIEWPROJECTION_MATRIX_ATTRIBUTE_ID: FABRIC.shaderAttributeTable.modelViewProjectionMatrix.id
-          },
-          entryFunctionName: 'drawCharacterInstance',
-          parameterBinding: [
-            'shader.uniformValues',
-            'rig.boneMatrices',
-            'camera.cameraMat44',
-            'camera.projectionMat44',
-            'instance.indicesBufferID',
-            'instance.elementCount'
-          ]
-        }));
     };
     characterInstanceNode.pub.getRigNode = function() {
       return scene.getPublicInterface(rigNode);

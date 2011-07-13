@@ -26,7 +26,11 @@ FABRIC.SceneGraph.registerNodeType('Geometry',
     var geometryNode = scene.constructNode('SceneGraphNode', options);
     uniformsdgnode = geometryNode.getUniformsDGNode();
     attributesdgnode = geometryNode.getAttributesDGNode();
-    attributesdgnode.addMember('positions', 'Vec3');
+    if(options.positionsVec4 == true ){
+      attributesdgnode.addMember('positions', 'Vec4');
+    }else{
+      attributesdgnode.addMember('positions', 'Vec3');
+    }
     attributesdgnode.addDependency(uniformsdgnode, 'uniforms');
 
     var uniformsname = uniformsdgnode.getName();
@@ -195,6 +199,7 @@ FABRIC.SceneGraph.registerNodeType('Geometry',
         return redrawEventHandler;
       }
       var vertexAttributes,
+        uniformValues,
         memberName,
         memberType,
         bufferIDMemberName,
@@ -222,36 +227,46 @@ FABRIC.SceneGraph.registerNodeType('Geometry',
           parameterBinding: [
             'uniforms.indices',
             'self.indicesCount',
-            'self.indicesBufferID',
-
-            'instance.elementCount',
-            'instance.indicesBufferID'
-          ]
-        }));
-      }
-      else {
-        redrawEventHandler.preDescendBindings.append(scene.constructOperator({
-          operatorName: 'setInstanceElementCount',
-          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadVBOs.kl',
-          entryFunctionName: 'setInstanceElementCount',
-          parameterBinding: [
-            'attributes.positions[]',
-            'instance.elementCount'
+            'self.indicesBufferID'
           ]
         }));
       }
 
       vertexAttributes = attributesdgnode.getMembers();
+      uniformValues = uniformsdgnode.getMembers();
       for (memberName in vertexAttributes) {
         if (!FABRIC.shaderAttributeTable[memberName]) {
           continue;
         }
         memberType = vertexAttributes[memberName].type;
-
         bufferIDMemberName = memberName + 'BufferID';
         countMemberName = memberName + 'Count';
+        
+        redrawEventHandler.addMember(countMemberName, 'Size', 0);
+        
+        if(uniformValues[bufferIDMemberName] && uniformValues[countMemberName]){
+          redrawEventHandler.preDescendBindings.append(scene.constructOperator({
+            operatorName: 'bindVBO',
+            srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/genAndLoadVBO.kl',
+            preProcessorDefinitions: {
+              DATA_TYPE: memberType,
+              ATTRIBUTE_NAME: memberName,
+              ATTRIBUTE_ID: FABRIC.shaderAttributeTable[memberName].id
+            },
+            entryFunctionName: 'bindVBO',
+            parameterBinding: [
+              'shader.attributeValues',
+              'uniforms.' + bufferIDMemberName,
+              'uniforms.' + countMemberName,
+              'self.' + countMemberName
+            ]
+          }));
+          continue;
+        }
+        
+        redrawEventHandler.addMember(bufferIDMemberName, 'Integer', 0);
+        
         dynamicMember = options.dynamicMembers.indexOf(memberName) != -1;
-
         attributeNodeBinding = 'attributes';
         for (i = 0; i < deformationbufferinterfaces.length; i++) {
           if (deformationbufferinterfaces[i].getDGNode().getMembers()[memberName]) {
@@ -259,11 +274,7 @@ FABRIC.SceneGraph.registerNodeType('Geometry',
             dynamicMember = true;
           }
         }
-
-
-        redrawEventHandler.addMember(bufferIDMemberName, 'Integer', 0);
-        redrawEventHandler.addMember(countMemberName, 'Size', 0);
-
+        
         /*
         if(dynamicMember){
           redrawEventHandler.preDescendBindings.append(scene.constructOperator({
@@ -309,6 +320,9 @@ FABRIC.SceneGraph.registerNodeType('Geometry',
           }));
         //}
       }
+      
+      
+      redrawEventHandler.postDescendBindings.append(this.getDrawOperator());
 
       return redrawEventHandler;
     };
@@ -387,8 +401,10 @@ FABRIC.SceneGraph.registerNodeType('Geometry',
           }
         }
       };
-      for (i = 0; i < deformableAttributes.length; i++) {
-        bufferInterface.propagateMember(deformableAttributes[i]);
+      if(deformableAttributes){
+        for (i = 0; i < deformableAttributes.length; i++) {
+          bufferInterface.propagateMember(deformableAttributes[i]);
+        }
       }
       deformationbufferinterfaces.push(bufferInterface);
       return bufferInterface.pub;
@@ -409,7 +425,7 @@ FABRIC.SceneGraph.registerNodeType('Points',
           srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/drawPoints.kl',
           entryFunctionName: 'drawPoints',
           parameterBinding: [
-            'instance.elementCount',
+            'self.positionsCount',
             'instance.drawToggle'
           ]
         });
@@ -446,8 +462,8 @@ FABRIC.SceneGraph.registerNodeType('Lines',
           operatorName: 'drawLines',
           srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/drawLines.kl',
           parameterBinding: [
-            'instance.elementCount',
-            'instance.indicesBufferID',
+            'self.indicesCount',
+            'self.indicesBufferID',
             'instance.drawToggle'
           ],
           entryFunctionName: 'drawLines'
@@ -493,8 +509,8 @@ FABRIC.SceneGraph.registerNodeType('Triangles',
           operatorName: 'drawTriangles',
           srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/drawTriangles.kl',
           parameterBinding: [
-            'instance.elementCount',
-            'instance.indicesBufferID',
+            'self.indicesCount',
+            'self.indicesBufferID',
             'instance.drawToggle'
           ],
           entryFunctionName: 'drawTriangles'
@@ -565,13 +581,16 @@ FABRIC.SceneGraph.registerNodeType('Instance',
     scene.assignDefaults(options, {
         transformNode: undefined,
         transformNodeMember: 'globalXfo',
+        transformNodeIndex: undefined,
         geometryNode: undefined,
         enableRaycasting: false,
         enableDrawing: true,
         enableShadowCasting: false,
         constructDefaultTransformNode: true
       });
-
+    // TODO: once the 'selector' system can be replaced with JavaScript event
+    // generation from KL, then we can eliminate this dgnode. It currently serves
+    // no other purpose. 
     options.dgnodenames.push('DGNode');
     var instanceNode = scene.constructNode('SceneGraphNode', options),
       dgnode = instanceNode.getDGNode(),
@@ -581,40 +600,49 @@ FABRIC.SceneGraph.registerNodeType('Instance',
       geometryNode,
       materialNodes = [];
 
-    dgnode.addMember('drawToggle', 'Boolean', options.enableDrawing);
-    // TODO: once event handler data can be bound for child events, then
-    // we should move these members onto the event handler.
-    dgnode.addMember('elementCount', 'Size', 0);
-    dgnode.addMember('indicesBufferID', 'Integer', 0);
-
-    redrawEventHandler.addScope('instance', dgnode);
+    redrawEventHandler.addMember('drawToggle', 'Boolean', options.enableDrawing);
+    redrawEventHandler.setScopeName('instance');
 
     var bindToSceneGraph = function() {
       redrawEventHandler.addScope('transform', transformNode.getDGNode());
-
-      redrawEventHandler.preDescendBindings.append(scene.constructOperator({
-          operatorName: 'loadCameraMatrices',
-          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadCameraMatrices.kl',
-          entryFunctionName: 'loadCameraMatrices',
-          preProcessorDefinitions: {
-            MODELMATRIX_ATTRIBUTE_ID: FABRIC.shaderAttributeTable.modelMatrix.id,
-            VIEWMATRIX_ATTRIBUTE_ID: FABRIC.shaderAttributeTable.viewMatrix.id,
-            PROJECTIONMATRIX_ATTRIBUTE_ID: FABRIC.shaderAttributeTable.projectionMatrix.id,
-            PROJECTIONMATRIXINV_ATTRIBUTE_ID: FABRIC.shaderAttributeTable.projectionMatrixInv.id,
-            NORMALMATRIX_ATTRIBUTE_ID: FABRIC.shaderAttributeTable.normalMatrix.id,
-            MODELVIEW_MATRIX_ATTRIBUTE_ID: FABRIC.shaderAttributeTable.modelViewMatrix.id,
-            MODELVIEWPROJECTION_MATRIX_ATTRIBUTE_ID: FABRIC.shaderAttributeTable.modelViewProjectionMatrix.id
-          },
-          parameterBinding: [
-            'shader.uniformValues',
-            'transform.' + transformNodeMember,
-            'camera.cameraMat44',
-            'camera.projectionMat44'
-          ]
-        }));
-
-      redrawEventHandler.postDescendBindings.append(geometryNode.getDrawOperator());
-
+      var preProcessorDefinitions = {
+              MODELMATRIX_ATTRIBUTE_ID: FABRIC.shaderAttributeTable.modelMatrix.id,
+              VIEWMATRIX_ATTRIBUTE_ID: FABRIC.shaderAttributeTable.viewMatrix.id,
+              PROJECTIONMATRIX_ATTRIBUTE_ID: FABRIC.shaderAttributeTable.projectionMatrix.id,
+              PROJECTIONMATRIXINV_ATTRIBUTE_ID: FABRIC.shaderAttributeTable.projectionMatrixInv.id,
+              NORMALMATRIX_ATTRIBUTE_ID: FABRIC.shaderAttributeTable.normalMatrix.id,
+              MODELVIEW_MATRIX_ATTRIBUTE_ID: FABRIC.shaderAttributeTable.modelViewMatrix.id,
+              MODELVIEWPROJECTION_MATRIX_ATTRIBUTE_ID: FABRIC.shaderAttributeTable.modelViewProjectionMatrix.id
+            };
+      if(!options.transformNodeIndex){
+        redrawEventHandler.preDescendBindings.append(scene.constructOperator({
+            operatorName: 'loadModelProjectionMatrices',
+            srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadModelProjectionMatrices.kl',
+            entryFunctionName: 'loadModelProjectionMatrices',
+            preProcessorDefinitions: preProcessorDefinitions,
+            parameterBinding: [
+              'shader.uniformValues',
+              'transform.' + transformNodeMember,
+              'camera.cameraMat44',
+              'camera.projectionMat44'
+            ]
+          }));
+      }else{
+        redrawEventHandler.addMember('transformNodeIndex', 'Size', options.transformNodeIndex);
+        redrawEventHandler.preDescendBindings.append(scene.constructOperator({
+            operatorName: 'loadIndexedModelProjectionMatrices',
+            srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadModelProjectionMatrices.kl',
+            entryFunctionName: 'loadIndexedModelProjectionMatrices',
+            preProcessorDefinitions: preProcessorDefinitions,
+            parameterBinding: [
+              'shader.uniformValues',
+              'transform.' + transformNodeMember + '[]',
+              'self.transformNodeIndex',
+              'camera.cameraMat44',
+              'camera.projectionMat44'
+            ]
+          }));
+      }
       ///////////////////////////////////////////////
       // Ray Cast Event Handling
       if (scene.getSceneRaycastEventHandler() &&
@@ -735,7 +763,7 @@ FABRIC.SceneGraph.registerNodeType('Instance',
       materialNodes.splice(index, 1);
     };
 
-    scene.addMemberInterface(instanceNode, dgnode, 'drawToggle', true);
+    scene.addMemberInterface(instanceNode, redrawEventHandler, 'drawToggle', true);
 
     // custom getter and setter for castShadows
     instanceNode.pub.__defineGetter__('castShadows', function() {

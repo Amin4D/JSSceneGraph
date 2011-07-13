@@ -23,7 +23,7 @@ operator rayIntersectLines(
   invGlobalMat44.row3.z = 0.0;
   objRay.direction = ray.direction * invGlobalMat44;
   
-  if (!objRay.intersectBoundingBox(bboxmin, bboxmax)) {
+  if (indices.size() > 2 && !objRay.intersectBoundingBox(bboxmin, bboxmax)) {
     return;
   }
 
@@ -33,7 +33,6 @@ operator rayIntersectLines(
     var Vec3 v1 = positions[indices[i + 1]];
     var Vec3 point;
     var Scalar dist, u, v;
-    
     if(objRay.intersectLineSegment(v0, v1, point, dist, u)){
       if (dist < threshold) {
         select = true;

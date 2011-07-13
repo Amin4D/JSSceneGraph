@@ -209,6 +209,8 @@ $(document).ready(function() { $('#play').button({
   var nBodyGeometry = scene.constructNode('NBodySimulation', { nBodies:7680 });
   var xformNode = scene.constructNode('Transform', { hierarchical: false });
 
+  document.getElementById('nbodiesDisp').childNodes[0].data = 'Num Bodies: ' +  + 7680;
+      
   var nBodyInstanceNode = scene.constructNode('Instance', {
       transformNode: xformNode,
       geometryNode: nBodyGeometry,
@@ -265,15 +267,13 @@ $(document).ready(function() { $('#play').button({
   $('#step').button()
     .click(function() {
       scene.animation.step();
-      if (useCPU)
-        nBodySimulateNodeCPU.evaluate();
     });
 
   $('#reset').button()
     .click(function() {
       resetSimulation();
     });
-
+    
   setInterval(function() {
       document.getElementById('frameRate').childNodes[0].data = 'Frame Rate:' + viewport.getFPS().toFixed(2);
     }, 600);
@@ -283,9 +283,8 @@ $(document).ready(function() { $('#play').button({
     function(event, ui) {
       var count = ui.value;
       if (count < 1) count = 1;
-        nBodyGeometry.setVertexCount(count);
-      if (useCPU)
-        nBodySimulateNodeCPU.setCount(count);
+      nBodyGeometry.setVertexCount(count);
+      document.getElementById('nbodiesDisp').childNodes[0].data = 'Num Bodies: ' + count;
       resetSimulation();
     });
 
@@ -372,7 +371,7 @@ $(document).ready(function() { $('#play').button({
                 <option value="1">Shell</option>
                 <option value="2">Expand</option>
               </select></div>
-              <div>Number of Bodies:</div>
+              <div id="nbodiesDisp">Number of Bodies:</div><p></p>
               <div id='nbodies' style="margin-top:10px;"></div>
               <div>Cluster Scale:</div>
               <div id='clsscale' style="margin-top:10px;"></div>

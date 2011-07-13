@@ -114,7 +114,7 @@ $(document).ready(function() { $('#play').button({
             parameterBinding: [
               'self.index',
               'self.count',
-              'self.positions',
+              'self.positionsVec4',
               'self.velocities',
               'self.mass',
               'self.vertexColors',
@@ -125,7 +125,7 @@ $(document).ready(function() { $('#play').button({
           }));
       nBodyGeometry.pub.setVertexCount(options.nBodies);
       
-      var memberName = 'positions';
+      var memberName = 'positionsVec4';
       var memberType = 'Vec4';
       var bufferIDMemberName = memberName + 'BufferID';
       var countMemberName = memberName + 'Count';
@@ -159,7 +159,7 @@ $(document).ready(function() { $('#play').button({
             ]
           }));
     
-      deformationBuffer = nBodyGeometry.pub.addDeformationBuffer(['positions']);
+      deformationBuffer = nBodyGeometry.pub.addDeformationBuffer();//['positions']);
       deformationBuffer.addDependency(scene.getGlobalsNode(), 'globals');
     
       deformationBuffer.assignOperator({
@@ -169,7 +169,7 @@ $(document).ready(function() { $('#play').button({
           srcFile: 'KL/nBodyOpGPU.kl',
           parameterBinding: [
             'globals.ms',
-            'parentattributes.positions[]',
+            'parentattributes.positionsVec4[]',
             'parentattributes.velocities[]',
             'parentattributes.mass[]',
             'uniforms.clContext',
@@ -205,7 +205,7 @@ $(document).ready(function() { $('#play').button({
   scene.constructNode('CameraManipulator', { targetNode: camera });
   viewport.setCameraNode(camera);
 
-  var materialNode = scene.constructNode('PointSpriteMaterial', { pointSize: 1.0 });
+  var materialNode = scene.constructNode('PointSpriteMaterial', { pointSize: 1.0, positionsVec4:true });
   var nBodyGeometry = scene.constructNode('NBodySimulation', { nBodies:7680 });
   var xformNode = scene.constructNode('Transform', { hierarchical: false });
 
@@ -274,6 +274,10 @@ $(document).ready(function() { $('#play').button({
       resetSimulation();
     });
 
+  setInterval(function() {
+      document.getElementById('frameRate').childNodes[0].data = 'Frame Rate:' + viewport.getFPS().toFixed(2);
+    }, 600);
+    
   $('#nbodies').slider('value', nBodyGeometry.getVertexCount());
   $('#nbodies').bind('slidechange',
     function(event, ui) {
@@ -356,6 +360,7 @@ $(document).ready(function() { $('#play').button({
               <button id="play" style="margin-top:10px;">Play</button>
               <button id="step" style="margin-top:10px;">Step</button>
               <button id="reset" style="margin-top:10px;">Reset</button>
+              <div class="content" id="frameRate">Frame Rate:</div><p></p>
             </div><!--content-->
           </div><!--box-->
           <div class="box">

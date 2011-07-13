@@ -174,7 +174,5 @@ operator nBodySimulateGPU(
   globalWorkSize[1] = q;
 
   clErr = clEnqueueNDRangeKernel(clCommandQueue, clKernel, 2, NULL, globalWorkSize.data, localWorkSize.data, eventWaitList, event);
-  report "clEnqueueNDRangeKernel: " + clErr;
   clErr = clFinish(clCommandQueue);
-  report "clFinish: " + clErr;
 }

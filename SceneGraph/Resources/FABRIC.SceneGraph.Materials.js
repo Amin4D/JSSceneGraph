@@ -1068,7 +1068,8 @@ FABRIC.SceneGraph.registerNodeType('PointSpriteMaterial',
   function(options, scene) {
 
     scene.assignDefaults(options, {
-        pointSize: 5
+        pointSize: 5,
+        positionsVec4:false
       });
 
     var pointSpriteTextureNode = options.spriteTextureNode;
@@ -1081,9 +1082,15 @@ FABRIC.SceneGraph.registerNodeType('PointSpriteMaterial',
       spriteTexture: { name: 'u_splatSampler', owner: 'texture' }
     };
     options.shaderAttributes = {
-      positions: { name: 'a_position' },
       vertexColors: { name: 'a_color' }
     };
+    
+    if(options.positionsVec4){
+      options.shaderAttributes.positionsVec4 = { name: 'a_position' };
+    }else{
+      options.shaderAttributes.positions = { name: 'a_position' };
+    }
+    
     options.textures = {
       spriteTexture: { node: pointSpriteTextureNode.pub }
     };

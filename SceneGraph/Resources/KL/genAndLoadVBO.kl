@@ -83,3 +83,22 @@ operator genVBOOp2(
     bufferDataCount = bufferData.size();
   }
 }
+
+
+
+operator bindVBO(
+  io ShaderValue attributeValues[],
+  io Integer dgbufferID,
+  io Size dgbufferDataCount,
+  io Size ehbufferDataCount,
+) {
+//  report("Loading ATTRIBUTE_NAME :" + dgbufferID  );
+  for (Integer i = 0; i < attributeValues.size(); i++) {
+    if (attributeValues[i].id == ATTRIBUTE_ID) {
+      DATA_TYPE val;
+      bindBuffer(val.dataSize(), dgbufferID, attributeValues[i].location);
+      ehbufferDataCount = dgbufferDataCount;
+      return;
+    }
+  }
+}

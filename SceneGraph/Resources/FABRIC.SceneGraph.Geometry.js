@@ -27,7 +27,7 @@ FABRIC.SceneGraph.registerNodeType('Geometry',
     uniformsdgnode = geometryNode.getUniformsDGNode();
     attributesdgnode = geometryNode.getAttributesDGNode();
     if(options.positionsVec4 == true ){
-      attributesdgnode.addMember('positions', 'Vec4');
+      attributesdgnode.addMember('positionsVec4', 'Vec4');
     }else{
       attributesdgnode.addMember('positions', 'Vec3');
     }
@@ -239,35 +239,32 @@ FABRIC.SceneGraph.registerNodeType('Geometry',
           continue;
         }
         memberType = vertexAttributes[memberName].type;
-
         bufferIDMemberName = memberName + 'BufferID';
-        redrawEventHandler.addMember(bufferIDMemberName, 'Integer', 0);
-        
         countMemberName = memberName + 'Count';
+        
         redrawEventHandler.addMember(countMemberName, 'Size', 0);
         
         if(uniformValues[bufferIDMemberName] && uniformValues[countMemberName]){
           redrawEventHandler.preDescendBindings.append(scene.constructOperator({
-            operatorName: 'copyBufferID',
-            srcCode: 'operator copyBufferID(\
-    io Integer dgbufferID,\
-    io Size dgbufferCount,\
-    io Integer ehbufferID,\
-    io Size ehbufferCount){\
-      report("copyBufferID:"+dgbufferID);\
-      ehbufferID = dgbufferID;\
-      ehbufferCount = dgbufferCount;\
-    }',
-            entryFunctionName: 'copyBufferID',
+            operatorName: 'bindVBO',
+            srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/genAndLoadVBO.kl',
+            preProcessorDefinitions: {
+              DATA_TYPE: memberType,
+              ATTRIBUTE_NAME: memberName,
+              ATTRIBUTE_ID: FABRIC.shaderAttributeTable[memberName].id
+            },
+            entryFunctionName: 'bindVBO',
             parameterBinding: [
+              'shader.attributeValues',
               'uniforms.' + bufferIDMemberName,
               'uniforms.' + countMemberName,
-              'self.' + bufferIDMemberName,
               'self.' + countMemberName
             ]
           }));
           continue;
         }
+        
+        redrawEventHandler.addMember(bufferIDMemberName, 'Integer', 0);
         
         dynamicMember = options.dynamicMembers.indexOf(memberName) != -1;
         attributeNodeBinding = 'attributes';
@@ -404,8 +401,10 @@ FABRIC.SceneGraph.registerNodeType('Geometry',
           }
         }
       };
-      for (i = 0; i < deformableAttributes.length; i++) {
-        bufferInterface.propagateMember(deformableAttributes[i]);
+      if(deformableAttributes){
+        for (i = 0; i < deformableAttributes.length; i++) {
+          bufferInterface.propagateMember(deformableAttributes[i]);
+        }
       }
       deformationbufferinterfaces.push(bufferInterface);
       return bufferInterface.pub;
@@ -426,7 +425,7 @@ FABRIC.SceneGraph.registerNodeType('Points',
           srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/drawPoints.kl',
           entryFunctionName: 'drawPoints',
           parameterBinding: [
-            'self.positionsCount',
+            (options.positionsVec4?'self.positionsVec4Count':'self.positionsCount'),
             'instance.drawToggle'
           ]
         });

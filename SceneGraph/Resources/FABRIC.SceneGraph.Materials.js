@@ -320,7 +320,6 @@ FABRIC.shaderAttributeTable = {
   normals: { id: 3, type: 'Vec3[]' },
   tangents: { id: 4, type: 'Vec4[]' },
   vertexColors: { id: 5, type: 'Color[]' },
-  positionsVec4: { id: 6, type: 'Vec4[]' },
 
   uvs0: { id: 15, type: 'Vec2[]' },
   uvs1: { id: 16, type: 'Vec2[]' },
@@ -1082,14 +1081,9 @@ FABRIC.SceneGraph.registerNodeType('PointSpriteMaterial',
       spriteTexture: { name: 'u_splatSampler', owner: 'texture' }
     };
     options.shaderAttributes = {
-      vertexColors: { name: 'a_color' }
+      vertexColors: { name: 'a_color' },
+      positions: { name: 'a_position' }
     };
-    
-    if(options.positionsVec4){
-      options.shaderAttributes.positionsVec4 = { name: 'a_position' };
-    }else{
-      options.shaderAttributes.positions = { name: 'a_position' };
-    }
     
     options.textures = {
       spriteTexture: { node: pointSpriteTextureNode.pub }

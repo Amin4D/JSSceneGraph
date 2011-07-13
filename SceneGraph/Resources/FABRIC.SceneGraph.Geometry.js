@@ -27,7 +27,7 @@ FABRIC.SceneGraph.registerNodeType('Geometry',
     uniformsdgnode = geometryNode.getUniformsDGNode();
     attributesdgnode = geometryNode.getAttributesDGNode();
     if(options.positionsVec4 == true ){
-      attributesdgnode.addMember('positionsVec4', 'Vec4');
+      attributesdgnode.addMember('positions', 'Vec4');
     }else{
       attributesdgnode.addMember('positions', 'Vec3');
     }
@@ -425,7 +425,7 @@ FABRIC.SceneGraph.registerNodeType('Points',
           srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/drawPoints.kl',
           entryFunctionName: 'drawPoints',
           parameterBinding: [
-            (options.positionsVec4?'self.positionsVec4Count':'self.positionsCount'),
+            'self.positionsCount',
             'instance.drawToggle'
           ]
         });

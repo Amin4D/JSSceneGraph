@@ -25,14 +25,14 @@ function genAndLoadVBOFn(
   Boolean reload,
   io Integer bufferID
 ) {
-  if (bufferID <= 0 || dynamic || reload) {
+  if (bufferID <= 0 || bufferData.size() != bufferDataCount || dynamic || reload) {
     if (bufferID != 0 && (bufferData.size() != bufferDataCount || reload)) {
       var Size bufferIDs[];
       bufferIDs.push(Size(bufferID));
       glDeleteBuffers(1, bufferIDs);
       bufferID = 0;
     }
-    //report("Generating VBO for: ATTRIBUTE_NAME" );
+    // report("Generating VBO for: ATTRIBUTE_NAME" );
     genBuffer(bufferData.data(), bufferData.dataSize(), dynamic, bufferID);
     bufferDataCount = bufferData.size();
   }
@@ -41,7 +41,6 @@ function genAndLoadVBOFn(
 
 operator genAndLoadVBO(
   io ShaderValue attributeValues[],
-
   io DATA_TYPE bufferData[],
   io Size bufferDataCount,
   io Boolean dynamic,
@@ -58,23 +57,24 @@ operator genAndLoadVBO(
   }
 }
 
-
-operator genVBOOp2(
+// Load a VBO from the Dependency Graph.
+// An OpenGL shader location is not specified. 
+operator genDGVBOOp(
   io DATA_TYPE bufferData[],
   io Size bufferDataCount,
   io Boolean dynamic,
   io Boolean reload,
   io Integer bufferID
 ) {
- //  report("genVBOOp2 Loading ATTRIBUTE_NAME :" + bufferID + ":" + bufferData.size() );
-  if (bufferID <= 0 || dynamic || reload) {
+  // report("genVBOOp2 Loading ATTRIBUTE_NAME :" + bufferID + ":" + bufferData.size() );
+  if (bufferID <= 0 || bufferData.size() != bufferDataCount || dynamic || reload) {
     if (bufferID != 0 && (bufferData.size() != bufferDataCount || reload)) {
       var Size bufferIDs[];
       bufferIDs.push(Size(bufferID));
       glDeleteBuffers(1, bufferIDs);
       bufferID = 0;
     }
-    //report("Generating VBO for: ATTRIBUTE_NAME" );
+    // report("genDGVBOOp Generating VBO for: ATTRIBUTE_NAME" );
     // We should be able to gen buffers here. 
     genBuffer(bufferData.data(), bufferData.dataSize(), dynamic, bufferID);
     var Size bufferIDs[];

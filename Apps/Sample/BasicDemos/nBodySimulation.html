@@ -114,7 +114,7 @@ $(document).ready(function() { $('#play').button({
             parameterBinding: [
               'self.index',
               'self.count',
-              'self.positionsVec4',
+              'self.positions',
               'self.velocities',
               'self.mass',
               'self.vertexColors',
@@ -125,7 +125,7 @@ $(document).ready(function() { $('#play').button({
           }));
       nBodyGeometry.pub.setVertexCount(options.nBodies);
       
-      var memberName = 'positionsVec4';
+      var memberName = 'positions';
       var memberType = 'Vec4';
       var bufferIDMemberName = memberName + 'BufferID';
       var countMemberName = memberName + 'Count';
@@ -149,7 +149,7 @@ $(document).ready(function() { $('#play').button({
               ATTRIBUTE_NAME: memberName,
               ATTRIBUTE_ID: FABRIC.shaderAttributeTable[memberName].id
             },
-            entryFunctionName: 'genVBOOp2',
+            entryFunctionName: 'genDGVBOOp',
             parameterBinding: [
               'self.' + memberName + '[]',
               'uniforms.' + countMemberName,
@@ -169,7 +169,7 @@ $(document).ready(function() { $('#play').button({
           srcFile: 'KL/nBodyOpGPU.kl',
           parameterBinding: [
             'globals.ms',
-            'parentattributes.positionsVec4[]',
+            'parentattributes.positions[]',
             'parentattributes.velocities[]',
             'parentattributes.mass[]',
             'uniforms.clContext',
@@ -205,7 +205,7 @@ $(document).ready(function() { $('#play').button({
   scene.constructNode('CameraManipulator', { targetNode: camera });
   viewport.setCameraNode(camera);
 
-  var materialNode = scene.constructNode('PointSpriteMaterial', { pointSize: 1.0, positionsVec4:true });
+  var materialNode = scene.constructNode('PointSpriteMaterial', { pointSize: 1.0 });
   var nBodyGeometry = scene.constructNode('NBodySimulation', { nBodies:7680 });
   var xformNode = scene.constructNode('Transform', { hierarchical: false });
 

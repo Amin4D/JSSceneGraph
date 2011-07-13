@@ -27,13 +27,7 @@
       .CodeMirror {
         border-top: 1px solid black;
         border-bottom: 1px solid black;
-        height: auto;
-        bottom:10px;
         background: #f0fcff;
-      }
-      .CodeMirror-scroll {
-        height: auto;
-        overflow:visible;
       }
       .activeline {background: #f0fcff !important;}
       
@@ -83,7 +77,9 @@ $(document).ready(function() {
   
   var compliationErrors = CodeMirror.fromTextArea(document.getElementById("compliationErrors"), {
     mode: "javascript",
-    lineNumbers: true
+    lineNumbers: true,
+    height: "100%",
+    width: "100%"
   });
 
 

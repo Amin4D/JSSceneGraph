@@ -13,7 +13,7 @@ function Ray.set(Vec3 start, Vec3 direction) {
   self.direction = direction;
 }
 
-function Scalar Ray.distanceToPoint(io Vec3 point) {
+function Scalar Ray.distanceToPoint(Vec3 point) {
   Vec3 v, w;
   Scalar c1, c2;
   Scalar rayT, dist;
@@ -32,11 +32,17 @@ function Scalar Ray.distanceToPoint(io Vec3 point) {
   }
 }
 
-function Scalar Ray.distanceToLine(io Vec3 lineP0, io Vec3 lineP1) {
+function Boolean Ray.intersectLineSegment(
+  Vec3 lineP0,
+  Vec3 lineP1,
+  io Vec3 point,
+  io Scalar dist,
+  io Scalar u
+) {
   Vec3 rayP1;
   rayP1 = self.start + self.direction;
 
-  var Scalar rayT, lineT, dist;
+  var Scalar rayT, lineT;
   dist = distanceFromLineToLine(
     self.start, rayP1,
     lineP0, lineP1,
@@ -44,27 +50,26 @@ function Scalar Ray.distanceToLine(io Vec3 lineP0, io Vec3 lineP1) {
   );
 
   if (rayT >= 0.0 && lineT >= 0.0 && lineT <= 1.0) {
-    return dist;
+    u = lineT;
+    point = (self.start + (self.direction * dist));
+    return true;
   }
   if (rayT >= 0.0 && lineT < 0.0) {
-    return distFromPointToLine(lineP0, self.start, rayP1);
+    dist = self.distanceToPoint(lineP0);
+    u = 0.0;
+    point = (self.start + (self.direction * dist));
+    return true;
   }
   if (rayT >= 0.0 && lineT > 1.0) {
-    return distFromPointToLine(lineP1, self.start, rayP1);
+    dist = self.distanceToPoint(lineP1);
+    u = 1.0;
+    point = (self.start + (self.direction * dist));
+    return true;
   }
-  // The line segment is behind the ray
-  if (lineT >= 0.0 && lineT < 1.0) {
-    return distFromPointToSegment(self.start, lineP0, self.start);
-  }
-  if (lineT < 0.0) {
-    return lineP0.dist(self.start);
-  }
-  else {
-    return lineP1.dist(self.start);
-  }
+  return false;
 }
 
-function Vec2 Ray.intersectLine(io Vec3 lineP0, io Vec3 lineP1) {
+function Vec2 Ray.intersectLine(Vec3 lineP0, Vec3 lineP1) {
   Vec3 rayP1;
   rayP1 = self.start + self.direction;
 

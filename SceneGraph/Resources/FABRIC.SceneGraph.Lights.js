@@ -106,8 +106,8 @@ FABRIC.SceneGraph.registerNodeType('Light',
       }));
     }
 
-    scene.addMemberInterface(lightNode, dgnode, 'color', true);
-    scene.addMemberInterface(lightNode, dgnode, 'cameraMat44');
+    lightNode.addMemberInterface(dgnode, 'color', true);
+    lightNode.addMemberInterface(dgnode, 'cameraMat44');
 
     if (typeof options.transformNode == 'string') {
       lightNode.pub.setTransformNode(scene.constructNode(options.transformNode, {
@@ -140,6 +140,15 @@ FABRIC.SceneGraph.registerNodeType('Light',
     var pointLightNode = scene.constructNode('Light', options);
     var dgnode = pointLightNode.getDGNode();
 
+<<<<<<< HEAD
+=======
+    if (options.position) {
+      var xfo = pointLightNode.pub.getTransformNode().getGlobalXfo();
+      xfo.tr = new FABRIC.RT.Vec3(options.position);
+      pointLightNode.pub.getTransformNode().setGlobalXfo(xfo);
+    }
+
+>>>>>>> origin/master
     if (options.display === true) {
       //Ideally we should merge all these line segments together... or have a meta-geometry generator in kl (able to create circles, lines, etc)?
       var materialNode = scene.pub.constructNode('FlatMaterial', {
@@ -232,6 +241,21 @@ FABRIC.SceneGraph.registerNodeType('DirectionalLight',
       return redrawEventHandler;
     };
 
+<<<<<<< HEAD
+=======
+    if (options.position) {
+      //The position is not used for directionalLight's lighting, but might be used for displaying the light
+      var xfo = directionalLightNode.pub.getTransformNode().getGlobalXfo();
+      xfo.tr = new FABRIC.RT.Vec3(options.position);
+      directionalLightNode.pub.getTransformNode().setGlobalXfo(xfo);
+    }
+    if (options.direction) {
+      var xfo = directionalLightNode.pub.getTransformNode().getGlobalXfo();
+      xfo.ori = FABRIC.RT.Quat.makeFrom2Vectors(new FABRIC.RT.Vec3(0.0, 0.0, -1.0), new FABRIC.RT.Vec3(options.direction).unit(), true);
+      directionalLightNode.pub.getTransformNode().setGlobalXfo(xfo);
+    }
+
+>>>>>>> origin/master
     if (options.display === true) {
       //Ideally we should merge all these line segments together... or have a meta-geometry generator in kl (able to create circles, lines, etc)?
       var materialNode = scene.pub.constructNode('FlatMaterial', {
@@ -303,7 +327,7 @@ FABRIC.SceneGraph.registerNodeType('SpotLight',
     var dgnode = spotLightNode.getDGNode();
 
     dgnode.addMember('coneAngle', 'Scalar', options.coneAngle);
-    scene.addMemberInterface(spotLightNode, dgnode, 'coneAngle', true);
+    spotLightNode.addMemberInterface(dgnode, 'coneAngle', true);
 
     var redrawEventHandlerConfigured = false;
     var parentGetRedrawEventHandler = spotLightNode.getRedrawEventHandler;

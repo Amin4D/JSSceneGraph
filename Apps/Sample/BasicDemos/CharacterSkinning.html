@@ -118,7 +118,7 @@ $(document).ready(function() {
   $globalTimeSlider.slider('value', 0.0);
   $globalTimeSlider.bind('slide',
     function(event, ui) {
-      scene.animation.time = ui.value;
+      scene.animation.setTime(ui.value);
       scene.redrawAllWindows();
     });
 

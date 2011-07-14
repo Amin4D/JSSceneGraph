@@ -16,9 +16,6 @@ function initOpenCL
 
     clContext = clCreateContext_GL(clErr);
 
-    var cl_platform_id clPlatformIDs[];
-    clErr = clGetPlatformIDs(1, clPlatformIDs);
-
     cl_device_id clContextDeviceIDs[];
     clErr = clGetContextDevices(clContext, clContextDeviceIDs);
     report "clGetContextDevices: " + clErr;
@@ -105,6 +102,7 @@ operator nBodySimulateGPU(
       clErr = clGetMemObjectSize(posCurrent, posCurrentSize);
       report 'posCurrentSize = ' + posCurrentSize;
       report 'posCurrent = ' + posCurrent + '(' + (Boolean)posCurrent + ')';
+
       velCurrent = clCreateBuffer(clContext, CL_MEM_READ_WRITE, memSize, NULL, clErr);
       Size velCurrentSize;
       clErr = clGetMemObjectSize(velCurrent, velCurrentSize);
@@ -147,6 +145,12 @@ operator nBodySimulateGPU(
   // Run the kernel and simulate
   var Scalar softeningSq = softening * softening;
 
+  cl_mem memsToAcquire[];
+  memsToAcquire.push(posCurrent);
+
+  clErr = clEnqueueAcquireGLObjects(clCommandQueue, memsToAcquire, eventWaitList, event);
+  report 'clEnqueueAcquireGLObjects: ' + clErr;
+
   // - Compute the local tile size for the single-multiple body interaction
   var Integer p = 256, q = 1;
   if (clPointCount < p && q == 1) {
@@ -174,5 +178,11 @@ operator nBodySimulateGPU(
   globalWorkSize[1] = q;
 
   clErr = clEnqueueNDRangeKernel(clCommandQueue, clKernel, 2, NULL, globalWorkSize.data, localWorkSize.data, eventWaitList, event);
+  report 'clEnqueueNDRangeKernel: ' + clErr;
+
+  clErr = clEnqueueReleaseGLObjects(clCommandQueue, memsToAcquire, eventWaitList, event);
+  report 'clEnqueueReleaseGLObjects: ' + clErr;
+
   clErr = clFinish(clCommandQueue);
+  report 'clFinish: ' + clErr;
 }

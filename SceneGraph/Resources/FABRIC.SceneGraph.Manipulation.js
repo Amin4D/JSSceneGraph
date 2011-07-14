@@ -499,7 +499,8 @@ FABRIC.SceneGraph.registerNodeType('Manipulator',
         targetNode.pub.setData(targetMember, xfo, targetMemberIndex);
       }
       else {
-        targetNode.pub[targetMember] = xfo;
+        var targetMembeSetter = "set"+targetMember.charAt(0).toUpperCase()+targetMember.slice(1);
+        targetNode.pub[targetMembeSetter](xfo);
       }
     }
 
@@ -538,8 +539,7 @@ FABRIC.SceneGraph.registerNodeType('Manipulator',
     // Manipulation happens in the space of the manipulator,
     // but we are computing a new 'target space'.
     manipulatorNode.getManipulationSpaceXfo = function() {
-    //  return transformNode.localXfo.multiply(this.getTargetGlobalXfo());
-      return this.getTargetGlobalXfo().multiply(transformNode.localXfo);
+      return this.getTargetGlobalXfo().multiply(transformNode.getLocalXfo());
     };
     
     manipulatorNode.getParentXfo = function() {
@@ -595,11 +595,11 @@ FABRIC.SceneGraph.registerNodeType('Manipulator',
     }
 
     manipulatorNode.pub.addEventListener('mouseover_geom', function(evt) {
-        material.color = highlightColor;
+        material.setColor(highlightColor);
         evt.viewportNode.redraw();
       });
     manipulatorNode.pub.addEventListener('mouseout_geom', function(evt) {
-        material.color = color;
+        material.setColor(color);
         evt.viewportNode.redraw();
       });
 

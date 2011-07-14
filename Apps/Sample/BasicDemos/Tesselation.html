@@ -48,7 +48,7 @@ $(document).ready(function() { var scene = FABRIC.SceneGraph.createScene();
   // Create a camera to draw the scene from
   var camera = scene.constructNode('TargetCamera', {
       nearDistance: 0.1,
-      farDistance: 50,
+      farDistance: 500,
       position: FABRIC.RT.vec3(0, 5, 10).scale(2.0)
     });
 
@@ -83,12 +83,12 @@ $(document).ready(function() { var scene = FABRIC.SceneGraph.createScene();
       min: 1.0,
       max: 64.0,
       step: 1.0,
-      value: tesselationMaterial.tesselationInner,
+      value: tesselationMaterial.getTesselationInner(),
     })
   .bind('slide',
     function(event, ui) {
-      tesselationMaterial.tesselationInner = ui.value;
-      tesselationMaterial.tesselationOuter = ui.value;
+      tesselationMaterial.setTesselationInner(ui.value);
+      tesselationMaterial.setTesselationOuter(ui.value);
       scene.redrawAllWindows();
     });
 
@@ -97,11 +97,11 @@ $(document).ready(function() { var scene = FABRIC.SceneGraph.createScene();
       min: 0.0,
       max: 1.0,
       step: 0.01,
-      value: tesselationMaterial.wireOpacity,
+      value: tesselationMaterial.getWireOpacity(),
     })
   .bind('slide',
     function(event, ui) {
-      tesselationMaterial.wireOpacity = ui.value
+      tesselationMaterial.setWireOpacity(ui.value);
       scene.redrawAllWindows();
     });
   

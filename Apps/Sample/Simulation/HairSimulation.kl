@@ -1,0 +1,29 @@
+function Scalar rand(in Integer seed, in Size index) {
+  var Integer base = 31281831726 * seed + 9777773128731* index;
+  return Scalar((base / 256) & 8388607) / 8388607.0;
+}
+
+operator initFromTrianglesWithXfo(
+  in Size index,
+  io Integer segments,
+  io Scalar length,
+  io Vec3 trianglePositions[],
+  io Xfo triangleTransform,
+  io Vec3 position,
+  io Vec3 direction,
+  io Vec3 elements[]
+) {
+
+  var Size triangleIndex = Size(Scalar(trianglePositions.size() / 3) * rand(1,index)) * 3;
+  var Scalar u = rand(2,index);
+  var Scalar v = (1.0 - u) * rand(3,index);
+  
+  report("using triangle "+triangleIndex+", u "+u+", v "+v);
+  
+  var Vec3 edge1 = trianglePositions[triangleIndex+2] - trianglePositions[triangleIndex];
+  var Vec3 edge2 = trianglePositions[triangleIndex+1] - trianglePositions[triangleIndex];
+  position = triangleTransform.transform(trianglePositions[triangleIndex] + edge1 * u + edge2 * v);
+  direction = triangleTransform.ori.transform(edge1.unit().cross(edge2.unit()).unit());
+  
+  //report("evaluating hair...");
+}

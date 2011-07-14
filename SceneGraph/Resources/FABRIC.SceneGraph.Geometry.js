@@ -509,8 +509,8 @@ FABRIC.SceneGraph.registerNodeType('Triangles',
             operatorName: 'drawPatches',
             srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/drawPatches.kl',
             parameterBinding: [
-              'instance.elementCount',
-              'instance.indicesBufferID',
+              'self.indicesCount',
+              'self.indicesBufferID',
               'instance.drawToggle'
             ],
             entryFunctionName: 'drawPatches'
@@ -520,8 +520,8 @@ FABRIC.SceneGraph.registerNodeType('Triangles',
             operatorName: 'drawTriangles',
             srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/drawTriangles.kl',
             parameterBinding: [
-              'instance.elementCount',
-              'instance.indicesBufferID',
+              'self.indicesCount',
+              'self.indicesBufferID',
               'instance.drawToggle'
             ],
             entryFunctionName: 'drawTriangles'

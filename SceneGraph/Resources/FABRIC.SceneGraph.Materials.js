@@ -1093,7 +1093,7 @@ FABRIC.SceneGraph.defineEffectFromFile('PhongVertexColorMaterial', 'FABRIC_ROOT/
 FABRIC.SceneGraph.defineEffectFromFile('NormalMaterial', 'FABRIC_ROOT/SceneGraph/Resources/Shaders/NormalShader.xml');
 
 FABRIC.SceneGraph.defineEffectFromFile('PhongTesselationMaterial', 'FABRIC_ROOT/SceneGraph/Resources/Shaders/PhongTesselationShader.xml');
-
+FABRIC.SceneGraph.defineEffectFromFile('HairMaterial', 'FABRIC_ROOT/SceneGraph/Resources/Shaders/HairShader.xml');
 
 FABRIC.SceneGraph.registerNodeType('PointSpriteMaterial',
   function(options, scene) {

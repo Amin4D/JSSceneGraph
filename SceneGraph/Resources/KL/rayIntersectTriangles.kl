@@ -19,7 +19,8 @@ operator rayIntersectTriangles(
   io Vec3 bboxmin,
   io Vec3 bboxmax
 ) {
-  Mat44 invGlobalMat44 = Mat44(globalXfo).inverse();
+  Mat44 globalMat44 = Mat44(globalXfo);
+  Mat44 invGlobalMat44 = globalMat44.inverse();
   Ray objRay;
   objRay.start = ray.start * invGlobalMat44;
   invGlobalMat44.row3.x = 0.0;
@@ -43,7 +44,7 @@ operator rayIntersectTriangles(
     if (objRay.intersectTriangle(true, v0, v1, v2, point, dist, u, v)) {
       select = true;
       if (dist < intersection.distance) {
-        intersection.point = point;
+        intersection.point = point * globalMat44;
         intersection.distance = dist;
         intersection.elementid = i;
       }

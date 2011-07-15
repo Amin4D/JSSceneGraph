@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<shader>
+	<name>HairMaterial</name>
+	<uniforms>
+		<uniform name="u_lightPosition" constant="lightPosition" owner="light"/>
+		<uniform name="u_modelViewProjectionMatrix" constant="modelViewProjectionMatrix" owner="instance"/>
+		<uniform name="u_modelViewMatrix" constant="modelViewMatrix"  owner="instance"/>
+		<uniform name="u_normalMatrix" constant="normalMatrix" owner="instance"/>
+		<uniform name="u_materialSpecularColor" constant="specularColor" defaultValue="FABRIC.RT.rgba(1.0,1.0,0.8,1.0)"/>
+	</uniforms>
+	<attributes>
+		<attribute name="a_position" binding="positions"/>
+		<attribute name="a_color" binding="vertexColors"/>
+		<attribute name="a_normal" binding="normals"/>
+	</attributes>
+	
+	<vertexshader>
+		<source>
+			uniform mat4 u_modelViewProjectionMatrix;
+			uniform mat4 u_modelViewMatrix;
+			uniform mat3 u_normalMatrix;
+			uniform vec4 u_lightPosition;
+
+			attribute vec4 a_position;
+			attribute vec3 a_normal;
+			attribute vec4 a_color;
+
+			varying vec4 color;
+			varying vec3 normal;
+			varying vec3 lightDir;
+			varying vec3 viewDir;
+
+			void main(){
+				normal = u_normalMatrix * a_normal;
+				vec4 modelCameraPosition = u_modelViewMatrix * a_position;
+  
+				lightDir = vec3(u_lightPosition - modelCameraPosition);
+
+				viewDir = vec3(-modelCameraPosition);
+				gl_Position = u_modelViewProjectionMatrix * a_position;
+
+				color = a_color;
+			}
+			
+		</source>
+	</vertexshader>
+	
+	<fragmentshader>
+		<source>
+			
+			uniform vec4 u_materialSpecularColor;
+
+			varying vec4 color;
+			varying vec3 normal;
+			varying vec3 lightDir;
+			varying vec3 viewDir;
+			
+			void main(){
+      
+        vec3 N = normalize(normal);
+        vec3 L = normalize(lightDir);
+        vec3 V = normalize(viewDir);
+        float vd = 1.0 - abs(dot(N,V));
+        float ld = 1.0 - abs(dot(N,L));
+        float d = vd * ld;
+        d = d * d * d;
+      
+				gl_FragColor = color * (1.0 - d) + u_materialSpecularColor * d;
+			}
+
+		</source>
+	</fragmentshader>
+</shader>

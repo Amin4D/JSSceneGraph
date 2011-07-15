@@ -37,6 +37,7 @@
     <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Materials.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Manipulation.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Kinematics.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/Parsers/parseCollada.js" charset="utf-8"></script>
     
     <script type="text/javascript">
 
@@ -47,7 +48,12 @@ FABRIC.SceneGraph.registerNodeType('Hair',
       transformNode: undefined,
       count: 50,
       segments: 14,
-      length: 40
+      length: 40,
+      stiffness: FABRIC.RT.vec2(0.2,0.5),
+      rootColorMin: FABRIC.RT.rgba(0.0, 0.05, 4.0, 1.0),
+      rootColorMax: FABRIC.RT.rgba(0.0, 0.45, 1.0, 1.0),
+      tipColorMin: FABRIC.RT.rgba(0.5, 0.5, 0.5, 1.0),
+      tipColorMax: FABRIC.RT.rgba(1.0, 1.0, 1.0, 1.0),
       });
 
     if (!options.trianglesNode) {
@@ -67,12 +73,17 @@ FABRIC.SceneGraph.registerNodeType('Hair',
     simNode.pub.addVertexAttributeValue('elements','Vec3[]');
     simNode.pub.setAttributeDynamic('positions');
     simNode.pub.addUniformValue('segments', 'Integer', options.segments);
-    simNode.pub.addUniformValue('length', 'Scalar', options.segments);
+    simNode.pub.addUniformValue('length', 'Scalar', options.length);
+    simNode.pub.addUniformValue('segmentLength', 'Scalar');
+    simNode.pub.addUniformValue('stiffness', 'Vec2', options.stiffness);
+    simNode.pub.addUniformValue('rootColor', 'Color[2]', [options.rootColorMin,options.rootColorMax]);
+    simNode.pub.addUniformValue('tipColor', 'Color[2]', [options.tipColorMin,options.tipColorMax]);
     
     // attach the operator to initiate the simulation from the 
     var simDGNode = simNode.getAttributesDGNode();
-    simDGNode.addDependency(trianglesNode.getAttributesDGNode(),'triangles');
-    simDGNode.addDependency(transformNode.getDGNode(),'transform');
+    simDGNode.addDependency(trianglesNode.getAttributesDGNode(),'trianglesattributes');
+    simDGNode.addDependency(trianglesNode.getUniformsDGNode(),'trianglesuniforms');
+    simDGNode.addDependency(transformNode.getDGNode(),'trianglestransform');
     simDGNode.bindings.append(scene.constructOperator({
       operatorName: 'initFromTrianglesWithXfo',
       srcFile: 'HairSimulation.kl',
@@ -80,17 +91,66 @@ FABRIC.SceneGraph.registerNodeType('Hair',
         'self.index',
         'uniforms.segments',
         'uniforms.length',
-        'triangles.positions[]',
-        'transform.globalXfo',
+        'trianglesattributes.positions[]',
+        'trianglesattributes.normals[]',
+        'trianglesuniforms.indices',
+        'trianglestransform.globalXfo',
+        'uniforms.segmentLength',
         'self.positions',
         'self.direction',
         'self.elements'
       ],
       entryFunctionName: 'initFromTrianglesWithXfo'
     }));
+    simDGNode.addDependency(scene.getGlobalsNode(), 'globals');
+    simDGNode.bindings.append(scene.constructOperator({
+      operatorName: 'simulate',
+      srcFile: 'HairSimulation.kl',
+      parameterBinding: [
+        'self.index',
+        'uniforms.segmentLength',
+        'uniforms.stiffness',
+        'self.positions',
+        'self.direction',
+        'self.elements',
+        'globals.ms'
+      ],
+      entryFunctionName: 'simulate'
+    }));
 
     // create the node to perform the simulation
     var hairNode = scene.constructNode('Lines', options);
+    hairNode.pub.addVertexAttributeValue('normals','Vec3');
+    hairNode.pub.addVertexAttributeValue('vertexColors','Color');
+    hairNode.pub.setAttributeDynamic('positions');
+    hairNode.pub.setAttributeDynamic('normals');
+    var hairDGNode = hairNode.getAttributesDGNode();
+    hairDGNode.addDependency(simDGNode,'simattributes');
+    hairDGNode.addDependency(simNode.getUniformsDGNode(),'simuniforms');
+    hairDGNode.bindings.append(scene.constructOperator({
+      operatorName: 'resizeLines',
+      srcFile: 'HairSimulation.kl',
+      parameterBinding: [
+        "simattributes.elements[]",
+        'self.newCount'
+      ],
+      entryFunctionName: 'resizeLines'
+    }));
+    hairDGNode.bindings.append(scene.constructOperator({
+      operatorName: 'generateLines',
+      srcFile: 'HairSimulation.kl',
+      parameterBinding: [
+        "simattributes.positions[]",
+        "simattributes.elements[]",
+        "simuniforms.rootColor",
+        "simuniforms.tipColor",
+        'self.positions[]',
+        'self.normals[]',
+        'self.vertexColors[]',
+        'uniforms.indices'
+      ],
+      entryFunctionName: 'generateLines'
+    }));
     
     hairNode.pub.getSimNode = function() {
       return simNode.pub;
@@ -107,7 +167,7 @@ $(document).ready(function() { var scene = FABRIC.SceneGraph.createScene();
 
   // Create a camera to draw the scene from
   var camera = scene.constructNode('TargetCamera', {
-      position: FABRIC.RT.vec3(40, 70, 100),
+      position: FABRIC.RT.vec3(40, 70, 100).scale(0.2),
       target: FABRIC.RT.vec3(0, 0, 0)
     });
 
@@ -117,45 +177,39 @@ $(document).ready(function() { var scene = FABRIC.SceneGraph.createScene();
 
   var light = scene.constructNode('PointLight', { position: FABRIC.RT.vec3(420.0, 1000.0, 600.0) });
 
-  var pointMaterial = scene.constructNode('FlatMaterial', {
-    prototypeMaterialType: 'PointMaterial',
-    pointSize: 3.0,
-    color: FABRIC.RT.rgb(0.7, 0.7, 0.7)
-  });
-  var flatMaterial = scene.constructNode('FlatMaterial', {
-    color: FABRIC.RT.rgb(0.7, 0.7, 0.7)
+  var hairMaterial = scene.constructNode('HairMaterial', {
+    lightNode: light,
+    //specularColor
   });
   var phongMaterial = scene.constructNode('PhongMaterial', {
     diffuseColor: FABRIC.RT.rgb(0.4, 0.4, 0.4),
     lightNode: light
   });
 
-  // Phong Plane
-  var plane = scene.constructNode('Instance', {
+  var triangles = scene.importAssetFile('../BasicDemos/Models/bricks.dae')['sphere'];
+  var triangleInstance = scene.constructNode('Instance', {
       transformNode: scene.constructNode('Transform', {
         hierarchical: false
       }),
-      geometryNode: scene.constructNode('Plane', {
-        length: 50,
-        width: 50,
-        lengthSections: 3,
-        widthSections: 3
-      }),
+      geometryNode: triangles,
       materialNode: phongMaterial
     });
-  scene.constructNode('3AxisRotationManipulator', { parentNode: plane, disableZBuffer: true });
-  
-  var hair = scene.constructNode('Instance', {
-      geometryNode: scene.constructNode('Hair', {
-        trianglesNode: plane.getGeometryNode(),
-        transformNode: plane.getTransformNode(),
-        length: 50,
-        width: 50,
-        lengthSections: 3,
-        widthSections: 3
-      }).getSimNode(),
-      materialNode: pointMaterial
+  scene.constructNode('3AxisRotationManipulator', { parentNode: triangleInstance, disableZBuffer: true, radius: 5 });
+
+  var hairGeometry = scene.constructNode('Hair', {
+      trianglesNode: triangles,
+      transformNode: triangleInstance.getTransformNode(),
+      segments: 6,
+      length: 3.5,
+      count: 7500
     });
+
+  var hairLines = scene.constructNode('Instance', {
+      geometryNode: hairGeometry,
+      materialNode: hairMaterial
+    });
+  
+  scene.animation.play();
 
   var errors = scene.getErrors();
   if (errors.length > 0) {

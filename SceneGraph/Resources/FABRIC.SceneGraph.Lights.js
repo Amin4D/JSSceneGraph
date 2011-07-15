@@ -21,7 +21,8 @@ FABRIC.SceneGraph.registerNodeType('Light',
     scene.assignDefaults(options, {
       color: FABRIC.RT.rgb(1.0, 1.0, 1.0),
       transformNode: 'Transform',
-      transformNodeMember: 'globalXfo'
+      transformNodeMember: 'globalXfo',
+      globalXfo: FABRIC.RT.xfo()
     });
 
     if (options.lightType == undefined) {
@@ -109,7 +110,10 @@ FABRIC.SceneGraph.registerNodeType('Light',
     lightNode.addMemberInterface(dgnode, 'cameraMat44');
 
     if (typeof options.transformNode == 'string') {
-      lightNode.pub.setTransformNode(scene.constructNode(options.transformNode, { hierarchical: false }).pub);
+      lightNode.pub.setTransformNode(scene.constructNode(options.transformNode, {
+          hierarchical: false,
+          globalXfo:options.globalXfo
+        }).pub);
     } else {
       lightNode.pub.setTransformNode(options.transformNode, options.transformNodeMember);
     }
@@ -132,15 +136,19 @@ FABRIC.SceneGraph.registerNodeType('Light',
     }
 
     options.lightType = FABRIC.SceneGraph.Lights.types.PointLight;
+    options.globalXfo = FABRIC.RT.xfo({ tr: options.position });
     var pointLightNode = scene.constructNode('Light', options);
     var dgnode = pointLightNode.getDGNode();
 
+<<<<<<< HEAD
+=======
     if (options.position) {
       var xfo = pointLightNode.pub.getTransformNode().getGlobalXfo();
       xfo.tr = new FABRIC.RT.Vec3(options.position);
       pointLightNode.pub.getTransformNode().setGlobalXfo(xfo);
     }
 
+>>>>>>> origin/master
     if (options.display === true) {
       //Ideally we should merge all these line segments together... or have a meta-geometry generator in kl (able to create circles, lines, etc)?
       var materialNode = scene.pub.constructNode('FlatMaterial', {
@@ -191,6 +199,14 @@ FABRIC.SceneGraph.registerNodeType('DirectionalLight',
     }
 
     options.lightType = FABRIC.SceneGraph.Lights.types.DirectionalLight;
+    options.globalXfo = FABRIC.RT.xfo();
+    if (options.position) {
+      //The position is not used for directionalLight's lighting, but might be used for displaying the light
+      options.globalXfo.tr = new FABRIC.RT.Vec3(options.position);
+    }
+    if (options.direction) {
+      xfo.ori = FABRIC.RT.Quat.makeFrom2Vectors(new FABRIC.RT.Vec3(0.0, 0.0, -1.0), new FABRIC.RT.Vec3(options.direction).unit(), true);
+    }
     var directionalLightNode = scene.constructNode('Light', options);
     var dgnode = directionalLightNode.getDGNode();
 
@@ -225,6 +241,8 @@ FABRIC.SceneGraph.registerNodeType('DirectionalLight',
       return redrawEventHandler;
     };
 
+<<<<<<< HEAD
+=======
     if (options.position) {
       //The position is not used for directionalLight's lighting, but might be used for displaying the light
       var xfo = directionalLightNode.pub.getTransformNode().getGlobalXfo();
@@ -237,6 +255,7 @@ FABRIC.SceneGraph.registerNodeType('DirectionalLight',
       directionalLightNode.pub.getTransformNode().setGlobalXfo(xfo);
     }
 
+>>>>>>> origin/master
     if (options.display === true) {
       //Ideally we should merge all these line segments together... or have a meta-geometry generator in kl (able to create circles, lines, etc)?
       var materialNode = scene.pub.constructNode('FlatMaterial', {
@@ -292,12 +311,16 @@ FABRIC.SceneGraph.registerNodeType('SpotLight',
         displaySize: 50
       });
 
-      if (!options.transformNode) {
-        scene.assignDefaults(options, {
-          position: FABRIC.RT.vec3(100.0, 100.0, 100.0),
-          target: FABRIC.RT.vec3(0.0, 0.0, 0.0),
-        });
-      }
+    if (!options.transformNode) {
+      scene.assignDefaults(options, {
+        position: FABRIC.RT.vec3(100.0, 100.0, 100.0),
+        target: FABRIC.RT.vec3(0.0, 0.0, 0.0)
+      });
+      options.globalXfo = FABRIC.RT.xfo({
+        tr: FABRIC.RT.vec3(options.position),
+        ori: FABRIC.RT.Quat.makeFrom2Vectors(new FABRIC.RT.Vec3(0.0, 0.0, -1.0), new FABRIC.RT.Vec3(options.target).subtract(options.position).unit(), true)
+      });
+    }
 
     options.lightType = FABRIC.SceneGraph.Lights.types.SpotLight;
     var spotLightNode = scene.constructNode('Light', options);
@@ -452,17 +475,6 @@ FABRIC.SceneGraph.registerNodeType('SpotLight',
 
     // the operator stack functions enable the light properties to be animated.
     scene.addMemberAndOperatorStackFunctions(spotLightNode, dgnode);
-
-    if (options.position) {
-      var xfo = spotLightNode.pub.getTransformNode().getGlobalXfo();
-      xfo.tr = new FABRIC.RT.Vec3(options.position);
-      spotLightNode.pub.getTransformNode().setGlobalXfo(xfo);
-    }
-    if (options.target) {
-      var xfo = spotLightNode.pub.getTransformNode().getGlobalXfo();
-      xfo.ori = FABRIC.RT.Quat.makeFrom2Vectors(new FABRIC.RT.Vec3(0.0, 0.0, -1.0), new FABRIC.RT.Vec3(options.target).subtract(options.position).unit(), true);
-      spotLightNode.pub.getTransformNode().setGlobalXfo(xfo);
-    }
 
     if (options.display === true) {
       // tan(theta) = o/a

@@ -128,12 +128,10 @@ FABRIC.SceneGraph.registerNodeType('Light',
   FABRIC.SceneGraph.registerNodeType('PointLight',
   function (options, scene) {
 
-    if (!options.transformNode) {
-      scene.assignDefaults(options, {
-        position: FABRIC.RT.vec3(420.0, 1000.0, 600.0),
-        displaySize: 5
-      });
-    }
+    scene.assignDefaults(options, {
+      position: FABRIC.RT.vec3(420.0, 1000.0, 600.0),
+      displaySize: 5
+    });
 
     options.lightType = FABRIC.SceneGraph.Lights.types.PointLight;
     options.globalXfo = FABRIC.RT.xfo({ tr: options.position });
@@ -232,21 +230,7 @@ FABRIC.SceneGraph.registerNodeType('DirectionalLight',
       return redrawEventHandler;
     };
 
-<<<<<<< HEAD
-=======
-    if (options.position) {
-      //The position is not used for directionalLight's lighting, but might be used for displaying the light
-      var xfo = directionalLightNode.pub.getTransformNode().getGlobalXfo();
-      xfo.tr = new FABRIC.RT.Vec3(options.position);
-      directionalLightNode.pub.getTransformNode().setGlobalXfo(xfo);
-    }
-    if (options.direction) {
-      var xfo = directionalLightNode.pub.getTransformNode().getGlobalXfo();
-      xfo.ori = FABRIC.RT.Quat.makeFrom2Vectors(new FABRIC.RT.Vec3(0.0, 0.0, -1.0), new FABRIC.RT.Vec3(options.direction).unit(), true);
-      directionalLightNode.pub.getTransformNode().setGlobalXfo(xfo);
-    }
 
->>>>>>> origin/master
     if (options.display === true) {
       //Ideally we should merge all these line segments together... or have a meta-geometry generator in kl (able to create circles, lines, etc)?
       var materialNode = scene.pub.constructNode('FlatMaterial', {

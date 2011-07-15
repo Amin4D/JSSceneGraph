@@ -614,6 +614,7 @@ FABRIC.SceneGraph.registerNodeType('Instance',
       materialNodes = [];
 
     dgnode.addMember('drawToggle', 'Boolean', options.enableDrawing);
+    instanceNode.addMemberInterface(dgnode, 'drawToggle', true);
     
     redrawEventHandler.addScope('instance', dgnode);
 
@@ -782,7 +783,7 @@ FABRIC.SceneGraph.registerNodeType('Instance',
     instanceNode.pub.getIsShadowCasting = function() {
       return materialNodes.indexOf(scene.getShadowMapMaterial()) != -1;
     };
-    instanceNode.pub.getIsShadowCasting = function(val) {
+    instanceNode.pub.setIsShadowCasting = function(val) {
       if (val) {
         if (options.shadowMappingMaterial) {
           instanceNode.pub.setMaterialNode(scene.pub.constructNode(options.shadowMappingMaterial));
@@ -813,7 +814,7 @@ FABRIC.SceneGraph.registerNodeType('Instance',
       instanceNode.pub.setMaterialNode(options.materialNode);
     }
     if (options.enableShadowCasting) {
-      instanceNode.pub.castShadows = true;
+      instanceNode.pub.setIsShadowCasting(true);
     }
     return instanceNode;
   });

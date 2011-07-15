@@ -53,7 +53,7 @@ function initOpenCL
 operator nBodySimulateGPU(
   io Scalar time,
   io Vec4 posInit[],
-  io Vec3 velInit[],
+  io Vec4 velInit[],
   io Scalar massInit[],
 
   io cl_context clContext,
@@ -61,6 +61,9 @@ operator nBodySimulateGPU(
   io cl_kernel clKernel,
   io String kernelSrc,
   io Integer posOpenGLBufferID,
+  io Integer velOpenGLBufferID,
+  io Integer posPrevOpenGLBufferID,
+  io Integer velPrevOpenGLBufferID,
   io cl_mem posCurrent,
   io cl_mem velCurrent,
   io cl_mem posPrev,
@@ -105,33 +108,25 @@ operator nBodySimulateGPU(
       clErr = clGetMemObjectSize(posCurrent, posCurrentSize);
       report 'posCurrentSize = ' + posCurrentSize;
       report 'posCurrent = ' + posCurrent + '(' + (Boolean)posCurrent + ')';
-      velCurrent = clCreateBuffer(clContext, CL_MEM_READ_WRITE, memSize, NULL, clErr);
+      velCurrent = clCreateFromGLBuffer(clContext, CL_MEM_READ_WRITE, velOpenGLBufferID, clErr);
       Size velCurrentSize;
       clErr = clGetMemObjectSize(velCurrent, velCurrentSize);
       report 'velCurrentSize = ' + velCurrentSize;
-      posPrev = clCreateBuffer(clContext, CL_MEM_READ_WRITE, memSize, NULL, clErr);
-      velPrev = clCreateBuffer(clContext, CL_MEM_READ_WRITE, memSize, NULL, clErr);
+      posPrev = clCreateFromGLBuffer(clContext, CL_MEM_READ_WRITE, posPrevOpenGLBufferID, clErr);
+      velPrev = clCreateFromGLBuffer(clContext, CL_MEM_READ_WRITE, velPrevOpenGLBufferID, clErr);
     }
 
     var Vec4 writeData[];
 
-    writeData.resize(clPointCount);
+    for (var Size i = 0; i < clPointCount; i++) {
+      posInit[i].t = massInit[i];
+    }
+    clErr = clEnqueueWriteBuffer(clCommandQueue, posPrev, CL_TRUE, 0, posInit.dataSize, posInit.data, eventWaitList, event);
 
     for (var Size i = 0; i < clPointCount; i++) {
-      writeData[i].x = posInit[i].x;
-      writeData[i].y = posInit[i].y;
-      writeData[i].z = posInit[i].z;
-      writeData[i].t = massInit[i];
+      velInit[i].t = 1.0 / massInit[i];
     }
-    clErr = clEnqueueWriteBuffer(clCommandQueue, posPrev, CL_TRUE, 0, writeData.dataSize, writeData.data, eventWaitList, event);
-
-    for (var Size i = 0; i < clPointCount; i++) {
-      writeData[i].x = velInit[i].x;
-      writeData[i].y = velInit[i].y;
-      writeData[i].z = velInit[i].z;
-      writeData[i].t = 1.0 / massInit[i];
-    }
-    clErr = clEnqueueWriteBuffer(clCommandQueue, velPrev, CL_TRUE, 0, writeData.dataSize, writeData.data, eventWaitList, event);
+    clErr = clEnqueueWriteBuffer(clCommandQueue, velPrev, CL_TRUE, 0, velInit.dataSize, velInit.data, eventWaitList, event);
   }
   else {
     var cl_mem temp;

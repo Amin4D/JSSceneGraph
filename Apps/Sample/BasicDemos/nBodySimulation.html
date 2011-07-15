@@ -31,7 +31,6 @@
     
     <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Geometry.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Particles.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Lights.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Materials.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Manipulation.js" charset="utf-8"></script>
@@ -78,8 +77,9 @@ $(document).ready(function() { $('#play').button({
           nBodies: 1024
         });
       options.positionsVec4 = true;
+      options.velocitiesVec4 = true;
       options.createBoundingBoxNode = false;
-      var nBodyGeometry = scene.constructNode('Particles', options);
+      var nBodyGeometry = scene.constructNode('Points', options);
       
       // Add all the paramters, and add getters/setters at the same time.
       nBodyGeometry.pub.addUniformValue('timeStep', 'Scalar', 0.1, true);
@@ -89,8 +89,11 @@ $(document).ready(function() { $('#play').button({
       nBodyGeometry.pub.addUniformValue('damping', 'Scalar', 0.9, true);
       nBodyGeometry.pub.addUniformValue('systemType', 'Integer', 0, true);
     
+      nBodyGeometry.pub.addVertexAttributeValue('velocities', 'Vec4');
       nBodyGeometry.pub.addVertexAttributeValue('mass', 'Scalar');
       nBodyGeometry.pub.addVertexAttributeValue('vertexColors', 'Color');
+      nBodyGeometry.pub.addVertexAttributeValue('posPrev', 'Vec4');
+      nBodyGeometry.pub.addVertexAttributeValue('velPrev', 'Vec4');
 
       var nBodyKernelGPUSrc = FABRIC.loadResourceURL('CL/nBodyKernel.cl');
     
@@ -125,41 +128,12 @@ $(document).ready(function() { $('#play').button({
           }));
       nBodyGeometry.pub.setVertexCount(options.nBodies);
       
-      var memberName = 'positions';
-      var memberType = 'Vec4';
-      var bufferIDMemberName = memberName + 'BufferID';
-      var countMemberName = memberName + 'Count';
-      var attributeNodeBinding = 'attributes';
-        
-      var reloadMemberName = memberName + 'Reload';
-      var dynamicMemberName = memberName + 'Dynamic';
-      
-      nBodyGeometry.pub.addUniformValue(bufferIDMemberName, 'Integer', 0);
-      nBodyGeometry.pub.addUniformValue(countMemberName, 'Size', 0);
-      nBodyGeometry.pub.addUniformValue(reloadMemberName, 'Boolean', false);
-      nBodyGeometry.pub.addUniformValue(dynamicMemberName, 'Boolean', false);
-
-      // TODO: Move this into the 'geometry' class and tidy up. 
-      nBodySimulateNodeGPU.bindings.append(scene.constructOperator({
-            operatorName: 'gen' + memberName + 'OpenGLBuffer',
-            mainThreadOnly: true,
-            srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/genAndLoadVBO.kl',
-            preProcessorDefinitions: {
-              DATA_TYPE: memberType,
-              ATTRIBUTE_NAME: memberName,
-              ATTRIBUTE_ID: FABRIC.shaderAttributeTable[memberName].id
-            },
-            entryFunctionName: 'genDGVBOOp',
-            parameterBinding: [
-              'self.' + memberName + '[]',
-              'uniforms.' + countMemberName,
-              'uniforms.' + dynamicMemberName,
-              'uniforms.' + reloadMemberName,
-              'uniforms.' + bufferIDMemberName
-            ]
-          }));
+      var positionsbufferIDMemberName = nBodyGeometry.genDGVBO('positions');
+      var velocitiesbufferIDMemberName = nBodyGeometry.genDGVBO('velocities');
+      var posPrevbufferIDMemberName = nBodyGeometry.genDGVBO('posPrev');
+      var velPrevbufferIDMemberName = nBodyGeometry.genDGVBO('velPrev');
     
-      deformationBuffer = nBodyGeometry.pub.addDeformationBuffer();//['positions']);
+      deformationBuffer = nBodyGeometry.pub.addDeformationBuffer();
       deformationBuffer.addDependency(scene.getGlobalsNode(), 'globals');
     
       deformationBuffer.assignOperator({
@@ -176,7 +150,10 @@ $(document).ready(function() { $('#play').button({
             'uniforms.clCommandQueue',
             'uniforms.clKernel',
             'uniforms.kernelSrc',
-            'uniforms.' + bufferIDMemberName,
+            'uniforms.' + positionsbufferIDMemberName,
+            'uniforms.' + velocitiesbufferIDMemberName,
+            'uniforms.' + posPrevbufferIDMemberName,
+            'uniforms.' + velPrevbufferIDMemberName,
             'uniforms.positionMem',
             'uniforms.velocityMem',
             'uniforms.positionPrevMem',

@@ -614,10 +614,6 @@ FABRIC.SceneGraph.registerNodeType('Instance',
       materialNodes = [];
 
     dgnode.addMember('drawToggle', 'Boolean', options.enableDrawing);
-    // TODO: once event handler data can be bound for child events, then
-    // we should move these members onto the event handler.
-    dgnode.addMember('elementCount', 'Size', 0);
-    dgnode.addMember('indicesBufferID', 'Integer', 0);
     
     redrawEventHandler.addScope('instance', dgnode);
 

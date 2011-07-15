@@ -136,6 +136,7 @@ function createTextureFromImage(
     var Size buffers[];
     buffers.push(Size(bufferID));
     glGenTextures(1, buffers);
+    bufferID = buffers[0];
     glActiveTexture(GL_TEXTURE0 + textureUnit);
     glBindTexture(GL_TEXTURE_2D, bufferID);
     //report("bufferID:"+bufferID);

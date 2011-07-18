@@ -48,12 +48,13 @@ FABRIC.SceneGraph.registerNodeType('Hair',
       transformNode: undefined,
       count: 50,
       segments: 14,
-      length: 40,
+      length: FABRIC.RT.vec2(1,1.5),
       stiffness: FABRIC.RT.vec2(0.2,0.5),
-      rootColorMin: FABRIC.RT.rgba(0.0, 0.05, 4.0, 1.0),
+      gravity: FABRIC.RT.vec2(0.2,0.5),
+      rootColorMin: FABRIC.RT.rgba(0.0, 0.05, 1.0, 1.0),
       rootColorMax: FABRIC.RT.rgba(0.0, 0.45, 1.0, 1.0),
-      tipColorMin: FABRIC.RT.rgba(0.5, 0.5, 0.5, 1.0),
-      tipColorMax: FABRIC.RT.rgba(1.0, 1.0, 1.0, 1.0),
+      tipColorMin: FABRIC.RT.rgba(0.2, 0.25, 1.0, 1.0),
+      tipColorMax: FABRIC.RT.rgba(0.2, 0.65, 1.0, 1.0),
       });
 
     if (!options.trianglesNode) {
@@ -72,9 +73,13 @@ FABRIC.SceneGraph.registerNodeType('Hair',
     pointNode.pub.addVertexAttributeValue('directions','Vec3');
     pointNode.pub.addVertexAttributeValue('vertexColors','Color');
     pointNode.pub.addVertexAttributeValue('stiffness','Scalar');
+    pointNode.pub.addVertexAttributeValue('gravity','Scalar');
+    pointNode.pub.addVertexAttributeValue('segmentlength','Scalar');
     pointNode.pub.addUniformValue('rootColor', 'Color[2]', [options.rootColorMin,options.rootColorMax]);
     pointNode.pub.addUniformValue('tipColor', 'Color[2]', [options.tipColorMin,options.tipColorMax]);
-    hairNode.pub.addUniformValue('stiffnessLimits', 'Vec2', options.stiffness);
+    pointNode.pub.addUniformValue('stiffnessLimits', 'Vec2', options.stiffness);
+    pointNode.pub.addUniformValue('gravityLimits', 'Vec2', options.gravity);
+    pointNode.pub.addUniformValue('lengthLimits', 'Vec2', options.length);
 
     var pointDGNode = pointNode.getAttributesDGNode();
     pointDGNode.addDependency(trianglesNode.getAttributesDGNode(),'trianglesattributes');
@@ -93,11 +98,14 @@ FABRIC.SceneGraph.registerNodeType('Hair',
         'self.directions',
         'self.vertexColors',
         'uniforms.stiffnessLimits',
-        'self.stiffness'
+        'self.stiffness',
+        'uniforms.gravityLimits',
+        'self.gravity',
+        'uniforms.lengthLimits',
+        'self.segmentlength'
       ],
       preProcessorDefinitions: {
-        SEGMENT_COUNT: options.segments + 1,
-        SEGMENT_LENGTH: options.length / options.segments,
+        SEGMENT_COUNT: options.segments + 1
       },
       entryFunctionName: 'initHair'
     }));
@@ -109,7 +117,7 @@ FABRIC.SceneGraph.registerNodeType('Hair',
     hairNode.pub.addVertexAttributeValue('prevpositions','Vec3');
     hairNode.pub.addVertexAttributeValue('directions','Vec3');
     hairNode.pub.addVertexAttributeValue('prevdirections','Vec3');
-    hairNode.pub.addVertexAttributeValue('vertexColors','Color',pointDGNode.getData("vertexColors"));
+    hairNode.pub.addVertexAttributeValue('vertexColors','Color');
     hairNode.pub.setAttributeDynamic("positions");
     
     // precompute the indices
@@ -140,17 +148,20 @@ FABRIC.SceneGraph.registerNodeType('Hair',
         "self.index",
         "points.positions[]",
         "points.directions[]",
-        "points.stiffness",
+        "points.stiffness[]",
+        "points.gravity[]",
+        "points.segmentlength[]",
+        "points.vertexColors[]",
         "self.positions",
         "self.prevpositions",
         "self.directions",
         "self.prevdirections",
+        "self.vertexColors",
         "transform.globalXfo",
         "globals.ms"
       ],
       preProcessorDefinitions: {
-        SEGMENT_COUNT: options.segments + 1,
-        SEGMENT_LENGTH: options.length / options.segments,
+        SEGMENT_COUNT: options.segments + 1
       },
       entryFunctionName: 'simulateHair'
     }));
@@ -164,8 +175,7 @@ FABRIC.SceneGraph.registerNodeType('Hair',
         "self.prevdirections[]"
       ],
       preProcessorDefinitions: {
-        SEGMENT_COUNT: options.segments + 1,
-        SEGMENT_LENGTH: options.length / options.segments,
+        SEGMENT_COUNT: options.segments + 1
       },
       entryFunctionName: 'shiftPositions'
     }));
@@ -208,14 +218,16 @@ $(document).ready(function() { var scene = FABRIC.SceneGraph.createScene();
       geometryNode: triangles,
       materialNode: phongMaterial
     });
-  scene.constructNode('3AxisRotationManipulator', { parentNode: triangleInstance, disableZBuffer: true, radius: 5 });
+  scene.constructNode('3AxisRotationManipulator', { parentNode: triangleInstance, disableZBuffer: true, radius: 7.5 });
+  scene.constructNode('3AxisTranslationManipulator', { parentNode: triangleInstance, disableZBuffer: true, size: 7.5 });
 
   var hairGeometry = scene.constructNode('Hair', {
       trianglesNode: triangles,
       transformNode: triangleInstance.getTransformNode(),
-      segments: 5,
-      length: 3.5,
-      count: 10
+      segments: 6,
+      length: FABRIC.RT.vec2(3,5),
+      stiffness: FABRIC.RT.vec2(0.75,1.5),
+      count: 12000
     });
 
   var hairLines = scene.constructNode('Instance', {

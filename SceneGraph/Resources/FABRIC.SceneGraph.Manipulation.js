@@ -276,8 +276,8 @@ FABRIC.SceneGraph.registerNodeType('PaintManipulator',
       }
       if (evt.button === 0) {
         // Paint
-        cameraMatrix = viewportNode.getCameraNode().cameraMat44;
-        projectionMatrix = viewportNode.getCameraNode().projectionMat44;
+        cameraMatrix = viewportNode.getCameraNode().getCameraMat44();
+        projectionMatrix = viewportNode.getCameraNode().getProjectionMat44();
 
         document.addEventListener('mousemove', paintFn, true);
         document.addEventListener('mouseup', releasePaintFn, true);
@@ -340,12 +340,12 @@ FABRIC.SceneGraph.registerNodeType('PaintManipulator',
 
     paintManipulatorNode.pub.enable = function(){
       enabled = true;
-      brushInstance.pub.drawToggle = true;
+      brushInstance.pub.setDrawToggle(true);
       scene.pub.redrawAllWindows();
     }
     paintManipulatorNode.pub.disable = function(){
       enabled = false;
-      brushInstance.pub.drawToggle = false;
+      brushInstance.pub.setDrawToggle(false);
       scene.pub.redrawAllWindows();
     }
 

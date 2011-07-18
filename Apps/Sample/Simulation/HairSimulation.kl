@@ -9,13 +9,21 @@ operator initHair(
   io Vec3 direction,
   io Color vertexColor,
   io Vec2 stiffnessLimits,
-  io Scalar stiffness
+  io Scalar stiffness,
+  io Vec2 gravityLimits,
+  io Scalar gravity,
+  io Vec2 lengthLimits,
+  io Scalar segmentlength
 )
 {
   // compute the indices inside the hair
   var Size rootIndex = Size(Scalar(index) / Scalar(SEGMENT_COUNT));
   var Size elementIndex = index % SEGMENT_COUNT;
   var Scalar ratio = Scalar(elementIndex) / Scalar(SEGMENT_COUNT-1);
+
+  // compute the length of each hair
+  var Scalar lengthBlend = mathRandomScalar(317,rootIndex * 412 + 71);
+  segmentlength = (lengthLimits.x * lengthBlend + lengthLimits.y * (1.0 - lengthBlend)) / Scalar(SEGMENT_COUNT-1);
   
   // compute the coordinate
   var Size triangleIndex = Size(mathRandomScalar(0,rootIndex * 97312 + 212) * Scalar(triangleIndices.size()) / 3.0) * 3;
@@ -32,7 +40,7 @@ operator initHair(
   edge1 = triangleNormals[triangleIndices[triangleIndex+2]] - triangleNormals[triangleIndices[triangleIndex]];
   edge2 = triangleNormals[triangleIndices[triangleIndex+1]] - triangleNormals[triangleIndices[triangleIndex]];
   direction = (triangleNormals[triangleIndices[triangleIndex]] + edge1 * u + edge2 * v).unit();
-  position += direction * Scalar(elementIndex) * SEGMENT_LENGTH;
+  position += direction * Scalar(elementIndex) * segmentlength;
   
   // now compute the color
   var Scalar rootBlend = mathRandomScalar(17,rootIndex * 314 + 47);
@@ -44,17 +52,25 @@ operator initHair(
   // compute the stiffness
   var Scalar stiffnessBlend = mathRandomScalar(27,rootIndex * 762 + 417);
   stiffness = stiffnessLimits.x * stiffnessBlend + stiffnessLimits.y * (1.0 - stiffnessBlend);
+
+  // compute the gravity
+  var Scalar gravityBlend = mathRandomScalar(97,rootIndex * 762 + 417);
+  gravity = gravityLimits.x * gravityBlend + gravityLimits.y * (1.0 - gravityBlend);
 }
 
 operator simulateHair(
   in Size index,
   io Vec3 localposition[],
   io Vec3 localdirection[],
-  io Scalar stiffness,
+  io Scalar stiffness[],
+  io Scalar gravity[],
+  io Scalar segmentlength[],
+  io Color color[],
   io Vec3 position,
   io Vec3 prevposition,
   io Vec3 direction,
   io Vec3 prevdirection,
+  io Color vertexColor,
   io Xfo xfo,
   io Scalar time
 )
@@ -67,15 +83,17 @@ operator simulateHair(
   }
   else
   {
-    position += prevdirection * stiffness;
+    position += prevdirection * stiffness[index];
+    position.y -= gravity[index] * segmentlength[index];
     direction = (position - prevposition);
     var Scalar length = direction.norm();
     if(length > 0.0001)
     {
-      direction *= SEGMENT_LENGTH / length;
+      direction *= segmentlength[index] / length;
       position = prevposition + direction;
     }
   }
+  vertexColor = color[index];
 }
 
 operator shiftPositions(

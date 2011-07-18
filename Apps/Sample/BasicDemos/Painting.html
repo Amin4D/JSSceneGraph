@@ -165,12 +165,12 @@ $(document).ready(function() {
   }
   else {
     var brushColor = FABRIC.RT.rgb(0.8, 0.0, 0.0);
-    paintManipulator.brushColor = brushColor;
+    paintManipulator.setBrushColor(brushColor);
     $('#brushColor').ColorPicker({
         flat: true,
         color: { r: brushColor.r * 255, g: brushColor.g * 255, b: brushColor.b * 255} ,
         onChange: function(hsb, hex, rgb) {
-          paintManipulator.brushColor = FABRIC.RT.rgb255(rgb.r, rgb.g, rgb.b);
+          paintManipulator.setBrushColor(FABRIC.RT.rgb255(rgb.r, rgb.g, rgb.b));
         }
       });
 

@@ -70,7 +70,7 @@ FABRIC.SceneGraph.registerNodeType('Hair',
     // create a pointnode to prepare the values
     var pointNode = scene.constructNode('Points', {name: options.name+'_Points'} );
     pointNode.pub.setVertexCount(options.count * (options.segments+1));
-    pointNode.pub.addVertexAttributeValue('directions','Vec3');
+    pointNode.pub.addVertexAttributeValue('normals','Vec3');
     pointNode.pub.addVertexAttributeValue('vertexColors','Color');
     pointNode.pub.addVertexAttributeValue('stiffness','Scalar');
     pointNode.pub.addVertexAttributeValue('gravity','Scalar');
@@ -95,7 +95,7 @@ FABRIC.SceneGraph.registerNodeType('Hair',
         "uniforms.rootColor",
         "uniforms.tipColor",
         "self.positions",
-        'self.directions',
+        'self.normals',
         'self.vertexColors',
         'uniforms.stiffnessLimits',
         'self.stiffness',
@@ -114,11 +114,12 @@ FABRIC.SceneGraph.registerNodeType('Hair',
     // create the node to perform the simulation
     var hairNode = scene.constructNode('Lines', options);
     hairNode.pub.setVertexCount(options.count * (options.segments+1));
+    hairNode.pub.addVertexAttributeValue('normals','Vec3');
     hairNode.pub.addVertexAttributeValue('prevpositions','Vec3');
-    hairNode.pub.addVertexAttributeValue('directions','Vec3');
-    hairNode.pub.addVertexAttributeValue('prevdirections','Vec3');
+    hairNode.pub.addVertexAttributeValue('prevnormals','Vec3');
     hairNode.pub.addVertexAttributeValue('vertexColors','Color');
     hairNode.pub.setAttributeDynamic("positions");
+    hairNode.pub.setAttributeDynamic("normals");
     
     // precompute the indices
     var singleCount = options.segments-1;
@@ -147,15 +148,15 @@ FABRIC.SceneGraph.registerNodeType('Hair',
       parameterBinding: [
         "self.index",
         "points.positions[]",
-        "points.directions[]",
+        "points.normals[]",
         "points.stiffness[]",
         "points.gravity[]",
         "points.segmentlength[]",
         "points.vertexColors[]",
         "self.positions",
         "self.prevpositions",
-        "self.directions",
-        "self.prevdirections",
+        "self.normals",
+        "self.prevnormals",
         "self.vertexColors",
         "transform.globalXfo",
         "globals.ms"
@@ -171,8 +172,8 @@ FABRIC.SceneGraph.registerNodeType('Hair',
       parameterBinding: [
         "self.positions[]",
         "self.prevpositions[]",
-        "self.directions[]",
-        "self.prevdirections[]"
+        "self.normals[]",
+        "self.prevnormals[]"
       ],
       preProcessorDefinitions: {
         SEGMENT_COUNT: options.segments + 1
@@ -203,7 +204,7 @@ $(document).ready(function() { var scene = FABRIC.SceneGraph.createScene();
 
   var hairMaterial = scene.constructNode('HairMaterial', {
     lightNode: light,
-    //specularColor
+    specularColor: FABRIC.RT.rgba(0.4, 0.85, 1.0, 1.0)
   });
   var phongMaterial = scene.constructNode('PhongMaterial', {
     diffuseColor: FABRIC.RT.rgb(0.4, 0.4, 0.4),
@@ -224,10 +225,11 @@ $(document).ready(function() { var scene = FABRIC.SceneGraph.createScene();
   var hairGeometry = scene.constructNode('Hair', {
       trianglesNode: triangles,
       transformNode: triangleInstance.getTransformNode(),
-      segments: 6,
+      segments: 5,
       length: FABRIC.RT.vec2(3,5),
       stiffness: FABRIC.RT.vec2(0.75,1.5),
-      count: 12000
+      gravity: FABRIC.RT.vec2(0.4,0.6),
+      count: 10000
     });
 
   var hairLines = scene.constructNode('Instance', {

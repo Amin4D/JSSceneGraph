@@ -71,8 +71,10 @@ FABRIC.SceneGraph.registerNodeType('Hair',
     pointNode.pub.setVertexCount(options.count * (options.segments+1));
     pointNode.pub.addVertexAttributeValue('directions','Vec3');
     pointNode.pub.addVertexAttributeValue('vertexColors','Color');
+    pointNode.pub.addVertexAttributeValue('stiffness','Scalar');
     pointNode.pub.addUniformValue('rootColor', 'Color[2]', [options.rootColorMin,options.rootColorMax]);
     pointNode.pub.addUniformValue('tipColor', 'Color[2]', [options.tipColorMin,options.tipColorMax]);
+    hairNode.pub.addUniformValue('stiffnessLimits', 'Vec2', options.stiffness);
 
     var pointDGNode = pointNode.getAttributesDGNode();
     pointDGNode.addDependency(trianglesNode.getAttributesDGNode(),'trianglesattributes');
@@ -90,6 +92,8 @@ FABRIC.SceneGraph.registerNodeType('Hair',
         "self.positions",
         'self.directions',
         'self.vertexColors',
+        'uniforms.stiffnessLimits',
+        'self.stiffness'
       ],
       preProcessorDefinitions: {
         SEGMENT_COUNT: options.segments + 1,
@@ -103,8 +107,9 @@ FABRIC.SceneGraph.registerNodeType('Hair',
     var hairNode = scene.constructNode('Lines', options);
     hairNode.pub.setVertexCount(options.count * (options.segments+1));
     hairNode.pub.addVertexAttributeValue('prevpositions','Vec3');
+    hairNode.pub.addVertexAttributeValue('directions','Vec3');
+    hairNode.pub.addVertexAttributeValue('prevdirections','Vec3');
     hairNode.pub.addVertexAttributeValue('vertexColors','Color',pointDGNode.getData("vertexColors"));
-    hairNode.pub.addUniformValue('stiffness', 'Vec2', options.stiffness);
     hairNode.pub.setAttributeDynamic("positions");
     
     // precompute the indices
@@ -133,11 +138,13 @@ FABRIC.SceneGraph.registerNodeType('Hair',
       srcFile: 'HairSimulation.kl',
       parameterBinding: [
         "self.index",
-        "uniforms.stiffness",
         "points.positions[]",
         "points.directions[]",
+        "points.stiffness",
         "self.positions",
         "self.prevpositions",
+        "self.directions",
+        "self.prevdirections",
         "transform.globalXfo",
         "globals.ms"
       ],
@@ -146,6 +153,21 @@ FABRIC.SceneGraph.registerNodeType('Hair',
         SEGMENT_LENGTH: options.length / options.segments,
       },
       entryFunctionName: 'simulateHair'
+    }));
+    hairDGNode.bindings.append(scene.constructOperator({
+      operatorName: 'shiftPositions',
+      srcFile: 'HairSimulation.kl',
+      parameterBinding: [
+        "self.positions[]",
+        "self.prevpositions[]",
+        "self.directions[]",
+        "self.prevdirections[]"
+      ],
+      preProcessorDefinitions: {
+        SEGMENT_COUNT: options.segments + 1,
+        SEGMENT_LENGTH: options.length / options.segments,
+      },
+      entryFunctionName: 'shiftPositions'
     }));
     
     return hairNode;

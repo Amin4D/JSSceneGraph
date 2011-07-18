@@ -1,142 +1,64 @@
-operator initFromTrianglesWithXfo(
+operator initHair(
   in Size index,
-  io Integer segments,
-  io Scalar length,
   io Vec3 trianglePositions[],
   io Vec3 triangleNormals[],
   io Integer triangleIndices[],
-  io Xfo triangleTransform,
-  io Scalar segmentLength,
+  io Color rootColorLimits[2],
+  io Color tipColorLimits[2],
   io Vec3 position,
   io Vec3 direction,
-  io Vec3 elements[]
+  io Color vertexColor
 )
 {
-  var Size triangleIndex = Size(mathRandomScalar(0,index * 97312 + 212) * Scalar(triangleIndices.size()) / 3.0) * 3;
-  var Scalar u = mathRandomScalar(1,index * 317231451 + 3);
-  var Scalar v = mathRandomScalar(2,index * 31812314 + 41);
-  var Scalar r = mathRandomScalar(3,index * 1742342 + 19);
+  // compute the indices inside the hair
+  var Size rootIndex = Size(Scalar(index) / Scalar(SEGMENT_COUNT));
+  var Size elementIndex = index % SEGMENT_COUNT;
+  var Scalar ratio = Scalar(elementIndex) / Scalar(SEGMENT_COUNT-1);
+  
+  // compute the coordinate
+  var Size triangleIndex = Size(mathRandomScalar(0,rootIndex * 97312 + 212) * Scalar(triangleIndices.size()) / 3.0) * 3;
+  var Scalar u = mathRandomScalar(1,rootIndex * 317231451 + 3);
+  var Scalar v = mathRandomScalar(2,rootIndex * 31812314 + 41);
+  var Scalar r = mathRandomScalar(3,rootIndex * 1742342 + 19);
   u *= r;
   v *= (1.0 - r);
   
+  // take care of position and direction
   var Vec3 edge1 = trianglePositions[triangleIndices[triangleIndex+2]] - trianglePositions[triangleIndices[triangleIndex]];
   var Vec3 edge2 = trianglePositions[triangleIndices[triangleIndex+1]] - trianglePositions[triangleIndices[triangleIndex]];
-  position = triangleTransform.transform(trianglePositions[triangleIndices[triangleIndex]] + edge1 * u + edge2 * v);
+  position = trianglePositions[triangleIndices[triangleIndex]] + edge1 * u + edge2 * v;
   edge1 = triangleNormals[triangleIndices[triangleIndex+2]] - triangleNormals[triangleIndices[triangleIndex]];
   edge2 = triangleNormals[triangleIndices[triangleIndex+1]] - triangleNormals[triangleIndices[triangleIndex]];
-  direction = triangleTransform.ori.transform(triangleNormals[triangleIndices[triangleIndex]] + edge1 * u + edge2 * v).unit();
+  direction = (triangleNormals[triangleIndices[triangleIndex]] + edge1 * u + edge2 * v).unit();
+  position += direction * Scalar(elementIndex) * SEGMENT_LENGTH;
   
-  if(elements.size() != Size(segments))
-  {
-    segmentLength = length / Scalar(segments);
-    elements.resize(Size(segments));
-    for(var Integer i=0;i<segments;i++)
-      elements[i] = position + direction * segmentLength * Scalar(i+1);
-  }
+  // now compute the color
+  var Scalar rootBlend = mathRandomScalar(17,rootIndex * 314 + 47);
+  var Scalar tipBlend = mathRandomScalar(19,rootIndex * 317 + 19);
+  var Color rootColor = rootColorLimits[0] * rootBlend + rootColorLimits[1] * (1.0 - rootBlend);
+  var Color tipColor = tipColorLimits[0] * tipBlend + tipColorLimits[1] * (1.0 - tipBlend);
+  vertexColor = rootColor * (1.0 - ratio) + tipColor * ratio;
 }
 
-operator simulate(
+operator simulateHair(
   in Size index,
-  io Scalar segmentLength,
   io Vec2 stiffnessLimits,
+  io Vec3 localposition[],
+  io Vec3 direction[],
   io Vec3 position,
-  io Vec3 direction,
-  io Vec3 elements[],
+  io Vec3 prevposition,
+  io Xfo xfo,
   io Scalar time
 )
 {
-  var Vec3 prev = position;
-  var Vec3 target;
-  var Vec3 dir = direction * segmentLength;
-  var Vec3 nextDir = dir;
-  var Scalar stiffness = (stiffnessLimits.y - stiffnessLimits.x) * mathRandomScalar(513,index * 7261 + 321) + stiffnessLimits.x;
-  for(var Size i=0;i<elements.size();i++)
+  var Size elementIndex = index % SEGMENT_COUNT;
+  if(elementIndex == 0 || time == 0.0)
   {
-    target = (prev + dir) * stiffness + elements[i] * (1.0 - stiffness);
-
-    // change the direction
-    nextDir = (target - prev).unit() * segmentLength;
-    elements[i] = prev + nextDir;
-      
-    // swap directions
-    dir = nextDir;
-    prev = elements[i];
+    position = xfo.transform(localposition[index]);
   }
-}
-
-operator resizeLines(
-  io Vec3 elements[][],
-  io Size newCount  
-)
-{
-  newCount = elements.size();
-  if(elements.size() > 0)
-    newCount *= (elements[0].size() + 1);
-}
-
-operator generateLines(
-  io Vec3 roots[],
-  io Vec3 elements[][],
-  io Color rootColorLimits[2],
-  io Color tipColorLimits[2],
-  io Vec3 positions[],
-  io Vec3 normals[],
-  io Color vertexColor[],
-  io Integer indices[]
-)
-{
-  if(elements.size() == 0)
-    return;
-
-  // only process the indices if we really need to  
-  var Size indicesCount = elements.size() * elements[0].size() * 2;
-  if(indices.size() != indicesCount)
+  else
   {
-    indices.resize(indicesCount);
-    var Size count = elements[0].size()-1;
-    var Size pntOffset = 0;
-    var Size indicesOffset = 0;
-    var Size colorOffset = 0;
-    for(var Size i=0;i<elements.size();i++)
-    {
-      indices[indicesOffset++] = pntOffset++;
-      for(var Size j=0;j<count;j++)
-      {
-        indices[indicesOffset++] = pntOffset;
-        indices[indicesOffset++] = pntOffset++;
-      }
-      indices[indicesOffset++] = pntOffset++;
-      
-      var Scalar rootBlend = mathRandomScalar(17,i * 314 + 47);
-      var Scalar tipBlend = mathRandomScalar(19,i * 317 + 19);
-      var Color rootColor = rootColorLimits[0] * rootBlend + rootColorLimits[1] * (1.0 - rootBlend);
-      var Color tipColor = tipColorLimits[0] * tipBlend + tipColorLimits[1] * (1.0 - tipBlend);
-      var Scalar step = 1.0 / Scalar(elements[i].size());
-      var Scalar blend = 0.0;
-      vertexColor[colorOffset++] = rootColor;
-      for(var Size j=0;j<elements[i].size();j++)
-      {
-        blend += step;
-        vertexColor[colorOffset++] = rootColor * (1.0 - blend) + tipColor * blend;
-      }
-    }
+    
   }
-
-  // let's update the points
-  var Size offset = 0;
-  for(var Size i=0;i<roots.size();i++)
-  {
-    var Vec3 prev = roots[i];
-    var Vec3 normal = elements[i][0] - prev;
-
-    positions[offset] = roots[i];
-    normals[offset++] = normal;
-    for(var Size j=0;j<elements[i].size();j++)
-    {
-      positions[offset] = elements[i][j];
-      normals[offset++] = normal;
-      normal = elements[i][j] - prev;
-      prev = elements[i][j];
-    }
-  }
+  prevposition = position;
 }

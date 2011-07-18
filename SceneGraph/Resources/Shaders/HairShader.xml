@@ -5,28 +5,34 @@
 		<uniform name="u_lightPosition" constant="lightPosition" owner="light"/>
 		<uniform name="u_modelViewProjectionMatrix" constant="modelViewProjectionMatrix" owner="instance"/>
 		<uniform name="u_modelViewMatrix" constant="modelViewMatrix"  owner="instance"/>
+		<uniform name="u_normalMatrix" constant="normalMatrix"  owner="instance"/>
 		<uniform name="u_materialSpecularColor" constant="specularColor" defaultValue="FABRIC.RT.rgba(1.0,1.0,0.8,1.0)"/>
 	</uniforms>
 	<attributes>
 		<attribute name="a_position" binding="positions"/>
 		<attribute name="a_color" binding="vertexColors"/>
+		<attribute name="a_normal" binding="normals"/>
 	</attributes>
 	
 	<vertexshader>
 		<source>
 			uniform mat4 u_modelViewProjectionMatrix;
 			uniform mat4 u_modelViewMatrix;
+			uniform mat3 u_normalMatrix;
 			uniform vec4 u_lightPosition;
 
 			attribute vec4 a_position;
 			attribute vec4 a_color;
+      attribute vec3 a_normal;
 
 			varying vec4 color;
 			varying vec3 lightDir;
 			varying vec3 viewDir;
+      varying vec3 normal;
 
 			void main(){
 				vec4 modelCameraPosition = u_modelViewMatrix * a_position;
+        normal = u_normalMatrix * a_normal;
         
 				lightDir = vec3(u_lightPosition - modelCameraPosition);
 
@@ -47,16 +53,18 @@
 			varying vec4 color;
 			varying vec3 lightDir;
 			varying vec3 viewDir;
+      varying vec3 normal;
 			
 			void main(){
       
-        //float vd = 1.0 - abs(dot(N,V));
-        //float ld = 1.0 - abs(dot(N,L));
-        //float d = vd * ld;
-        //d = d * d * d;
+        vec3 N = normalize(normal);
+        vec3 L = normalize(lightDir);
+        vec3 V = normalize(viewDir);
+        float td = clamp(0.7 + dot(N,L),0.3,1);
+        float nd = 1.0 - abs(dot(N,V));
+        nd = nd * nd * nd * nd * nd;
       
-				//gl_FragColor = color * (1.0 - d) + u_materialSpecularColor * d;
-				gl_FragColor = color;
+				gl_FragColor = td * (color * (1.0 - nd) + u_materialSpecularColor * nd);
 			}
 
 		</source>

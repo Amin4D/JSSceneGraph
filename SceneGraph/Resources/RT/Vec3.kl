@@ -201,6 +201,9 @@ function Scalar distanceFromLineToLine(
   c = v.dot(v); // always >= 0
   d = u.dot(w);
   e = v.dot(w);
+  if(a == 0.0 || c == 0.0){
+    return 1.0e20;
+  }
   D = a * c - b * b; // always >= 0
 
   // com_pute the line _parameters of the two closest points
@@ -218,7 +221,6 @@ function Scalar distanceFromLineToLine(
     l1_t = (b * e - c * d) / D;
     l2_t = (a * e - b * d) / D;
   }
-
   // get the difference of the two closest points
   dP = w + (l1_t * u) - (l2_t * v);
 

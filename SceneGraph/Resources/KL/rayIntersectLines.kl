@@ -32,13 +32,13 @@ operator rayIntersectLines(
     var Vec3 v0 = positions[indices[i + 0]];
     var Vec3 v1 = positions[indices[i + 1]];
     var Vec3 point;
-    var Scalar dist, u, v;
-    if(objRay.intersectLineSegment(v0, v1, point, dist, u)){
+    var Scalar dist, rayParam, segmentParam;
+    if(objRay.intersectLineSegment(v0, v1, dist, rayParam, segmentParam)){
       if (dist < threshold) {
         select = true;
         if (dist < intersection.distance) {
-          intersection.point = point * globalMat44;
-          intersection.distance = dist;
+          intersection.point = v0.lerp(v1, segmentParam) * globalMat44;
+          intersection.distance = rayParam;
           intersection.elementid = i;
         }
       }

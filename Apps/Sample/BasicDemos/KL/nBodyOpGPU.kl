@@ -14,28 +14,15 @@ function initOpenCL
   if (!clContext) {
     var Integer clErr;
 
-    clContext = clCreateContext_GL(clErr);
+    var Integer clErr;
+    var cl_platform_id clPlatformIDs[];
+    clErr = clGetPlatformIDs(1, clPlatformIDs);
 
-    cl_device_id clContextDeviceIDs[];
-    clErr = clGetContextDevices(clContext, clContextDeviceIDs);
-    report "clGetContextDevices: " + clErr;
-    
-    cl_device_id clDeviceID = clContextDeviceIDs[0];
-    for ( Size i=0; i<clContextDeviceIDs.size; ++i )
-    {
-      cl_device_type clDeviceType;
-      clErr = clGetDeviceType( clContextDeviceIDs[i], clDeviceType );
-      report "clGetDeviceType: " + clErr;
-      if ( clDeviceType == CL_DEVICE_TYPE_GPU )
-      {
-        report "Found GPU device at index " + i;
-        clDeviceID = clContextDeviceIDs[i];
-        break;
-      }
-    }
-    report "clDeviceID = " + clDeviceID + " (" + (Boolean)clDeviceID + ")";
-    cl_device_id clDeviceIDs[];
-    clDeviceIDs.push(clDeviceID);
+    var cl_device_id clDeviceIDs[];
+    clErr = clGetDeviceIDs(clPlatformIDs[0], CL_DEVICE_TYPE_GPU, clDeviceIDs);
+    var cl_device_id clDeviceID = clDeviceIDs[0];
+
+    clContext = clCreateContext(clDeviceIDs, clErr);
 
     clCommandQueue = clCreateCommandQueue(clContext, clDeviceID, 0, clErr);
     report "clCreateCommandQueue: " + clErr;
@@ -131,15 +118,6 @@ operator nBodySimulateGPU(
   // Run the kernel and simulate
   var Scalar softeningSq = softening * softening;
 
-  cl_mem memsToAcquire[];
-  memsToAcquire.push(posCurrent);
-  memsToAcquire.push(velCurrent);
-  memsToAcquire.push(posPrev);
-  memsToAcquire.push(velPrev);
-
-  clErr = clEnqueueAcquireGLObjects(clCommandQueue, memsToAcquire, eventWaitList, event);
-  //report 'clEnqueueAcquireGLObjects: ' + clErr;
-
   // - Compute the local tile size for the single-multiple body interaction
   var Integer p = 256, q = 1;
   if (clPointCount < p && q == 1) {
@@ -170,9 +148,6 @@ operator nBodySimulateGPU(
 
   clErr = clEnqueueNDRangeKernel(clCommandQueue, clKernel, 2, NULL, globalWorkSize.data, localWorkSize.data, eventWaitList, event);
   //report 'clEnqueueNDRangeKernel: ' + clErr;
-
-  clErr = clEnqueueReleaseGLObjects(clCommandQueue, memsToAcquire, eventWaitList, event);
-  //report 'clEnqueueReleaseGLObjects: ' + clErr;
 
 //  clErr = clFinish(clCommandQueue);
   //report 'clFinish: ' + clErr;

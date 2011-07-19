@@ -11,7 +11,7 @@ float shadowLookupOffset(
 ){
   // Hard-coded for now. Should be added to the uniforms
   float pixelOffset = 0.0; //1.0 / 1024.0;
-  return shadow2DProj(shadowMapSampler, shadowCoord + vec4(offSet.x * ShadowCoord.w, offSet.y * shadowCoord.w, 0.05, 0.0) ).w;
+  return shadow2DProj(shadowMapSampler, shadowCoord + vec4(offset.x * shadowCoord.w, offset.y * shadowCoord.w, 0.05, 0.0) ).w;
 }
 
 float getLightFactor_PCF( 

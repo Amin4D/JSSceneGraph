@@ -57,8 +57,8 @@ float getLightFactor_Hard(
     in sampler2DShadow shadowMapSampler,
     in vec4 shadowCoord
 ){
-//  shadowCoord.w += 0.003;
-  return shadow2DProj(shadowMapSampler, vec4(shadowCoord.x, shadowCoord.y, shadowCoord.z - 0.01, shadowCoord.w) ).w;
+  shadowCoord.z -= 0.01;
+  return shadow2DProj(shadowMapSampler, shadowCoord).x;
 }
 
 #else

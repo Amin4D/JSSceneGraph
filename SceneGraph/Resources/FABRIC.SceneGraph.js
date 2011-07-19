@@ -924,7 +924,7 @@ FABRIC.SceneGraph.registerNodeType('Viewport',
         mouseMoveEvents: true,
         backgroundColor: FABRIC.RT.rgb(0.5, 0.5, 0.5),
         postProcessEffect: undefined,
-        rayIntersectionThreshold: 0.8
+        rayIntersectionThreshold: 0.2
       });
     options.dgnodenames.push('DGNode');
 
@@ -1231,8 +1231,7 @@ FABRIC.SceneGraph.registerNodeType('Viewport',
             evt.rayData = raycastResult.rayData;
             evt.hitData = raycastResult.closestNode.value;
             if (mouseOverNode == undefined ||
-                mouseOverNode.name !== hitNode.name ||
-                mouseOverNodeData.sliceid !== evt.hitData.sliceid) {
+                mouseOverNode.pub.getName() !== hitNode.pub.getName()) {
               if (mouseOverNode) {
                 evt.toElement = hitNode;
                 evt.hitData = mouseOverNodeData;

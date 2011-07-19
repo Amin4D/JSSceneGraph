@@ -25,200 +25,217 @@
   </textures>	
 	<vertexshader>
 		<source>
-			in vec4 a_position;
-			in vec4 a_normal;
-			in vec4 a_texCoord;
-      out vec3 v_position;
-      out vec3 v_normal;
-      out vec3 v_lightdir;
-      out vec2 v_texcoord;
-      uniform vec4 u_lightPosition;
-			uniform mat4 u_modelViewMatrix;
-			
-			void main(){
-				v_position = a_position.xyz;
-				v_normal = a_normal.xyz;
-				v_lightdir = vec3(u_lightPosition - u_modelViewMatrix * a_position);
-        v_texcoord = a_texCoord.xy;
-			}
-		</source>
+                  #version 400
+                  
+                  uniform vec4 u_lightPosition;
+                  uniform mat4 u_modelViewMatrix;
+                  
+                  in vec4 a_position;
+                  in vec4 a_normal;
+                  in vec4 a_texCoord;
+                  
+                  out vec3 v_position;
+                  out vec3 v_normal;
+                  out vec3 v_lightdir;
+                  out vec2 v_texcoord;
+                                    
+                  void main(){
+                    v_position = a_position.xyz;
+                    v_normal = a_normal.xyz;
+                    v_lightdir = vec3(u_lightPosition - u_modelViewMatrix * a_position);
+                    v_texcoord = a_texCoord.xy;
+                  }
+          </source>
 	</vertexshader>
 
 	<tesscontrolshader>
 		<source>
-      layout(vertices = 3) out;
-      in vec3 v_position[];
-      in vec3 v_normal[];
-      in vec3 v_lightdir[];
-      in vec2 v_texcoord[];
-      out vec3 tc_position[];
-      out vec3 tc_normal[];
-      out vec3 tc_lightdir[];
-      out vec2 tc_texcoord[];
-      uniform float u_tesselationInner;
-      uniform float u_tesselationOuter;
-
-      #define ID gl_InvocationID
-
-      void main()
-      {
-        tc_position[ID] = v_position[ID];
-        tc_normal[ID] = v_normal[ID];
-        tc_lightdir[ID] = v_lightdir[ID];
-        tc_texcoord[ID] = v_texcoord[ID];
-        if (ID == 0) {
-          gl_TessLevelInner[0] = u_tesselationInner;
-          gl_TessLevelOuter[0] = u_tesselationOuter;
-          gl_TessLevelOuter[1] = u_tesselationOuter;
-          gl_TessLevelOuter[2] = u_tesselationOuter;
-        }
-      }
+                  #version 400
+                  
+                  layout(vertices = 3) out;
+                  
+                  uniform float u_tesselationInner;
+                  uniform float u_tesselationOuter;
+                  
+                  in vec3 v_position[];
+                  in vec3 v_normal[];
+                  in vec3 v_lightdir[];
+                  in vec2 v_texcoord[];
+                  
+                  out vec3 tc_position[];
+                  out vec3 tc_normal[];
+                  out vec3 tc_lightdir[];
+                  out vec2 tc_texcoord[];
+                  
+                  #define ID gl_InvocationID
+                  
+                  void main()
+                  {
+                    tc_position[ID] = v_position[ID];
+                    tc_normal[ID] = v_normal[ID];
+                    tc_lightdir[ID] = v_lightdir[ID];
+                    tc_texcoord[ID] = v_texcoord[ID];
+                    if (ID == 0) {
+                      gl_TessLevelInner[0] = u_tesselationInner;
+                      gl_TessLevelOuter[0] = u_tesselationOuter;
+                      gl_TessLevelOuter[1] = u_tesselationOuter;
+                      gl_TessLevelOuter[2] = u_tesselationOuter;
+                    }
+                  }
     </source>
 	</tesscontrolshader>
 	
 	<tessevalshader>
 		<source>
-      layout(triangles, equal_spacing, cw) in;
-			uniform mat4 u_modelViewProjectionMatrix;
-      uniform float u_tesselationDepthMin;
-      uniform float u_tesselationDepthMax;
-			uniform sampler2D u_samplerDepthMap;
-
-      in vec3 tc_position[];
-      in vec3 tc_normal[];
-      in vec3 tc_lightdir[];
-      in vec2 tc_texcoord[];
-      out vec3 te_position;
-      out vec3 te_normal;
-      out vec3 te_lightdir;
-      out vec2 te_texcoord;
-      out vec3 te_patchdistance;
-      
-      void main()
-      {
-        te_patchdistance = gl_TessCoord;
-
-        vec2 texcoord = gl_TessCoord.x * tc_texcoord[0] + gl_TessCoord.y * tc_texcoord[1] + gl_TessCoord.z * tc_texcoord[2];
-        
-        vec3 n0 = gl_TessCoord.x * tc_normal[0];
-        vec3 n1 = gl_TessCoord.y * tc_normal[1];
-        vec3 n2 = gl_TessCoord.z * tc_normal[2];
-        vec3 normal = normalize(n0 + n1 + n2);
-
-        vec4 texColor = texture(u_samplerDepthMap, texcoord );
-        float depth = (texColor.x + texColor.y + texColor.z) * 0.3333;
-        depth = u_tesselationDepthMin * (1.0 - depth) + u_tesselationDepthMax * depth;
-
-        vec3 p0 = gl_TessCoord.x * tc_position[0];
-        vec3 p1 = gl_TessCoord.y * tc_position[1];
-        vec3 p2 = gl_TessCoord.z * tc_position[2];
-        te_position = p0 + p1 + p2 + normal * depth;
-        
-        te_normal = normal;
-        te_texcoord  = texcoord;
-
-        p0 = gl_TessCoord.x * tc_lightdir[0];
-        p1 = gl_TessCoord.y * tc_lightdir[1];
-        p2 = gl_TessCoord.z * tc_lightdir[2];
-        te_lightdir = normalize(p0 + p1 + p2);
-
-        gl_Position = u_modelViewProjectionMatrix * vec4(te_position, 1);
-      }
+                  #version 400
+                  
+                  layout(triangles, equal_spacing, cw) in;
+                  uniform mat4 u_modelViewProjectionMatrix;
+                  uniform float u_tesselationDepthMin;
+                  uniform float u_tesselationDepthMax;
+                  uniform sampler2D u_samplerDepthMap;
+                  
+                  in vec3 tc_position[];
+                  in vec3 tc_normal[];
+                  in vec3 tc_lightdir[];
+                  in vec2 tc_texcoord[];
+                  
+                  out vec3 te_position;
+                  out vec3 te_normal;
+                  out vec3 te_lightdir;
+                  out vec2 te_texcoord;
+                  out vec3 te_patchdistance;
+                  
+                  void main()
+                  {
+                    te_patchdistance = gl_TessCoord;
+                  
+                    vec2 texcoord = gl_TessCoord.x * tc_texcoord[0] + gl_TessCoord.y * tc_texcoord[1] + gl_TessCoord.z * tc_texcoord[2];
+                    
+                    vec3 n0 = gl_TessCoord.x * tc_normal[0];
+                    vec3 n1 = gl_TessCoord.y * tc_normal[1];
+                    vec3 n2 = gl_TessCoord.z * tc_normal[2];
+                    vec3 normal = normalize(n0 + n1 + n2);
+                  
+                    vec4 texColor = texture(u_samplerDepthMap, texcoord );
+                    float depth = (texColor.x + texColor.y + texColor.z) * 0.3333;
+                    depth = u_tesselationDepthMin * (1.0 - depth) + u_tesselationDepthMax * depth;
+                  
+                    vec3 p0 = gl_TessCoord.x * tc_position[0];
+                    vec3 p1 = gl_TessCoord.y * tc_position[1];
+                    vec3 p2 = gl_TessCoord.z * tc_position[2];
+                    te_position = p0 + p1 + p2 + normal * depth;
+                    
+                    te_normal = normal;
+                    te_texcoord  = texcoord;
+                  
+                    p0 = gl_TessCoord.x * tc_lightdir[0];
+                    p1 = gl_TessCoord.y * tc_lightdir[1];
+                    p2 = gl_TessCoord.z * tc_lightdir[2];
+                    te_lightdir = normalize(p0 + p1 + p2);
+                  
+                    gl_Position = u_modelViewProjectionMatrix * vec4(te_position, 1);
+                  }
     </source>
 	</tessevalshader>
 
 	<geometryshader>
 		<source>
-      layout(triangles) in;
-      layout(triangle_strip, max_vertices = 3) out;
-			uniform mat3 u_normalMatrix;
-
-      in vec3 te_patchdistance[3];
-      in vec3 te_position[3];
-      in vec3 te_normal[3];
-      in vec3 te_lightdir[3];
-      in vec2 te_texcoord[3];
-      
-      out vec3 g_patchdistance;
-      out vec3 g_tridistance;
-      out vec3 g_normal;
-      out vec3 g_lightdir;
-      out vec2 g_texcoord;
-      
-      void main()
-      {
-        vec3 A = te_position[2] - te_position[0];
-        vec3 B = te_position[1] - te_position[0];
-        g_normal = u_normalMatrix * normalize(cross(A, B));
-        
-        //g_normal = te_normal[2];
-        g_lightdir = te_lightdir[2];
-        g_patchdistance = te_patchdistance[2];
-        g_tridistance = vec3(0, 0, 1);
-        g_texcoord = te_texcoord[2];
-        gl_Position = gl_in[2].gl_Position;
-        EmitVertex();
-
-        //g_normal = te_normal[1];
-        g_lightdir = te_lightdir[1];
-        g_patchdistance = te_patchdistance[1];
-        g_tridistance = vec3(0, 1, 0);
-        g_texcoord = te_texcoord[1];
-        gl_Position = gl_in[1].gl_Position;
-        EmitVertex();
-        
-        //g_normal = te_normal[0];
-        g_lightdir = te_lightdir[0];
-        g_patchdistance = te_patchdistance[0];
-        g_tridistance = vec3(1, 0, 0);
-        g_texcoord = te_texcoord[0];
-        gl_Position = gl_in[0].gl_Position;
-        EmitVertex();
-
-        EndPrimitive();
-      }
+                  #version 400
+                  
+                  layout(triangles) in;
+                  layout(triangle_strip, max_vertices = 3) out;
+                  uniform mat3 u_normalMatrix;
+                  
+                  in vec3 te_patchdistance[3];
+                  in vec3 te_position[3];
+                  in vec3 te_normal[3];
+                  in vec3 te_lightdir[3];
+                  in vec2 te_texcoord[3];
+                  
+                  out vec3 g_patchdistance;
+                  out vec3 g_tridistance;
+                  out vec3 g_normal;
+                  out vec3 g_lightdir;
+                  out vec2 g_texcoord;
+                  
+                  void main()
+                  {
+                    vec3 A = te_position[2] - te_position[0];
+                    vec3 B = te_position[1] - te_position[0];
+                    g_normal = u_normalMatrix * normalize(cross(A, B));
+                    
+                    //g_normal = te_normal[2];
+                    g_lightdir = te_lightdir[2];
+                    g_patchdistance = te_patchdistance[2];
+                    g_tridistance = vec3(0, 0, 1);
+                    g_texcoord = te_texcoord[2];
+                    gl_Position = gl_in[2].gl_Position;
+                    EmitVertex();
+                  
+                    //g_normal = te_normal[1];
+                    g_lightdir = te_lightdir[1];
+                    g_patchdistance = te_patchdistance[1];
+                    g_tridistance = vec3(0, 1, 0);
+                    g_texcoord = te_texcoord[1];
+                    gl_Position = gl_in[1].gl_Position;
+                    EmitVertex();
+                    
+                    //g_normal = te_normal[0];
+                    g_lightdir = te_lightdir[0];
+                    g_patchdistance = te_patchdistance[0];
+                    g_tridistance = vec3(1, 0, 0);
+                    g_texcoord = te_texcoord[0];
+                    gl_Position = gl_in[0].gl_Position;
+                    EmitVertex();
+                  
+                    EndPrimitive();
+                  }
     </source>
 	</geometryshader>
   
 	<fragmentshader>
 		<source>
+                  #version 400
 
-      out vec4 FragColor;
-      in vec3 g_tridistance;
-      in vec3 g_patchdistance;
-      in vec3 g_normal;
-      in vec3 g_lightdir;
-      in vec2 g_texcoord;
-      uniform vec4 u_materialColor;
-      uniform vec4 u_wireColor;
-      uniform float u_wireOpacity;
-			uniform sampler2D u_samplerDepthMap;
-      
-      float amplify(float d, float scale, float offset)
-      {
-        d = scale * d + offset;
-        d = clamp(d, 0, 1);
-        d = 1 - exp2(-2*d*d);
-        return d;
-      }
-      
-      float triangleBlend(vec3 triDistance, vec3 patchDistance)
-      {
-        float d1 = min(min(triDistance.x, triDistance.y), triDistance.z);
-        float d2 = min(min(patchDistance.x, patchDistance.y), patchDistance.z);
-        return amplify(d1, 75, -0.5) * amplify(d2, 70, -0.5);
-      }
-      
-      void main()
-      {
-        vec3 N = normalize(g_normal);
-        vec3 L = normalize(g_lightdir);
-        float df = abs(dot(N, L));
-        float blend = triangleBlend( g_tridistance, g_patchdistance);
-        vec4 color = df * u_materialColor;
-        vec4 wire = u_wireOpacity * u_wireColor + (1.0 - u_wireOpacity) * color;
-        FragColor = blend * color + (1.0 - blend) * wire;
-      }
+                  uniform vec4 u_materialColor;
+                  uniform vec4 u_wireColor;
+                  uniform float u_wireOpacity;
+                  uniform sampler2D u_samplerDepthMap;
+                  
+                  in vec3 g_tridistance;
+                  in vec3 g_patchdistance;
+                  in vec3 g_normal;
+                  in vec3 g_lightdir;
+                  in vec2 g_texcoord;
+                  out vec4 FragColor;
+
+                  
+                  float amplify(float d, float scale, float offset)
+                  {
+                    d = scale * d + offset;
+                    d = clamp(d, 0, 1);
+                    d = 1 - exp2(-2*d*d);
+                    return d;
+                  }
+                  
+                  float triangleBlend(vec3 triDistance, vec3 patchDistance)
+                  {
+                    float d1 = min(min(triDistance.x, triDistance.y), triDistance.z);
+                    float d2 = min(min(patchDistance.x, patchDistance.y), patchDistance.z);
+                    return amplify(d1, 75, -0.5) * amplify(d2, 70, -0.5);
+                  }
+                  
+                  void main()
+                  {
+                    vec3 N = normalize(g_normal);
+                    vec3 L = normalize(g_lightdir);
+                    float df = abs(dot(N, L));
+                    float blend = triangleBlend( g_tridistance, g_patchdistance);
+                    vec4 color = df * u_materialColor;
+                    vec4 wire = u_wireOpacity * u_wireColor + (1.0 - u_wireOpacity) * color;
+                    FragColor = blend * color + (1.0 - blend) * wire;
+                  }
 
 		</source>
 	</fragmentshader>

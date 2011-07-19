@@ -1,0 +1,168 @@
+
+//
+// Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
+//
+
+function initOpenCL
+(
+  io cl_context clContext,
+  io cl_command_queue clCommandQueue,
+  io cl_kernel clKernel,
+  io Size clLocal,
+  in String kernelSrc
+) {
+  if (!clContext) {
+    var Integer clErr;
+
+    var cl_platform_id clPlatformIDs[];
+    clErr = clGetPlatformIDs(clPlatformIDs);
+
+    var cl_device_id clDeviceIDs[];
+    clErr = clGetDeviceIDs(clPlatformIDs[0], CL_DEVICE_TYPE_GPU, clDeviceIDs);
+    var cl_device_id clDeviceID = clDeviceIDs[0];
+
+    clContext = clCreateContext(clDeviceIDs, clErr);
+
+    clCommandQueue = clCreateCommandQueue(clContext, clDeviceID, 0, clErr);
+    report "clCreateCommandQueue: " + clErr;
+    report "clCommandQueue = " + clCommandQueue + " (" + (Boolean)clCommandQueue + ")";
+  
+    var cl_program clProgram = clCreateProgramWithSource(clContext, kernelSrc, clErr);
+    report "clCreateProgramWithSource: " + clErr;
+    report "clProgram = " + clProgram + " (" + (Boolean)clProgram + ")";
+    
+    clErr = clBuildProgram(clProgram, clDeviceIDs, '');
+    report "clBuildProgram: " + clErr;
+    if (clErr) {
+      var String infoStr;
+      clGetProgramBuildInfoStr(clProgram, clDeviceID, CL_PROGRAM_BUILD_LOG, infoStr);
+      report('...OpenCL build failed: ' + infoStr);
+    }
+
+    clKernel = clCreateKernel(clProgram, 'integrateBodies_MT', clErr);
+    var Data NULL;
+    clGetKernelWorkGroupInfo(clKernel, clDeviceID, CL_KERNEL_WORK_GROUP_SIZE, clLocal.dataSize, clLocal.data, NULL);
+  }
+}
+
+operator nBodySimulateGPU(
+  io Scalar time,
+  io Vec4 posInit[],
+  io Vec4 velInit[],
+  io Scalar massInit[],
+
+  io cl_context clContext,
+  io cl_command_queue clCommandQueue,
+  io cl_kernel clKernel,
+  io String kernelSrc,
+  io cl_mem posCurrent,
+  io cl_mem velCurrent,
+  io cl_mem posPrev,
+  io cl_mem velPrev,
+  io Size clPointCount,
+
+  io Scalar timeStep,
+  io Scalar softening,
+  io Scalar damping,
+  
+  io Vec4 posDraw[],
+) {
+  var Data NULL;
+  var Integer clErr;
+  var cl_event eventWaitList[];
+  var cl_event event;
+
+  if (!clContext) {
+    var Size clLocal;
+
+    initOpenCL(clContext, clCommandQueue, clKernel, clLocal, kernelSrc);
+  }
+
+  if (time == 0.0) {
+    if (clPointCount != posInit.size()) {
+      if (posInit.size() > 255) {
+        clPointCount = posInit.size() & ~255;
+      }
+      else {
+        clPointCount = posInit.size();
+      }
+      if (posCurrent) {
+        clReleaseMemObject(posCurrent);
+        clReleaseMemObject(velCurrent);
+        clReleaseMemObject(posPrev);
+        clReleaseMemObject(velPrev);
+      }
+      var Size memSize = clPointCount * 4 * 4; // float * 4
+      // TODO: Always check the error values.
+      posCurrent = clCreateBuffer(clContext, CL_MEM_READ_WRITE, memSize, NULL, clErr);
+      velCurrent = clCreateBuffer(clContext, CL_MEM_READ_WRITE, memSize, NULL, clErr);
+      posPrev = clCreateBuffer(clContext, CL_MEM_READ_WRITE, memSize, NULL, clErr);
+      velPrev = clCreateBuffer(clContext, CL_MEM_READ_WRITE, memSize, NULL, clErr);
+    }
+
+    clErr = clEnqueueWriteBuffer(clCommandQueue, posPrev, CL_TRUE, 0, posInit.dataSize, posInit.data, eventWaitList, event);
+    clErr = clEnqueueWriteBuffer(clCommandQueue, velPrev, CL_TRUE, 0, velInit.dataSize, velInit.data, eventWaitList, event);
+  }
+  else {
+    var cl_mem temp;
+    temp = posPrev;
+    posPrev = posCurrent;
+    posCurrent = temp;
+
+    temp = velPrev;
+    velPrev = velCurrent;
+    velCurrent = temp;
+  }
+
+  // Run the kernel and simulate
+  var Scalar softeningSq = softening * softening;
+
+  // - Compute the local tile size for the single-multiple body interaction
+  var Integer p = 256, q = 1;
+  if (clPointCount < p && q == 1) {
+    p = clPointCount;
+  }
+  var Size sharedMemSize = p * q * 4; // sizeof( float )
+
+  clErr = clSetKernelArg(clKernel, 0, posCurrent.dataSize, posCurrent.data);
+  clErr = clSetKernelArg(clKernel, 1, velCurrent.dataSize, velCurrent.data);
+  clErr = clSetKernelArg(clKernel, 2, posPrev.dataSize, posPrev.data);
+  clErr = clSetKernelArg(clKernel, 3, velPrev.dataSize, velPrev.data);
+
+  if ( time == 0.0 ) {
+    clErr = clSetKernelArg(clKernel, 4, timeStep.dataSize, timeStep.data);
+    clErr = clSetKernelArg(clKernel, 5, damping.dataSize, damping.data);
+    clErr = clSetKernelArg(clKernel, 6, softeningSq.dataSize, softeningSq.data);
+
+    clErr = clSetKernelArg(clKernel, 7, clPointCount.dataSize, clPointCount.data);
+
+    clErr = clSetKernelArg(clKernel, 8, sharedMemSize, NULL);
+  }
+
+  var Size localWorkSize[2], globalWorkSize[2];
+  localWorkSize[0] = p;
+  localWorkSize[1] = q;
+  globalWorkSize[0] = clPointCount;
+  globalWorkSize[1] = q;
+
+  clErr = clEnqueueNDRangeKernel(clCommandQueue, clKernel, 2, NULL, globalWorkSize.data, localWorkSize.data, eventWaitList, event);
+  //report 'clEnqueueNDRangeKernel: ' + clErr;
+
+//  clErr = clFinish(clCommandQueue);
+  //report 'clFinish: ' + clErr;
+  
+  // Read the simulated data back for display
+  // TBD: Use VBOs to avoid copying the data from the GPU
+  {
+    var Vec4 readData[];
+    
+    readData.resize(clPointCount);
+  
+    clErr = clEnqueueReadBuffer(clCommandQueue, posCurrent, CL_TRUE, 0, readData.dataSize, readData.data, eventWaitList, event);
+
+    posDraw.resize(clPointCount);
+    for (var Size i = 0; i < clPointCount; i++) {
+      posDraw[i] = readData[i];
+    }
+  }
+}

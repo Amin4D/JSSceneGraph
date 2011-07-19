@@ -1,0 +1,217 @@
+
+//
+// Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
+//
+
+function Scalar rand(io Integer seed) {
+  seed = 1664525 * seed + 1013904223;
+  return Scalar((seed / 256) & 8388607) / 8388607.0;
+}
+
+operator nBodyInit(
+  in Size index,
+  in Size size,
+  io Vec4 posV4,
+  io Vec4 velV4,
+  io Scalar mass,
+  io Color color,
+  io Integer systemType,
+  io Scalar positionScale,
+  io Scalar velocityScale
+) {
+  var Integer seed = Integer(index);
+  rand(seed);
+  Vec3 pos;
+  Vec3 vel;
+
+  if (systemType == 0)// Random
+  {
+    // Get spherically distributed positions and velocities
+    for (; ; ) {
+      pos.x = rand(seed) * 2.0 - 1.0;
+      pos.y = rand(seed) * 2.0 - 1.0;
+      pos.z = rand(seed) * 2.0 - 1.0;
+      if (pos.normSq() <= 1.0)
+        break;
+    }
+    pos *= positionScale;
+
+    for (; ; ) {
+      vel.x = rand(seed) * 2.0 - 1.0;
+      vel.y = rand(seed) * 2.0 - 1.0;
+      vel.z = rand(seed) * 2.0 - 1.0;
+      if (vel.normSq() <= 1.0)
+        break;
+    }
+    vel *= velocityScale;
+  }
+  else if (systemType == 1)// Shell
+  {
+    var Scalar scale = positionScale;
+    var Scalar vscale = scale * velocityScale;
+    var Scalar inner = 2.5 * scale, outer = 4.0 * scale;
+
+    var Vec3 point;
+    for (; ; ) {
+      point.x = rand(seed) * 2.0 - 1.0;
+      point.y = rand(seed) * 2.0 - 1.0;
+      point.z = rand(seed) * 2.0 - 1.0;
+      if (point.normSq() <= 1.0)
+        break;
+    }
+  
+    point.setUnit();
+  
+    var Vec3 jitter(rand(seed), rand(seed), rand(seed));
+    var Vec3 one(1.0, 1.0, 1.0);
+    pos = point * (one * inner + (outer - inner) * jitter);
+  
+    var Vec3 axis(rand(seed) * 2.0 - 1.0, rand(seed) * 2.0 - 1.0, rand(seed) * 2.0 - 1.0);
+  
+    axis.setUnit();
+    if ((1.0 - axis.dot(point)) < 0.0001) {
+      axis.x = point.y;
+      axis.y = point.x;
+      axis.setUnit();
+    }
+    var Vec3 vv;
+
+    vel = (pos.cross(axis)) * vscale;
+  }
+  else if (systemType == 2)// Expand
+  {
+    var Scalar sizeScale = Scalar(size) / 1024.0;
+    if (sizeScale < 1.0) sizeScale = 1.0;
+      var Scalar scale = positionScale * sizeScale;
+    var Scalar vscale = scale * velocityScale;
+
+    var Vec3 point;
+    for (; ; ) {
+      point.x = rand(seed) * 2.0 - 1.0;
+      point.y = rand(seed) * 2.0 - 1.0;
+      point.z = rand(seed) * 2.0 - 1.0;
+      if (point.normSq() <= 1.0)
+        break;
+    }
+
+    pos = point * scale;
+    vel = point * vscale;
+  }
+
+  mass = rand(seed) * 0.4 + 1.8;
+
+  color.r = rand(seed) * 0.2 + 0.1;
+  color.g = rand(seed) * 0.6 + 0.4;
+  color.b = rand(seed) * 0.6 + 0.4;
+  color.a = 255;
+  
+  posV4.x = pos.x;
+  posV4.y = pos.y;
+  posV4.z = pos.z;
+  posV4.t = mass;
+  
+  velV4.x = vel.x;
+  velV4.y = vel.y;
+  velV4.z = vel.z;
+  velV4.t = 1.0/mass;
+}
+
+operator nBodySimulateInit(
+  io Scalar time,
+  io Vec4 posInit[],
+  io Vec4 velInit[],
+  io Color colorInit[],
+  io Vec4 posCurrent[],
+  io Vec4 velCurrent[],
+  io Color colors[],
+  io Integer indices[]
+) {
+  if (time == 0.0) {
+    var Size count = posInit.size();
+    indices.resize(count);
+    colors.resize(count);
+    for (var Size i = 0; i < count; i++) {
+      posCurrent[i] = posInit[i];
+      velCurrent[i] = velInit[i];
+      colors[i] = colorInit[i];
+      indices[i] = Integer(i);
+    }
+
+  }
+}
+
+operator nBodySimulateStartFrame(
+  io Vec4 posCurrent[],
+  io Vec4 velCurrent[],
+  io Vec4 posPrev[],
+  io Vec4 velPrev[]
+) {
+  var Size count = posCurrent.size();
+  for (var Size i = 0; i < count; i++) {
+    posPrev[i] = posCurrent[i];
+    velPrev[i] = velCurrent[i];
+  }
+}
+
+// NBODY SIMULATION STEP
+function Vec3 twoPointInteraction(
+  Vec3 pos0,
+  Vec3 pos1,
+  Scalar mass0,
+  Scalar mass1,
+  Scalar softeningSq
+) {
+  var Vec3 r = pos0 - pos1;
+
+  var Scalar dSq = r.normSq();
+  dSq += softeningSq;
+
+  var Scalar invD = 1.0 / sqrt(dSq);
+  var Scalar invD3 = invD * invD * invD;
+
+  return r * mass0 * mass1 * invD3;
+}
+
+operator nBodySimulateStep_Real(
+  Size index,
+  io Vec3 posNew,
+  io Vec3 velNew,
+  Vec3 pos[],
+  Vec3 vel[],
+  Scalar mass[],
+  Scalar timeStep,
+  Scalar softening,
+  Scalar damping
+) {
+  var Size nbBodies = pos.size();
+
+  var Scalar softeningSq = softening * softening;
+
+  // Compute force on the bodies
+  var Vec3 force;
+  force.setNull();
+  for (var Size i = 0; i < nbBodies; i++) {
+    if (index != i) {
+      force += twoPointInteraction(pos[index], pos[i], mass[index], mass[i], softeningSq);
+    }
+  }
+
+  velNew = vel[index] + (force / mass[index]) * timeStep;
+  velNew *= damping;
+
+  posNew += velNew * timeStep;
+}
+
+operator nBodySimulateStep(
+  in Size index,
+  io Vec3 posNew,
+  io Vec3 velNew,
+  io Vec3 pos[],
+  io Vec3 vel[],
+  io Scalar mass[],
+  io Scalar timeStep,
+  io Scalar softening,
+  io Scalar damping
+) {
+  nBodySimulateStep_Real(index, posNew, velNew, pos, vel, mass, timeStep, softening, damping);
+}

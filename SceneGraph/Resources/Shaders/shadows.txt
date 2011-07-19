@@ -11,7 +11,7 @@ float shadowLookupOffset(
 ){
   // Hard-coded for now. Should be added to the uniforms
   float pixelOffset = 0.0; //1.0 / 1024.0;
-  return textureProj(shadowMapSampler, shadowCoord + vec4(offset.x * shadowCoord.w, offset.y * shadowCoord.w, 0.0, 0.0) );
+  return shadow2DProj(shadowMapSampler, shadowCoord + vec4(offSet.x * ShadowCoord.w, offSet.y * shadowCoord.w, 0.05, 0.0) ).w;
 }
 
 float getLightFactor_PCF( 
@@ -57,8 +57,8 @@ float getLightFactor_Hard(
     in sampler2DShadow shadowMapSampler,
     in vec4 shadowCoord
 ){
-    shadowCoord.w += 0.003;
-    return textureProj(shadowMapSampler, shadowCoord );
+//  shadowCoord.w += 0.003;
+  return shadow2DProj(shadowMapSampler, vec4(shadowCoord.x, shadowCoord.y, shadowCoord.z - 0.01, shadowCoord.w) ).w;
 }
 
 #else

@@ -1,142 +1,139 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <shader>
-	<name>ShadowReceivingPhongMaterial</name>
+  <name>ShadowReceivingPhongMaterial</name>
 
-	<uniforms>
-		<uniform name="u_lightPosition" constant="lightPosition" owner="light"/>
-		<uniform name="u_lightType" constant="lightType" owner="light"/>
-		<uniform name="u_lightDir" constant="lightDir" owner="light"/>
-		<uniform name="u_lightColor" constant="lightColor" owner="light"/>
-		<uniform name="u_lightCosCutoff" constant="lightCosCutoff" owner="light"/>
+  <uniforms>
+    <uniform name="u_lightPosition" constant="lightPosition" owner="light"/>
+    <uniform name="u_lightType" constant="lightType" owner="light"/>
+    <uniform name="u_lightDir" constant="lightDir" owner="light"/>
+    <uniform name="u_lightColor" constant="lightColor" owner="light"/>
+    <uniform name="u_lightCosCutoff" constant="lightCosCutoff" owner="light"/>
 
-		<uniform name="u_shadowMapSampler" constant="lightShadowMap" defaultValue="0.0" owner="light"/>
-		<uniform name="u_shadowMapMatrix" constant="lightShadowMapMatrix" owner="light"/>
+    <uniform name="u_shadowMapSampler" constant="lightShadowMap" defaultValue="0.0" owner="light"/>
+    <uniform name="u_shadowMapMatrix" constant="lightShadowMapMatrix" owner="light"/>
 
-		<uniform name="u_materialAmbientColor" constant="ambientColor" defaultValue="FABRIC.RT.rgba(0,0,0,1)"/>
-		<uniform name="u_materialDiffuseColor" constant="diffuseColor" defaultValue="FABRIC.RT.rgba(0.8,0,0,1)"/>
-		<uniform name="u_materialSpecularColor" constant="specularColor" defaultValue="FABRIC.RT.rgba(0.5,0.5,0.5,1)"/>
-		<uniform name="u_materialShininess" constant="shininess" defaultValue="20.0"/>
+    <uniform name="u_materialAmbientColor" constant="ambientColor" defaultValue="FABRIC.RT.rgba(0,0,0,1)"/>
+    <uniform name="u_materialDiffuseColor" constant="diffuseColor" defaultValue="FABRIC.RT.rgba(0.8,0,0,1)"/>
+    <uniform name="u_materialSpecularColor" constant="specularColor" defaultValue="FABRIC.RT.rgba(0.5,0.5,0.5,1)"/>
+    <uniform name="u_materialShininess" constant="shininess" defaultValue="20.0"/>
 
-		<uniform name="u_modelViewProjectionMatrix" constant="modelViewProjectionMatrix" owner="instance"/>
-		<uniform name="u_modelViewMatrix" constant="modelViewMatrix"  owner="instance"/>
-		<uniform name="u_normalMatrix" constant="normalMatrix"  owner="instance"/>
+    <uniform name="u_modelViewProjectionMatrix" constant="modelViewProjectionMatrix" owner="instance"/>
+    <uniform name="u_modelViewMatrix" constant="modelViewMatrix"  owner="instance"/>
+    <uniform name="u_normalMatrix" constant="normalMatrix"  owner="instance"/>
 
-	</uniforms>
+  </uniforms>
 
-	<attributes>
-		<attribute name="a_position" binding="positions"/>
-		<attribute name="a_normal" binding="normals"/>
-	</attributes>
+  <attributes>
+    <attribute name="a_position" binding="positions"/>
+    <attribute name="a_normal" binding="normals"/>
+  </attributes>
 
-	<textures>
-		<texture binding="lightShadowMap"/>
-	</textures>
+  <textures>
+    <texture binding="lightShadowMap"/>
+  </textures>
 
-	<lights>
-		<light type="SpotLight" binding="light" shadowMap="shadowMap"/>
-	</lights>
+  <lights>
+    <light type="SpotLight" binding="light" shadowMap="shadowMap"/>
+  </lights>
 
-	<vertexshader>
-		<source>
-			<![CDATA[
-			#version 130
+  <vertexshader>
+    <source>
+      <![CDATA[
 
-			uniform mat4 u_modelViewProjectionMatrix;
-			uniform mat4 u_modelViewMatrix;
-			uniform mat3 u_normalMatrix;
+      uniform mat4 u_modelViewProjectionMatrix;
+      uniform mat4 u_modelViewMatrix;
+      uniform mat3 u_normalMatrix;
 
-			uniform vec4 u_lightPosition;
-			uniform mat4 u_shadowMapMatrix;
-			uniform mat4 u_objectMatrix;
+      uniform vec4 u_lightPosition;
+      uniform mat4 u_shadowMapMatrix;
+      uniform mat4 u_objectMatrix;
 
-			in vec4 a_position;
-			in vec3 a_normal;
+      attribute vec4 a_position;
+      attribute vec3 a_normal;
 
-			out vec4 shadowCoord;
-			out vec3 normal;
-			out vec3 lightDir;
-			out vec3 viewDir;
+      varying vec4 shadowCoord;
+      varying vec3 normal;
+      varying vec3 lightDir;
+      varying vec3 viewDir;
 
-			void main(){
-				normal = u_normalMatrix * a_normal;
+      void main(){
+        normal = u_normalMatrix * a_normal;
 
-				vec3 vertex = vec3( u_modelViewMatrix * a_position );
-				lightDir = u_lightPosition.xyz - vertex;
-				viewDir = vec3(-vertex);
-				gl_Position = u_modelViewProjectionMatrix * a_position;
+        vec3 vertex = vec3( u_modelViewMatrix * a_position );
+        lightDir = u_lightPosition.xyz - vertex;
+        viewDir = vec3(-vertex);
+        gl_Position = u_modelViewProjectionMatrix * a_position;
 
-				shadowCoord =  u_shadowMapMatrix * u_modelViewMatrix * a_position;
-			}
+        shadowCoord =  u_shadowMapMatrix * u_modelViewMatrix * a_position;
+      }
 
-			]]>
-		</source>
-	</vertexshader>
+      ]]>
+    </source>
+  </vertexshader>
 
-	<fragmentshader>
-		<source>
-			<![CDATA[
-			#version 130
-			
-			uniform int u_lightType;
-			uniform vec3 u_lightDir;
-			uniform vec4 u_lightColor;
-			uniform float u_lightCosCutoff;
+  <fragmentshader>
+    <source>
+      <![CDATA[
+      
+      uniform int u_lightType;
+      uniform vec3 u_lightDir;
+      uniform vec4 u_lightColor;
+      uniform float u_lightCosCutoff;
 
-			uniform float u_materialShininess;
-			uniform vec4 u_materialAmbientColor;
-			uniform vec4 u_materialDiffuseColor;
-			uniform vec4 u_materialSpecularColor;
-			
-			in vec3 normal;
-			in vec3 lightDir;
-			in vec3 viewDir;
-			in vec4 shadowCoord;
-			
-			out vec4 FragColor;
-			
-			]]>
-			</source>
-			<include file="lighting.txt"/>
-			<include file="shadows.txt"/>
-			<source>
-			<![CDATA[
-			
+      uniform float u_materialShininess;
+      uniform vec4 u_materialAmbientColor;
+      uniform vec4 u_materialDiffuseColor;
+      uniform vec4 u_materialSpecularColor;
+      
+      varying vec3 normal;
+      varying vec3 lightDir;
+      varying vec3 viewDir;
+      varying vec4 shadowCoord;
+      
+      
+      ]]>
+      </source>
+      <include file="lighting.txt"/>
+      <include file="shadows.txt"/>
+      <source>
+      <![CDATA[
+      
 
-			#ifdef USE_SHADOW_SAMPLER
-				uniform sampler2DShadow u_shadowMapSampler;
-			#else
-				uniform sampler2D u_shadowMapSampler;
-			#endif
+      #ifdef USE_SHADOW_SAMPLER
+        uniform sampler2DShadow u_shadowMapSampler;
+      #else
+        uniform sampler2D u_shadowMapSampler;
+      #endif
 
 
-			void main()
-			{
-			//	float lightFactor = getLightFactor_PCF( u_shadowMapSampler, shadowCoord );
-			//	float lightFactor = getLightFactor_Dither( u_shadowMapSampler, shadowCoord );
-				float lightFactor = getLightFactor_Hard( u_shadowMapSampler, shadowCoord );
-				
-				vec3 Ln = normalize(lightDir);
-				vec3 Vn = normalize(viewDir);
-				vec3 Nn = normalize(normal);
-				
-				
-				FragColor = phong_shading(	Nn, 
-								Ln, 
-								Vn, 
-								u_lightType,
-								u_lightDir,
-								lightFactor,
-								u_lightCosCutoff,
-								u_lightColor,
-								u_materialDiffuseColor, 
-								u_materialSpecularColor,
-								u_materialShininess,
-								u_materialAmbientColor );
-			}
+      void main()
+      {
+      //  float lightFactor = getLightFactor_PCF( u_shadowMapSampler, shadowCoord );
+      //  float lightFactor = getLightFactor_Dither( u_shadowMapSampler, shadowCoord );
+        float lightFactor = getLightFactor_Hard( u_shadowMapSampler, shadowCoord );
+        
+        vec3 Ln = normalize(lightDir);
+        vec3 Vn = normalize(viewDir);
+        vec3 Nn = normalize(normal);
+        
+        
+        gl_FragColor = phong_shading(  Nn, 
+                Ln, 
+                Vn, 
+                u_lightType,
+                u_lightDir,
+                lightFactor,
+                u_lightCosCutoff,
+                u_lightColor,
+                u_materialDiffuseColor, 
+                u_materialSpecularColor,
+                u_materialShininess,
+                u_materialAmbientColor );
+      }
 
 
 
-			]]>
-		</source>
-	</fragmentshader>
+      ]]>
+    </source>
+  </fragmentshader>
 </shader>

@@ -8,6 +8,7 @@ FABRIC.SceneGraph.registerNodeType('Geometry',
   function(options, scene) {
     scene.assignDefaults(options, {
         dynamicMembers: [],
+        genOpenGLBuffers:[],
         createBoundingBoxNode: true,
         tesselationSupported: false,
         tesselationVertices: 3
@@ -56,7 +57,7 @@ FABRIC.SceneGraph.registerNodeType('Geometry',
         ]
       }));
     }
-
+    
     // extend public interface
     geometryNode.pub.addUniformValue = function(name, type, value, addGetterSetterInterface) {
       uniformsdgnode.addMember(name, type, value);
@@ -197,8 +198,8 @@ FABRIC.SceneGraph.registerNodeType('Geometry',
       if (redrawEventHandler) {
         return redrawEventHandler;
       }
-      var vertexAttributes,
-        uniformValues,
+      var vertexAttributes = attributesdgnode.getMembers(),
+        uniformValues = uniformsdgnode.getMembers(),
         memberName,
         memberType,
         bufferIDMemberName,
@@ -231,8 +232,6 @@ FABRIC.SceneGraph.registerNodeType('Geometry',
         }));
       }
 
-      vertexAttributes = attributesdgnode.getMembers();
-      uniformValues = uniformsdgnode.getMembers();
       for (memberName in vertexAttributes) {
         if (!FABRIC.shaderAttributeTable[memberName]) {
           continue;
@@ -408,6 +407,47 @@ FABRIC.SceneGraph.registerNodeType('Geometry',
       deformationbufferinterfaces.push(bufferInterface);
       return bufferInterface.pub;
     };
+    
+    
+    geometryNode.genDGVBO = function(memberName){
+      var vertexAttributes = attributesdgnode.getMembers();
+      var uniformValues = uniformsdgnode.getMembers();
+      if (!vertexAttributes[memberName]) {
+        console.error(memberName + " is not an attribute.");
+        return;
+      }
+      var memberType = vertexAttributes[memberName].type;
+      var bufferIDMemberName = memberName + 'BufferID';
+      var countMemberName = memberName + 'Count';
+        
+      var reloadMemberName = memberName + 'Reload';
+      var dynamicMemberName = memberName + 'Dynamic';
+      
+      geometryNode.pub.addUniformValue(bufferIDMemberName, 'Integer', 0);
+      geometryNode.pub.addUniformValue(countMemberName, 'Size', 0);
+      geometryNode.pub.addUniformValue(reloadMemberName, 'Boolean', false);
+      geometryNode.pub.addUniformValue(dynamicMemberName, 'Boolean', false);
+
+      attributesdgnode.bindings.append(scene.constructOperator({
+            operatorName: 'gen' + memberName + 'OpenGLBuffer',
+            mainThreadOnly: true,
+            srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/genAndLoadVBO.kl',
+            preProcessorDefinitions: {
+              DATA_TYPE: memberType,
+              ATTRIBUTE_NAME: memberName,
+              ATTRIBUTE_ID: -1
+            },
+            entryFunctionName: 'genDGVBOOp',
+            parameterBinding: [
+              'self.' + memberName + '[]',
+              'uniforms.' + countMemberName,
+              'uniforms.' + dynamicMemberName,
+              'uniforms.' + reloadMemberName,
+              'uniforms.' + bufferIDMemberName
+            ]
+          }));
+      return bufferIDMemberName;
+    }
 
     return geometryNode;
   });

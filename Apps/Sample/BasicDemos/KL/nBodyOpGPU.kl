@@ -14,9 +14,8 @@ function initOpenCL
   if (!clContext) {
     var Integer clErr;
 
-    var Integer clErr;
     var cl_platform_id clPlatformIDs[];
-    clErr = clGetPlatformIDs(1, clPlatformIDs);
+    clErr = clGetPlatformIDs(clPlatformIDs);
 
     var cl_device_id clDeviceIDs[];
     clErr = clGetDeviceIDs(clPlatformIDs[0], CL_DEVICE_TYPE_GPU, clDeviceIDs);

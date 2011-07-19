@@ -39,6 +39,7 @@
 	<vertexshader>
 		<source>
 			<![CDATA[
+			#version 130
 
 			uniform mat4 u_modelViewProjectionMatrix;
 			uniform mat4 u_modelViewMatrix;
@@ -48,13 +49,13 @@
 			uniform mat4 u_shadowMapMatrix;
 			uniform mat4 u_objectMatrix;
 
-			attribute vec4 a_position;
-			attribute vec3 a_normal;
+			in vec4 a_position;
+			in vec3 a_normal;
 
-			varying vec4 shadowCoord;
-			varying vec3 normal;
-			varying vec3 lightDir;
-			varying vec3 viewDir;
+			out vec4 shadowCoord;
+			out vec3 normal;
+			out vec3 lightDir;
+			out vec3 viewDir;
 
 			void main(){
 				normal = u_normalMatrix * a_normal;
@@ -74,7 +75,8 @@
 	<fragmentshader>
 		<source>
 			<![CDATA[
-
+			#version 130
+			
 			uniform int u_lightType;
 			uniform vec3 u_lightDir;
 			uniform vec4 u_lightColor;
@@ -85,11 +87,12 @@
 			uniform vec4 u_materialDiffuseColor;
 			uniform vec4 u_materialSpecularColor;
 			
-			varying vec3 normal;
-			varying vec3 lightDir;
-			varying vec3 viewDir;
-		
-			varying vec4 shadowCoord;
+			in vec3 normal;
+			in vec3 lightDir;
+			in vec3 viewDir;
+			in vec4 shadowCoord;
+			
+			out vec4 FragColor;
 			
 			]]>
 			</source>
@@ -117,18 +120,18 @@
 				vec3 Nn = normalize(normal);
 				
 				
-				gl_FragColor = phong_shading(	Nn, 
-												Ln, 
-												Vn, 
-												u_lightType,
-												u_lightDir,
-												lightFactor,
-												u_lightCosCutoff,
-												u_lightColor,
-												u_materialDiffuseColor, 
-												u_materialSpecularColor,
-												u_materialShininess,
-												u_materialAmbientColor );
+				FragColor = phong_shading(	Nn, 
+								Ln, 
+								Vn, 
+								u_lightType,
+								u_lightDir,
+								lightFactor,
+								u_lightCosCutoff,
+								u_lightColor,
+								u_materialDiffuseColor, 
+								u_materialSpecularColor,
+								u_materialShininess,
+								u_materialAmbientColor );
 			}
 
 

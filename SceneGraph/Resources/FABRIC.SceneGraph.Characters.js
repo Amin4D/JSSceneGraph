@@ -522,9 +522,25 @@ FABRIC.SceneGraph.registerNodeType('CharacterRig',
           entryFunctionName: 'calcSkinningMatrices',
           parameterBinding: ['self.pose', 'skeleton.invmatrices', 'self.boneMatrices']
         }));
+      
+      // offer to create an operator which computes the inverse as a xfo[]
+      characterRigNode.pub.computeInverseXfos = function()
+      {
+        dgnode.addMember('boneXfos', 'Xfo[]');
+        
+        dgnode.bindings.append(scene.constructOperator({
+            operatorName: 'calcSkinningXfos',
+            srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/characterRig.kl',
+            entryFunctionName: 'calcSkinningXfos',
+            parameterBinding: ['self.pose', 'skeleton.bones', 'self.boneXfos']
+          }));
+        
+        // remove the function once more
+        characterRigNode.pub.computeInverseXfos  = function(){};
+      }
     }
     setSkeletonNode(options.skeletonNode);
-
+    
     if (options.variablesNode) {
       characterRigNode.pub.setVariablesNode(options.variablesNode);
     }

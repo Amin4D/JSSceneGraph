@@ -334,6 +334,7 @@ FABRIC.shaderAttributeTable = {
   specularColor: { id: 33, type: 'Color' },
   shininess: { id: 34, type: 'Scalar' },
   bumpiness: { id: 35, type: 'Scalar' },
+  normalLength: { id: 36, type: 'Scalar' },
 
   light: { id: 50, type: 'Vec3' },
   lightType: { id: 51, type: 'Integer' },

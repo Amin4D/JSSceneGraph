@@ -201,8 +201,11 @@ function Scalar distanceFromLineToLine(
   c = v.dot(v); // always >= 0
   d = u.dot(w);
   e = v.dot(w);
-  if(a == 0.0 || c == 0.0){
-    return 1.0e20;
+  if(a == 0.0){
+    return distFromPointToLine(l1_p1, l2_p0, l2_p1);
+  }
+  if(c == 0.0){
+    return distFromPointToLine(l2_p0, l1_p0, l1_p1);
   }
   D = a * c - b * b; // always >= 0
 

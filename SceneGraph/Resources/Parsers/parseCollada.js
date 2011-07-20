@@ -17,6 +17,7 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
   var data = {};
   var currentTechnique = false;
   var exportedNodes = {};
+  options.bindToGlobalTime = options.bindToGlobalTime == undefined ? true : options.bindToGlobalTime;
 
   var createSkeletonFromHierarchy = function(skeletonName, rootNodeName, calcReferencePoseFromInverseBindPose) {
     if (!data[rootNodeName]) {
@@ -171,7 +172,7 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
       variablesNode.addMember('localxfos', 'Xfo[]', skeletonNode.getReferenceLocalPose());
 
       // create the base animation nodes
-      var controllerNode = scene.constructNode('AnimationController');
+      var controllerNode = scene.constructNode('AnimationController', { bindToGlobalTime: options.bindToGlobalTime } );
       var trackNode = scene.constructNode('LinearKeyAnimationTrack');
       trackNode.setTrackCount(tracks.length);
       trackNode.setTracksData(jsonData);

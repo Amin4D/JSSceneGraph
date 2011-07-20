@@ -149,7 +149,8 @@ FABRIC.SceneGraph.registerNodeType('BezierKeyAnimationTrack',
 FABRIC.SceneGraph.registerNodeType('AnimationController',
   function(options, scene) {
     scene.assignDefaults(options, {
-        playbackRate: 1.0
+        playbackRate: 1.0,
+        bindToGlobalTime: true
       });
     options.dgnodenames.push('DGNode');
 
@@ -157,6 +158,10 @@ FABRIC.SceneGraph.registerNodeType('AnimationController',
     var dgnode = animationControllerNode.getDGNode();
     dgnode.addMember('playbackRate', 'Scalar', options.playbackRate);
     dgnode.addMember('localtime', 'Scalar');
+    
+    // create a getter and setter for the local time
+    animationControllerNode.addMemberInterface(dgnode, 'playbackRate', true);
+    animationControllerNode.addMemberInterface(dgnode, 'localtime', true);
 
     // extend public interface
     animationControllerNode.pub.setTime = function(time) {
@@ -166,36 +171,38 @@ FABRIC.SceneGraph.registerNodeType('AnimationController',
     // Here, the animation controllers time is locked to
     // global time. Often the time context for an animation
     // is computed, or simulated based on scene events.
-    dgnode.addDependency(scene.getGlobalsNode(), 'globals');
-    dgnode.bindings.append(scene.constructOperator(
-      {
-        operatorName: 'setControllerLocalTime.kl',
-        srcCode:
-          '\noperator setControllerLocalTime(io Scalar globalTime, io Scalar localTime) \n' +
-          '{\n' +
-          '  localTime = globalTime;\n' +
-          '}',
-        entryFunctionName: 'setControllerLocalTime',
-        parameterBinding: [
-          'globals.ms',
-          'self.localtime'
-        ]
-      }));
-    // This operator might simulate the platback local time by incrementing
-    // it each frame by a rate specified by the playbackRate parameter.
-  /*  dgnode.bindings.append(scene.constructOperator(
-      {
-        operatorName:'incrementControllerLocalTime',
-        srcFile:'FABRIC_ROOT/SceneGraph/Resources/KL/incrementControllerLocalTime.kl',
-        entryFunctionName:'incrementControllerLocalTime',
-        parameterBinding:[
-          'globals.time',
-          'globals.timeStep',
-          'self.playbackRate',
-          'self.localtime'
-        ]
-      }));
-  */
+    if(options.bindToGlobalTime) {
+      dgnode.addDependency(scene.getGlobalsNode(), 'globals');
+      dgnode.bindings.append(scene.constructOperator(
+        {
+          operatorName: 'setControllerLocalTime.kl',
+          srcCode:
+            '\noperator setControllerLocalTime(io Scalar globalTime, io Scalar localTime) \n' +
+            '{\n' +
+            '  localTime = globalTime;\n' +
+            '}',
+          entryFunctionName: 'setControllerLocalTime',
+          parameterBinding: [
+            'globals.ms',
+            'self.localtime'
+          ]
+        }));
+      // This operator might simulate the platback local time by incrementing
+      // it each frame by a rate specified by the playbackRate parameter.
+    /*  dgnode.bindings.append(scene.constructOperator(
+        {
+          operatorName:'incrementControllerLocalTime',
+          srcFile:'FABRIC_ROOT/SceneGraph/Resources/KL/incrementControllerLocalTime.kl',
+          entryFunctionName:'incrementControllerLocalTime',
+          parameterBinding:[
+            'globals.time',
+            'globals.timeStep',
+            'self.playbackRate',
+            'self.localtime'
+          ]
+        }));
+    */
+    }
     return animationControllerNode;
   });
 

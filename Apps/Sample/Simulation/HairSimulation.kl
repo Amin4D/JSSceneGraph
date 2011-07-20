@@ -71,19 +71,13 @@ operator simulateHair(
   io Vec3 normal,
   io Vec3 prevnormal,
   io Color vertexColor,
-  io Xfo xfo,
   io Scalar time
 )
 {
   var Size elementIndex = index % SEGMENT_COUNT;
   var Size rootIndex = index - elementIndex;
   
-  if(elementIndex == 0 || time == 0.0)
-  {
-    position = xfo.transform(localposition[index]);
-    normal = xfo.ori.transform(localnormal[rootIndex]);
-  }
-  else
+  if(elementIndex != 0 && time > 0.0)
   {
     position += prevnormal * stiffness[index];
     position.y -= gravity[index] * segmentlength[index];

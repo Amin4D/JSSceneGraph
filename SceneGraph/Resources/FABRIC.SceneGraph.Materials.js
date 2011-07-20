@@ -669,6 +669,9 @@ FABRIC.SceneGraph.registerNodeType('Material',
         }
       };
       for (i in options.textures) {
+        if (options.textures[i].owner !== undefined) {
+          continue;
+        }
         addTextureInterface(i, options.textures[i], textureUnit);
         textureUnit++;
       }
@@ -885,7 +888,7 @@ FABRIC.SceneGraph.defineEffectFromFile = function(effectName, effectfile) {
     };
   
     collectTextures = function(node) {
-      var len, j, textureNode;
+      var len, j, textureNode, textureName;
       effectParameters.textures = {};
       len = node.childNodes.length;
       for (j = 0; j < len; j++) {
@@ -893,9 +896,13 @@ FABRIC.SceneGraph.defineEffectFromFile = function(effectName, effectfile) {
           continue;
         }
         textureNode = node.childNodes[j];
-        effectParameters.textures[textureNode.getAttribute('binding')] = {
-          name: textureNode.getAttribute('binding')
+        textureName = textureNode.getAttribute('binding');
+        effectParameters.textures[textureName] = {
+          name: textureNode
         };
+        if (textureNode.getAttribute('owner')) {
+          effectParameters.textures[textureName].owner = textureNode.getAttribute('owner');
+        }
       }
     };
   

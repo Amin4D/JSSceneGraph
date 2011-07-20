@@ -300,6 +300,9 @@ FABRIC.SceneGraph.registerNodeType('SpotLight',
     options.lightType = FABRIC.SceneGraph.Lights.types.SpotLight;
     var spotLightNode = scene.constructNode('Light', options);
     var dgnode = spotLightNode.getDGNode();
+    
+    // the operator stack functions enable the light properties to be animated.
+    scene.addMemberAndOperatorStackFunctions(spotLightNode, dgnode);
 
     dgnode.addMember('coneAngle', 'Scalar', options.coneAngle);
     spotLightNode.addMemberInterface(dgnode, 'coneAngle', true);
@@ -334,6 +337,9 @@ FABRIC.SceneGraph.registerNodeType('SpotLight',
         }));
 
       if (options.castShadows) {
+        
+        this.constructShadowRenderEventHandler();
+      
         redrawEventHandler.addMember('shadowMap', 'Size', 0);
 
         redrawEventHandler.preDescendBindings.append(
@@ -385,8 +391,8 @@ FABRIC.SceneGraph.registerNodeType('SpotLight',
       redrawEventHandlerConfigured = true;
       return redrawEventHandler;
     };
-
-    if (options.castShadows) {
+    
+    spotLightNode.constructShadowRenderEventHandler = function() {
 
       var shadowRenderEventHandler = scene.constructEventHandlerNode(options.name + '_renderDepthBuffer');
 
@@ -402,10 +408,6 @@ FABRIC.SceneGraph.registerNodeType('SpotLight',
       dgnode.addMember('depthTextureID', 'Size', 0);
       dgnode.addMember('colorTextureID', 'Size', 0);
 
-      // TODO: I think that the light projections matrices aren't correct.
-      // the shadow map is clipped by the cone angle. The projection matrix,
-      // should encapsulate the cone. This error can be seens clearly in the
-      // Shadow Casting lights demo.
       dgnode.bindings.append(scene.constructOperator({
           operatorName: 'calcLightProjectionMatricies',
           srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/shadowMaps.kl',
@@ -447,11 +449,9 @@ FABRIC.SceneGraph.registerNodeType('SpotLight',
 
       scene.registerShadowCastingLightSourceHandler(shadowRenderEventHandler);
     }
-
-    // the operator stack functions enable the light properties to be animated.
-    scene.addMemberAndOperatorStackFunctions(spotLightNode, dgnode);
-
-    if (options.display === true) {
+    
+    spotLightNode.constructDisplay = function() {
+      
       // tan(theta) = o/a
       // tan(theta)/a = o
       var coneDist = options.displaySize;
@@ -484,6 +484,10 @@ FABRIC.SceneGraph.registerNodeType('SpotLight',
         }),
         materialNode: lightMaterial
       });
+    }
+    
+    if (options.display === true) {
+      spotLightNode.constructDisplay();
     }
 
     return spotLightNode;

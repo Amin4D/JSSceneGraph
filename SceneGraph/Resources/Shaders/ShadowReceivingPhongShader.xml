@@ -29,7 +29,7 @@
 	</attributes>
 
 	<textures>
-		<texture binding="lightShadowMap"/>
+		<texture binding="lightShadowMap" owner="light"/>
 	</textures>
 
 	<lights>

@@ -10,7 +10,7 @@ function Mat44 symmetricFrustum(Scalar r, Scalar t, Scalar n, Scalar f) {
     n / r, 0.0, 0.0, 0.0,
     0.0, n / t, 0.0, 0.0,
     0.0, 0.0, -(f + n) / (f - n), - 1.0,
-  0.0, 0.0, -(2.0 * f * n) / (f - n), 0.0);
+    0.0, 0.0, -(2.0 * f * n) / (f - n), 0.0);
   return result;
 }
 
@@ -23,11 +23,7 @@ operator calcLightProjectionMatricies(
   io Mat44 shadowMat
 ) {
   //  report( "calcLightProjectionMatricies" );
-
-  //  report("lightMat:" + lightMat );
-
-  //console_log( "updateLightProjection\n" );
-
+  
   var Scalar frustumH = tan(fovY / 2) * near;
   var Scalar frustumW = frustumH;
 
@@ -63,7 +59,6 @@ operator genAndBindShadowMapFBO(
   prevFBO = prevFBOs[0];
 
   if (depthTextureID == 0) {
-    //    report("generatingFBO: "+mapsize);
 
     var Data NULL;
 
@@ -91,7 +86,6 @@ operator genAndBindShadowMapFBO(
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
 
     // Remove artefact on the edges of the shadowmap
     var Scalar border[];
@@ -125,8 +119,6 @@ operator genAndBindShadowMapFBO(
     var Integer status = glCheckFramebufferStatusEXT(GL_FRAMEBUFFER_EXT);
     if (status != GL_FRAMEBUFFER_COMPLETE_EXT)
       report('GL_FRAMEBUFFER_COMPLETE_EXT failed, CANNOT use FBO\n');
-
-    // report("fboId:"+shadowFBO);
   }
 
   // This is important, if not here, FBO's depthbuffer won't be populated.
@@ -155,12 +147,8 @@ operator unbindFBO(
   // unbind FBO
   glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, prevFBO);
 
-  //  glDrawBuffer( GL_FRONT );
-  //  glReadBuffer( GL_FRONT );
-
   // Clear previous frame values
   glCullFace(GL_BACK);
-  //  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
 operator bindShadowMapBuffer(
@@ -176,28 +164,31 @@ operator debugShadowMapBuffer(
 ) {
   // report( "debugBuffer" );
   // Create a simple shader for drawing
-/*
+  var Integer prevPrograms[];
+  prevPrograms.resize(1);
+  glGetIntegerv(GL_CURRENT_PROGRAM, prevPrograms);
+
   ShaderSource vertexShader;
   vertexShader.type = GL_VERTEX_SHADER;
-  vertexShader.code = '\
-  attribute vec4 a_position; \
-  attribute vec4 a_texCoord; \
-  void main() { \
-    gl_TexCoord[0].st = a_texCoord.xy; \
-    gl_Position = a_position; \
-  } \
-  ';
+  vertexShader.code = " \
+    attribute vec4 a_position; \
+    attribute vec4 a_texCoord; \
+    void main() { \
+      gl_TexCoord[0].st = a_texCoord.xy; \
+      gl_Position = a_position; \
+    } \
+    ";
 
   ShaderSource fragmentShader;
   fragmentShader.type = GL_FRAGMENT_SHADER;
-  fragmentShader.code = '\
-  uniform sampler2D u_sampler0; \
-  void main() \
-  { \
-    vec2 uv = gl_TexCoord[0].st; \
-    gl_FragColor = texture2D( u_sampler0, uv ); \
-  } \
-  ';
+  fragmentShader.code = " \
+    uniform sampler2D u_sampler0; \
+    void main() \
+    { \
+      vec2 uv = gl_TexCoord[0].st; \
+      gl_FragColor = texture2D( u_sampler0, uv ); \
+    } \
+    ";
 
   ShaderSource shaders[];
   shaders.push(vertexShader);
@@ -206,10 +197,14 @@ operator debugShadowMapBuffer(
 
   var Integer programID = fglCreateProgramFromShaders('debugShadowMap', shaders, programParams);
   glUseProgram(programID);
+  
+  String positionAttribName = 'a_position';
+  String texAttribName = 'a_texCoord';
+  String samplerAttribName = 'u_sampler0';
 
-  var Integer posLocation = glGetAttribLocation(programID, 'a_position');
-  var Integer texLocation = glGetAttribLocation(programID, 'a_texCoord');
-  var Integer smpLocation = glGetUniformLocation(programID, 'u_sampler0');
+  var Integer posLocation = glGetAttribLocation(programID, positionAttribName);
+  var Integer texLocation = glGetAttribLocation(programID, texAttribName);
+  var Integer smpLocation = glGetUniformLocation(programID, samplerAttribName);
 
   // Set the sampler
   glEnable(GL_TEXTURE_2D);
@@ -232,24 +227,24 @@ operator debugShadowMapBuffer(
   idx[0] = 0; idx[1] = 2; idx[2] = 1;
   idx[3] = 0; idx[4] = 3; idx[5] = 2;
 
-  var Integer bufferID[3];
-
+  var Size bufferID[];
+  bufferID.resize(3);
   var Data NULL;
 
   glGenBuffers(3, bufferID);
 
   glBindBuffer(GL_ARRAY_BUFFER, bufferID[0]);
-  glBufferData(GL_ARRAY_BUFFER, p.dataSize(), p, GL_STATIC_DRAW);
+  glBufferData(GL_ARRAY_BUFFER, p.dataSize(), p.data(), GL_STATIC_DRAW);
   glEnableVertexAttribArray(posLocation);
   glVertexAttribPointer(posLocation, 3, GL_FLOAT, GL_FALSE, 0, NULL);
 
   glBindBuffer(GL_ARRAY_BUFFER, bufferID[1]);
-  glBufferData(GL_ARRAY_BUFFER, t.dataSize(), t, GL_STATIC_DRAW);
+  glBufferData(GL_ARRAY_BUFFER, t.dataSize(), t.data(), GL_STATIC_DRAW);
   glEnableVertexAttribArray(texLocation);
   glVertexAttribPointer(texLocation, 2, GL_FLOAT, GL_FALSE, 0, NULL);
 
   glBindBuffer(GL_ARRAY_BUFFER, bufferID[2]);
-  glBufferData(GL_ARRAY_BUFFER, idx.dataSize(), idx, GL_STATIC_DRAW);
+  glBufferData(GL_ARRAY_BUFFER, idx.dataSize(), idx.data(), GL_STATIC_DRAW);
   glBindBuffer(GL_ARRAY_BUFFER, 0);
 
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, bufferID[2]);
@@ -260,5 +255,7 @@ operator debugShadowMapBuffer(
 
   glDeleteProgram(programID);
   glDeleteBuffers(3, bufferID);
-  */
+  
+  glUseProgram(prevPrograms[0]);
+  
 }

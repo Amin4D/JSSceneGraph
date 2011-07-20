@@ -282,6 +282,7 @@ FABRIC.SceneGraph.registerNodeType('SpotLight',
         farDistance: 1000,
         color: FABRIC.RT.rgb(1.0, 1.0, 1.0),
         castShadows: true,
+        displayShadowDebug: false,
         resolution: 1024,
         displaySize: 50
       });
@@ -341,6 +342,19 @@ FABRIC.SceneGraph.registerNodeType('SpotLight',
         this.constructShadowRenderEventHandler();
       
         redrawEventHandler.addMember('shadowMap', 'Size', 0);
+        
+        // Debug shadowmap?
+        if(options.displayShadowDebug === true){
+          redrawEventHandler.preDescendBindings.append(
+            scene.constructOperator({
+                operatorName:"debugShadowMapBuffer",
+                srcFile:"../../../SceneGraph/Resources/KL/shadowMaps.kl",
+                entryFunctionName:"debugShadowMapBuffer",
+                parameterBinding:[
+                  'light.colorTextureID'
+                ]
+              }));
+        }
 
         redrawEventHandler.preDescendBindings.append(
           scene.constructOperator({
@@ -373,20 +387,7 @@ FABRIC.SceneGraph.registerNodeType('SpotLight',
               ]
             }));
 
-        // Debug shadowmap?
-    /*    if(true)
-        {
-          redrawEventHandler.preDescendBindings.append(
-            scene.constructOperator({
-                operatorName:"debugShadowMapBuffer",
-                srcFile:"../../../SceneGraph/Resources/KL/shadowMaps.kl",
-                entryFunctionName:"debugShadowMapBuffer",
-                parameterBinding:[
-                  "light.colorTextureID"
-                ]
-              }));
-        }
-    */ }
+     }
 
       redrawEventHandlerConfigured = true;
       return redrawEventHandler;

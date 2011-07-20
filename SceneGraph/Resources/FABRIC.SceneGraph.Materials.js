@@ -898,7 +898,7 @@ FABRIC.SceneGraph.defineEffectFromFile = function(effectName, effectfile) {
         textureNode = node.childNodes[j];
         textureName = textureNode.getAttribute('binding');
         effectParameters.textures[textureName] = {
-          name: textureNode
+          name: textureName
         };
         if (textureNode.getAttribute('owner')) {
           effectParameters.textures[textureName].owner = textureNode.getAttribute('owner');

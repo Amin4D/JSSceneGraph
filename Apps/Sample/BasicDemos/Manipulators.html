@@ -44,8 +44,9 @@ $(document).ready(function() {
   // Create the scene.
   var scene = FABRIC.SceneGraph.createScene();
   var viewport = scene.constructNode('Viewport', {
+    windowElement: document.getElementById('FabricContainer'),
     enableRaycasting: true,
-    windowElement: document.getElementById('FabricContainer')
+    rayIntersectionThreshold: 0.8
   });
 
   // Create a camera to draw the scene from

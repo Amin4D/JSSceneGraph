@@ -108,5 +108,4 @@ operator generatePlane(
       }
     }
   }
-  report("NumTriangles:" + ii );
 }

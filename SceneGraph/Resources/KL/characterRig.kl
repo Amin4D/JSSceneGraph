@@ -15,3 +15,16 @@ operator calcSkinningMatrices(io Xfo pose[], io Mat44 invMatrices[], io Mat44 ma
     matrices[i] = invMatrices[i] * Mat44(pose[i]);
   }
 }
+
+operator calcSkinningXfos(io Xfo pose[], io Bone bones[], io Xfo xfos[]) {
+  if (bones.size() != pose.size()) {
+    //  report("Error in calcSkinningXfos: bones.size() != pose.size() ");
+    return;
+  }
+  xfos.resize(pose.size());
+  for (var Integer i = 0; i < pose.size(); i++) {
+    //xfos[i] = bones[i].referencePose.invProject(pose[i]);
+    //xfos[i] = pose[i];
+    xfos[i] = pose[i].project(bones[i].referencePose.inv());
+  }
+}

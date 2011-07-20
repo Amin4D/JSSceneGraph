@@ -284,6 +284,7 @@ FABRIC.SceneGraph.registerNodeType('SpotLight',
         castShadows: true,
         displayShadowDebug: false,
         resolution: 1024,
+        display: false,
         displaySize: 50
       });
 
@@ -343,12 +344,12 @@ FABRIC.SceneGraph.registerNodeType('SpotLight',
       
         redrawEventHandler.addMember('shadowMap', 'Size', 0);
         
-        // Debug shadowmap?
         if(options.displayShadowDebug === true){
+          // Display the shadow color map on screen.
           redrawEventHandler.preDescendBindings.append(
             scene.constructOperator({
                 operatorName:"debugShadowMapBuffer",
-                srcFile:"../../../SceneGraph/Resources/KL/shadowMaps.kl",
+                srcFile:"FABRIC_ROOT/SceneGraph/Resources/KL/shadowMaps.kl",
                 entryFunctionName:"debugShadowMapBuffer",
                 parameterBinding:[
                   'light.colorTextureID'
@@ -456,6 +457,9 @@ FABRIC.SceneGraph.registerNodeType('SpotLight',
       // tan(theta) = o/a
       // tan(theta)/a = o
       var coneDist = options.displaySize;
+      if(options.position && options.target){
+        coneDist = options.position.dist(options.target);
+      }
       var coneRadius = Math.tan(options.coneAngle * 0.5) * coneDist;
       var lightMaterial = scene.pub.constructNode('FlatMaterial', { color: FABRIC.RT.rgb(1.0, 0.7, 0.4) });
       var crossGeometry = scene.pub.constructNode('Cross', { size: coneDist * 0.05 });
@@ -469,7 +473,7 @@ FABRIC.SceneGraph.registerNodeType('SpotLight',
         transformNode: scene.pub.constructNode('Transform', {
           hierarchical: true,
           parentTransformNode: spotLightNode.pub.getTransformNode(),
-          localXfo: FABRIC.RT.xfo({ tr: FABRIC.RT.vec3(0, 0, -options.displaySize) })
+          localXfo: FABRIC.RT.xfo({ tr: FABRIC.RT.vec3(0, 0, -coneDist) })
         }),
         geometryNode: crossGeometry,
         materialNode: lightMaterial
@@ -478,7 +482,10 @@ FABRIC.SceneGraph.registerNodeType('SpotLight',
         transformNode: scene.pub.constructNode('Transform', {
           hierarchical: true,
           parentTransformNode: spotLightNode.pub.getTransformNode(),
-          localXfo: FABRIC.RT.xfo({ ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.Vec3.xAxis, 90), tr: FABRIC.RT.vec3(0, 0, -options.displaySize) })
+          localXfo: FABRIC.RT.xfo({
+            ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.Vec3.xAxis, 90),
+            tr: FABRIC.RT.vec3(0, 0, -coneDist)
+          })
         }),
         geometryNode: scene.pub.constructNode('Circle', {
           radius: coneRadius

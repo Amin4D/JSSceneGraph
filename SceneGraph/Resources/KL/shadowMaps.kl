@@ -61,14 +61,32 @@ operator genAndBindShadowMapFBO(
   if (depthTextureID == 0) {
 
     var Data NULL;
-
     glEnable(GL_TEXTURE_2D);
-    Size colorTextureIDs[];
-    colorTextureIDs.resize(1);
-    glGenTextures(1, colorTextureIDs);
-    colorTextureID = colorTextureIDs[0];
-    glBindTexture(GL_TEXTURE_2D, colorTextureID);
     
+    Size textureIDs[];
+    textureIDs.resize(2);
+    glGenTextures(2, textureIDs);
+    
+    /////////////////////////////////////////////////////
+    // Depth Texture
+    depthTextureID = textureIDs[0];
+    glBindTexture(GL_TEXTURE_2D, depthTextureID);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_R_TO_TEXTURE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
+    glTexParameteri(GL_TEXTURE_2D, GL_DEPTH_TEXTURE_MODE, GL_INTENSITY);
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, mapsize, mapsize, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+
+    /////////////////////////////////////////////////////
+    // Color Texture
+    colorTextureID = textureIDs[1];
+    
+    glBindTexture(GL_TEXTURE_2D, colorTextureID);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -76,33 +94,7 @@ operator genAndBindShadowMapFBO(
     //NULL means reserve texture memory, but texels are undefined
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, mapsize, mapsize, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 
-    // Try to use a texture depth component
-    Size depthTextureIDs[];
-    depthTextureIDs.resize(1);
-    glGenTextures(1, depthTextureIDs);
-    depthTextureID = depthTextureIDs[0];
-    
-    glBindTexture(GL_TEXTURE_2D, depthTextureID);
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-    // Remove artefact on the edges of the shadowmap
-    var Scalar border[];
-    border.resize(4);
-    glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, border);
-
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
-
-    // This is to allow usage of shadow2DProj function in the shader
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_R_TO_TEXTURE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
-    glTexParameteri(GL_TEXTURE_2D, GL_DEPTH_TEXTURE_MODE, GL_INTENSITY);
-
-    //Having a border of > 0 length is not supported on some drivers; disabling for now. Todo: consider using Renderbuffer for depth info
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, mapsize, mapsize, 0 /*1 unsupported on some drivers*/, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
-
+    /////////////////////////////////////////////////////
     // create a framebuffer object
     glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
     Size shadowFBOs[];

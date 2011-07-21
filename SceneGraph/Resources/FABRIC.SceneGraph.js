@@ -473,27 +473,6 @@ FABRIC.SceneGraph = {
       }
       return obj;
     };
-    scene.addFileReadWriteFunctions = function(sceneGraphNode, dgnode) {
-      if (sceneGraphNode.loadResourceFile) {
-        return;
-      }
-      sceneGraphNode.loadResourceURL = function(filepath) {
-        var datablob = scene.loadResourceURL(filepath);
-        if (datablob) {
-          dgnode.setBinary(datablob);
-        }else {
-          throw ('File not found:' + filepath);
-        }
-      };
-      sceneGraphNode.loadResourceFile = function(filepath) {
-        var datablob = scene.readResourceFile(filepath);
-        if (datablob) {
-          dgnode.setBinary(datablob);
-        }else {
-          throw ('File not found:' + filepath);
-        }
-      };
-    };
 
     /////////////////////////////////////////////////////////////////////
     // Public Scene Interface

@@ -118,9 +118,6 @@ FABRIC.SceneGraph.registerNodeType('Light',
       lightNode.pub.setTransformNode(options.transformNode, options.transformNodeMember);
     }
 
-    // the operator stack functions enable the light properties to be animated.
-    scene.addMemberAndOperatorStackFunctions(lightNode, dgnode);
-
     return lightNode;
   });
 
@@ -447,9 +444,6 @@ FABRIC.SceneGraph.registerNodeType('SpotLight',
 
       scene.registerShadowCastingLightSourceHandler(shadowRenderEventHandler);
     }
-
-    // the operator stack functions enable the light properties to be animated.
-    scene.addMemberAndOperatorStackFunctions(spotLightNode, dgnode);
 
     if (options.display === true) {
       // tan(theta) = o/a

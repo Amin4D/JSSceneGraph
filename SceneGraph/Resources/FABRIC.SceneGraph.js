@@ -447,68 +447,6 @@ FABRIC.SceneGraph = {
       }
       return shadowMapMaterial;
     };
-    //////////////////////////////////////////////////////////
-    // This method decorates the passed in sceneGraphNode with methods to
-    // add members, operators, and denpendencies.
-    // One day we will want to build a persistence layer for the scene graph
-    // and so these changes will need to be recorded ready for persisting.
-    scene.addMemberAndOperatorStackFunctions = function(sceneGraphNode, dgnode) {
-      sceneGraphNode.getMembers = function() {
-        return dgnode.getMembers();
-      };
-      sceneGraphNode.addMember = function(name, type, defaultval) {
-        if (defaultval) {
-          dgnode.addMember(name, type, defaultval);
-        }else {
-          dgnode.addMember(name, type);
-        }
-      };
-      sceneGraphNode.setCount = function(count) {
-        dgnode.setCount(count);
-      };
-      sceneGraphNode.setData = function(memberName, data) {
-        var nodeInstanceMembers = dgnode.getMembers();
-        if (!nodeInstanceMembers[memberName]) {
-          throw ("Node '" + nodeInstanceName + "' Does not contain member :" + memberName);
-        }
-        var memberType = nodeInstanceMembers[memberName].type;
-
-        // Note: Currently it is ambiguous whether we are setting an Array member, or
-        // each element in a sliced node.
-        if ((typeof data) === 'object' && data.constructor.name === 'Array' &&
-          memberType.substr(-2) !== '[]') {
-          for (var i = 0; i < data.length; i++) {
-            dgnode.setData(memberName, i, data[i]);
-          }
-        }else {
-          dgnode.setData(memberName, 0, data);
-        }
-      };
-      sceneGraphNode.appendOperator = function(operatorDef) {
-        var binding;
-
-        if ('getParameterLayout' in operatorDef)
-          binding = operatorDef;
-        else
-          binding = scene.constructOperator(operatorDef);
-
-        dgnode.bindings.append(binding);
-      };
-      sceneGraphNode.insertOperator = function(operatorDef, beforeIndex) {
-        var binding;
-
-        if ('getParameterLayout' in operatorDef)
-          binding = operatorDef;
-        else
-          binding = scene.constructOperator(operatorDef);
-
-        dgnode.bindings.insert(binding, beforeIndex);
-      };
-      sceneGraphNode.addDependency = function(dependencydgnode, dependencyName) {
-        dgnode.addDependency(dependencydgnode, dependencyName);
-      };
-      return sceneGraphNode;
-    };
     scene.addEventHandlingFunctions = function(obj) {
       // We store a map of arrays of event listener functions.
       var eventListeners = {};

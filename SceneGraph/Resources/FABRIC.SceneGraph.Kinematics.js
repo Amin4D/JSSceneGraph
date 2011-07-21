@@ -32,8 +32,6 @@ FABRIC.SceneGraph.registerNodeType('Transform',
       return redrawEventHandler;
     };
 
-    scene.addMemberAndOperatorStackFunctions(transformNode, dgnode);
-
     if (options.hierarchical) {
       dgnode.addMember('localXfo', 'Xfo', options.localXfo);
       dgnode.bindings.append(scene.constructOperator( {

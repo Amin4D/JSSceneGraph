@@ -22,17 +22,16 @@ FABRIC.SceneGraph.registerNodeType('Image',
         createResouceLoadEventHandler: true,
         createLoadTextureEventHandler: true
       });
-    options.dgnodenames.push('DGNode');
 
-    var ext = options.url ? options.url.substr(options.url.lastIndexOf('.') + 1) : undefined,
+    var imageNode = scene.constructNode('Texture', options),
+      dgnode,
       imageLoaded = false,
       onloadCallbacks = [],
-      dgResourceLoadEventHandler,
       redrawEventHandler,
-      url,
-      imageNode = scene.constructNode('Texture', options),
-      dgnode = imageNode.getDGNode();
+      ext = options.url ? options.url.substr(options.url.lastIndexOf('.') + 1) : undefined,
+      url;
 
+    dgnode = imageNode.constructDGNode('DGNode')
     dgnode.addMember('type', 'String', ext);
     dgnode.addMember('hdr', 'Boolean', options.wantHDR);
     dgnode.addMember('width', 'Size');
@@ -46,28 +45,10 @@ FABRIC.SceneGraph.registerNodeType('Image',
       onloadCallbacks.push(options.onLoadCallback);
     }
 
-    if (options.createResouceLoadEventHandler) {
-        dgResourceLoadEventHandler = scene.constructEventHandlerNode(options.url);
-        dgResourceLoadEventHandler.addScope('image', dgnode);
-        dgResourceLoadEventHandler.preDescendBindings.append(scene.constructOperator({
-            operatorName: (options.wantHDR ? 'loadImageHDR' : 'loadImageLDR'),
-            parameterBinding: [
-              'resource.data',
-              'resource.dataSize',
-              'image.type',
-              'image.width',
-              'image.height',
-              'image.pixels'
-            ],
-            entryFunctionName: (options.wantHDR ? 'loadImageHDR' : 'loadImageLDR'),
-            srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadTexture.kl'
-          }));
-    }
-
     // Construct the handler for loading the image into texture memory.
-    redrawEventHandler = scene.constructEventHandlerNode(options.name + '_draw');
+    redrawEventHandler = imageNode.constructEventHandlerNode('Draw');
     redrawEventHandler.addScope('image', dgnode);
-    redrawEventHandler.addMember('bufferID', 'Integer', 0);
+    redrawEventHandler.addMember('bufferID', 'Size', 0);
     if (options.createLoadTextureEventHandler) {
         redrawEventHandler.preDescendBindings.append(scene.constructOperator({
             operatorName: 'loadTexture',
@@ -87,18 +68,34 @@ FABRIC.SceneGraph.registerNodeType('Image',
     };
 
     imageNode.loadImageAsset = function(imageURL) {
-      var dgResourceLoadEvent;
       url = imageURL;
-      dgResourceLoadEvent = scene.constructResourceLoadEventNode(imageURL);
-      dgResourceLoadEvent.appendEventHandler(dgResourceLoadEventHandler);
-      dgResourceLoadEvent.didFireCallback = function() {
+      var resourceLoadEvent = scene.constructResourceLoadEventNode(imageURL),
+          resourceLoadEventHandler = imageNode.constructEventHandlerNode('ResourceLoadHandler');
+          
+      resourceLoadEventHandler.addScope('image', dgnode);
+      resourceLoadEventHandler.preDescendBindings.append(scene.constructOperator({
+          operatorName: (options.wantHDR ? 'loadImageHDR' : 'loadImageLDR'),
+          parameterBinding: [
+            'resource.data',
+            'resource.dataSize',
+            'image.type',
+            'image.width',
+            'image.height',
+            'image.pixels'
+          ],
+          entryFunctionName: (options.wantHDR ? 'loadImageHDR' : 'loadImageLDR'),
+          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadTexture.kl'
+        }));
+      
+      resourceLoadEvent.appendEventHandler(resourceLoadEventHandler);
+      resourceLoadEvent.didFireCallback = function() {
         var i;
         imageLoaded = true;
         for (i = 0; i < onloadCallbacks.length; i++) {
           onloadCallbacks[i].call();
         }
       };
-      dgResourceLoadEvent.start();
+      resourceLoadEvent.start();
     };
 
     imageNode.getURL = function() {
@@ -226,15 +223,15 @@ FABRIC.SceneGraph.registerNodeType('PointSpriteTexture',
     scene.assignDefaults(options, {
         spriteResolution: 32
       });
-    options.dgnodenames.push('DGNode');
-    var pointSpriteTextureNode = scene.constructNode('Texture', options),
-      dgnode = pointSpriteTextureNode.getDGNode(),
-      redrawEventHandler = scene.constructEventHandlerNode(options.name + '_draw');
-
+    
+    var pointSpriteTextureNode = scene.constructNode('Texture', options);
+    
+    var dgnode = pointSpriteTextureNode.constructDGNode('DGNode');
     dgnode.addMember('resolution', 'Integer', options.spriteResolution);
 
+    var redrawEventHandler = pointSpriteTextureNode.constructEventHandlerNode('Draw');
     redrawEventHandler.addScope('image', dgnode);
-    redrawEventHandler.addMember('bufferID', 'Integer', 0);
+    redrawEventHandler.addMember('bufferID', 'Size', 0);
     redrawEventHandler.preDescendBindings.append(scene.constructOperator({
             operatorName: 'createSpriteTexture',
             srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadTexture.kl',
@@ -386,7 +383,7 @@ FABRIC.SceneGraph.registerNodeType('Shader',
         parentEventHandler: scene.getSceneRedrawEventHandler()
       });
     var shaderNode = scene.constructNode('SceneGraphNode', options),
-      redrawEventHandler = scene.constructEventHandlerNode(options.name + '_draw'),
+      redrawEventHandler = shaderNode.constructEventHandlerNode('Draw'),
       shaderSources = [],
       uniformValues = [],
       programParams = [],
@@ -534,11 +531,10 @@ FABRIC.SceneGraph.registerNodeType('Material',
         parentEventHandler: options.parentEventHandler
       });
 
-      if(constructDGNode){
-        options.dgnodenames.push('DGNode');
-      }
+
       materialNode = scene.constructNode('SceneGraphNode', options);
-      redrawEventHandler = scene.constructEventHandlerNode(options.name + '_redraw');
+      dgnode = materialNode.constructDGNode('DGNode');
+      redrawEventHandler = materialNode.constructEventHandlerNode('Draw');
 
       shader.getRedrawEventHandler().appendChildEventHandler(redrawEventHandler);
 
@@ -555,10 +551,8 @@ FABRIC.SceneGraph.registerNodeType('Material',
     else {
       // The shader and the material properties are stored in the same node.
       // we simply extend the shader with the material paramters. 
-      if(constructDGNode){
-        options.dgnodenames.push('DGNode');
-      }
       materialNode = scene.constructNode('Shader', options);
+      dgnode = materialNode.constructDGNode('DGNode');
       redrawEventHandler = materialNode.getRedrawEventHandler();
     }
     if(constructDGNode){
@@ -621,11 +615,10 @@ FABRIC.SceneGraph.registerNodeType('Material',
 
     if (options.lights) {
       addLightInterface = function(lightName, lightDef) {
-        var lightStub, setterName, setLightNodeFn;
-        lightStub = scene.constructEventHandlerNode(options.name + '_redraw_' + lightName);
+        var lightStub = materialNode.constructEventHandlerNode('Draw_' + lightName);
         redrawEventHandler.appendChildEventHandler(lightStub);
         
-        setLightNodeFn = function(node) {
+        var setLightNodeFn = function(node) {
           if (!node.isTypeOf(lightDef.type)) {
             throw ('Incorrect type assignment. Must assign a ' + lightDef.type);
           }
@@ -644,7 +637,7 @@ FABRIC.SceneGraph.registerNodeType('Material',
     }
     if (options.textures) {
       addTextureInterface = function(textureName, textureDef, textureUnit) {
-        var textureStub = scene.constructEventHandlerNode(options.name + textureName + '_stub');
+        var textureStub = materialNode.constructEventHandlerNode(textureName + '_Stub');
         textureStub.setScopeName('textureStub');
         textureStub.addMember('textureUnit', 'Integer', textureUnit);
         redrawEventHandler.appendChildEventHandler(textureStub);
@@ -1158,22 +1151,6 @@ FABRIC.SceneGraph.registerNodeType('PointSpriteMaterial',
       }));
 
     return pointSpriteMaterialNode;
-  });
-
-
-FABRIC.SceneGraph.registerNodeType('StupidPostProcessEffect',
-  function(options, scene) {
-    options.fragmentShader =
-      'uniform sampler2D u_rgbaImage;' +
-      'void main()' +
-      '{' +
-      '  vec2 uv = gl_TexCoord[0].st;' +
-      '  uv.s += sin(gl_FragCoord.x) * 0.01;' +
-      '  uv.t += cos(gl_FragCoord.x) * 0.01;' +
-      '  gl_FragColor = texture2D(u_rgbaImage, uv);' +
-      '}';
-    var stupidPostProcessEffect = scene.constructNode('PostProcessEffect', options);
-    return stupidPostProcessEffect;
   });
 
 

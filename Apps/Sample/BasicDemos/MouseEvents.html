@@ -46,7 +46,7 @@ $(document).ready(function() {
   var scene = FABRIC.SceneGraph.createScene();
 
   var camera = scene.constructNode('TargetCamera', {
-      position: FABRIC.RT.vec3(70, 62, -40),
+      position: FABRIC.RT.vec3(70, 62, 40),
       target: FABRIC.RT.vec3(30, 20, 0)
     });
   var viewport = scene.constructNode('Viewport', {

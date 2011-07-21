@@ -29,12 +29,12 @@ FABRIC.SceneGraph.registerNodeType('Light',
       throw ': Lights must define a type';
     }
 
-    options.dgnodenames.push('DGNode');
-    var lightNode = scene.constructNode('SceneGraphNode', options);
-    var transformNode;
-    var transformNodeMember;
-    var redrawEventHandler;
-    var dgnode = lightNode.getDGNode();
+    var lightNode = scene.constructNode('SceneGraphNode', options),
+      dgnode = transformNode.constructDGNode('DGNode'),
+      transformNode,
+      transformNodeMember,
+      redrawEventHandler;
+    
     dgnode.addMember('type', 'Integer', options.lightType);
     dgnode.addMember('lightMat44', 'Mat44');
     dgnode.addMember('cameraMat44', 'Mat44');

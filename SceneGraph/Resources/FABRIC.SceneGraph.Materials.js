@@ -22,16 +22,15 @@ FABRIC.SceneGraph.registerNodeType('Image',
         createResouceLoadEventHandler: true,
         createLoadTextureEventHandler: true
       });
-    options.dgnodenames.push('DGNode');
 
-    var ext = options.url ? options.url.substr(options.url.lastIndexOf('.') + 1) : undefined,
+    var imageNode = scene.constructNode('Texture', options),
+      dgnode = imageNode.constructDGNode('DGNode'),
       imageLoaded = false,
       onloadCallbacks = [],
       dgResourceLoadEventHandler,
       redrawEventHandler,
-      url,
-      imageNode = scene.constructNode('Texture', options),
-      dgnode = imageNode.getDGNode();
+      ext = options.url ? options.url.substr(options.url.lastIndexOf('.') + 1) : undefined,
+      url;
 
     dgnode.addMember('type', 'String', ext);
     dgnode.addMember('hdr', 'Boolean', options.wantHDR);
@@ -226,9 +225,9 @@ FABRIC.SceneGraph.registerNodeType('PointSpriteTexture',
     scene.assignDefaults(options, {
         spriteResolution: 32
       });
-    options.dgnodenames.push('DGNode');
+    
     var pointSpriteTextureNode = scene.constructNode('Texture', options),
-      dgnode = pointSpriteTextureNode.getDGNode(),
+      dgnode = pointSpriteTextureNode.constructDGNode('DGNode'),
       redrawEventHandler = scene.constructEventHandlerNode(options.name + '_draw');
 
     dgnode.addMember('resolution', 'Integer', options.spriteResolution);
@@ -526,9 +525,8 @@ FABRIC.SceneGraph.registerNodeType('Material',
         parentEventHandler: options.parentEventHandler
       });
 
-      options.dgnodenames.push('DGNode');
       materialNode = scene.constructNode('SceneGraphNode', options);
-      dgnode = materialNode.getDGNode();
+      dgnode = materialNode.constructDGNode('DGNode');
       redrawEventHandler = scene.constructEventHandlerNode(options.name + '_redraw');
 
       shader.getRedrawEventHandler().appendChildEventHandler(redrawEventHandler);
@@ -546,9 +544,8 @@ FABRIC.SceneGraph.registerNodeType('Material',
     else {
       // The shader and the material properties are stored in the same node.
       // we simply extend the shader with the material paramters. 
-      options.dgnodenames.push('DGNode');
       materialNode = scene.constructNode('Shader', options);
-      dgnode = materialNode.getDGNode();
+      dgnode = materialNode.constructDGNode('DGNode');
       redrawEventHandler = materialNode.getRedrawEventHandler();
     }
 

@@ -207,7 +207,6 @@ FABRIC.SceneGraph = {
         });
       }
 
-      options.dgnodenames = options.dgnodenames ? options.dgnodenames : [];
       options.ehnodenames = options.ehnodenames ? options.ehnodenames : [];
 
       var sceneGraphNode = FABRIC.SceneGraph.nodeFactories[type].call(undefined, options, scene);
@@ -731,7 +730,6 @@ FABRIC.SceneGraph = {
 FABRIC.SceneGraph.registerNodeType('SceneGraphNode',
   function(options, scene) {
 
-    var dgnodenames = options.dgnodenames ? options.dgnodenames : [];
     var dgnodes = {};
     
     var ehnodenames = options.ehnodenames ? options.ehnodenames : [];
@@ -772,34 +770,29 @@ FABRIC.SceneGraph.registerNodeType('SceneGraphNode',
             corenode.setData(memberName, sliceIndex?sliceIndex:0, value);
           }
         }
-      }
-    };
-    
-    // store it to the map
-    scene.setSceneGraphNode(name, sceneGraphNode);
-    
-    // take care of the DG nodes
-    var constructDGNode = function(dgnodename) {
-      dgnodes[dgnodename] = scene.constructDependencyGraphNode(name + '_' + dgnodename);
-      dgnodes[dgnodename].sceneGraphNode = sceneGraphNode;
-      sceneGraphNode['get' + dgnodename] = function() {
-        return dgnodes[dgnodename];
-      };
-      sceneGraphNode['add' + dgnodename + 'Member'] = function(
-          memberName,
-          memberType,
-          defaultValue,
-          defineGetter,
-          defineSetter) {
-        dgnodes[dgnodename].addMember(memberName, memberType, defaultValue);
-        if(defineGetter){
-          sceneGraphNode.addMemberInterface(dgnodes[dgnodename], memberName, defineSetter);
+      },
+      constructDGNode: function(dgnodename) {
+        if(dgnodes[dgnodename]){
+          throw "SceneGraphNode already has a " + dgnodename;
+        }
+        dgnodes[dgnodename] = scene.constructDependencyGraphNode(name + '_' + dgnodename);
+        dgnodes[dgnodename].sceneGraphNode = sceneGraphNode;
+        sceneGraphNode['get' + dgnodename] = function() {
+          return dgnodes[dgnodename];
         };
-      };
-    }
-
-    for (var i = 0; i < dgnodenames.length; i++) {
-      constructDGNode(dgnodenames[i]);
+        sceneGraphNode['add' + dgnodename + 'Member'] = function(
+            memberName,
+            memberType,
+            defaultValue,
+            defineGetter,
+            defineSetter) {
+          dgnodes[dgnodename].addMember(memberName, memberType, defaultValue);
+          if(defineGetter){
+            sceneGraphNode.addMemberInterface(dgnodes[dgnodename], memberName, defineSetter);
+          };
+        };
+        return dgnodes[dgnodename];
+      }
     }
 
     // take care of the DG nodes
@@ -827,6 +820,9 @@ FABRIC.SceneGraph.registerNodeType('SceneGraphNode',
       constructEventHandler(ehnodenames[i]);
     }
 
+    // store it to the map
+    scene.setSceneGraphNode(name, sceneGraphNode);
+    
     return sceneGraphNode;
   });
 
@@ -843,7 +839,6 @@ FABRIC.SceneGraph.registerNodeType('Viewport',
         postProcessEffect: undefined,
         rayIntersectionThreshold: 0.2
       });
-    options.dgnodenames.push('DGNode');
 
     if (!options.windowElement) {
       throw ('Must provide a window to this constructor');
@@ -853,8 +848,8 @@ FABRIC.SceneGraph.registerNodeType('Viewport',
     var windowElement = options.windowElement;
     var fabricwindow = scene.addWindow(windowElement);
 
-    var viewportNode = scene.constructNode('SceneGraphNode', options);
-    var dgnode = viewportNode.getDGNode();
+    var viewportNode = scene.constructNode('SceneGraphNode', options),
+      dgnode = viewportNode.constructDGNode('DGNode');
     dgnode.addMember('backgroundColor', 'Color', options.backgroundColor);
     var redrawEventHandler = scene.constructEventHandlerNode(options.name + '_RedrawEventHandler');
 
@@ -1249,12 +1244,12 @@ FABRIC.SceneGraph.registerNodeType('Camera',
         orthographic: false,
         transformNode: 'Transform'
       });
-    options.dgnodenames.push('DGNode');
 
-    var transformNode;
-    var transformNodeMember = 'globalXfo';
-    var cameraNode = scene.constructNode('SceneGraphNode', options);
-    var dgnode = cameraNode.getDGNode();
+    var cameraNode = scene.constructNode('SceneGraphNode', options),
+      dgnode = cameraNode.constructDGNode('DGNode'),
+      transformNode,
+      transformNodeMember = 'globalXfo';
+      
     dgnode.addMember('nearDistance', 'Scalar', options.nearDistance);
     dgnode.addMember('farDistance', 'Scalar', options.farDistance);
     dgnode.addMember('fovY', 'Scalar', options.fovY * FABRIC.RT.degToRad);

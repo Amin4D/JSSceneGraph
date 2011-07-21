@@ -161,10 +161,8 @@ FABRIC.SceneGraph.registerNodeType('PaintManipulator',
       enabled:true
       });
 
-    options.dgnodenames.push('RayCastDGNode');
-
     var paintManipulatorNode = scene.constructNode('SceneGraphNode', options),
-      collectPointsDgNode = paintManipulatorNode.getRayCastDGNode(),
+      collectPointsDgNode = paintManipulatorNode.constructDGNode('RayCastDGNode'),
       paintEventHandler,
       paintEvent,
       viewportNode,

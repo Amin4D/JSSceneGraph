@@ -405,7 +405,7 @@ FABRIC.SceneGraph = {
         }
         var diagnostics = operator.getDiagnostics();
         if (diagnostics.length > 0) {
-          console.error(descDiags(operator.getFullSourceCode(), diagnostics));
+          console.error(descDiags(operator.getSourceCode(), diagnostics));
         }
       }
       compileKL(code);

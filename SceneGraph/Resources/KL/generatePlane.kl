@@ -52,8 +52,8 @@ operator generatePlane(
 
   for (Integer i = 0; i <= lengthSections; i++) {
     for (Integer j = 0; j <= widthSections; j++) {
-      Scalar x = ((Scalar) i / (Scalar) lengthSections) - 0.5;
-      Scalar z = ((Scalar) j / (Scalar) widthSections) - 0.5;
+      Scalar x = (Scalar(i) / Scalar(lengthSections)) - 0.5;
+      Scalar z = (Scalar(j) / Scalar(widthSections)) - 0.5;
       positions[vi] = Vec3(x * length, 0.0, z * width);
       normals[vi] = Vec3(0.0, 1.0, 0.0);
       uvs[vi] = Vec2(x + 0.5, z + 0.5);

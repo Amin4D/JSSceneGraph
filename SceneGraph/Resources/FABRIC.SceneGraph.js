@@ -441,7 +441,7 @@ FABRIC.SceneGraph = {
     };
     scene.getShadowMapMaterial = function() {
       if (!shadowMapMaterial) {
-        shadowMapMaterial = this.pub.constructNode('ShadowMaterial', {
+        shadowMapMaterial = this.pub.constructNode(sceneOptions.shadowMaterial, {
           parentEventHandler: beginRenderShadowMap
         });
       }
@@ -559,9 +559,9 @@ FABRIC.SceneGraph = {
 
     /////////////////////////////////////////////////////////////////////
     // Public Scene Interface
-    sceneOptions = sceneOptions ? sceneOptions : {};
-    scene.assignDefaults(sceneOptions, {
+    sceneOptions = scene.assignDefaults(sceneOptions, {
         constructGlobalsNode: true,
+        shadowMaterial:'ShadowMaterial',
         constructAnimationInterface: true,
         fixedTimeStep: true,
         timeStep: 20

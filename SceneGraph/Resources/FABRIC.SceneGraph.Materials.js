@@ -366,7 +366,6 @@ FABRIC.shaderAttributeTable = {
   modelViewMatrix: { id: 148, type: 'Mat44' },
   modelViewProjectionMatrix: { id: 149, type: 'Mat44' },
 
-
   width: { id: 200, type: 'Integer' },
   height: { id: 201, type: 'Integer' },
   colorMix: { id: 202, type: 'Scalar' },
@@ -509,7 +508,15 @@ FABRIC.SceneGraph.registerNodeType('Material',
       textureNodes = {},
       addTextureInterface,
       textureUnit = 0;
-
+    // We only need to construct a DG  node if there are material
+    // uniforms specified.
+    var constructDGNode = false;
+    for (uniformName in options.shaderUniforms) {
+      if (options.shaderUniforms[uniformName].owner === undefined ) {
+        constructDGNode = true;
+        break;
+      }
+    }
     if (options.separateShaderNode) {
       shaderName = materialType + 'Shader' + (options.shaderNameDecoration !== undefined ?
                                               options.shaderNameDecoration : '');
@@ -527,9 +534,10 @@ FABRIC.SceneGraph.registerNodeType('Material',
         parentEventHandler: options.parentEventHandler
       });
 
-      options.dgnodenames.push('DGNode');
+      if(constructDGNode){
+        options.dgnodenames.push('DGNode');
+      }
       materialNode = scene.constructNode('SceneGraphNode', options);
-      dgnode = materialNode.getDGNode();
       redrawEventHandler = scene.constructEventHandlerNode(options.name + '_redraw');
 
       shader.getRedrawEventHandler().appendChildEventHandler(redrawEventHandler);
@@ -547,14 +555,16 @@ FABRIC.SceneGraph.registerNodeType('Material',
     else {
       // The shader and the material properties are stored in the same node.
       // we simply extend the shader with the material paramters. 
-      options.dgnodenames.push('DGNode');
+      if(constructDGNode){
+        options.dgnodenames.push('DGNode');
+      }
       materialNode = scene.constructNode('Shader', options);
-      dgnode = materialNode.getDGNode();
       redrawEventHandler = materialNode.getRedrawEventHandler();
     }
-
-    redrawEventHandler.addScope('material', dgnode);
-
+    if(constructDGNode){
+      dgnode = materialNode.getDGNode();
+      redrawEventHandler.addScope('material', dgnode);
+    }
 
     /////////////////////////////////
     // Material Binding operator
@@ -682,12 +692,6 @@ FABRIC.SceneGraph.registerNodeType('Material',
   });
 
 
-FABRIC.SceneGraph.registerNodeType('ShadowmapMaterial',
-  function(options, scene) {
-    options.parentEventHandler = scene.getBeginRenderShadowMapEventHandler();
-    return scene.constructNode('Material', options);
-  });
-
 FABRIC.SceneGraph.registerNodeType('PointMaterial',
   function(options, scene) {
     scene.assignDefaults(options, {
@@ -794,7 +798,8 @@ FABRIC.SceneGraph.registerNodeType('PostProcessEffect',
 FABRIC.SceneGraph.defineEffectFromFile = function(effectName, effectfile) {
   
   var preprocessorDirectives,
-      effectParameters;
+      effectParameters,
+      separateShaderNode = false;
   
   var parseEffectFile = function(){
     var xmlText,
@@ -815,7 +820,7 @@ FABRIC.SceneGraph.defineEffectFromFile = function(effectName, effectfile) {
       childNode;
       
     preprocessorDirectives = {};
-    effectParameters = {};
+    effectParameters = { separateShaderNode:false };
   
     xmlText = FABRIC.loadResourceURL(effectfile, 'text/xml');
     parser = new DOMParser();
@@ -847,6 +852,8 @@ FABRIC.SceneGraph.defineEffectFromFile = function(effectName, effectfile) {
         }
         if (uniformNode.getAttribute('owner')) {
           effectParameters.shaderUniforms[uniformName].owner = uniformNode.getAttribute('owner');
+        }else{
+          effectParameters.separateShaderNode = true;
         }
         if (uniformNode.getAttribute('state')) {
           effectParameters.shaderUniforms[uniformName].state = uniformNode.getAttribute('state');

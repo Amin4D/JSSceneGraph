@@ -729,31 +729,35 @@ FABRIC.SceneGraph.registerNodeType('3AxisRotationManipulator',
         radius: 15,
         xaxis: true,
         yaxis: true,
-        zaxis: true
+        zaxis: true,
+        name: 'ThreeAxisRotationManipulator'
       });
+    
+    var threeAxisRotationManipulator = scene.constructNode('SceneGraphNode', options);
+    var name = threeAxisRotationManipulator.pub.getName();
 
     var circle = scene.pub.constructNode('Circle', { radius: options.radius });
 
     var xaxisGizmoNode = scene.pub.constructNode('RotationManipulator', scene.assignDefaults(options, {
-        name: 'XAxisRotationManipulator',
+        name: name + 'XAxis',
         color: FABRIC.RT.rgb(0.8, 0, 0, 1),
         localXfo: new FABRIC.RT.Xfo(FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(0, 0, 1), -90)),
         geometryNode: circle
       }, true));
     var yaxisGizmoNode = scene.pub.constructNode('RotationManipulator', scene.assignDefaults(options, {
-        name: 'YAxisRotationManipulator',
+        name: name + 'YAxis',
         color: FABRIC.RT.rgb(0, 0.8, 0, 1),
         localXfo: new FABRIC.RT.Xfo(),
         geometryNode: circle
       }, true));
     var zaxisGizmoNode = scene.pub.constructNode('RotationManipulator', scene.assignDefaults(options, {
-        name: 'ZAxisRotationManipulator',
+        name: name + 'ZAxis',
         color: FABRIC.RT.rgb(0, 0, 0.8, 1),
         localXfo: new FABRIC.RT.Xfo(FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(1, 0, 0), 90)),
         geometryNode: circle
       }, true));
 
-    return scene.constructNode('SceneGraphNode', options);
+    return threeAxisRotationManipulator;
   });
 
 FABRIC.SceneGraph.registerNodeType('LinearTranslationManipulator',
@@ -881,14 +885,18 @@ FABRIC.SceneGraph.registerNodeType('3AxisTranslationManipulator',
   function(options, scene) {
     scene.assignDefaults(options, {
         trackRate: 0.1,
-        size: 25
+        size: 25,
+        name: 'threeAxisTrans'
       });
+    
+    var threeAxisTranslationManipulator = scene.constructNode('SceneGraphNode', options);
+    var name = threeAxisTranslationManipulator.pub.getName();
 
     var lineVector = scene.pub.constructNode('LineVector', { to: FABRIC.RT.vec3(0, options.size, 0) });
     var arrowHead = scene.pub.constructNode('Cone', { radius: options.size * 0.04, height: options.size * 0.2 });
 
     scene.pub.constructNode('LinearTranslationManipulator', scene.assignDefaults(options, {
-        name: options.name + 'XAxis',
+        name: name + '_XAxis',
         color: FABRIC.RT.rgb(0.8, 0, 0, 1),
         localXfo: new FABRIC.RT.Xfo({
           ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(0, 0, 1), -90)
@@ -896,7 +904,7 @@ FABRIC.SceneGraph.registerNodeType('3AxisTranslationManipulator',
         geometryNode: lineVector
       }, true));
     scene.pub.constructNode('LinearTranslationManipulator', scene.assignDefaults(options, {
-        name: options.name + 'XAxisArrowHead',
+        name: name + '_XAxisArrowHead',
         color: FABRIC.RT.rgb(0.8, 0, 0, 1),
         localXfo: FABRIC.RT.xfo({
           ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(0, 0, 1), -90),
@@ -906,13 +914,13 @@ FABRIC.SceneGraph.registerNodeType('3AxisTranslationManipulator',
       }, true));
 
     scene.pub.constructNode('LinearTranslationManipulator', scene.assignDefaults(options, {
-        name: options.name + 'YAxis',
+        name: name + '_YAxis',
         color: FABRIC.RT.rgb(0, 0.8, 0),
         localXfo: new FABRIC.RT.Xfo(),
         geometryNode: lineVector
       }, true));
     scene.pub.constructNode('LinearTranslationManipulator', scene.assignDefaults(options, {
-        name: options.name + 'YAxisArrowHead',
+        name: name + '_YAxisArrowHead',
         color: FABRIC.RT.rgb(0, 0.8, 0),
         localXfo: FABRIC.RT.xfo({
           tr: FABRIC.RT.vec3(0, options.size, 0)
@@ -921,7 +929,7 @@ FABRIC.SceneGraph.registerNodeType('3AxisTranslationManipulator',
       }, true));
 
     scene.pub.constructNode('LinearTranslationManipulator', scene.assignDefaults(options, {
-        name: options.name + 'ZAxis',
+        name: name + '_ZAxis',
         color: FABRIC.RT.rgb(0, 0, 0.8),
         localXfo: new FABRIC.RT.Xfo({
           ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(1, 0, 0), 90)
@@ -929,7 +937,7 @@ FABRIC.SceneGraph.registerNodeType('3AxisTranslationManipulator',
         geometryNode: lineVector
       }, true));
     scene.pub.constructNode('LinearTranslationManipulator', scene.assignDefaults(options, {
-        name: options.name + 'ZAxisArrowHead',
+        name: name + '_ZAxisArrowHead',
         color: FABRIC.RT.rgb(0, 0, 0.8),
         localXfo: FABRIC.RT.xfo({
           ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(1, 0, 0), 90),
@@ -947,7 +955,7 @@ FABRIC.SceneGraph.registerNodeType('3AxisTranslationManipulator',
       });
 
     scene.pub.constructNode('PlanarTranslationManipulator', scene.assignDefaults(options, {
-        name: 'YZPlaneTranslationManipulator',
+        name: name + '_YZPlane',
         color: FABRIC.RT.rgb(0.8, 0, 0, 1),
         localXfo: new FABRIC.RT.Xfo({
           ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(0, 0, 1), 90)
@@ -955,13 +963,13 @@ FABRIC.SceneGraph.registerNodeType('3AxisTranslationManipulator',
         geometryNode: drawTriangle
       }, true));
     scene.pub.constructNode('PlanarTranslationManipulator', scene.assignDefaults(options, {
-        name: 'XZPlaneTranslationManipulator',
+        name: name + '_XZPlane',
         color: FABRIC.RT.rgb(0, 0.8, 0, 1),
         localXfo: new FABRIC.RT.Xfo(),
         geometryNode: drawTriangle
       }, true));
     scene.pub.constructNode('PlanarTranslationManipulator', scene.assignDefaults(options, {
-        name: 'XYPlaneTranslationManipulator',
+        name: name + '_XYPlane',
         color: FABRIC.RT.rgb(0, 0, 0.8, 1),
         localXfo: new FABRIC.RT.Xfo({
           ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(1, 0, 0), -90)
@@ -969,7 +977,7 @@ FABRIC.SceneGraph.registerNodeType('3AxisTranslationManipulator',
         geometryNode: drawTriangle
       }, true));
 
-    return scene.constructNode('SceneGraphNode', options);
+    return threeAxisTranslationManipulator;
   });
 
 
@@ -981,8 +989,10 @@ FABRIC.SceneGraph.registerNodeType('PivotRotationManipulator',
         name: 'RotationManipulator'
       });
 
-    options.geometryNode = options.geometryNode ? options.geometryNode :
-      scene.pub.constructNode('Circle', { radius: options.radius });
+    if(!options.geometryNode){
+      options.geometryNode = 
+        scene.pub.constructNode('Circle', { radius: options.radius });
+    }
 
     var manipulatorNode = scene.constructNode('Manipulator', options);
 

@@ -792,7 +792,7 @@ var wrapFabricClient = function(fabricClient, logCallback, debugLogCallback) {
           for (var i = 0; i < commandResults.length; ++i) {
             var commandResult = commandResults[i];
             results.push({
-              node: DG.namedObjects[commandResult.node],
+              node: DG.namedObjects[commandResult.node].pub,
               value: RT.assignPrototypes(commandResult.data, typeName)
             });
           }

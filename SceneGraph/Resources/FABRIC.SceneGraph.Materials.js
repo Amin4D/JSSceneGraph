@@ -1146,22 +1146,6 @@ FABRIC.SceneGraph.registerNodeType('PointSpriteMaterial',
   });
 
 
-FABRIC.SceneGraph.registerNodeType('StupidPostProcessEffect',
-  function(options, scene) {
-    options.fragmentShader =
-      'uniform sampler2D u_rgbaImage;' +
-      'void main()' +
-      '{' +
-      '  vec2 uv = gl_TexCoord[0].st;' +
-      '  uv.s += sin(gl_FragCoord.x) * 0.01;' +
-      '  uv.t += cos(gl_FragCoord.x) * 0.01;' +
-      '  gl_FragColor = texture2D(u_rgbaImage, uv);' +
-      '}';
-    var stupidPostProcessEffect = scene.constructNode('PostProcessEffect', options);
-    return stupidPostProcessEffect;
-  });
-
-
 FABRIC.SceneGraph.registerNodeType('BloomPostProcessEffect',
   function(options, scene) {
     options.fragmentShader = FABRIC.loadResourceURL('FABRIC_ROOT/SceneGraph/Resources/Shaders/BloomPixelShader.glsl');

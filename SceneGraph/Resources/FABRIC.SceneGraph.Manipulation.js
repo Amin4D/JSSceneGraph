@@ -580,7 +580,7 @@ FABRIC.SceneGraph.registerNodeType('Manipulator',
     // setup the postdescend operators for disable and enable zbuffer
     // PT - This could be done at the shader/material stage
     if (options.disableZBuffer) {
-      manipulatorNode.getRedrawEventHandler().postDescendBindings.insert(scene.constructOperator({
+      manipulatorNode.getRedrawEventHandler().preDescendBindings.insert(scene.constructOperator({
           operatorName: 'disableZBuffer',
           srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/drawAttributes.kl',
           entryFunctionName: 'disableZBuffer',

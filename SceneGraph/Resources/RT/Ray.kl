@@ -35,36 +35,33 @@ function Scalar Ray.distanceToPoint(Vec3 point) {
 function Boolean Ray.intersectLineSegment(
   Vec3 lineP0,
   Vec3 lineP1,
-  io Vec3 point,
   io Scalar dist,
-  io Scalar u
+  io Scalar rayParam,
+  io Scalar segmentParam,
 ) {
   Vec3 rayP1;
   rayP1 = self.start + self.direction;
 
-  var Scalar rayT, lineT;
   dist = distanceFromLineToLine(
     self.start, rayP1,
     lineP0, lineP1,
-    rayT, lineT
+    rayParam, segmentParam
   );
-
-  if (rayT >= 0.0 && lineT >= 0.0 && lineT <= 1.0) {
-    u = lineT;
-    point = (self.start + (self.direction * dist));
-    return true;
-  }
-  if (rayT >= 0.0 && lineT < 0.0) {
-    dist = self.distanceToPoint(lineP0);
-    u = 0.0;
-    point = (self.start + (self.direction * dist));
-    return true;
-  }
-  if (rayT >= 0.0 && lineT > 1.0) {
-    dist = self.distanceToPoint(lineP1);
-    u = 1.0;
-    point = (self.start + (self.direction * dist));
-    return true;
+  
+  if (rayParam >= 0.0){
+    if (segmentParam >= 0.0 && segmentParam <= 1.0) {
+      return true;
+    }
+    if (segmentParam < 0.0) {
+      dist = self.distanceToPoint(lineP0);
+      segmentParam = 0.0;
+      return true;
+    }
+    if (segmentParam > 1.0) {
+      dist = self.distanceToPoint(lineP1);
+      segmentParam = 1.0;
+      return true;
+    }
   }
   return false;
 }

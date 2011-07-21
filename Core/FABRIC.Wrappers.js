@@ -792,7 +792,7 @@ var wrapFabricClient = function(fabricClient, logCallback, debugLogCallback) {
           for (var i = 0; i < commandResults.length; ++i) {
             var commandResult = commandResults[i];
             results.push({
-              node: DG.namedObjects[commandResult.node],
+              node: DG.namedObjects[commandResult.node].pub,
               value: RT.assignPrototypes(commandResult.data, typeName)
             });
           }
@@ -1141,6 +1141,7 @@ var wrapFabricClient = function(fabricClient, logCallback, debugLogCallback) {
 
     VP.createViewPort = function(name) {
       var viewPort = {
+        popUpMenuItems: {}
       };
 
       viewPort.patch = function(diff) {
@@ -1165,6 +1166,10 @@ var wrapFabricClient = function(fabricClient, logCallback, debugLogCallback) {
           case 'redrawFinished':
             if (viewPort.redrawFinishedCallback)
               viewPort.redrawFinishedCallback();
+            break;
+          case 'popUpMenuItemSelected':
+            if (arg in viewPort.popUpMenuItems)
+              viewPort.popUpMenuItems[arg]();
             break;
           default:
             throw 'unrecognized';
@@ -1227,6 +1232,13 @@ var wrapFabricClient = function(fabricClient, logCallback, debugLogCallback) {
         },
         setRedrawFinishedCallback: function(callback) {
           viewPort.redrawFinishedCallback = callback;
+        },
+        addPopUpMenuItem: function(name, desc, callback) {
+          viewPort.popUpMenuItems[name] = callback;
+          viewPort.queueCommand('addPopUpMenuItem', {
+            desc: desc,
+            arg: name
+          });
         }
       };
 

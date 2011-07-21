@@ -13,7 +13,7 @@ operator calcCellIndex(
   io HashTable hashtable
 ) {
   // determine the cell that this particle belongs to.
-  var Vec3 num_sections((Scalar) hashtable.x_count, (Scalar) hashtable.y_count, (Scalar) hashtable.z_count);
+  var Vec3 num_sections(Scalar(hashtable.x_count), Scalar(hashtable.y_count), Scalar(hashtable.z_count));
   var Vec3 gridDim = num_sections * hashtable.cellsize;
   cellcoords = (((position + (gridDim * 0.5)) / gridDim) * num_sections);
 

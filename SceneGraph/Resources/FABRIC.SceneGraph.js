@@ -50,15 +50,6 @@ FABRIC.SceneGraph = {
     if (!FABRIC.SceneGraph.OpenGLConstants)
       FABRIC.SceneGraph.OpenGLConstants = JSON.parse(context.EX.getLoadedExts().FabricOGL.jsConstants);
 
-    // [pzion 20110326] Add a context menu item for any windows
-    // in the context that pops up a Fabric debugger for the context
-    context.addPopUpItem(
-      'Fabric debugger...',
-      function(arg) {
-        scene.displayDebugger();
-      },
-      null);
-
     // EAch Viewport creates a new fabricwindow which is the origin of
     // window redraw events.
     var windows = [];
@@ -132,6 +123,15 @@ FABRIC.SceneGraph = {
     };
     scene.addWindow = function(element, options) {
       var fabricwindow = context.createWindow(element, options);
+      // [pzion 20110326] Add a context menu item for any windows
+      // in the context that pops up a Fabric debugger for the context
+      fabricwindow.addPopUpMenuItem(
+        'display-core-debugger',
+        'Fabric debugger...',
+        function(arg) {
+          scene.pub.displayDebugger();
+        }
+      );
       windows.push(fabricwindow);
       return fabricwindow;
     };
@@ -924,7 +924,7 @@ FABRIC.SceneGraph.registerNodeType('Viewport',
         mouseMoveEvents: true,
         backgroundColor: FABRIC.RT.rgb(0.5, 0.5, 0.5),
         postProcessEffect: undefined,
-        rayIntersectionThreshold: 0.8
+        rayIntersectionThreshold: 0.2
       });
     options.dgnodenames.push('DGNode');
 
@@ -1225,14 +1225,11 @@ FABRIC.SceneGraph.registerNodeType('Viewport',
         if (cameraNode && viewPortRayCastDgNode && options.mouseMoveEvents) {
           var raycastResult = viewportNode.pub.rayCast(evt);
           if (raycastResult.closestNode) {
-            // TODO: Log a bug. We should be getting the pub interfae here
-            // from the 'closestNode' from the ;werapper layer.
-            var hitNode = raycastResult.closestNode.node.pub.sceneGraphNode;
+            var hitNode = raycastResult.closestNode.node.sceneGraphNode;
             evt.rayData = raycastResult.rayData;
             evt.hitData = raycastResult.closestNode.value;
             if (mouseOverNode == undefined ||
-                mouseOverNode.name !== hitNode.name ||
-                mouseOverNodeData.sliceid !== evt.hitData.sliceid) {
+                mouseOverNode.pub.getName() !== hitNode.pub.getName()) {
               if (mouseOverNode) {
                 evt.toElement = hitNode;
                 evt.hitData = mouseOverNodeData;
@@ -1264,7 +1261,7 @@ FABRIC.SceneGraph.registerNodeType('Viewport',
         if (cameraNode && viewPortRayCastDgNode) {
           var raycastResult = viewportNode.pub.rayCast(evt);
           if (raycastResult.closestNode) {
-            var hitNode = raycastResult.closestNode.node.pub.sceneGraphNode;
+            var hitNode = raycastResult.closestNode.node.sceneGraphNode;
             evt.rayData = raycastResult.rayData;
             evt.hitData = raycastResult.closestNode.value;
             fireGeomEvent('mousedown_geom', evt, hitNode);
@@ -1280,7 +1277,7 @@ FABRIC.SceneGraph.registerNodeType('Viewport',
         if (cameraNode && viewPortRayCastDgNode && options.mouseUpEvents) {
           var raycastResult = viewportNode.pub.rayCast(evt);
           if (raycastResult.closestNode) {
-            var hitNode = raycastResult.closestNode.node.pub.sceneGraphNode;
+            var hitNode = raycastResult.closestNode.node.sceneGraphNode;
             evt.rayData = raycastResult.rayData;
             evt.hitData = raycastResult;
             fireGeomEvent('mouseup_geom', evt, hitNode);

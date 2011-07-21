@@ -807,6 +807,7 @@ FABRIC.SceneGraph.registerNodeType('SceneGraphNode',
             sceneGraphNode.addMemberInterface(ehnodes[ehname], memberName, defineSetter);
           }
         };
+        return ehnodes[ehname];
       }
     }
 
@@ -841,7 +842,7 @@ FABRIC.SceneGraph.registerNodeType('Viewport',
 
     var viewportNode = scene.constructNode('SceneGraphNode', options),
       dgnode = viewportNode.constructDGNode('DGNode'),
-      redrawEventHandler = viewportNode.constructEventHandlerNode(options.name + '_RedrawEventHandler');
+      redrawEventHandler = viewportNode.constructEventHandlerNode('RedrawEventHandler');
       
     dgnode.addMember('backgroundColor', 'Color', options.backgroundColor);
 

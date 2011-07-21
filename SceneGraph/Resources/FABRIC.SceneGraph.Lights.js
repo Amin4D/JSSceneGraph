@@ -30,7 +30,7 @@ FABRIC.SceneGraph.registerNodeType('Light',
     }
 
     var lightNode = scene.constructNode('SceneGraphNode', options),
-      dgnode = transformNode.constructDGNode('DGNode'),
+      dgnode = lightNode.constructDGNode('DGNode'),
       transformNode,
       transformNodeMember,
       redrawEventHandler;

@@ -48,7 +48,7 @@ FABRIC.SceneGraph.registerNodeType('Particles',
     }
 
     if (options.createSpatialHashTable) {
-      var spatialHashDGNode = materialNode.constructDGNode('SpatialHashDGNode');
+      var spatialHashDGNode = particlesNode.constructDGNode('SpatialHashDGNode');
       var neighborInfluenceRange = options.cellsize / 2.0;
       particlesNode.pub.addVertexAttributeValue('neighborinfluencerange', 'Scalar', neighborInfluenceRange);
       particlesNode.pub.addVertexAttributeValue('cellindices', 'Integer', -1);

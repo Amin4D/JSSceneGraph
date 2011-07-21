@@ -812,9 +812,9 @@ FABRIC.SceneGraph.registerNodeType('SceneGraphNode',
         return eventhandlernode;
       },
       constructEventNode: function(eventname) {
-        eventnode = scene.constructEventNode(name + '_' + ehname);
+        eventnode = scene.constructEventNode(name + '_' + eventname);
         eventnode.sceneGraphNode = sceneGraphNode;
-        eventnodes[ehname] = eventnode;
+        eventnodes[eventname] = eventnode;
         return eventnode;
       }
     }

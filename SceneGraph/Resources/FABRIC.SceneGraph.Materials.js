@@ -48,7 +48,7 @@ FABRIC.SceneGraph.registerNodeType('Image',
     // Construct the handler for loading the image into texture memory.
     redrawEventHandler = imageNode.constructEventHandlerNode('Draw');
     redrawEventHandler.addScope('image', dgnode);
-    redrawEventHandler.addMember('bufferID', 'Integer', 0);
+    redrawEventHandler.addMember('bufferID', 'Size', 0);
     if (options.createLoadTextureEventHandler) {
         redrawEventHandler.preDescendBindings.append(scene.constructOperator({
             operatorName: 'loadTexture',
@@ -231,7 +231,7 @@ FABRIC.SceneGraph.registerNodeType('PointSpriteTexture',
 
     var redrawEventHandler = pointSpriteTextureNode.constructEventHandlerNode('Draw');
     redrawEventHandler.addScope('image', dgnode);
-    redrawEventHandler.addMember('bufferID', 'Integer', 0);
+    redrawEventHandler.addMember('bufferID', 'Size', 0);
     redrawEventHandler.preDescendBindings.append(scene.constructOperator({
             operatorName: 'createSpriteTexture',
             srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadTexture.kl',

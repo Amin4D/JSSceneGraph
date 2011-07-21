@@ -1225,9 +1225,7 @@ FABRIC.SceneGraph.registerNodeType('Viewport',
         if (cameraNode && viewPortRayCastDgNode && options.mouseMoveEvents) {
           var raycastResult = viewportNode.pub.rayCast(evt);
           if (raycastResult.closestNode) {
-            // TODO: Log a bug. We should be getting the pub interfae here
-            // from the 'closestNode' from the ;werapper layer.
-            var hitNode = raycastResult.closestNode.node.pub.sceneGraphNode;
+            var hitNode = raycastResult.closestNode.node.sceneGraphNode;
             evt.rayData = raycastResult.rayData;
             evt.hitData = raycastResult.closestNode.value;
             if (mouseOverNode == undefined ||
@@ -1263,7 +1261,7 @@ FABRIC.SceneGraph.registerNodeType('Viewport',
         if (cameraNode && viewPortRayCastDgNode) {
           var raycastResult = viewportNode.pub.rayCast(evt);
           if (raycastResult.closestNode) {
-            var hitNode = raycastResult.closestNode.node.pub.sceneGraphNode;
+            var hitNode = raycastResult.closestNode.node.sceneGraphNode;
             evt.rayData = raycastResult.rayData;
             evt.hitData = raycastResult.closestNode.value;
             fireGeomEvent('mousedown_geom', evt, hitNode);
@@ -1279,7 +1277,7 @@ FABRIC.SceneGraph.registerNodeType('Viewport',
         if (cameraNode && viewPortRayCastDgNode && options.mouseUpEvents) {
           var raycastResult = viewportNode.pub.rayCast(evt);
           if (raycastResult.closestNode) {
-            var hitNode = raycastResult.closestNode.node.pub.sceneGraphNode;
+            var hitNode = raycastResult.closestNode.node.sceneGraphNode;
             evt.rayData = raycastResult.rayData;
             evt.hitData = raycastResult;
             fireGeomEvent('mouseup_geom', evt, hitNode);

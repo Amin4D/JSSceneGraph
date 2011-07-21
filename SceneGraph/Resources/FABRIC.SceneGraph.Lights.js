@@ -44,7 +44,7 @@ FABRIC.SceneGraph.registerNodeType('Light',
       if (redrawEventHandler) {
         return redrawEventHandler;
       }
-      redrawEventHandler = scene.constructEventHandlerNode(options.name + '_render');
+      redrawEventHandler = lightNode.constructEventHandlerNode('Render');
       redrawEventHandler.addScope('light', dgnode);
 
       redrawEventHandler.preDescendBindings.append(scene.constructOperator({
@@ -385,7 +385,7 @@ FABRIC.SceneGraph.registerNodeType('SpotLight',
 
     if (options.castShadows) {
 
-      var shadowRenderEventHandler = scene.constructEventHandlerNode(options.name + '_renderDepthBuffer');
+      var shadowRenderEventHandler = spotLightNode.constructEventHandlerNode('RenderDepthBuffer');
 
       // Projection Values
       dgnode.addMember('nearDistance', 'Scalar', options.nearDistance);

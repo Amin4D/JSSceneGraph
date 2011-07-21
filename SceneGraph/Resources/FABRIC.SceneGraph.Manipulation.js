@@ -191,7 +191,7 @@ FABRIC.SceneGraph.registerNodeType('PaintManipulator',
     collectPointsDgNode.addMember('brushColor', 'Color', options.brushColor);
     paintManipulatorNode.addMemberInterface(collectPointsDgNode, 'brushColor', true);
 
-    paintEventHandler = scene.constructEventHandlerNode('Viewport_raycast');
+    paintEventHandler = spotLightNode.constructEventHandlerNode('Viewport_raycast');
     paintEventHandler.addScope('paintData', collectPointsDgNode);
 
     // Raycast events are fired from the viewport. As the event
@@ -302,7 +302,7 @@ FABRIC.SceneGraph.registerNodeType('PaintManipulator',
         transformNode = scene.getPrivateInterface(instanceNode.pub.getTransformNode()),
         paintOperator;
 
-      paintInstanceEventHandler = scene.constructEventHandlerNode(options.name + '_paint_' + node.name);
+      paintInstanceEventHandler = paintManipulatorNode.constructEventHandlerNode('Paint_' + node.name);
       paintInstanceEventHandler.addScope('geometry_vertexattributes', geometryNode.getAttributesDGNode());
       paintInstanceEventHandler.addScope('transform', transformNode.getDGNode());
       paintInstanceEventHandler.addScope('instance', instanceNode.getDGNode());

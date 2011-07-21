@@ -201,7 +201,7 @@ FABRIC.SceneGraph.registerNodeType('Geometry',
         attributeNodeBinding,
         i;
 
-      redrawEventHandler = scene.constructEventHandlerNode(options.name + '_GeometryDraw');
+      redrawEventHandler = geometryNode.constructEventHandlerNode('GeometryDraw');
       redrawEventHandler.addScope('uniforms', uniformsdgnode);
       redrawEventHandler.addScope('attributes', attributesdgnode);
       for (i = 0; i < deformationbufferinterfaces.length; i++) {
@@ -635,10 +635,9 @@ FABRIC.SceneGraph.registerNodeType('Instance',
     // TODO: once the 'selector' system can be replaced with JavaScript event
     // generation from KL, then we can eliminate this dgnode. It currently serves
     // no other purpose. 
-    options.ehnodenames.push('RedrawEventHandler');
     var instanceNode = scene.constructNode('SceneGraphNode', options),
       dgnode = instanceNode.constructDGNode('DGNode'),
-      redrawEventHandler = instanceNode.getRedrawEventHandler(),
+      redrawEventHandler = instanceNode.constructEventHandlerNode('Draw'),
       transformNode,
       transformNodeMember = options.transformNodeMember,
       geometryNode,
@@ -696,7 +695,7 @@ FABRIC.SceneGraph.registerNodeType('Instance',
         geometryNode.getRayintersectionOperator
       ) {
         var raycastOperator = geometryNode.getRayintersectionOperator(transformNodeMember);
-        raycastEventHandler = scene.constructEventHandlerNode(options.name + '_raycast');
+        raycastEventHandler = instanceNode.constructEventHandlerNode('Raycast');
         raycastEventHandler.addScope('geometry_uniforms', geometryNode.getUniformsDGNode());
         raycastEventHandler.addScope('geometry_attributes', geometryNode.getAttributesDGNode());
         raycastEventHandler.addScope('boundingbox', geometryNode.getBoundingBoxDGNode());

@@ -207,8 +207,6 @@ FABRIC.SceneGraph = {
         });
       }
 
-      options.ehnodenames = options.ehnodenames ? options.ehnodenames : [];
-
       var sceneGraphNode = FABRIC.SceneGraph.nodeFactories[type].call(undefined, options, scene);
       if (!sceneGraphNode) {
         throw (' Factory function method must return an object');
@@ -583,8 +581,8 @@ FABRIC.SceneGraph = {
 
     ///////////////////////////////////////////////////////////////////
     // Shadowcasting Lightsource <-> SceneGraph draw event handler firewall
-    var propagateRenderShadowMapEvent = scene.constructEventHandlerNode('propagateRenderShadowMapEvent');
-    var beginRenderShadowMap = scene.constructEventHandlerNode('beginRenderShadowMap');
+    var propagateRenderShadowMapEvent = scene.constructEventHandlerNode('PropagateRenderShadowMapEvent');
+    var beginRenderShadowMap = scene.constructEventHandlerNode('BeginRenderShadowMap');
     // The shadow map shader is constructed on demand.
     var shadowMapMaterial;
 
@@ -731,8 +729,6 @@ FABRIC.SceneGraph.registerNodeType('SceneGraphNode',
   function(options, scene) {
 
     var dgnodes = {};
-    
-    var ehnodenames = options.ehnodenames ? options.ehnodenames : [];
     var ehnodes = {};
 
     var capitalizeFirstLetter = function(str) {
@@ -792,33 +788,28 @@ FABRIC.SceneGraph.registerNodeType('SceneGraphNode',
           };
         };
         return dgnodes[dgnodename];
+      },
+      constructEventHandlerNode: function(ehname) {
+        ehnodes[ehname] = scene.constructEventHandlerNode(name + '_' + ehname);
+        ehnodes[ehname].sceneGraphNode = sceneGraphNode;
+        sceneGraphNode['get' + ehname] = function() {
+          return ehnodes[ehname];
+        };
+        
+        sceneGraphNode['add' + ehname + 'Member'] = function(
+            memberName,
+            memberType,
+            defaultValue,
+            defineGetter,
+            defineSetter){
+          ehnodes[ehname].addMember(memberName, memberType, defaultValue);
+          if(defineGetter) {
+            sceneGraphNode.addMemberInterface(ehnodes[ehname], memberName, defineSetter);
+          }
+        };
       }
     }
 
-    // take care of the DG nodes
-    var constructEventHandler = function(ehname) {
-      ehnodes[ehname] = scene.constructEventHandlerNode(name + '_' + ehname);
-      ehnodes[ehname].sceneGraphNode = sceneGraphNode;
-      sceneGraphNode['get' + ehname] = function() {
-        return ehnodes[ehname];
-      };
-      
-      sceneGraphNode['add' + ehname + 'Member'] = function(
-          memberName,
-          memberType,
-          defaultValue,
-          defineGetter,
-          defineSetter){
-        ehnodes[ehname].addMember(memberName, memberType, defaultValue);
-        if(defineGetter) {
-          sceneGraphNode.addMemberInterface(ehnodes[ehname], memberName, defineSetter);
-        }
-      };
-    }
-
-    for (var i = 0; i < ehnodenames.length; i++) {
-      constructEventHandler(ehnodenames[i]);
-    }
 
     // store it to the map
     scene.setSceneGraphNode(name, sceneGraphNode);
@@ -849,9 +840,10 @@ FABRIC.SceneGraph.registerNodeType('Viewport',
     var fabricwindow = scene.addWindow(windowElement);
 
     var viewportNode = scene.constructNode('SceneGraphNode', options),
-      dgnode = viewportNode.constructDGNode('DGNode');
+      dgnode = viewportNode.constructDGNode('DGNode'),
+      redrawEventHandler = viewportNode.constructEventHandlerNode(options.name + '_RedrawEventHandler');
+      
     dgnode.addMember('backgroundColor', 'Color', options.backgroundColor);
-    var redrawEventHandler = scene.constructEventHandlerNode(options.name + '_RedrawEventHandler');
 
     redrawEventHandler.addScope('viewPort', dgnode);
     redrawEventHandler.addScope('window', fabricwindow.windowNode);
@@ -871,13 +863,12 @@ FABRIC.SceneGraph.registerNodeType('Viewport',
     fabricwindow.redrawEvent.appendEventHandler(scene.getScenePreRedrawEventHandler());
     fabricwindow.redrawEvent.appendEventHandler(redrawEventHandler);
 
-    var propagationRedrawEventHandler = scene.constructEventHandlerNode(
-      options.name + '_propagationRedrawEventHandler');
+    var propagationRedrawEventHandler = viewportNode.constructEventHandlerNode('DrawPropagation');
     redrawEventHandler.appendChildEventHandler(propagationRedrawEventHandler);
 
     // Texture Stub for loading Background textures.
     var backgroundTextureNode, textureStub, textureStubdgnode;
-    textureStub = scene.constructEventHandlerNode(options.name + '_backgroundTextureStub');
+    textureStub = viewportNode.constructEventHandlerNode('BackgroundTextureStub');
     propagationRedrawEventHandler.appendChildEventHandler(textureStub);
 
     var postProcessEffects = [];
@@ -910,7 +901,7 @@ FABRIC.SceneGraph.registerNodeType('Viewport',
         ]
       }));
 
-      viewPortRaycastEventHandler = scene.constructEventHandlerNode('Viewport_raycast');
+      viewPortRaycastEventHandler = viewportNode.constructEventHandlerNode('Viewport_raycast');
       viewPortRaycastEventHandler.addScope('raycastData', viewPortRayCastDgNode);
 
       // Raycast events are fired from the viewport. As the event
@@ -1247,6 +1238,7 @@ FABRIC.SceneGraph.registerNodeType('Camera',
 
     var cameraNode = scene.constructNode('SceneGraphNode', options),
       dgnode = cameraNode.constructDGNode('DGNode'),
+      redrawEventHandler = cameraNode.constructEventHandlerNode('RedrawEventHandler'),
       transformNode,
       transformNodeMember = 'globalXfo';
       
@@ -1258,7 +1250,6 @@ FABRIC.SceneGraph.registerNodeType('Camera',
     dgnode.addMember('orthographic', 'Boolean', options.orthographic);
     dgnode.addMember('projectionMat44', 'Mat44');
 
-    var redrawEventHandler = scene.constructEventHandlerNode(options.name + '_RedrawEventHandler');
     redrawEventHandler.addScope('camera', dgnode);
 
     redrawEventHandler.preDescendBindings.append(scene.constructOperator({

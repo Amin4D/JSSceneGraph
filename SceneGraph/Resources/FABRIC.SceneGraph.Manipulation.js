@@ -197,7 +197,7 @@ FABRIC.SceneGraph.registerNodeType('PaintManipulator',
     // Raycast events are fired from the viewport. As the event
     // propagates down the tree it collects scopes and fires operators.
     // The operators us the collected scopes to calculate the ray.
-    paintEvent = scene.constructEventNode(options.name + 'Event');
+    paintEvent = paintManipulatorNode.constructEventNode('Event');
     paintEvent.appendEventHandler(paintEventHandler);
 
     var brushMaterial = scene.constructNode('FlatScreenSpaceMaterial', { color: FABRIC.RT.rgb(0.8, 0, 0) });

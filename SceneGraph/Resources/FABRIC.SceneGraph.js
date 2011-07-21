@@ -729,7 +729,8 @@ FABRIC.SceneGraph.registerNodeType('SceneGraphNode',
   function(options, scene) {
 
     var dgnodes = {};
-    var ehnodes = {};
+    var eventnodes = {};
+    var eventhandlernodes = {};
 
     var capitalizeFirstLetter = function(str) {
       return str[0].toUpperCase() + str.substr(1);
@@ -771,10 +772,10 @@ FABRIC.SceneGraph.registerNodeType('SceneGraphNode',
         if(dgnodes[dgnodename]){
           throw "SceneGraphNode already has a " + dgnodename;
         }
-        dgnodes[dgnodename] = scene.constructDependencyGraphNode(name + '_' + dgnodename);
-        dgnodes[dgnodename].sceneGraphNode = sceneGraphNode;
+        var dgnode = scene.constructDependencyGraphNode(name + '_' + dgnodename);
+        dgnode.sceneGraphNode = sceneGraphNode;
         sceneGraphNode['get' + dgnodename] = function() {
-          return dgnodes[dgnodename];
+          return dgnode;
         };
         sceneGraphNode['add' + dgnodename + 'Member'] = function(
             memberName,
@@ -782,32 +783,39 @@ FABRIC.SceneGraph.registerNodeType('SceneGraphNode',
             defaultValue,
             defineGetter,
             defineSetter) {
-          dgnodes[dgnodename].addMember(memberName, memberType, defaultValue);
+          dgnode.addMember(memberName, memberType, defaultValue);
           if(defineGetter){
-            sceneGraphNode.addMemberInterface(dgnodes[dgnodename], memberName, defineSetter);
+            sceneGraphNode.addMemberInterface(dgnode, memberName, defineSetter);
           };
         };
-        return dgnodes[dgnodename];
+        dgnodes[dgnodename] = dgnode;
+        return dgnode;
       },
       constructEventHandlerNode: function(ehname) {
-        ehnodes[ehname] = scene.constructEventHandlerNode(name + '_' + ehname);
-        ehnodes[ehname].sceneGraphNode = sceneGraphNode;
+        var eventhandlernode = scene.constructEventHandlerNode(name + '_' + ehname);
+        eventhandlernode.sceneGraphNode = sceneGraphNode;
         sceneGraphNode['get' + ehname] = function() {
-          return ehnodes[ehname];
+          return eventhandlernode;
         };
-        
         sceneGraphNode['add' + ehname + 'Member'] = function(
             memberName,
             memberType,
             defaultValue,
             defineGetter,
             defineSetter){
-          ehnodes[ehname].addMember(memberName, memberType, defaultValue);
+          eventhandlernode.addMember(memberName, memberType, defaultValue);
           if(defineGetter) {
-            sceneGraphNode.addMemberInterface(ehnodes[ehname], memberName, defineSetter);
+            sceneGraphNode.addMemberInterface(eventhandlernode, memberName, defineSetter);
           }
         };
-        return ehnodes[ehname];
+        eventhandlernodes[ehname] = eventhandlernode;
+        return eventhandlernode;
+      },
+      constructEventNode: function(eventname) {
+        eventnode = scene.constructEventNode(name + '_' + ehname);
+        eventnode.sceneGraphNode = sceneGraphNode;
+        eventnodes[ehname] = eventnode;
+        return eventnode;
       }
     }
 
@@ -902,13 +910,13 @@ FABRIC.SceneGraph.registerNodeType('Viewport',
         ]
       }));
 
-      viewPortRaycastEventHandler = viewportNode.constructEventHandlerNode('Viewport_raycast');
+      viewPortRaycastEventHandler = viewportNode.constructEventHandlerNode('Raycast');
       viewPortRaycastEventHandler.addScope('raycastData', viewPortRayCastDgNode);
 
       // Raycast events are fired from the viewport. As the event
       // propagates down the tree it collects scopes and fires operators.
       // The operators us the collected scopes to calculate the ray.
-      viewPortRaycastEvent = scene.constructEventNode('Viewport_raycastEvent');
+      viewPortRaycastEvent = viewportNode.constructEventNode('RaycastEvent');
       viewPortRaycastEvent.appendEventHandler(viewPortRaycastEventHandler);
 
       // the sceneRaycastEventHandler propogates the event throughtout the scene.

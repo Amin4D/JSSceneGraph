@@ -405,9 +405,6 @@ var wrapFabricClient = function(fabricClient, logCallback, debugLogCallback) {
         if ('entryFunctionName' in diff)
           result.entryFunctionName = diff.entryFunctionName;
 
-        if ('fullSourceCode' in diff)
-          result.fullSourceCode = diff.fullSourceCode;
-
         if ('diagnostics' in diff)
           result.diagnostics = diff.diagnostics;
         
@@ -440,19 +437,10 @@ var wrapFabricClient = function(fabricClient, logCallback, debugLogCallback) {
         result.sourceCode = sourceCode;
         var oldDiagnostics = result.diagnostics;
         delete result.diagnostics;
-        var oldFullSourceCode = result.fullSourceCode;
-        delete result.fullSourceCode;
         result.queueCommand('setSourceCode', sourceCode, function() {
           result.sourceCode = oldSourceCode;
           result.diagnostics = oldDiagnostics;
-          result.fullSourceCode = oldFullSourceCode;
         });
-      };
-
-      result.pub.getFullSourceCode = function() {
-        if (!('fullSourceCode' in result))
-          executeQueuedCommands();
-        return result.fullSourceCode;
       };
 
       result.pub.getEntryFunctionName = function() {

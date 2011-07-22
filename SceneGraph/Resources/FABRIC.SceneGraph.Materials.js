@@ -454,7 +454,7 @@ FABRIC.SceneGraph.registerNodeType('Shader',
       ]
     }));
     
-    if (options.autoSetProgram) {
+    if (options.useProgram) {
       redrawEventHandler.preDescendBindings.append(scene.constructOperator({
         operatorName: 'useProgramOp',
         srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadShader.kl',
@@ -486,7 +486,7 @@ FABRIC.SceneGraph.registerNodeType('Shader',
 FABRIC.SceneGraph.registerNodeType('Material',
   function(options, scene) {
     scene.assignDefaults(options, {
-        autoSetProgram: true,
+        useProgram: true,
         separateShaderNode: true,
         shaderNode: undefined
       });
@@ -537,7 +537,7 @@ FABRIC.SceneGraph.registerNodeType('Material',
           shaderAttributes: options.shaderAttributes,
           programParams: options.programParams,
           parentEventHandler: options.parentEventHandler,
-          autoSetProgram: options.autoSetProgram
+          useProgram: options.useProgram
         });
       }
 
@@ -702,11 +702,12 @@ FABRIC.SceneGraph.registerNodeType('PostProcessEffect',
         fragmentShader: undefined,
         shaderUniforms: undefined,
         
-        autoSetProgram: false,
+        useProgram: false,
         parentEventHandler: false,
         separateShaderNode: false,
         OGL_INTERNALFORMAT: 'GL_RGBA16F_ARB',
-        OGL_FORMAT: 'GL_RGBA'
+        OGL_FORMAT: 'GL_RGBA',
+        OGL_TYPE: 'GL_UNSIGNED_BYTE'
       });
 
 
@@ -746,7 +747,8 @@ FABRIC.SceneGraph.registerNodeType('PostProcessEffect',
           srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/offscreenRendering.kl',
           preProcessorDefinitions: {
             OGL_INTERNALFORMAT: options.OGL_INTERNALFORMAT,
-            OGL_FORMAT: options.OGL_FORMAT
+            OGL_FORMAT: options.OGL_FORMAT,
+            OGL_TYPE: options.OGL_TYPE
           },
           entryFunctionName: 'prepareOffscreenRendering',
           parameterBinding: [
@@ -765,7 +767,8 @@ FABRIC.SceneGraph.registerNodeType('PostProcessEffect',
           srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/OffscreenRendering.kl',
           preProcessorDefinitions: {
             OGL_INTERNALFORMAT: options.OGL_INTERNALFORMAT,
-            OGL_FORMAT: options.OGL_FORMAT
+            OGL_FORMAT: options.OGL_FORMAT,
+            OGL_TYPE: options.OGL_TYPE
           },
           entryFunctionName: 'renderOffscreenToView',
           parameterBinding: [

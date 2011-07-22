@@ -53,7 +53,7 @@ $(document).ready(function() {
   }));
 
   // We cannot enable pose processing effectds untill we can removeChildEventHandlers
-  viewport.addPostProcessEffectShader(scene.constructNode('FilmicTonemapperPostProcessEffect'));
+  viewport.addPostProcessEffectShader(scene.constructNode('EdgeDetectionPostProcessEffect'));
 
   var errors = scene.getErrors();
   if (errors.length > 0) {

@@ -5,8 +5,9 @@
 
 #include 'FABRIC_ROOT/SceneGraph/Resources/KL/loadShader.kl'
 
-// #define OGL_INTERNALFORMAT GL_RGBA16F_ARB
+// #define OGL_INTERNALFORMAT GL_RGBA16F_ARB/* GL_RGBA8 */
 // #define OGL_FORMAT GL_RGBA
+// #define OGL_TYPE GL_UNSIGNED_BYTE
 
 operator prepareOffscreenRendering(
   io Integer width,
@@ -19,7 +20,7 @@ operator prepareOffscreenRendering(
   // report(">>>prepareOffscreenRendering");
   var Integer integers[];
   integers.resize(1);
-  glGetIntegerv(GL_FRAMEBUFFER_BINDING_EXT, integers);
+  glGetIntegerv(GL_FRAMEBUFFER_BINDING, integers);
   prevFBO = integers[0];
 
   glEnable(GL_TEXTURE_2D);
@@ -43,7 +44,7 @@ operator prepareOffscreenRendering(
       sizeArray[1] = Size(depthTextureID);
       glDeleteTextures(2, sizeArray);
 
-      glBindFramebuffer(GL_FRAMEBUFFER_EXT, 0);
+      glBindFramebuffer(GL_FRAMEBUFFER, 0);
       sizeArray[0] = fboID;
       glDeleteFramebuffers(1, sizeArray);
 
@@ -63,9 +64,7 @@ operator prepareOffscreenRendering(
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    //NULL means reserve texture memory, but texels are undefined
-    // ==> GL_RGBA32F_ARB
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F_ARB/* GL_RGBA8 */, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+    glTexImage2D(GL_TEXTURE_2D, 0, OGL_INTERNALFORMAT, width, height, 0, OGL_FORMAT, OGL_TYPE, NULL);
 
     // Try to use a texture depth component
     glBindTexture(GL_TEXTURE_2D, depthTextureID);
@@ -78,19 +77,19 @@ operator prepareOffscreenRendering(
     glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, width, height, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, NULL);
 
     // create a framebuffer object
-    glBindFramebuffer(GL_FRAMEBUFFER_EXT, 0);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glGenFramebuffers(1, sizeArray);
     fboID = sizeArray[0];
-    glBindFramebuffer(GL_FRAMEBUFFER_EXT, fboID);
+    glBindFramebuffer(GL_FRAMEBUFFER, fboID);
 
     // attach the texture to FBO depth attachment point
-    glFramebufferTexture2D(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, colorTextureID, 0);
-    glFramebufferTexture2D(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_TEXTURE_2D, depthTextureID, 0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, colorTextureID, 0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthTextureID, 0);
 
     // check FBO status
-    var Integer status = glCheckFramebufferStatus(GL_FRAMEBUFFER_EXT);
-    if (status != GL_FRAMEBUFFER_COMPLETE_EXT) {
-      report('prepareOffscreenRendering: GL_FRAMEBUFFER_COMPLETE_EXT failed, CANNOT use FBO\n');
+    var Integer status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+    if (status != GL_FRAMEBUFFER_COMPLETE) {
+      report('prepareOffscreenRendering: GL_FRAMEBUFFER_COMPLETE failed, CANNOT use FBO\n');
 
       sizeArray[0] = Size(fboID);
       glDeleteFramebuffers(1, sizeArray);
@@ -100,7 +99,7 @@ operator prepareOffscreenRendering(
 
   // Switch to off-screen rendering using our FBO
   if (fboID > 0) {
-    glBindFramebuffer(GL_FRAMEBUFFER_EXT, fboID);
+    glBindFramebuffer(GL_FRAMEBUFFER, fboID);
   }
   // report("<<<prepareOffscreenRendering");
 }
@@ -114,7 +113,7 @@ operator renderOffscreenToView(
 ) {
   // report(">>>renderOffscreenToView");
 
-  glBindFramebuffer(GL_FRAMEBUFFER_EXT, prevFBO);
+  glBindFramebuffer(GL_FRAMEBUFFER, prevFBO);
 
   glPushAttrib(GL_DEPTH_BUFFER_BIT | GL_VIEWPORT_BIT | GL_TEXTURE_BIT);
 

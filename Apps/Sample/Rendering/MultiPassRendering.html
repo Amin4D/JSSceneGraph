@@ -57,32 +57,36 @@ attribute vec4 a_position;\
 void main(){\
   gl_Position = a_position;\
 }',*/
-      fragmentShader: '\
-uniform sampler2D u_fboTexture;\
-// uniform vec2 u_size;\
-uniform vec3 u_color;\
-void main(){\
-  // vec2 texCoord = gl_FragCoord.xy / u_size;\
-  vec2 texcoord = vec2(gl_TexCoord[0]);\
-  float thickness = abs(texture2D(u_fboTexture, texCoord).r);\
-  if (thickness <= 0.0){\
-      discard;\
-  }\
-  float sigma = 30.0;\
-  float intensity = exp(-sigma * thickness);\
-  gl_FragColor = vec4(intensity * Color, 1);\
-}',
+      fragmentShader: '\n\
+uniform sampler2D u_fboTexture;\n\
+// uniform vec2 u_size;\n\
+uniform vec3 u_color;\n\
+\n\
+void main(){\n\
+  // vec2 texCoord = gl_FragCoord.xy / u_size;\n\
+  \n\
+  vec2 texCoord = vec2(gl_TexCoord[0]);\n\
+  \n\
+  float thickness = abs(texture2D(u_fboTexture, texCoord).r);\n\
+  if (thickness <= 0.0){\n\
+      discard;\n\
+  }\n\
+  \n\
+  float sigma = 30.0;\n\
+  float intensity = exp(-sigma * thickness);\n\
+  gl_FragColor = vec4(intensity * u_color, 1);\n\
+}\n\
+      ',
       shaderUniforms: {
         fboTexture: { name: 'u_fboTexture', owner: 'fbo' },
     /*    size: { name: 'u_size' },
-    */    color: { name: 'u_color' }
+    */    color: { name: 'u_color', defaultValue:FABRIC.RT.rgba(0.3,0.6,0,1) }
       },
       shaderAttributes: {
         positions: { name: 'a_position' }
       }
     });
-/*
-    
+    /*
     var thickGlassMaterial = scene.constructNode('Material', {
       name:'ThickGlassMaterial',
       parentEventHandler: thickGlassMaterialPP.getRedrawEventHandler(),
@@ -168,8 +172,10 @@ operator setBackFaceCulling(){\
     thickGlassMaterial.getRedrawEventHandler = function() {
       return drawPropagateEventHandler;
     };
- */
+ 
     return thickGlassMaterial;
+    */
+    return thickGlassMaterialPP;
   });
     
     

@@ -439,8 +439,12 @@ FABRIC.SceneGraph.registerNodeType('Shader',
         FABRIC.SceneGraph.OpenGLConstants[i], options.programParams[i]));
     }
     redrawEventHandler.addMember('programParams', 'ShaderProgramParam[]', programParams);
-
-    redrawEventHandler.preDescendBindings.append(scene.constructOperator({
+  
+    var operators = redrawEventHandler.preDescendBindings;
+    if(options.assignUniformsOnPostDescend == true){
+      operators = redrawEventHandler.postDescendBindings;
+    }
+    operators.append(scene.constructOperator({
       operatorName: 'loadShader',
       srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadShader.kl',
       entryFunctionName: 'loadShader',
@@ -454,17 +458,6 @@ FABRIC.SceneGraph.registerNodeType('Shader',
       ]
     }));
     
-    if (options.useProgram) {
-      redrawEventHandler.preDescendBindings.append(scene.constructOperator({
-        operatorName: 'useProgramOp',
-        srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadShader.kl',
-        entryFunctionName: 'useProgram',
-        parameterBinding: [
-          (options.separateShaderNode ? 'shader.program' : 'self.program')
-        ]
-      }));
-    }
-
     if (options.parentEventHandler !== false) {
       // The shader is registered with the scenegraph, which will
       // handle passing render events to the shader from the cameras.
@@ -487,7 +480,8 @@ FABRIC.SceneGraph.registerNodeType('Material',
   function(options, scene) {
     scene.assignDefaults(options, {
         separateShaderNode: true,
-        shaderNode: undefined
+        shaderNode: undefined,
+        assignUniformsOnPostDescend:false
       });
 
     var materialNode,
@@ -536,7 +530,7 @@ FABRIC.SceneGraph.registerNodeType('Material',
           shaderAttributes: options.shaderAttributes,
           programParams: options.programParams,
           parentEventHandler: options.parentEventHandler,
-          useProgram: options.useProgram
+          assignUniformsOnPostDescend: options.assignUniformsOnPostDescend
         });
       }
 
@@ -564,7 +558,14 @@ FABRIC.SceneGraph.registerNodeType('Material',
     }
 
     /////////////////////////////////
-    // Material Binding operator
+    // Material uniform interface definition.
+    // Here we expose define members on our dgnode to store
+    // the material uniforms, and apply operators to load those
+    // values during render traversial.
+    var operators = redrawEventHandler.preDescendBindings;
+    if(options.assignUniformsOnPostDescend===true){
+      operators = redrawEventHandler.postDescendBindings;
+    }
     for (uniformName in options.shaderUniforms) {
       uniform = options.shaderUniforms[uniformName];
       // TODO: generalize a method for looking up uniform values from 'known owners'.
@@ -582,7 +583,7 @@ FABRIC.SceneGraph.registerNodeType('Material',
         materialNode.addMemberInterface(dgnode, uniformName, true);
       }
       operatorFunction = 'load' + uniformType + 'Uniform';
-      redrawEventHandler.preDescendBindings.append(scene.constructOperator({
+      operators.append(scene.constructOperator({
         operatorName: operatorFunction + uniformName,
         srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadUniforms.kl',
         preProcessorDefinitions: {
@@ -702,6 +703,7 @@ FABRIC.SceneGraph.registerNodeType('PostProcessEffect',
         
         parentEventHandler: false,
         separateShaderNode: false,
+        assignUniformsOnPostDescend:true,
         OGL_INTERNALFORMAT: 'GL_RGBA16F_ARB',
         OGL_FORMAT: 'GL_RGBA',
         OGL_TYPE: 'GL_UNSIGNED_BYTE'

@@ -207,9 +207,6 @@ FABRIC.SceneGraph = {
         });
       }
 
-      options.dgnodenames = options.dgnodenames ? options.dgnodenames : [];
-      options.ehnodenames = options.ehnodenames ? options.ehnodenames : [];
-
       var sceneGraphNode = FABRIC.SceneGraph.nodeFactories[type].call(undefined, options, scene);
       if (!sceneGraphNode) {
         throw (' Factory function method must return an object');
@@ -408,7 +405,7 @@ FABRIC.SceneGraph = {
         }
         var diagnostics = operator.getDiagnostics();
         if (diagnostics.length > 0) {
-          console.error(descDiags(operator.getFullSourceCode(), diagnostics));
+          console.error(descDiags(operator.getSourceCode(), diagnostics));
         }
       }
       compileKL(code);
@@ -447,68 +444,6 @@ FABRIC.SceneGraph = {
       }
       return shadowMapMaterial;
     };
-    //////////////////////////////////////////////////////////
-    // This method decorates the passed in sceneGraphNode with methods to
-    // add members, operators, and denpendencies.
-    // One day we will want to build a persistence layer for the scene graph
-    // and so these changes will need to be recorded ready for persisting.
-    scene.addMemberAndOperatorStackFunctions = function(sceneGraphNode, dgnode) {
-      sceneGraphNode.getMembers = function() {
-        return dgnode.getMembers();
-      };
-      sceneGraphNode.addMember = function(name, type, defaultval) {
-        if (defaultval) {
-          dgnode.addMember(name, type, defaultval);
-        }else {
-          dgnode.addMember(name, type);
-        }
-      };
-      sceneGraphNode.setCount = function(count) {
-        dgnode.setCount(count);
-      };
-      sceneGraphNode.setData = function(memberName, data) {
-        var nodeInstanceMembers = dgnode.getMembers();
-        if (!nodeInstanceMembers[memberName]) {
-          throw ("Node '" + nodeInstanceName + "' Does not contain member :" + memberName);
-        }
-        var memberType = nodeInstanceMembers[memberName].type;
-
-        // Note: Currently it is ambiguous whether we are setting an Array member, or
-        // each element in a sliced node.
-        if ((typeof data) === 'object' && data.constructor.name === 'Array' &&
-          memberType.substr(-2) !== '[]') {
-          for (var i = 0; i < data.length; i++) {
-            dgnode.setData(memberName, i, data[i]);
-          }
-        }else {
-          dgnode.setData(memberName, 0, data);
-        }
-      };
-      sceneGraphNode.appendOperator = function(operatorDef) {
-        var binding;
-
-        if ('getParameterLayout' in operatorDef)
-          binding = operatorDef;
-        else
-          binding = scene.constructOperator(operatorDef);
-
-        dgnode.bindings.append(binding);
-      };
-      sceneGraphNode.insertOperator = function(operatorDef, beforeIndex) {
-        var binding;
-
-        if ('getParameterLayout' in operatorDef)
-          binding = operatorDef;
-        else
-          binding = scene.constructOperator(operatorDef);
-
-        dgnode.bindings.insert(binding, beforeIndex);
-      };
-      sceneGraphNode.addDependency = function(dependencydgnode, dependencyName) {
-        dgnode.addDependency(dependencydgnode, dependencyName);
-      };
-      return sceneGraphNode;
-    };
     scene.addEventHandlingFunctions = function(obj) {
       // We store a map of arrays of event listener functions.
       var eventListeners = {};
@@ -534,27 +469,6 @@ FABRIC.SceneGraph = {
         }
       }
       return obj;
-    };
-    scene.addFileReadWriteFunctions = function(sceneGraphNode, dgnode) {
-      if (sceneGraphNode.loadResourceFile) {
-        return;
-      }
-      sceneGraphNode.loadResourceURL = function(filepath) {
-        var datablob = scene.loadResourceURL(filepath);
-        if (datablob) {
-          dgnode.setBinary(datablob);
-        }else {
-          throw ('File not found:' + filepath);
-        }
-      };
-      sceneGraphNode.loadResourceFile = function(filepath) {
-        var datablob = scene.readResourceFile(filepath);
-        if (datablob) {
-          dgnode.setBinary(datablob);
-        }else {
-          throw ('File not found:' + filepath);
-        }
-      };
     };
 
     /////////////////////////////////////////////////////////////////////
@@ -667,8 +581,8 @@ FABRIC.SceneGraph = {
 
     ///////////////////////////////////////////////////////////////////
     // Shadowcasting Lightsource <-> SceneGraph draw event handler firewall
-    var propagateRenderShadowMapEvent = scene.constructEventHandlerNode('propagateRenderShadowMapEvent');
-    var beginRenderShadowMap = scene.constructEventHandlerNode('beginRenderShadowMap');
+    var propagateRenderShadowMapEvent = scene.constructEventHandlerNode('PropagateRenderShadowMapEvent');
+    var beginRenderShadowMap = scene.constructEventHandlerNode('BeginRenderShadowMap');
     // The shadow map shader is constructed on demand.
     var shadowMapMaterial;
 
@@ -814,11 +728,9 @@ FABRIC.SceneGraph = {
 FABRIC.SceneGraph.registerNodeType('SceneGraphNode',
   function(options, scene) {
 
-    var dgnodenames = options.dgnodenames ? options.dgnodenames : [];
     var dgnodes = {};
-    
-    var ehnodenames = options.ehnodenames ? options.ehnodenames : [];
-    var ehnodes = {};
+    var eventnodes = {};
+    var eventhandlernodes = {};
 
     var capitalizeFirstLetter = function(str) {
       return str[0].toUpperCase() + str.substr(1);
@@ -855,61 +767,62 @@ FABRIC.SceneGraph.registerNodeType('SceneGraphNode',
             corenode.setData(memberName, sliceIndex?sliceIndex:0, value);
           }
         }
+      },
+      constructDGNode: function(dgnodename) {
+        if(dgnodes[dgnodename]){
+          throw "SceneGraphNode already has a " + dgnodename;
+        }
+        var dgnode = scene.constructDependencyGraphNode(name + '_' + dgnodename);
+        dgnode.sceneGraphNode = sceneGraphNode;
+        sceneGraphNode['get' + dgnodename] = function() {
+          return dgnode;
+        };
+        sceneGraphNode['add' + dgnodename + 'Member'] = function(
+            memberName,
+            memberType,
+            defaultValue,
+            defineGetter,
+            defineSetter) {
+          dgnode.addMember(memberName, memberType, defaultValue);
+          if(defineGetter){
+            sceneGraphNode.addMemberInterface(dgnode, memberName, defineSetter);
+          };
+        };
+        dgnodes[dgnodename] = dgnode;
+        return dgnode;
+      },
+      constructEventHandlerNode: function(ehname) {
+        var eventhandlernode = scene.constructEventHandlerNode(name + '_' + ehname);
+        eventhandlernode.sceneGraphNode = sceneGraphNode;
+        sceneGraphNode['get' + ehname] = function() {
+          return eventhandlernode;
+        };
+        sceneGraphNode['add' + ehname + 'Member'] = function(
+            memberName,
+            memberType,
+            defaultValue,
+            defineGetter,
+            defineSetter){
+          eventhandlernode.addMember(memberName, memberType, defaultValue);
+          if(defineGetter) {
+            sceneGraphNode.addMemberInterface(eventhandlernode, memberName, defineSetter);
+          }
+        };
+        eventhandlernodes[ehname] = eventhandlernode;
+        return eventhandlernode;
+      },
+      constructEventNode: function(eventname) {
+        eventnode = scene.constructEventNode(name + '_' + eventname);
+        eventnode.sceneGraphNode = sceneGraphNode;
+        eventnodes[eventname] = eventnode;
+        return eventnode;
       }
-    };
-    
+    }
+
+
     // store it to the map
     scene.setSceneGraphNode(name, sceneGraphNode);
     
-    // take care of the DG nodes
-    var constructDGNode = function(dgnodename) {
-      dgnodes[dgnodename] = scene.constructDependencyGraphNode(name + '_' + dgnodename);
-      dgnodes[dgnodename].sceneGraphNode = sceneGraphNode;
-      sceneGraphNode['get' + dgnodename] = function() {
-        return dgnodes[dgnodename];
-      };
-      sceneGraphNode['add' + dgnodename + 'Member'] = function(
-          memberName,
-          memberType,
-          defaultValue,
-          defineGetter,
-          defineSetter) {
-        dgnodes[dgnodename].addMember(memberName, memberType, defaultValue);
-        if(defineGetter){
-          sceneGraphNode.addMemberInterface(dgnodes[dgnodename], memberName, defineSetter);
-        };
-      };
-    }
-
-    for (var i = 0; i < dgnodenames.length; i++) {
-      constructDGNode(dgnodenames[i]);
-    }
-
-    // take care of the DG nodes
-    var constructEventHandler = function(ehname) {
-      ehnodes[ehname] = scene.constructEventHandlerNode(name + '_' + ehname);
-      ehnodes[ehname].sceneGraphNode = sceneGraphNode;
-      sceneGraphNode['get' + ehname] = function() {
-        return ehnodes[ehname];
-      };
-      
-      sceneGraphNode['add' + ehname + 'Member'] = function(
-          memberName,
-          memberType,
-          defaultValue,
-          defineGetter,
-          defineSetter){
-        ehnodes[ehname].addMember(memberName, memberType, defaultValue);
-        if(defineGetter) {
-          sceneGraphNode.addMemberInterface(ehnodes[ehname], memberName, defineSetter);
-        }
-      };
-    }
-
-    for (var i = 0; i < ehnodenames.length; i++) {
-      constructEventHandler(ehnodenames[i]);
-    }
-
     return sceneGraphNode;
   });
 
@@ -926,7 +839,6 @@ FABRIC.SceneGraph.registerNodeType('Viewport',
         postProcessEffect: undefined,
         rayIntersectionThreshold: 0.2
       });
-    options.dgnodenames.push('DGNode');
 
     if (!options.windowElement) {
       throw ('Must provide a window to this constructor');
@@ -936,10 +848,11 @@ FABRIC.SceneGraph.registerNodeType('Viewport',
     var windowElement = options.windowElement;
     var fabricwindow = scene.addWindow(windowElement);
 
-    var viewportNode = scene.constructNode('SceneGraphNode', options);
-    var dgnode = viewportNode.getDGNode();
+    var viewportNode = scene.constructNode('SceneGraphNode', options),
+      dgnode = viewportNode.constructDGNode('DGNode'),
+      redrawEventHandler = viewportNode.constructEventHandlerNode('RedrawEventHandler');
+      
     dgnode.addMember('backgroundColor', 'Color', options.backgroundColor);
-    var redrawEventHandler = scene.constructEventHandlerNode(options.name + '_RedrawEventHandler');
 
     redrawEventHandler.addScope('viewPort', dgnode);
     redrawEventHandler.addScope('window', fabricwindow.windowNode);
@@ -959,13 +872,12 @@ FABRIC.SceneGraph.registerNodeType('Viewport',
     fabricwindow.redrawEvent.appendEventHandler(scene.getScenePreRedrawEventHandler());
     fabricwindow.redrawEvent.appendEventHandler(redrawEventHandler);
 
-    var propagationRedrawEventHandler = scene.constructEventHandlerNode(
-      options.name + '_propagationRedrawEventHandler');
+    var propagationRedrawEventHandler = viewportNode.constructEventHandlerNode('DrawPropagation');
     redrawEventHandler.appendChildEventHandler(propagationRedrawEventHandler);
 
     // Texture Stub for loading Background textures.
     var backgroundTextureNode, textureStub, textureStubdgnode;
-    textureStub = scene.constructEventHandlerNode(options.name + '_backgroundTextureStub');
+    textureStub = viewportNode.constructEventHandlerNode('BackgroundTextureStub');
     propagationRedrawEventHandler.appendChildEventHandler(textureStub);
 
     var postProcessEffects = [];
@@ -998,13 +910,13 @@ FABRIC.SceneGraph.registerNodeType('Viewport',
         ]
       }));
 
-      viewPortRaycastEventHandler = scene.constructEventHandlerNode('Viewport_raycast');
+      viewPortRaycastEventHandler = viewportNode.constructEventHandlerNode('Raycast');
       viewPortRaycastEventHandler.addScope('raycastData', viewPortRayCastDgNode);
 
       // Raycast events are fired from the viewport. As the event
       // propagates down the tree it collects scopes and fires operators.
       // The operators us the collected scopes to calculate the ray.
-      viewPortRaycastEvent = scene.constructEventNode('Viewport_raycastEvent');
+      viewPortRaycastEvent = viewportNode.constructEventNode('RaycastEvent');
       viewPortRaycastEvent.appendEventHandler(viewPortRaycastEventHandler);
 
       // the sceneRaycastEventHandler propogates the event throughtout the scene.
@@ -1332,12 +1244,13 @@ FABRIC.SceneGraph.registerNodeType('Camera',
         orthographic: false,
         transformNode: 'Transform'
       });
-    options.dgnodenames.push('DGNode');
 
-    var transformNode;
-    var transformNodeMember = 'globalXfo';
-    var cameraNode = scene.constructNode('SceneGraphNode', options);
-    var dgnode = cameraNode.getDGNode();
+    var cameraNode = scene.constructNode('SceneGraphNode', options),
+      dgnode = cameraNode.constructDGNode('DGNode'),
+      redrawEventHandler = cameraNode.constructEventHandlerNode('RedrawEventHandler'),
+      transformNode,
+      transformNodeMember = 'globalXfo';
+      
     dgnode.addMember('nearDistance', 'Scalar', options.nearDistance);
     dgnode.addMember('farDistance', 'Scalar', options.farDistance);
     dgnode.addMember('fovY', 'Scalar', options.fovY * FABRIC.RT.degToRad);
@@ -1346,7 +1259,6 @@ FABRIC.SceneGraph.registerNodeType('Camera',
     dgnode.addMember('orthographic', 'Boolean', options.orthographic);
     dgnode.addMember('projectionMat44', 'Mat44');
 
-    var redrawEventHandler = scene.constructEventHandlerNode(options.name + '_RedrawEventHandler');
     redrawEventHandler.addScope('camera', dgnode);
 
     redrawEventHandler.preDescendBindings.append(scene.constructOperator({

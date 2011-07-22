@@ -73,10 +73,9 @@ FABRIC.SceneGraph.registerNodeType('CharacterSkeleton',
       calcInvMatricies: true,
       calcReferencePoseFromInverseBindPose: false
       });
-    options.dgnodenames.push('DGNode');
 
     var characterSkeletonNode = scene.constructNode('SceneGraphNode', options);
-    var dgnode = characterSkeletonNode.getDGNode();
+    var dgnode = characterSkeletonNode.constructDGNode('DGNode');
     dgnode.addMember('bones', 'Bone[]');
     dgnode.addMember('invmatrices', 'Mat44[]');
 
@@ -332,10 +331,8 @@ FABRIC.SceneGraph.registerNodeType('CharacterSkeletonDebug',
 FABRIC.SceneGraph.registerNodeType('CharacterVariables',
   function(options, scene) {
 
-    options.dgnodenames.push('DGNode');
-
     var characterVariablesNode = scene.constructNode('SceneGraphNode', options);
-    var dgnode = characterVariablesNode.getDGNode();
+    var dgnode = characterVariablesNode.constructDGNode('DGNode');
 
     // extend the private interface
     characterVariablesNode.pub.addMember = function(name, type, value) {
@@ -417,10 +414,9 @@ FABRIC.SceneGraph.registerNodeType('CharacterRig',
     if (!options.skeletonNode) {
       throw ('skeletonNode must be specified.');
     }
-    options.dgnodenames.push('DGNode');
 
     var characterRigNode = scene.constructNode('SceneGraphNode', options);
-    var dgnode = characterRigNode.getDGNode();
+    var dgnode = characterRigNode.constructDGNode('DGNode');
     var skeletonNode,
       variablesNode,
       constantsNode,

@@ -28,7 +28,6 @@ operator videoGetPixels(
   io Size height,
   io RGB pixels[]
 ) {
-
   FabricVIDEOGetAllPixels(stream, width, height, pixels);
 }
 
@@ -36,12 +35,16 @@ operator videoLoadToGPU(
   io Size width,
   io Size height,
   io RGB pixels[],
-  io Integer bufferID,
+  io Size bufferID,
   io Integer textureUnit
 ) {
   if (pixels.size() > 0) {
     if (bufferID == 0) {
-      glGenTextures(1, bufferID.data());
+      var Size buffers[];
+      buffers.resize(1);
+      glGenTextures(1, buffers);
+      bufferID = buffers[0];
+      
       glActiveTexture(GL_TEXTURE0 + textureUnit);
       glBindTexture(GL_TEXTURE_2D, bufferID);
 

@@ -47,9 +47,9 @@ operator generateGrid(
 
   var Integer i, j, k, indexid = 0;
   var Scalar x, y, z;
-  var Scalar fNumX = (Scalar) numXsections - 1.0;
-  var Scalar fNumY = (Scalar) numYsections - 1.0;
-  var Scalar fNumZ = (Scalar) numZsections - 1.0;
+  var Scalar fNumX = Scalar(numXsections) - 1.0;
+  var Scalar fNumY = Scalar(numYsections) - 1.0;
+  var Scalar fNumZ = Scalar(numZsections) - 1.0;
 
   if (numZsections > 1) {
     x = 0.0;

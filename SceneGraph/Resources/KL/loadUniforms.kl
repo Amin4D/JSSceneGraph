@@ -8,6 +8,7 @@ operator loadBooleanUniform(
   io ShaderValue uniformValues[],
   io Boolean value,
 ) {
+  //  report("loadBooleanUniform: ATTRIBUTE_NAME ");
   for (Integer i = 0; i < uniformValues.size(); i++) {
     if (uniformValues[i].id == ATTRIBUTE_ID) {
       glUniform1i(uniformValues[i].location, (value ? 1 : 0));
@@ -36,6 +37,7 @@ operator loadScalarUniform(
   io ShaderValue uniformValues[],
   io Scalar value,
 ) {
+  //  report("loadScalarUniform: ATTRIBUTE_NAME ");
   for (Integer i = 0; i < uniformValues.size(); i++) {
     if (uniformValues[i].id == ATTRIBUTE_ID) {
       if (uniformValues[i].location != - 1) {
@@ -50,6 +52,7 @@ operator loadVec2Uniform(
   io ShaderValue uniformValues[],
   io Vec2 value,
 ) {
+  //  report("loadVec2Uniform: ATTRIBUTE_NAME ");
   for (Integer i = 0; i < uniformValues.size(); i++) {
     if (uniformValues[i].id == ATTRIBUTE_ID) {
       if (uniformValues[i].location != - 1) {
@@ -64,6 +67,7 @@ operator loadVec3Uniform(
   io ShaderValue uniformValues[],
   io Vec3 value,
 ) {
+  //  report("loadVec3Uniform: ATTRIBUTE_NAME ");
   for (Integer i = 0; i < uniformValues.size(); i++) {
     if (uniformValues[i].id == ATTRIBUTE_ID) {
       if (uniformValues[i].location != - 1) {
@@ -78,6 +82,7 @@ operator loadVec4Uniform(
   io ShaderValue uniformValues[],
   io Vec4 value,
 ) {
+  //  report("loadVec4Uniform: ATTRIBUTE_NAME ");
   for (Integer i = 0; i < uniformValues.size(); i++) {
     if (uniformValues[i].id == ATTRIBUTE_ID) {
       if (uniformValues[i].location != - 1) {
@@ -92,6 +97,7 @@ operator loadColorUniform(
   io ShaderValue uniformValues[],
   io Color value,
 ) {
+  //  report("loadColorUniform: ATTRIBUTE_NAME ");
   for (Integer i = 0; i < uniformValues.size(); i++) {
     if (uniformValues[i].id == ATTRIBUTE_ID) {
       if (uniformValues[i].location != - 1) {
@@ -106,6 +112,7 @@ operator loadMat33Uniform(
   io ShaderValue uniformValues[],
   io Mat33 value,
 ) {
+  //  report("loadMat33Uniform: ATTRIBUTE_NAME ");
   for (Integer i = 0; i < uniformValues.size(); i++) {
     if (uniformValues[i].id == ATTRIBUTE_ID) {
       if (uniformValues[i].location != - 1) {
@@ -122,6 +129,7 @@ operator loadMat44Uniform(
   io ShaderValue uniformValues[],
   io Mat44 value,
 ) {
+  //  report("loadMat44Uniform: ATTRIBUTE_NAME ");
   for (Integer i = 0; i < uniformValues.size(); i++) {
     if (uniformValues[i].id == ATTRIBUTE_ID) {
       if (uniformValues[i].location != - 1) {

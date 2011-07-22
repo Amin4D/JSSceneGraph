@@ -110,11 +110,11 @@ $(document).ready(function() { var scene = FABRIC.SceneGraph.createScene();
   scene.constructNode('Instance', {
       transformNode: scene.constructNode('Transform', {
         hierarchical: false,
-        globalXfo: FABRIC.RT.xfo({ tr: FABRIC.RT.vec3(0, 10, 0) })
+        globalXfo: FABRIC.RT.xfo({ tr: FABRIC.RT.vec3(0, 15, 0) })
       }),
       geometryNode: scene.constructNode('Cone', {
-        radius: 6.0,
-        height: 26.0,
+        radius: 10.0,
+        height: 30.0,
         detail: 10
       }),
       materialNode: greenPhongMaterial

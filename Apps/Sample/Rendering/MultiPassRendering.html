@@ -40,7 +40,8 @@
     <script type="text/javascript">
     
     
-
+// These Node definitions are inlined for now, but will
+// be moved to a separate file once they are stabilized. 
 FABRIC.SceneGraph.registerNodeType('ThickGlassMaterial',
   function(options, scene) {
     scene.assignDefaults(options, {
@@ -51,27 +52,17 @@ FABRIC.SceneGraph.registerNodeType('ThickGlassMaterial',
       parentEventHandler: scene.getSceneRedrawEventHandler(),
       OGL_INTERNALFORMAT: 'GL_RG16F',
       OGL_FORMAT: 'GL_RG',
-      OGL_TYPE: 'GL_FLOAT',/*
-      vertexShader: '\
-attribute vec4 a_position;\
-void main(){\
-  gl_Position = a_position;\
-}',*/
+      OGL_TYPE: 'GL_FLOAT',
       fragmentShader: '\n\
 uniform sampler2D u_fboTexture;\n\
-// uniform vec2 u_size;\n\
 uniform vec3 u_color;\n\
 \n\
 void main(){\n\
-  // vec2 texCoord = gl_FragCoord.xy / u_size;\n\
-  \n\
   vec2 texCoord = vec2(gl_TexCoord[0]);\n\
-  \n\
   float thickness = abs(texture2D(u_fboTexture, texCoord).r);\n\
   if (thickness <= 0.0){\n\
       discard;\n\
   }\n\
-  \n\
   float sigma = 30.0;\n\
   float intensity = exp(-sigma * thickness);\n\
   gl_FragColor = vec4(intensity * u_color, 1);\n\
@@ -79,14 +70,27 @@ void main(){\n\
       ',
       shaderUniforms: {
         fboTexture: { name: 'u_fboTexture', owner: 'fbo' },
-    /*    size: { name: 'u_size' },
-    */    color: { name: 'u_color', defaultValue:FABRIC.RT.rgba(0.3,0.6,0,1) }
+        color: { name: 'u_color', defaultValue:FABRIC.RT.rgba(0.3,0.6,0,1) }
       },
       shaderAttributes: {
         positions: { name: 'a_position' }
       }
     });
-    /*
+      
+      
+    thickGlassMaterialPP.getRedrawEventHandler().postDescendBindings.insert(scene.constructOperator({
+        operatorName: 'setThickGlassMaterialPPAttribs',
+        srcCode: '\n\
+operator setThickGlassMaterialPPAttribs(){\n\
+    glEnable(GL_CULL_FACE);\n\
+    glEnable(GL_BLEND);\n\
+    glBlendFunc(GL_ONE, GL_ONE);\n\
+}',
+        entryFunctionName: 'setThickGlassMaterialPPAttribs',
+      }), 0);
+    
+    
+    
     var thickGlassMaterial = scene.constructNode('Material', {
       name:'ThickGlassMaterial',
       parentEventHandler: thickGlassMaterialPP.getRedrawEventHandler(),
@@ -174,8 +178,6 @@ operator setBackFaceCulling(){\
     };
  
     return thickGlassMaterial;
-    */
-    return thickGlassMaterialPP;
   });
     
     

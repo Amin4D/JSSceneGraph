@@ -49,7 +49,9 @@ $(document).ready(function() { var $globalTimeSlider = $('#globalTime').slider({
   $('#curveEditor').button();
 
   var scene = FABRIC.SceneGraph.createScene();
-  var viewport = scene.constructNode('Viewport', { windowElement: document.getElementById('FabricContainer') });
+  var viewport = scene.constructNode('Viewport', {
+      windowElement: document.getElementById('FabricContainer')
+    });
 
   // Create a camera to draw the scene from
   var camera = scene.constructNode('TargetCamera', {

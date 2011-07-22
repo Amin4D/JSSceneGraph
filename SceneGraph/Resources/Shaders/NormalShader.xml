@@ -8,6 +8,7 @@
 	<uniform name="u_projectionMatrix" constant="projectionMatrix" owner="instance"/>
 	<uniform name="u_projectionMatrixInv" constant="projectionMatrixInv" owner="instance"/>
 	<uniform name="u_normalMatrix" constant="normalMatrix" owner="instance"/>
+	<uniform name="u_normalLength" constant="normalLength" defaultValue="2.0"/>
 	</uniforms>
 	
 	<attributes>
@@ -31,8 +32,6 @@
 			attribute vec3 a_normal;
 			
 			varying vec3 normal;
-			varying vec3 lightDir;
-			varying vec3 viewDir;
 			
 			void main(){
 				normal = u_normalMatrix * a_normal;
@@ -48,6 +47,7 @@
 			
 			uniform mat4 u_projectionMatrix;
 			uniform mat4 u_projectionMatrixInv;
+			uniform float u_normalLength;
 
 			// Geometry shader takes the varying from the vertex
 			// shader as an array equal to the number of components
@@ -60,7 +60,7 @@
 				// normal, and transforming the resulting offset point back to projection space.
 				vec4 V0, V1;
 				V0 = gl_PositionIn[0];
-				V1 = u_projectionMatrix * ( u_projectionMatrixInv * V0 + vec4( normal[0], 0.0 ) );
+				V1 = u_projectionMatrix * ( u_projectionMatrixInv * V0 + (vec4( normal[0], 0.0 ) * u_normalLength) );
 				
 				gl_Position = V0;
 				EmitVertex();

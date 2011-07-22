@@ -163,7 +163,10 @@ $(document).ready(function() { $('#play').button({
 
   // Create the scene.
   var scene = FABRIC.SceneGraph.createScene();
-  var viewport = scene.constructNode('Viewport', { windowElement: document.getElementById('FabricContainer'), backgroundColor: FABRIC.RT.rgb(0.0, 0.0, 0.0) });
+  var viewport = scene.constructNode('Viewport', {
+      windowElement: document.getElementById('FabricContainer'),
+      backgroundColor: FABRIC.RT.rgb(0.0, 0.0, 0.0)
+    });
 
   // Create a camera to draw the scene from
   camera = scene.constructNode('TargetCamera', {

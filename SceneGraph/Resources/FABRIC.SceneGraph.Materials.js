@@ -740,7 +740,7 @@ FABRIC.SceneGraph.registerNodeType('PostProcessEffect',
     redrawEventHandler.preDescendBindings.append(
       scene.constructOperator({
           operatorName: 'prepareOffscreenRenderingOp',
-          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/OffscreenRendering.kl',
+          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/offscreenRendering.kl',
           entryFunctionName: 'prepareOffscreenRendering',
           parameterBinding: [
             'window.width',
@@ -756,7 +756,7 @@ FABRIC.SceneGraph.registerNodeType('PostProcessEffect',
     redrawEventHandler.postDescendBindings.append(
       scene.constructOperator({
           operatorName: 'renderOffscreenToViewOp',
-          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/OffscreenRendering.kl',
+          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/offscreenRendering.kl',
           entryFunctionName: 'renderOffscreenToView',
           parameterBinding: [
             'window.width',

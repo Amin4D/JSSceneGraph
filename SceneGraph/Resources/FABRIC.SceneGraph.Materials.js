@@ -486,7 +486,6 @@ FABRIC.SceneGraph.registerNodeType('Shader',
 FABRIC.SceneGraph.registerNodeType('Material',
   function(options, scene) {
     scene.assignDefaults(options, {
-        useProgram: true,
         separateShaderNode: true,
         shaderNode: undefined
       });
@@ -566,7 +565,6 @@ FABRIC.SceneGraph.registerNodeType('Material',
 
     /////////////////////////////////
     // Material Binding operator
-
     for (uniformName in options.shaderUniforms) {
       uniform = options.shaderUniforms[uniformName];
       // TODO: generalize a method for looking up uniform values from 'known owners'.
@@ -702,14 +700,12 @@ FABRIC.SceneGraph.registerNodeType('PostProcessEffect',
         fragmentShader: undefined,
         shaderUniforms: undefined,
         
-        useProgram: false,
         parentEventHandler: false,
         separateShaderNode: false,
         OGL_INTERNALFORMAT: 'GL_RGBA16F_ARB',
         OGL_FORMAT: 'GL_RGBA',
         OGL_TYPE: 'GL_UNSIGNED_BYTE'
       });
-
 
     if (options.fragmentShader === undefined) {
       throw 'No pixel shader specified';

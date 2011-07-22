@@ -48,11 +48,9 @@ $(document).ready(function() {
   var viewport = scene.constructNode('Viewport', {
     /*postProcessEffect:postProcessEffect,*/
     windowElement: document.getElementById('FabricContainer'),
-    enableRaycasting: true
+    enableRaycasting: true,
+    backgroundColor: FABRIC.RT.rgb(0.1, 0.1, 0.1)
   });
-
-  // Set the viewPort background to red
-  viewport.backgroundColor = FABRIC.RT.rgb(0.1, 0.1, 0.1);
 
   // Create a camera to draw the scene from
   var camera = scene.constructNode('TargetCamera', {

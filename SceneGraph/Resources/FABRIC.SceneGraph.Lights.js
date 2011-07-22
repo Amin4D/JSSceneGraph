@@ -279,7 +279,9 @@ FABRIC.SceneGraph.registerNodeType('SpotLight',
         farDistance: 1000,
         color: FABRIC.RT.rgb(1.0, 1.0, 1.0),
         castShadows: true,
+        displayShadowDebug: false,
         resolution: 1024,
+        display: false,
         displaySize: 50
       });
 
@@ -297,6 +299,9 @@ FABRIC.SceneGraph.registerNodeType('SpotLight',
     options.lightType = FABRIC.SceneGraph.Lights.types.SpotLight;
     var spotLightNode = scene.constructNode('Light', options);
     var dgnode = spotLightNode.getDGNode();
+    
+    // the operator stack functions enable the light properties to be animated.
+    scene.addMemberAndOperatorStackFunctions(spotLightNode, dgnode);
 
     dgnode.addMember('coneAngle', 'Scalar', options.coneAngle);
     spotLightNode.addMemberInterface(dgnode, 'coneAngle', true);
@@ -331,7 +336,23 @@ FABRIC.SceneGraph.registerNodeType('SpotLight',
         }));
 
       if (options.castShadows) {
+        
+        this.constructShadowRenderEventHandler();
+      
         redrawEventHandler.addMember('shadowMap', 'Size', 0);
+        
+        if(options.displayShadowDebug === true){
+          // Display the shadow color map on screen.
+          redrawEventHandler.preDescendBindings.append(
+            scene.constructOperator({
+                operatorName:"debugShadowMapBuffer",
+                srcFile:"FABRIC_ROOT/SceneGraph/Resources/KL/shadowMaps.kl",
+                entryFunctionName:"debugShadowMapBuffer",
+                parameterBinding:[
+                  'light.colorTextureID'
+                ]
+              }));
+        }
 
         redrawEventHandler.preDescendBindings.append(
           scene.constructOperator({
@@ -364,26 +385,13 @@ FABRIC.SceneGraph.registerNodeType('SpotLight',
               ]
             }));
 
-        // Debug shadowmap?
-    /*    if(true)
-        {
-          redrawEventHandler.preDescendBindings.append(
-            scene.constructOperator({
-                operatorName:"debugShadowMapBuffer",
-                srcFile:"../../../SceneGraph/Resources/KL/shadowMaps.kl",
-                entryFunctionName:"debugShadowMapBuffer",
-                parameterBinding:[
-                  "light.colorTextureID"
-                ]
-              }));
-        }
-    */ }
+     }
 
       redrawEventHandlerConfigured = true;
       return redrawEventHandler;
     };
-
-    if (options.castShadows) {
+    
+    spotLightNode.constructShadowRenderEventHandler = function() {
 
       var shadowRenderEventHandler = spotLightNode.constructEventHandlerNode('RenderDepthBuffer');
 
@@ -399,10 +407,6 @@ FABRIC.SceneGraph.registerNodeType('SpotLight',
       dgnode.addMember('depthTextureID', 'Size', 0);
       dgnode.addMember('colorTextureID', 'Size', 0);
 
-      // TODO: I think that the light projections matrices aren't correct.
-      // the shadow map is clipped by the cone angle. The projection matrix,
-      // should encapsulate the cone. This error can be seens clearly in the
-      // Shadow Casting lights demo.
       dgnode.bindings.append(scene.constructOperator({
           operatorName: 'calcLightProjectionMatricies',
           srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/shadowMaps.kl',
@@ -444,11 +448,14 @@ FABRIC.SceneGraph.registerNodeType('SpotLight',
 
       scene.registerShadowCastingLightSourceHandler(shadowRenderEventHandler);
     }
-
-    if (options.display === true) {
+    
+    spotLightNode.constructDisplay = function() {
       // tan(theta) = o/a
       // tan(theta)/a = o
       var coneDist = options.displaySize;
+      if(options.position && options.target){
+        coneDist = options.position.dist(options.target);
+      }
       var coneRadius = Math.tan(options.coneAngle * 0.5) * coneDist;
       var lightMaterial = scene.pub.constructNode('FlatMaterial', { color: FABRIC.RT.rgb(1.0, 0.7, 0.4) });
       var crossGeometry = scene.pub.constructNode('Cross', { size: coneDist * 0.05 });
@@ -462,7 +469,7 @@ FABRIC.SceneGraph.registerNodeType('SpotLight',
         transformNode: scene.pub.constructNode('Transform', {
           hierarchical: true,
           parentTransformNode: spotLightNode.pub.getTransformNode(),
-          localXfo: FABRIC.RT.xfo({ tr: FABRIC.RT.vec3(0, 0, -options.displaySize) })
+          localXfo: FABRIC.RT.xfo({ tr: FABRIC.RT.vec3(0, 0, -coneDist) })
         }),
         geometryNode: crossGeometry,
         materialNode: lightMaterial
@@ -471,13 +478,20 @@ FABRIC.SceneGraph.registerNodeType('SpotLight',
         transformNode: scene.pub.constructNode('Transform', {
           hierarchical: true,
           parentTransformNode: spotLightNode.pub.getTransformNode(),
-          localXfo: FABRIC.RT.xfo({ ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.Vec3.xAxis, 90), tr: FABRIC.RT.vec3(0, 0, -options.displaySize) })
+          localXfo: FABRIC.RT.xfo({
+            ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.Vec3.xAxis, 90),
+            tr: FABRIC.RT.vec3(0, 0, -coneDist)
+          })
         }),
         geometryNode: scene.pub.constructNode('Circle', {
           radius: coneRadius
         }),
         materialNode: lightMaterial
       });
+    }
+    
+    if (options.display === true) {
+      spotLightNode.constructDisplay();
     }
 
     return spotLightNode;

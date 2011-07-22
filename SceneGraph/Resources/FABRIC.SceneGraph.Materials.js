@@ -331,6 +331,7 @@ FABRIC.shaderAttributeTable = {
   specularColor: { id: 33, type: 'Color' },
   shininess: { id: 34, type: 'Scalar' },
   bumpiness: { id: 35, type: 'Scalar' },
+  normalLength: { id: 36, type: 'Scalar' },
 
   light: { id: 50, type: 'Vec3' },
   lightType: { id: 51, type: 'Integer' },
@@ -361,7 +362,6 @@ FABRIC.shaderAttributeTable = {
   projectionMatrixInv: { id: 154, type: 'Mat44' },
   modelViewMatrix: { id: 148, type: 'Mat44' },
   modelViewProjectionMatrix: { id: 149, type: 'Mat44' },
-
 
   width: { id: 200, type: 'Integer' },
   height: { id: 201, type: 'Integer' },
@@ -505,7 +505,15 @@ FABRIC.SceneGraph.registerNodeType('Material',
       textureNodes = {},
       addTextureInterface,
       textureUnit = 0;
-
+    // We only need to construct a DG  node if there are material
+    // uniforms specified.
+    var constructDGNode = false;
+    for (uniformName in options.shaderUniforms) {
+      if (options.shaderUniforms[uniformName].owner === undefined ) {
+        constructDGNode = true;
+        break;
+      }
+    }
     if (options.separateShaderNode) {
       shaderName = materialType + 'Shader' + (options.shaderNameDecoration !== undefined ?
                                               options.shaderNameDecoration : '');
@@ -522,6 +530,7 @@ FABRIC.SceneGraph.registerNodeType('Material',
         programParams: options.programParams,
         parentEventHandler: options.parentEventHandler
       });
+
 
       materialNode = scene.constructNode('SceneGraphNode', options);
       dgnode = materialNode.constructDGNode('DGNode');
@@ -546,9 +555,10 @@ FABRIC.SceneGraph.registerNodeType('Material',
       dgnode = materialNode.constructDGNode('DGNode');
       redrawEventHandler = materialNode.getRedrawEventHandler();
     }
-
-    redrawEventHandler.addScope('material', dgnode);
-
+    if(constructDGNode){
+      dgnode = materialNode.getDGNode();
+      redrawEventHandler.addScope('material', dgnode);
+    }
 
     /////////////////////////////////
     // Material Binding operator
@@ -662,6 +672,9 @@ FABRIC.SceneGraph.registerNodeType('Material',
         }
       };
       for (i in options.textures) {
+        if (options.textures[i].owner !== undefined) {
+          continue;
+        }
         addTextureInterface(i, options.textures[i], textureUnit);
         textureUnit++;
       }
@@ -671,12 +684,6 @@ FABRIC.SceneGraph.registerNodeType('Material',
     return materialNode;
   });
 
-
-FABRIC.SceneGraph.registerNodeType('ShadowmapMaterial',
-  function(options, scene) {
-    options.parentEventHandler = scene.getBeginRenderShadowMapEventHandler();
-    return scene.constructNode('Material', options);
-  });
 
 FABRIC.SceneGraph.registerNodeType('PointMaterial',
   function(options, scene) {
@@ -784,7 +791,8 @@ FABRIC.SceneGraph.registerNodeType('PostProcessEffect',
 FABRIC.SceneGraph.defineEffectFromFile = function(effectName, effectfile) {
   
   var preprocessorDirectives,
-      effectParameters;
+      effectParameters,
+      separateShaderNode = false;
   
   var parseEffectFile = function(){
     var xmlText,
@@ -805,7 +813,7 @@ FABRIC.SceneGraph.defineEffectFromFile = function(effectName, effectfile) {
       childNode;
       
     preprocessorDirectives = {};
-    effectParameters = {};
+    effectParameters = { separateShaderNode:false };
   
     xmlText = FABRIC.loadResourceURL(effectfile, 'text/xml');
     parser = new DOMParser();
@@ -837,6 +845,8 @@ FABRIC.SceneGraph.defineEffectFromFile = function(effectName, effectfile) {
         }
         if (uniformNode.getAttribute('owner')) {
           effectParameters.shaderUniforms[uniformName].owner = uniformNode.getAttribute('owner');
+        }else{
+          effectParameters.separateShaderNode = true;
         }
         if (uniformNode.getAttribute('state')) {
           effectParameters.shaderUniforms[uniformName].state = uniformNode.getAttribute('state');
@@ -878,7 +888,7 @@ FABRIC.SceneGraph.defineEffectFromFile = function(effectName, effectfile) {
     };
   
     collectTextures = function(node) {
-      var len, j, textureNode;
+      var len, j, textureNode, textureName;
       effectParameters.textures = {};
       len = node.childNodes.length;
       for (j = 0; j < len; j++) {
@@ -886,9 +896,13 @@ FABRIC.SceneGraph.defineEffectFromFile = function(effectName, effectfile) {
           continue;
         }
         textureNode = node.childNodes[j];
-        effectParameters.textures[textureNode.getAttribute('binding')] = {
-          name: textureNode.getAttribute('binding')
+        textureName = textureNode.getAttribute('binding');
+        effectParameters.textures[textureName] = {
+          name: textureName
         };
+        if (textureNode.getAttribute('owner')) {
+          effectParameters.textures[textureName].owner = textureNode.getAttribute('owner');
+        }
       }
     };
   

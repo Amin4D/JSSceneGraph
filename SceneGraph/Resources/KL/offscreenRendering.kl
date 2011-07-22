@@ -11,27 +11,27 @@
 operator prepareOffscreenRendering(
   io Integer width,
   io Integer height,
-  io Integer osFBO,
-  io Integer osPrevFBO,
-  io Integer osColorID,
-  io Integer osDepthID
+  io Integer fboID,
+  io Integer prevFBO,
+  io Integer colorTextureID,
+  io Integer depthTextureID
 ) {
   // report(">>>prepareOffscreenRendering");
   var Integer integers[];
   integers.resize(1);
   glGetIntegerv(GL_FRAMEBUFFER_BINDING_EXT, integers);
-  osPrevFBO = integers[0];
+  prevFBO = integers[0];
 
   glEnable(GL_TEXTURE_2D);
   
   var Size sizeArray[];
   sizeArray.resize(2);
 
-  if (osFBO > 0) {
+  if (fboID > 0) {
     var Integer texWidth, texHeight;
 
     // Have the dimensions changed?
-    glBindTexture(GL_TEXTURE_2D, osColorID);
+    glBindTexture(GL_TEXTURE_2D, colorTextureID);
     glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, integers);
     texWidth = integers[0];
     glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, integers);
@@ -39,26 +39,26 @@ operator prepareOffscreenRendering(
 
     if (width != texWidth || height != texHeight) {
       // Textures need to be deleted first.
-      sizeArray[0] = Size(osColorID);
-      sizeArray[1] = Size(osDepthID);
+      sizeArray[0] = Size(colorTextureID);
+      sizeArray[1] = Size(depthTextureID);
       glDeleteTextures(2, sizeArray);
 
       glBindFramebuffer(GL_FRAMEBUFFER_EXT, 0);
-      sizeArray[0] = osFBO;
+      sizeArray[0] = fboID;
       glDeleteFramebuffers(1, sizeArray);
 
-      osFBO = osColorID = osDepthID = 0;
+      fboID = colorTextureID = depthTextureID = 0;
     }
   }
 
-  if (osFBO == 0) {
+  if (fboID == 0) {
     var Data NULL;
 
     glGenTextures(2, sizeArray);
-    osColorID = sizeArray[0];
-    osDepthID = sizeArray[1];
+    colorTextureID = sizeArray[0];
+    depthTextureID = sizeArray[1];
 
-    glBindTexture(GL_TEXTURE_2D, osColorID);
+    glBindTexture(GL_TEXTURE_2D, colorTextureID);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -68,7 +68,7 @@ operator prepareOffscreenRendering(
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F_ARB/* GL_RGBA8 */, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 
     // Try to use a texture depth component
-    glBindTexture(GL_TEXTURE_2D, osDepthID);
+    glBindTexture(GL_TEXTURE_2D, depthTextureID);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
@@ -80,27 +80,27 @@ operator prepareOffscreenRendering(
     // create a framebuffer object
     glBindFramebuffer(GL_FRAMEBUFFER_EXT, 0);
     glGenFramebuffers(1, sizeArray);
-    osFBO = sizeArray[0];
-    glBindFramebuffer(GL_FRAMEBUFFER_EXT, osFBO);
+    fboID = sizeArray[0];
+    glBindFramebuffer(GL_FRAMEBUFFER_EXT, fboID);
 
     // attach the texture to FBO depth attachment point
-    glFramebufferTexture2D(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, osColorID, 0);
-    glFramebufferTexture2D(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_TEXTURE_2D, osDepthID, 0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, colorTextureID, 0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_TEXTURE_2D, depthTextureID, 0);
 
     // check FBO status
     var Integer status = glCheckFramebufferStatus(GL_FRAMEBUFFER_EXT);
     if (status != GL_FRAMEBUFFER_COMPLETE_EXT) {
       report('prepareOffscreenRendering: GL_FRAMEBUFFER_COMPLETE_EXT failed, CANNOT use FBO\n');
 
-      sizeArray[0] = Size(osFBO);
+      sizeArray[0] = Size(fboID);
       glDeleteFramebuffers(1, sizeArray);
-      osFBO = - 1;
+      fboID = - 1;
     }
   }
 
   // Switch to off-screen rendering using our FBO
-  if (osFBO > 0) {
-    glBindFramebuffer(GL_FRAMEBUFFER_EXT, osFBO);
+  if (fboID > 0) {
+    glBindFramebuffer(GL_FRAMEBUFFER_EXT, fboID);
   }
   // report("<<<prepareOffscreenRendering");
 }
@@ -108,13 +108,13 @@ operator prepareOffscreenRendering(
 operator renderOffscreenToView(
   io Integer width,
   io Integer height,
-  io Integer osPrevFBO,
-  io Integer osColorID,
+  io Integer prevFBO,
+  io Integer colorTextureID,
   io Integer program
 ) {
   // report(">>>renderOffscreenToView");
 
-  glBindFramebuffer(GL_FRAMEBUFFER_EXT, osPrevFBO);
+  glBindFramebuffer(GL_FRAMEBUFFER_EXT, prevFBO);
 
   glPushAttrib(GL_DEPTH_BUFFER_BIT | GL_VIEWPORT_BIT | GL_TEXTURE_BIT);
 
@@ -136,7 +136,7 @@ operator renderOffscreenToView(
   // Set the sampler
   glEnable(GL_TEXTURE_2D);
   glActiveTexture(GL_TEXTURE0);
-  glBindTexture(GL_TEXTURE_2D, osColorID);
+  glBindTexture(GL_TEXTURE_2D, colorTextureID);
   glUniform1i(smpLocation, 0);
 
   // Draw a quad in the upper left with debugging info

@@ -700,12 +700,15 @@ FABRIC.SceneGraph.registerNodeType('PostProcessEffect',
   function(options, scene) {
     scene.assignDefaults(options, {
         fragmentShader: undefined,
-        shaderUniforms: undefined
+        shaderUniforms: undefined,
+        
+        autoSetProgram: false,
+        parentEventHandler: false,
+        separateShaderNode: false,
+        OGL_INTERNALFORMAT: 'GL_RGBA16F_ARB',
+        OGL_FORMAT: 'GL_RGBA'
       });
 
-    options.autoSetProgram = false;
-    options.parentEventHandler = false;
-    options.separateShaderNode = false;
 
     if (options.fragmentShader === undefined) {
       throw 'No pixel shader specified';
@@ -742,8 +745,8 @@ FABRIC.SceneGraph.registerNodeType('PostProcessEffect',
           operatorName: 'prepareOffscreenRenderingOp',
           srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/offscreenRendering.kl',
           preProcessorDefinitions: {
-            OGL_INTERNALFORMAT: 'GL_RGBA16F_ARB',
-            OGL_FORMAT: 'GL_RGBA'
+            OGL_INTERNALFORMAT: options.OGL_INTERNALFORMAT,
+            OGL_FORMAT: options.OGL_FORMAT
           },
           entryFunctionName: 'prepareOffscreenRendering',
           parameterBinding: [
@@ -761,8 +764,8 @@ FABRIC.SceneGraph.registerNodeType('PostProcessEffect',
           operatorName: 'renderOffscreenToViewOp',
           srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/OffscreenRendering.kl',
           preProcessorDefinitions: {
-            OGL_INTERNALFORMAT: 'GL_RGBA16F_ARB',
-            OGL_FORMAT: 'GL_RGBA'
+            OGL_INTERNALFORMAT: options.OGL_INTERNALFORMAT,
+            OGL_FORMAT: options.OGL_FORMAT
           },
           entryFunctionName: 'renderOffscreenToView',
           parameterBinding: [

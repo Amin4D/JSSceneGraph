@@ -96,19 +96,19 @@ operator genAndBindShadowMapFBO(
 
     /////////////////////////////////////////////////////
     // create a framebuffer object
-    glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
+    glBindFramebuffer(GL_FRAMEBUFFER_EXT, 0);
     Size shadowFBOs[];
     shadowFBOs.resize(1);
-    glGenFramebuffersEXT(1, shadowFBOs);
+    glGenFramebuffers(1, shadowFBOs);
     shadowFBO = shadowFBOs[0];
-    glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, shadowFBO);
+    glBindFramebuffer(GL_FRAMEBUFFER_EXT, shadowFBO);
 
     // attach the texture to FBO depth attachment point
-    glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, colorTextureID, 0);
-    glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_TEXTURE_2D, depthTextureID, 0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, colorTextureID, 0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_TEXTURE_2D, depthTextureID, 0);
 
     // check FBO status
-    var Integer status = glCheckFramebufferStatusEXT(GL_FRAMEBUFFER_EXT);
+    var Integer status = glCheckFramebufferStatus(GL_FRAMEBUFFER_EXT);
     if (status != GL_FRAMEBUFFER_COMPLETE_EXT)
       report('GL_FRAMEBUFFER_COMPLETE_EXT failed, CANNOT use FBO\n');
   }
@@ -116,7 +116,7 @@ operator genAndBindShadowMapFBO(
   // This is important, if not here, FBO's depthbuffer won't be populated.
 
   //First step: Render from the light POV to a FBO, store depth values only
-  glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, shadowFBO); //Rendering offscreen
+  glBindFramebuffer(GL_FRAMEBUFFER_EXT, shadowFBO); //Rendering offscreen
   glEnable(GL_DEPTH_TEST);
 
   // In the case we render the shadowmap to a higher resolution, the viewport must be modified accordingly.
@@ -137,7 +137,7 @@ operator unbindFBO(
   //  report("unbindFBO");
 
   // unbind FBO
-  glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, prevFBO);
+  glBindFramebuffer(GL_FRAMEBUFFER_EXT, prevFBO);
 
   // Clear previous frame values
   glCullFace(GL_BACK);

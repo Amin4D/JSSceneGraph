@@ -741,6 +741,10 @@ FABRIC.SceneGraph.registerNodeType('PostProcessEffect',
       scene.constructOperator({
           operatorName: 'prepareOffscreenRenderingOp',
           srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/offscreenRendering.kl',
+          preProcessorDefinitions: {
+            OGL_INTERNALFORMAT: 'GL_RGBA16F_ARB',
+            OGL_FORMAT: 'GL_RGBA'
+          },
           entryFunctionName: 'prepareOffscreenRendering',
           parameterBinding: [
             'window.width',
@@ -750,13 +754,16 @@ FABRIC.SceneGraph.registerNodeType('PostProcessEffect',
             'self.offscreenColorID',
             'self.offscreenDepthID'
           ]
-        }
-     ));
+        }));
 
     redrawEventHandler.postDescendBindings.append(
       scene.constructOperator({
           operatorName: 'renderOffscreenToViewOp',
-          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/offscreenRendering.kl',
+          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/OffscreenRendering.kl',
+          preProcessorDefinitions: {
+            OGL_INTERNALFORMAT: 'GL_RGBA16F_ARB',
+            OGL_FORMAT: 'GL_RGBA'
+          },
           entryFunctionName: 'renderOffscreenToView',
           parameterBinding: [
             'window.width',
@@ -765,8 +772,7 @@ FABRIC.SceneGraph.registerNodeType('PostProcessEffect',
             'self.offscreenColorID',
             'self.program'
           ]
-        }
-     ));
+        }));
     return postProcessEffect;
   }
 );

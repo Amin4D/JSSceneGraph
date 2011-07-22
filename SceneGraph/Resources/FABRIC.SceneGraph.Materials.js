@@ -481,7 +481,6 @@ FABRIC.SceneGraph.registerNodeType('Shader',
 FABRIC.SceneGraph.registerNodeType('Material',
   function(options, scene) {
     scene.assignDefaults(options, {
-        autoSetProgram: true,
         separateShaderNode: true
       });
 
@@ -493,7 +492,6 @@ FABRIC.SceneGraph.registerNodeType('Material',
       index,
       shaderName,
       shader,
-      operators,
       addAccessors,
       uniform,
       uniformName,
@@ -564,20 +562,10 @@ FABRIC.SceneGraph.registerNodeType('Material',
     // Material Binding operator
     scene.pushTimer('generatingMaterialOperators');
 
-    operators = redrawEventHandler.preDescendBindings;
-    if (options.autoSetProgram) {
-      operators.append(scene.constructOperator({
-        operatorName: 'useProgramOp',
-        srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadShader.kl',
-        entryFunctionName: 'useProgram',
-        parameterBinding: [
-          (options.separateShaderNode ? 'shader.program' : 'self.program')
-        ]
-      }));
-    }
 
     /////////////////////////////////
 
+    var operators = redrawEventHandler.preDescendBindings;
     for (uniformName in options.shaderUniforms) {
       uniform = options.shaderUniforms[uniformName];
       // TODO: generalize a method for looking up uniform values from 'known owners'.
@@ -715,7 +703,6 @@ FABRIC.SceneGraph.registerNodeType('PostProcessEffect',
         shaderUniforms: undefined
       });
 
-    options.autoSetProgram = false;
     options.parentEventHandler = false;
     options.separateShaderNode = false;
 

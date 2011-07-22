@@ -204,6 +204,7 @@ operator validateShaderBindings(
       report('WARNING: ' + shaderName + ': Attribute not bound:' + name);
     }
   }
+  
 }
 
 operator loadShader(
@@ -220,8 +221,5 @@ operator loadShader(
       validateShaderBindings(shaderName, program, uniformValues, attributeValues);
     }
   }
-}
-
-operator useProgram(io Integer program) {
   glUseProgram(program);
 }

@@ -300,9 +300,6 @@ FABRIC.SceneGraph.registerNodeType('SpotLight',
     var spotLightNode = scene.constructNode('Light', options);
     var dgnode = spotLightNode.getDGNode();
     
-    // the operator stack functions enable the light properties to be animated.
-    scene.addMemberAndOperatorStackFunctions(spotLightNode, dgnode);
-
     dgnode.addMember('coneAngle', 'Scalar', options.coneAngle);
     spotLightNode.addMemberInterface(dgnode, 'coneAngle', true);
 

@@ -3,7 +3,7 @@
     Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
     -->
   <head> 
-    <title>FABRIC - Primitives</title> 
+    <title>FABRIC - PostProcessing Filters</title> 
     
     <meta charset="iso-8859-1"/>
     <link href="../../../themes/default/style.css" rel="stylesheet" type="text/css" />
@@ -38,6 +38,28 @@
     <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Kinematics.js" charset="utf-8"></script>
     
     <script type="text/javascript">
+    
+FABRIC.SceneGraph.registerNodeType('VeryLittleEffect',
+  function(options, scene) {
+    options.fragmentShader= '\
+uniform sampler2D u_rgbaImage;\
+uniform int u_windowWidth;\
+uniform int u_windowHeight;\
+void main(){\
+  vec2 texCoord = gl_FragCoord.xy / vec2(float(u_windowWidth), float(u_windowHeight));\
+  gl_FragColor = texture2D(u_rgbaImage, texCoord);\
+}';
+    
+    options.shaderUniforms = {
+      width: { name: 'u_windowWidth', owner: 'window' },
+      height: { name: 'u_windowHeight', owner: 'window' }
+    };
+    
+    var veryLittleEffect = scene.constructNode('PostProcessEffect', options);
+    return veryLittleEffect;
+  });
+    
+    
 $(document).ready(function() { var scene = FABRIC.SceneGraph.createScene();
   var viewport = scene.constructNode('Viewport', {
     enableRaycasting: false,
@@ -53,8 +75,8 @@ $(document).ready(function() { var scene = FABRIC.SceneGraph.createScene();
   scene.constructNode('CameraManipulator', { targetNode: camera });
 
   viewport.setCameraNode(camera);
-  viewport.addPostProcessEffectShader(scene.constructNode('BloomPostProcessEffect'));
-
+  viewport.addPostProcessEffectShader(scene.constructNode('VeryLittleEffect'));
+/*
   var light = scene.constructNode('PointLight', { position: FABRIC.RT.vec3(420.0, 1000.0, 600.0) });
 
 
@@ -130,7 +152,7 @@ $(document).ready(function() { var scene = FABRIC.SceneGraph.createScene();
       }),
       materialNode: bluePhongMaterial
     });
-
+*/
 
   var errors = scene.getErrors();
   if (errors.length > 0) {

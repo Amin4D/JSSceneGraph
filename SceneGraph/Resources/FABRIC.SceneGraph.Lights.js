@@ -47,7 +47,7 @@ FABRIC.SceneGraph.registerNodeType('Light',
 
       redrawEventHandler.preDescendBindings.append(scene.constructOperator({
         operatorName: 'loadLight',
-        srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/lights.kl',
+        srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadLights.kl',
         preProcessorDefinitions: {
           LIGHTTYPE_ATTRIBUTE_ID: FABRIC.shaderAttributeTable['lightType'].id,
           LIGHTCOLOR_ATTRIBUTE_ID: FABRIC.shaderAttributeTable['lightColor'].id,
@@ -201,7 +201,7 @@ FABRIC.SceneGraph.registerNodeType('DirectionalLight',
 
       redrawEventHandler.preDescendBindings.append(scene.constructOperator({
         operatorName: 'loadDirectionalLight',
-        srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/lights.kl',
+        srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadLights.kl',
         preProcessorDefinitions: {
           LIGHTTYPE_ATTRIBUTE_ID: FABRIC.shaderAttributeTable['lightType'].id,
           LIGHTCOLOR_ATTRIBUTE_ID: FABRIC.shaderAttributeTable['lightColor'].id,
@@ -306,7 +306,7 @@ FABRIC.SceneGraph.registerNodeType('SpotLight',
       redrawEventHandler.preDescendBindings.append(
         scene.constructOperator({
           operatorName: 'loadSpotLight',
-          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/lights.kl',
+          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadLights.kl',
           preProcessorDefinitions: {
           LIGHTTYPE_ATTRIBUTE_ID: FABRIC.shaderAttributeTable['lightType'].id,
           LIGHTCOLOR_ATTRIBUTE_ID: FABRIC.shaderAttributeTable['lightColor'].id,
@@ -346,7 +346,7 @@ FABRIC.SceneGraph.registerNodeType('SpotLight',
         redrawEventHandler.preDescendBindings.append(
           scene.constructOperator({
               operatorName: 'loadLightMatrixUniform',
-              srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/lights.kl',
+              srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadLights.kl',
               preProcessorDefinitions: {
                 LIGHTTYPE_ATTRIBUTE_ID: FABRIC.shaderAttributeTable['lightType'].id,
                 LIGHTCOLOR_ATTRIBUTE_ID: FABRIC.shaderAttributeTable['lightColor'].id,

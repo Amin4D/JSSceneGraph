@@ -1,0 +1,253 @@
+<html xmlns="http://www.w3.org/1999/xhtml"> 
+  <!--
+    Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
+    -->
+  <head> 
+    <title>FABRIC - Multi-Pass Rendering</title> 
+    
+    <meta charset="iso-8859-1"/>
+    <link href="../../../themes/default/style.css" rel="stylesheet" type="text/css" />
+    <link href="../../../themes/default/viewer.css" rel="stylesheet" type="text/css" />
+    
+    <script type="text/javascript" src="../../../ThirdParty/jQuery/jquery-1.4.2.min.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/jQuery/jquery-ui-1.8.5.custom.min.js"></script>
+
+    <link type="text/css" href="../../../ThirdParty/jQuery/css/vader/jquery-ui-1.8.5.custom.css" rel="stylesheet" />
+
+    <script type="text/javascript" src="../../../Core/FABRIC.Wrappers.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../Core/FABRIC.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Math.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Vec2.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Vec3.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Vec4.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Mat22.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Mat33.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Mat44.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Quat.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Xfo.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/RGBA.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Color.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Euler.js" charset="utf-8"></script>
+
+    <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Geometry.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Primitives.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Lights.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Materials.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Manipulation.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Kinematics.js" charset="utf-8"></script>
+    
+    <script type="text/javascript">
+    
+    
+
+FABRIC.SceneGraph.registerNodeType('ThickGlassMaterial',
+  function(options, scene) {
+    scene.assignDefaults(options, {
+      });
+    
+    var thickGlassMaterialPP = scene.constructNode('PostProcessEffect', {
+      name: 'ThickGlassMaterialPP',
+      parentEventHandler: scene.getSceneRedrawEventHandler(),
+      OGL_INTERNALFORMAT: 'GL_RG16F',
+      OGL_FORMAT: 'GL_RG',
+      OGL_TYPE: 'GL_FLOAT',/*
+      vertexShader: '\
+attribute vec4 a_position;\
+void main(){\
+  gl_Position = a_position;\
+}',*/
+      fragmentShader: '\
+uniform sampler2D u_fboTexture;\
+// uniform vec2 u_size;\
+uniform vec3 u_color;\
+void main(){\
+  // vec2 texCoord = gl_FragCoord.xy / u_size;\
+  vec2 texcoord = vec2(gl_TexCoord[0]);\
+  float thickness = abs(texture2D(u_fboTexture, texCoord).r);\
+  if (thickness <= 0.0){\
+      discard;\
+  }\
+  float sigma = 30.0;\
+  float intensity = exp(-sigma * thickness);\
+  gl_FragColor = vec4(intensity * Color, 1);\
+}',
+      shaderUniforms: {
+        fboTexture: { name: 'u_fboTexture', owner: 'fbo' },
+    /*    size: { name: 'u_size' },
+    */    color: { name: 'u_color' }
+      },
+      shaderAttributes: {
+        positions: { name: 'a_position' }
+      }
+    });
+/*
+    
+    var thickGlassMaterial = scene.constructNode('Material', {
+      name:'ThickGlassMaterial',
+      parentEventHandler: thickGlassMaterialPP.getRedrawEventHandler(),
+      vertexShader: '\
+attribute vec4 a_position;\
+uniform mat4 u_modelViewProjectionMatrix;\
+void main(){\
+    gl_Position = u_modelViewProjectionMatrix * a_position;\
+}',
+      fragmentShader: '\
+uniform float u_depthScale;\
+\
+void main(){\
+    float depth = u_depthScale * gl_FragCoord.z;\
+    gl_FragColor = vec4(depth, 0, 0, 0);\
+}',
+      shaderUniforms: {
+        modelViewProjectionMatrix: { name: 'u_modelViewProjectionMatrix' },
+        depthScale: { name: 'u_depthScale', defaultValue: 1.0, owner:'childNode' }
+      },
+      shaderAttributes: {
+        positions: { name: 'a_position' }
+      },
+      separateShaderNode: false
+    });
+    
+    ////////////////////////////////////////////////////////
+    // Now prepare the front and back materials
+    
+    var frontMaterial = scene.constructNode('Material', {
+      separateShaderNode: true,
+      shaderNode: thickGlassMaterial,
+      shaderUniforms: {
+        depthScale: { name: 'u_depthScale', defaultValue: 1.0 }
+      }
+    });
+    frontMaterial.getRedrawEventHandler().preDescendBindings.append(scene.constructOperator({
+        operatorName: 'setFrontFaceCulling',
+        srcCode: '\
+operator setFrontFaceCulling(){\
+  glEnable(GL_CULL_FACE);\
+  glEnable(GL_BLEND);\
+  glBlendFunc(GL_ONE, GL_ONE);\
+  glCullFace(GL_FRONT);\
+}',
+        entryFunctionName: 'setFrontFaceCulling',
+      }));
+    
+    var backMaterial = scene.constructNode('Material', {
+      separateShaderNode: true,
+      shaderNode: thickGlassMaterial,
+      shaderUniforms: {
+        depthScale: { name: 'u_depthScale', defaultValue: -1.0 }
+      }
+    });
+    backMaterial.getRedrawEventHandler().preDescendBindings.append(scene.constructOperator({
+        operatorName: 'setBackFaceCulling',
+        srcCode: '\
+operator setBackFaceCulling(){\
+  glCullFace(GL_BACK);\
+}',
+        entryFunctionName: 'setBackFaceCulling',
+      }));
+    
+    
+    var drawPropagateEventHandler = thickGlassMaterial.constructEventHandlerNode('Propagate');
+    frontMaterial.getRedrawEventHandler().appendChildEventHandler(drawPropagateEventHandler);
+    backMaterial.getRedrawEventHandler().appendChildEventHandler(drawPropagateEventHandler);
+
+    var parentIsTypeOf = thickGlassMaterial.pub.isTypeOf;
+    thickGlassMaterial.pub.isTypeOf = function(type){
+      if(type === 'Material'){
+        return true;
+      }
+      return parentIsTypeOf;
+    }
+    
+    thickGlassMaterial.getVBORequirements = function() {
+      return {
+        positions: { name: 'a_position' }
+      };
+    };
+    thickGlassMaterial.getRedrawEventHandler = function() {
+      return drawPropagateEventHandler;
+    };
+ */
+    return thickGlassMaterial;
+  });
+    
+    
+$(document).ready(function() {
+  
+  var scene = FABRIC.SceneGraph.createScene();
+  var viewport = scene.constructNode('Viewport', {
+    windowElement: document.getElementById('FabricContainer'),
+    backgroundColor: FABRIC.RT.rgb(0.0, 0.05, 0.15)
+  });
+
+  // Create a camera to draw the scene from
+  var camera = scene.constructNode('TargetCamera', {
+      position: FABRIC.RT.vec3(40, 70, 100),
+      target: FABRIC.RT.vec3(0, 0, 0)
+    });
+
+  scene.constructNode("CameraManipulator", { targetNode:camera } );
+
+  viewport.setCameraNode(camera);
+
+  var light = scene.constructNode('PointLight', { position: FABRIC.RT.vec3(420.0, 1000.0, 600.0) });
+  var sphere = scene.constructNode('Sphere', { radius: 10, detail: 10, needUVs: true, tangentsFromUV: 0 });
+
+  // Flat Shader
+  var thickGlassMaterial = scene.constructNode('ThickGlassMaterial', {
+      color: FABRIC.RT.rgb(0.8, 0, 0, 1)
+    });
+  /*
+  scene.constructNode('Instance', {
+      transformNode: scene.constructNode('Transform', {
+          hierarchical: false,
+          globalXfo: FABRIC.RT.xfo({ tr: FABRIC.RT.vec3(-30, 0, 0) })
+        }),
+      geometryNode: sphere,
+      materialNode: thickGlassMaterial
+    });
+  */
+  var errors = scene.getErrors();
+  if (errors.length > 0) {
+    throw (errors.toString());
+  }
+  else {
+    scene.redrawAllWindows();
+
+    console.log(scene.getTimerProfiles());
+
+    console.log('Done');
+  }
+});
+
+</script>
+
+  </head> 
+  <body>
+    <div id="wrapper">
+      <ul id="nav">
+        <li><a href="#" id="fabric-logo"><img src="../../../themes/default/_img/projects/fabric-logo.png" /></a></li>
+      </ul>
+      <div id="editor">
+        <div id="viewer">
+          <div id="FabricContainer"></div> 
+        </div><!--viewer-->
+        <div id="sidebar">
+          
+          <div class="box">
+            <h2>INFO</h2>
+            <div class="content">
+              Materials.<br>
+              This sample shows the creation of several materials through FABRIC's JavaScript based SceneGraph.
+              All Materials are implemented using GLSL shaders, from Constant, Phong, Textures, Normal Mapping
+              to Geometry Shaders for drawing the normals of the last object. Check out the source code of this
+              page to see how this works.
+            </div><!--content-->
+          </div><!--box-->
+            
+        </div><!--sidebar-->
+      </div> <!--editor-->
+    </div><!--wrapper-->
+  </body> 
+  </html>

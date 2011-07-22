@@ -41,10 +41,8 @@ FABRIC.SceneGraph.registerNodeType('Light',
     dgnode.addMember('color', 'Color', options.color);
 
     lightNode.getRedrawEventHandler = function () {
-      if (redrawEventHandler) {
-        return redrawEventHandler;
-      }
-      redrawEventHandler = lightNode.constructEventHandlerNode('Render');
+      // This call will replace the 'getRedrawEventHandler' with an accessor.
+      redrawEventHandler = lightNode.constructEventHandlerNode('Redraw');
       redrawEventHandler.addScope('light', dgnode);
 
       redrawEventHandler.preDescendBindings.append(scene.constructOperator({
@@ -200,9 +198,6 @@ FABRIC.SceneGraph.registerNodeType('DirectionalLight',
     var parentGetRedrawEventHandler = directionalLightNode.getRedrawEventHandler;
     directionalLightNode.getRedrawEventHandler = function() {
       var redrawEventHandler = parentGetRedrawEventHandler();
-      if (redrawEventHandlerConfigured) {
-        return redrawEventHandler;
-      }
 
       redrawEventHandler.preDescendBindings.append(scene.constructOperator({
         operatorName: 'loadDirectionalLight',
@@ -310,9 +305,6 @@ FABRIC.SceneGraph.registerNodeType('SpotLight',
     var parentGetRedrawEventHandler = spotLightNode.getRedrawEventHandler;
     spotLightNode.getRedrawEventHandler = function() {
       var redrawEventHandler = parentGetRedrawEventHandler();
-      if (redrawEventHandlerConfigured) {
-        return redrawEventHandler;
-      }
 
       redrawEventHandler.preDescendBindings.append(
         scene.constructOperator({

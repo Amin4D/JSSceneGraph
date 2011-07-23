@@ -90,15 +90,29 @@ $(document).ready(function() {
     });
   scene.constructNode('3AxisTranslationManipulator', { parentNode: cube2Draw });
 
-  // Pivot
-  var cube3Draw = scene.constructNode('Instance', {
+  // Screen Space Translation
+  var cube2Draw = scene.constructNode('Instance', {
       transformNode: scene.constructNode('Transform', {
         hierarchical: false,
         globalXfo: FABRIC.RT.xfo({ tr: FABRIC.RT.vec3(35, 0, 0) })
       }),
       geometryNode: cube,
       materialNode: scene.constructNode('PhongMaterial', {
-        diffuseColor: FABRIC.RT.rgb(0.0, 0.8, 0, 1),
+        diffuseColor: FABRIC.RT.rgb(0.0, 0.0, 0.8, 1),
+        lightNode: light
+      })
+    });
+  scene.constructNode('ScreenTranslationManipulator', { parentNode: cube2Draw, radius:2 });
+
+  // Pivot
+  var cube3Draw = scene.constructNode('Instance', {
+      transformNode: scene.constructNode('Transform', {
+        hierarchical: false,
+        globalXfo: FABRIC.RT.xfo({ tr: FABRIC.RT.vec3(70, 0, 0) })
+      }),
+      geometryNode: cube,
+      materialNode: scene.constructNode('PhongMaterial', {
+        diffuseColor: FABRIC.RT.rgb(0.8, 0.5, 0.2, 1),
         lightNode: light
       })
     });
@@ -109,11 +123,11 @@ $(document).ready(function() {
   var cube4Draw = scene.constructNode('Instance', {
       transformNode: scene.constructNode('Transform', {
         hierarchical: false,
-        globalXfo: FABRIC.RT.xfo({ tr: FABRIC.RT.vec3(75, 0, 0) })
+        globalXfo: FABRIC.RT.xfo({ tr: FABRIC.RT.vec3(100, 0, 0) })
       }),
       geometryNode: bone,
       materialNode: scene.constructNode('PhongMaterial', {
-        diffuseColor: FABRIC.RT.rgb(0.0, 0.8, 0, 1),
+        diffuseColor: FABRIC.RT.rgb(0.2, 0.5, 0.8, 1),
         lightNode: light
       })
     });

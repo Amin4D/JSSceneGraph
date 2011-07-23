@@ -161,10 +161,8 @@ FABRIC.SceneGraph.registerNodeType('PaintManipulator',
       enabled:true
       });
 
-    options.dgnodenames.push('RayCastDGNode');
-
     var paintManipulatorNode = scene.constructNode('SceneGraphNode', options),
-      collectPointsDgNode = paintManipulatorNode.getRayCastDGNode(),
+      collectPointsDgNode = paintManipulatorNode.constructDGNode('RayCastDGNode'),
       paintEventHandler,
       paintEvent,
       viewportNode,
@@ -193,13 +191,13 @@ FABRIC.SceneGraph.registerNodeType('PaintManipulator',
     collectPointsDgNode.addMember('brushColor', 'Color', options.brushColor);
     paintManipulatorNode.addMemberInterface(collectPointsDgNode, 'brushColor', true);
 
-    paintEventHandler = scene.constructEventHandlerNode('Viewport_raycast');
+    paintEventHandler = spotLightNode.constructEventHandlerNode('Viewport_raycast');
     paintEventHandler.addScope('paintData', collectPointsDgNode);
 
     // Raycast events are fired from the viewport. As the event
     // propagates down the tree it collects scopes and fires operators.
     // The operators us the collected scopes to calculate the ray.
-    paintEvent = scene.constructEventNode(options.name + 'Event');
+    paintEvent = paintManipulatorNode.constructEventNode('Event');
     paintEvent.appendEventHandler(paintEventHandler);
 
     var brushMaterial = scene.constructNode('FlatScreenSpaceMaterial', { color: FABRIC.RT.rgb(0.8, 0, 0) });
@@ -304,7 +302,7 @@ FABRIC.SceneGraph.registerNodeType('PaintManipulator',
         transformNode = scene.getPrivateInterface(instanceNode.pub.getTransformNode()),
         paintOperator;
 
-      paintInstanceEventHandler = scene.constructEventHandlerNode(options.name + '_paint_' + node.name);
+      paintInstanceEventHandler = paintManipulatorNode.constructEventHandlerNode('Paint_' + node.name);
       paintInstanceEventHandler.addScope('geometry_vertexattributes', geometryNode.getAttributesDGNode());
       paintInstanceEventHandler.addScope('transform', transformNode.getDGNode());
       paintInstanceEventHandler.addScope('instance', instanceNode.getDGNode());
@@ -580,7 +578,7 @@ FABRIC.SceneGraph.registerNodeType('Manipulator',
     // setup the postdescend operators for disable and enable zbuffer
     // PT - This could be done at the shader/material stage
     if (options.disableZBuffer) {
-      manipulatorNode.getRedrawEventHandler().postDescendBindings.insert(scene.constructOperator({
+      manipulatorNode.getRedrawEventHandler().preDescendBindings.insert(scene.constructOperator({
           operatorName: 'disableZBuffer',
           srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/drawAttributes.kl',
           entryFunctionName: 'disableZBuffer',

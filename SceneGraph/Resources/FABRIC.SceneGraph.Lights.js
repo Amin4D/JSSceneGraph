@@ -29,12 +29,12 @@ FABRIC.SceneGraph.registerNodeType('Light',
       throw ': Lights must define a type';
     }
 
-    options.dgnodenames.push('DGNode');
-    var lightNode = scene.constructNode('SceneGraphNode', options);
-    var transformNode;
-    var transformNodeMember;
-    var redrawEventHandler;
-    var dgnode = lightNode.getDGNode();
+    var lightNode = scene.constructNode('SceneGraphNode', options),
+      dgnode = lightNode.constructDGNode('DGNode'),
+      transformNode,
+      transformNodeMember,
+      redrawEventHandler;
+    
     dgnode.addMember('type', 'Integer', options.lightType);
     dgnode.addMember('lightMat44', 'Mat44');
     dgnode.addMember('cameraMat44', 'Mat44');
@@ -44,7 +44,7 @@ FABRIC.SceneGraph.registerNodeType('Light',
       if (redrawEventHandler) {
         return redrawEventHandler;
       }
-      redrawEventHandler = scene.constructEventHandlerNode(options.name + '_render');
+      redrawEventHandler = lightNode.constructEventHandlerNode('Render');
       redrawEventHandler.addScope('light', dgnode);
 
       redrawEventHandler.preDescendBindings.append(scene.constructOperator({
@@ -117,9 +117,6 @@ FABRIC.SceneGraph.registerNodeType('Light',
     } else {
       lightNode.pub.setTransformNode(options.transformNode, options.transformNodeMember);
     }
-
-    // the operator stack functions enable the light properties to be animated.
-    scene.addMemberAndOperatorStackFunctions(lightNode, dgnode);
 
     return lightNode;
   });
@@ -388,7 +385,7 @@ FABRIC.SceneGraph.registerNodeType('SpotLight',
 
     if (options.castShadows) {
 
-      var shadowRenderEventHandler = scene.constructEventHandlerNode(options.name + '_renderDepthBuffer');
+      var shadowRenderEventHandler = spotLightNode.constructEventHandlerNode('RenderDepthBuffer');
 
       // Projection Values
       dgnode.addMember('nearDistance', 'Scalar', options.nearDistance);
@@ -447,9 +444,6 @@ FABRIC.SceneGraph.registerNodeType('SpotLight',
 
       scene.registerShadowCastingLightSourceHandler(shadowRenderEventHandler);
     }
-
-    // the operator stack functions enable the light properties to be animated.
-    scene.addMemberAndOperatorStackFunctions(spotLightNode, dgnode);
 
     if (options.display === true) {
       // tan(theta) = o/a

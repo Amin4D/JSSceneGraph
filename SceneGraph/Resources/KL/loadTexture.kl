@@ -183,7 +183,7 @@ operator createTextureFromImageHDR(
 
 operator createSpriteTexture(
   io Integer res,
-  io Integer bufferID,
+  io Size bufferID,
   io Integer textureUnit
 ) {
   if (!bufferID && res > 0) {

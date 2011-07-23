@@ -502,15 +502,7 @@ FABRIC.SceneGraph.registerNodeType('Material',
       textureNodes = {},
       addTextureInterface,
       textureUnit = 0;
-    // We only need to construct a DG  node if there are material
-    // uniforms specified.
-    var constructDGNode = false;
-    for (uniformName in options.shaderUniforms) {
-      if (options.shaderUniforms[uniformName].owner === undefined ) {
-        constructDGNode = true;
-        break;
-      }
-    }
+
     if (options.separateShaderNode) {
       if(options.shaderNode){
         shader = options.shaderNode;
@@ -552,10 +544,7 @@ FABRIC.SceneGraph.registerNodeType('Material',
       redrawEventHandler = materialNode.getRedrawEventHandler();
     }
     
-    if(constructDGNode){
-      dgnode = materialNode.constructDGNode('DGNode');
-      redrawEventHandler.addScope('material', dgnode);
-    }
+    
 
     /////////////////////////////////
     // Material uniform interface definition.
@@ -579,6 +568,10 @@ FABRIC.SceneGraph.registerNodeType('Material',
 
       uniformType = FABRIC.shaderAttributeTable[uniformName].type;
       if (uniform.owner === undefined) {
+        if(!dgnode){
+          dgnode = materialNode.constructDGNode('DGNode');
+          redrawEventHandler.addScope('material', dgnode);
+        }
         dgnode.addMember(uniformName, uniformType, uniform.defaultValue);
         materialNode.addMemberInterface(dgnode, uniformName, true);
       }
@@ -1130,7 +1123,10 @@ FABRIC.SceneGraph.registerNodeType('PointSpriteMaterial',
     options.fragmentShader = FABRIC.loadResourceURL('FABRIC_ROOT/SceneGraph/Resources/Shaders/PointSpriteFragmentShader.glsl');
 
     var pointSpriteMaterialNode = scene.constructNode('Material', options);
-    var dgnode = pointSpriteMaterialNode.getDGNode();
+    
+    // TODO: Stop using fixed function pipeline calls. Use Geometry shaders
+    var dgnode = pointSpriteMaterialNode.constructDGNode('DGNode');
+    pointSpriteMaterialNode.getRedrawEventHandler().addScope('material', dgnode);
 
     dgnode.addMember('pointSize', 'Scalar', options.pointSize);
     pointSpriteMaterialNode.addMemberInterface(dgnode, 'pointSize', true);

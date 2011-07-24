@@ -227,6 +227,9 @@ $(document).ready(function() {
   var dgnodeColor = FABRIC.rgb255(20,90,250);
   var operatorColor = FABRIC.rgb255(80,200,200);
   
+  var preDescendOperatorColor = FABRIC.rgb255(200,100,50);
+  var postDescendOperatorColor = FABRIC.rgb255(150,74,25);
+  
   var errorColor = FABRIC.rgb255(250,0,0);
 
   var dependencyConnectionColor = FABRIC.rgb255(100,180,250);
@@ -405,8 +408,7 @@ $(document).ready(function() {
       $('#errorDisplay').append('<br>'+ name + ': ' + JSON.stringify(errorList) + '</br>');
     }
     
-    var displayOperator = function(svgnode, operator){
-      var color = operatorColor;
+    var displayOperator = function(svgnode, operator, color){
       if (operator.getErrors().length > 0){
         displayError(operator.getName(), operator.getErrors());
         color = errorColor;
@@ -436,9 +438,9 @@ $(document).ready(function() {
         });
     }
     
-    var displayOperatorList = function(svgnode, operators){
+    var displayOperatorList = function(svgnode, operators, color){
       for(var i=0; i<operators.getLength(); i++){
-        displayOperator(svgnode, operators.getOperator(i) );
+        displayOperator(svgnode, operators.getOperator(i), color);
       }
     }
     
@@ -450,8 +452,7 @@ $(document).ready(function() {
           color: color,
           height: 15,
           createEditButton: false,
-          draggable: true,
-          shadow: FABRIC.vec2(0,0)
+          draggable: true
         })
         .translate(pos);
       svgnode.addOutPort({
@@ -497,8 +498,8 @@ $(document).ready(function() {
             createLabelEventCatcher:false
           });
       }
-      displayOperatorList(svgnode, eventHandler.preDescendBindings);
-      displayOperatorList(svgnode, eventHandler.postDescendBindings);
+      displayOperatorList(svgnode, eventHandler.preDescendBindings, preDescendOperatorColor);
+      displayOperatorList(svgnode, eventHandler.postDescendBindings, postDescendOperatorColor);
       return svgnode;
     }
     
@@ -514,8 +515,7 @@ $(document).ready(function() {
           color: color,
           height: 15,
           createEditButton: true,
-          draggable: true,
-          shadow: FABRIC.vec2(0,0)
+          draggable: true
         })
         .translate(pos);
       addNodeInspectorCallback(svgnode, dgnode);
@@ -539,7 +539,7 @@ $(document).ready(function() {
           allowMultipleConnections:true,
           createLabelEventCatcher:false
         });
-      displayOperatorList(svgnode, dgnode.bindings);
+      displayOperatorList(svgnode, dgnode.bindings, operatorColor);
       return svgnode;
     }
     

@@ -111,7 +111,7 @@ $(document).ready(function() {
         hierarchical: false,
         globalXfo: FABRIC.RT.xfo({ tr: FABRIC.RT.vec3(-10, 0, -10) })
       }),
-      geometryNode: scene.constructNode('Plane', { length: 50, width: 50 }),
+      geometryNode: scene.constructNode('Plane', { length: 50, width: 50, doubleSided: false }),
       materialNode: greyPhongMaterial,
       enableShadowCasting: true
     });

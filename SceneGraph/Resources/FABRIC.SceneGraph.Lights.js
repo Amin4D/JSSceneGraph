@@ -41,15 +41,13 @@ FABRIC.SceneGraph.registerNodeType('Light',
     dgnode.addMember('color', 'Color', options.color);
 
     lightNode.getRedrawEventHandler = function () {
-      if (redrawEventHandler) {
-        return redrawEventHandler;
-      }
-      redrawEventHandler = lightNode.constructEventHandlerNode('Render');
+      // This call will replace the 'getRedrawEventHandler' with an accessor.
+      redrawEventHandler = lightNode.constructEventHandlerNode('Redraw');
       redrawEventHandler.addScope('light', dgnode);
 
       redrawEventHandler.preDescendBindings.append(scene.constructOperator({
         operatorName: 'loadLight',
-        srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/lights.kl',
+        srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadLights.kl',
         preProcessorDefinitions: {
           LIGHTTYPE_ATTRIBUTE_ID: FABRIC.shaderAttributeTable['lightType'].id,
           LIGHTCOLOR_ATTRIBUTE_ID: FABRIC.shaderAttributeTable['lightColor'].id,
@@ -200,13 +198,10 @@ FABRIC.SceneGraph.registerNodeType('DirectionalLight',
     var parentGetRedrawEventHandler = directionalLightNode.getRedrawEventHandler;
     directionalLightNode.getRedrawEventHandler = function() {
       var redrawEventHandler = parentGetRedrawEventHandler();
-      if (redrawEventHandlerConfigured) {
-        return redrawEventHandler;
-      }
 
       redrawEventHandler.preDescendBindings.append(scene.constructOperator({
         operatorName: 'loadDirectionalLight',
-        srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/lights.kl',
+        srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadLights.kl',
         preProcessorDefinitions: {
           LIGHTTYPE_ATTRIBUTE_ID: FABRIC.shaderAttributeTable['lightType'].id,
           LIGHTCOLOR_ATTRIBUTE_ID: FABRIC.shaderAttributeTable['lightColor'].id,
@@ -300,9 +295,6 @@ FABRIC.SceneGraph.registerNodeType('SpotLight',
     var spotLightNode = scene.constructNode('Light', options);
     var dgnode = spotLightNode.getDGNode();
     
-    // the operator stack functions enable the light properties to be animated.
-    scene.addMemberAndOperatorStackFunctions(spotLightNode, dgnode);
-
     dgnode.addMember('coneAngle', 'Scalar', options.coneAngle);
     spotLightNode.addMemberInterface(dgnode, 'coneAngle', true);
 
@@ -310,14 +302,11 @@ FABRIC.SceneGraph.registerNodeType('SpotLight',
     var parentGetRedrawEventHandler = spotLightNode.getRedrawEventHandler;
     spotLightNode.getRedrawEventHandler = function() {
       var redrawEventHandler = parentGetRedrawEventHandler();
-      if (redrawEventHandlerConfigured) {
-        return redrawEventHandler;
-      }
 
       redrawEventHandler.preDescendBindings.append(
         scene.constructOperator({
           operatorName: 'loadSpotLight',
-          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/lights.kl',
+          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadLights.kl',
           preProcessorDefinitions: {
           LIGHTTYPE_ATTRIBUTE_ID: FABRIC.shaderAttributeTable['lightType'].id,
           LIGHTCOLOR_ATTRIBUTE_ID: FABRIC.shaderAttributeTable['lightColor'].id,
@@ -357,7 +346,7 @@ FABRIC.SceneGraph.registerNodeType('SpotLight',
         redrawEventHandler.preDescendBindings.append(
           scene.constructOperator({
               operatorName: 'loadLightMatrixUniform',
-              srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/lights.kl',
+              srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadLights.kl',
               preProcessorDefinitions: {
                 LIGHTTYPE_ATTRIBUTE_ID: FABRIC.shaderAttributeTable['lightType'].id,
                 LIGHTCOLOR_ATTRIBUTE_ID: FABRIC.shaderAttributeTable['lightColor'].id,

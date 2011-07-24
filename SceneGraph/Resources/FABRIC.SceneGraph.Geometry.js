@@ -187,9 +187,6 @@ FABRIC.SceneGraph.registerNodeType('Geometry',
       return true;
     };
     geometryNode.getRedrawEventHandler = function() {
-      if (redrawEventHandler) {
-        return redrawEventHandler;
-      }
       var vertexAttributes = attributesdgnode.getMembers(),
         uniformValues = uniformsdgnode.getMembers(),
         memberName,
@@ -201,7 +198,8 @@ FABRIC.SceneGraph.registerNodeType('Geometry',
         attributeNodeBinding,
         i;
 
-      redrawEventHandler = geometryNode.constructEventHandlerNode('GeometryDraw');
+      // This call will replace the 'getRedrawEventHandler' with an accessor.
+      redrawEventHandler = geometryNode.constructEventHandlerNode('Redraw');
       redrawEventHandler.addScope('uniforms', uniformsdgnode);
       redrawEventHandler.addScope('attributes', attributesdgnode);
       for (i = 0; i < deformationbufferinterfaces.length; i++) {
@@ -637,7 +635,7 @@ FABRIC.SceneGraph.registerNodeType('Instance',
     // no other purpose. 
     var instanceNode = scene.constructNode('SceneGraphNode', options),
       dgnode = instanceNode.constructDGNode('DGNode'),
-      redrawEventHandler = instanceNode.constructEventHandlerNode('Draw'),
+      redrawEventHandler = instanceNode.constructEventHandlerNode('Redraw'),
       transformNode,
       transformNodeMember = options.transformNodeMember,
       geometryNode,
@@ -710,9 +708,6 @@ FABRIC.SceneGraph.registerNodeType('Instance',
     }
 
     // extend private interface
-    instanceNode.getRedrawEventHandler = function() {
-      return redrawEventHandler;
-    };
     instanceNode.writeData = function(sceneSaver, constructionOptions, nodeData) {
       constructionOptions.enableRaycasting = options.enableRaycasting;
 

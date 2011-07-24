@@ -340,7 +340,7 @@ FABRIC.SceneGraph = {
       constructBinding = function(op) {
         var binding = context.DG.createBinding();
         binding.setOperator(op);
-        binding.setParameterLayout(operatorDef.parameterBinding);
+        binding.setParameterLayout(operatorDef.parameterBinding ? operatorDef.parameterBinding : []);
         return binding;
       }
 
@@ -365,8 +365,9 @@ FABRIC.SceneGraph = {
 
       operator = context.DG.createOperator(uid);
       
-      if (operatorDef.mainThreadOnly)
+      if (operatorDef.mainThreadOnly){
         operator.setMainThreadOnly(true);
+      }
 
       descDiags = function(fullCode, diags) {
         var fullCodeLines = fullCode.split('\n');
@@ -794,7 +795,7 @@ FABRIC.SceneGraph.registerNodeType('SceneGraphNode',
       constructEventHandlerNode: function(ehname) {
         var eventhandlernode = scene.constructEventHandlerNode(name + '_' + ehname);
         eventhandlernode.sceneGraphNode = sceneGraphNode;
-        sceneGraphNode['get' + ehname] = function() {
+        sceneGraphNode['get' + ehname + 'EventHandler'] = function() {
           return eventhandlernode;
         };
         sceneGraphNode['add' + ehname + 'Member'] = function(
@@ -850,7 +851,7 @@ FABRIC.SceneGraph.registerNodeType('Viewport',
 
     var viewportNode = scene.constructNode('SceneGraphNode', options),
       dgnode = viewportNode.constructDGNode('DGNode'),
-      redrawEventHandler = viewportNode.constructEventHandlerNode('RedrawEventHandler');
+      redrawEventHandler = viewportNode.constructEventHandlerNode('Redraw');
       
     dgnode.addMember('backgroundColor', 'Color', options.backgroundColor);
 
@@ -936,12 +937,6 @@ FABRIC.SceneGraph.registerNodeType('Viewport',
     }
 
     // private interface
-    viewportNode.getRedrawEventHandler = function() {
-      return redrawEventHandler;
-    };
-    viewportNode.getRaycastEventHandler = function() {
-      return viewPortRaycastEventHandler;
-    };
     viewportNode.getWindowElement = function() {
       return windowElement;
     };
@@ -972,7 +967,12 @@ FABRIC.SceneGraph.registerNodeType('Viewport',
         textureStub.postDescendBindings.append(
           scene.constructOperator({
               operatorName: 'renderTextureToView',
-              srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/OffscreenRendering.kl',
+              srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/offscreenRendering.kl',
+              preProcessorDefinitions: {
+        OGL_INTERNALFORMAT: 'GL_RGBA16F_ARB',
+        OGL_FORMAT: 'GL_RGBA',
+        OGL_TYPE: 'GL_UNSIGNED_BYTE'
+              },
               entryFunctionName: 'renderTextureToView',
               parameterBinding: [
                 'self.textureUnit',
@@ -1247,7 +1247,7 @@ FABRIC.SceneGraph.registerNodeType('Camera',
 
     var cameraNode = scene.constructNode('SceneGraphNode', options),
       dgnode = cameraNode.constructDGNode('DGNode'),
-      redrawEventHandler = cameraNode.constructEventHandlerNode('RedrawEventHandler'),
+      redrawEventHandler = cameraNode.constructEventHandlerNode('Redraw'),
       transformNode,
       transformNodeMember = 'globalXfo';
       
@@ -1279,11 +1279,6 @@ FABRIC.SceneGraph.registerNodeType('Camera',
     // Now register the camera with the Scene Graph so that
     // It will connect the camera with the scene graph rendered elements.(shaders etc)
     redrawEventHandler.appendChildEventHandler(scene.getSceneRedrawEventHandler());
-
-    // private interface
-    cameraNode.getRedrawEventHandler = function() {
-      return redrawEventHandler;
-    };
 
     // public interface
     cameraNode.pub.getTransformNode = function() {

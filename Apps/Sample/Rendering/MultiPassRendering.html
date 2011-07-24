@@ -55,7 +55,7 @@ FABRIC.SceneGraph.registerNodeType('ThickGlassMaterial',
       OGL_TYPE: 'GL_FLOAT',
       fragmentShader: '\n\
 uniform sampler2D u_fboTexture;\n\
-uniform vec3 u_color;\n\
+uniform vec4 u_color;\n\
 \n\
 void main(){\n\
   vec2 texCoord = vec2(gl_TexCoord[0]);\n\
@@ -65,7 +65,7 @@ void main(){\n\
   }\n\
   float sigma = 30.0;\n\
   float intensity = exp(-sigma * thickness);\n\
-  gl_FragColor = vec4(intensity * u_color, 1);\n\
+  gl_FragColor = intensity * u_color;\n\
 }\n\
       ',
       shaderUniforms: {
@@ -77,22 +77,23 @@ void main(){\n\
       }
     });
       
-      
-    thickGlassMaterialPP.getRedrawEventHandler().postDescendBindings.insert(scene.constructOperator({
-        operatorName: 'setThickGlassMaterialPPAttribs',
+    // Before rendering the geometry to the FBO, set up some OpenGL attribs
+    thickGlassMaterialPP.getRedrawEventHandler().preDescendBindings.append(scene.constructOperator({
+        operatorName: 'setThickGlassMaterialAttribs',
         srcCode: '\n\
-operator setThickGlassMaterialPPAttribs(){\n\
+operator setThickGlassMaterialAttribs(){\n\
+    report("setThickGlassMaterialAttribs");\n\
     glEnable(GL_CULL_FACE);\n\
     glEnable(GL_BLEND);\n\
     glBlendFunc(GL_ONE, GL_ONE);\n\
+    report("setThickGlassMaterialAttribs:end");\n\
 }',
-        entryFunctionName: 'setThickGlassMaterialPPAttribs',
-      }), 0);
-    
+        entryFunctionName: 'setThickGlassMaterialAttribs',
+      }));
     
     
     var thickGlassMaterial = scene.constructNode('Material', {
-      name:'ThickGlassMaterial',
+      name:'ThickGlassMaterialShader',
       parentEventHandler: thickGlassMaterialPP.getRedrawEventHandler(),
       vertexShader: '\
 attribute vec4 a_position;\
@@ -108,7 +109,7 @@ void main(){\
     gl_FragColor = vec4(depth, 0, 0, 0);\
 }',
       shaderUniforms: {
-        modelViewProjectionMatrix: { name: 'u_modelViewProjectionMatrix' },
+        modelViewProjectionMatrix: { name: 'u_modelViewProjectionMatrix', owner:'instance' },
         depthScale: { name: 'u_depthScale', defaultValue: 1.0, owner:'childNode' }
       },
       shaderAttributes: {
@@ -121,6 +122,7 @@ void main(){\
     // Now prepare the front and back materials
     
     var frontMaterial = scene.constructNode('Material', {
+      name:'ThickGlassBackFaceMaterial',
       separateShaderNode: true,
       shaderNode: thickGlassMaterial,
       shaderUniforms: {
@@ -131,15 +133,13 @@ void main(){\
         operatorName: 'setFrontFaceCulling',
         srcCode: '\
 operator setFrontFaceCulling(){\
-  glEnable(GL_CULL_FACE);\
-  glEnable(GL_BLEND);\
-  glBlendFunc(GL_ONE, GL_ONE);\
   glCullFace(GL_FRONT);\
 }',
         entryFunctionName: 'setFrontFaceCulling',
       }));
     
     var backMaterial = scene.constructNode('Material', {
+      name:'ThickGlassFrontFaceMaterial',
       separateShaderNode: true,
       shaderNode: thickGlassMaterial,
       shaderUniforms: {
@@ -206,7 +206,7 @@ $(document).ready(function() {
   var thickGlassMaterial = scene.constructNode('ThickGlassMaterial', {
       color: FABRIC.RT.rgb(0.8, 0, 0, 1)
     });
-  /*
+  
   scene.constructNode('Instance', {
       transformNode: scene.constructNode('Transform', {
           hierarchical: false,
@@ -215,7 +215,7 @@ $(document).ready(function() {
       geometryNode: sphere,
       materialNode: thickGlassMaterial
     });
-  */
+  
   var errors = scene.getErrors();
   if (errors.length > 0) {
     throw (errors.toString());

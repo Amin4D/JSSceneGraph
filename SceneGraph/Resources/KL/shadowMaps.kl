@@ -117,7 +117,9 @@ operator genAndBindShadowMapFBO(
 
   //First step: Render from the light POV to a FBO, store depth values only
   glBindFramebuffer(GL_FRAMEBUFFER, shadowFBO); //Rendering offscreen
-  glEnable(GL_DEPTH_TEST);
+  
+  
+  glPushAttrib(GL_DEPTH_BUFFER_BIT | GL_VIEWPORT_BIT | GL_TEXTURE_BIT);
 
   // In the case we render the shadowmap to a higher resolution, the viewport must be modified accordingly.
   glViewport(0, 0, mapsize, mapsize);
@@ -126,6 +128,8 @@ operator genAndBindShadowMapFBO(
   glClearColor(0.0, 0.0, 0.0, 1.0);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+  glEnable(GL_DEPTH_TEST);
+  glEnable(GL_CULL_FACE);
   // Culling switching, rendering only backface, this is done to avoid self-shadowing
   glCullFace(GL_FRONT);
 
@@ -138,9 +142,8 @@ operator unbindFBO(
 
   // unbind FBO
   glBindFramebuffer(GL_FRAMEBUFFER, prevFBO);
-
-  // Clear previous frame values
-  glCullFace(GL_BACK);
+  // restore the OpenGL state
+  glPopAttrib();
 }
 
 operator bindShadowMapBuffer(
@@ -156,9 +159,11 @@ operator debugShadowMapBuffer(
 ) {
   // report( "debugBuffer" );
   // Create a simple shader for drawing
-  var Integer prevPrograms[];
-  prevPrograms.resize(1);
-  glGetIntegerv(GL_CURRENT_PROGRAM, prevPrograms);
+
+  // TODO: Validate that we need to store all these states.
+  glPushAttrib(GL_DEPTH_BUFFER_BIT | GL_VIEWPORT_BIT | GL_TEXTURE_BIT);
+  glDisable(GL_DEPTH_TEST);
+  glDisable(GL_CULL_FACE);
 
   ShaderSource vertexShader;
   vertexShader.type = GL_VERTEX_SHADER;
@@ -248,6 +253,5 @@ operator debugShadowMapBuffer(
   glDeleteProgram(programID);
   glDeleteBuffers(3, bufferID);
   
-  glUseProgram(prevPrograms[0]);
-  
+  glPopAttrib();
 }

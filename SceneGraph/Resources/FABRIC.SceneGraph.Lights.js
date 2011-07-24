@@ -438,7 +438,10 @@ FABRIC.SceneGraph.registerNodeType('SpotLight',
       
         if(options.displayShadowDebug === true){
           // Display the shadow color map on screen.
-          shadowRenderEventHandler.postDescendBindings.preDescendBindings.append(
+          var shadowDebugRenderEventHandler = spotLightNode.constructEventHandlerNode('renderDebugQuad');
+          scene.getScenePostRedrawEventHandler().appendChildEventHandler(shadowDebugRenderEventHandler);
+          shadowDebugRenderEventHandler.addScope('light', dgnode);
+          shadowDebugRenderEventHandler.preDescendBindings.append(
             scene.constructOperator({
                 operatorName:"debugShadowMapBuffer",
                 srcFile:"FABRIC_ROOT/SceneGraph/Resources/KL/shadowMaps.kl",

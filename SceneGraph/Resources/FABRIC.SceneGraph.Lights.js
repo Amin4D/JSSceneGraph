@@ -329,7 +329,7 @@ FABRIC.SceneGraph.registerNodeType('SpotLight',
         this.constructShadowRenderEventHandler();
       
         redrawEventHandler.addMember('shadowMap', 'Size', 0);
-        
+        /*
         if(options.displayShadowDebug === true){
           // Display the shadow color map on screen.
           redrawEventHandler.preDescendBindings.append(
@@ -342,7 +342,7 @@ FABRIC.SceneGraph.registerNodeType('SpotLight',
                 ]
               }));
         }
-
+        */
         redrawEventHandler.preDescendBindings.append(
           scene.constructOperator({
               operatorName: 'loadLightMatrixUniform',
@@ -434,6 +434,20 @@ FABRIC.SceneGraph.registerNodeType('SpotLight',
             'light.prevFBO'
           ]
         }));
+      
+      
+        if(options.displayShadowDebug === true){
+          // Display the shadow color map on screen.
+          shadowRenderEventHandler.postDescendBindings.preDescendBindings.append(
+            scene.constructOperator({
+                operatorName:"debugShadowMapBuffer",
+                srcFile:"FABRIC_ROOT/SceneGraph/Resources/KL/shadowMaps.kl",
+                entryFunctionName:"debugShadowMapBuffer",
+                parameterBinding:[
+                  'light.colorTextureID'
+                ]
+              }));
+        }
 
       scene.registerShadowCastingLightSourceHandler(shadowRenderEventHandler);
     }

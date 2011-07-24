@@ -731,6 +731,7 @@ FABRIC.SceneGraph.registerNodeType('PostProcessEffect',
     redrawEventHandler.addMember('offscreenPrevFBO', 'Integer', 0);
     redrawEventHandler.addMember('offscreenColorID', 'Integer', 0);
     redrawEventHandler.addMember('offscreenDepthID', 'Integer', 0);
+    redrawEventHandler.addMember('prevProgramID', 'Integer', 0);
 
     redrawEventHandler.preDescendBindings.append(
       scene.constructOperator({
@@ -748,7 +749,8 @@ FABRIC.SceneGraph.registerNodeType('PostProcessEffect',
             'self.offscreenFBO',
             'self.offscreenPrevFBO',
             'self.offscreenColorID',
-            'self.offscreenDepthID'
+            'self.offscreenDepthID',
+            'self.prevProgramID'
           ]
         }));
 
@@ -767,7 +769,8 @@ FABRIC.SceneGraph.registerNodeType('PostProcessEffect',
             'window.height',
             'self.offscreenPrevFBO',
             'self.offscreenColorID',
-            'self.program'
+            'self.program',
+            'self.prevProgramID'
           ]
         }));
     return postProcessEffect;

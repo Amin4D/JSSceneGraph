@@ -55,7 +55,7 @@ $(document).ready(function() { var scene = FABRIC.SceneGraph.createScene();
   scene.constructNode('CameraManipulator', { targetNode: camera });
 
   viewport.setCameraNode(camera);
-  viewport.addPostProcessEffectShader(scene.constructNode('EdgeDetectionPostProcessEffect'));
+  viewport.addPostProcessEffectShader(scene.constructNode('FilmicTonemapperPostProcessEffect'));
   
   var light = scene.constructNode('PointLight', { position: FABRIC.RT.vec3(420.0, 1000.0, 600.0) });
 

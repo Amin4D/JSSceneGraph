@@ -997,7 +997,6 @@ FABRIC.SceneGraph.defineEffectFromFile = function(effectName, effectfile) {
       if(!effectParameters){
         parseEffectFile();
       }
-      scene.pushTimer('constructMaterialAndShaderNode');
       scene.assignDefaults(options, {
           prototypeMaterialType: 'Material'
         });
@@ -1068,8 +1067,6 @@ FABRIC.SceneGraph.defineEffectFromFile = function(effectName, effectfile) {
           materialNode.pub['set' + capitalizeFirstLetter(textureName) + 'Node'](options[textureName + 'Node']);
         }
       }
-
-      scene.popTimer('constructMaterialAndShaderNode');
       return materialNode;
     });
 };

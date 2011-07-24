@@ -16,10 +16,24 @@ function initOpenCL
 
     var cl_platform_id clPlatformIDs[];
     clErr = clGetPlatformIDs(clPlatformIDs);
-
+    
+    Boolean deviceFound = false;
+    var cl_device_id clDeviceID;
     var cl_device_id clDeviceIDs[];
-    clErr = clGetDeviceIDs(clPlatformIDs[0], CL_DEVICE_TYPE_GPU, clDeviceIDs);
-    var cl_device_id clDeviceID = clDeviceIDs[0];
+    for(Integer i=0; i<clPlatformIDs.size(); i++){
+      clErr = clGetDeviceIDs(clPlatformIDs[0], CL_DEVICE_TYPE_GPU, clDeviceIDs);
+      if(clDeviceIDs.size() == 0){
+        report("No OpenCL capable devices detected for platform:" + i);
+        
+      }else{
+        deviceFound = true;
+        clDeviceID = clDeviceIDs[0];
+      }
+    }
+    if(!deviceFound){
+      report("No OpenCL capable devices Found: Aborting...");
+      return;
+    }
 
     clContext = clCreateContext(clDeviceIDs, clErr);
 

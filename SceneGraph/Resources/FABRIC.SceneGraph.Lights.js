@@ -391,8 +391,8 @@ FABRIC.SceneGraph.registerNodeType('SpotLight',
       dgnode.addMember('shadowMat44', 'Mat44');
 
       dgnode.addMember('shadowmapsize', 'Integer', options.resolution);
-      dgnode.addMember('shadowFBO', 'Size', 0);
-      dgnode.addMember('prevFBO', 'Size', 0);
+      dgnode.addMember('shadowFBO', 'Integer', 0);
+      dgnode.addMember('prevFBO', 'Integer', 0);
       dgnode.addMember('depthTextureID', 'Size', 0);
       dgnode.addMember('colorTextureID', 'Size', 0);
 

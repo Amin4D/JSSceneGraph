@@ -18,7 +18,7 @@ operator prepareOffscreenRendering(
   io Integer depthTextureID,
   io Integer prevProgramID
 ) {
-//  report(">>>prepareOffscreenRendering");
+  report(">>>prepareOffscreenRendering");
   var Integer integers[];
   integers.resize(1);
   glGetIntegerv(GL_FRAMEBUFFER_BINDING, integers);
@@ -95,7 +95,7 @@ operator prepareOffscreenRendering(
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     //NULL means reserve texture memory, but texels are undefined
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+    glTexImage2D(GL_TEXTURE_2D, 0, OGL_INTERNALFORMAT, width, height, 0, OGL_FORMAT, OGL_TYPE, NULL);
 
     /////////////////////////////////////////////////////
     // create a framebuffer object
@@ -126,7 +126,7 @@ operator prepareOffscreenRendering(
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
   }
-///  report("<<<prepareOffscreenRendering");
+  report("<<<prepareOffscreenRendering");
 }
 
 operator renderOffscreenToView(
@@ -137,7 +137,7 @@ operator renderOffscreenToView(
   io Integer program,
   io Integer prevProgramID
 ) {
-//  report(">>>renderOffscreenToView program:" + program);
+  report(">>>renderOffscreenToView program:" + program);
 
   
   glPopAttrib();
@@ -152,7 +152,7 @@ operator renderOffscreenToView(
   glDisable(GL_DEPTH_TEST);
   glDisable(GL_CULL_FACE);
 
-  glClearColor(0.0, 1.0, 0.0, 1.0);
+  glClearColor(0.0, 0.0, 0.0, 1.0);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
   glUseProgram(program);

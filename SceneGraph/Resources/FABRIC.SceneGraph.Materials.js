@@ -697,7 +697,7 @@ FABRIC.SceneGraph.registerNodeType('PostProcessEffect',
         parentEventHandler: false,
         separateShaderNode: false,
         assignUniformsOnPostDescend:true,
-        OGL_INTERNALFORMAT: 'GL_RGBA16F_ARB',
+        OGL_INTERNALFORMAT: 'GL_RGBA16F_ARB',/* GL_RGBA8 */
         OGL_FORMAT: 'GL_RGBA',
         OGL_TYPE: 'GL_UNSIGNED_BYTE'
       });

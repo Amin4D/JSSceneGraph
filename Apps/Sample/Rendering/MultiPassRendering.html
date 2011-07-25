@@ -95,21 +95,38 @@ operator setThickGlassMaterialAttribs(){\n\
     var thickGlassMaterial = scene.constructNode('Material', {
       name:'ThickGlassMaterialShader',
       parentEventHandler: thickGlassMaterialPP.getRedrawEventHandler(),
-      vertexShader: '\
-attribute vec4 a_position;\
-uniform mat4 u_modelViewProjectionMatrix;\
-void main(){\
-    gl_Position = u_modelViewProjectionMatrix * a_position;\
-}',
-      fragmentShader: '\
-uniform float u_depthScale;\
-\
-void main(){\
-    float depth = u_depthScale * gl_FragCoord.z;\
-    gl_FragColor = vec4(depth, 0, 0, 0);\
-}',
+      vertexShader: '\n\
+attribute vec4 a_position;\n\
+attribute vec3 a_normal;\n\
+varying vec4 position;\n\
+varying vec3 normal;\n\
+uniform mat4 u_modelViewProjectionMatrix;\n\
+uniform mat4 u_modelViewMatrix;\n\
+uniform mat3 u_normalMatrix;\n\
+void main(){\n\
+    position = u_modelViewMatrix * a_position;\n\
+    normal = u_normalMatrix * a_normal;\n\
+    gl_Position = u_modelViewProjectionMatrix * a_position;\n\
+}\n',
+      fragmentShader: '\n\
+uniform float u_depthScale;\n\
+varying vec4 position;\n\
+varying vec3 normal;\n\
+\n\
+void main(){\n\
+    vec3 N = normalize(normal);\n\
+    vec3 P = vec3(position.x,position.y,position.z);\n\
+    vec3 I = normalize(P);\n\
+    float cosTheta = abs(dot(I, N));\n\
+    float fresnel = pow(1.0 - cosTheta, 4.0);\n\
+\n\
+    float depth = u_depthScale * gl_FragCoord.z;\n\
+    gl_FragColor = vec4(depth, fresnel, 0, 0);\n\
+}\n',
       shaderUniforms: {
         modelViewProjectionMatrix: { name: 'u_modelViewProjectionMatrix', owner:'instance' },
+        normalMatrix: { name: 'u_normalMatrix', owner:'instance' },
+        modelViewMatrix: { name: 'u_modelViewMatrix', owner:'instance' },
         depthScale: { name: 'u_depthScale', defaultValue: 1.0, owner:'childNode' }
       },
       shaderAttributes: {
@@ -207,6 +224,16 @@ $(document).ready(function() {
       color: FABRIC.RT.rgb(0.8, 0, 0, 1)
     });
   
+  scene.constructNode('Instance', {
+      transformNode: scene.constructNode('Transform', {
+        hierarchical: false,
+        globalXfo: FABRIC.RT.xfo({ tr: FABRIC.RT.vec3(0, 3.8, -16) })
+      }),
+      geometryNode: scene.constructNode('Teapot', { size: 4 }),
+      materialNode: thickGlassMaterial,
+      enableShadowCasting: true
+    });
+
   scene.constructNode('Instance', {
       transformNode: scene.constructNode('Transform', {
           hierarchical: false,

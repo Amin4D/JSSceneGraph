@@ -16,9 +16,10 @@ operator prepareOffscreenRendering(
   io Integer prevFBO,
   io Integer colorTextureID,
   io Integer depthTextureID,
-  io Integer prevProgramID
+  io Integer prevProgramID,
+  io Color backgroundColor
 ) {
-  report(">>>prepareOffscreenRendering");
+//  report(">>>prepareOffscreenRendering");
   var Integer integers[];
   integers.resize(1);
   glGetIntegerv(GL_FRAMEBUFFER_BINDING, integers);
@@ -67,12 +68,24 @@ operator prepareOffscreenRendering(
     glEnable(GL_TEXTURE_2D);
     
     Size textureIDs[];
-    textureIDs.resize(2);
-    glGenTextures(2, textureIDs);
+    textureIDs.resize(1);
+    glGenTextures(1, textureIDs);
     
     /////////////////////////////////////////////////////
+    // Color Texture
+    colorTextureID = textureIDs[0];
+    
+    glBindTexture(GL_TEXTURE_2D, colorTextureID);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexImage2D(GL_TEXTURE_2D, 0, OGL_INTERNALFORMAT, width, height, 0, OGL_FORMAT, OGL_TYPE, NULL);
+
+    /*
+    /////////////////////////////////////////////////////
     // Depth Texture
-    depthTextureID = textureIDs[0];
+    depthTextureID = textureIDs[1];
     glBindTexture(GL_TEXTURE_2D, depthTextureID);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -84,19 +97,7 @@ operator prepareOffscreenRendering(
     glTexParameteri(GL_TEXTURE_2D, GL_DEPTH_TEXTURE_MODE, GL_INTENSITY);
 
     glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, width, height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
-
-    /////////////////////////////////////////////////////
-    // Color Texture
-    colorTextureID = textureIDs[1];
-    
-    glBindTexture(GL_TEXTURE_2D, colorTextureID);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    //NULL means reserve texture memory, but texels are undefined
-    glTexImage2D(GL_TEXTURE_2D, 0, OGL_INTERNALFORMAT, width, height, 0, OGL_FORMAT, OGL_TYPE, NULL);
-
+*/
     /////////////////////////////////////////////////////
     // create a framebuffer object
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -108,7 +109,7 @@ operator prepareOffscreenRendering(
 
     // attach the texture to FBO depth attachment point
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, colorTextureID, 0);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthTextureID, 0);
+ //   glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthTextureID, 0);
 
     // check FBO status
     var Integer status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
@@ -119,14 +120,14 @@ operator prepareOffscreenRendering(
   // Switch to off-screen rendering using our FBO
   if (fboID > 0) {
     glBindFramebuffer(GL_FRAMEBUFFER, fboID);
-    glPushAttrib(GL_DEPTH_BUFFER_BIT | GL_VIEWPORT_BIT | GL_TEXTURE_BIT);
-    glClearColor(0, 0, 0, 0);
+    glPushAttrib(GL_DEPTH_BUFFER_BIT | GL_VIEWPORT_BIT | GL_ENABLE_BIT | GL_TEXTURE_BIT);
+    glClearColor(backgroundColor.r, backgroundColor.g, backgroundColor.b, 1.0);
     glClear(GL_COLOR_BUFFER_BIT);
-    glClear(GL_DEPTH_BUFFER_BIT);
+ //   glClear(GL_DEPTH_BUFFER_BIT);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
   }
-  report("<<<prepareOffscreenRendering");
+//  report("<<<prepareOffscreenRendering");
 }
 
 operator renderOffscreenToView(
@@ -135,10 +136,10 @@ operator renderOffscreenToView(
   io Integer prevFBO,
   io Integer colorTextureID,
   io Integer program,
-  io Integer prevProgramID
+  io Integer prevProgramID,
+  io Color backgroundColor
 ) {
-  report(">>>renderOffscreenToView program:" + program);
-
+//  report(">>>renderOffscreenToView program:" + program);
   
   glPopAttrib();
   glBindFramebuffer(GL_FRAMEBUFFER, prevFBO);
@@ -151,10 +152,7 @@ operator renderOffscreenToView(
   glViewport(0, 0, width, height);
   glDisable(GL_DEPTH_TEST);
   glDisable(GL_CULL_FACE);
-
-  glClearColor(0.0, 0.0, 0.0, 1.0);
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
+  
   glUseProgram(program);
 
   var String name = 'a_position';
@@ -184,7 +182,6 @@ operator renderOffscreenToView(
   var Integer idx[6];
   idx[0] = 0; idx[1] = 2; idx[2] = 1;
   idx[3] = 0; idx[4] = 3; idx[5] = 2;
-
 
   var Data NULL;
 

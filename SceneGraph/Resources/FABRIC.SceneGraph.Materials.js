@@ -750,7 +750,8 @@ FABRIC.SceneGraph.registerNodeType('PostProcessEffect',
             'self.offscreenPrevFBO',
             'self.offscreenColorID',
             'self.offscreenDepthID',
-            'self.prevProgramID'
+            'self.prevProgramID',
+            'viewPort.backgroundColor'
           ]
         }));
 
@@ -770,7 +771,8 @@ FABRIC.SceneGraph.registerNodeType('PostProcessEffect',
             'self.offscreenPrevFBO',
             'self.offscreenColorID',
             'self.program',
-            'self.prevProgramID'
+            'self.prevProgramID',
+            'viewPort.backgroundColor'
           ]
         }));
     return postProcessEffect;

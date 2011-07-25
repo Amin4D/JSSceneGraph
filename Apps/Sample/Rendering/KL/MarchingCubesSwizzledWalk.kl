@@ -1,0 +1,42 @@
+
+//
+// Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
+//
+
+
+
+function swizzledWalk(
+  io Integer n, 
+  io Vec3 gridData[],
+  Vec3 pos,
+  Vec3 size,
+  Vec3 cubeSize){
+	if(size.x>1){
+		Vec3 newSize(floor(size.x*0.5), floor(size.y*0.5), floor(size.z*0.5));
+
+		swizzledWalk(n, gridData, pos, newSize, cubeSize);
+		swizzledWalk(n, gridData, pos+Vec3(newSize.x, 0, 0), newSize, cubeSize);
+		swizzledWalk(n, gridData, pos+Vec3(0, newSize.y,0), newSize, cubeSize);
+		swizzledWalk(n, gridData, pos+Vec3(newSize.x, newSize.y, 0), newSize, cubeSize);
+
+		swizzledWalk(n, gridData, pos+Vec3(0, 0, newSize.z), newSize, cubeSize);
+		swizzledWalk(n, gridData, pos+Vec3(newSize.x, 0, newSize.z), newSize, cubeSize);
+		swizzledWalk(n, gridData, pos+Vec3(0, newSize.y, newSize.z), newSize, cubeSize);
+		swizzledWalk(n, gridData, pos+Vec3(newSize.x, newSize.y, newSize.z), newSize, cubeSize);
+	}else{
+		gridData.x=(pos.x/cubeSize.x)*2.0-1.0;
+		gridData.y=(pos.y/cubeSize.y)*2.0-1.0;
+		gridData.z=(pos.z/cubeSize.z)*2.0-1.0;
+		n+=3;
+	}
+}
+
+operator swizzledWalkOp(
+  io Vec3 cubeSize,
+  io Vec3 gridData[],
+  io Vec3 dataSize
+){
+  Integer n = 0;
+  Vec3 pos(0,0,0);
+  swizzledWalk( n, gridData, pos, size, cubeSize)
+}

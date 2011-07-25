@@ -1,0 +1,43 @@
+
+//
+// Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
+//
+
+
+
+operator setGridVertexCount(
+  io Integer numXsections,
+  io Integer numYsections,
+  io Integer numZsections,
+  io Size newCount
+) {
+  if (numXsections < 1) numXsections = 1;
+  if (numYsections < 1) numYsections = 1;
+  if (numZsections < 1) numZsections = 1;
+
+  newCount = numXsections * numYsections * numZsections;
+//report("setGridVertexCount X:" + numXsections + " Y:" + numYsections + " Z:" + numZsections);
+}
+
+operator generateGrid(
+  io Vec3 positions[],
+  io Scalar sizeX,
+  io Scalar sizeY,
+  io Scalar sizeZ,
+  io Integer numXsections,
+  io Integer numYsections,
+  io Integer numZsections
+) {
+  Vec3 cubeStep(2.0/Scalar(numXsections), 2.0/Scalar(numYsections), 2.0/Scalar(numZsections));
+//  report("cubeStep:"+cubeStep);
+  
+  Integer ii=0;
+  for(Scalar k=-1; k<1.0; k+=cubeStep.z){
+    for(Scalar j=-1; j<1.0; j+=cubeStep.y){
+      for(Scalar i=-1; i<1.0; i+=cubeStep.x){
+        positions[ii] = Vec3(i * sizeX, j * sizeY, k * sizeZ);
+        ii++;
+      }
+    }
+  }
+}

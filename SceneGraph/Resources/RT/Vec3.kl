@@ -96,6 +96,10 @@ function Scalar Vec3.norm() {
   return sqrt(self.normSq());
 }
 
+function Scalar Vec3.length() {
+  return sqrt(self.normSq());
+}
+
 function Vec3 Vec3.unit() {
   var Scalar n = self.norm();
   if (n > 0.0) {

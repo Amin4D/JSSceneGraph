@@ -470,7 +470,7 @@ $(document).ready(function() { var scene = FABRIC.SceneGraph.createScene();
   var marchingCubesMaterial = scene.constructNode('MarchingCubesShader', {
     color: FABRIC.RT.rgb(0.7, 0.7, 0.7)
   });
-
+/*
   // Grid
   scene.constructNode('Instance', {
       transformNode: scene.constructNode('Transform', {
@@ -479,7 +479,7 @@ $(document).ready(function() { var scene = FABRIC.SceneGraph.createScene();
       geometryNode: scene.constructNode('PointGrid'),
       materialNode: marchingCubesMaterial
     });
-
+*/
   var errors = scene.getErrors();
   if (errors.length > 0) {
     throw (errors.toString());

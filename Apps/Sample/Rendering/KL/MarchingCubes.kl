@@ -32,173 +32,168 @@ operator marchingCubesInit(
   }
   report("marchingCubesInit");
   
-  var Integer seed = Integer(5);
+  var Integer seed = 5;
   rand(seed);
 
-	////Textures generation////
+  ////Textures generation////
 
-	//Edge Table texture//
-	//This texture store the 256 different configurations of a marching cube.
-	//This is a table accessed with a bitfield of the 8 cube edges states 
-	//(edge cut by isosurface or totally in or out).
-	//(cf. MarchingCubes.cpp)
-    Size edgeTableTexArray[];
-    edgeTableTexArray.resize(1);
-	glGenTextures(1, edgeTableTexArray);
-    edgeTableTex = edgeTableTexArray[0];
-	glActiveTexture(GL_TEXTURE1);
-	glEnable(GL_TEXTURE_2D);
+  //Edge Table texture//
+  //This texture store the 256 different configurations of a marching cube.
+  //This is a table accessed with a bitfield of the 8 cube edges states 
+  //(edge cut by isosurface or totally in or out).
+  //(cf. MarchingCubes.cpp)
+  Size edgeTableTexArray[];
+  edgeTableTexArray.resize(1);
+  glGenTextures(1, edgeTableTexArray);
+  edgeTableTex = edgeTableTexArray[0];
+  glActiveTexture(GL_TEXTURE1);
+  glEnable(GL_TEXTURE_2D);
 
-	glBindTexture(GL_TEXTURE_2D, edgeTableTex);
-	//Integer textures must use nearest filtering mode
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+  glBindTexture(GL_TEXTURE_2D, edgeTableTex);
+  //Integer textures must use nearest filtering mode
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 
-	//We create an integer texture with new GL_EXT_texture_integer formats
-	glTexImage2D( GL_TEXTURE_2D, 0, GL_ALPHA16I_EXT, 256, 1, 0, GL_ALPHA_INTEGER_EXT, GL_INT, edgeTable.data());
+  //We create an integer texture with new GL_EXT_texture_integer formats
+  glTexImage2D( GL_TEXTURE_2D, 0, GL_ALPHA16I_EXT, 256, 1, 0, GL_ALPHA_INTEGER_EXT, GL_INT, edgeTable.data());
 
 
-	//Triangle Table texture//
-	//This texture store the vertex index list for 
-	//generating the triangles of each configurations.
-	//(cf. MarchingCubes.cpp)
+  //Triangle Table texture//
+  //This texture store the vertex index list for 
+  //generating the triangles of each configurations.
+  //(cf. MarchingCubes.cpp)
   Size triTableTexArray[];
   triTableTexArray.resize(1);
   glGenTextures(1, triTableTexArray);
   triTableTex = triTableTexArray[0];
-	glActiveTexture(GL_TEXTURE2);
-	glEnable(GL_TEXTURE_2D);
+  glActiveTexture(GL_TEXTURE2);
+  glEnable(GL_TEXTURE_2D);
 
-	glBindTexture(GL_TEXTURE_2D, triTableTex);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+  glBindTexture(GL_TEXTURE_2D, triTableTex);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 
-	glTexImage2D( GL_TEXTURE_2D, 0, GL_ALPHA16I_EXT, 16, 256, 0, GL_ALPHA_INTEGER_EXT, GL_INT, triTable.data());
-
-
+  glTexImage2D( GL_TEXTURE_2D, 0, GL_ALPHA16I_EXT, 16, 256, 0, GL_ALPHA_INTEGER_EXT, GL_INT, triTable.data());
 
 
-	//Datafield//
-	//Store the volume data to polygonise
-    Size dataFieldTexArray[];
-    dataFieldTexArray.resize(1);
-	glGenTextures(3, dataFieldTexArray);
-    dataFieldTex[0] = dataFieldTexArray[0];
+
+
+  //Datafield//
+  //Store the volume data to polygonise
+  Size dataFieldTexArray[];
+  dataFieldTexArray.resize(1);
+  glGenTextures(3, dataFieldTexArray);
+  dataFieldTex[0] = dataFieldTexArray[0];
   //  dataFieldTex[1] = dataFieldTexArray[1];
   //  dataFieldTex[2] = dataFieldTexArray[2];
 
-	glActiveTexture(GL_TEXTURE0);
-	glEnable(GL_TEXTURE_3D);
-	glBindTexture(GL_TEXTURE_3D, dataFieldTex[0]);
-	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+  glActiveTexture(GL_TEXTURE0);
+  glEnable(GL_TEXTURE_3D);
+  glBindTexture(GL_TEXTURE_3D, dataFieldTex[0]);
+  glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 
-	//Generate a distance field to the center of the cube
-	dataField[0].resize(Integer(dataSize.x*dataSize.y*dataSize.z));
-	for(Integer k=0; k<Integer(dataSize.z); k++)
-	for(Integer j=0; j<Integer(dataSize.y); j++)
-	for(Integer i=0; i<Integer(dataSize.x); i++){
-      Scalar dist = Vec3(Scalar(i), Scalar(j), Scalar(k)).dist(Vec3(floor(dataSize.x*0.5),floor(dataSize.y*0.5),floor(dataSize.z*0.5)));
-		Scalar d = dist/Scalar(dataSize.length()*0.4);
-		dataField[0][i+j*dataSize.x+k*dataSize.x*dataSize.y]=d;//+(rand(seed)%100-50)/200.0*d;
-	}
+  //Generate a distance field to the center of the cube
+  dataField[0].resize(Integer(dataSize.x*dataSize.y*dataSize.z));
+  for(Integer k=0; k<Integer(dataSize.z); k++)
+  for(Integer j=0; j<Integer(dataSize.y); j++)
+  for(Integer i=0; i<Integer(dataSize.x); i++){
+    Scalar dist = Vec3(Scalar(i), Scalar(j), Scalar(k)).dist(Vec3(floor(dataSize.x*0.5),floor(dataSize.y*0.5),floor(dataSize.z*0.5)));
+    Scalar d = dist/Scalar(dataSize.length()*0.4);
+    dataField[0][i+j*dataSize.x+k*dataSize.x*dataSize.y]=d;//+(rand(seed)%100-50)/200.0*d;
+  }
 
-	glTexImage3D( GL_TEXTURE_3D, 0, GL_ALPHA32F_ARB, dataSize.x, dataSize.y, dataSize.z, 0, GL_ALPHA, GL_FLOAT, dataField[0].data());
-
+  glTexImage3D( GL_TEXTURE_3D, 0, GL_ALPHA32F_ARB, dataSize.x, dataSize.y, dataSize.z, 0, GL_ALPHA, GL_FLOAT, dataField[0].data());
 
 /*
-	//Datafield Perturbated//
-	dataField[1].resize(dataSize.x*dataSize.y*dataSize.z);
-	//perturb
-    Integer ii=0;
-	for(Integer k=0; k<dataSize.z; k++)
-	for(Integer j=0; j<dataSize.y; j++)
-	for(Integer i=0; i<dataSize.x; i++){
-		Scalar d=dataField[0][i+j*dataSize.x+k*dataSize.x*dataSize.y];
-		dataField[1][i+j*dataSize.x+k*dataSize.x*dataSize.y]=d+(rand(ii)%100-50)/100.0*d;
-        ii++;
-	}
-    
-	//Smooth
-	for(Integer l=0; l<4; l++)
-	for(Integer k=1; k<dataSize.z-1; k++)
-	for(Integer j=1; j<dataSize.y-1; j++)
-	for(Integer i=1; i<dataSize.x-1; i++){
-		dataField[1][i+j*dataSize.x+k*dataSize.x*dataSize.y]=(dataField[1][i+1+j*dataSize.x+k*dataSize.x*dataSize.y]+dataField[1][i-1+j*dataSize.x+k*dataSize.x*dataSize.y]+dataField[1][i+(j+1)*dataSize.x+k*dataSize.x*dataSize.y]+dataField[1][i+(j-1)*dataSize.x+k*dataSize.x*dataSize.y]+dataField[1][i+j*dataSize.x+(k+1)*dataSize.x*dataSize.y]+dataField[1][i+j*dataSize.x+(k-1)*dataSize.x*dataSize.y])/6.0;
-	}
+  //Datafield Perturbated//
+  dataField[1].resize(Integer(dataSize.x*dataSize.y*dataSize.z));
+  //perturb
+  for(Integer k=0; k<dataSize.z; k++)
+  for(Integer j=0; j<dataSize.y; j++)
+  for(Integer i=0; i<dataSize.x; i++){
+    Scalar d=dataField[0][i+j*dataSize.x+k*dataSize.x*dataSize.y];
+    dataField[1][i+j*dataSize.x+k*dataSize.x*dataSize.y]=d+(rand(seed)%100-50)/100.0*d;
+  }
+  //Smooth
+  for(Integer l=0; l<4; l++)
+  for(Integer k=1; k<dataSize.z-1; k++)
+  for(Integer j=1; j<dataSize.y-1; j++)
+  for(Integer i=1; i<dataSize.x-1; i++){
+    dataField[1][i+j*dataSize.x+k*dataSize.x*dataSize.y]=(dataField[1][i+1+j*dataSize.x+k*dataSize.x*dataSize.y]+dataField[1][i-1+j*dataSize.x+k*dataSize.x*dataSize.y]+dataField[1][i+(j+1)*dataSize.x+k*dataSize.x*dataSize.y]+dataField[1][i+(j-1)*dataSize.x+k*dataSize.x*dataSize.y]+dataField[1][i+j*dataSize.x+(k+1)*dataSize.x*dataSize.y]+dataField[1][i+j*dataSize.x+(k-1)*dataSize.x*dataSize.y])/6.0;
+  }
 
-	//Store the volume data to polygonise
-	glBindTexture(GL_TEXTURE_3D, dataFieldTex[1]);
-	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+  //Store the volume data to polygonise
+  glBindTexture(GL_TEXTURE_3D, dataFieldTex[1]);
+  glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 
-	glTexImage3D( GL_TEXTURE_3D, 0, GL_ALPHA32F_ARB, dataSize.x, dataSize.y, dataSize.z, 0, GL_ALPHA, GL_FLOAT, dataField[1].data());
+  glTexImage3D( GL_TEXTURE_3D, 0, GL_ALPHA32F_ARB, dataSize.x, dataSize.y, dataSize.z, 0, GL_ALPHA, GL_FLOAT, dataField[1].data());
 
 
-	//Cayley-polynomial//
-	dataField[2].resize(dataSize.x*dataSize.y*dataSize.z);
+  //Cayley-polynomial//
+  dataField[2].resize(Integer(dataSize.x*dataSize.y*dataSize.z));
 
-	for(Integer k=0; k<dataSize.z; k++)
-	for(Integer j=0; j<dataSize.y; j++)
-	for(Integer i=0; i<dataSize.x; i++){
-		Scalar x=2.0/dataSize.x*i-1.0;
-		Scalar y=2.0/dataSize.y*j-1.0;
-		Scalar z=2.0/dataSize.z*k-1.0;
-		dataField[2][i+j*dataSize.x+k*dataSize.x*dataSize.y]= 16.0*x*y*z + 4.0*x*x + 4.0*y*y + 4.0*z*z - 1.0;
-	}
+  for(Integer k=0; k<dataSize.z; k++)
+  for(Integer j=0; j<dataSize.y; j++)
+  for(Integer i=0; i<dataSize.x; i++){
+    Scalar x=2.0/dataSize.x*i-1.0;
+    Scalar y=2.0/dataSize.y*j-1.0;
+    Scalar z=2.0/dataSize.z*k-1.0;
+    dataField[2][i+j*dataSize.x+k*dataSize.x*dataSize.y]= 16.0*x*y*z + 4.0*x*x + 4.0*y*y + 4.0*z*z - 1.0;
+  }
 
-	glBindTexture(GL_TEXTURE_3D, dataFieldTex[2]);
-	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+  glBindTexture(GL_TEXTURE_3D, dataFieldTex[2]);
+  glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 
-	glTexImage3D( GL_TEXTURE_3D, 0, GL_ALPHA32F_ARB, dataSize.x, dataSize.y, dataSize.z, 0, GL_ALPHA, GL_FLOAT, dataField[2]);
-
+  glTexImage3D( GL_TEXTURE_3D, 0, GL_ALPHA32F_ARB, dataSize.x, dataSize.y, dataSize.z, 0, GL_ALPHA, GL_FLOAT, dataField[2].data());
 */
 
-	//Set current texture//
-	glActiveTexture(GL_TEXTURE0);
-	glEnable(GL_TEXTURE_3D);
-	glBindTexture(GL_TEXTURE_3D, dataFieldTex[curData]);
+  //Set current texture//
+  glActiveTexture(GL_TEXTURE0);
+  glEnable(GL_TEXTURE_3D);
+  glBindTexture(GL_TEXTURE_3D, dataFieldTex[curData]);
     
     report("programObject:" + programObject);
     
     String uniformName;
-	////Samplers assignment///;
-	uniformName = "dataFieldTex";   glUniform1i(glGetUniformLocation(programObject, uniformName), 0);
-	uniformName = "edgeTableTex";   glUniform1i(glGetUniformLocation(programObject, uniformName), 1); 
+  ////Samplers assignment///;
+  uniformName = "dataFieldTex";   glUniform1i(glGetUniformLocation(programObject, uniformName), 0);
+  uniformName = "edgeTableTex";   glUniform1i(glGetUniformLocation(programObject, uniformName), 1); 
     uniformName = "triTableTex";   glUniform1i(glGetUniformLocation(programObject, uniformName), 2);
     
 
-	////Uniforms parameters////
-	//Initial isolevel
-	uniformName = "isolevel";   glUniform1f(glGetUniformLocation(programObject, uniformName), isolevel); 
-	//Step in data 3D texture for gradient computation (lighting)
-	uniformName = "dataStep";   glUniform3f(glGetUniformLocation(programObject, uniformName), 1.0/dataSize.x, 1.0/dataSize.y, 1.0/dataSize.z); 
+  ////Uniforms parameters////
+  //Initial isolevel
+  uniformName = "isolevel";   glUniform1f(glGetUniformLocation(programObject, uniformName), isolevel); 
+  //Step in data 3D texture for gradient computation (lighting)
+  uniformName = "dataStep";   glUniform3f(glGetUniformLocation(programObject, uniformName), 1.0/dataSize.x, 1.0/dataSize.y, 1.0/dataSize.z); 
 
-	//Decal for each vertex in a marching cube
-	uniformName = "vertDecals[0]";   glUniform3f(glGetUniformLocation(programObject, uniformName), 0.0, 0.0, 0.0); 
-	uniformName = "vertDecals[1]";   glUniform3f(glGetUniformLocation(programObject, uniformName), cubeStep.x, 0.0, 0.0); 
-	uniformName = "vertDecals[2]";   glUniform3f(glGetUniformLocation(programObject, uniformName), cubeStep.x, cubeStep.y, 0.0); 
-	uniformName = "vertDecals[3]";   glUniform3f(glGetUniformLocation(programObject, uniformName), 0.0, cubeStep.y, 0.0); 
-	uniformName = "vertDecals[4]";   glUniform3f(glGetUniformLocation(programObject, uniformName), 0.0, 0.0, cubeStep.z); 
-	uniformName = "vertDecals[5]";   glUniform3f(glGetUniformLocation(programObject, uniformName), cubeStep.x, 0.0, cubeStep.z); 
-	uniformName = "vertDecals[6]";   glUniform3f(glGetUniformLocation(programObject, uniformName), cubeStep.x, cubeStep.y, cubeStep.z); 
-	uniformName = "vertDecals[7]";   glUniform3f(glGetUniformLocation(programObject, uniformName), 0.0, cubeStep.y, cubeStep.z); 
+  //Decal for each vertex in a marching cube
+  uniformName = "vertDecals[0]";   glUniform3f(glGetUniformLocation(programObject, uniformName), 0.0, 0.0, 0.0); 
+  uniformName = "vertDecals[1]";   glUniform3f(glGetUniformLocation(programObject, uniformName), cubeStep.x, 0.0, 0.0); 
+  uniformName = "vertDecals[2]";   glUniform3f(glGetUniformLocation(programObject, uniformName), cubeStep.x, cubeStep.y, 0.0); 
+  uniformName = "vertDecals[3]";   glUniform3f(glGetUniformLocation(programObject, uniformName), 0.0, cubeStep.y, 0.0); 
+  uniformName = "vertDecals[4]";   glUniform3f(glGetUniformLocation(programObject, uniformName), 0.0, 0.0, cubeStep.z); 
+  uniformName = "vertDecals[5]";   glUniform3f(glGetUniformLocation(programObject, uniformName), cubeStep.x, 0.0, cubeStep.z); 
+  uniformName = "vertDecals[6]";   glUniform3f(glGetUniformLocation(programObject, uniformName), cubeStep.x, cubeStep.y, cubeStep.z); 
+  uniformName = "vertDecals[7]";   glUniform3f(glGetUniformLocation(programObject, uniformName), 0.0, cubeStep.y, cubeStep.z); 
 
   initialized = true;
 }

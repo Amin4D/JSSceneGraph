@@ -672,7 +672,14 @@ FABRIC.SceneGraph.registerNodeType('PointMaterial',
       });
 
     var pointMaterial = scene.constructNode('Material', options);
-    var dgnode = pointMaterial.getDGNode();
+    var dgnode;
+    if(pointMaterial.getDGNode){
+      dgnode = pointMaterial.getDGNode();
+    }
+    else{
+      dgnode = pointMaterial.constructDGNode('DGNode');
+      pointMaterial.getRedrawEventHandler().addScope('material', dgnode);
+    }
     dgnode.addMember('pointSize', 'Scalar', options.pointSize);
     pointMaterial.addMemberInterface(dgnode, 'pointSize', true);
 

@@ -50,15 +50,13 @@ FABRIC.SceneGraph.registerNodeType('MarchingCubesShader',
       dataSize: FABRIC.RT.vec3(128, 128, 128),
       isoLevel: 0.5,
       curData: 0,
-      diffuseMember: 'diffuseColor'
+      color: FABRIC.RT.rgb(1,0,0)
       });
     var cubeStep=FABRIC.RT.vec3(options.cubeSize.x*0.5, options.cubeSize.y*0.5, options.cubeSize.z*0.5);
     
-    options.parentEventHandler = scene.getBeginRenderShadowMapEventHandler();
     var mcMaterial = scene.constructNode('MCShader', options);
     var redrawEventHandler = mcMaterial.getRedrawEventHandler();
     
-    redrawEventHandler.addMember('programObject', 'Size', 0);
     redrawEventHandler.addMember('edgeTableTex', 'Size', 0);
     redrawEventHandler.addMember('triTableTex', 'Size', 0);
     redrawEventHandler.addMember('dataFieldTex', 'Size[3]');
@@ -70,6 +68,7 @@ FABRIC.SceneGraph.registerNodeType('MarchingCubesShader',
     redrawEventHandler.addMember('dataField', 'Scalar[3][]');
     redrawEventHandler.addMember('isolevel', 'Scalar', options.isoLevel);
     redrawEventHandler.addMember('curData', 'Integer', options.curData);
+    redrawEventHandler.addMember('initialized', 'Boolean', false);
     
     var edgeTable=[
 	0x0  , 0x109, 0x203, 0x30a, 0x406, 0x50f, 0x605, 0x70c,
@@ -374,7 +373,7 @@ FABRIC.SceneGraph.registerNodeType('MarchingCubesShader',
       srcFile: 'KL/MarchingCubes.kl',
       entryFunctionName: 'marchingCubesInit',
       parameterBinding: [
-        'self.programObject',
+        'shader.program',
         'self.edgeTableTex',
         'self.triTableTex',
         'self.dataFieldTex',
@@ -386,8 +385,9 @@ FABRIC.SceneGraph.registerNodeType('MarchingCubesShader',
         'self.isolevel',
         'self.curData',
         
-        'self.curData',
-        'self.triTable'
+        'self.edgeTable',
+        'self.triTable',
+        'self.initialized'
       ]
     }));
     return mcMaterial;
@@ -450,7 +450,7 @@ $(document).ready(function() { var scene = FABRIC.SceneGraph.createScene();
   var viewport = scene.constructNode('Viewport', {
     enableRaycasting: false,
     windowElement: document.getElementById('FabricContainer'),
-    backgroundColor: FABRIC.RT.rgb(0.0, 0.0, 0.0)
+    backgroundColor: FABRIC.RT.rgb(0.6, 0.6, 0.6)
   });
 
   // Create a camera to draw the scene from
@@ -471,7 +471,6 @@ $(document).ready(function() { var scene = FABRIC.SceneGraph.createScene();
     color: FABRIC.RT.rgb(0.7, 0.7, 0.7)
   });
 
-
   // Grid
   scene.constructNode('Instance', {
       transformNode: scene.constructNode('Transform', {
@@ -480,7 +479,6 @@ $(document).ready(function() { var scene = FABRIC.SceneGraph.createScene();
       geometryNode: scene.constructNode('PointGrid'),
       materialNode: marchingCubesMaterial
     });
-
 
   var errors = scene.getErrors();
   if (errors.length > 0) {

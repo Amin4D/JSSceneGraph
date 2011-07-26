@@ -11,7 +11,7 @@ function Scalar rand(io Integer seed) {
 
 
 operator marchingCubesInit(
-  io Size programObject,
+  io Integer programObject,
   io Size edgeTableTex,
   io Size triTableTex,
   io Size dataFieldTex[3],
@@ -24,8 +24,14 @@ operator marchingCubesInit(
   io Integer curData,
   
   io Integer edgeTable[],
-  io Integer triTable[]
+  io Integer triTable[][],
+  io Boolean initialized
 ) {
+  if(initialized){
+    return;
+  }
+  report("marchingCubesInit");
+  
   var Integer seed = Integer(5);
   rand(seed);
 
@@ -37,6 +43,7 @@ operator marchingCubesInit(
 	//(edge cut by isosurface or totally in or out).
 	//(cf. MarchingCubes.cpp)
     Size edgeTableTexArray[];
+    edgeTableTexArray.resize(1);
 	glGenTextures(1, edgeTableTexArray);
     edgeTableTex = edgeTableTexArray[0];
 	glActiveTexture(GL_TEXTURE1);
@@ -107,6 +114,7 @@ operator marchingCubesInit(
 
 	glTexImage3D( GL_TEXTURE_3D, 0, GL_ALPHA32F_ARB, dataSize.x, dataSize.y, dataSize.z, 0, GL_ALPHA, GL_FLOAT, dataField[0].data());
 
+
 /*
 	//Datafield Perturbated//
 	dataField[1].resize(dataSize.x*dataSize.y*dataSize.z);
@@ -159,20 +167,22 @@ operator marchingCubesInit(
 	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 
 	glTexImage3D( GL_TEXTURE_3D, 0, GL_ALPHA32F_ARB, dataSize.x, dataSize.y, dataSize.z, 0, GL_ALPHA, GL_FLOAT, dataField[2]);
-    
-    
+
 */
 
 	//Set current texture//
 	glActiveTexture(GL_TEXTURE0);
 	glEnable(GL_TEXTURE_3D);
 	glBindTexture(GL_TEXTURE_3D, dataFieldTex[curData]);
-
+    
+    report("programObject:" + programObject);
+    
     String uniformName;
 	////Samplers assignment///;
 	uniformName = "dataFieldTex";   glUniform1i(glGetUniformLocation(programObject, uniformName), 0);
 	uniformName = "edgeTableTex";   glUniform1i(glGetUniformLocation(programObject, uniformName), 1); 
-    uniformName = "triTableTex";   glUniform1i(glGetUniformLocation(programObject, uniformName), 2); 
+    uniformName = "triTableTex";   glUniform1i(glGetUniformLocation(programObject, uniformName), 2);
+    
 
 	////Uniforms parameters////
 	//Initial isolevel
@@ -190,4 +200,5 @@ operator marchingCubesInit(
 	uniformName = "vertDecals[6]";   glUniform3f(glGetUniformLocation(programObject, uniformName), cubeStep.x, cubeStep.y, cubeStep.z); 
 	uniformName = "vertDecals[7]";   glUniform3f(glGetUniformLocation(programObject, uniformName), 0.0, cubeStep.y, cubeStep.z); 
 
+  initialized = true;
 }

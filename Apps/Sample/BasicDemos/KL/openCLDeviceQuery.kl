@@ -1,0 +1,143 @@
+
+//
+// Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
+//
+
+operator openCLDeviceQuery
+(
+  io Boolean bPassed,
+  io String sProfileString
+){
+  var Integer ciErrNum;
+
+  // start logs
+
+  bPassed = true;
+  sProfileString = "oclDeviceQuery, Platform Name = ";
+    
+  var cl_platform_id clPlatformIDs[];
+  clErr = clGetPlatformIDs(clPlatformIDs);
+  
+  Boolean deviceFound = false;
+  var cl_device_id clDeviceID;
+  var cl_device_id clDeviceIDs[];
+  for(Integer i=0; i<clPlatformIDs.size(); i++){
+    String buffer;
+    ciErrNum = clGetPlatformInfo (clPlatformIDs[0], CL_PLATFORM_NAME, buffer, NULL);
+    
+    if(ciErrNum){
+      sProfileString += "Error retriving platform info:" + i;
+      continue;
+    }
+    
+    sProfileString += " CL_PLATFORM_NAME: " + buffer;
+    sProfileString += ", Platform Version = ";
+    
+    ciErrNum = clGetPlatformInfo (clSelectedPlatformID, CL_PLATFORM_VERSION, buffer, NULL);
+    if (ciErrNum == CL_SUCCESS)
+    {
+        sProfileString += " CL_PLATFORM_VERSION: " + buffer;
+        sProfileString += cBuffer;
+    } 
+    else
+    {
+        sProfileString += " Error " +ciErrNum + " in clGetPlatformInfo Call !!!";
+        bPassed = false;
+    }
+    sProfileString += ", SDK Revision = ";
+    
+    // Log OpenCL SDK Revision # 
+    sProfileString += " OpenCL SDK Revision: " + OCL_SDKREVISION;
+    
+    // Get and log OpenCL device info 
+    Integer ciDeviceCount;
+    cl_device_id *devices;
+    sProfileString += "OpenCL Device Info:\n\n";
+
+    var cl_device_id clDeviceID;
+    var cl_device_id clDeviceIDs[];
+    ciErrNum = clGetDeviceIDs(clPlatformIDs[0], CL_DEVICE_TYPE_ALL, clDeviceIDs);
+    if(clDeviceIDs.size() == 0){
+      sProfileString += " No devices found supporting OpenCL (return code "+ciErrNum+")\n\n";
+      continue;
+    }
+    else if (ciErrNum != CL_SUCCESS)
+    {
+      sProfileString += (" Error "+ciErrNum+" in clGetDeviceIDs call !!!\n\n");
+      bPassed = false;
+      continue;
+    }
+    else{
+      // Get and log the OpenCL device ID's
+      sProfileString += (" "+clDeviceIDs.size()+" devices found supporting OpenCL:\n\n");
+    }
+    cl_context clContext;
+    clContext = clCreateContext(clDeviceIDs, ciErrNum);
+    if (ciErrNum != CL_SUCCESS)
+    {
+      sProfileString += ("Error "+ciErrNum+" in clCreateContext call !!!\n\n");
+      bPassed = false;
+    }
+    else 
+    {
+      // show info for each device in the context
+      for(Integer i = 0; i < clDeviceIDs.size(); ++i ) 
+      {
+          sProfileString += (" ---------------------------------\n");
+          clGetDeviceInfo(clDeviceIDs[i], CL_DEVICE_NAME, buffer);
+          sProfileString += (" Device "+buffer+"\n");
+          sProfileString += (" ---------------------------------\n");
+        //  oclPrintDevInfo(LOGBOTH, devices[i]);
+        //  sProfileString += ", Device = ";
+        //  sProfileString += cBuffer;
+      }
+      
+
+      // Determine and show image format support 
+      Integer uiNumSupportedFormats = 0;
+
+      cl_image_format ImageFormats[];
+      // 2D
+      Integer uiNumSupportedFormats;
+      clGetSupportedImageFormats(clContext, CL_MEM_READ_ONLY, 
+                                 CL_MEM_OBJECT_IMAGE2D,   
+                                 NULL, NULL, uiNumSupportedFormats);
+      ImageFormats.resize(uiNumSupportedFormats);
+      clGetSupportedImageFormats(clContext, CL_MEM_READ_ONLY, 
+                                 CL_MEM_OBJECT_IMAGE2D,   
+                                 uiNumSupportedFormats, ImageFormats, NULL);
+      sProfileString += ("  ---------------------------------\n");
+      sProfileString += ("  2D Image Formats Supported ("+uiNumSupportedFormats+")\n"); 
+      sProfileString += ("  ---------------------------------\n");
+      sProfileString += (" #   Channel Order   Channel Type"); 
+      for(Integer i = 0; i < uiNumSupportedFormats; i++) 
+      {  
+        sProfileString += (" " +(i + 1));
+        sProfileString += "  " + oclImageFormatString(ImageFormats[i].image_channel_order);
+        sProfileString += "  " + oclImageFormatString(ImageFormats[i].image_channel_data_type);
+      }
+      sProfileString += ("\n"); 
+
+      // 3D
+      clGetSupportedImageFormats(cxGPUContext, CL_MEM_READ_ONLY, 
+                                 CL_MEM_OBJECT_IMAGE3D,   
+                                 NULL, NULL, uiNumSupportedFormats);
+      ImageFormats.resize(uiNumSupportedFormats);
+      clGetSupportedImageFormats(cxGPUContext, CL_MEM_READ_ONLY, 
+                                 CL_MEM_OBJECT_IMAGE3D,   
+                                 uiNumSupportedFormats, ImageFormats, NULL);
+      sProfileString += ("  ---------------------------------\n");
+      sProfileString += ("  3D Image Formats Supported ("+uiNumSupportedFormats+")\n"); 
+      sProfileString += ("  ---------------------------------\n");
+      sProfileString += (" #   Channel Order   Channel Type"); 
+      for(Integer i = 0; i < uiNumSupportedFormats; i++) 
+      {  
+        sProfileString += (" " +(i + 1));
+        sProfileString += "  " + oclImageFormatString(ImageFormats[i].image_channel_order);
+        sProfileString += "  " + oclImageFormatString(ImageFormats[i].image_channel_data_type);
+      }
+      sProfileString += ("\n");
+    }
+  }
+}
+

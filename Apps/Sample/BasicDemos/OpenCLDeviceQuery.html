@@ -1,0 +1,143 @@
+<html xmlns="http://www.w3.org/1999/xhtml"> 
+  <!--
+    Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
+    -->
+  <head> 
+    <title>FABRIC - OpenCL Device Query</title> 
+    
+    <meta charset="iso-8859-1"/>
+    <link href="../../../themes/default/style.css" rel="stylesheet" type="text/css" />
+    <link href="../../../themes/default/viewer.css" rel="stylesheet" type="text/css" />
+    
+    <script type="text/javascript" src="../../../ThirdParty/jQuery/jquery-1.4.2.min.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/jQuery/jquery-ui-1.8.5.custom.min.js"></script>
+
+    <link type="text/css" href="../../../ThirdParty/jQuery/css/vader/jquery-ui-1.8.5.custom.css" rel="stylesheet" />
+
+      <script type="text/javascript" src="../../../Core/FABRIC.Wrappers.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../Core/FABRIC.js" charset="utf-8"></script>
+    
+    <script type="text/javascript">
+$(document).ready(function() {
+  
+  var context = FABRIC.createContext();
+  var dgnode = context.DependencyGraph.createNode('DeviceQuery');
+  
+  var operator = context.DG.createOperator('DeviceQueryOp');
+  operator.setEntryFunctionName('openCLDeviceQuery');
+  operator.setSourceCode(FABRIC.loadResourceURL('KL/openCLDeviceQuery.kl'));
+  
+  
+    var descDiags = function(fullCode, diags) {
+        var fullCodeLines = fullCode.split('\n');
+        var desc = 'Error compiling operator:\n';
+        for (var i = 0; i < diags.length; ++i) {
+          if (i == 16) {
+            desc += '(' + (diags.length - i) + ' more diagnostic(s) omitted)\n';
+            break;
+          }
+          desc += diags[i].line + ':' + diags[i].column + ': ' + diags[i].level + ': ' + diags[i].desc + '\n';
+          var line = diags[i].line - 1;
+          for (var j = line - 6; j <= line + 6; ++j) {
+            if (j >= 0 && j < fullCodeLines.length) {
+              if (j == line)
+                desc += '>>>\t';
+              else
+                desc += '\t';
+              desc += '' + fullCodeLines[j] + '\n';
+            }
+          }
+        }
+        return desc;
+      };
+  
+  var diagnostics = operator.getDiagnostics();
+  if (diagnostics.length > 0) {
+    console.error(descDiags(operator.getSourceCode(), diagnostics));
+  }
+
+  var binding = context.DG.createBinding();
+  binding.setOperator(operator);
+  binding.setParameterLayout([
+    'self.profileString'
+  ]);
+  
+  dgnode.bindings.append(operator);
+  dgnode.evaluate();
+  var profileString = dgnode.getData('profileString');
+  
+  
+  
+});
+
+</script>
+
+  </head> 
+  <body>
+    <div id="wrapper">
+      <ul id="nav">
+        <li><a href="#" id="fabric-logo"><img src="../../../themes/default/_img/projects/fabric-logo.png" /></a></li>
+      </ul>
+      <div id="editor">
+        <div id="viewer">
+          <div id="FabricContainer"></div> 
+        </div><!--viewer-->
+
+        <div id="sidebar">
+
+          <div class="box">
+            <h2>INFO</h2>
+            <div class="content">
+              nBodySimulation.<br>
+              This sample uses OpenCL, and therefore currently doesn't run on linux.
+              The sample uses OpenCL to simulate geometry on the GPU, providing excellent performance
+              as well as programmable pipeline features for deformation + simulation.
+            </div><!--content-->
+          </div><!--box-->
+
+
+          <div class="box">
+            <h2>Playback</h2>
+            <div class="content">
+              <button id="play">Play</button>
+              <button id="step">Step</button>
+              <button id="reset" style="margin-top:10px;">Reset</button>
+              <div id="frameRate" style="margin-top:10px;">Frame Rate:</div><p></p>
+            </div><!--content-->
+          </div><!--box-->
+          <div class="box">
+            <h2>Initial Settings</h2>
+            <div class="content">
+              <div>System Type:
+              <select onchange="setSystemType(this.options[this.selectedIndex].value);">
+                <option value="0">Spherical</option>
+                <option value="1">Shell</option>
+                <option value="2" selected>Expand</option>
+              </select></div>
+              <div id="nbodiesDisp" style="margin-top:10px;">Number of Bodies:</div><p></p>
+              <div id='nbodies' style="margin-top:10px;"></div>
+              <div style="margin-top:10px;">Cluster Scale:</div>
+              <div id='clsscale' style="margin-top:10px;"></div>
+              <div style="margin-top:10px;">Velocity Scale:</div>
+              <div id='velscale' style="margin-top:10px;"></div>
+            </div><!--content-->
+          </div><!--box-->
+          <div class="box">
+            <h2>Simulation Settings</h2>
+            <div class="content">
+              <div>Time Step:</div>
+              <div id='timestep' style="margin-top:10px;"></div>
+              <div style="margin-top:10px;">Softening:</div>
+              <div id='softening' style="margin-top:10px;"></div>
+              <div style="margin-top:10px;">Damping:</div>
+              <div id='damping' style="margin-top:10px;"></div>
+              <div style="margin-top:10px;">Size of Bodies:</div>
+              <div id='pointSize' style="margin-top:10px;"></div>
+            </div><!--content-->
+          </div><!--box-->
+            
+        </div><!--sidebar-->
+      </div> <!--editor-->
+    </div><!--wrapper-->
+  </body> 
+  </html>

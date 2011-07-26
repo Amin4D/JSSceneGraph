@@ -31,7 +31,7 @@ function Scalar linearTosRGB(Scalar l) {
 function loadImageFromRawData(
   Data rawImageData,
   Size rawImageDataSize,
-  String decoder,
+  String extensionOrMimeType,
   Boolean wantHDR,
   io Size imageWidth,
   io Size imageHeight,
@@ -42,14 +42,14 @@ function loadImageFromRawData(
     return;
   
   var Boolean haveHDR;
-  switch (decoder) {
+  switch (extensionOrMimeType) {
     case'png':
-    case 'image/png':
+    case'image/png':
       FabricPNGDecode(rawImageData, rawImageDataSize, imageWidth, imageHeight, imageLDR);
       haveHDR = false;
       break;
     case'tga':
-    case 'image/tga':
+    case'image/tga':
       FabricTGADecode(rawImageData, rawImageDataSize, imageWidth, imageHeight, imageLDR);
       haveHDR = false;
       break;
@@ -131,7 +131,7 @@ operator loadImageHDR(
 ) {
   var RGBA imageLDR[];
   var Size width, height;
-  loadImageFromRawData(resource.data, resource.dataSize, resource.mimeType, true, width, height, imageHDR, imageLDR);
+  loadImageFromRawData(resource.data, resource.dataSize, resource.extension, true, width, height, imageHDR, imageLDR);
   imageWidth = width;
   imageHeight = height;
 }
@@ -145,7 +145,7 @@ operator loadImageLDR(
   //  report("loadImageLDR:" + decoder);
   var Color imageHDR[];
   var Size width, height;
-  loadImageFromRawData(resource.data, resource.dataSize, resource.mimeType, false, width, height, imageHDR, imageLDR);
+  loadImageFromRawData(resource.data, resource.dataSize, resource.extension ? resource.extension : resource.mimeType, false, width, height, imageHDR, imageLDR);
   imageWidth = width;
   imageHeight = height;
 }

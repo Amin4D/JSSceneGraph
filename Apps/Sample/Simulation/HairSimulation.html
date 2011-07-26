@@ -206,7 +206,7 @@ $(document).ready(function() { var scene = FABRIC.SceneGraph.createScene();
 
   // Create a camera to draw the scene from
   var camera = scene.constructNode('TargetCamera', {
-      position: FABRIC.RT.vec3(4, 7, 10).scale(1.0),
+      position: FABRIC.RT.vec3(32, 20, 0),
       target: FABRIC.RT.vec3(0, 2, 0),
       nearDistance: 0.1,
       farDistance: 200
@@ -227,6 +227,7 @@ $(document).ready(function() { var scene = FABRIC.SceneGraph.createScene();
     lightNode: light
   });
 
+  /* T - character
   var assetNodes = scene.importAssetFile('../BasicDemos/Models/envelope.dae', { bindToGlobalTime: false });
   var skinMaterial = scene.constructNode('PhongSkinningMaterial', {
       lightNode: light,
@@ -244,6 +245,30 @@ $(document).ready(function() { var scene = FABRIC.SceneGraph.createScene();
       stiffness: FABRIC.RT.vec2(0.75,1.5),
       gravity: FABRIC.RT.vec2(0.4,0.6),
       count: 25000
+    });
+  */
+
+  var assetNodes = scene.importAssetFile('../../Private/Monster/Models/monster_low_mocap_02.dae', {
+    scaleFactor: 1.0,
+    bindToGlobalTime: false,
+    nodesToIgnore: {image: true}
+  });
+  var skinMaterial = scene.constructNode('PhongSkinningMaterial', {
+      lightNode: light,
+      diffuseColor: FABRIC.RT.rgba(0.0, 0.25, 1.0, 1.0),
+      numBones: assetNodes.bodyCharacterSkeleton.getNumBones()
+    });
+  assetNodes.bodyInstance.setMaterialNode(skinMaterial);
+  var animationController = assetNodes.bodyAnimationController;
+
+  var hairGeometry = scene.constructNode('Hair', {
+      characterMeshNode: assetNodes.body,
+      characterRigNode: assetNodes.bodyCharacterRig,
+      segments: 5,
+      length: FABRIC.RT.vec2(0.5,1),
+      stiffness: FABRIC.RT.vec2(0.75,1.5),
+      gravity: FABRIC.RT.vec2(0.4,0.6),
+      count: 2//25000
     });
 
   var hairLines = scene.constructNode('Instance', {

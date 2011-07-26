@@ -24,6 +24,7 @@ operator calcSkinningXfos(io Xfo pose[], io Bone bones[], io Xfo xfos[]) {
   xfos.resize(pose.size());
   for (var Integer i = 0; i < pose.size(); i++) {
     //xfos[i] = bones[i].referencePose.invProject(pose[i]);
+    //xfos[i] = pose[i].invProject(bones[i].referencePose);
     //xfos[i] = pose[i];
     xfos[i] = pose[i].project(bones[i].referencePose.inv());
   }

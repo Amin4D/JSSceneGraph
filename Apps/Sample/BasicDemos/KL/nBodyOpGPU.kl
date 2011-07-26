@@ -25,11 +25,11 @@ function initOpenCL
 
     clCommandQueue = clCreateCommandQueue(clContext, clDeviceID, 0, clErr);
     report "clCreateCommandQueue: " + clErr;
-    report "clCommandQueue = " + clCommandQueue + " (" + (Boolean)clCommandQueue + ")";
+    report "clCommandQueue = " + clCommandQueue + " (" + Boolean(clCommandQueue) + ")";
   
     var cl_program clProgram = clCreateProgramWithSource(clContext, kernelSrc, clErr);
     report "clCreateProgramWithSource: " + clErr;
-    report "clProgram = " + clProgram + " (" + (Boolean)clProgram + ")";
+    report "clProgram = " + clProgram + " (" + Boolean(clProgram) + ")";
     
     clErr = clBuildProgram(clProgram, clDeviceIDs, '');
     report "clBuildProgram: " + clErr;

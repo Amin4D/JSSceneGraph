@@ -161,10 +161,8 @@ FABRIC.SceneGraph.registerNodeType('PaintManipulator',
       enabled:true
       });
 
-    options.dgnodenames.push('RayCastDGNode');
-
     var paintManipulatorNode = scene.constructNode('SceneGraphNode', options),
-      collectPointsDgNode = paintManipulatorNode.getRayCastDGNode(),
+      collectPointsDgNode = paintManipulatorNode.constructDGNode('RayCastDGNode'),
       paintEventHandler,
       paintEvent,
       viewportNode,
@@ -193,13 +191,13 @@ FABRIC.SceneGraph.registerNodeType('PaintManipulator',
     collectPointsDgNode.addMember('brushColor', 'Color', options.brushColor);
     paintManipulatorNode.addMemberInterface(collectPointsDgNode, 'brushColor', true);
 
-    paintEventHandler = scene.constructEventHandlerNode('Viewport_raycast');
+    paintEventHandler = spotLightNode.constructEventHandlerNode('Viewport_raycast');
     paintEventHandler.addScope('paintData', collectPointsDgNode);
 
     // Raycast events are fired from the viewport. As the event
     // propagates down the tree it collects scopes and fires operators.
     // The operators us the collected scopes to calculate the ray.
-    paintEvent = scene.constructEventNode(options.name + 'Event');
+    paintEvent = paintManipulatorNode.constructEventNode('Event');
     paintEvent.appendEventHandler(paintEventHandler);
 
     var brushMaterial = scene.constructNode('FlatScreenSpaceMaterial', { color: FABRIC.RT.rgb(0.8, 0, 0) });
@@ -304,7 +302,7 @@ FABRIC.SceneGraph.registerNodeType('PaintManipulator',
         transformNode = scene.getPrivateInterface(instanceNode.pub.getTransformNode()),
         paintOperator;
 
-      paintInstanceEventHandler = scene.constructEventHandlerNode(options.name + '_paint_' + node.name);
+      paintInstanceEventHandler = paintManipulatorNode.constructEventHandlerNode('Paint_' + node.name);
       paintInstanceEventHandler.addScope('geometry_vertexattributes', geometryNode.getAttributesDGNode());
       paintInstanceEventHandler.addScope('transform', transformNode.getDGNode());
       paintInstanceEventHandler.addScope('instance', instanceNode.getDGNode());
@@ -580,7 +578,7 @@ FABRIC.SceneGraph.registerNodeType('Manipulator',
     // setup the postdescend operators for disable and enable zbuffer
     // PT - This could be done at the shader/material stage
     if (options.disableZBuffer) {
-      manipulatorNode.getRedrawEventHandler().postDescendBindings.insert(scene.constructOperator({
+      manipulatorNode.getRedrawEventHandler().preDescendBindings.insert(scene.constructOperator({
           operatorName: 'disableZBuffer',
           srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/drawAttributes.kl',
           entryFunctionName: 'disableZBuffer',
@@ -729,31 +727,35 @@ FABRIC.SceneGraph.registerNodeType('3AxisRotationManipulator',
         radius: 15,
         xaxis: true,
         yaxis: true,
-        zaxis: true
+        zaxis: true,
+        name: 'ThreeAxisRotationManipulator'
       });
+    
+    var threeAxisRotationManipulator = scene.constructNode('SceneGraphNode', options);
+    var name = threeAxisRotationManipulator.pub.getName();
 
     var circle = scene.pub.constructNode('Circle', { radius: options.radius });
 
     var xaxisGizmoNode = scene.pub.constructNode('RotationManipulator', scene.assignDefaults(options, {
-        name: 'XAxisRotationManipulator',
+        name: name + 'XAxis',
         color: FABRIC.RT.rgb(0.8, 0, 0, 1),
         localXfo: new FABRIC.RT.Xfo(FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(0, 0, 1), -90)),
         geometryNode: circle
       }, true));
     var yaxisGizmoNode = scene.pub.constructNode('RotationManipulator', scene.assignDefaults(options, {
-        name: 'YAxisRotationManipulator',
+        name: name + 'YAxis',
         color: FABRIC.RT.rgb(0, 0.8, 0, 1),
         localXfo: new FABRIC.RT.Xfo(),
         geometryNode: circle
       }, true));
     var zaxisGizmoNode = scene.pub.constructNode('RotationManipulator', scene.assignDefaults(options, {
-        name: 'ZAxisRotationManipulator',
+        name: name + 'ZAxis',
         color: FABRIC.RT.rgb(0, 0, 0.8, 1),
         localXfo: new FABRIC.RT.Xfo(FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(1, 0, 0), 90)),
         geometryNode: circle
       }, true));
 
-    return scene.constructNode('SceneGraphNode', options);
+    return threeAxisRotationManipulator;
   });
 
 FABRIC.SceneGraph.registerNodeType('LinearTranslationManipulator',
@@ -881,14 +883,18 @@ FABRIC.SceneGraph.registerNodeType('3AxisTranslationManipulator',
   function(options, scene) {
     scene.assignDefaults(options, {
         trackRate: 0.1,
-        size: 25
+        size: 25,
+        name: 'threeAxisTrans'
       });
+    
+    var threeAxisTranslationManipulator = scene.constructNode('SceneGraphNode', options);
+    var name = threeAxisTranslationManipulator.pub.getName();
 
     var lineVector = scene.pub.constructNode('LineVector', { to: FABRIC.RT.vec3(0, options.size, 0) });
     var arrowHead = scene.pub.constructNode('Cone', { radius: options.size * 0.04, height: options.size * 0.2 });
 
     scene.pub.constructNode('LinearTranslationManipulator', scene.assignDefaults(options, {
-        name: options.name + 'XAxis',
+        name: name + '_XAxis',
         color: FABRIC.RT.rgb(0.8, 0, 0, 1),
         localXfo: new FABRIC.RT.Xfo({
           ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(0, 0, 1), -90)
@@ -896,7 +902,7 @@ FABRIC.SceneGraph.registerNodeType('3AxisTranslationManipulator',
         geometryNode: lineVector
       }, true));
     scene.pub.constructNode('LinearTranslationManipulator', scene.assignDefaults(options, {
-        name: options.name + 'XAxisArrowHead',
+        name: name + '_XAxisArrowHead',
         color: FABRIC.RT.rgb(0.8, 0, 0, 1),
         localXfo: FABRIC.RT.xfo({
           ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(0, 0, 1), -90),
@@ -906,13 +912,13 @@ FABRIC.SceneGraph.registerNodeType('3AxisTranslationManipulator',
       }, true));
 
     scene.pub.constructNode('LinearTranslationManipulator', scene.assignDefaults(options, {
-        name: options.name + 'YAxis',
+        name: name + '_YAxis',
         color: FABRIC.RT.rgb(0, 0.8, 0),
         localXfo: new FABRIC.RT.Xfo(),
         geometryNode: lineVector
       }, true));
     scene.pub.constructNode('LinearTranslationManipulator', scene.assignDefaults(options, {
-        name: options.name + 'YAxisArrowHead',
+        name: name + '_YAxisArrowHead',
         color: FABRIC.RT.rgb(0, 0.8, 0),
         localXfo: FABRIC.RT.xfo({
           tr: FABRIC.RT.vec3(0, options.size, 0)
@@ -921,7 +927,7 @@ FABRIC.SceneGraph.registerNodeType('3AxisTranslationManipulator',
       }, true));
 
     scene.pub.constructNode('LinearTranslationManipulator', scene.assignDefaults(options, {
-        name: options.name + 'ZAxis',
+        name: name + '_ZAxis',
         color: FABRIC.RT.rgb(0, 0, 0.8),
         localXfo: new FABRIC.RT.Xfo({
           ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(1, 0, 0), 90)
@@ -929,7 +935,7 @@ FABRIC.SceneGraph.registerNodeType('3AxisTranslationManipulator',
         geometryNode: lineVector
       }, true));
     scene.pub.constructNode('LinearTranslationManipulator', scene.assignDefaults(options, {
-        name: options.name + 'ZAxisArrowHead',
+        name: name + '_ZAxisArrowHead',
         color: FABRIC.RT.rgb(0, 0, 0.8),
         localXfo: FABRIC.RT.xfo({
           ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(1, 0, 0), 90),
@@ -947,7 +953,7 @@ FABRIC.SceneGraph.registerNodeType('3AxisTranslationManipulator',
       });
 
     scene.pub.constructNode('PlanarTranslationManipulator', scene.assignDefaults(options, {
-        name: 'YZPlaneTranslationManipulator',
+        name: name + '_YZPlane',
         color: FABRIC.RT.rgb(0.8, 0, 0, 1),
         localXfo: new FABRIC.RT.Xfo({
           ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(0, 0, 1), 90)
@@ -955,13 +961,13 @@ FABRIC.SceneGraph.registerNodeType('3AxisTranslationManipulator',
         geometryNode: drawTriangle
       }, true));
     scene.pub.constructNode('PlanarTranslationManipulator', scene.assignDefaults(options, {
-        name: 'XZPlaneTranslationManipulator',
+        name: name + '_XZPlane',
         color: FABRIC.RT.rgb(0, 0.8, 0, 1),
         localXfo: new FABRIC.RT.Xfo(),
         geometryNode: drawTriangle
       }, true));
     scene.pub.constructNode('PlanarTranslationManipulator', scene.assignDefaults(options, {
-        name: 'XYPlaneTranslationManipulator',
+        name: name + '_XYPlane',
         color: FABRIC.RT.rgb(0, 0, 0.8, 1),
         localXfo: new FABRIC.RT.Xfo({
           ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(1, 0, 0), -90)
@@ -969,7 +975,7 @@ FABRIC.SceneGraph.registerNodeType('3AxisTranslationManipulator',
         geometryNode: drawTriangle
       }, true));
 
-    return scene.constructNode('SceneGraphNode', options);
+    return threeAxisTranslationManipulator;
   });
 
 
@@ -981,8 +987,10 @@ FABRIC.SceneGraph.registerNodeType('PivotRotationManipulator',
         name: 'RotationManipulator'
       });
 
-    options.geometryNode = options.geometryNode ? options.geometryNode :
-      scene.pub.constructNode('Circle', { radius: options.radius });
+    if(!options.geometryNode){
+      options.geometryNode = 
+        scene.pub.constructNode('Circle', { radius: options.radius });
+    }
 
     var manipulatorNode = scene.constructNode('Manipulator', options);
 

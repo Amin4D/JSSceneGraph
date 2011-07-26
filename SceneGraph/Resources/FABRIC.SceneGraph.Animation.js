@@ -9,7 +9,6 @@ FABRIC.SceneGraph.registerNodeType('AnimationTrack',
         keyframetype: undefined,
         name:'AnimationTrack'
       });
-    options.dgnodenames.push('DGNode');
 
     if (options.keyframetype == undefined) {
       throw ('Please specify a type of data to interpollate');
@@ -27,7 +26,7 @@ FABRIC.SceneGraph.registerNodeType('AnimationTrack',
     }
 
     var animationTrackNode = scene.constructNode('SceneGraphNode', options);
-    var dgnode = animationTrackNode.getDGNode();
+    var dgnode = animationTrackNode.constructDGNode('DGNode');
     dgnode.addMember('name', 'String', 'keyframeAnimationTrack');
     dgnode.addMember('color', 'Color', FABRIC.RT.rgb(1, 1, 1));
     dgnode.addMember('keys', options.keyframetype + '[]');
@@ -152,10 +151,9 @@ FABRIC.SceneGraph.registerNodeType('AnimationController',
         playbackRate: 1.0,
         bindToGlobalTime: true
       });
-    options.dgnodenames.push('DGNode');
 
     var animationControllerNode = scene.constructNode('SceneGraphNode', options);
-    var dgnode = animationControllerNode.getDGNode();
+    var dgnode = animationControllerNode.constructDGNode('DGNode');
     dgnode.addMember('playbackRate', 'Scalar', options.playbackRate);
     dgnode.addMember('localtime', 'Scalar');
     
@@ -217,12 +215,11 @@ FABRIC.SceneGraph.registerNodeType('AnimationEvaluator',
         animationControllerNode: undefined,
         animationTrackNode: undefined
       });
-    options.dgnodenames.push('DGNode');
 
     var animationEvaluatorNode = scene.constructNode('SceneGraphNode', options);
 
     var evaluatorDatatype = options.animationTrackNode.getValueType();
-    var dgnode = animationEvaluatorNode.getDGNode();
+    var dgnode = animationEvaluatorNode.constructDGNode('DGNode');
     dgnode.addMember('value', evaluatorDatatype, 0);
     dgnode.addMember('keyid', 'Integer', 0);
 
@@ -421,12 +418,10 @@ FABRIC.SceneGraph.registerNodeType('TrackDisplay',
         timeRange: FABRIC.RT.vec2(0, 100),
         segmentCount: 100
       });
-    options.dgnodenames.push('DGNode');
-    options.dgnodenames.push('ParametersDGNode');
 
     var trackDisplayNode = scene.constructNode('SceneGraphNode', options);
-    var dgnode = trackDisplayNode.getDGNode();
-    var parametersdgnode = trackDisplayNode.getParametersDGNode();
+    var dgnode = trackDisplayNode.constructDGNode('DGNode');
+    var parametersdgnode = trackDisplayNode.constructDGNode('ParametersDGNode');
 
     parametersdgnode.addMember('timeRange', 'Vec2', options.timeRange);
     parametersdgnode.addMember('trackIndex', 'Integer', options.trackIndex);

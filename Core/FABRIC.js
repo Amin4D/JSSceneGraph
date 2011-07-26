@@ -11,9 +11,6 @@ FABRIC = (function() {
   var bindContextToEmbedTag = function(embedTag) {
     var result = wrapFabricClient(embedTag, function(s) { console.log(s); } /*, function(s){console.debug(s);}*/);
 
-    result.addPopUpItem = function(desc, callback, arg) {
-      //embedTag.addPopUpItem(desc, callback, arg);
-    };
     /*
     {
       contextID: embedTag.contextID,
@@ -131,6 +128,9 @@ FABRIC = (function() {
             if (callback)
               callback();
           });
+        },
+        addPopUpMenuItem: function(name, desc, callback) {
+          context.VP.viewPort.addPopUpMenuItem(name, desc, callback);
         }
       };
       result.__defineGetter__('fps', function() {
@@ -180,6 +180,10 @@ FABRIC = (function() {
       throw 'missing URL';
     }
 
+    if(document.location.href.split('/')[0] === 'file:'){
+      alert('Fabric demos must be loaded from localhost.\nNot directly from the file system.\n\ne.g. "http://localhost/Fabric/Apps/Sample/BasicDemos/Flocking.html"');
+      thorow('Fabric demos must be loaded from localhost.\nNot directly from the file system.\n\ne.g. "http://localhost/Fabric/Apps/Sample/BasicDemos/Flocking.html"');
+    }
     url = processURL(url);
 
     var result = null;

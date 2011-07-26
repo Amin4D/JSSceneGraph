@@ -54,10 +54,12 @@ function loadImageFromRawData(
       haveHDR = false;
       break;
     case'hdr':
+    case'image/hdr':
       FabricHDRDecode(rawImageData, rawImageDataSize, imageWidth, imageHeight, imageHDR);
       haveHDR = true;
       break;
     case'exr':
+    case'image/exr':
       FabricHDRDecode(rawImageData, rawImageDataSize, imageWidth, imageHeight, imageHDR);
       haveHDR = true;
       break;
@@ -91,38 +93,6 @@ function loadImageFromRawData(
   }
 }
 
-operator loadImageHDR_old(
-  io Data rawImageData,
-  io Size rawImageDataSize,
-  io String decoder,
-  io Size imageWidth,
-  io Size imageHeight,
-  io Color imageHDR[],
-) {
-  var RGBA imageLDR[];
-
-  var Size width, height;
-  loadImageFromRawData(rawImageData, rawImageDataSize, decoder, true, width, height, imageHDR, imageLDR);
-  imageWidth = width;
-  imageHeight = height;
-}
-
-operator loadImageLDR_old(
-  io Data rawImageData,
-  io Size rawImageDataSize,
-  io String decoder,
-  io Size imageWidth,
-  io Size imageHeight,
-  io RGBA imageLDR[],
-) {
-  //  report("loadImageLDR_old:" + decoder);
-  var Color imageHDR[];
-  var Size width, height;
-  loadImageFromRawData(rawImageData, rawImageDataSize, decoder, false, width, height, imageHDR, imageLDR);
-  imageWidth = width;
-  imageHeight = height;
-}
-
 operator loadImageHDR(
   io FabricResource resource,
   io Size imageWidth,
@@ -131,7 +101,7 @@ operator loadImageHDR(
 ) {
   var RGBA imageLDR[];
   var Size width, height;
-  loadImageFromRawData(resource.data, resource.dataSize, resource.extension, true, width, height, imageHDR, imageLDR);
+  loadImageFromRawData(resource.data, resource.dataSize, resource.extension ? resource.extension : resource.mimeType, true, width, height, imageHDR, imageLDR);
   imageWidth = width;
   imageHeight = height;
 }

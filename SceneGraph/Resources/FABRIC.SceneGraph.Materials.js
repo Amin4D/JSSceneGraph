@@ -10,119 +10,6 @@ FABRIC.SceneGraph.registerNodeType('Texture',
     return textureNode;
   });
 
-// TODO: The texture image type needs to be broken into LDR and HDR.
-// here we have HDR image loading mixed in with LDR image loading,
-// but it should be a separate type.
-FABRIC.SceneGraph.registerNodeType('Image_old',
-  function(options, scene) {
-    scene.assignDefaults(options, {
-        onLoadCallback: undefined,
-        wantHDR: false,
-        wantRGBA: true,
-        createResouceLoadEventHandler: true,
-        createLoadTextureEventHandler: true
-      });
-    options.dgnodenames.push('DGNode');
-
-    var ext = options.url ? options.url.substr(options.url.lastIndexOf('.') + 1) : undefined,
-      imageLoaded = false,
-      onloadCallbacks = [],
-      dgResourceLoadEventHandler,
-      redrawEventHandler,
-      url,
-      imageNode = scene.constructNode('Texture', options),
-      dgnode = imageNode.getDGNode();
-
-    dgnode.addMember('type', 'String', ext);
-    dgnode.addMember('hdr', 'Boolean', options.wantHDR);
-    dgnode.addMember('width', 'Size');
-    dgnode.addMember('height', 'Size');
-    dgnode.addMember('pixels', (options.wantHDR ? 'Color' : (options.wantRGBA ? 'RGBA' : 'RGB')) + '[]');
-
-    imageNode.addMemberInterface(dgnode, 'width');
-    imageNode.addMemberInterface(dgnode, 'height');
-
-    if (options.onLoadCallback) {
-      onloadCallbacks.push(options.onLoadCallback);
-    }
-
-    if (options.createResouceLoadEventHandler) {
-        dgResourceLoadEventHandler = scene.constructEventHandlerNode(options.url);
-        dgResourceLoadEventHandler.addScope('image', dgnode);
-        dgResourceLoadEventHandler.preDescendBindings.append(scene.constructOperator({
-            operatorName: (options.wantHDR ? 'loadImageHDR_old' : 'loadImageLDR_old'),
-            parameterBinding: [
-              'resource.data',
-              'resource.dataSize',
-              'image.type',
-              'image.width',
-              'image.height',
-              'image.pixels'
-            ],
-            entryFunctionName: (options.wantHDR ? 'loadImageHDR_old' : 'loadImageLDR_old'),
-            srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadTexture.kl'
-          }));
-    }
-
-    // Construct the handler for loading the image into texture memory.
-    redrawEventHandler = scene.constructEventHandlerNode(options.name + '_draw');
-    redrawEventHandler.addScope('image', dgnode);
-    redrawEventHandler.addMember('bufferID', 'Integer', 0);
-    if (options.createLoadTextureEventHandler) {
-        redrawEventHandler.preDescendBindings.append(scene.constructOperator({
-            operatorName: 'loadTexture',
-            srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadTexture.kl',
-            entryFunctionName: 'createTextureFromImageLDR',
-            parameterBinding: [
-              'image.width',
-              'image.height',
-              'image.pixels',
-              'self.bufferID',
-              'textureStub.textureUnit'
-            ]
-          }));
-    }
-    imageNode.getRedrawEventHandler = function() {
-      return redrawEventHandler;
-    };
-
-    imageNode.loadImageAsset = function(imageURL) {
-      var dgResourceLoadEvent;
-      url = imageURL;
-      dgResourceLoadEvent = scene.constructResourceLoadEventNode(imageURL);
-      dgResourceLoadEvent.appendEventHandler(dgResourceLoadEventHandler);
-      dgResourceLoadEvent.didFireCallback = function() {
-        var i;
-        imageLoaded = true;
-        for (i = 0; i < onloadCallbacks.length; i++) {
-          onloadCallbacks[i].call();
-        }
-      };
-      dgResourceLoadEvent.start();
-    };
-
-    imageNode.getURL = function() {
-      return url;
-    };
-
-    imageNode.isImageLoaded = function() {
-      return imageLoaded;
-    };
-
-    imageNode.addOnLoadCallback = function(callback) {
-      if (imageLoaded) {
-        callback.call();
-      }else {
-        onloadCallbacks.push(callback);
-      }
-    };
-
-    if (options.url) {
-      imageNode.loadImageAsset(options.url);
-    }
-    return imageNode;
-  });
-
   // TODO: The texture image type needs to be broken into LDR and HDR.
   // here we have HDR image loading mixed in with LDR image loading,
   // but it should be a separate type.
@@ -137,7 +24,6 @@ FABRIC.SceneGraph.registerNodeType('Image_old',
     options.dgnodenames.push('DGNode');
 
     var imageLoaded = false,
-      dgResourceLoadEventHandler,
       redrawEventHandler,
       url,
       imageNode = scene.constructNode('Texture', options),

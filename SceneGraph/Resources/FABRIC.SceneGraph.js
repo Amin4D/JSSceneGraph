@@ -182,9 +182,6 @@ FABRIC.SceneGraph = {
     scene.constructEventNode = function(name) {
       return context.DependencyGraph.createEvent(name);
     };
-    scene.constructResourceLoadEventNode = function(url) {
-      return context.DependencyGraph.createResourceLoadEvent('RLE: ' + url, url);
-    };
     scene.constructEventHandlerNode = function (name) {
       return context.DependencyGraph.createEventHandler(name);
     };

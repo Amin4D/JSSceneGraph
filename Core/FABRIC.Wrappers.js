@@ -840,21 +840,6 @@ var wrapFabricClient = function (fabricClient, logCallback, debugLogCallback) {
       return result;
     };
 
-    DG.createResourceLoadEvent = function (name, url) {
-      var result = DG.createEvent(name);
-
-      result.pub.getURL = function () {
-        return url;
-      };
-
-      result.pub.start = function () {
-        result.queueCommand('start');
-        executeQueuedCommands();
-      };
-
-      return result;
-    };
-
     DG.createEventHandler = function (name) {
       var result = DG.createContainer(name);
 
@@ -1070,16 +1055,6 @@ var wrapFabricClient = function (fabricClient, logCallback, debugLogCallback) {
           event.destroy();
         });
         return event.pub;
-      },
-      createResourceLoadEvent: function (name, url) {
-        var resourceLoadEvent = DG.createResourceLoadEvent(name, url);
-        DG.queueCommand([], 'createResourceLoadEvent', {
-          name: name,
-          url: url
-        }, function () {
-          resourceLoadEvent.destroy();
-        });
-        return resourceLoadEvent.pub;
       },
       createEventHandler: function (name) {
         var eventHandler = DG.createEventHandler(name);

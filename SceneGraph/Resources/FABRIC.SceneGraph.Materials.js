@@ -13,7 +13,7 @@ FABRIC.SceneGraph.registerNodeType('Texture',
 // TODO: The texture image type needs to be broken into LDR and HDR.
 // here we have HDR image loading mixed in with LDR image loading,
 // but it should be a separate type.
-FABRIC.SceneGraph.registerNodeType('Image',
+FABRIC.SceneGraph.registerNodeType('Image_old',
   function(options, scene) {
     scene.assignDefaults(options, {
         onLoadCallback: undefined,
@@ -50,7 +50,7 @@ FABRIC.SceneGraph.registerNodeType('Image',
         dgResourceLoadEventHandler = scene.constructEventHandlerNode(options.url);
         dgResourceLoadEventHandler.addScope('image', dgnode);
         dgResourceLoadEventHandler.preDescendBindings.append(scene.constructOperator({
-            operatorName: (options.wantHDR ? 'loadImageHDR' : 'loadImageLDR'),
+            operatorName: (options.wantHDR ? 'loadImageHDR_old' : 'loadImageLDR_old'),
             parameterBinding: [
               'resource.data',
               'resource.dataSize',
@@ -59,7 +59,7 @@ FABRIC.SceneGraph.registerNodeType('Image',
               'image.height',
               'image.pixels'
             ],
-            entryFunctionName: (options.wantHDR ? 'loadImageHDR' : 'loadImageLDR'),
+            entryFunctionName: (options.wantHDR ? 'loadImageHDR_old' : 'loadImageLDR_old'),
             srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadTexture.kl'
           }));
     }
@@ -120,6 +120,90 @@ FABRIC.SceneGraph.registerNodeType('Image',
     if (options.url) {
       imageNode.loadImageAsset(options.url);
     }
+    return imageNode;
+  });
+
+  // TODO: The texture image type needs to be broken into LDR and HDR.
+  // here we have HDR image loading mixed in with LDR image loading,
+  // but it should be a separate type.
+  FABRIC.SceneGraph.registerNodeType('Image',
+  function (options, scene) {
+    scene.assignDefaults(options, {
+      wantHDR: false,
+      wantRGBA: true,
+      createResouceLoadNode: true,
+      createLoadTextureEventHandler: true
+    });
+    options.dgnodenames.push('DGNode');
+
+    var imageLoaded = false,
+      dgResourceLoadEventHandler,
+      redrawEventHandler,
+      url,
+      imageNode = scene.constructNode('Texture', options),
+      dgnode = imageNode.getDGNode(),
+      resourceLoadNode,
+      resourceloaddgnode;
+
+    dgnode.addMember('hdr', 'Boolean', options.wantHDR);
+    dgnode.addMember('width', 'Size');
+    dgnode.addMember('height', 'Size');
+    dgnode.addMember('pixels', (options.wantHDR ? 'Color' : (options.wantRGBA ? 'RGBA' : 'RGB')) + '[]');
+
+    imageNode.addMemberInterface(dgnode, 'width');
+    imageNode.addMemberInterface(dgnode, 'height');
+
+    if (options.createResouceLoadNode) {
+      resourceLoadNode = scene.constructNode('ResourceLoad', options);
+      resourceloaddgnode = resourceLoadNode.getDGLoadNode();
+      dgnode.addDependency(resourceloaddgnode, 'resource');
+
+      dgnode.bindings.append(scene.constructOperator({
+        operatorName: (options.wantHDR ? 'loadImageHDR' : 'loadImageLDR'),
+        parameterBinding: [
+              'resource.resource',
+              'self.width',
+              'self.height',
+              'self.pixels'
+            ],
+        entryFunctionName: (options.wantHDR ? 'loadImageHDR' : 'loadImageLDR'),
+        srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadTexture.kl'
+      }));
+    }
+
+    imageNode.getResourceLoadNode = function () {
+      return resourceLoadNode;
+    };
+
+    // Construct the handler for loading the image into texture memory.
+    redrawEventHandler = scene.constructEventHandlerNode(options.name + '_draw');
+    redrawEventHandler.addScope('image', dgnode);
+    redrawEventHandler.addMember('bufferID', 'Integer', 0);
+    if (options.createLoadTextureEventHandler) {
+      redrawEventHandler.preDescendBindings.append(scene.constructOperator({
+        operatorName: 'loadTexture',
+        srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadTexture.kl',
+        entryFunctionName: 'createTextureFromImageLDR',
+        parameterBinding: [
+              'image.width',
+              'image.height',
+              'image.pixels',
+              'self.bufferID',
+              'textureStub.textureUnit'
+            ]
+      }));
+    }
+    imageNode.getRedrawEventHandler = function () {
+      return redrawEventHandler;
+    };
+
+    imageNode.getURL = function () {
+      return url;
+    };
+
+    imageNode.pub.isImageLoaded = function () {
+      return resourceLoadNode ? resourceLoadNode.pub.isLoaded() : false;
+    };
     return imageNode;
   });
 

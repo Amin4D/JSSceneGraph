@@ -185,11 +185,16 @@ FABRIC.SceneGraph = {
     scene.constructResourceLoadEventNode = function(url) {
       return context.DependencyGraph.createResourceLoadEvent('RLE: ' + url, url);
     };
-    scene.constructEventHandlerNode = function(name) {
+    scene.constructEventHandlerNode = function (name) {
       return context.DependencyGraph.createEventHandler(name);
     };
-    scene.constructDependencyGraphNode = function(name) {
-      return context.DependencyGraph.createNode(name);
+    scene.constructDependencyGraphNode = function (name, isResourceLoad) {
+      if (isResourceLoad) {
+        return context.DependencyGraph.createResourceLoadNode(name);
+      }
+      else {
+        return context.DependencyGraph.createNode(name);
+      }
     };
 
     scene.constructNode = function(type, options) {
@@ -208,6 +213,7 @@ FABRIC.SceneGraph = {
       }
 
       options.dgnodenames = options.dgnodenames ? options.dgnodenames : [];
+      options.dgresourceloadnodenames = options.dgresourceloadnodenames ? options.dgresourceloadnodenames : [];
       options.ehnodenames = options.ehnodenames ? options.ehnodenames : [];
 
       var sceneGraphNode = FABRIC.SceneGraph.nodeFactories[type].call(undefined, options, scene);
@@ -815,6 +821,7 @@ FABRIC.SceneGraph.registerNodeType('SceneGraphNode',
   function(options, scene) {
 
     var dgnodenames = options.dgnodenames ? options.dgnodenames : [];
+    var dgresourceloadnodenames = options.dgresourceloadnodenames ? options.dgresourceloadnodenames : [];
     var dgnodes = {};
     
     var ehnodenames = options.ehnodenames ? options.ehnodenames : [];
@@ -862,8 +869,8 @@ FABRIC.SceneGraph.registerNodeType('SceneGraphNode',
     scene.setSceneGraphNode(name, sceneGraphNode);
     
     // take care of the DG nodes
-    var constructDGNode = function(dgnodename) {
-      dgnodes[dgnodename] = scene.constructDependencyGraphNode(name + '_' + dgnodename);
+    var constructDGNode = function(dgnodename, isResourceLoad) {
+      dgnodes[dgnodename] = scene.constructDependencyGraphNode(name + '_' + dgnodename, isResourceLoad);
       dgnodes[dgnodename].sceneGraphNode = sceneGraphNode;
       sceneGraphNode['get' + dgnodename] = function() {
         return dgnodes[dgnodename];
@@ -885,7 +892,11 @@ FABRIC.SceneGraph.registerNodeType('SceneGraphNode',
       constructDGNode(dgnodenames[i]);
     }
 
-    // take care of the DG nodes
+    for (var i = 0; i < dgresourceloadnodenames.length; i++) {
+      constructDGNode(dgresourceloadnodenames[i], true);
+    }
+
+    // take care of the EH nodes
     var constructEventHandler = function(ehname) {
       ehnodes[ehname] = scene.constructEventHandlerNode(name + '_' + ehname);
       ehnodes[ehname].sceneGraphNode = sceneGraphNode;
@@ -1323,6 +1334,61 @@ FABRIC.SceneGraph.registerNodeType('Viewport',
     return viewportNode;
   });
 
+  FABRIC.SceneGraph.registerNodeType('ResourceLoad',
+  function (options, scene) {
+
+    scene.assignDefaults(options, {
+      redrawOnLoad: true
+    });
+
+    var onloadCallbacks = [];
+    lastLoadCallbackURL = '';
+
+    options.dgresourceloadnodenames.push('DGLoadNode');
+
+    var resourceLoadNode = scene.constructNode('SceneGraphNode', options);
+    var dgnode = resourceLoadNode.getDGLoadNode();
+
+    resourceLoadNode.addMemberInterface(dgnode, 'url', true);
+    resourceLoadNode.addMemberInterface(dgnode, 'resource');
+
+    dgnode.addOnLoadCallback(function () {
+      var i;
+      lastLoadCallbackURL = resourceLoadNode.pub.getUrl();
+      for (i = 0; i < onloadCallbacks.length; i++) {
+        onloadCallbacks[i](resourceLoadNode.pub);
+      }
+      onloadCallbacks = [];
+
+      if (options.redrawOnLoad) {
+        scene.pub.redrawAllWindows();
+      }
+    });
+
+    resourceLoadNode.pub.isLoaded = function () {
+      return lastLoadCallbackURL !== '' && lastLoadCallbackURL === resourceLoadNode.pub.getUrl();
+    }
+
+    resourceLoadNode.pub.addOnLoadCallback = function (callback) {
+      //It is possible that a resourceLoadNode actually loads multiple resources in a sequence;
+      //make sure the callback is only fired when the 'next' resource is loaded.
+      if (resourceLoadNode.pub.isLoaded()) {
+        callback.call(); //Already loaded
+      } else {
+        onloadCallbacks.push(callback);
+      }
+    };
+
+    if (options.onLoadCallback) {
+      resourceLoadNode.pub.addOnLoadCallback(options.onLoadCallback);
+    }
+
+    if (options.url) {
+      resourceLoadNode.pub.setUrl(options.url);
+    }
+
+    return resourceLoadNode;
+  });
 
 FABRIC.SceneGraph.registerNodeType('Camera',
   function(options, scene) {

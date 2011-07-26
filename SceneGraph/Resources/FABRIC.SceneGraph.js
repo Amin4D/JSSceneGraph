@@ -425,6 +425,9 @@ FABRIC.SceneGraph = {
     scene.getSceneRedrawEventHandler = function() {
       return beginDrawEventHandler;
     };
+    scene.getScenePostRedrawEventHandler = function() {
+      return postDrawEventHandler;
+    };
     scene.getSceneRaycastEventHandler = function() {
       return sceneRaycastEventHandler;
     };
@@ -578,6 +581,7 @@ FABRIC.SceneGraph = {
     // and the shaders will be left connected to this node. Multiple
     // cameras can render the scene by connecting to this node.
     var preDrawEventHandler = scene.constructEventHandlerNode('Scene_PreDraw');
+    var postDrawEventHandler = scene.constructEventHandlerNode('Scene_PostDraw');
 
 
     ///////////////////////////////////////////////////////////////////
@@ -872,6 +876,7 @@ FABRIC.SceneGraph.registerNodeType('Viewport',
 
     fabricwindow.redrawEvent.appendEventHandler(scene.getScenePreRedrawEventHandler());
     fabricwindow.redrawEvent.appendEventHandler(redrawEventHandler);
+    fabricwindow.redrawEvent.appendEventHandler(scene.getScenePostRedrawEventHandler());
 
     var propagationRedrawEventHandler = viewportNode.constructEventHandlerNode('DrawPropagation');
     redrawEventHandler.appendChildEventHandler(propagationRedrawEventHandler);

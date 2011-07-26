@@ -255,7 +255,7 @@ FABRIC.SceneGraph.registerNodeType('Plane',
         width: 10,
         lengthSections: 2,
         widthSections: 2,
-        doubleSided: true
+        doubleSided: false
       });
 
     options.uvSets = 1;

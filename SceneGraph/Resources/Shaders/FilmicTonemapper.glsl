@@ -18,6 +18,7 @@ void main()
 	p.x = max(0.0, linearCol.x - 0.004);
 	p.y = max(0.0, linearCol.y - 0.004);
 	p.z = max(0.0, linearCol.z - 0.004);
+	p.w = 0.0;
 	
 	gl_FragColor = (p*(6.2*p+0.5))/(p*(6.2*p+1.7)+0.06);
 #endif

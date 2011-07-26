@@ -697,7 +697,7 @@ FABRIC.SceneGraph.registerNodeType('PostProcessEffect',
         parentEventHandler: false,
         separateShaderNode: false,
         assignUniformsOnPostDescend:true,
-        OGL_INTERNALFORMAT: 'GL_RGBA16F_ARB',
+        OGL_INTERNALFORMAT: 'GL_RGBA16F_ARB',/* GL_RGBA8 */
         OGL_FORMAT: 'GL_RGBA',
         OGL_TYPE: 'GL_UNSIGNED_BYTE'
       });
@@ -731,6 +731,7 @@ FABRIC.SceneGraph.registerNodeType('PostProcessEffect',
     redrawEventHandler.addMember('offscreenPrevFBO', 'Integer', 0);
     redrawEventHandler.addMember('offscreenColorID', 'Integer', 0);
     redrawEventHandler.addMember('offscreenDepthID', 'Integer', 0);
+    redrawEventHandler.addMember('prevProgramID', 'Integer', 0);
 
     redrawEventHandler.preDescendBindings.append(
       scene.constructOperator({
@@ -748,14 +749,16 @@ FABRIC.SceneGraph.registerNodeType('PostProcessEffect',
             'self.offscreenFBO',
             'self.offscreenPrevFBO',
             'self.offscreenColorID',
-            'self.offscreenDepthID'
+            'self.offscreenDepthID',
+            'self.prevProgramID',
+            'viewPort.backgroundColor'
           ]
         }));
 
     redrawEventHandler.postDescendBindings.append(
       scene.constructOperator({
           operatorName: 'renderOffscreenToViewOp',
-          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/OffscreenRendering.kl',
+          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/offscreenRendering.kl',
           preProcessorDefinitions: {
             OGL_INTERNALFORMAT: options.OGL_INTERNALFORMAT,
             OGL_FORMAT: options.OGL_FORMAT,
@@ -767,7 +770,9 @@ FABRIC.SceneGraph.registerNodeType('PostProcessEffect',
             'window.height',
             'self.offscreenPrevFBO',
             'self.offscreenColorID',
-            'self.program'
+            'self.program',
+            'self.prevProgramID',
+            'viewPort.backgroundColor'
           ]
         }));
     return postProcessEffect;
@@ -997,7 +1002,6 @@ FABRIC.SceneGraph.defineEffectFromFile = function(effectName, effectfile) {
       if(!effectParameters){
         parseEffectFile();
       }
-      scene.pushTimer('constructMaterialAndShaderNode');
       scene.assignDefaults(options, {
           prototypeMaterialType: 'Material'
         });
@@ -1068,8 +1072,6 @@ FABRIC.SceneGraph.defineEffectFromFile = function(effectName, effectfile) {
           materialNode.pub['set' + capitalizeFirstLetter(textureName) + 'Node'](options[textureName + 'Node']);
         }
       }
-
-      scene.popTimer('constructMaterialAndShaderNode');
       return materialNode;
     });
 };

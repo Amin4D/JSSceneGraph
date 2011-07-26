@@ -672,7 +672,14 @@ FABRIC.SceneGraph.registerNodeType('PointMaterial',
       });
 
     var pointMaterial = scene.constructNode('Material', options);
-    var dgnode = pointMaterial.getDGNode();
+    var dgnode;
+    if(pointMaterial.getDGNode){
+      dgnode = pointMaterial.getDGNode();
+    }
+    else{
+      dgnode = pointMaterial.constructDGNode('DGNode');
+      pointMaterial.getRedrawEventHandler().addScope('material', dgnode);
+    }
     dgnode.addMember('pointSize', 'Scalar', options.pointSize);
     pointMaterial.addMemberInterface(dgnode, 'pointSize', true);
 
@@ -758,7 +765,7 @@ FABRIC.SceneGraph.registerNodeType('PostProcessEffect',
     redrawEventHandler.postDescendBindings.append(
       scene.constructOperator({
           operatorName: 'renderOffscreenToViewOp',
-          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/OffscreenRendering.kl',
+          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/offscreenRendering.kl',
           preProcessorDefinitions: {
             OGL_INTERNALFORMAT: options.OGL_INTERNALFORMAT,
             OGL_FORMAT: options.OGL_FORMAT,

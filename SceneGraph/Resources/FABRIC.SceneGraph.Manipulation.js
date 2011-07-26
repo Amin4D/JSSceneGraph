@@ -191,7 +191,7 @@ FABRIC.SceneGraph.registerNodeType('PaintManipulator',
     collectPointsDgNode.addMember('brushColor', 'Color', options.brushColor);
     paintManipulatorNode.addMemberInterface(collectPointsDgNode, 'brushColor', true);
 
-    paintEventHandler = spotLightNode.constructEventHandlerNode('Viewport_raycast');
+    paintEventHandler = paintManipulatorNode.constructEventHandlerNode('Paint');
     paintEventHandler.addScope('paintData', collectPointsDgNode);
 
     // Raycast events are fired from the viewport. As the event
@@ -1135,7 +1135,8 @@ FABRIC.SceneGraph.registerNodeType('BoneManipulator',
         dragXfo.tr = parentXfo.tr;
       }else{
         parentXfo = manipulatorNode.getParentXfo();
-        dragXfo.tr.addInPlace(dragVec);
+        // The root of the chain can be translated.
+      //  dragXfo.tr.addInPlace(dragVec);
       }
 
       var angle1 = -(vec1.negate().getAngleTo(dragXfo.tr.subtract(planePoint.add(vec1.scale(options.length)))));

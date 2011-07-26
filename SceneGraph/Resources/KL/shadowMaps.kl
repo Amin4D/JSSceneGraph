@@ -64,8 +64,8 @@ operator genAndBindShadowMapFBO(
     glEnable(GL_TEXTURE_2D);
     
     Size textureIDs[];
-    textureIDs.resize(2);
-    glGenTextures(2, textureIDs);
+    textureIDs.resize(1);
+    glGenTextures(1, textureIDs);
     
     /////////////////////////////////////////////////////
     // Depth Texture
@@ -84,7 +84,8 @@ operator genAndBindShadowMapFBO(
 
     /////////////////////////////////////////////////////
     // Color Texture
-    colorTextureID = textureIDs[1];
+    glGenTextures(1, textureIDs);
+    colorTextureID = textureIDs[0];
     
     glBindTexture(GL_TEXTURE_2D, colorTextureID);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);

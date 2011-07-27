@@ -16,8 +16,8 @@ FABRIC.SceneGraph.Lights = {
   }
 };
 
-FABRIC.SceneGraph.registerNodeType('Light',
-  function (options, scene) {
+FABRIC.SceneGraph.registerNodeType('Light', {
+  factoryFn: function (options, scene) {
     scene.assignDefaults(options, {
       color: FABRIC.RT.rgb(1.0, 1.0, 1.0),
       transformNode: 'Transform',
@@ -117,11 +117,11 @@ FABRIC.SceneGraph.registerNodeType('Light',
     }
 
     return lightNode;
-  });
+  }});
 
 
-  FABRIC.SceneGraph.registerNodeType('PointLight',
-  function (options, scene) {
+FABRIC.SceneGraph.registerNodeType('PointLight', {
+  factoryFn: function (options, scene) {
 
     scene.assignDefaults(options, {
       position: FABRIC.RT.vec3(420.0, 1000.0, 600.0),
@@ -169,10 +169,10 @@ FABRIC.SceneGraph.registerNodeType('Light',
     }
 
     return pointLightNode;
-  });
+  }});
 
-FABRIC.SceneGraph.registerNodeType('DirectionalLight',
-  function (options, scene) {
+FABRIC.SceneGraph.registerNodeType('DirectionalLight', {
+  factoryFn: function (options, scene) {
 
     if (!options.transformNode) {
       scene.assignDefaults(options, {
@@ -263,11 +263,11 @@ FABRIC.SceneGraph.registerNodeType('DirectionalLight',
     }
 
     return directionalLightNode;
-  });
+  }});
 
 
-FABRIC.SceneGraph.registerNodeType('SpotLight',
-  function(options, scene) {
+FABRIC.SceneGraph.registerNodeType('SpotLight', {
+  factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
         coneAngle: 60 * FABRIC.RT.degToRad,
         nearDistance: 1,
@@ -329,7 +329,7 @@ FABRIC.SceneGraph.registerNodeType('SpotLight',
         this.constructShadowRenderEventHandler();
       
         redrawEventHandler.addMember('shadowMap', 'Size', 0);
-        
+        /*
         if(options.displayShadowDebug === true){
           // Display the shadow color map on screen.
           redrawEventHandler.preDescendBindings.append(
@@ -342,7 +342,7 @@ FABRIC.SceneGraph.registerNodeType('SpotLight',
                 ]
               }));
         }
-
+        */
         redrawEventHandler.preDescendBindings.append(
           scene.constructOperator({
               operatorName: 'loadLightMatrixUniform',
@@ -434,6 +434,23 @@ FABRIC.SceneGraph.registerNodeType('SpotLight',
             'light.prevFBO'
           ]
         }));
+      
+      
+        if(options.displayShadowDebug === true){
+          // Display the shadow color map on screen.
+          var shadowDebugRenderEventHandler = spotLightNode.constructEventHandlerNode('renderDebugQuad');
+          scene.getScenePostRedrawEventHandler().appendChildEventHandler(shadowDebugRenderEventHandler);
+          shadowDebugRenderEventHandler.addScope('light', dgnode);
+          shadowDebugRenderEventHandler.preDescendBindings.append(
+            scene.constructOperator({
+                operatorName:"debugShadowMapBuffer",
+                srcFile:"FABRIC_ROOT/SceneGraph/Resources/KL/shadowMaps.kl",
+                entryFunctionName:"debugShadowMapBuffer",
+                parameterBinding:[
+                  'light.colorTextureID'
+                ]
+              }));
+        }
 
       scene.registerShadowCastingLightSourceHandler(shadowRenderEventHandler);
     }
@@ -484,6 +501,6 @@ FABRIC.SceneGraph.registerNodeType('SpotLight',
     }
 
     return spotLightNode;
-  });
+  }});
 
 

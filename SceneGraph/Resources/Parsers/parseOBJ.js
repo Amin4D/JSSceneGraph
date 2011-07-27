@@ -15,6 +15,7 @@ FABRIC.SceneGraph.registerParser('obj', function(scene, assetFile, options) {
   var textureCoords = [];
   var subObjectName = '';
   var subObjectMaterialName;
+  var scaleFactor = options.scaleFactor ? options.scaleFactor : 1.0;
 
   var meshData = {
     positions: [],
@@ -163,7 +164,7 @@ FABRIC.SceneGraph.registerParser('obj', function(scene, assetFile, options) {
       var p2 = parseFloat(items[2]);
       var p3 = parseFloat(items[3]);
       if (!isNaN(p1) && !isNaN(p2) && !isNaN(p3)) {
-        positions.push(new FABRIC.RT.Vec3(p1, p2, p3));
+        positions.push(new FABRIC.RT.Vec3(p1*scaleFactor, p2*scaleFactor, p3*scaleFactor));
       }
       else {
         throw 'Malformed vertex on line ' + lineNumber;

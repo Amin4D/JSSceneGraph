@@ -3,7 +3,7 @@
     Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
     -->
   <head> 
-    <title>FABRIC - Tutorial 09 - SceneGraph Basics</title> 
+    <title>FABRIC - Tutorial 10 - Basic Drawing Pipeline</title> 
     
     <meta charset="iso-8859-1"/>
     <link href="../../../themes/default/style.css" rel="stylesheet" type="text/css" />
@@ -29,6 +29,10 @@
 
     <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Kinematics.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Lights.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Materials.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Geometry.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Primitives.js" charset="utf-8"></script>
     
 
 <script type="text/javascript">
@@ -44,6 +48,44 @@ $(document).ready(function() {
     backgroundColor: FABRIC.RT.rgb(0.0, 0.05, 0.15)
   });
 
+  // create a camera, to be able to see something
+  var camera = scene.constructNode('TargetCamera', {
+      position: FABRIC.RT.vec3(15, 15, 15),
+      target: FABRIC.RT.vec3(0, 0, 0)
+    });
+  viewport.setCameraNode(camera);
+
+  // create a light node  
+  var light = scene.constructNode('PointLight', {
+    position: FABRIC.RT.vec3(100,100,100)
+  });
+
+  // create a material node
+  var material = scene.constructNode('PhongMaterial', {
+    diffuseColor: FABRIC.RT.rgb(0.8, 0, 0),
+    lightNode: light
+  });
+  
+  // create a transform node
+  var transform = scene.constructNode('Transform', {
+    hierarchical: false,
+    globalXfo: FABRIC.RT.xfo({ tr: FABRIC.RT.vec3(0, 2, 0) })
+  })
+  
+  // create a geometry node
+  var cone = scene.constructNode('Cone', {
+    radius: 4.0,
+    height: 16.0,
+    detail: 10
+  })
+
+  // create an instance, using the material, the transform and the geometry
+  scene.constructNode('Instance', {
+      transformNode: transform, 
+      geometryNode: cone,
+      materialNode: material
+    });
+
   // parse the scene for errors
   var errors = scene.getErrors();
   if (errors.length > 0) {
@@ -55,7 +97,6 @@ $(document).ready(function() {
 
     console.log('Done');
   }
-
 });
 
 </script>

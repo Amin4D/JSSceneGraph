@@ -245,63 +245,6 @@ FABRIC.SceneGraph.registerNodeType('PointSpriteTexture',
 
 
 /**
- * Struct to store the source code of a shader
- * @constructor
- * @param {string} code The source code of the shader.
- * @param {string} type The type of the shader.
- */
-FABRIC.RT.ShaderSource = function(code, type) {
-  this.code = (code !== undefined) ? code : '';
-  this.type = (type !== undefined) ? type : 0;
-};
-
-FABRIC.appendOnCreateContextCallback(function(context) {
-  context.RegisteredTypesManager.registerType('ShaderSource', {
-      members: { code: 'String', type: 'Integer' },
-      constructor: FABRIC.RT.ShaderSource
-    });
-});
-
-/**
- * Struct to store information about a single shader's value
- * @constructor
- * @param {string} name The name of the shader's value.
- * @param {string} id The id of the shader's value.
- * @param {array} state The state of the shader's value.
- */
-FABRIC.RT.ShaderValue = function(name, id, state) {
-  this.name = (name !== undefined) ? name : '';
-  this.id = (id !== undefined) ? id : 0;
-  this.state = (state !== undefined) ? state : [];
-  this.location = -1;
-};
-
-FABRIC.appendOnCreateContextCallback(function(context) {
-  context.RegisteredTypesManager.registerType('ShaderValue', {
-      members: { name: 'String', id: 'Integer', state: 'String[]', location: 'Integer' },
-      constructor: FABRIC.RT.ShaderValue
-    });
-});
-
-/**
- * Struct to store information about a single shader's program's parameter
- * @constructor
- * @param {string} id The id of the parameter.
- * @param {number} value The value of the parameter.
- */
-FABRIC.RT.ShaderProgramParam = function(id, value) {
-  this.id = (id !== undefined) ? id : 0;
-  this.value = (value !== undefined) ? value : -1;
-};
-
-FABRIC.appendOnCreateContextCallback(function(context) {
-  context.RegisteredTypesManager.registerType('ShaderProgramParam', {
-      members: { id: 'Integer', value: 'Integer' },
-      constructor: FABRIC.RT.ShaderProgramParam
-    });
-});
-
-/**
  * Table storing all of the known shader attributes and their types.
  */
 FABRIC.shaderAttributeTable = {
@@ -378,36 +321,31 @@ FABRIC.SceneGraph.registerNodeType('Shader',
       });
     var shaderNode = scene.constructNode('SceneGraphNode', options),
       redrawEventHandler = shaderNode.constructEventHandlerNode('Redraw'),
-      shaderSources = [],
-      uniformValues = [],
-      programParams = [],
+      shaderProgram = new FABRIC.RT.OGLShaderProgram(options.name);
       i;
 
     if (options.fragmentShader) {
-      shaderSources.push(new FABRIC.RT.ShaderSource(
+      shaderProgram.shaderSources.push(new FABRIC.RT.OGLShaderSource(
         options.fragmentShader, FABRIC.SceneGraph.OpenGLConstants.GL_FRAGMENT_SHADER));
     }
     if (options.vertexShader) {
-      shaderSources.push(new FABRIC.RT.ShaderSource(
+      shaderProgram.shaderSources.push(new FABRIC.RT.OGLShaderSource(
         options.vertexShader, FABRIC.SceneGraph.OpenGLConstants.GL_VERTEX_SHADER));
     }
     if (options.tessControlShader) {
-      shaderSources.push(new FABRIC.RT.ShaderSource(
+      shaderProgram.shaderSources.push(new FABRIC.RT.OGLShaderSource(
         options.tessControlShader, FABRIC.SceneGraph.OpenGLConstants.GL_TESS_CONTROL_SHADER));
     }
     if (options.tessEvalShader) {
-      shaderSources.push(new FABRIC.RT.ShaderSource(
+      shaderProgram.shaderSources.push(new FABRIC.RT.OGLShaderSource(
         options.tessEvalShader, FABRIC.SceneGraph.OpenGLConstants.GL_TESS_EVALUATION_SHADER));
     }
     if (options.geometryShader) {
-      shaderSources.push(new FABRIC.RT.ShaderSource(
+      shaderProgram.shaderSources.push(new FABRIC.RT.OGLShaderSource(
         options.geometryShader, FABRIC.SceneGraph.OpenGLConstants.GL_GEOMETRY_SHADER_EXT));
     }
 
     redrawEventHandler.setScopeName('shader');
-    redrawEventHandler.addMember('shaderSources', 'ShaderSource[]', shaderSources);
-    redrawEventHandler.addMember('name', 'String', options.name);
-    redrawEventHandler.addMember('program', 'Integer', 0);
 
     ///////////////////////////////////////////////////
     // Uniform Values
@@ -415,7 +353,7 @@ FABRIC.SceneGraph.registerNodeType('Shader',
       if (!FABRIC.shaderAttributeTable[i]) {
         throw ('Error defining ' + options.name + '. Attribute not defined in the AttributeTable:' + i);
       }
-      uniformValues.push(new FABRIC.RT.ShaderValue(
+      shaderProgram.uniformValues.push(new FABRIC.RT.OGLShaderValue(
         options.shaderUniforms[i].name, FABRIC.shaderAttributeTable[i].id));
     }
     redrawEventHandler.addMember('uniformValues', 'ShaderValue[]', uniformValues);
@@ -427,7 +365,7 @@ FABRIC.SceneGraph.registerNodeType('Shader',
       if (!FABRIC.shaderAttributeTable[i]) {
         throw ('Attribute not defined in the AttributeTable:' + i);
       }
-      attributeValues.push(new FABRIC.RT.ShaderValue(
+      shaderProgram.attributeValues.push(new FABRIC.RT.OGLShaderValue(
         options.shaderAttributes[i].name, FABRIC.shaderAttributeTable[i].id));
     }
     redrawEventHandler.addMember('attributeValues', 'ShaderValue[]', attributeValues);
@@ -435,10 +373,10 @@ FABRIC.SceneGraph.registerNodeType('Shader',
     ///////////////////////////////////////////////////
     // EXT Params
     for (i in options.programParams) {
-      programParams.push(new FABRIC.RT.ShaderProgramParam(
+       shaderProgram.programParams.push(new FABRIC.RT.OGLShaderProgramParam(
         FABRIC.SceneGraph.OpenGLConstants[i], options.programParams[i]));
     }
-    redrawEventHandler.addMember('programParams', 'ShaderProgramParam[]', programParams);
+    redrawEventHandler.addMember('shaderProgram', 'OGLShaderProgram', shaderProgram);
   
     var operators = redrawEventHandler.preDescendBindings;
     if(options.assignUniformsOnPostDescend == true){
@@ -449,12 +387,7 @@ FABRIC.SceneGraph.registerNodeType('Shader',
       srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadShader.kl',
       entryFunctionName: 'loadShader',
       parameterBinding: [
-        'self.name',
-        'self.shaderSources',
-        'self.uniformValues',
-        'self.attributeValues',
-        'self.programParams',
-        'self.program'
+        'self.shaderProgram'
       ]
     }));
     

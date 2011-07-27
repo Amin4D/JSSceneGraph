@@ -17,7 +17,7 @@ FABRIC.SceneGraph.Lights = {
 };
 
 FABRIC.SceneGraph.registerNodeType('Light',
-  function (options, scene) {
+  function(options, scene) {
     scene.assignDefaults(options, {
       color: FABRIC.RT.rgb(1.0, 1.0, 1.0),
       transformNode: 'Transform',
@@ -40,7 +40,7 @@ FABRIC.SceneGraph.registerNodeType('Light',
     dgnode.addMember('cameraMat44', 'Mat44');
     dgnode.addMember('color', 'Color', options.color);
 
-    lightNode.getRedrawEventHandler = function () {
+    lightNode.getRedrawEventHandler = function() {
       // This call will replace the 'getRedrawEventHandler' with an accessor.
       redrawEventHandler = lightNode.constructEventHandlerNode('Redraw');
       redrawEventHandler.addScope('light', dgnode);
@@ -71,10 +71,10 @@ FABRIC.SceneGraph.registerNodeType('Light',
 
     // public interface
     // TODO: try to have base class with input transform (would share with cameraNode)
-    lightNode.pub.getTransformNode = function () {
+    lightNode.pub.getTransformNode = function() {
       return transformNode.pub;
     };
-    lightNode.pub.setTransformNode = function (node, member) {
+    lightNode.pub.setTransformNode = function(node, member) {
       if (member) {
         transformNodeMember = member;
       }
@@ -121,7 +121,7 @@ FABRIC.SceneGraph.registerNodeType('Light',
 
 
   FABRIC.SceneGraph.registerNodeType('PointLight',
-  function (options, scene) {
+  function(options, scene) {
 
     scene.assignDefaults(options, {
       position: FABRIC.RT.vec3(420.0, 1000.0, 600.0),
@@ -172,7 +172,7 @@ FABRIC.SceneGraph.registerNodeType('Light',
   });
 
 FABRIC.SceneGraph.registerNodeType('DirectionalLight',
-  function (options, scene) {
+  function(options, scene) {
 
     if (!options.transformNode) {
       scene.assignDefaults(options, {

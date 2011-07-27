@@ -182,10 +182,10 @@ FABRIC.SceneGraph = {
     scene.constructEventNode = function(name) {
       return context.DependencyGraph.createEvent(name);
     };
-    scene.constructEventHandlerNode = function (name) {
+    scene.constructEventHandlerNode = function(name) {
       return context.DependencyGraph.createEventHandler(name);
     };
-    scene.constructDependencyGraphNode = function (name, isResourceLoad) {
+    scene.constructDependencyGraphNode = function(name, isResourceLoad) {
       if (isResourceLoad) {
         return context.DependencyGraph.createResourceLoadNode(name);
       }
@@ -798,10 +798,10 @@ FABRIC.SceneGraph.registerNodeType('SceneGraphNode',
         dgnodes[dgnodename] = dgnode;
         return dgnode;
       },
-      constructResourceLoadNode: function (dgnodename) {
+      constructResourceLoadNode: function(dgnodename) {
         return sceneGraphNode.constructDGNode(dgnodename, true);
       },
-      constructEventHandlerNode: function (ehname) {
+      constructEventHandlerNode: function(ehname) {
         var eventhandlernode = scene.constructEventHandlerNode(name + '_' + ehname);
         eventhandlernode.sceneGraphNode = sceneGraphNode;
         sceneGraphNode['get' + ehname + 'EventHandler'] = function() {
@@ -1243,7 +1243,7 @@ FABRIC.SceneGraph.registerNodeType('Viewport',
   });
 
   FABRIC.SceneGraph.registerNodeType('ResourceLoad',
-  function (options, scene) {
+  function(options, scene) {
 
     scene.assignDefaults(options, {
       redrawOnLoad: true
@@ -1258,7 +1258,7 @@ FABRIC.SceneGraph.registerNodeType('Viewport',
     resourceLoadNode.addMemberInterface(dgnode, 'url', true);
     resourceLoadNode.addMemberInterface(dgnode, 'resource');
 
-    dgnode.addOnLoadCallback(function () {
+    dgnode.addOnLoadCallback(function() {
       var i;
       lastLoadCallbackURL = resourceLoadNode.pub.getUrl();
       for (i = 0; i < onloadCallbacks.length; i++) {
@@ -1271,11 +1271,11 @@ FABRIC.SceneGraph.registerNodeType('Viewport',
       }
     });
 
-    resourceLoadNode.pub.isLoaded = function () {
+    resourceLoadNode.pub.isLoaded = function() {
       return lastLoadCallbackURL !== '' && lastLoadCallbackURL === resourceLoadNode.pub.getUrl();
     }
 
-    resourceLoadNode.pub.addOnLoadCallback = function (callback) {
+    resourceLoadNode.pub.addOnLoadCallback = function(callback) {
       //It is possible that a resourceLoadNode actually loads multiple resources in a sequence;
       //make sure the callback is only fired when the 'next' resource is loaded.
       if (resourceLoadNode.pub.isLoaded()) {

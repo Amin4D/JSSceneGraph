@@ -14,7 +14,7 @@ FABRIC.SceneGraph.registerNodeType('Texture',
   // here we have HDR image loading mixed in with LDR image loading,
   // but it should be a separate type.
   FABRIC.SceneGraph.registerNodeType('Image',
-  function (options, scene) {
+  function(options, scene) {
     scene.assignDefaults(options, {
       wantHDR: false,
       wantRGBA: true,
@@ -57,11 +57,11 @@ FABRIC.SceneGraph.registerNodeType('Texture',
         srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadTexture.kl'
       }));
 
-      imageNode.getResourceLoadNode = function () {
+      imageNode.getResourceLoadNode = function() {
         return resourceLoadNode;
       };
 
-      imageNode.isImageLoaded = function () {
+      imageNode.isImageLoaded = function() {
         return resourceLoadNode ? resourceLoadNode.pub.isLoaded() : false;
       };
     }
@@ -85,7 +85,7 @@ FABRIC.SceneGraph.registerNodeType('Texture',
       }));
     }
 
-    imageNode.getURL = function () {
+    imageNode.getURL = function() {
       return url;
     };
 

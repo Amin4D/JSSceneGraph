@@ -14,10 +14,10 @@ FABRIC = (function() {
     /*
     {
       contextID: embedTag.contextID,
-      jsonExec: function (jsonEncodedCommands) {
+      jsonExec: function(jsonEncodedCommands) {
         return embedTag.jsonExec(jsonEncodedCommands);
       },
-      setJSONNotifyCallback: function (jsonNotifyCallback) {
+      setJSONNotifyCallback: function(jsonNotifyCallback) {
         embedTag.setJSONNotifyCallback(jsonNotifyCallback);
       },
       RegisteredTypesManager: embedTag.RegisteredTypesManager,

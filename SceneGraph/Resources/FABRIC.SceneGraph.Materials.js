@@ -4,17 +4,17 @@
 //
 
 
-FABRIC.SceneGraph.registerNodeType('Texture',
-  function(options, scene) {
+FABRIC.SceneGraph.registerNodeType('Texture', {
+  factoryFn: function(options, scene) {
     var textureNode = scene.constructNode('SceneGraphNode', options);
     return textureNode;
-  });
+  }});
 
 // TODO: The texture image type needs to be broken into LDR and HDR.
 // here we have HDR image loading mixed in with LDR image loading,
 // but it should be a separate type.
-FABRIC.SceneGraph.registerNodeType('Image',
-  function(options, scene) {
+FABRIC.SceneGraph.registerNodeType('Image', {
+  factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
         onLoadCallback: undefined,
         wantHDR: false,
@@ -115,10 +115,10 @@ FABRIC.SceneGraph.registerNodeType('Image',
       imageNode.loadImageAsset(options.url);
     }
     return imageNode;
-  });
+  }});
 
-FABRIC.SceneGraph.registerNodeType('Video',
-  function(options, scene) {
+FABRIC.SceneGraph.registerNodeType('Video', {
+  factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
         localFileName: ''
       });
@@ -213,10 +213,10 @@ FABRIC.SceneGraph.registerNodeType('Video',
     };
 
     return videoNode;
-  });
+  }});
 
-FABRIC.SceneGraph.registerNodeType('PointSpriteTexture',
-  function(options, scene) {
+FABRIC.SceneGraph.registerNodeType('PointSpriteTexture', {
+  factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
         spriteResolution: 32
       });
@@ -241,7 +241,7 @@ FABRIC.SceneGraph.registerNodeType('PointSpriteTexture',
           }));
 
     return pointSpriteTextureNode;
-  });
+  }});
 
 
 /**
@@ -371,8 +371,8 @@ FABRIC.shaderAttributeTable = {
   tesselationDepthMax: { id: 256, type: 'Scalar' }
 };
 
-FABRIC.SceneGraph.registerNodeType('Shader',
-  function(options, scene) {
+FABRIC.SceneGraph.registerNodeType('Shader', {
+  factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
         parentEventHandler: scene.getSceneRedrawEventHandler()
       });
@@ -471,13 +471,13 @@ FABRIC.SceneGraph.registerNodeType('Shader',
       return options.shaderAttributes;
     };
     return shaderNode;
-  }
+  }}
 );
 
 
 
-FABRIC.SceneGraph.registerNodeType('Material',
-  function(options, scene) {
+FABRIC.SceneGraph.registerNodeType('Material', {
+  factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
         separateShaderNode: true,
         shaderNode: undefined,
@@ -662,11 +662,11 @@ FABRIC.SceneGraph.registerNodeType('Material',
     }
 
     return materialNode;
-  });
+  }});
 
 
-FABRIC.SceneGraph.registerNodeType('PointMaterial',
-  function(options, scene) {
+FABRIC.SceneGraph.registerNodeType('PointMaterial', {
+  factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
         pointSize: 3.0
       });
@@ -692,11 +692,11 @@ FABRIC.SceneGraph.registerNodeType('PointMaterial',
         parameterBinding: ['material.pointSize']
       }));
     return pointMaterial;
-  });
+  }});
 
 
-FABRIC.SceneGraph.registerNodeType('PostProcessEffect',
-  function(options, scene) {
+FABRIC.SceneGraph.registerNodeType('PostProcessEffect', {
+  factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
         fragmentShader: undefined,
         shaderUniforms: undefined,
@@ -783,7 +783,7 @@ FABRIC.SceneGraph.registerNodeType('PostProcessEffect',
           ]
         }));
     return postProcessEffect;
-  }
+  }}
 );
 
 /**
@@ -1004,8 +1004,8 @@ FABRIC.SceneGraph.defineEffectFromFile = function(effectName, effectfile) {
     }
   }
 
-  FABRIC.SceneGraph.registerNodeType(effectName,
-    function(options, scene) {
+  FABRIC.SceneGraph.registerNodeType(effectName, {
+    factoryFn: function(options, scene) {
       if(!effectParameters){
         parseEffectFile();
       }
@@ -1080,7 +1080,7 @@ FABRIC.SceneGraph.defineEffectFromFile = function(effectName, effectfile) {
         }
       }
       return materialNode;
-    });
+    }});
 };
 
 FABRIC.SceneGraph.defineEffectFromFile('FlatMaterial', 'FABRIC_ROOT/SceneGraph/Resources/Shaders/FlatShader.xml');
@@ -1103,8 +1103,8 @@ FABRIC.SceneGraph.defineEffectFromFile('NormalMaterial', 'FABRIC_ROOT/SceneGraph
 FABRIC.SceneGraph.defineEffectFromFile('PhongTesselationMaterial', 'FABRIC_ROOT/SceneGraph/Resources/Shaders/PhongTesselationShader.xml');
 
 
-FABRIC.SceneGraph.registerNodeType('PointSpriteMaterial',
-  function(options, scene) {
+FABRIC.SceneGraph.registerNodeType('PointSpriteMaterial', {
+  factoryFn: function(options, scene) {
 
     scene.assignDefaults(options, {
         pointSize: 5,
@@ -1154,29 +1154,29 @@ FABRIC.SceneGraph.registerNodeType('PointSpriteMaterial',
       }));
 
     return pointSpriteMaterialNode;
-  });
+  }});
 
 
-FABRIC.SceneGraph.registerNodeType('BloomPostProcessEffect',
-  function(options, scene) {
+FABRIC.SceneGraph.registerNodeType('BloomPostProcessEffect', {
+  factoryFn: function(options, scene) {
     options.fragmentShader = FABRIC.loadResourceURL('FABRIC_ROOT/SceneGraph/Resources/Shaders/BloomPixelShader.glsl');
 
     var bloomPostProcessEffect = scene.constructNode('PostProcessEffect', options);
     return bloomPostProcessEffect;
-  });
+  }});
 
 
-FABRIC.SceneGraph.registerNodeType('FilmicTonemapperPostProcessEffect',
-  function(options, scene) {
+FABRIC.SceneGraph.registerNodeType('FilmicTonemapperPostProcessEffect', {
+  factoryFn: function(options, scene) {
     options.fragmentShader = FABRIC.loadResourceURL('FABRIC_ROOT/SceneGraph/Resources/Shaders/FilmicTonemapper.glsl');
 
     var filmicTonemapperEffect = scene.constructNode('PostProcessEffect', options);
     return filmicTonemapperEffect;
-  });
+  }});
 
 
-FABRIC.SceneGraph.registerNodeType('EdgeDetectionPostProcessEffect',
-  function(options, scene) {
+FABRIC.SceneGraph.registerNodeType('EdgeDetectionPostProcessEffect', {
+  factoryFn: function(options, scene) {
     options.fragmentShader = FABRIC.loadResourceURL('FABRIC_ROOT/SceneGraph/Resources/Shaders/EdgeDetectionPixelShader.glsl');
 
     options.shaderUniforms = {
@@ -1187,12 +1187,12 @@ FABRIC.SceneGraph.registerNodeType('EdgeDetectionPostProcessEffect',
 
     var edgeDetectionEffect = scene.constructNode('PostProcessEffect', options);
     return edgeDetectionEffect;
-  });
+  }});
 
 
 
-FABRIC.SceneGraph.registerNodeType('GaussianBlurPostProcessEffect',
-  function(options, scene) {
+FABRIC.SceneGraph.registerNodeType('GaussianBlurPostProcessEffect', {
+  factoryFn: function(options, scene) {
     options.fragmentShader = FABRIC.loadResourceURL('FABRIC_ROOT/SceneGraph/Resources/Shaders/GaussianBlurFragmentShader.glsl');
 
     options.shaderUniforms = {
@@ -1201,6 +1201,6 @@ FABRIC.SceneGraph.registerNodeType('GaussianBlurPostProcessEffect',
 
     var edgeDetectionEffect = scene.constructNode('PostProcessEffect', options);
     return edgeDetectionEffect;
-  });
+  }});
 
 

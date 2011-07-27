@@ -3,8 +3,8 @@
 // Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
 //
 
-FABRIC.SceneGraph.registerNodeType('Transform',
-  function(options, scene) {
+FABRIC.SceneGraph.registerNodeType('Transform', {
+  factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
         parentTransformNode: undefined,
         hierarchical: false,
@@ -87,11 +87,11 @@ FABRIC.SceneGraph.registerNodeType('Transform',
     }
 
     return transformNode;
-  });
+  }});
 
 
-FABRIC.SceneGraph.registerNodeType('AimTransform',
-  function(options, scene) {
+FABRIC.SceneGraph.registerNodeType('AimTransform', {
+  factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
         target: FABRIC.RT.vec3(0, 0, 0),
         roll: 0.0
@@ -134,7 +134,7 @@ FABRIC.SceneGraph.registerNodeType('AimTransform',
     aimTransformNode.addMemberInterface(dgnode, 'roll', true);
     
     return aimTransformNode;
-  });
+  }});
 /*
 FABRIC.SceneGraph.registerNodeType('AimCameraTransform',
   function(options, scene) {

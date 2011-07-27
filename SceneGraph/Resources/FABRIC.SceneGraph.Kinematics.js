@@ -4,6 +4,10 @@
 //
 
 FABRIC.SceneGraph.registerNodeType('Transform', {
+  briefDesc: 'The Transform node implements a global or hierarchical transform.',
+  detailedDesc: 'The Transform node uses a redraw eventhandler to draw an OpenGL projection. The node can be used in '+
+                'a hierarchical mode, in which is projects its own projection into another Transform node\'s projection. '+
+                'This allows to compute hierarchies in 3D.',
   factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
         parentTransformNode: undefined,
@@ -91,6 +95,10 @@ FABRIC.SceneGraph.registerNodeType('Transform', {
 
 
 FABRIC.SceneGraph.registerNodeType('AimTransform', {
+  briefDesc: 'The AimTransform node implements a global lookat transform.',
+  detailedDesc: 'The AimTransform uses the Transform node to implement a lookat transform, using a '+
+                'root position as well as a target position. Furthermore you can use a roll to offset '+
+                'the used upvector (default is (0,1,0). This node is used for the TargetCamera node.',
   factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
         target: FABRIC.RT.vec3(0, 0, 0),

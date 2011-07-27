@@ -863,6 +863,11 @@ FABRIC.SceneGraph.registerNodeType('SceneGraphNode', {
   }});
 
 FABRIC.SceneGraph.registerNodeType('Viewport', {
+  briefDesc: 'The Viewport node implements the basic OpenGL canvas.',
+  detailedDesc: 'Utilizing a redraw eventhandler, the ViewPort node offers a powerful OpenGL canvas, ' +
+                'which is connected to an embed element inside the DOM. The most important parameter of '+
+                'the ViewPort node\'s options is the windowElement, the ID of the HTML element to append '+
+                'the viewport to.',
   factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
         windowElement: undefined,
@@ -1270,6 +1275,9 @@ FABRIC.SceneGraph.registerNodeType('Viewport', {
 
 
 FABRIC.SceneGraph.registerNodeType('Camera', {
+  briefDesc: 'The Camera node implements an OpenGL camera for the ViewPort node.',
+  detailedDesc: 'The Camera node uses a redraw event handler to draw the camera projection to '+
+                'the OpenGL canvas.',
   factoryFn: function(options, scene) {
 
     scene.assignDefaults(options, {
@@ -1364,6 +1372,8 @@ FABRIC.SceneGraph.registerNodeType('Camera', {
 
 
 FABRIC.SceneGraph.registerNodeType('FreeCamera', {
+  briefDesc: 'The FreeCamera node implements an OpenGL camera in a free roaming mode.',
+  detailedDesc: 'The FreeCamera node uses the Camera node to implement a free roaming camera without a target point.',
   factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
         position: FABRIC.RT.vec3(1, 0, 0),
@@ -1382,6 +1392,8 @@ FABRIC.SceneGraph.registerNodeType('FreeCamera', {
 
 
 FABRIC.SceneGraph.registerNodeType('TargetCamera', {
+  briefDesc: 'The TargetCamera node implements an OpenGL camera in using a target point',
+  detailedDesc: 'The TargetCamera node uses the Camera node to implement a camera with a target point, similar to the GLUT lookat camera.',
   factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
         target: FABRIC.RT.vec3(0, 0, 0)

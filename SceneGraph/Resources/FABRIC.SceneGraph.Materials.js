@@ -1005,6 +1005,8 @@ FABRIC.SceneGraph.defineEffectFromFile = function(effectName, effectfile) {
   }
 
   FABRIC.SceneGraph.registerNodeType(effectName, {
+    briefDesc: 'The '+effectName+' node is a xml based GLSL shader.',
+    detailedDesc: 'The '+effectName+' GLSL shader is implemented in "'+effectfile+'".',
     factoryFn: function(options, scene) {
       if(!effectParameters){
         parseEffectFile();

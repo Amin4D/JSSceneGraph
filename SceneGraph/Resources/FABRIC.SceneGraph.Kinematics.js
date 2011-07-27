@@ -136,8 +136,8 @@ FABRIC.SceneGraph.registerNodeType('AimTransform', {
     return aimTransformNode;
   }});
 /*
-FABRIC.SceneGraph.registerNodeType('AimCameraTransform',
-  function(options, scene) {
+FABRIC.SceneGraph.registerNodeType('AimCameraTransform', {
+  factoryFn: function(options, scene) {
     if(options.globalXfo && options.target){
       var dirVec = options.globalXfo.tr.subtract(options.target);
       var vec1 = options.globalXfo.ori.getZaxis();
@@ -150,6 +150,6 @@ FABRIC.SceneGraph.registerNodeType('AimCameraTransform',
     }
    var aimCameraTransformNode = scene.constructNode('AimTransform', options);
     return aimCameraTransformNode;
-  });
+  }});
   */
 

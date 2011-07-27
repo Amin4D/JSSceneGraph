@@ -365,8 +365,8 @@ FABRIC.SceneGraph.registerNodeType('CharacterVariables', {
 
 // This node represents a branch in an animation graph
 // Where multiple rig input values are being blended together
-FABRIC.SceneGraph.registerNodeType("NLerpCharacterVariables",
-  function(options, scene){
+FABRIC.SceneGraph.registerNodeType("NLerpCharacterVariables", {
+  factoryFn: function(options, scene){
     scene.assignDefaults(options, {
       });
     var rigVariablesNode = scene.constructNode("RigVariables");
@@ -391,7 +391,7 @@ FABRIC.SceneGraph.registerNodeType("NLerpCharacterVariables",
         skeletonNode = node;
       };
     return rigVariablesNode;
-  });
+  }});
   */
 
 // These are the values that represent the evaluation

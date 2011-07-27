@@ -20,8 +20,8 @@ FABRIC.SceneGraph = {
       if (!options.briefDesc || !options.detailedDesc)
         console.log('WARNING: Node Constructor "'+type+'" does not provide a proper description.');
       this.nodeDescriptions[type] = {};
-      this.nodeDescriptions[type].brief = options.briefDesc ? options.briefDesc : 'Brief description missing.';
-      this.nodeDescriptions[type].detailed = options.detailedDesc ? options.detailedDesc : 'Detailed description missing.';
+      this.nodeDescriptions[type].brief = options.briefDesc ? options.briefDesc : 'Brief description missing. Please implement.';
+      this.nodeDescriptions[type].detailed = options.detailedDesc ? options.detailedDesc : 'Detailed description missing. Please implement.';
       this.nodeFactories[type] = options.factoryFn;
     }
   },

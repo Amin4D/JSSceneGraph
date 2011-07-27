@@ -43,8 +43,8 @@
     
 // These Node definitions are inlined for now, but will
 // be moved to a separate file once they are stabilized. 
-FABRIC.SceneGraph.registerNodeType('ThickGlassMaterial',
-  function(options, scene) {
+FABRIC.SceneGraph.registerNodeType('ThickGlassMaterial', {
+  factoryFn: function(options, scene) {
     options = scene.assignDefaults(options, {
         color:FABRIC.RT.rgba(0.6,0.3,0,1)
       });
@@ -145,7 +145,7 @@ void main(){\n\
     });
     
     return thickGlassMaterial;
-  });
+  }});
     
     
 $(document).ready(function() {

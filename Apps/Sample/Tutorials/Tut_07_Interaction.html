@@ -1,0 +1,145 @@
+<html xmlns="http://www.w3.org/1999/xhtml"> 
+  <!--
+    Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
+    -->
+  <head> 
+    <title>FABRIC - Tutorial 07 - Interaction with the Core</title> 
+    
+    <meta charset="iso-8859-1"/>
+    <script type="text/javascript" src="../../../ThirdParty/jQuery/jquery-1.4.2.min.js"></script>
+
+    <script type="text/javascript" src="../../../Core/FABRIC.Wrappers.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../Core/FABRIC.js" charset="utf-8"></script>
+    
+
+<script type="text/javascript">
+
+$(document).ready(function() {
+  
+  // create a context and store it
+  var context = FABRIC.createContext();
+  $("#context").context = context;
+
+  // create a new dgnode
+  var dgnode1 = context.DependencyGraph.createNode("myNode1");
+  var dgnode2 = context.DependencyGraph.createNode("myNode2");
+  var dgnodeInteract = context.DependencyGraph.createNode("myNode3");
+  
+  // add some members
+  dgnode1.addMember('a','Scalar');
+  dgnode1.addMember('b','Scalar');
+  dgnode1.addMember('result','Scalar');
+  dgnode2.addMember('result','Scalar');
+  dgnodeInteract.addMember('multiplier','Scalar',3.0);
+  
+  // increase the slicecount of the nodes
+  var count = 1000000; // one million instructions
+  dgnode1.setCount(count);
+  dgnode2.setCount(count);
+  dgnodeInteract.setCount(1);
+  
+  // create dependencies between the nodes
+  dgnode2.addDependency(dgnode1, 'otherNode');
+  dgnode2.addDependency(dgnodeInteract, 'interaction');
+  
+  // create three operators, one to initiate the data, one to add, and one to mul
+  var operatorInit = context.DependencyGraph.createOperator("initiate");
+  operatorInit.setSourceCode(
+    'operator initiate(in Size index, io Scalar a, io Scalar b) {\n'+
+    '  a = 12.5 * Scalar(index);\n'+
+    '  b = 1.73 * Scalar(index);\n'+
+    '}\n');
+  operatorInit.setEntryFunctionName('initiate');
+  
+  var operatorAdd = context.DependencyGraph.createOperator("add");
+  operatorAdd.setSourceCode(
+    'operator add(io Scalar a, io Scalar b, io Scalar result) {\n'+
+    '  result = a + b;\n'+
+    '}\n');
+  operatorAdd.setEntryFunctionName('add');
+  
+  var operatorMul = context.DependencyGraph.createOperator("operatorMul");
+  operatorMul.setSourceCode(
+    'operator mul(io Scalar input[], io Scalar multiplier, io Scalar result, in Size index) {\n'+
+    '  result = multiplier * input[index];\n'+
+    '}\n');
+  operatorMul.setEntryFunctionName('mul');
+  
+  // create bindings between the nodes and the operator
+  var binding1init = context.DependencyGraph.createBinding();
+  binding1init.setOperator(operatorInit);
+  binding1init.setParameterLayout([
+    'self.index',
+    'self.a',
+    'self.b'
+  ]);
+  var binding1add = context.DependencyGraph.createBinding();
+  binding1add.setOperator(operatorAdd);
+  binding1add.setParameterLayout([
+    'self.a',
+    'self.b',
+    'self.result'
+  ]);
+  var binding2 = context.DependencyGraph.createBinding();
+  binding2.setOperator(operatorMul);
+  binding2.setParameterLayout([
+    'otherNode.result[]',
+    'interaction.multiplier',
+    'self.result',
+    'self.index'
+  ]);
+  
+  // append the new binding to the node
+  dgnode1.bindings.append(binding1init);
+  dgnode1.bindings.append(binding1add);
+  dgnode2.bindings.append(binding2);
+  
+  // evaluate the node!
+  var refresh = function() {
+    dgnode2.evaluate();
+    
+    // query the node's data (only for certain indices)
+    var displayCount = count > 100 ? 100 : count;
+    var indices = [];
+    for(var i=0;i<displayCount;i++)
+      indices.push(i);
+  
+    var data1 = dgnode1.getSlicesBulkData(indices);
+    var data2 = dgnode2.getSlicesBulkData(indices);
+  
+    // construct html to output the computation
+    var multiplier = dgnodeInteract.getSliceBulkData(0).multiplier;
+    var html = "<b>Computation result (displaying "+displayCount+" of "+count+"):</b><br>";
+    for (var i=0;i<displayCount;i++) {
+      html += "<br>slice("+i+"): "+multiplier+" * ( a("+data1[i].a+") + b("+data1[i].b+") ) = result("+data2[i].result+")";
+    }
+    
+    // output the html
+    $("#output").html(html);
+  }
+  refresh();
+  
+  // setup interaction
+  $("#multiplier")
+    .val(dgnodeInteract.getSliceBulkData(0).multiplier)
+    .change(function(){
+      var value = $(this).val();
+      value = parseFloat(value);
+      $(this).val(value);
+      
+      dgnodeInteract.setSliceBulkData(0,{ multiplier: value });
+      refresh();
+    });
+});
+
+</script>
+
+  </head> 
+  <body>
+    <div id="context">
+    </div>
+    Multiplier <input id="multiplier" type=text></input><br><br>
+    <div id="output">
+    </div>
+  </body> 
+  </html>

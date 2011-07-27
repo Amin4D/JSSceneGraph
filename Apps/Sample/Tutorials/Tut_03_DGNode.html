@@ -1,0 +1,56 @@
+<html xmlns="http://www.w3.org/1999/xhtml"> 
+  <!--
+    Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
+    -->
+  <head> 
+    <title>FABRIC - Tutorial 03 - Create a DG Node</title> 
+    
+    <meta charset="iso-8859-1"/>
+    <script type="text/javascript" src="../../../ThirdParty/jQuery/jquery-1.4.2.min.js"></script>
+
+    <script type="text/javascript" src="../../../Core/FABRIC.Wrappers.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../Core/FABRIC.js" charset="utf-8"></script>
+    
+
+<script type="text/javascript">
+
+$(document).ready(function() {
+  
+  // create a context and store it
+  var context = FABRIC.createContext();
+  $("#context").context = context;
+
+  // create a new dgnode
+  var dgnode = context.DependencyGraph.createNode("myNode");
+  
+  // we only store the node to the context div for demonstration
+  // purpose, so that we can retrieve it in the console.
+  $("#context").myNode = dgnode;
+  
+  // add some members
+  dgnode.addMember('a','Scalar',17.3);
+  dgnode.addMember('b','Boolean',true);
+  dgnode.addMember('c','Integer',7);
+  dgnode.addMember('d','Integer[]',[1,2,3,4,5]);
+  
+  // construct html to output the members
+  var html = "<b>Node Members:</b><br>";
+  var members = dgnode.getMembers();
+  for (var member in members) {
+    html += "<br>'"+member+"' <i>of type</i> '"+members[member].type+"'";
+  }
+  
+  // output the html
+  $("#output").html(html);
+});
+
+</script>
+
+  </head> 
+  <body>
+    <div id="context">
+    </div>
+    <div id="output">
+    </div>
+  </body> 
+  </html>

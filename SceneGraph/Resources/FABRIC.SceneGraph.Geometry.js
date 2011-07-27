@@ -4,8 +4,8 @@
 //
 
 
-FABRIC.SceneGraph.registerNodeType('Geometry',
-  function(options, scene) {
+FABRIC.SceneGraph.registerNodeType('Geometry', {
+  factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
         dynamicMembers: [],
         genOpenGLBuffers:[],
@@ -440,10 +440,10 @@ FABRIC.SceneGraph.registerNodeType('Geometry',
     }
 
     return geometryNode;
-  });
+  }});
 
-FABRIC.SceneGraph.registerNodeType('Points',
-  function(options, scene) {
+FABRIC.SceneGraph.registerNodeType('Points', {
+  factoryFn: function(options, scene) {
 
     var pointsNode = scene.constructNode('Geometry', options);
 
@@ -476,12 +476,12 @@ FABRIC.SceneGraph.registerNodeType('Points',
     };
 
     return pointsNode;
-  });
+  }});
 
 
 
-FABRIC.SceneGraph.registerNodeType('Lines',
-  function(options, scene) {
+FABRIC.SceneGraph.registerNodeType('Lines', {
+  factoryFn: function(options, scene) {
 
     var linesNode = scene.constructNode('Geometry', options);
 
@@ -518,13 +518,13 @@ FABRIC.SceneGraph.registerNodeType('Lines',
     linesNode.pub.addUniformValue('indices', 'Integer[]');
     linesNode.pub.addUniformValue('thickness', 'Scalar', 3.0);
     return linesNode;
-  });
+  }});
 
 
 
 
-FABRIC.SceneGraph.registerNodeType('Triangles',
-  function(options, scene) {
+FABRIC.SceneGraph.registerNodeType('Triangles', {
+  factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
         uvSets: undefined,
         tangentsFromUV: undefined
@@ -615,11 +615,11 @@ FABRIC.SceneGraph.registerNodeType('Triangles',
       }
     }
     return trianglesNode;
-  });
+  }});
 
 
-FABRIC.SceneGraph.registerNodeType('Instance',
-  function(options, scene) {
+FABRIC.SceneGraph.registerNodeType('Instance', {
+  factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
         transformNode: undefined,
         transformNodeMember: 'globalXfo',
@@ -842,5 +842,5 @@ FABRIC.SceneGraph.registerNodeType('Instance',
       instanceNode.pub.setIsShadowCasting(true);
     }
     return instanceNode;
-  });
+  }});
 

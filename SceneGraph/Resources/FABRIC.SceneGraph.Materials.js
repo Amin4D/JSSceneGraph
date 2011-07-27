@@ -25,11 +25,12 @@ FABRIC.SceneGraph.registerNodeType('Texture',
     var imageLoaded = false,
       redrawEventHandler,
       ext = options.url ? options.url.substr(options.url.lastIndexOf('.') + 1) : undefined,
-      url;
-      dgnode = imageNode.getDGNode(),
+      url,
+      dgnode,
       resourceLoadNode,
       resourceloaddgnode;
 
+    imageNode = scene.constructNode('Texture', options);
     dgnode = imageNode.constructDGNode('DGNode')
     dgnode.addMember('hdr', 'Boolean', options.wantHDR);
     dgnode.addMember('width', 'Size');
@@ -51,12 +52,19 @@ FABRIC.SceneGraph.registerNodeType('Texture',
               'self.width',
               'self.height',
               'self.pixels'
+            ],
         entryFunctionName: (options.wantHDR ? 'loadImageHDR' : 'loadImageLDR'),
         srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadTexture.kl'
       }));
-    imageNode.getResourceLoadNode = function () {
-      return resourceLoadNode;
-    };
+
+      imageNode.getResourceLoadNode = function () {
+        return resourceLoadNode;
+      };
+
+      imageNode.isImageLoaded = function () {
+        return resourceLoadNode ? resourceLoadNode.pub.isLoaded() : false;
+      };
+    }
 
     // Construct the handler for loading the image into texture memory.
     redrawEventHandler = imageNode.constructEventHandlerNode('Redraw');
@@ -77,30 +85,10 @@ FABRIC.SceneGraph.registerNodeType('Texture',
       }));
     }
 
-      resourceLoadEventHandler.addScope('image', dgnode);
-      resourceLoadEventHandler.preDescendBindings.append(scene.constructOperator({
-          operatorName: (options.wantHDR ? 'loadImageHDR' : 'loadImageLDR'),
-          parameterBinding: [
-            'resource.data',
-            'resource.dataSize',
-            'image.type',
-            'image.width',
-            'image.height',
-            'image.pixels'
-          ],
-          entryFunctionName: (options.wantHDR ? 'loadImageHDR' : 'loadImageLDR'),
-          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadTexture.kl'
-        }));
-      
-      resourceLoadEvent.appendEventHandler(resourceLoadEventHandler);
-      resourceLoadEvent.didFireCallback = function() {
     imageNode.getURL = function () {
       return url;
     };
 
-    imageNode.pub.isImageLoaded = function () {
-      return resourceLoadNode ? resourceLoadNode.pub.isLoaded() : false;
-    };
     return imageNode;
   });
 

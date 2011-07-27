@@ -209,7 +209,6 @@ FABRIC.SceneGraph = {
         });
       }
 
-      options.dgresourceloadnodenames = options.dgresourceloadnodenames ? options.dgresourceloadnodenames : [];
       var sceneGraphNode = FABRIC.SceneGraph.nodeFactories[type].call(undefined, options, scene);
       if (!sceneGraphNode) {
         throw (' Factory function method must return an object');
@@ -736,7 +735,6 @@ FABRIC.SceneGraph = {
 FABRIC.SceneGraph.registerNodeType('SceneGraphNode',
   function(options, scene) {
 
-    var dgresourceloadnodenames = options.dgresourceloadnodenames ? options.dgresourceloadnodenames : [];
     var dgnodes = {};
     var eventnodes = {};
     var eventhandlernodes = {};
@@ -777,11 +775,11 @@ FABRIC.SceneGraph.registerNodeType('SceneGraphNode',
           }
         }
       },
-      constructDGNode: function(dgnodename) {
+      constructDGNode: function(dgnodename, isResourceLoad) {
         if(dgnodes[dgnodename]){
           throw "SceneGraphNode already has a " + dgnodename;
         }
-        var dgnode = scene.constructDependencyGraphNode(name + '_' + dgnodename);
+        var dgnode = scene.constructDependencyGraphNode(name + '_' + dgnodename, isResourceLoad);
         dgnode.sceneGraphNode = sceneGraphNode;
         sceneGraphNode['get' + dgnodename] = function() {
           return dgnode;
@@ -800,14 +798,14 @@ FABRIC.SceneGraph.registerNodeType('SceneGraphNode',
         dgnodes[dgnodename] = dgnode;
         return dgnode;
       },
-      constructEventHandlerNode: function(ehname) {
+      constructResourceLoadNode: function (dgnodename) {
+        return sceneGraphNode.constructDGNode(dgnodename, true);
+      },
+      constructEventHandlerNode: function (ehname) {
         var eventhandlernode = scene.constructEventHandlerNode(name + '_' + ehname);
         eventhandlernode.sceneGraphNode = sceneGraphNode;
         sceneGraphNode['get' + ehname + 'EventHandler'] = function() {
           return eventhandlernode;
-    }
-
-    // take care of the EH nodes
         };
         sceneGraphNode['add' + ehname + 'Member'] = function(
             memberName,
@@ -1254,10 +1252,8 @@ FABRIC.SceneGraph.registerNodeType('Viewport',
     var onloadCallbacks = [];
     lastLoadCallbackURL = '';
 
-    options.dgresourceloadnodenames.push('DGLoadNode');
-
     var resourceLoadNode = scene.constructNode('SceneGraphNode', options);
-    var dgnode = resourceLoadNode.getDGLoadNode();
+    var dgnode = resourceLoadNode.constructResourceLoadNode('DGLoadNode');
 
     resourceLoadNode.addMemberInterface(dgnode, 'url', true);
     resourceLoadNode.addMemberInterface(dgnode, 'resource');

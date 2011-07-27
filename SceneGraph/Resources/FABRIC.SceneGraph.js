@@ -9,13 +9,37 @@
  */
 FABRIC.SceneGraph = {
   nodeFactories: {},
+  nodeDescriptions: {},
   assetLoaders: {},
-  registerNodeType: function(type, factoryFn) {
+  registerNodeType: function(type, options) {
     if (this.nodeFactories[type]) {
       throw ('Node Constructor already Registered:' + type);
     }else {
-      this.nodeFactories[type] = factoryFn;
+      if (!options.factoryFn)
+        throw ('Node Constructor "'+type+'" does not implement the factoryFn');
+      if (!options.briefDesc || !options.detailedDesc)
+        console.log('WARNING: Node Constructor "'+type+'" does not provide a proper description.');
+      this.nodeDescriptions[type] = {};
+      this.nodeDescriptions[type].brief = options.briefDesc ? options.briefDesc : 'Brief description missing. Please implement.';
+      this.nodeDescriptions[type].detailed = options.detailedDesc ? options.detailedDesc : 'Detailed description missing. Please implement.';
+      this.nodeFactories[type] = options.factoryFn;
     }
+  },
+  help: function(type) {
+    var result = {};
+    if (!type) {
+      for (var type in this.nodeDescriptions) {
+        result[type] = {};
+        result[type].brief = this.nodeDescriptions[type].brief;
+        result[type].detailed = this.nodeDescriptions[type].detailed;
+      }
+    } else {
+      if (!this.nodeDescriptions[type])
+        throw ('Node Constructor "'+type+'" is not registered!');
+      result.brief = this.nodeDescriptions[type].brief;
+      result.detailed = this.nodeDescriptions[type].detailed;
+    }
+    return result;
   },
   registerParser: function(ext, parserFn) {
     var makeFileHandle = function(filePath) {
@@ -730,8 +754,15 @@ FABRIC.SceneGraph = {
   }
 };
 
-FABRIC.SceneGraph.registerNodeType('SceneGraphNode',
-  function(options, scene) {
+FABRIC.SceneGraph.registerNodeType('SceneGraphNode', {
+  briefDesc: 'The base class for the SceneGraphNodes.',
+  detailedDesc: 'The SceneGraphNode is a basic wrapper for Fabric\'s DGNode. Each SceneGraphNode can '+
+                'contain several DGNodes. Furthermore the SceneGraphNode implements the concept of a '+
+                'private and public interface. All methods which are public (outside of the scope of) '+
+                'a constructor) are added to the "pub" member of the SceneGraphNode, whereas private '+
+                'methods (inside of the scope of a constructor) are attached to the SceneGraphNode '+
+                'object itself.',
+  factoryFn: function(options, scene) {
 
     var dgnodes = {};
     var eventnodes = {};
@@ -829,10 +860,15 @@ FABRIC.SceneGraph.registerNodeType('SceneGraphNode',
     scene.setSceneGraphNode(name, sceneGraphNode);
     
     return sceneGraphNode;
-  });
+  }});
 
-FABRIC.SceneGraph.registerNodeType('Viewport',
-  function(options, scene) {
+FABRIC.SceneGraph.registerNodeType('Viewport', {
+  briefDesc: 'The Viewport node implements the basic OpenGL canvas.',
+  detailedDesc: 'Utilizing a redraw eventhandler, the ViewPort node offers a powerful OpenGL canvas, ' +
+                'which is connected to an embed element inside the DOM. The most important parameter of '+
+                'the ViewPort node\'s options is the windowElement, the ID of the HTML element to append '+
+                'the viewport to.',
+  factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
         windowElement: undefined,
         cameraNode: undefined,
@@ -1235,11 +1271,14 @@ FABRIC.SceneGraph.registerNodeType('Viewport',
     }
 
     return viewportNode;
-  });
+  }});
 
 
-FABRIC.SceneGraph.registerNodeType('Camera',
-  function(options, scene) {
+FABRIC.SceneGraph.registerNodeType('Camera', {
+  briefDesc: 'The Camera node implements an OpenGL camera for the ViewPort node.',
+  detailedDesc: 'The Camera node uses a redraw event handler to draw the camera projection to '+
+                'the OpenGL canvas.',
+  factoryFn: function(options, scene) {
 
     scene.assignDefaults(options, {
         nearDistance: 5,
@@ -1328,12 +1367,14 @@ FABRIC.SceneGraph.registerNodeType('Camera',
       cameraNode.pub.setTransformNode(options.transformNode);
     }
     return cameraNode;
-  });
+  }});
 
 
 
-FABRIC.SceneGraph.registerNodeType('FreeCamera',
-  function(options, scene) {
+FABRIC.SceneGraph.registerNodeType('FreeCamera', {
+  briefDesc: 'The FreeCamera node implements an OpenGL camera in a free roaming mode.',
+  detailedDesc: 'The FreeCamera node uses the Camera node to implement a free roaming camera without a target point.',
+  factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
         position: FABRIC.RT.vec3(1, 0, 0),
         orientation: FABRIC.RT.quat()
@@ -1346,12 +1387,14 @@ FABRIC.SceneGraph.registerNodeType('FreeCamera',
     var freeCameraNode = scene.constructNode('Camera', options);
 
     return freeCameraNode;
-  });
+  }});
 
 
 
-FABRIC.SceneGraph.registerNodeType('TargetCamera',
-  function(options, scene) {
+FABRIC.SceneGraph.registerNodeType('TargetCamera', {
+  briefDesc: 'The TargetCamera node implements an OpenGL camera in using a target point',
+  detailedDesc: 'The TargetCamera node uses the Camera node to implement a camera with a target point, similar to the GLUT lookat camera.',
+  factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
         target: FABRIC.RT.vec3(0, 0, 0)
       });
@@ -1378,6 +1421,6 @@ FABRIC.SceneGraph.registerNodeType('TargetCamera',
     }));
 
     return targetCameraNode;
-  });
+  }});
 
 

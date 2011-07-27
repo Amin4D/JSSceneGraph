@@ -71,8 +71,8 @@ $(document).ready(function() { $('#play').button({
   
   
   
-  FABRIC.SceneGraph.registerNodeType('NBodySimulation',
-    function(options, scene) {
+  FABRIC.SceneGraph.registerNodeType('NBodySimulation', {
+    factoryFn: function(options, scene) {
       scene.assignDefaults(options, {
           nBodies: 1024
         });
@@ -158,7 +158,7 @@ $(document).ready(function() { $('#play').button({
         });
   
       return nBodyGeometry;
-    });
+    }});
 
 
   // Create the scene.

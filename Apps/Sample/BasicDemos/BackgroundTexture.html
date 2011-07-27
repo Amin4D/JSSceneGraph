@@ -53,7 +53,7 @@ $(document).ready(function() {
   }));
 
   // We cannot enable pose processing effectds untill we can removeChildEventHandlers
-  viewport.addPostProcessEffectShader(scene.constructNode('FilmicTonemapperPostProcessEffect'));
+  viewport.addPostProcessEffectShader(scene.constructNode('EdgeDetectionPostProcessEffect'));
 
   var errors = scene.getErrors();
   if (errors.length > 0) {
@@ -86,7 +86,7 @@ $(document).ready(function() {
             <h2>INFO</h2>
             <div class="content">
               Background Texture.<br>
-              This very basic sample shows the use of a background texture drawn through OpenGL. Have a look
+              This very basic sample shows the use of a background texture that is filtered through OpenGL. Have a look
               at the source code of this page to see how this is set up.
             </div><!--content-->
           </div><!--box-->

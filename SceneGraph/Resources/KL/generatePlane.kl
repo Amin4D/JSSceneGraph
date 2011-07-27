@@ -8,6 +8,7 @@
 operator setPlaneVertexCount(
   io Integer lengthSections,
   io Integer widthSections,
+  io Boolean doubleSided,
   io Size newCount
 ) {
   var Integer vi = 0;
@@ -20,7 +21,11 @@ operator setPlaneVertexCount(
     widthSections = 1;
   }
 
-  newCount = 2 * (lengthSections + 1) * (widthSections + 1);
+  if(doubleSided){
+    newCount = 2 * (lengthSections + 1) * (widthSections + 1);
+  }else{
+    newCount = (lengthSections + 1) * (widthSections + 1);
+  }
 }
 
 operator generatePlane(
@@ -29,6 +34,7 @@ operator generatePlane(
   io Scalar width,
   io Integer lengthSections,
   io Integer widthSections,
+  io Boolean doubleSided,
 
   io Vec3 positions[],
   io Vec3 normals[],
@@ -48,38 +54,57 @@ operator generatePlane(
   //  positions.resize( numPoints );
   //  normals.resize( numPoints );
   //  uvs.resize( numPoints );
-  idx.resize(2 * 6 * lengthSections * widthSections);
-
+  if(doubleSided){
+    idx.resize(2 * 6 * lengthSections * widthSections);
+  }else{
+    idx.resize(6 * lengthSections * widthSections);
+  }
   for (Integer i = 0; i <= lengthSections; i++) {
     for (Integer j = 0; j <= widthSections; j++) {
-      Scalar x = ((Scalar) i / (Scalar) lengthSections) - 0.5;
-      Scalar z = ((Scalar) j / (Scalar) widthSections) - 0.5;
+      Scalar x = (Scalar(i) / Scalar(lengthSections)) - 0.5;
+      Scalar z = (Scalar(j) / Scalar(widthSections)) - 0.5;
       positions[vi] = Vec3(x * length, 0.0, z * width);
       normals[vi] = Vec3(0.0, 1.0, 0.0);
       uvs[vi] = Vec2(x + 0.5, z + 0.5);
       vi++;
-      positions[vi] = Vec3(x * length, 0.0, z * width);
-      normals[vi] = Vec3(0.0, - 1.0, 0.0);
-      uvs[vi] = Vec2(x + 0.5, z + 0.5);
-      vi++;
+      
+      if(doubleSided){
+        positions[vi] = Vec3(x * length, 0.0, z * width);
+        normals[vi] = Vec3(0.0, - 1.0, 0.0);
+        uvs[vi] = Vec2(x + 0.5, z + 0.5);
+        vi++;
+      }
     }
   }
-
-  for (Integer i = 0; i < lengthSections; i++) {
-    for (Integer j = 0; j < widthSections; j++) {
-      idx[ii++] = 2 * (j + ((lengthSections + 1) * (i + 1)) + 0);
-      idx[ii++] = 2 * (j + 0);
-      idx[ii++] = 2 * (j + 1);
-      idx[ii++] = 2 * (j + ((lengthSections + 1) * (i + 1)) + 0);
-      idx[ii++] = 2 * (j + 1);
-      idx[ii++] = 2 * (j + ((lengthSections + 1) * (i + 1)) + 1);
-
-      idx[ii++] = 2 * (j + ((lengthSections + 1) * (i + 1)) + 1) + 1;
-      idx[ii++] = 2 * (j + 1) + 1;
-      idx[ii++] = 2 * (j + ((lengthSections + 1) * (i + 1)) + 0) + 1;
-      idx[ii++] = 2 * (j + 1) + 1;
-      idx[ii++] = 2 * (j + 0) + 1;
-      idx[ii++] = 2 * (j + ((lengthSections + 1) * (i + 1)) + 0) + 1;
+  if(doubleSided){
+    for (Integer i = 0; i < lengthSections; i++) {
+      for (Integer j = 0; j < widthSections; j++) {
+        idx[ii++] = 2 * (j + ((lengthSections + 1) * (i + 1)) + 0);
+        idx[ii++] = 2 * (j + 0);
+        idx[ii++] = 2 * (j + 1);
+        idx[ii++] = 2 * (j + ((lengthSections + 1) * (i + 1)) + 0);
+        idx[ii++] = 2 * (j + 1);
+        idx[ii++] = 2 * (j + ((lengthSections + 1) * (i + 1)) + 1);
+  
+        
+        idx[ii++] = 2 * (j + ((lengthSections + 1) * (i + 1)) + 1) + 1;
+        idx[ii++] = 2 * (j + 1) + 1;
+        idx[ii++] = 2 * (j + ((lengthSections + 1) * (i + 1)) + 0) + 1;
+        idx[ii++] = 2 * (j + 1) + 1;
+        idx[ii++] = 2 * (j + 0) + 1;
+        idx[ii++] = 2 * (j + ((lengthSections + 1) * (i + 1)) + 0) + 1;
+      }
+    }
+  } else {
+    for (Integer i = 0; i < lengthSections; i++) {
+      for (Integer j = 0; j < widthSections; j++) {
+        idx[ii++] = (j + ((lengthSections + 1) * (i + 1)) + 0);
+        idx[ii++] = (j + 0);
+        idx[ii++] = (j + 1);
+        idx[ii++] = (j + ((lengthSections + 1) * (i + 1)) + 0);
+        idx[ii++] = (j + 1);
+        idx[ii++] = (j + ((lengthSections + 1) * (i + 1)) + 1);
+      }
     }
   }
 }

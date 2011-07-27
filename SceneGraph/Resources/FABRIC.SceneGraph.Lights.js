@@ -29,27 +29,25 @@ FABRIC.SceneGraph.registerNodeType('Light',
       throw ': Lights must define a type';
     }
 
-    options.dgnodenames.push('DGNode');
-    var lightNode = scene.constructNode('SceneGraphNode', options);
-    var transformNode;
-    var transformNodeMember;
-    var redrawEventHandler;
-    var dgnode = lightNode.getDGNode();
+    var lightNode = scene.constructNode('SceneGraphNode', options),
+      dgnode = lightNode.constructDGNode('DGNode'),
+      transformNode,
+      transformNodeMember,
+      redrawEventHandler;
+    
     dgnode.addMember('type', 'Integer', options.lightType);
     dgnode.addMember('lightMat44', 'Mat44');
     dgnode.addMember('cameraMat44', 'Mat44');
     dgnode.addMember('color', 'Color', options.color);
 
     lightNode.getRedrawEventHandler = function () {
-      if (redrawEventHandler) {
-        return redrawEventHandler;
-      }
-      redrawEventHandler = scene.constructEventHandlerNode(options.name + '_render');
+      // This call will replace the 'getRedrawEventHandler' with an accessor.
+      redrawEventHandler = lightNode.constructEventHandlerNode('Redraw');
       redrawEventHandler.addScope('light', dgnode);
 
       redrawEventHandler.preDescendBindings.append(scene.constructOperator({
         operatorName: 'loadLight',
-        srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/lights.kl',
+        srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadLights.kl',
         preProcessorDefinitions: {
           LIGHTTYPE_ATTRIBUTE_ID: FABRIC.shaderAttributeTable['lightType'].id,
           LIGHTCOLOR_ATTRIBUTE_ID: FABRIC.shaderAttributeTable['lightColor'].id,
@@ -117,9 +115,6 @@ FABRIC.SceneGraph.registerNodeType('Light',
     } else {
       lightNode.pub.setTransformNode(options.transformNode, options.transformNodeMember);
     }
-
-    // the operator stack functions enable the light properties to be animated.
-    scene.addMemberAndOperatorStackFunctions(lightNode, dgnode);
 
     return lightNode;
   });
@@ -203,13 +198,10 @@ FABRIC.SceneGraph.registerNodeType('DirectionalLight',
     var parentGetRedrawEventHandler = directionalLightNode.getRedrawEventHandler;
     directionalLightNode.getRedrawEventHandler = function() {
       var redrawEventHandler = parentGetRedrawEventHandler();
-      if (redrawEventHandlerConfigured) {
-        return redrawEventHandler;
-      }
 
       redrawEventHandler.preDescendBindings.append(scene.constructOperator({
         operatorName: 'loadDirectionalLight',
-        srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/lights.kl',
+        srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadLights.kl',
         preProcessorDefinitions: {
           LIGHTTYPE_ATTRIBUTE_ID: FABRIC.shaderAttributeTable['lightType'].id,
           LIGHTCOLOR_ATTRIBUTE_ID: FABRIC.shaderAttributeTable['lightColor'].id,
@@ -282,7 +274,9 @@ FABRIC.SceneGraph.registerNodeType('SpotLight',
         farDistance: 1000,
         color: FABRIC.RT.rgb(1.0, 1.0, 1.0),
         castShadows: true,
+        displayShadowDebug: false,
         resolution: 1024,
+        display: false,
         displaySize: 50
       });
 
@@ -300,7 +294,7 @@ FABRIC.SceneGraph.registerNodeType('SpotLight',
     options.lightType = FABRIC.SceneGraph.Lights.types.SpotLight;
     var spotLightNode = scene.constructNode('Light', options);
     var dgnode = spotLightNode.getDGNode();
-
+    
     dgnode.addMember('coneAngle', 'Scalar', options.coneAngle);
     spotLightNode.addMemberInterface(dgnode, 'coneAngle', true);
 
@@ -308,14 +302,11 @@ FABRIC.SceneGraph.registerNodeType('SpotLight',
     var parentGetRedrawEventHandler = spotLightNode.getRedrawEventHandler;
     spotLightNode.getRedrawEventHandler = function() {
       var redrawEventHandler = parentGetRedrawEventHandler();
-      if (redrawEventHandlerConfigured) {
-        return redrawEventHandler;
-      }
 
       redrawEventHandler.preDescendBindings.append(
         scene.constructOperator({
           operatorName: 'loadSpotLight',
-          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/lights.kl',
+          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadLights.kl',
           preProcessorDefinitions: {
           LIGHTTYPE_ATTRIBUTE_ID: FABRIC.shaderAttributeTable['lightType'].id,
           LIGHTCOLOR_ATTRIBUTE_ID: FABRIC.shaderAttributeTable['lightColor'].id,
@@ -334,12 +325,28 @@ FABRIC.SceneGraph.registerNodeType('SpotLight',
         }));
 
       if (options.castShadows) {
+        
+        this.constructShadowRenderEventHandler();
+      
         redrawEventHandler.addMember('shadowMap', 'Size', 0);
-
+        /*
+        if(options.displayShadowDebug === true){
+          // Display the shadow color map on screen.
+          redrawEventHandler.preDescendBindings.append(
+            scene.constructOperator({
+                operatorName:"debugShadowMapBuffer",
+                srcFile:"FABRIC_ROOT/SceneGraph/Resources/KL/shadowMaps.kl",
+                entryFunctionName:"debugShadowMapBuffer",
+                parameterBinding:[
+                  'light.colorTextureID'
+                ]
+              }));
+        }
+        */
         redrawEventHandler.preDescendBindings.append(
           scene.constructOperator({
               operatorName: 'loadLightMatrixUniform',
-              srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/lights.kl',
+              srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadLights.kl',
               preProcessorDefinitions: {
                 LIGHTTYPE_ATTRIBUTE_ID: FABRIC.shaderAttributeTable['lightType'].id,
                 LIGHTCOLOR_ATTRIBUTE_ID: FABRIC.shaderAttributeTable['lightColor'].id,
@@ -367,28 +374,15 @@ FABRIC.SceneGraph.registerNodeType('SpotLight',
               ]
             }));
 
-        // Debug shadowmap?
-    /*    if(true)
-        {
-          redrawEventHandler.preDescendBindings.append(
-            scene.constructOperator({
-                operatorName:"debugShadowMapBuffer",
-                srcFile:"../../../SceneGraph/Resources/KL/shadowMaps.kl",
-                entryFunctionName:"debugShadowMapBuffer",
-                parameterBinding:[
-                  "light.colorTextureID"
-                ]
-              }));
-        }
-    */ }
+     }
 
       redrawEventHandlerConfigured = true;
       return redrawEventHandler;
     };
+    
+    spotLightNode.constructShadowRenderEventHandler = function() {
 
-    if (options.castShadows) {
-
-      var shadowRenderEventHandler = scene.constructEventHandlerNode(options.name + '_renderDepthBuffer');
+      var shadowRenderEventHandler = spotLightNode.constructEventHandlerNode('RenderDepthBuffer');
 
       // Projection Values
       dgnode.addMember('nearDistance', 'Scalar', options.nearDistance);
@@ -402,10 +396,6 @@ FABRIC.SceneGraph.registerNodeType('SpotLight',
       dgnode.addMember('depthTextureID', 'Size', 0);
       dgnode.addMember('colorTextureID', 'Size', 0);
 
-      // TODO: I think that the light projections matrices aren't correct.
-      // the shadow map is clipped by the cone angle. The projection matrix,
-      // should encapsulate the cone. This error can be seens clearly in the
-      // Shadow Casting lights demo.
       dgnode.bindings.append(scene.constructOperator({
           operatorName: 'calcLightProjectionMatricies',
           srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/shadowMaps.kl',
@@ -444,17 +434,34 @@ FABRIC.SceneGraph.registerNodeType('SpotLight',
             'light.prevFBO'
           ]
         }));
+      
+      
+        if(options.displayShadowDebug === true){
+          // Display the shadow color map on screen.
+          var shadowDebugRenderEventHandler = spotLightNode.constructEventHandlerNode('renderDebugQuad');
+          scene.getScenePostRedrawEventHandler().appendChildEventHandler(shadowDebugRenderEventHandler);
+          shadowDebugRenderEventHandler.addScope('light', dgnode);
+          shadowDebugRenderEventHandler.preDescendBindings.append(
+            scene.constructOperator({
+                operatorName:"debugShadowMapBuffer",
+                srcFile:"FABRIC_ROOT/SceneGraph/Resources/KL/shadowMaps.kl",
+                entryFunctionName:"debugShadowMapBuffer",
+                parameterBinding:[
+                  'light.colorTextureID'
+                ]
+              }));
+        }
 
       scene.registerShadowCastingLightSourceHandler(shadowRenderEventHandler);
     }
-
-    // the operator stack functions enable the light properties to be animated.
-    scene.addMemberAndOperatorStackFunctions(spotLightNode, dgnode);
-
-    if (options.display === true) {
+    
+    spotLightNode.constructDisplay = function() {
       // tan(theta) = o/a
       // tan(theta)/a = o
       var coneDist = options.displaySize;
+      if(options.position && options.target){
+        coneDist = options.position.dist(options.target);
+      }
       var coneRadius = Math.tan(options.coneAngle * 0.5) * coneDist;
       var lightMaterial = scene.pub.constructNode('FlatMaterial', { color: FABRIC.RT.rgb(1.0, 0.7, 0.4) });
       var crossGeometry = scene.pub.constructNode('Cross', { size: coneDist * 0.05 });
@@ -468,7 +475,7 @@ FABRIC.SceneGraph.registerNodeType('SpotLight',
         transformNode: scene.pub.constructNode('Transform', {
           hierarchical: true,
           parentTransformNode: spotLightNode.pub.getTransformNode(),
-          localXfo: FABRIC.RT.xfo({ tr: FABRIC.RT.vec3(0, 0, -options.displaySize) })
+          localXfo: FABRIC.RT.xfo({ tr: FABRIC.RT.vec3(0, 0, -coneDist) })
         }),
         geometryNode: crossGeometry,
         materialNode: lightMaterial
@@ -477,13 +484,20 @@ FABRIC.SceneGraph.registerNodeType('SpotLight',
         transformNode: scene.pub.constructNode('Transform', {
           hierarchical: true,
           parentTransformNode: spotLightNode.pub.getTransformNode(),
-          localXfo: FABRIC.RT.xfo({ ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.Vec3.xAxis, 90), tr: FABRIC.RT.vec3(0, 0, -options.displaySize) })
+          localXfo: FABRIC.RT.xfo({
+            ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.Vec3.xAxis, 90),
+            tr: FABRIC.RT.vec3(0, 0, -coneDist)
+          })
         }),
         geometryNode: scene.pub.constructNode('Circle', {
           radius: coneRadius
         }),
         materialNode: lightMaterial
       });
+    }
+    
+    if (options.display === true) {
+      spotLightNode.constructDisplay();
     }
 
     return spotLightNode;

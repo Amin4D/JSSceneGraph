@@ -11,28 +11,14 @@ FABRIC.SceneGraph.registerNodeType('Transform',
         globalXfo: undefined,
         localXfo: undefined
       });
-    options.dgnodenames.push('DGNode');
 
-    var transformNode;
-    var dgnode;
-    var redrawEventHandler;
-    var parentTransformNode;
-    var children = [];
+    var transformNode = scene.constructNode('SceneGraphNode', options),
+      dgnode = transformNode.constructDGNode('DGNode'),
+      parentTransformNode,
+      children = [];
 
-    transformNode = scene.constructNode('SceneGraphNode', options);
-    dgnode = transformNode.getDGNode();
     dgnode.addMember('globalXfo', 'Xfo', options.globalXfo);
     transformNode.addMemberInterface(dgnode, 'globalXfo');
-
-    transformNode.getRedrawEventHandler = function() {
-      if (redrawEventHandler) {
-        return redrawEventHandler;
-      }
-      redrawEventHandler = scene.constructEventHandlerNode('TransformDraw');
-      return redrawEventHandler;
-    };
-
-    scene.addMemberAndOperatorStackFunctions(transformNode, dgnode);
 
     if (options.hierarchical) {
       dgnode.addMember('localXfo', 'Xfo', options.localXfo);

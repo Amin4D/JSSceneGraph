@@ -25,7 +25,7 @@ operator generateCircle(
   // +z-plane
   var Integer indexid = 0;
   for (var Integer i = 0; i < numSegments; i++) {
-    var Scalar angle = ((Scalar) i / (Scalar) numSegments) * arcAngle;
+    var Scalar angle = (Scalar(i) / Scalar(numSegments)) * arcAngle;
     positions[i] = Vec3(sin(angle) * radius, 0.0, cos(angle) * radius);
 
     indices[indexid++] = i;

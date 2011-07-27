@@ -13,24 +13,16 @@ FABRIC.SceneGraph.registerNodeType('Geometry',
         tesselationSupported: false,
         tesselationVertices: 3
       });
-    options.dgnodenames.push('UniformsDGNode');
-    options.dgnodenames.push('AttributesDGNode');
-    if (options.createBoundingBoxNode) {
-      options.dgnodenames.push('BoundingBoxDGNode');
-    }
 
-    var geometryNode,
-      redrawEventHandler,
-      uniformsdgnode,
-      attributesdgnode,
+    var geometryNode = geometryNode = scene.constructNode('SceneGraphNode', options),
+      uniformsdgnode = geometryNode.constructDGNode('UniformsDGNode'),
+      attributesdgnode = geometryNode.constructDGNode('AttributesDGNode'),
       bboxdgnode,
+      redrawEventHandler,
       deformationbufferinterfaces = [],
       tesselationSupported = options.tesselationSupported,
       tesselationVertices = options.tesselationVertices;
 
-    var geometryNode = scene.constructNode('SceneGraphNode', options);
-    uniformsdgnode = geometryNode.getUniformsDGNode();
-    attributesdgnode = geometryNode.getAttributesDGNode();
     if(options.positionsVec4 == true ){
       attributesdgnode.addMember('positions', 'Vec4');
     }else{
@@ -42,7 +34,7 @@ FABRIC.SceneGraph.registerNodeType('Geometry',
     var attributesname = attributesdgnode.getName();
 
     if (options.createBoundingBoxNode) {
-      bboxdgnode = geometryNode.getBoundingBoxDGNode();
+      bboxdgnode = geometryNode.constructDGNode('BoundingBoxDGNode');
       bboxdgnode.addMember('min', 'Vec3');
       bboxdgnode.addMember('max', 'Vec3');
       bboxdgnode.addDependency(attributesdgnode, 'attributes');
@@ -181,7 +173,7 @@ FABRIC.SceneGraph.registerNodeType('Geometry',
         message;
       for (attributeName in vboRequirements) {
         if (!vertexAttributes[attributeName]) {
-          message = 'Geometry: ' + this.name + ' does not meet shader requirements.\n';
+          message = 'Geometry: ' + this.getName() + ' does not meet shader requirements.\n';
           message += 'Shader requires :' + JSON.stringify(vboRequirements) + '\n';
           message += 'But geometry does not support attribute:' + JSON.stringify(attributeName) + '\n';
 
@@ -195,9 +187,6 @@ FABRIC.SceneGraph.registerNodeType('Geometry',
       return true;
     };
     geometryNode.getRedrawEventHandler = function() {
-      if (redrawEventHandler) {
-        return redrawEventHandler;
-      }
       var vertexAttributes = attributesdgnode.getMembers(),
         uniformValues = uniformsdgnode.getMembers(),
         memberName,
@@ -209,7 +198,8 @@ FABRIC.SceneGraph.registerNodeType('Geometry',
         attributeNodeBinding,
         i;
 
-      redrawEventHandler = scene.constructEventHandlerNode(options.name + '_GeometryDraw');
+      // This call will replace the 'getRedrawEventHandler' with an accessor.
+      redrawEventHandler = geometryNode.constructEventHandlerNode('Redraw');
       redrawEventHandler.addScope('uniforms', uniformsdgnode);
       redrawEventHandler.addScope('attributes', attributesdgnode);
       for (i = 0; i < deformationbufferinterfaces.length; i++) {
@@ -643,11 +633,9 @@ FABRIC.SceneGraph.registerNodeType('Instance',
     // TODO: once the 'selector' system can be replaced with JavaScript event
     // generation from KL, then we can eliminate this dgnode. It currently serves
     // no other purpose. 
-    options.dgnodenames.push('DGNode');
-    options.ehnodenames.push('RedrawEventHandler');
     var instanceNode = scene.constructNode('SceneGraphNode', options),
-      dgnode = instanceNode.getDGNode(),
-      redrawEventHandler = instanceNode.getRedrawEventHandler(),
+      dgnode = instanceNode.constructDGNode('DGNode'),
+      redrawEventHandler = instanceNode.constructEventHandlerNode('Redraw'),
       transformNode,
       transformNodeMember = options.transformNodeMember,
       geometryNode,
@@ -705,7 +693,7 @@ FABRIC.SceneGraph.registerNodeType('Instance',
         geometryNode.getRayintersectionOperator
       ) {
         var raycastOperator = geometryNode.getRayintersectionOperator(transformNodeMember);
-        raycastEventHandler = scene.constructEventHandlerNode(options.name + '_raycast');
+        raycastEventHandler = instanceNode.constructEventHandlerNode('Raycast');
         raycastEventHandler.addScope('geometry_uniforms', geometryNode.getUniformsDGNode());
         raycastEventHandler.addScope('geometry_attributes', geometryNode.getAttributesDGNode());
         raycastEventHandler.addScope('boundingbox', geometryNode.getBoundingBoxDGNode());
@@ -720,9 +708,6 @@ FABRIC.SceneGraph.registerNodeType('Instance',
     }
 
     // extend private interface
-    instanceNode.getRedrawEventHandler = function() {
-      return redrawEventHandler;
-    };
     instanceNode.writeData = function(sceneSaver, constructionOptions, nodeData) {
       constructionOptions.enableRaycasting = options.enableRaycasting;
 

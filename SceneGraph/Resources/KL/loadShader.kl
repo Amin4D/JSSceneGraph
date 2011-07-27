@@ -132,27 +132,6 @@ function Integer fglCreateProgramFromShaders(
   return programID;
 }
 
-function String getRTTypeFromOGLType(in Integer oglType) {
-  if (oglType == GL_FLOAT)
-    return 'Scalar';
-  else if (oglType == GL_FLOAT_VEC2)
-    return 'Vec2';
-  else if (oglType == GL_FLOAT_VEC3)
-    return 'Vec3';
-  else if (oglType == GL_FLOAT_VEC4)
-    return 'Color';
-  else if (oglType == GL_INT)
-    return 'Integer';
-  else if (oglType == GL_BOOL)
-    return 'Boolean';
-  else if (oglType == GL_FLOAT_MAT3)
-    return 'Mat33';
-  else if (oglType == GL_FLOAT_MAT4)
-    return 'Mat44';
-
-  return '';
-}
-
 operator validateShaderBindings(
   io String shaderName,
   io Integer program,
@@ -225,6 +204,7 @@ operator validateShaderBindings(
       report('WARNING: ' + shaderName + ': Attribute not bound:' + name);
     }
   }
+  
 }
 
 operator loadShader(
@@ -241,8 +221,5 @@ operator loadShader(
       validateShaderBindings(shaderName, program, uniformValues, attributeValues);
     }
   }
-}
-
-operator useProgram(io Integer program) {
   glUseProgram(program);
 }

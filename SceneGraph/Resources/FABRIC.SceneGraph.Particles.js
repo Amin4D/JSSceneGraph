@@ -3,7 +3,7 @@
 // Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
 //
 
-// The Particles node is a relative of the 'Draw' node.
+// The Particles node is a relative of the 'Redraw' node.
 // It is bound to a 'Geometry' which it renders for each Instance.
 
 // Particles is similar to 'Points' except it is set up for multi-threading.
@@ -28,9 +28,6 @@ FABRIC.SceneGraph.registerNodeType('Particles',
       ],
       createDebugLines: true
     });
-    if (options.createSpatialHashTable) {
-      options.dgnodenames.push('SpatialHashDGNode');
-    }
 
     var redrawEventHandler;
     options.createSlicedNode = true;
@@ -51,6 +48,7 @@ FABRIC.SceneGraph.registerNodeType('Particles',
     }
 
     if (options.createSpatialHashTable) {
+      var spatialHashDGNode = particlesNode.constructDGNode('SpatialHashDGNode');
       var neighborInfluenceRange = options.cellsize / 2.0;
       particlesNode.pub.addVertexAttributeValue('neighborinfluencerange', 'Scalar', neighborInfluenceRange);
       particlesNode.pub.addVertexAttributeValue('cellindices', 'Integer', -1);
@@ -60,10 +58,10 @@ FABRIC.SceneGraph.registerNodeType('Particles',
       particlesNode.pub.addVertexAttributeValue('previousframe_velocities', 'Vec3');
       particlesNode.pub.addVertexAttributeValue('previousframe_orientations', 'Vec3');
 
-      particlesNode.getSpatialHashDGNode().addMember('hashtable', 'HashTable',
+      spatialHashDGNode.addMember('hashtable', 'HashTable',
         FABRIC.Simulation.hashTable(options.cellsize, options.x_count, options.y_count, options.z_count));
 
-      particlesNode.getAttributesDGNode().addDependency(particlesNode.getSpatialHashDGNode(), 'hashtable');
+      particlesNode.getAttributesDGNode().addDependency(spatialHashDGNode, 'hashtable');
 
       // Display the Grid
       if (options.displayGrid)

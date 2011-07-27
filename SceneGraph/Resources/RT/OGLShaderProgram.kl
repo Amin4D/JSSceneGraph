@@ -5,6 +5,7 @@
 
 function OGLShaderProgram(String name) {
   self.name = name;
+  self.programId = 0;
 }
 
 function Integer OGLShaderProgram.getId(){
@@ -66,80 +67,6 @@ function Integer OGLShaderProgram.createAndCompileShader(OGLShaderSource shaders
   return shaderID;
 }
 
-function Integer OGLShaderProgram.createProgramFromShaders() {
-  if (this.shaderSources.size() == 0) {
-    report(self.name + ' : No shaders given to build a self.programId from.');
-    return 0;
-  }
-
-  var Integer shaderIDs[];
-  for (var Size i = 0; i < this.shaderSources.size(); i++) {
-    var Integer shaderID = self.createAndCompileShader(self.name, this.shaderSources[i].type, this.shaderSources[i].code);
-    if (shaderID == 0)
-      break;
-    shaderIDs.push(shaderID);
-  }
-
-  if (shaderIDs.size() == this.shaderSources.size()) {
-    self.programId = glCreateProgram();
-    if (self.programId) {
-      for (var Size i = 0; i < shaderIDs.size(); i++) {
-        glAttachShader(self.programId, shaderIDs[i]);
-      }
-      // The self.programId parameters need to be added before linking
-      for (var Size i = 0; i < self.programParams.size(); i++) {
-        glProgramParameteriEXT(self.programId, self.programParams[i].id, self.programParams[i].value);
-      }
-
-      glLinkProgram(self.programId);
-
-      var Integer linked[];
-      linked.push(0);
-      glGetProgramiv(self.programId, GL_LINK_STATUS, linked);
-      if (linked[0] == 0) {
-        report(self.name + ' : Program linking failed:');
-      }
-
-      var Integer infoLen[];
-      infoLen.resize(1);
-      glGetProgramiv(self.programId, GL_INFO_LOG_LENGTH, infoLen);
-
-      if (infoLen.size() > 0 && infoLen[0] > 1) {
-        if (linked.size() > 0 || linked[0] > 0) {
-          report(self.name + ' : Program linking succeeded, with warnings:');
-        }
-        var Size bufferSize[];
-        var Size bufferTotalSize = 0;
-        for(var Size i=0;i<infoLen.size();i++)
-        {
-          bufferSize.push(Size(infoLen[i]));
-          bufferTotalSize += bufferSize[i];
-        }
-
-        var String infoLog;
-        glGetProgramInfoLog(self.programId, bufferTotalSize, bufferSize, infoLog);
-        report(infoLog);
-      }
-      else if (!linked) {
-        report('<Unknown reason>');
-      }
-
-      if (!linked) {
-        glDeleteProgram(self.programId);
-        self.programId = 0;
-      }
-    }
-  }
-  for (var Size i = 0; i < shaderIDs.size(); i++) {
-    glDeleteShader(shaderIDs[i]);
-  }
-  
-  if (self.programId) {
-    validateShaderBindings(self.name, self.programId, self.uniformValues, self.attributeValues);
-  }
-  
-  return self.programId;
-}
 
 function OGLShaderProgram.validateShaderBindings() {
   var String name, typeName;
@@ -210,6 +137,80 @@ function OGLShaderProgram.validateShaderBindings() {
   }
 }
 
+
+function OGLShaderProgram.createProgramFromShaders() {
+  if (self.shaderSources.size() == 0) {
+    report(self.name + ' : No shaders given to build a self.programId from.');
+    return;
+  }
+
+  var Integer shaderIDs[];
+  for (var Size i = 0; i < self.shaderSources.size(); i++) {
+    var Integer shaderID = self.createAndCompileShader(self.shaderSources[i]);
+    if (shaderID == 0)
+      break;
+    shaderIDs.push(shaderID);
+  }
+
+  if (shaderIDs.size() == self.shaderSources.size()) {
+    self.programId = 3;//glCreateProgram();
+    if (self.programId != 0) {
+      for (var Size i = 0; i < shaderIDs.size(); i++) {
+        glAttachShader(self.programId, shaderIDs[i]);
+      }
+      // The self.programId parameters need to be added before linking
+      for (var Size i = 0; i < self.programParams.size(); i++) {
+        glProgramParameteriEXT(self.programId, self.programParams[i].id, self.programParams[i].value);
+      }
+
+      glLinkProgram(self.programId);
+
+      var Integer linked[];
+      linked.push(0);
+      glGetProgramiv(self.programId, GL_LINK_STATUS, linked);
+      if (linked[0] == 0) {
+        report(self.name + ' : Program linking failed:');
+      }
+
+      var Integer infoLen[];
+      infoLen.resize(1);
+      glGetProgramiv(self.programId, GL_INFO_LOG_LENGTH, infoLen);
+
+      if (infoLen.size() > 0 && infoLen[0] > 1) {
+        if (linked.size() > 0 || linked[0] > 0) {
+          report(self.name + ' : Program linking succeeded, with warnings:');
+        }
+        var Size bufferSize[];
+        var Size bufferTotalSize = 0;
+        for(var Size i=0;i<infoLen.size();i++)
+        {
+          bufferSize.push(Size(infoLen[i]));
+          bufferTotalSize += bufferSize[i];
+        }
+
+        var String infoLog;
+        glGetProgramInfoLog(self.programId, bufferTotalSize, bufferSize, infoLog);
+        report(infoLog);
+      }
+      else if (!linked) {
+        report('<Unknown reason>');
+      }
+
+      if (!linked) {
+        glDeleteProgram(self.programId);
+        self.programId = 0;
+      }
+    }
+  }
+  for (var Size i = 0; i < shaderIDs.size(); i++) {
+    glDeleteShader(shaderIDs[i]);
+  }
+  
+  if (self.programId) {
+    self.validateShaderBindings();
+  }
+}
+
 function OGLShaderProgram.loadShader() {
   if (!self.programId) {
     self.createProgramFromShaders();
@@ -224,134 +225,129 @@ function OGLShaderProgram.loadShader() {
 // these can all have the same name.
 // Note2: Maybe we should drop the uniformId system, and
 // store the location values in the material node instead
-// of the shader. 
+// of the shader.
 
-
-function OGLShaderProgram.loadBooleanUniform(
-  io Integer uniformId,
-  io Boolean value
+function Integer OGLShaderProgram.getUniformLocation(
+  Integer uniformId
 ) {
   for (Integer i = 0; i < self.uniformValues.size(); i++) {
     if (self.uniformValues[i].id == uniformId) {
-      glUniform1i(self.uniformValues[i].location, (value ? 1 : 0));
-      return;
+      return self.uniformValues[i].location;
     }
+  }
+  return -1;
+}
+
+
+function OGLShaderProgram.loadBooleanUniform(
+  Integer location,
+  Boolean value
+) {
+  if (location != - 1) {
+    glUniform1i(location, (value ? 1 : 0));
+  }
+  else{
+    report("Invalid Uniform Locations");
   }
 }
 
 function OGLShaderProgram.loadIntegerUniform(
-  io Integer uniformId,
-  io Integer value
+  Integer location,
+  Integer value
 ) {
-  for (Integer i = 0; i < self.uniformValues.size(); i++) {
-    if (self.uniformValues[i].id == uniformId) {
-      if (self.uniformValues[i].location != - 1) {
-        glUniform1i(self.uniformValues[i].location, value);
-      }
-      return;
-    }
+  if (location != - 1) {
+    glUniform1i(location, value);
+  }
+  else{
+    report("Invalid Uniform Locations");
   }
 }
 
 function OGLShaderProgram.loadScalarUniform(
-  io Integer uniformId,
-  io Scalar value
+  Integer location,
+  Scalar value
 ) {
-  for (Integer i = 0; i < self.uniformValues.size(); i++) {
-    if (self.uniformValues[i].id == uniformId) {
-      if (self.uniformValues[i].location != - 1) {
-        glUniform1f(self.uniformValues[i].location, value);
-      }
-      return;
-    }
+  if (location != - 1) {
+    glUniform1f(location, value);
+  }
+  else{
+    report("Invalid Uniform Locations");
   }
 }
 
 function OGLShaderProgram.loadVec2Uniform(
-  io Integer uniformId,
-  io Vec2 value
+  Integer location,
+  Vec2 value
 ) {
-  for (Integer i = 0; i < self.uniformValues.size(); i++) {
-    if (self.uniformValues[i].id == uniformId) {
-      if (self.uniformValues[i].location != - 1) {
-        glUniform2f(self.uniformValues[i].location, value.x, value.y);
-      }
-      return;
-    }
+  if (location != - 1) {
+    glUniform2f(location, value.x, value.y);
+  }
+  else{
+    report("Invalid Uniform Locations");
   }
 }
 
 function OGLShaderProgram.loadVec3Uniform(
-  io Integer uniformId,
-  io Vec3 value
+  Integer location,
+  Vec3 value
 ) {
-  for (Integer i = 0; i < self.uniformValues.size(); i++) {
-    if (self.uniformValues[i].id == uniformId) {
-      if (self.uniformValues[i].location != - 1) {
-        glUniform3f(self.uniformValues[i].location, value.x, value.y, value.z);
-      }
-      return;
-    }
+  if (location != - 1) {
+    glUniform3f(location, value.x, value.y, value.z);
+  }
+  else{
+    report("Invalid Uniform Locations");
   }
 }
 
 function OGLShaderProgram.loadVec4Uniform(
-  io Integer uniformId,
-  io Vec4 value
+  Integer location,
+  Vec4 value
 ) {
-  for (Integer i = 0; i < self.uniformValues.size(); i++) {
-    if (self.uniformValues[i].id == uniformId) {
-      if (self.uniformValues[i].location != - 1) {
-        glUniform4f(self.uniformValues[i].location, value.x, value.y, value.z, value.t);
-      }
-      return;
-    }
+  if (location != - 1) {
+    glUniform4f(location, value.x, value.y, value.z, value.t);
+  }
+  else{
+    report("Invalid Uniform Locations");
   }
 }
 
 function OGLShaderProgram.loadColorUniform(
-  io Integer uniformId,
-  io Color value
+  Integer location,
+  Color value
 ) {
-  for (Integer i = 0; i < self.uniformValues.size(); i++) {
-    if (self.uniformValues[i].id == uniformId) {
-      if (self.uniformValues[i].location != - 1) {
-        glUniform4f(self.uniformValues[i].location, value.r, value.g, value.b, value.a);
-      }
-      return;
-    }
+  if (location != - 1) {
+    glUniform4f(location, value.r, value.g, value.b, value.a);
+  }
+  else{
+    report("Invalid Uniform Locations");
   }
 }
 
 function OGLShaderProgram.loadMat33Uniform(
-  io Integer uniformId,
-  io Mat33 value
+  Integer location,
+  Mat33 value
 ) {
-  for (Integer i = 0; i < self.uniformValues.size(); i++) {
-    if (self.uniformValues[i].id == uniformId) {
-      if (self.uniformValues[i].location != - 1) {
-        var Mat33 values[];
-        values.push(value);
-        glUniformMatrix3fv(self.uniformValues[i].location, 1, false, values);
-      }
-      return;
-    }
+  if (location != - 1) {
+    var Mat33 values[];
+    values.push(value);
+    glUniformMatrix3fv(location, 1, false, values);
+  }
+  else{
+    report("Invalid Uniform Locations");
   }
 }
 
 function OGLShaderProgram.loadMat44Uniform(
-  io Integer uniformId,
-  io Mat44 value
+  Integer location,
+  Mat44 value
 ) {
-  for (Integer i = 0; i < self.uniformValues.size(); i++) {
-    if (self.uniformValues[i].id == uniformId) {
-      if (self.uniformValues[i].location != - 1) {
-        var Mat44 values[];
-        values.push(value);
-        glUniformMatrix4fv(self.uniformValues[i].location, 1, false, values);
-      }
-      return;
-    }
+  if (location != - 1) {
+    var Mat44 values[];
+    values.push(value);
+    glUniformMatrix4fv(location, 1, false, values);
+  }
+  else{
+    report("Invalid Uniform Locations");
   }
 }
 
@@ -388,7 +384,7 @@ function OGLShaderProgram.bindBuffer(
   if (bufferID > 0) {
     var Data NULL;
     glBindBuffer(GL_ARRAY_BUFFER, bufferID);
-    if (shaderBufferLocation != - 1) {
+    if (bufferLocation != - 1) {
       glEnableVertexAttribArray(bufferLocation);
       glVertexAttribPointer(bufferLocation, 3, GL_FLOAT, GL_FALSE, datumSize, NULL);
     }
@@ -427,7 +423,7 @@ function OGLShaderProgram.genAndLoadIndicesVBOs(
 
   // I'm not sure this is correct.
   // should be be buffering the data every frame?
-  this.genBuffer(indices.data(), indices.dataSize(), false, indicesBufferID);
+  self.genBuffer(indices.data(), indices.dataSize(), false, indicesBufferID);
   indicesCount = indices.size();
 }
 
@@ -442,17 +438,17 @@ function OGLShaderProgram.genAndBindVBO(
   Boolean reload,
   io Integer bufferID
 ) {
-  if (bufferID <= 0 || bufferData.size() != bufferDataCount || dynamic || reload) {
-    if (bufferID != 0 && (bufferData.size() != bufferDataCount || reload)) {
+  if (bufferID <= 0 || bufferDataSize != bufferDataCount || dynamic || reload) {
+    if (bufferID != 0 && (bufferDataSize != bufferDataCount || reload)) {
       var Size bufferIDs[];
       bufferIDs.push(Size(bufferID));
       glDeleteBuffers(1, bufferIDs);
       bufferID = 0;
     }
-    genBuffer(bufferData.data(), bufferData.dataSize(), dynamic, bufferID);
+    self.genBuffer(bufferData, bufferDataSize, dynamic, bufferID);
     bufferDataCount = bufferDataSize;
   }
-  this.bindBuffer(bufferDataElementSize, bufferID, bufferLocation);
+  self.bindBuffer(bufferDataElementSize, bufferID, bufferLocation);
 }
 
 

@@ -356,7 +356,6 @@ FABRIC.SceneGraph.registerNodeType('Shader',
       shaderProgram.uniformValues.push(new FABRIC.RT.OGLShaderValue(
         options.shaderUniforms[i].name, FABRIC.shaderAttributeTable[i].id));
     }
-    redrawEventHandler.addMember('uniformValues', 'ShaderValue[]', uniformValues);
 
     ///////////////////////////////////////////////////
     // Attribute Values
@@ -368,7 +367,6 @@ FABRIC.SceneGraph.registerNodeType('Shader',
       shaderProgram.attributeValues.push(new FABRIC.RT.OGLShaderValue(
         options.shaderAttributes[i].name, FABRIC.shaderAttributeTable[i].id));
     }
-    redrawEventHandler.addMember('attributeValues', 'ShaderValue[]', attributeValues);
 
     ///////////////////////////////////////////////////
     // EXT Params
@@ -508,16 +506,18 @@ FABRIC.SceneGraph.registerNodeType('Material',
         dgnode.addMember(uniformName, uniformType, uniform.defaultValue);
         materialNode.addMemberInterface(dgnode, uniformName, true);
       }
-      operatorFunction = 'load' + uniformType + 'Uniform';
+      
       operators.append(scene.constructOperator({
-        operatorName: operatorFunction + uniformName,
+        operatorName: 'load' + uniformName + 'Uniform',
         srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadUniforms.kl',
         preProcessorDefinitions: {
-          ATTRIBUTE_ID: FABRIC.shaderAttributeTable[uniformName].id
+          ATTRIBUTE_NAME: uniformName,
+          ATTRIBUTE_ID: FABRIC.shaderAttributeTable[uniformName].id,
+          DATA_TYPE: uniformType
         },
-        entryFunctionName: operatorFunction,
+        entryFunctionName: 'loadUniform',
         parameterBinding: [
-          (options.separateShaderNode ? 'shader.uniformValues' : 'self.uniformValues'),
+          (options.separateShaderNode ? 'shader.shaderProgram' : 'self.shaderProgram'),
           (uniform.owner === undefined ? 'material' : uniform.owner) + '.' + uniformName
         ]
       }));
@@ -560,12 +560,13 @@ FABRIC.SceneGraph.registerNodeType('Material',
           operatorName: 'loadIntegerUniform',
           srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadUniforms.kl',
           preProcessorDefinitions: {
-            ATTRIBUTE_ID: FABRIC.shaderAttributeTable[textureName].id,
-            ATTRIBUTE_NAME: textureName
+            ATTRIBUTE_NAME: textureName,
+            ATTRIBUTE_ID: FABRIC.shaderAttributeTable[uniformName].id,
+            DATA_TYPE: 'Integer'
           },
-          entryFunctionName: 'loadIntegerUniform',
+          entryFunctionName: 'loadUniform',
           parameterBinding: [
-            'shader.uniformValues',
+            'shader.shaderProgram',
             'self.textureUnit'
           ]
         }));

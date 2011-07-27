@@ -4,140 +4,14 @@
 //
 
 
-operator loadBooleanUniform(
-  io ShaderValue uniformValues[],
-  io Boolean value,
+operator loadUniform(
+  io OGLShaderProgram shaderProgram,
+  io DATA_TYPE value
 ) {
-  //  report("loadBooleanUniform: ATTRIBUTE_NAME ");
-  for (Integer i = 0; i < uniformValues.size(); i++) {
-    if (uniformValues[i].id == ATTRIBUTE_ID) {
-      glUniform1i(uniformValues[i].location, (value ? 1 : 0));
-      return;
-    }
+  //  report("loadATTRIBUTE_NAMEUniform");
+  Integer location = getUniformLocation(ATTRIBUTE_ID);
+  if(location!=-1){
+    shaderProgram.loadDATA_TYPEUniform( location, value );
   }
 }
 
-operator loadIntegerUniform(
-  io ShaderValue uniformValues[],
-  io Integer value,
-) {
-  //  report("loadIntegerUniform: ATTRIBUTE_NAME ");
-  for (Integer i = 0; i < uniformValues.size(); i++) {
-    if (uniformValues[i].id == ATTRIBUTE_ID) {
-      //  report("loadIntegerUniform -> location:" + uniformValues[i].location + " value:" + value );
-      if (uniformValues[i].location != - 1) {
-        glUniform1i(uniformValues[i].location, value);
-      }
-      return;
-    }
-  }
-}
-
-operator loadScalarUniform(
-  io ShaderValue uniformValues[],
-  io Scalar value,
-) {
-  //  report("loadScalarUniform: ATTRIBUTE_NAME ");
-  for (Integer i = 0; i < uniformValues.size(); i++) {
-    if (uniformValues[i].id == ATTRIBUTE_ID) {
-      if (uniformValues[i].location != - 1) {
-        glUniform1f(uniformValues[i].location, value);
-      }
-      return;
-    }
-  }
-}
-
-operator loadVec2Uniform(
-  io ShaderValue uniformValues[],
-  io Vec2 value,
-) {
-  //  report("loadVec2Uniform: ATTRIBUTE_NAME ");
-  for (Integer i = 0; i < uniformValues.size(); i++) {
-    if (uniformValues[i].id == ATTRIBUTE_ID) {
-      if (uniformValues[i].location != - 1) {
-        glUniform2f(uniformValues[i].location, value.x, value.y);
-      }
-      return;
-    }
-  }
-}
-
-operator loadVec3Uniform(
-  io ShaderValue uniformValues[],
-  io Vec3 value,
-) {
-  //  report("loadVec3Uniform: ATTRIBUTE_NAME ");
-  for (Integer i = 0; i < uniformValues.size(); i++) {
-    if (uniformValues[i].id == ATTRIBUTE_ID) {
-      if (uniformValues[i].location != - 1) {
-        glUniform3f(uniformValues[i].location, value.x, value.y, value.z);
-      }
-      return;
-    }
-  }
-}
-
-operator loadVec4Uniform(
-  io ShaderValue uniformValues[],
-  io Vec4 value,
-) {
-  //  report("loadVec4Uniform: ATTRIBUTE_NAME ");
-  for (Integer i = 0; i < uniformValues.size(); i++) {
-    if (uniformValues[i].id == ATTRIBUTE_ID) {
-      if (uniformValues[i].location != - 1) {
-        glUniform4f(uniformValues[i].location, value.x, value.y, value.z, value.t);
-      }
-      return;
-    }
-  }
-}
-
-operator loadColorUniform(
-  io ShaderValue uniformValues[],
-  io Color value,
-) {
-  //  report("loadColorUniform: ATTRIBUTE_NAME ");
-  for (Integer i = 0; i < uniformValues.size(); i++) {
-    if (uniformValues[i].id == ATTRIBUTE_ID) {
-      if (uniformValues[i].location != - 1) {
-        glUniform4f(uniformValues[i].location, value.r, value.g, value.b, value.a);
-      }
-      return;
-    }
-  }
-}
-
-operator loadMat33Uniform(
-  io ShaderValue uniformValues[],
-  io Mat33 value,
-) {
-  //  report("loadMat33Uniform: ATTRIBUTE_NAME ");
-  for (Integer i = 0; i < uniformValues.size(); i++) {
-    if (uniformValues[i].id == ATTRIBUTE_ID) {
-      if (uniformValues[i].location != - 1) {
-        var Mat33 values[];
-        values.push(value);
-        glUniformMatrix3fv(uniformValues[i].location, 1, false, values);
-      }
-      return;
-    }
-  }
-}
-
-operator loadMat44Uniform(
-  io ShaderValue uniformValues[],
-  io Mat44 value,
-) {
-  //  report("loadMat44Uniform: ATTRIBUTE_NAME ");
-  for (Integer i = 0; i < uniformValues.size(); i++) {
-    if (uniformValues[i].id == ATTRIBUTE_ID) {
-      if (uniformValues[i].location != - 1) {
-        var Mat44 values[];
-        values.push(value);
-        glUniformMatrix4fv(uniformValues[i].location, 1, false, values);
-      }
-      return;
-    }
-  }
-}

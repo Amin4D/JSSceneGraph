@@ -18,7 +18,7 @@ FABRIC.RT.OGLShaderSource = function(code, type) {
 FABRIC.appendOnCreateContextCallback(function(context) {
   context.RegisteredTypesManager.registerType('OGLShaderSource', {
       members: { code: 'String', type: 'Integer' },
-      constructor: FABRIC.RT.ShaderSource
+      constructor: FABRIC.RT.OGLShaderSource
     });
 });
 
@@ -39,7 +39,7 @@ FABRIC.RT.OGLShaderValue = function(name, id, state) {
 FABRIC.appendOnCreateContextCallback(function(context) {
   context.RegisteredTypesManager.registerType('OGLShaderValue', {
       members: { name: 'String', id: 'Integer', state: 'String[]', location: 'Integer' },
-      constructor: FABRIC.RT.ShaderValue
+      constructor: FABRIC.RT.OGLShaderValue
     });
 });
 
@@ -58,7 +58,7 @@ FABRIC.RT.OGLShaderProgramParam = function(id, value) {
 FABRIC.appendOnCreateContextCallback(function(context) {
   context.RegisteredTypesManager.registerType('OGLShaderProgramParam', {
       members: { id: 'Integer', value: 'Integer' },
-      constructor: FABRIC.RT.ShaderProgramParam
+      constructor: FABRIC.RT.OGLShaderProgramParam
     });
 });
 
@@ -70,12 +70,12 @@ FABRIC.appendOnCreateContextCallback(function(context) {
  * @param {object} direction A Vec3 defining the direction of the ray.
  */
 FABRIC.RT.OGLShaderProgram = function(name) {
-  this.name = name;
+  this.name = name ? name : '';
   this.programId = 0;
-  this.shaderSources = shaderSources ? shaderSources : [];
-  this.programParams = programParams ? programParams : [];
-  this.uniformValues = uniformValues ? uniformValues : [];
-  this.attributeValues = attributeValues ? attributeValues : [];
+  this.shaderSources = [];
+  this.programParams = [];
+  this.uniformValues = [];
+  this.attributeValues = [];
 };
 
 FABRIC.appendOnCreateContextCallback(function(context) {

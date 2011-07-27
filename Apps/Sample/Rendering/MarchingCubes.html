@@ -43,8 +43,8 @@
 FABRIC.SceneGraph.defineEffectFromFile('MCShader', 'shader/MarchingCubesShader.xml');
 
 
-FABRIC.SceneGraph.registerNodeType('MarchingCubesShader',
-  function(options, scene) {
+FABRIC.SceneGraph.registerNodeType('MarchingCubesShader', {
+  factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
       cubeSize: FABRIC.RT.vec3(32,32,32),
       dataSize: FABRIC.RT.vec3(128, 128, 128),
@@ -391,12 +391,12 @@ FABRIC.SceneGraph.registerNodeType('MarchingCubesShader',
       ]
     }));
     return mcMaterial;
-  });
+  }});
     
     
 
-FABRIC.SceneGraph.registerNodeType('PointGrid',
-  function(options, scene) {
+FABRIC.SceneGraph.registerNodeType('PointGrid',{
+  factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
       size_x: 2.0,
       size_y: 2.0,
@@ -442,7 +442,7 @@ FABRIC.SceneGraph.registerNodeType('PointGrid',
     ]);
 
     return gridNode;
-  });
+  }});
 
 
     

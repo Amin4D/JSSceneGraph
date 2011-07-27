@@ -10,16 +10,19 @@ FABRIC.SceneGraph.registerNodeType('Texture', {
     return textureNode;
   }});
 
+<<<<<<< HEAD
   // TODO: The texture image type needs to be broken into LDR and HDR.
   // here we have HDR image loading mixed in with LDR image loading,
   // but it should be a separate type.
+  FABRIC.SceneGraph.registerNodeType('Image',
+  function(options, scene) {
+=======
+// TODO: The texture image type needs to be broken into LDR and HDR.
+// here we have HDR image loading mixed in with LDR image loading,
+// but it should be a separate type.
 FABRIC.SceneGraph.registerNodeType('Image', {
-  briefDesc: 'The Image node holds image data, and optionally creates an URL image loader and an OpenGL texture.',
-  detailedDesc: 'The Image node holds generic image data (members: pixels, width, height), which might be HDR (member: hdr). ' +
-                'If \'options.createResouceLoadNode\', an URL-based image loader will be incorporated, and currently supports ' +
-                '.png, .tga, .exr and .hdr image formats. If \'options.createLoadTextureEventHandler\', an OpenGL texture ' +
-                'will be created from the image.',
   factoryFn: function(options, scene) {
+>>>>>>> origin/HEAD
     scene.assignDefaults(options, {
       wantHDR: false,
       wantRGBA: true,
@@ -71,11 +74,11 @@ FABRIC.SceneGraph.registerNodeType('Image', {
       };
     }
 
+    // Construct the handler for loading the image into texture memory.
+    redrawEventHandler = imageNode.constructEventHandlerNode('Redraw');
+    redrawEventHandler.addScope('image', dgnode);
+    redrawEventHandler.addMember('bufferID', 'Size', 0);
     if (options.createLoadTextureEventHandler) {
-      // Construct the handler for loading the image into texture memory.
-      redrawEventHandler = imageNode.constructEventHandlerNode('Redraw');
-      redrawEventHandler.addScope('image', dgnode);
-      redrawEventHandler.addMember('bufferID', 'Size', 0);
       redrawEventHandler.preDescendBindings.append(scene.constructOperator({
         operatorName: 'loadTexture',
         srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadTexture.kl',
@@ -88,10 +91,6 @@ FABRIC.SceneGraph.registerNodeType('Image', {
               'textureStub.textureUnit'
             ]
       }));
-
-      imageNode.getLoadTextureEventHandler = function() {
-        return redrawEventHandler;
-      };
     }
 
     imageNode.getURL = function() {

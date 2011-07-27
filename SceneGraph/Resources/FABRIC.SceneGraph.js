@@ -206,14 +206,16 @@ FABRIC.SceneGraph = {
     scene.constructEventNode = function(name) {
       return context.DependencyGraph.createEvent(name);
     };
-    scene.constructResourceLoadEventNode = function(url) {
-      return context.DependencyGraph.createResourceLoadEvent('RLE: ' + url, url);
-    };
     scene.constructEventHandlerNode = function(name) {
       return context.DependencyGraph.createEventHandler(name);
     };
-    scene.constructDependencyGraphNode = function(name) {
-      return context.DependencyGraph.createNode(name);
+    scene.constructDependencyGraphNode = function(name, isResourceLoad) {
+      if (isResourceLoad) {
+        return context.DependencyGraph.createResourceLoadNode(name);
+      }
+      else {
+        return context.DependencyGraph.createNode(name);
+      }
     };
 
     scene.constructNode = function(type, options) {
@@ -804,11 +806,11 @@ FABRIC.SceneGraph.registerNodeType('SceneGraphNode', {
           }
         }
       },
-      constructDGNode: function(dgnodename) {
+      constructDGNode: function(dgnodename, isResourceLoad) {
         if(dgnodes[dgnodename]){
           throw "SceneGraphNode already has a " + dgnodename;
         }
-        var dgnode = scene.constructDependencyGraphNode(name + '_' + dgnodename);
+        var dgnode = scene.constructDependencyGraphNode(name + '_' + dgnodename, isResourceLoad);
         dgnode.sceneGraphNode = sceneGraphNode;
         sceneGraphNode['get' + dgnodename] = function() {
           return dgnode;
@@ -826,6 +828,9 @@ FABRIC.SceneGraph.registerNodeType('SceneGraphNode', {
         };
         dgnodes[dgnodename] = dgnode;
         return dgnode;
+      },
+      constructResourceLoadNode: function(dgnodename) {
+        return sceneGraphNode.constructDGNode(dgnodename, true);
       },
       constructEventHandlerNode: function(ehname) {
         var eventhandlernode = scene.constructEventHandlerNode(name + '_' + ehname);
@@ -1273,6 +1278,64 @@ FABRIC.SceneGraph.registerNodeType('Viewport', {
     return viewportNode;
   }});
 
+  FABRIC.SceneGraph.registerNodeType('ResourceLoad', {
+  briefDesc: 'The ResourceLoad node implements the loading of a resource from an URL.',
+  detailedDesc: 'Based on is \'url\' member, the ResourceLoad node will asynchronously load the associated ' +
+                'resource to its \'resource\' member. Until the data is loaded, resource.dataSize will be zero. ' +
+                'Once the data is loaded, JS callbacks will be fired; you can register those by calling the ' +
+                '\'addOnLoadCallback\' member function. Unless \'option.redrawOnLoad\' is set to false, the loading ' +
+                'will automatically trigger a redraw. Note that operators can dynamically modify the URL.',
+  factoryFn: function(options, scene) {
+    scene.assignDefaults(options, {
+      redrawOnLoad: true
+    });
+
+    var onloadCallbacks = [];
+    lastLoadCallbackURL = '';
+
+    var resourceLoadNode = scene.constructNode('SceneGraphNode', options);
+    var dgnode = resourceLoadNode.constructResourceLoadNode('DGLoadNode');
+
+    resourceLoadNode.addMemberInterface(dgnode, 'url', true);
+    resourceLoadNode.addMemberInterface(dgnode, 'resource');
+
+    dgnode.addOnLoadCallback(function() {
+      var i;
+      lastLoadCallbackURL = resourceLoadNode.pub.getUrl();
+      for (i = 0; i < onloadCallbacks.length; i++) {
+        onloadCallbacks[i](resourceLoadNode.pub);
+      }
+      onloadCallbacks = [];
+
+      if (options.redrawOnLoad) {
+        scene.pub.redrawAllWindows();
+      }
+    });
+
+    resourceLoadNode.pub.isLoaded = function() {
+      return lastLoadCallbackURL !== '' && lastLoadCallbackURL === resourceLoadNode.pub.getUrl();
+    }
+
+    resourceLoadNode.pub.addOnLoadCallback = function(callback) {
+      //It is possible that a resourceLoadNode actually loads multiple resources in a sequence;
+      //make sure the callback is only fired when the 'next' resource is loaded.
+      if (resourceLoadNode.pub.isLoaded()) {
+        callback.call(); //Already loaded
+      } else {
+        onloadCallbacks.push(callback);
+      }
+    };
+
+    if (options.onLoadCallback) {
+      resourceLoadNode.pub.addOnLoadCallback(options.onLoadCallback);
+    }
+
+    if (options.url) {
+      resourceLoadNode.pub.setUrl(options.url);
+    }
+
+    return resourceLoadNode;
+  }});
 
 FABRIC.SceneGraph.registerNodeType('Camera', {
   briefDesc: 'The Camera node implements an OpenGL camera for the ViewPort node.',

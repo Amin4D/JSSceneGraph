@@ -77,21 +77,17 @@ FABRIC.SceneGraph.registerNodeType('Image', {
       redrawEventHandler.addScope('image', dgnode);
       redrawEventHandler.addMember('bufferID', 'Size', 0);
       redrawEventHandler.preDescendBindings.append(scene.constructOperator({
-        operatorName: 'loadTexture',
+        operatorName: 'createTextureFromImageLDR',
         srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadTexture.kl',
         entryFunctionName: 'createTextureFromImageLDR',
         parameterBinding: [
-              'image.width',
-              'image.height',
-              'image.pixels',
-              'self.bufferID',
-              'textureStub.textureUnit'
-            ]
+          'image.width',
+          'image.height',
+          'image.pixels',
+          'self.bufferID',
+          'textureStub.textureUnit'
+        ]
       }));
-
-      imageNode.getLoadTextureEventHandler = function() {
-        return redrawEventHandler;
-      };
     }
 
     imageNode.getURL = function() {
@@ -398,7 +394,8 @@ FABRIC.SceneGraph.registerNodeType('Material', {
     scene.assignDefaults(options, {
         separateShaderNode: true,
         shaderNode: undefined,
-        assignUniformsOnPostDescend:false
+        storeUniformsInDGNode: false,
+        assignUniformsOnPostDescend: false
       });
 
     var materialNode,
@@ -486,13 +483,24 @@ FABRIC.SceneGraph.registerNodeType('Material', {
       }
 
       uniformType = FABRIC.shaderAttributeTable[uniformName].type;
+      var uniformOwner;
       if (uniform.owner === undefined) {
-        if(!dgnode){
-          dgnode = materialNode.constructDGNode('DGNode');
-          redrawEventHandler.addScope('material', dgnode);
+        if(options.storeUniformsInDGNode){
+          if(!dgnode){
+            dgnode = materialNode.constructDGNode('DGNode');
+            redrawEventHandler.addScope('material', dgnode);
+          }
+          dgnode.addMember(uniformName, uniformType, uniform.defaultValue);
+          materialNode.addMemberInterface(dgnode, uniformName, true);
+          uniformOwner = 'material';
         }
-        dgnode.addMember(uniformName, uniformType, uniform.defaultValue);
-        materialNode.addMemberInterface(dgnode, uniformName, true);
+        else{
+          redrawEventHandler.addMember(uniformName, uniformType, uniform.defaultValue);
+          materialNode.addMemberInterface(redrawEventHandler, uniformName, true);
+          uniformOwner = 'self';
+        }
+      }else{
+        uniformOwner = uniform.owner;
       }
       
       operators.append(scene.constructOperator({
@@ -506,7 +514,7 @@ FABRIC.SceneGraph.registerNodeType('Material', {
         entryFunctionName: 'loadUniform',
         parameterBinding: [
           (options.separateShaderNode ? 'shader.shaderProgram' : 'self.shaderProgram'),
-          (uniform.owner === undefined ? 'material' : uniform.owner) + '.' + uniformName
+          uniformOwner + '.' + uniformName
         ]
       }));
     }
@@ -544,8 +552,8 @@ FABRIC.SceneGraph.registerNodeType('Material', {
           operatorName: 'loadIntegerUniform',
           srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadUniforms.kl',
           preProcessorDefinitions: {
-            ATTRIBUTE_NAME: textureName,
-            ATTRIBUTE_ID: FABRIC.shaderAttributeTable[uniformName].id,
+            ATTRIBUTE_NAME: capitalizeFirstLetter(textureName),
+            ATTRIBUTE_ID: FABRIC.shaderAttributeTable[textureName].id,
             DATA_TYPE: 'Integer'
           },
           entryFunctionName: 'loadUniform',

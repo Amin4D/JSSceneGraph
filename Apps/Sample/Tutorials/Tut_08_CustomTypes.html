@@ -1,0 +1,127 @@
+<html xmlns="http://www.w3.org/1999/xhtml"> 
+  <!--
+    Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
+    -->
+  <head> 
+    <title>FABRIC - Tutorial 08 - Custom Types</title> 
+    
+    <meta charset="iso-8859-1"/>
+    <script type="text/javascript" src="../../../ThirdParty/jQuery/jquery-1.4.2.min.js"></script>
+
+    <script type="text/javascript" src="../../../Core/FABRIC.Wrappers.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../Core/FABRIC.js" charset="utf-8"></script>
+    
+
+<script type="text/javascript">
+
+$(document).ready(function() {
+
+  // implement the javascript vector  
+  var myVector = function(json) {
+    var type = { x: 0.0, y: 0.0 };
+    if (json != undefined) {
+      type.x = json.x == undefined ? 0.0 : json.x;
+      type.y = json.y == undefined ? 0.0 : json.y;
+    }
+    // implement a to string method for console output
+    type.__proto__.toString= function() {
+      return 'myVector(' + this.x + ',' + this.y + ')';
+    };
+    return type;
+  };
+  
+  // define the KL binding
+  // for now we only implement a simply add operator
+  // as well as a length
+  var myVectorKLCode =
+    'function myVector +(myVector a, myVector b){\n' +
+    '  myVector result;\n' +
+    '  result.x = a.x + b.x;\n' +
+    '  result.y = a.y + b.y;\n' +
+    '  return result;\n' +
+    '}\n' +
+    'function Scalar myVector.length(){\n' +
+    '  return sqrt(self.x * self.x + self.y * self.y);\n' +
+    '}\n';
+  
+  FABRIC.appendOnCreateContextCallback(function(context) {
+    context.RegisteredTypesManager.registerType('myVector', {
+      members: {
+        x: 'Scalar',
+        y: 'Scalar'
+      },
+      constructor: myVector,
+      kBindings: myVectorKLCode
+    });
+  });
+  
+  // create a context and store it
+  var context = FABRIC.createContext();
+
+  // create a new dgnode
+  var dgnode = context.DependencyGraph.createNode("myNode");
+  
+  // add some members
+  dgnode.addMember('a','myVector', myVector( { x: 17.0, y: 12 } ));
+  dgnode.addMember('b','myVector', myVector( { x: 21.0, y: 271 } ));
+  dgnode.addMember('sum','myVector');
+  dgnode.addMember('length','Scalar');
+  
+  // create an operator
+  var operatorAdd = context.DependencyGraph.createOperator("add");
+  operatorAdd.setSourceCode(
+    'operator add(io myVector a, io myVector b, io myVector result) {\n'+
+    '  result = a + b;\n'+
+    '}\n');
+  operatorAdd.setEntryFunctionName('add');
+
+  var operatorLength = context.DependencyGraph.createOperator("length");
+  operatorLength.setSourceCode(
+    'operator length(io myVector v, io Scalar result) {\n'+
+    '  result = v.length();\n'+
+    '}\n');
+  operatorLength.setEntryFunctionName('length');
+  
+  // create bindings between the nodes and the operator
+  var bindingAdd = context.DependencyGraph.createBinding();
+  bindingAdd.setOperator(operatorAdd);
+  bindingAdd.setParameterLayout([
+    'self.a',
+    'self.b',
+    'self.sum'
+  ]);
+  var bindingLength = context.DependencyGraph.createBinding();
+  bindingLength.setOperator(operatorLength);
+  bindingLength.setParameterLayout([
+    'self.sum',
+    'self.length'
+  ]);
+
+  // append the bindings to the node
+  dgnode.bindings.append(bindingAdd);
+  dgnode.bindings.append(bindingLength);
+  
+  // evaluate the node
+  dgnode.evaluate();
+  
+  // query the node's data
+  var data = dgnode.getBulkData();
+  
+  // construct html to output the computation
+  var html = "<b>Computation result:</b><br>";
+  html += "<br>( "+data.a[0]+" + "+data.b[0]+" ).length = "+data.length[0];
+  
+  // output the html
+  $("#output").html(html);
+});
+
+</script>
+
+  </head> 
+  <body>
+    <div id="context">
+    </div>
+    <div id="output">
+    </div>
+  </body> 
+  </html>

@@ -243,7 +243,7 @@ FABRIC.SceneGraph.registerNodeType('Geometry', {
             },
             entryFunctionName: 'bindVBO',
             parameterBinding: [
-              'shader.attributeValues',
+              'shader.shaderProgram',
               'uniforms.' + bufferIDMemberName,
               'uniforms.' + countMemberName,
               'self.' + countMemberName
@@ -298,7 +298,7 @@ FABRIC.SceneGraph.registerNodeType('Geometry', {
             },
             entryFunctionName: 'genAndLoadVBO',
             parameterBinding: [
-              'shader.attributeValues',
+              'shader.shaderProgram',
               attributeNodeBinding + '.' + memberName + '[]',
               'self.' + countMemberName,
               'self.' + dynamicMemberName,
@@ -664,7 +664,7 @@ FABRIC.SceneGraph.registerNodeType('Instance', {
             entryFunctionName: 'loadModelProjectionMatrices',
             preProcessorDefinitions: preProcessorDefinitions,
             parameterBinding: [
-              'shader.uniformValues',
+              'shader.shaderProgram',
               'transform.' + transformNodeMember,
               'camera.cameraMat44',
               'camera.projectionMat44'

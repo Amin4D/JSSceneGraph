@@ -97,7 +97,9 @@ function OGLShaderProgram.validateShaderBindings() {
     type.push(Size(0));
     nbReceived.push(Size(0));
     glGetActiveUniform(self.programId, i, 1024, nbReceived, size, type, name);
-    //  report( "P: " + i + " - " + size + " - " + type + " - " + name );
+    if(self.debug){
+      report( "U: " + i + " - " + size + " - " + type + " - " + name );
+    }
 
     Boolean found = false;
     for (j = 0; j < self.uniformValues.size(); j++) {
@@ -122,7 +124,9 @@ function OGLShaderProgram.validateShaderBindings() {
     type.push(Size(0));
     nbReceived.push(Size(0));
     glGetActiveAttrib(self.programId, i, 1024, nbReceived, size, type, name);
-    //  report( "A: " + i + " - " + size + " - " + type + " - " + name );
+    if(self.debug){
+      report( "A: " + i + " - " + size + " - " + type + " - " + name );
+    }
 
     Boolean found = false;
     for (j = 0; j < self.attributeValues.size(); j++) {
@@ -136,6 +140,9 @@ function OGLShaderProgram.validateShaderBindings() {
     }
   }
 }
+
+
+
 
 
 function OGLShaderProgram.createProgramFromShaders() {
@@ -153,7 +160,7 @@ function OGLShaderProgram.createProgramFromShaders() {
   }
 
   if (shaderIDs.size() == self.shaderSources.size()) {
-    self.programId = 3;//glCreateProgram();
+    self.programId = glCreateProgram();
     if (self.programId != 0) {
       for (var Size i = 0; i < shaderIDs.size(); i++) {
         glAttachShader(self.programId, shaderIDs[i]);
@@ -205,8 +212,7 @@ function OGLShaderProgram.createProgramFromShaders() {
   for (var Size i = 0; i < shaderIDs.size(); i++) {
     glDeleteShader(shaderIDs[i]);
   }
-  
-  if (self.programId) {
+  if (self.programId != 0) {
     self.validateShaderBindings();
   }
 }
@@ -239,11 +245,50 @@ function Integer OGLShaderProgram.getUniformLocation(
 }
 
 
+
+function Boolean OGLShaderProgram.validateUniformBinding(
+  Integer location,
+  Size dataSize
+) {
+report("validateUniformBinding:" + dataSize);
+  var String name, typeName;
+  var Integer i, j;
+
+  var Integer nbUniforms[];
+  nbUniforms.push(0);
+  glGetProgramiv(self.programId, GL_ACTIVE_UNIFORMS, nbUniforms);
+  for (i = 0; i < nbUniforms[0]; i++) {
+    var Integer size[];
+    var Size type[];
+    var Size nbReceived[];
+    size.push(0);
+    type.push(Size(0));
+    nbReceived.push(Size(0));
+    glGetActiveUniform(self.programId, i, 1024, nbReceived, size, type, name);
+ 
+    Integer activeUniformLocation = glGetUniformLocation(self.programId, name);
+    if(activeUniformLocation == location){
+      if(dataSize <= size[0]){
+        return true;
+      }else{
+        report("ERROR: The uniform size is not big enough to contain the given data");
+        return false;
+      }
+    }
+  }
+  report("ERROR: The uniform is not active");
+  return false;
+}
+
+
 function OGLShaderProgram.loadBooleanUniform(
   Integer location,
   Boolean value
 ) {
   if (location != - 1) {
+    if(self.debug){
+    //  self.validateUniformBinding(location, value.dataSize());
+    }
     glUniform1i(location, (value ? 1 : 0));
   }
   else{
@@ -256,6 +301,9 @@ function OGLShaderProgram.loadIntegerUniform(
   Integer value
 ) {
   if (location != - 1) {
+    if(self.debug){
+      self.validateUniformBinding(location, value.dataSize());
+    }
     glUniform1i(location, value);
   }
   else{
@@ -268,6 +316,9 @@ function OGLShaderProgram.loadScalarUniform(
   Scalar value
 ) {
   if (location != - 1) {
+    if(self.debug){
+      self.validateUniformBinding(location, value.dataSize());
+    }
     glUniform1f(location, value);
   }
   else{
@@ -280,6 +331,9 @@ function OGLShaderProgram.loadVec2Uniform(
   Vec2 value
 ) {
   if (location != - 1) {
+    if(self.debug){
+      self.validateUniformBinding(location, value.dataSize());
+    }
     glUniform2f(location, value.x, value.y);
   }
   else{
@@ -292,6 +346,9 @@ function OGLShaderProgram.loadVec3Uniform(
   Vec3 value
 ) {
   if (location != - 1) {
+    if(self.debug){
+      self.validateUniformBinding(location, value.dataSize());
+    }
     glUniform3f(location, value.x, value.y, value.z);
   }
   else{
@@ -304,6 +361,9 @@ function OGLShaderProgram.loadVec4Uniform(
   Vec4 value
 ) {
   if (location != - 1) {
+    if(self.debug){
+      self.validateUniformBinding(location, value.dataSize());
+    }
     glUniform4f(location, value.x, value.y, value.z, value.t);
   }
   else{
@@ -316,6 +376,9 @@ function OGLShaderProgram.loadColorUniform(
   Color value
 ) {
   if (location != - 1) {
+    if(self.debug){
+      self.validateUniformBinding(location, value.dataSize());
+    }
     glUniform4f(location, value.r, value.g, value.b, value.a);
   }
   else{
@@ -355,6 +418,16 @@ function OGLShaderProgram.loadMat44Uniform(
 // Interfaces for loading buffers.
 
 
+function Integer OGLShaderProgram.getAttributeLocation(
+  Integer attributeId
+) {
+  for (Integer i = 0; i < self.attributeValues.size(); i++) {
+    if (self.attributeValues[i].id == attributeId) {
+      return self.attributeValues[i].location;
+    }
+  }
+  return -1;
+}
 
 function OGLShaderProgram.genBuffer(
   Data bufferData,
@@ -396,18 +469,6 @@ function OGLShaderProgram.bindBuffer(
 }
 
 
-function Integer OGLShaderProgram.getBufferLocation(
-  io Integer attributeId
-) {
-  for (Integer i = 0; i < self.attributeValues.size(); i++) {
-    if (self.attributeValues[i].id == attributeId) {
-      return self.attributeValues[i].location;
-    }
-  }
-  return -1;
-}
-
-
 function OGLShaderProgram.genAndLoadIndicesVBOs(
   io Integer indices[],
   io Size indicesCount,
@@ -426,6 +487,30 @@ function OGLShaderProgram.genAndLoadIndicesVBOs(
   self.genBuffer(indices.data(), indices.dataSize(), false, indicesBufferID);
   indicesCount = indices.size();
 }
+
+
+function OGLShaderProgram.genVBO(
+  Data bufferData,
+  Size bufferDataSize,
+  Size bufferDataElementSize,
+  io Size bufferDataCount,
+  Boolean dynamic,
+  Boolean reload,
+  io Integer bufferID
+) {
+  if (bufferID <= 0 || bufferDataSize != bufferDataCount || dynamic || reload) {
+    if (bufferID != 0 && (bufferDataSize != bufferDataCount || reload)) {
+      var Size bufferIDs[];
+      bufferIDs.push(Size(bufferID));
+      glDeleteBuffers(1, bufferIDs);
+      bufferID = 0;
+    }
+    self.genBuffer(bufferData, bufferDataSize, dynamic, bufferID);
+    bufferDataCount = bufferDataSize;
+  }
+}
+
+
 
 
 function OGLShaderProgram.genAndBindVBO(

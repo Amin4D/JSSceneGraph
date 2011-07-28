@@ -76,6 +76,7 @@ FABRIC.RT.OGLShaderProgram = function(name) {
   this.programParams = [];
   this.uniformValues = [];
   this.attributeValues = [];
+  this.debug = false;
 };
 
 FABRIC.appendOnCreateContextCallback(function(context) {
@@ -86,7 +87,8 @@ FABRIC.appendOnCreateContextCallback(function(context) {
       shaderSources: 'OGLShaderSource[]',
       programParams: 'OGLShaderProgramParam[]',
       uniformValues: 'OGLShaderValue[]',
-      attributeValues: 'OGLShaderValue[]'
+      attributeValues: 'OGLShaderValue[]',
+      debug: 'Boolean'
     },
     constructor: FABRIC.RT.OGLShaderProgram,
     kBindings: FABRIC.loadResourceURL('FABRIC_ROOT/SceneGraph/Resources/RT/OGLShaderProgram.kl')

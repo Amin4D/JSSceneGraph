@@ -58,7 +58,7 @@ FABRIC.SceneGraph.registerNodeType('Light', {
         },
         entryFunctionName: 'loadLight',
         parameterBinding: [
-        'shader.uniformValues',
+        'shader.shaderProgram',
         'light.type',
         'light.color',
         'camera.cameraMat44',
@@ -212,7 +212,7 @@ FABRIC.SceneGraph.registerNodeType('DirectionalLight', {
         },
         entryFunctionName: 'loadDirectionalLight',
         parameterBinding: [
-          'shader.uniformValues',
+          'shader.shaderProgram',
           'camera.cameraMat44',
           'light.lightMat44'
         ]
@@ -317,7 +317,7 @@ FABRIC.SceneGraph.registerNodeType('SpotLight', {
           },
           entryFunctionName: 'loadSpotLight',
           parameterBinding: [
-            'shader.uniformValues',
+            'shader.shaderProgram',
             'light.coneAngle',
             'camera.cameraMat44',
             'light.lightMat44'
@@ -357,7 +357,7 @@ FABRIC.SceneGraph.registerNodeType('SpotLight', {
               },
               entryFunctionName: 'loadLightMatrixUniform',
               parameterBinding: [
-                'shader.uniformValues',
+                'shader.shaderProgram',
                 'light.shadowMat44',
                 'camera.cameraMat44'
               ]

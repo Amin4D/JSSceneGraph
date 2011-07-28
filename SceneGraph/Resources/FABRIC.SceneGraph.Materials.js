@@ -358,6 +358,8 @@ FABRIC.SceneGraph.registerNodeType('Shader', {
        shaderProgram.programParams.push(new FABRIC.RT.OGLShaderProgramParam(
         FABRIC.SceneGraph.OpenGLConstants[i], options.programParams[i]));
     }
+    
+  //  shaderProgram.debug = true;
     redrawEventHandler.addMember('shaderProgram', 'OGLShaderProgram', shaderProgram);
   
     var operators = redrawEventHandler.preDescendBindings;

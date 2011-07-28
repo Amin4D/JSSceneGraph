@@ -71,7 +71,7 @@ $(document).ready(function() {
 
   viewport.setCameraNode(camera);
 
-  var light;// = scene.constructNode('PointLight', { position: FABRIC.RT.vec3(420.0, 1000.0, 600.0) });
+  var light = scene.constructNode('PointLight', { position: FABRIC.RT.vec3(420.0, 1000.0, 600.0) });
   var redMaterial = scene.constructNode('PhongMaterial', {
           diffuseColor: FABRIC.RT.rgb(0.8, 0, 0, 1),
           lightNode: light

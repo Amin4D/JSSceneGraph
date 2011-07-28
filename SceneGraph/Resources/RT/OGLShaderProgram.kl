@@ -151,6 +151,10 @@ function OGLShaderProgram.createProgramFromShaders() {
     return;
   }
 
+  if(self.debug){
+    report("createProgramFromShaders:");
+  }
+  
   var Integer shaderIDs[];
   for (var Size i = 0; i < self.shaderSources.size(); i++) {
     var Integer shaderID = self.createAndCompileShader(self.shaderSources[i]);
@@ -250,7 +254,6 @@ function Boolean OGLShaderProgram.validateUniformBinding(
   Integer location,
   Size dataSize
 ) {
-report("validateUniformBinding:" + dataSize);
   var String name, typeName;
   var Integer i, j;
 
@@ -265,15 +268,14 @@ report("validateUniformBinding:" + dataSize);
     type.push(Size(0));
     nbReceived.push(Size(0));
     glGetActiveUniform(self.programId, i, 1024, nbReceived, size, type, name);
- 
     Integer activeUniformLocation = glGetUniformLocation(self.programId, name);
     if(activeUniformLocation == location){
-      if(dataSize <= size[0]){
+     // if(dataSize <= size[0]){
         return true;
-      }else{
-        report("ERROR: The uniform size is not big enough to contain the given data");
-        return false;
-      }
+     // }else{
+     //   report("ERROR: The uniform size is not big enough to contain the given data");
+     //   return false;
+     // }
     }
   }
   report("ERROR: The uniform is not active");

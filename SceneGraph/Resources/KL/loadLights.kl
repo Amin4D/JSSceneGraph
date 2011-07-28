@@ -12,26 +12,22 @@ operator loadLight(
   io Mat44 cameraMatrix,
   io Mat44 lightMatrix
 ) {
-  report("loadLight");
+//  report("loadLight");
   Integer location;
 
   location = shaderProgram.getUniformLocation(LIGHTTYPE_ATTRIBUTE_ID);
-  report("loadLightType location:" + location + " type:" + type);
   if(location!=-1){
     shaderProgram.loadIntegerUniform(location, type);
   }
   location = shaderProgram.getUniformLocation(LIGHTCOLOR_ATTRIBUTE_ID);
-  report("loadLightColor location:" + location + " color:" + color);
   if(location!=-1){
     shaderProgram.loadColorUniform(location, color);
   }
   location = shaderProgram.getUniformLocation(LIGHTPOS_ATTRIBUTE_ID);
   if(location!=-1){
     var Vec4 viewPos = lightMatrix.row3 * cameraMatrix;
-  report("loadLightViewPos location:" + location + " viewPos:" + viewPos);
-    shaderProgram.loadVec4Uniform(LIGHTPOS_ATTRIBUTE_ID, viewPos);
+    shaderProgram.loadVec4Uniform(location, viewPos);
   }
-  report("loadLight :end");
 }
 
 operator loadDirectionalLight(

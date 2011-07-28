@@ -359,7 +359,7 @@ FABRIC.SceneGraph.registerNodeType('Shader', {
         FABRIC.SceneGraph.OpenGLConstants[i], options.programParams[i]));
     }
     
-  //  shaderProgram.debug = true;
+    shaderProgram.debug = true;
     redrawEventHandler.addMember('shaderProgram', 'OGLShaderProgram', shaderProgram);
   
     var operators = redrawEventHandler.preDescendBindings;
@@ -461,8 +461,10 @@ FABRIC.SceneGraph.registerNodeType('Material', {
       redrawEventHandler = materialNode.getRedrawEventHandler();
     }
     
+    var capitalizeFirstLetter = function(str) {
+      return str[0].toUpperCase() + str.substr(1);
+    };
     
-
     /////////////////////////////////
     // Material uniform interface definition.
     // Here we expose define members on our dgnode to store
@@ -494,7 +496,7 @@ FABRIC.SceneGraph.registerNodeType('Material', {
       }
       
       operators.append(scene.constructOperator({
-        operatorName: 'load' + uniformName + 'Uniform',
+        operatorName: 'load' + capitalizeFirstLetter(uniformName) + 'Uniform',
         srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadUniforms.kl',
         preProcessorDefinitions: {
           ATTRIBUTE_NAME: uniformName,
@@ -508,10 +510,6 @@ FABRIC.SceneGraph.registerNodeType('Material', {
         ]
       }));
     }
-
-    var capitalizeFirstLetter = function(str) {
-      return str[0].toUpperCase() + str.substr(1);
-    };
 
     if (options.lights) {
       addLightInterface = function(lightName, lightDef) {

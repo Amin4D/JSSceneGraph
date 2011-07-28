@@ -416,6 +416,18 @@ function OGLShaderProgram.loadMat44Uniform(
   }
 }
 
+function OGLShaderProgram.loadMat44UniformArray(
+  Integer location,
+  io Mat44 values[] /* PT 28-06-11 I'm not sure why values is an l-value in the following call */
+) {
+  if (location != - 1) {
+    glUniformMatrix4fv(location, values.size(), false, values);
+  }
+  else{
+    report("Invalid Uniform Locations");
+  }
+}
+
 //////////////////////////////////////////////////////////
 // Interfaces for loading buffers.
 

@@ -205,13 +205,17 @@ FABRIC.SceneGraph.registerNodeType('Geometry', {
       for (i = 0; i < deformationbufferinterfaces.length; i++) {
         redrawEventHandler.addScope('attributes' + (i + 1), deformationbufferinterfaces[i].getDGNode());
       }
+      
+      var capitalizeFirstLetter = function(str) {
+        return str[0].toUpperCase() + str.substr(1);
+      };
 
       if (uniformsdgnode.getMembers().indices) {
         redrawEventHandler.addMember('indicesBufferID', 'Integer', 0);
         redrawEventHandler.addMember('indicesCount', 'Size', 0);
 
         redrawEventHandler.preDescendBindings.append(scene.constructOperator({
-          operatorName: 'genAndLoadIndicesVBOs',
+          operatorName: 'loadIndices',
           srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadVBOs.kl',
           entryFunctionName: 'genAndLoadIndicesVBOs',
           parameterBinding: [
@@ -289,11 +293,11 @@ FABRIC.SceneGraph.registerNodeType('Geometry', {
           redrawEventHandler.addMember(dynamicMemberName, 'Boolean', dynamicMember);
 
           redrawEventHandler.preDescendBindings.append(scene.constructOperator({
-            operatorName: 'genAndLoad' + memberName + 'VBO',
+            operatorName: 'load' + capitalizeFirstLetter(memberName),
             srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/genAndLoadVBO.kl',
             preProcessorDefinitions: {
               DATA_TYPE: memberType,
-              ATTRIBUTE_NAME: memberName,
+              ATTRIBUTE_NAME: capitalizeFirstLetter(memberName),
               ATTRIBUTE_ID: FABRIC.shaderAttributeTable[memberName].id
             },
             entryFunctionName: 'genAndLoadVBO',

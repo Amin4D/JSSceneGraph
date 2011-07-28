@@ -77,8 +77,8 @@ $(document).ready(function() {
           lightNode: light
         });
 
-//  var assets = scene.importAssetFile('Models/cow.obj');
-//  var instanceNode = scene.constructNode('Instance', { geometryNode: assets['cow'], materialNode: redMaterial });
+  var assets = scene.importAssetFile('Models/cow.obj');
+  var instanceNode = scene.constructNode('Instance', { geometryNode: assets['cow'], materialNode: redMaterial });
 
   var errors = scene.getErrors();
   if (errors.length > 0) {

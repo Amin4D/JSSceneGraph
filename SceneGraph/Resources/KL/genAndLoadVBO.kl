@@ -18,7 +18,7 @@ operator genAndLoadVBO(
   io Integer bufferID
 ) {
   Integer location = shaderProgram.getAttributeLocation(ATTRIBUTE_ID);
-  report("genAndLoadVBO ATTRIBUTE_NAME bufferID:" + bufferID + " bufferDataCount:" + bufferDataCount + " location:" + location );
+//  report("genAndLoadVBO ATTRIBUTE_NAME bufferID:" + bufferID + " bufferDataCount:" + bufferDataCount + " location:" + location );
   if(location!=-1){
     DATA_TYPE val;
     shaderProgram.genAndBindVBO(

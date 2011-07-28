@@ -1,0 +1,82 @@
+<html xmlns="http://www.w3.org/1999/xhtml"> 
+  <!--
+    Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
+    -->
+  <head> 
+    <title>FABRIC - Tutorial 04 - Create an Operator</title> 
+    
+    <meta charset="iso-8859-1"/>
+    <script type="text/javascript" src="../../../ThirdParty/jQuery/jquery-1.4.2.min.js"></script>
+
+    <script type="text/javascript" src="../../../Core/FABRIC.Wrappers.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../Core/FABRIC.js" charset="utf-8"></script>
+    
+
+<script type="text/javascript">
+
+$(document).ready(function() {
+  
+  // create a context and store it
+  var context = FABRIC.createContext();
+
+  // create a new dgnode
+  var dgnode = context.DependencyGraph.createNode("myNode");
+  
+  // we only store the node to the context div for demonstration
+  // purpose, so that we can retrieve it in the console.
+  $("#context").myNode = dgnode;
+  
+  // add some members
+  dgnode.addMember('a','Scalar',17.3);
+  dgnode.addMember('b','Scalar',49.2);
+  dgnode.addMember('result','Scalar');
+  
+  // create an operator
+  var operator = context.DependencyGraph.createOperator("add");
+  operator.setSourceCode(
+    'operator add(io Scalar a, io Scalar b, io Scalar result) {\n'+
+    '  result = a + b;\n'+
+    '}\n');
+  operator.setEntryFunctionName('add');
+  
+  // create a binding between the node and the operator
+  var binding = context.DependencyGraph.createBinding();
+  binding.setOperator(operator);
+  binding.setParameterLayout([
+    'self.a',
+    'self.b',
+    'self.result',
+  ]);
+  
+  // append the new binding to the node
+  dgnode.bindings.append(binding);
+  
+  console.log(dgnode.getErrors());
+  
+  // evaluate the node!
+  dgnode.evaluate();
+  
+  // query the node's data
+  var data = dgnode.getBulkData();
+  console.log(data);
+  
+  // construct html to output the computation
+  var html = "<b>Computation result:</b><br>";
+  for (var i=0;i<data.a.length;i++) {
+    html += "<br>slice("+i+"): a("+data.a[i]+") + b("+data.b[i]+") = result("+data.result[i]+")";
+  }
+  
+  // output the html
+  $("#output").html(html);
+});
+
+</script>
+
+  </head> 
+  <body>
+    <div id="context">
+    </div>
+    <div id="output">
+    </div>
+  </body> 
+  </html>

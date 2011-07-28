@@ -47,8 +47,8 @@
     
     <script type="text/javascript">
 
-FABRIC.SceneGraph.registerNodeType('Hair',
-  function(options, scene) {
+FABRIC.SceneGraph.registerNodeType('Hair', {
+  factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
       characterMeshNode: undefined,
       count: 50,
@@ -196,7 +196,7 @@ FABRIC.SceneGraph.registerNodeType('Hair',
     }));
     
     return hairNode;
-  });    
+  }});    
 
 $(document).ready(function() { var scene = FABRIC.SceneGraph.createScene();
   var viewport = scene.constructNode('Viewport', {
@@ -227,7 +227,7 @@ $(document).ready(function() { var scene = FABRIC.SceneGraph.createScene();
     lightNode: light
   });
 
-  /* T - character
+  //* T - character
   var assetNodes = scene.importAssetFile('../BasicDemos/Models/envelope.dae', { bindToGlobalTime: false });
   var skinMaterial = scene.constructNode('PhongSkinningMaterial', {
       lightNode: light,
@@ -246,8 +246,9 @@ $(document).ready(function() { var scene = FABRIC.SceneGraph.createScene();
       gravity: FABRIC.RT.vec2(0.4,0.6),
       count: 25000
     });
-  */
+  //*/
 
+  /* Monster Character - not yet working
   var assetNodes = scene.importAssetFile('../../Private/Monster/Models/monster_low_mocap_02.dae', {
     scaleFactor: 1.0,
     bindToGlobalTime: false,
@@ -270,6 +271,7 @@ $(document).ready(function() { var scene = FABRIC.SceneGraph.createScene();
       gravity: FABRIC.RT.vec2(0.4,0.6),
       count: 2//25000
     });
+  //*/
 
   var hairLines = scene.constructNode('Instance', {
       geometryNode: hairGeometry,

@@ -1,0 +1,8 @@
+
+//
+// Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
+//
+
+operator copyVec3ArrayElementToVec3(io Vec3 vecArray[], io Vec3 value, in Size index) {
+  value = vecArray[index];
+}

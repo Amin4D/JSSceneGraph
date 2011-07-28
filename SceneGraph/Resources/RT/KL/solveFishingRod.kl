@@ -1,0 +1,103 @@
+
+//
+// Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
+//
+
+
+
+#include 'FABRIC_ROOT/SceneGraph/Resources/KL/softLimitBezierCurve.kl'
+
+function Scalar clamp(Scalar v, Scalar min, Scalar max) {
+  //  return ( v > min ) ? (( v < max ) ? v : max) : min;
+
+  if (v > min) {
+    if (v < max) {
+      return v;
+    }
+    else {
+      return max;
+    }
+  }
+  else {
+    return min;
+  }
+}
+
+function applyFishingRod(
+  io Xfo boneXfo,
+  in Scalar boneLength,
+  in Xfo target,
+  in Vec3 boneLocalAxis,
+
+  in Scalar minLineLength,
+  in Vec2 minLineLengthSoftening,
+  in Scalar maxLineLength,
+  in Vec2 maxLineLengthSoftening
+) {
+  Vec3 vecToTarget, boneLengthVector, bendAxis;
+  Scalar distBoneBaseToTarget, distBoneTipToTarget, newDistBoneTipToTarget;
+
+  vecToTarget = target.tr - boneXfo.tr;
+  distBoneBaseToTarget = vecToTarget.norm();
+  vecToTarget *= 1.0 / distBoneBaseToTarget;
+
+  boneLengthVector = boneXfo.ori.rotateVector(boneLocalAxis);
+  distBoneTipToTarget = (boneXfo.tr + (boneLengthVector * boneLength)).dist(target.tr);
+
+  newDistBoneTipToTarget = applySoftLimitBezierCurve(
+    distBoneTipToTarget,
+    minLineLength,
+    minLineLengthSoftening,
+    maxLineLength,
+    maxLineLengthSoftening
+  );
+
+  if (abs(newDistBoneTipToTarget - distBoneTipToTarget) > 0.001) {
+
+    // this is the current angle of the bone.
+    Scalar fkBoneAngle = acos(boneLengthVector.dot(vecToTarget));
+
+    // Use trigonometry to determine the ikBoneAngle
+    // Law of cosines. a = BoneLength; b = newDistBoneTipToTarget; c = newDistBoneTipToTarget;
+    Scalar a = boneLength;
+    Scalar b = distBoneBaseToTarget;
+    Scalar c = newDistBoneTipToTarget;
+    Scalar ikBoneAngle = acos(clamp(((a * a) + (b * b) - (c * c)) / (2.0 * a * b), - 1.0, 1.0));
+
+    // Subtract off the current angle the bone has with the vecToTarget to keep the delta
+    Scalar deltaBoneAngle = (ikBoneAngle - fkBoneAngle);
+
+    bendAxis = vecToTarget.cross(boneLengthVector);
+    boneXfo.ori = axisAndAngleToQuat(bendAxis, deltaBoneAngle) * boneXfo.ori;
+  }
+}
+
+operator fishingRodOp(
+  io Xfo pose[],
+  io Bone bones[],
+  io Integer boneIndex,
+  io Scalar restLineLength,
+  io Scalar minLineLength,
+  io Scalar maxLineLength,
+  io Xfo target
+) {
+
+  // Compute the FK pose of the chain.
+  // Note: this should be moved to a separate solver.
+  pose[boneIndex] = bones[boneIndex].referencePose;
+
+  Vec2 minLineLengthSoftening(restLineLength - minLineLength, restLineLength - minLineLength);
+  Vec2 maxLineLengthSoftening(maxLineLength - restLineLength, maxLineLength - restLineLength);
+
+  applyFishingRod(
+    pose[boneIndex],
+    bones[boneIndex].length,
+    target,
+    Vec3(1.0, 0.0, 0.0),
+
+    minLineLength,
+    minLineLengthSoftening,
+    maxLineLength,
+    maxLineLengthSoftening
+  );
+}

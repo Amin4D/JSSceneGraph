@@ -1,0 +1,119 @@
+
+//
+// Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
+//
+
+operator solveIK2Bone(
+  io Xfo pose[],
+  io Bone bones[],
+  io Integer boneA,
+  io Integer boneB,
+  io Integer targetParent,
+  io Integer upvectorParent,
+  io Xfo target,
+  io Xfo upvector,
+  io Scalar directionBlend,
+  io Scalar upvectorBlend
+) {
+  report('solveIK2Bone');
+  if (bones[boneA].parent != - 1) {
+    pose[boneA] = bones[boneA].referenceLocalPose * pose[bones[boneA].parent];
+  }
+
+  pose[boneB] = bones[boneB].referenceLocalPose * pose[boneA];
+
+  // compute the manipulator positions
+  var Vec3 targetPos = pose[targetParent].transform(target.tr);
+  var Vec3 upvectorPos = pose[upvectorParent].transform(upvector.tr);
+
+  // compute the sides of the triangles and their lengths
+  var Vec3 sideA = upvectorPos - pose[boneA].tr;
+  var Vec3 sideC = targetPos - pose[boneA].tr;
+  var Scalar lengthA = bones[boneA].length;
+  var Scalar lengthB = bones[boneB].length;
+  var Scalar lengthC = sideC.norm();
+
+  // compute the direction of the first bone
+  var Vec3 direction;
+  Boolean triangleSolution = false;
+  //if(lengthC < lengthA + lengthB && abs(lengthC) > abs(lengthA-lengthB)){
+  if (lengthC < lengthA + lengthB) {
+    var Scalar angle = - acos((lengthA * lengthA + lengthC * lengthC - lengthB * lengthB) / (2.0 * lengthA * lengthC));
+    var Vec3 axis = sideA.cross(sideC).unit();
+    var Quat q = axisAndAngleToQuat(axis, angle);
+    direction = q.transform(sideC);
+    triangleSolution = true;
+  }
+  else {
+    direction = sideC;
+  }
+
+  // orient the bone inside of the plane
+  var Vec3 boneAXaxis = pose[boneA].ori.getXaxis();
+  if (pose[boneA].sc.x < 0.0) {
+    boneAXaxis = boneAXaxis.neg();
+  }
+  var Vec3 boneBXaxis = pose[boneB].ori.getXaxis();
+  if (pose[boneB].sc.x < 0.0) {
+    boneBXaxis = boneBXaxis.neg();
+  }
+  if (directionBlend > 0.0) {
+    pose[boneA].ori = makeQuatFrom2Vectors(boneAXaxis, direction.unit()).unit() * pose[boneA].ori;
+  }
+  pose[boneB].tr = pose[boneA].transform(bones[boneB].referenceLocalPose.tr);
+  direction = targetPos - pose[boneB].tr;
+  if (directionBlend > 0.0) {
+    pose[boneB].ori = makeQuatFrom2Vectors(boneBXaxis, direction.unit()).unit() * pose[boneB].ori;
+  }
+
+  // compute the upvector directions
+  var Vec3 upDirectionA;
+  var Vec3 upDirectionB;
+  if (triangleSolution) {
+    upDirectionA = pose[boneA].transform(Vec3(bones[boneA].length * 0.5, 0.0, 0.0)) - targetPos;
+    upDirectionB = pose[boneB].transform(Vec3(bones[boneB].length * 0.5, 0.0, 0.0)) - pose[boneA].tr;
+  }
+  else {
+    upDirectionA = upvectorPos - pose[boneA].tr;
+    upDirectionB = upvectorPos - pose[boneA].tr;
+  }
+
+  // upvector orient the bones
+  // for now blending is static
+  if (upvectorBlend > 0.0) {
+    boneAXaxis = pose[boneA].ori.getXaxis();
+    upDirectionA = boneAXaxis.cross(upDirectionA.cross(boneAXaxis)).unit();
+    boneBXaxis = pose[boneB].ori.getXaxis();
+    upDirectionB = boneBXaxis.cross(upDirectionB.cross(boneBXaxis)).unit();
+
+    pose[boneA].ori = makeQuatFrom2Vectors(pose[boneA].ori.getYaxis(), upDirectionA).unit() * pose[boneA].ori;
+    pose[boneB].ori = makeQuatFrom2Vectors(pose[boneB].ori.getYaxis(), upDirectionB).unit() * pose[boneB].ori;
+  }
+}
+
+operator solveInvIK2Bone(
+  io Xfo pose[],
+  io Bone bones[],
+  io Integer boneA,
+  io Integer boneB,
+  io Integer targetParent,
+  io Integer upvectorParent,
+  io Xfo target,
+  io Xfo upvector,
+  io Scalar directionBlend,
+  io Scalar upvectorBlend
+) {
+  // compute the target
+  target = pose[boneB];
+  target.tr = target.transform(Vec3(bones[boneB].length, 0.0, 0.0));
+  target = pose[targetParent].invProject(target);
+
+  // compute the upvector
+  upvector = pose[boneB];
+  upvector.tr = pose[boneA].transform(Vec3(bones[boneA].length, bones[boneA].length, 0.0));
+  upvector = pose[upvectorParent].invProject(upvector);
+
+  // use total blends for now
+  directionBlend = 1.0;
+  upvectorBlend = 1.0;
+}

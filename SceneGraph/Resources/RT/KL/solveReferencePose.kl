@@ -1,0 +1,14 @@
+
+//
+// Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
+//
+
+operator solveReferencePose(
+  io Xfo pose[],
+  io Bone bones[],
+  io Integer indices[]
+) {
+  for (var Integer i = 0; i < indices.size(); i++) {
+    pose[indices[i]] = bones[indices[i]].referencePose;
+  }
+}

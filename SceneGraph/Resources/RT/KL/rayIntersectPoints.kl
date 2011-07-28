@@ -1,0 +1,31 @@
+
+//
+// Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
+//
+
+operator rayIntersectPoints(
+  io Boolean select,
+  io RayIntersection intersection,
+  io Ray ray,
+  io Scalar threshold,
+  io Xfo globalXfo,
+  io Vec3 positions[],
+  io Vec3 bboxmin,
+  io Vec3 bboxmax
+) {
+  Mat44 globalMat44 = globalXfo;
+  intersection.distance = 1.0e20;
+  var Vec3 ray_P2 = rayOri + rayDir;
+  for (var Integer i = 0; i < positions.size(); i++) {
+    var Vec3 vert = positions[i] * globalMat44;
+    var Scalar thisDist = ray.distToPoint(vert, rayOri, ray_P2);
+    if (thisDist < threshold) {
+      select = true;
+      if (thisDist < intersection.distance) {
+        intersection.point = rayOri + (rayDir * thisDist);
+        intersection.distance = thisDist;
+        intersection.elementid = i;
+      }
+    }
+  }
+}

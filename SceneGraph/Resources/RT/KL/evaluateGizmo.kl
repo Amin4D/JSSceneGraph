@@ -1,0 +1,63 @@
+
+//
+// Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
+//
+
+operator evaluateGizmo(
+  io Xfo globalXfo,
+  io Integer parentIndex,
+  io Integer targetIndex,
+  io Boolean compensation,
+  io Xfo localXfo,
+  io Xfo parentSingle,
+  io Xfo parentArray[],
+  io Xfo targetSingle,
+  io Xfo targetArray[]
+) {
+  //  report("evaluateGizmo:begin");
+  var Xfo parent;
+  if (parentIndex == - 1) {
+    parent = parentSingle;
+  }
+  else {
+    parent = parentArray[parentIndex];
+  }
+
+  if (compensation) {
+    //    report("evaluateGizmo targetIndex :" + targetIndex);
+    // Compensation means that we apply the target transfrom
+    // in the space of the parent to get the manipulator globalXfo.
+    var Xfo target;
+    if (targetIndex == - 1) {
+      parent = targetSingle * parent;
+    }
+    else {
+      parent = targetArray[targetIndex] * parent;
+    }
+  }
+  globalXfo = localXfo * parent;
+  //  report("evaluateGizmo:end");
+}
+
+/*
+
+operator bindGizmoToXfo(
+  io Xfo globalXfo,
+  io Xfo localXfo,
+  io Xfo parentSpace,
+){
+  globalXfo = localXfo * parentSpace;
+}
+
+operator bindGizmoToXfoArray(
+  io Xfo globalXfo,
+  io Xfo localXfo,
+  io Xfo targetXfo,
+  io Xfo spaces[],
+  io Integer parentIndex,
+){
+//  globalXfo = localXfo * targetXfo * spaces[ parentIndex ];
+  globalXfo = targetXfo * spaces[ parentIndex ];
+}
+
+*/

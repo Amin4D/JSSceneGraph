@@ -1,0 +1,156 @@
+
+//
+// Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
+//
+
+
+#include 'FABRIC_ROOT/SceneGraph/Resources/KL/spatialHashTable.kl'
+
+operator simulateParticles(
+  in Size index,
+  io Vec3 position,
+  io Vec3 velocity,
+  io Vec3 goal,
+  io Integer cellindex,
+  io Vec3 cellcoords,
+
+  io Vec3 previousframe_positions[],
+  io Vec3 previousframe_velocities[],
+
+  io Scalar neighborInfluenceRange,
+  io HashTable hashtable,
+
+  io Scalar timestep,
+
+  io Integer neighborIndices[],
+  io Scalar neighborDistances[]
+) {
+  // We start with our back buffer position
+  position = previousframe_positions[index];
+  velocity = previousframe_velocities[index];
+
+  getNeighboringIndices(
+    neighborIndices,
+    neighborDistances,
+    index,
+    position,
+    velocity,
+    cellindex,
+    cellcoords,
+    previousframe_positions,
+    previousframe_velocities,
+    neighborInfluenceRange,
+  hashtable);
+
+  //////////////////////////////////////////////////////
+  // Now we do some simulations
+
+  var Integer i;
+
+  // Drag
+{
+    var Scalar speed = velocity.norm();
+    var Scalar slowdown = 0.00001;
+    if (speed > 0.0) {
+      if (speed < slowdown) {
+        velocity.setNull();
+      }else {
+        velocity = velocity - (velocity * (1.0 / speed) * slowdown);
+      }
+    }
+  }
+
+  // Goal Seek
+{
+    var Vec3 goalDir = goal - position;
+    var Scalar goalDist = goalDir.norm();
+
+    if (goalDist < 0.01) {
+      velocity = velocity.lerp(Vec3(0.0, 0.0, 0.0), 0.1);
+
+    }
+    else {
+      velocity = velocity.lerp(goalDir * (0.05 / goalDist), 0.1);
+    }
+
+  }
+
+  if (neighborIndices.size > 0) {
+    //////////////////////////////////////////////////////
+    // Separation
+  {
+      var Scalar separationWeight = 0.1;
+      var Scalar separationDistance = neighborInfluenceRange * 0.65;
+      var Vec3 separationVector(0.0, 0.0, 0.0);
+      for (i = 0; i < neighborIndices.size; i++) {
+        var Integer neighborId = neighborIndices[i];
+
+        if (neighborId != index) {
+          var Scalar neighborDist = neighborDistances[i];
+
+          if (neighborDist == 0.0) {
+            // Two particles are sitting on top of each other.
+            // We move them to a safe distance appart
+            if (neighborId < index) {
+              position += Vec3(separationDistance * 0.25, 0.0, separationDistance * 0.25);
+            }else {
+              position -= Vec3(separationDistance * 0.25, 0.0, separationDistance * 0.25);
+            }
+          }
+          else if (neighborDist < separationDistance) {
+            separationVector += (position - previousframe_positions[neighborId]) * ((1.0 / neighborDist) * (separationDistance - neighborDist));
+          }
+        }
+      }
+      velocity += separationVector * separationWeight;
+    }
+
+    //    //////////////////////////////////////////////////////
+    //    // Cohesion
+    //    {
+    //      var Scalar cohesionWeight = 0.00001;
+    //      var Scalar numNeighbors = Scalar(neighborIndices.size);
+    //      var Vec3 neighborCenter(0.0,0.0,0.0);
+    //      for( i=0; i< neighborIndices.size; i++ ){
+    //        if( neighborIndices[i] == index ){
+    //          continue;
+    //        }
+    //        neighborCenter += previousframe_positions[neighborIndices[i]];
+    //      }
+    //      neighborCenter = neighborCenter / numNeighbors;
+    //      velocity += ( neighborCenter - position ) * cohesionWeight;
+    //    }
+
+    //////////////////////////////////////////////////////
+    // Alignment
+    //    {
+    //      var Scalar alignmentWeight = 0.1;
+    //      var Vec3 neighborVelocity;
+    //      for( i=0; i< neighborIndices.size; i++ ){
+    //        neighborVelocity += previousframe_velocities[neighborIndices[i]];
+    //      }
+    //      neighborVelocity /= neighborIndices.size;
+    //      velocity += ( neighborVelocity - velocity ) * alignmentWeight;
+    //    }
+
+  }
+
+  velocity.y = 0.0;
+  position = position + velocity; // / timestep);
+  position.y = 0.0;
+
+  ////////////////////////////////////////////////
+  // Clamp the particle within the bounds of the hash grid
+  if (position.x > (hashtable.x_count * hashtable.cellsize * 0.475)) {
+    position.x = hashtable.x_count * hashtable.cellsize * 0.475;
+  }
+  if (position.x < (hashtable.x_count * - hashtable.cellsize * 0.475)) {
+    position.x = hashtable.x_count * - hashtable.cellsize * 0.475;
+  }
+  if (position.z > (hashtable.z_count * hashtable.cellsize * 0.475)) {
+    position.z = hashtable.z_count * hashtable.cellsize * 0.475;
+  }
+  if (position.z < (hashtable.z_count * - hashtable.cellsize * 0.475)) {
+    position.z = hashtable.z_count * - hashtable.cellsize * 0.475;
+  }
+}

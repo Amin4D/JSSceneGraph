@@ -1,0 +1,17 @@
+
+//
+// Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
+//
+
+
+operator loadUniform(
+  io OGLShaderProgram shaderProgram,
+  io DATA_TYPE value
+) {
+  Integer location = shaderProgram.getUniformLocation(ATTRIBUTE_ID);
+//  report("loadATTRIBUTE_NAMEUniform:" + location);
+  if(location!=-1){
+    shaderProgram.loadDATA_TYPEUniform(location, value);
+  }
+}
+

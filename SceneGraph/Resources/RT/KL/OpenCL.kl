@@ -1,0 +1,66 @@
+
+//
+// Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
+//
+
+operator OpenCL_Init(
+  io Integer preferredDevice, // 0 == GPU - 1 == CPU
+  io cl_context clContext,
+  io cl_command_queue clCommandQueue,
+  io cl_device_id clDeviceID
+) {
+  // Note: Only handles one compute device for now.
+  var Data NULL;
+
+  if (!clContext) {
+    var Integer deviceTypes[2];
+    deviceTypes[0] = CL_DEVICE_TYPE_GPU;
+    deviceTypes[1] = CL_DEVICE_TYPE_CPU;
+
+    var Integer clErr;
+    var cl_platform_id clPlatformIDs[];
+    clErr = clGetPlatformIDs(1, clPlatformIDs);
+
+    var cl_device_id clDeviceIDs[];
+    clErr = clGetDeviceIDs(clPlatformIDs[0], deviceTypes[preferredDevice], clDeviceIDs);
+    clDeviceID = clDeviceIDs[0];
+
+    var cl_device_id oneDeviceID[];
+    oneDeviceID.push(clDeviceID);
+
+    clContext = clCreateContext(oneDeviceID, clErr);
+    clCommandQueue = clCreateCommandQueue(clContext, clDeviceID, 0, clErr);
+  }
+}
+
+operator OpenCL_CreateProgram(
+  io cl_context clContext,
+  io cl_device_id clDeviceID,
+  io String clSource,
+  io cl_program clProgram
+) {
+  if (!clProgram) {
+    var Integer clErr;
+    clProgram = clCreateProgramWithSource(clContext, clSource, clErr);
+
+    var cl_device_id oneDeviceID[];
+    oneDeviceID.push(clDeviceID);
+    clErr = clBuildProgram(clProgram, oneDeviceID, '');
+    if (clErr) {
+      var String logStr;
+      clGetProgramBuildInfoStr(clProgram, clDeviceID, CL_PROGRAM_BUILD_LOG, logStr);
+      report('OpenCL build failed: ' + logStr);
+    }
+  }
+}
+
+operator OpenCL_CreateKernel(
+  io cl_program clProgram,
+  io String clKernelName,
+  io cl_kernel clKernel
+) {
+  if (!clKernel) {
+    var Integer clErr;
+    clKernel = clCreateKernel(clProgram, clKernelName, clErr);
+  }
+}

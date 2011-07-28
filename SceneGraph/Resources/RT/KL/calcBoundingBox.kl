@@ -1,0 +1,22 @@
+
+//
+// Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
+//
+
+operator calcBoundingBox(
+  io Vec3 positions[],
+  io Vec3 bboxmin,
+  io Vec3 bboxmax
+) {
+  bboxmin.x = bboxmin.y = bboxmin.z = 1.0e20;
+  bboxmax.x = bboxmax.y = bboxmax.z = - 1.0e20;
+  for (Integer i = 0; i < positions.size(); i++) {
+    Vec3 p = positions[i];
+    if (p.x < bboxmin.x) bboxmin.x = p.x;
+      if (p.x > bboxmax.x) bboxmax.x = p.x;
+      if (p.y < bboxmin.y) bboxmin.y = p.y;
+      if (p.y > bboxmax.y) bboxmax.y = p.y;
+      if (p.z < bboxmin.z) bboxmin.z = p.z;
+      if (p.z > bboxmax.z) bboxmax.z = p.z;
+    }
+}

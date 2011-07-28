@@ -1,0 +1,56 @@
+
+//
+// Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
+//
+
+
+operator solveBlendBones(
+  io Xfo pose[],
+  io Bone bones[],
+  io Integer base,
+  io Integer end,
+  io Integer blendBones[],
+  io Xfo blendBoneOffsets[],
+  io Scalar blendWeights[]
+) {
+  if (blendBones.size() != blendWeights.size()) {
+    // TODO: throw an assert once we are able to do that.
+    report('Error: blendBones count does not match blendWeights count');
+    return;
+  }
+
+  Xfo baseXfo = pose[base];
+  Xfo endXfo = pose[end];
+
+  for (var Integer i = 0; i < blendBones.size(); i++) {
+    pose[blendBones[i]].tr = baseXfo.transformVector(bones[blendBones[i]].referenceLocalPose.tr);
+    pose[blendBones[i]].ori = slerp(baseXfo.ori, endXfo.ori, blendWeights[i]);
+  }
+}
+
+operator solveTwistBones(
+  io Xfo pose[],
+  io Bone bones[],
+  io Integer base,
+  io Integer end,
+  io Integer twistBones[],
+  io Scalar twistWeights[]
+) {
+  if (twistBones.size() != twistWeights.size()) {
+    // TODO: throw an assert once we are able to do that.
+    report('Error: twistBone count does not match twistWeights count');
+    return;
+  }
+
+  Xfo baseXfo = pose[base];
+  Xfo endXfo = pose[end];
+
+  Vec3 baseVec = (endXfo.tr - baseXfo.tr).unit();
+  Vec3 endVec = endXfo.ori.getXaxis();
+  endXfo.ori = makeQuatFrom2Vectors(endVec, baseVec) * endXfo.ori;
+
+  for (var Integer i = 0; i < twistBones.size(); i++) {
+    pose[twistBones[i]].tr = baseXfo.transformVector(bones[twistBones[i]].referenceLocalPose.tr);
+    pose[twistBones[i]].ori = slerp(baseXfo.ori, endXfo.ori, twistWeights[i]);
+  }
+}

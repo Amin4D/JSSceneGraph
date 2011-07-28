@@ -1,0 +1,68 @@
+
+//
+// Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
+//
+
+
+function genBuffer(
+  Data bufferData,
+  Size bufferSize,
+  Boolean dynamic,
+  io Integer bufferID
+) {
+  if (bufferSize > 0) {
+    if (bufferID == 0) {
+      var Size buffers[];
+      buffers.push(Size(0));
+      glGenBuffers(1, buffers);
+      bufferID = Integer(buffers[0]);
+    }
+    // Now fill the buffer with the data
+    glBindBuffer(GL_ARRAY_BUFFER, bufferID);
+    glBufferData(GL_ARRAY_BUFFER, bufferSize, bufferData, dynamic ? GL_DYNAMIC_DRAW : GL_STATIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+  }
+}
+
+function bindBuffer(
+  Integer datumSize,
+  Integer bufferID,
+  Integer shaderBufferLocation
+) {
+  if (bufferID > 0) {
+    var Data NULL;
+    glBindBuffer(GL_ARRAY_BUFFER, bufferID);
+    if (shaderBufferLocation != - 1) {
+      glEnableVertexAttribArray(shaderBufferLocation);
+      glVertexAttribPointer(shaderBufferLocation, 3, GL_FLOAT, GL_FALSE, datumSize, NULL);
+    }
+    else {
+      report('Invalid shader attribute location for VBO.');
+    }
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+  }
+}
+
+operator genAndLoadIndicesVBOs(
+  io Integer indices[],
+  io Size indicesCount,
+  io Integer indicesBufferID
+) {
+  //  report("genAndLoadIndicesVBOs:" + indicesBufferID );
+  if (indicesBufferID != 0 && indices.size() != indicesCount) {
+    var Size buffers[];
+    buffers.push(Size(indicesBufferID));
+    glDeleteBuffers(1, buffers);
+    indicesBufferID = 0;
+  }
+
+  genBuffer(indices.data(), indices.dataSize(), false, indicesBufferID);
+  indicesCount = indices.size();
+}
+
+operator setInstanceElementCount(
+  io Vec3 positions[],
+  io Size indicesCount
+) {
+  indicesCount = positions.size();
+}

@@ -30,7 +30,7 @@ FABRIC.appendOnCreateContextCallback(function(context) {
  * @param {object} start A Vec3 defining the start of the ray.
  * @param {object} direction A Vec3 defining the direction of the ray.
  */
-FABRIC.RT.RenderTarget = function(width, height, textureDescs) {
+FABRIC.RT.OGLRenderTarget = function(width, height, textureDescs) {
   this.width = width ? width : 0;
   this.height = height ? height : 0;
   this.textureDescs = textureDescs ? textureDescs : [];
@@ -39,7 +39,8 @@ FABRIC.RT.RenderTarget = function(width, height, textureDescs) {
   this.hasDepthBufferTexture = false;
   this.numColorBuffers = 0;
   this.clearDepth = true;
-  this.clearColor = true;
+  this.clearColor = FABRIC.RT.rgb();
+  this.clearColorFlag = true;
 };
 
 FABRIC.appendOnCreateContextCallback(function(context) {

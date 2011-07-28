@@ -75,16 +75,16 @@ FABRIC.SceneGraph.registerNodeType('Image', {
       // Construct the handler for loading the image into texture memory.
       redrawEventHandler = imageNode.constructEventHandlerNode('Redraw');
       redrawEventHandler.addScope('image', dgnode);
-      redrawEventHandler.addMember('bufferID', 'Size', 0);
+      redrawEventHandler.addMember('oglTexture2D', 'OGLTexture2D', FABRIC.RT.oglTexture2D());
       redrawEventHandler.preDescendBindings.append(scene.constructOperator({
-        operatorName: 'createTextureFromImageLDR',
+        operatorName: 'bindTextureLDR',
         srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadTexture.kl',
-        entryFunctionName: 'createTextureFromImageLDR',
+        entryFunctionName: 'bindTextureLDR',
         parameterBinding: [
           'image.width',
           'image.height',
           'image.pixels',
-          'self.bufferID',
+          'self.oglTexture2D',
           'textureStub.textureUnit'
         ]
       }));

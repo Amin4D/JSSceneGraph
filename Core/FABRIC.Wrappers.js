@@ -42,7 +42,14 @@ var wrapFabricClient = function(fabricClient, logCallback, debugLogCallback) {
             if (unwind)
               unwind();
           }
-          throw 'Fabric core exception: ' + result.exception;
+          if(commands[j+1].arg.name){
+            // When debugging compiler errors in registered types,
+            // knowing the name of the type is essential.
+            throw 'Error in :' + commands[j+1].cmd + '('+ commands[j+1].arg.name+').\n\
+                  Fabric core exception: ' + result.exception;
+          }else{
+            throw 'Fabric core exception: ' + result.exception;
+          }
         }
         else if (callback)
           callback(result.result);

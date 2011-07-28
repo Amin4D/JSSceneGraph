@@ -248,7 +248,19 @@ function Integer OGLShaderProgram.getUniformLocation(
   return -1;
 }
 
-
+/*
+PT 28-06-12 this function refuses to compile...
+error: not all paths return a value
+function Integer OGLShaderProgram.getUniformLocationByName(
+  String name
+) {
+  if(self.programId!=0){
+    return glGetAttribLocation(self.programId, name);
+  }else{
+    return -1;
+  }
+}
+*/
 
 function Boolean OGLShaderProgram.validateUniformBinding(
   Integer location,
@@ -288,6 +300,10 @@ function OGLShaderProgram.loadBooleanUniform(
   Integer location,
   Boolean value
 ) {
+  if(self.programId==0){
+    report("ERROR: Shader not in use");
+    return;
+  }
   if (location != - 1) {
     if(self.debug){
     //  self.validateUniformBinding(location, value.dataSize());
@@ -303,6 +319,10 @@ function OGLShaderProgram.loadIntegerUniform(
   Integer location,
   Integer value
 ) {
+  if(self.programId==0){
+    report("ERROR: Shader not in use");
+    return;
+  }
   if (location != - 1) {
     if(self.debug){
       self.validateUniformBinding(location, value.dataSize());
@@ -318,6 +338,10 @@ function OGLShaderProgram.loadScalarUniform(
   Integer location,
   Scalar value
 ) {
+  if(self.programId==0){
+    report("ERROR: Shader not in use");
+    return;
+  }
   if (location != - 1) {
     if(self.debug){
       self.validateUniformBinding(location, value.dataSize());
@@ -333,6 +357,10 @@ function OGLShaderProgram.loadVec2Uniform(
   Integer location,
   Vec2 value
 ) {
+  if(self.programId==0){
+    report("ERROR: Shader not in use");
+    return;
+  }
   if (location != - 1) {
     if(self.debug){
       self.validateUniformBinding(location, value.dataSize());
@@ -348,6 +376,10 @@ function OGLShaderProgram.loadVec3Uniform(
   Integer location,
   Vec3 value
 ) {
+  if(self.programId==0){
+    report("ERROR: Shader not in use");
+    return;
+  }
   if (location != - 1) {
     if(self.debug){
       self.validateUniformBinding(location, value.dataSize());
@@ -363,6 +395,10 @@ function OGLShaderProgram.loadVec4Uniform(
   Integer location,
   Vec4 value
 ) {
+  if(self.programId==0){
+    report("ERROR: Shader not in use");
+    return;
+  }
   if (location != - 1) {
     if(self.debug){
       self.validateUniformBinding(location, value.dataSize());
@@ -378,6 +414,10 @@ function OGLShaderProgram.loadColorUniform(
   Integer location,
   Color value
 ) {
+  if(self.programId==0){
+    report("ERROR: Shader not in use");
+    return;
+  }
   if (location != - 1) {
     if(self.debug){
       self.validateUniformBinding(location, value.dataSize());
@@ -393,6 +433,10 @@ function OGLShaderProgram.loadMat33Uniform(
   Integer location,
   Mat33 value
 ) {
+  if(self.programId==0){
+    report("ERROR: Shader not in use");
+    return;
+  }
   if (location != - 1) {
     var Mat33 values[];
     values.push(value);
@@ -407,6 +451,10 @@ function OGLShaderProgram.loadMat44Uniform(
   Integer location,
   Mat44 value
 ) {
+  if(self.programId==0){
+    report("ERROR: Shader not in use");
+    return;
+  }
   if (location != - 1) {
     if(self.debug){
       self.validateUniformBinding(location, value.dataSize());
@@ -424,6 +472,10 @@ function OGLShaderProgram.loadMat44UniformArray(
   Integer location,
   io Mat44 values[] /* PT 28-06-11 I'm not sure why values is an l-value in the following call */
 ) {
+  if(self.programId==0){
+    report("ERROR: Shader not in use");
+    return;
+  }
   if (location != - 1) {
     glUniformMatrix4fv(location, values.size(), false, values);
   }
@@ -472,6 +524,10 @@ function OGLShaderProgram.bindBuffer(
   Integer bufferID,
   Integer bufferLocation
 ) {
+  if(self.programId==0){
+    report("ERROR: Shader not in use");
+    return;
+  }
   if (bufferID > 0) {
     var Data NULL;
     glBindBuffer(GL_ARRAY_BUFFER, bufferID);

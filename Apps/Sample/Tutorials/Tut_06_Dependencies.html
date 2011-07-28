@@ -18,7 +18,6 @@ $(document).ready(function() {
   
   // create a context and store it
   var context = FABRIC.createContext();
-  $("#context").context = context;
 
   // create a new dgnode
   var dgnode1 = context.DependencyGraph.createNode("myNode1");
@@ -28,6 +27,7 @@ $(document).ready(function() {
   dgnode1.addMember('a','Scalar');
   dgnode1.addMember('b','Scalar');
   dgnode1.addMember('result','Scalar');
+  
   dgnode2.addMember('result','Scalar');
   
   // increase the slicecount of the nodes

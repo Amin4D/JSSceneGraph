@@ -18,7 +18,6 @@ $(document).ready(function() {
   
   // create a context and store it
   var context = FABRIC.createContext();
-  $("#context").context = context;
 
   // create a new dgnode
   var dgnode = context.DependencyGraph.createNode("myNode");
@@ -52,11 +51,14 @@ $(document).ready(function() {
   // append the new binding to the node
   dgnode.bindings.append(binding);
   
+  console.log(dgnode.getErrors());
+  
   // evaluate the node!
   dgnode.evaluate();
   
   // query the node's data
   var data = dgnode.getBulkData();
+  console.log(data);
   
   // construct html to output the computation
   var html = "<b>Computation result:</b><br>";

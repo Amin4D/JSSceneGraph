@@ -18,7 +18,6 @@ $(document).ready(function() {
   
   // create a context and store it
   var context = FABRIC.createContext();
-  $("#context").context = context;
 
   // create a new dgnode
   var dgnode1 = context.DependencyGraph.createNode("myNode1");
@@ -127,7 +126,9 @@ $(document).ready(function() {
       value = parseFloat(value);
       $(this).val(value);
       
-      dgnodeInteract.setSliceBulkData(0,{ multiplier: value });
+      var json = {};
+      json.multiplier = value;
+      dgnodeInteract.setSliceBulkData(0,json);
       refresh();
     });
 });

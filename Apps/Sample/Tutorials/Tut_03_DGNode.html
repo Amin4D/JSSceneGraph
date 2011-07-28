@@ -18,14 +18,13 @@ $(document).ready(function() {
   
   // create a context and store it
   var context = FABRIC.createContext();
-  $("#context").context = context;
 
   // create a new dgnode
   var dgnode = context.DependencyGraph.createNode("myNode");
   
   // we only store the node to the context div for demonstration
   // purpose, so that we can retrieve it in the console.
-  $("#context").myNode = dgnode;
+  console.log(dgnode);
   
   // add some members
   dgnode.addMember('a','Scalar',17.3);

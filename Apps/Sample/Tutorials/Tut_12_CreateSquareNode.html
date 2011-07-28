@@ -3,7 +3,7 @@
     Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
     -->
   <head> 
-    <title>FABRIC - Tutorial 10 - Basic Drawing Pipeline</title> 
+    <title>FABRIC - Tutorial 12 - Create Square Node</title> 
     
     <meta charset="iso-8859-1"/>
     <link href="../../../themes/default/style.css" rel="stylesheet" type="text/css" />
@@ -33,11 +33,45 @@
     <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Materials.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Geometry.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Primitives.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Manipulation.js" charset="utf-8"></script>
     
 
 <script type="text/javascript">
 
 $(document).ready(function() {
+  
+  // implement our own scenegraph node of type Square
+FABRIC.SceneGraph.registerNodeType('Square', {
+  factoryFn: function(options, scene) {
+    scene.assignDefaults(options, {
+      });
+
+    var squareNode = scene.constructNode('Lines', options);
+    var uniforms = squareNode.getUniformsDGNode();
+    var attributes = squareNode.getAttributesDGNode();
+    
+    attributes.setCount(4);
+    var attributesData = attributes.getBulkData();
+    attributesData.positions[0] = FABRIC.RT.vec3(-1,0,-1);
+    attributesData.positions[1] = FABRIC.RT.vec3(1,0,-1);
+    attributesData.positions[2] = FABRIC.RT.vec3(1,0,1);
+    attributesData.positions[3] = FABRIC.RT.vec3(-1,0,1);
+    
+    var uniformsData = uniforms.getBulkData();
+    uniformsData.indices[0].push(0);
+    uniformsData.indices[0].push(1);
+    uniformsData.indices[0].push(1);
+    uniformsData.indices[0].push(2);
+    uniformsData.indices[0].push(2);
+    uniformsData.indices[0].push(3);
+    uniformsData.indices[0].push(3);
+    uniformsData.indices[0].push(0);
+    
+    attributes.setBulkData(attributesData);
+    uniforms.setBulkData(uniformsData);
+    
+    return squareNode;
+  }});
 
   // create a scene (this creates a context)
   var scene = FABRIC.SceneGraph.createScene();
@@ -54,16 +88,12 @@ $(document).ready(function() {
       target: FABRIC.RT.vec3(0, 0, 0)
     });
   viewport.setCameraNode(camera);
-
-  // create a light node  
-  var light = scene.constructNode('PointLight', {
-    position: FABRIC.RT.vec3(100,100,100)
-  });
+  
+  scene.constructNode("CameraManipulator", { targetNode:camera } );
 
   // create a material node
-  var material = scene.constructNode('PhongMaterial', {
-    diffuseColor: FABRIC.RT.rgb(0.8, 0, 0),
-    lightNode: light
+  var material = scene.constructNode('FlatMaterial', {
+    color: FABRIC.RT.rgb(0.8, 0, 0),
   });
   
   // create a transform node
@@ -73,16 +103,12 @@ $(document).ready(function() {
   })
   
   // create a geometry node
-  var cone = scene.constructNode('Cone', {
-    radius: 4.0,
-    height: 16.0,
-    detail: 10
-  })
+  var square = scene.constructNode('Square', {});
 
   // create an instance, using the material, the transform and the geometry
   scene.constructNode('Instance', {
       transformNode: transform, 
-      geometryNode: cone,
+      geometryNode: square,
       materialNode: material
     });
 

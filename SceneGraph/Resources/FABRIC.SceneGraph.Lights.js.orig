@@ -16,8 +16,13 @@ FABRIC.SceneGraph.Lights = {
   }
 };
 
+<<<<<<< HEAD
+FABRIC.SceneGraph.registerNodeType('Light',
+  function(options, scene) {
+=======
 FABRIC.SceneGraph.registerNodeType('Light', {
   factoryFn: function (options, scene) {
+>>>>>>> origin/HEAD
     scene.assignDefaults(options, {
       color: FABRIC.RT.rgb(1.0, 1.0, 1.0),
       transformNode: 'Transform',
@@ -120,8 +125,13 @@ FABRIC.SceneGraph.registerNodeType('Light', {
   }});
 
 
+<<<<<<< HEAD
+  FABRIC.SceneGraph.registerNodeType('PointLight',
+  function(options, scene) {
+=======
 FABRIC.SceneGraph.registerNodeType('PointLight', {
   factoryFn: function (options, scene) {
+>>>>>>> origin/HEAD
 
     scene.assignDefaults(options, {
       position: FABRIC.RT.vec3(420.0, 1000.0, 600.0),
@@ -171,8 +181,13 @@ FABRIC.SceneGraph.registerNodeType('PointLight', {
     return pointLightNode;
   }});
 
+<<<<<<< HEAD
+FABRIC.SceneGraph.registerNodeType('DirectionalLight',
+  function(options, scene) {
+=======
 FABRIC.SceneGraph.registerNodeType('DirectionalLight', {
   factoryFn: function (options, scene) {
+>>>>>>> origin/HEAD
 
     if (!options.transformNode) {
       scene.assignDefaults(options, {
@@ -391,8 +406,8 @@ FABRIC.SceneGraph.registerNodeType('SpotLight', {
       dgnode.addMember('shadowMat44', 'Mat44');
 
       dgnode.addMember('shadowmapsize', 'Integer', options.resolution);
-      dgnode.addMember('shadowFBO', 'Integer', 0);
-      dgnode.addMember('prevFBO', 'Integer', 0);
+      dgnode.addMember('shadowFBO', 'Size', 0);
+      dgnode.addMember('prevFBO', 'Size', 0);
       dgnode.addMember('depthTextureID', 'Size', 0);
       dgnode.addMember('colorTextureID', 'Size', 0);
 

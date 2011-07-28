@@ -3,8 +3,8 @@
 // Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
 //
 
-FABRIC.SceneGraph.registerNodeType('CameraManipulator',
-  function(options, scene) {
+FABRIC.SceneGraph.registerNodeType('CameraManipulator', {
+  factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
         mouseWheelZoomRate: 0.3,
         mouseDragZoomRate:0.001,
@@ -150,11 +150,11 @@ FABRIC.SceneGraph.registerNodeType('CameraManipulator',
     }
 
     return cameraManipulatorNode;
-  });
+  }});
 
 
-FABRIC.SceneGraph.registerNodeType('PaintManipulator',
-  function(options, scene) {
+FABRIC.SceneGraph.registerNodeType('PaintManipulator', {
+  factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
       brushSize: 0.1,
       brushScaleSpeed: 1.0,
@@ -348,11 +348,11 @@ FABRIC.SceneGraph.registerNodeType('PaintManipulator',
     }
 
     return paintManipulatorNode;
-  });
+  }});
 
 
-FABRIC.SceneGraph.registerNodeType('Manipulator',
-  function(options, scene) {
+FABRIC.SceneGraph.registerNodeType('Manipulator', {
+  factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
         targetNode: undefined,
         targetMember: undefined,
@@ -658,11 +658,11 @@ FABRIC.SceneGraph.registerNodeType('Manipulator',
     }
 
     return manipulatorNode;
-  });
+  }});
 
 
-FABRIC.SceneGraph.registerNodeType('RotationManipulator',
-  function(options, scene) {
+FABRIC.SceneGraph.registerNodeType('RotationManipulator', {
+  factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
         rotateRate: 0.35,
         radius: 15,
@@ -716,11 +716,11 @@ FABRIC.SceneGraph.registerNodeType('RotationManipulator',
     manipulatorNode.pub.addEventListener('dragend', dragendFn);
 
     return manipulatorNode;
-  });
+  }});
 
 
-FABRIC.SceneGraph.registerNodeType('3AxisRotationManipulator',
-  function(options, scene) {
+FABRIC.SceneGraph.registerNodeType('3AxisRotationManipulator', {
+  factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
         trackRate: 0.1,
         orbitRate: 0.25,
@@ -756,10 +756,10 @@ FABRIC.SceneGraph.registerNodeType('3AxisRotationManipulator',
       }, true));
 
     return threeAxisRotationManipulator;
-  });
+  }});
 
-FABRIC.SceneGraph.registerNodeType('LinearTranslationManipulator',
-  function(options, scene) {
+FABRIC.SceneGraph.registerNodeType('LinearTranslationManipulator', {
+  factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
         size: 20,
         name: 'LinearTranslationManipulator'
@@ -792,11 +792,11 @@ FABRIC.SceneGraph.registerNodeType('LinearTranslationManipulator',
     manipulatorNode.pub.addEventListener('drag', dragFn);
 
     return manipulatorNode;
-  });
+  }});
 
 
-FABRIC.SceneGraph.registerNodeType('PlanarTranslationManipulator',
-  function(options, scene) {
+FABRIC.SceneGraph.registerNodeType('PlanarTranslationManipulator', {
+  factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
         size: 15,
         name: 'PlanarTranslationManipulator'
@@ -837,10 +837,10 @@ FABRIC.SceneGraph.registerNodeType('PlanarTranslationManipulator',
     manipulatorNode.pub.addEventListener('drag', dragFn);
 
     return manipulatorNode;
-  });
+  }});
 
-FABRIC.SceneGraph.registerNodeType('ScreenTranslationManipulator',
-  function(options, scene) {
+FABRIC.SceneGraph.registerNodeType('ScreenTranslationManipulator', {
+  factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
         radius: 0.5,
         name: 'ScreenTranslationManipulator'
@@ -877,10 +877,10 @@ FABRIC.SceneGraph.registerNodeType('ScreenTranslationManipulator',
     manipulatorNode.pub.addEventListener('drag', dragFn);
 
     return manipulatorNode;
-  });
+  }});
 
-FABRIC.SceneGraph.registerNodeType('3AxisTranslationManipulator',
-  function(options, scene) {
+FABRIC.SceneGraph.registerNodeType('3AxisTranslationManipulator', {
+  factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
         trackRate: 0.1,
         size: 25,
@@ -976,11 +976,11 @@ FABRIC.SceneGraph.registerNodeType('3AxisTranslationManipulator',
       }, true));
 
     return threeAxisTranslationManipulator;
-  });
+  }});
 
 
-FABRIC.SceneGraph.registerNodeType('PivotRotationManipulator',
-  function(options, scene) {
+FABRIC.SceneGraph.registerNodeType('PivotRotationManipulator', {
+  factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
         rotateRate: 0.35,
         radius: 15,
@@ -1058,13 +1058,13 @@ FABRIC.SceneGraph.registerNodeType('PivotRotationManipulator',
     manipulatorNode.pub.addEventListener('dragend', dragendFn);
 
     return manipulatorNode;
-  });
+  }});
 
 
 
 
-FABRIC.SceneGraph.registerNodeType('BoneManipulator',
-  function(options, scene) {
+FABRIC.SceneGraph.registerNodeType('BoneManipulator', {
+  factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
         name: 'BoneManipulator',
         parentManipulator: undefined,
@@ -1241,7 +1241,7 @@ FABRIC.SceneGraph.registerNodeType('BoneManipulator',
     }
 
     return manipulatorNode;
-  });
+  }});
 
 
 

@@ -11,7 +11,7 @@ function loadModelProjectionMatricesFn(
   Mat44 cameraMatrix,
   Mat44 projectionMatrix
 ) {
-   report("loadModelProjectionMatrices");
+//  report("loadModelProjectionMatrices");
   Integer location;
 
   location = shaderProgram.getUniformLocation(MODELMATRIX_ATTRIBUTE_ID);

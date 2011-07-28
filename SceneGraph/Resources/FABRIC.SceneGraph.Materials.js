@@ -297,7 +297,8 @@ FABRIC.shaderAttributeTable = {
 FABRIC.SceneGraph.registerNodeType('Shader', {
   factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
-        parentEventHandler: scene.getSceneRedrawEventHandler()
+        parentEventHandler: scene.getSceneRedrawEventHandler(),
+        debug: false
       });
     var shaderNode = scene.constructNode('SceneGraphNode', options),
       redrawEventHandler = shaderNode.constructEventHandlerNode('Redraw'),
@@ -355,7 +356,7 @@ FABRIC.SceneGraph.registerNodeType('Shader', {
         FABRIC.SceneGraph.OpenGLConstants[i], options.programParams[i]));
     }
     
-    shaderProgram.debug = true;
+    shaderProgram.debug = options.debug;
     redrawEventHandler.addMember('shaderProgram', 'OGLShaderProgram', shaderProgram);
   
     var operators = redrawEventHandler.preDescendBindings;

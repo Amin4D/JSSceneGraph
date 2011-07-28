@@ -270,6 +270,7 @@ function Boolean OGLShaderProgram.validateUniformBinding(
     glGetActiveUniform(self.programId, i, 1024, nbReceived, size, type, name);
     Integer activeUniformLocation = glGetUniformLocation(self.programId, name);
     if(activeUniformLocation == location){
+      report("Loading :"+ name);
      // if(dataSize <= size[0]){
         return true;
      // }else{
@@ -407,6 +408,9 @@ function OGLShaderProgram.loadMat44Uniform(
   Mat44 value
 ) {
   if (location != - 1) {
+    if(self.debug){
+      self.validateUniformBinding(location, value.dataSize());
+    }
     var Mat44 values[];
     values.push(value);
     glUniformMatrix4fv(location, 1, false, values);

@@ -53,7 +53,7 @@ FABRIC.SceneGraph.registerNodeType('CharacterMesh', {
           },
           entryFunctionName: 'drawCharacterInstance',
           parameterBinding: [
-            'shader.uniformValues',
+            'shader.shaderProgram',
             'rig.boneMatrices',
             'camera.cameraMat44',
             'camera.projectionMat44',

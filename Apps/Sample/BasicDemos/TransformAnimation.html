@@ -50,8 +50,7 @@ $(document).ready(function() { var startTimeMS = (new Date).getTime();
 
 
 FABRIC.SceneGraph.registerNodeType('SwirleyMovementTransform', {
-  function(options, scene) {
-
+  factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
         baseXfo: FABRIC.RT.xfo(),
         objId: 0

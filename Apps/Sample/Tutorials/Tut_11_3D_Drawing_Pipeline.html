@@ -3,19 +3,17 @@
     Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
     -->
   <head> 
-    <title>FABRIC - Background Texture</title> 
+    <title>FABRIC - Tutorial 11 - 3D Drawing Pipeline</title> 
     
     <meta charset="iso-8859-1"/>
     <link href="../../../themes/default/style.css" rel="stylesheet" type="text/css" />
     <link href="../../../themes/default/viewer.css" rel="stylesheet" type="text/css" />
-    
-    <script type="text/javascript" src="../../../ThirdParty/jQuery/jquery-1.4.2.min.js"></script>
-    <script type="text/javascript" src="../../../ThirdParty/jQuery/jquery-ui-1.8.5.custom.min.js"></script>
 
-    <link type="text/css" href="../../../ThirdParty/jQuery/css/vader/jquery-ui-1.8.5.custom.css" rel="stylesheet" />
+    <script type="text/javascript" src="../../../ThirdParty/jQuery/jquery-1.4.2.min.js"></script>
 
     <script type="text/javascript" src="../../../Core/FABRIC.Wrappers.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../Core/FABRIC.js" charset="utf-8"></script>
+
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Math.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Vec2.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Vec3.js" charset="utf-8"></script>
@@ -30,31 +28,65 @@
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Euler.js" charset="utf-8"></script>
 
     <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Geometry.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Primitives.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Kinematics.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Lights.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Materials.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Manipulation.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Kinematics.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Geometry.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Primitives.js" charset="utf-8"></script>
     
-<script type="text/javascript">
 
+<script type="text/javascript">
 
 $(document).ready(function() {
 
+  // create a scene (this creates a context)
   var scene = FABRIC.SceneGraph.createScene();
+  
+  // create the first scenegraph node, the viewport
   var viewport = scene.constructNode('Viewport', {
     windowElement: document.getElementById('FabricContainer'),
     backgroundColor: FABRIC.RT.rgb(0.0, 0.05, 0.15)
   });
 
-  viewport.setBackgroundTextureImage(scene.constructNode('Image', {
-    url: 'Resources/tomatoes_960_640.png'
-  }));
+  // create a camera, to be able to see something
+  var camera = scene.constructNode('TargetCamera', {
+      position: FABRIC.RT.vec3(15, 15, 15),
+      target: FABRIC.RT.vec3(0, 0, 0)
+    });
+  viewport.setCameraNode(camera);
 
-  // We cannot enable pose processing effectds untill we can removeChildEventHandlers
-  viewport.addPostProcessEffectShader(scene.constructNode('EdgeDetectionPostProcessEffect'));
+  // create a light node  
+  var light = scene.constructNode('PointLight', {
+    position: FABRIC.RT.vec3(100,100,100)
+  });
 
+  // create a material node
+  var material = scene.constructNode('PhongMaterial', {
+    diffuseColor: FABRIC.RT.rgb(0.8, 0, 0),
+    lightNode: light
+  });
+  
+  // create a transform node
+  var transform = scene.constructNode('Transform', {
+    hierarchical: false,
+    globalXfo: FABRIC.RT.xfo({ tr: FABRIC.RT.vec3(0, 2, 0) })
+  })
+  
+  // create a geometry node
+  var cone = scene.constructNode('Cone', {
+    radius: 4.0,
+    height: 16.0,
+    detail: 10
+  })
+
+  // create an instance, using the material, the transform and the geometry
+  scene.constructNode('Instance', {
+      transformNode: transform, 
+      geometryNode: cone,
+      materialNode: material
+    });
+
+  // parse the scene for errors
   var errors = scene.getErrors();
   if (errors.length > 0) {
     throw (errors.toString());
@@ -65,7 +97,6 @@ $(document).ready(function() {
 
     console.log('Done');
   }
-
 });
 
 </script>
@@ -80,18 +111,6 @@ $(document).ready(function() {
         <div id="viewer">
           <div id="FabricContainer"></div> 
         </div><!--viewer-->
-        <div id="sidebar">
-          
-          <div class="box">
-            <h2>INFO</h2>
-            <div class="content">
-              Background Texture.<br>
-              This very basic sample shows the use of a background texture that is filtered through OpenGL. Have a look
-              at the source code of this page to see how this is set up.
-            </div><!--content-->
-          </div><!--box-->
-            
-        </div><!--sidebar-->
       </div> <!--editor-->
     </div><!--wrapper-->
   </body> 

@@ -3,8 +3,8 @@
 // Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
 //
 
-FABRIC.SceneGraph.registerNodeType('AnimationTrack',
-  function(options, scene) {
+FABRIC.SceneGraph.registerNodeType('AnimationTrack', {
+  factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
         keyframetype: undefined,
         name:'AnimationTrack'
@@ -127,26 +127,26 @@ FABRIC.SceneGraph.registerNodeType('AnimationTrack',
         curveEditorWindow.scene = scene.pub;
     }
     return animationTrackNode;
-  });
+  }});
 
 
-FABRIC.SceneGraph.registerNodeType('LinearKeyAnimationTrack',
-  function(options, scene) {
+FABRIC.SceneGraph.registerNodeType('LinearKeyAnimationTrack', {
+  factoryFn: function(options, scene) {
     options.keyframetype = 'LinearKeyframe';
     return scene.constructNode('AnimationTrack', options);
-  });
+  }});
 
 
-FABRIC.SceneGraph.registerNodeType('BezierKeyAnimationTrack',
-  function(options, scene) {
+FABRIC.SceneGraph.registerNodeType('BezierKeyAnimationTrack', {
+  factoryFn: function(options, scene) {
     options.keyframetype = 'BezierKeyframe';
     return scene.constructNode('AnimationTrack', options);
-  });
+  }});
 
 // The Animation Controller only maintains time values which can be used by
 // animation evaluators. Many evaluators can share an Animation Controller
-FABRIC.SceneGraph.registerNodeType('AnimationController',
-  function(options, scene) {
+FABRIC.SceneGraph.registerNodeType('AnimationController', {
+  factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
         playbackRate: 1.0,
         bindToGlobalTime: true
@@ -202,15 +202,15 @@ FABRIC.SceneGraph.registerNodeType('AnimationController',
     */
     }
     return animationControllerNode;
-  });
+  }});
 
 
 
 // The animation evaluator evaluates the keyframe animation tracks using the
 // time computed in the animation controller. It stores the evaluated values
 // Which are in turn bound to parameters on other nodes.
-FABRIC.SceneGraph.registerNodeType('AnimationEvaluator',
-  function(options, scene) {
+FABRIC.SceneGraph.registerNodeType('AnimationEvaluator', {
+  factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
         animationControllerNode: undefined,
         animationTrackNode: undefined
@@ -402,7 +402,7 @@ FABRIC.SceneGraph.registerNodeType('AnimationEvaluator',
       animationEvaluatorNode.pub.setAnimationTrackNode(options.animationTrackNode);
     }
     return animationEvaluatorNode;
-  });
+  }});
 
 
 
@@ -410,8 +410,8 @@ FABRIC.SceneGraph.registerNodeType('AnimationEvaluator',
 // The animation evaluator evaluates the keyframe animation tracks using the
 // time computed in the animation controller. It stores the evaluated values
 // Which are in turn bound to parameters on other nodes.
-FABRIC.SceneGraph.registerNodeType('TrackDisplay',
-  function(options, scene) {
+FABRIC.SceneGraph.registerNodeType('TrackDisplay', {
+  factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
         animationTrackNode: undefined,
         trackIndex: 0,
@@ -463,6 +463,6 @@ FABRIC.SceneGraph.registerNodeType('TrackDisplay',
       trackDisplayNode.pub.setAnimationTrackNode(options.animationTrackNode);
     }
     return trackDisplayNode;
-  });
+  }});
 
 

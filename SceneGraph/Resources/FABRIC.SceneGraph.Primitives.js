@@ -18,8 +18,8 @@
 // from the same operator (uniforms and attributes). This solution is termporary,
 // and will be resolved elegantly with the graph nesting solution mentioned above.
 
-FABRIC.SceneGraph.registerNodeType('LineVector',
-  function(options, scene) {
+FABRIC.SceneGraph.registerNodeType('LineVector', {
+  factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
         from: FABRIC.RT.vec3(0, 0, 0),
         to: FABRIC.RT.vec3(1, 0, 0),
@@ -33,11 +33,11 @@ FABRIC.SceneGraph.registerNodeType('LineVector',
         indices: [0, 1]
       });
     return lineSegmentNode;
-  });
+  }});
 
 
-FABRIC.SceneGraph.registerNodeType('Cross',
-  function(options, scene) {
+FABRIC.SceneGraph.registerNodeType('Cross', {
+  factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
       size: 1.0
     });
@@ -58,11 +58,11 @@ FABRIC.SceneGraph.registerNodeType('Cross',
       })
     ]);
     return crossNode;
-  });
+  }});
 
 
-FABRIC.SceneGraph.registerNodeType('Rectangle',
-  function(options, scene) {
+FABRIC.SceneGraph.registerNodeType('Rectangle', {
+  factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
       length: 4.0,
       width: 2.5
@@ -87,11 +87,11 @@ FABRIC.SceneGraph.registerNodeType('Rectangle',
     ]);
 
     return rectangleNode;
-  });
+  }});
 
 
-FABRIC.SceneGraph.registerNodeType('BoundingBox',
-  function(options, scene) {
+FABRIC.SceneGraph.registerNodeType('BoundingBox', {
+  factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
       bboxmin: FABRIC.RT.vec3(-2, -3, -4),
       bboxmax: FABRIC.RT.vec3(4, 3, 2)
@@ -116,11 +116,11 @@ FABRIC.SceneGraph.registerNodeType('BoundingBox',
     ]);
 
     return boundingBoxNode;
-  });
+  }});
 
 
-FABRIC.SceneGraph.registerNodeType('Grid',
-  function(options, scene) {
+FABRIC.SceneGraph.registerNodeType('Grid', {
+  factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
       size_x: 10.0,
       size_y: 10.0,
@@ -167,11 +167,11 @@ FABRIC.SceneGraph.registerNodeType('Grid',
     ]);
 
     return gridNode;
-  });
+  }});
 
 
-FABRIC.SceneGraph.registerNodeType('Axes',
-  function(options, scene) {
+FABRIC.SceneGraph.registerNodeType('Axes', {
+  factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
         size: 1.0
       });
@@ -199,11 +199,11 @@ FABRIC.SceneGraph.registerNodeType('Axes',
       })
     ]);
     return axesNode;
-  });
+  }});
 
 
-FABRIC.SceneGraph.registerNodeType('Circle',
-  function(options, scene) {
+FABRIC.SceneGraph.registerNodeType('Circle', {
+  factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
         radius: 10,
         arcAngle: 6.28318,
@@ -245,17 +245,17 @@ FABRIC.SceneGraph.registerNodeType('Circle',
       })
     ]);
     return circleNode;
-  });
+  }});
 
 
-FABRIC.SceneGraph.registerNodeType('Plane',
-  function(options, scene) {
+FABRIC.SceneGraph.registerNodeType('Plane', {
+  factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
         length: 10,
         width: 10,
         lengthSections: 2,
         widthSections: 2,
-        doubleSided: true
+        doubleSided: false
       });
 
     options.uvSets = 1;
@@ -305,11 +305,11 @@ FABRIC.SceneGraph.registerNodeType('Plane',
       })
     ]);
     return planeNode;
-  });
+  }});
 
 
-FABRIC.SceneGraph.registerNodeType('Cuboid',
-  function(options, scene) {
+FABRIC.SceneGraph.registerNodeType('Cuboid', {
+  factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
         length: 10,
         width: 10,
@@ -349,11 +349,11 @@ FABRIC.SceneGraph.registerNodeType('Cuboid',
       })
     ]);
     return cubeNode;
-  });
+  }});
 
 
-FABRIC.SceneGraph.registerNodeType('Sphere',
-  function(options, scene) {
+FABRIC.SceneGraph.registerNodeType('Sphere', {
+  factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
         radius: 5.0,
         detail: 5
@@ -396,11 +396,11 @@ FABRIC.SceneGraph.registerNodeType('Sphere',
       })
     ]);
     return sphereNode;
-  });
+  }});
 
 
-FABRIC.SceneGraph.registerNodeType('Torus',
-  function(options, scene) {
+FABRIC.SceneGraph.registerNodeType('Torus', {
+  factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
         inner_radius: 2.0,
         outer_radius: 5.0,
@@ -446,11 +446,11 @@ FABRIC.SceneGraph.registerNodeType('Torus',
       })
     ]);
     return torusNode;
-  });
+  }});
 
 
-FABRIC.SceneGraph.registerNodeType('Cone',
-  function(options, scene) {
+FABRIC.SceneGraph.registerNodeType('Cone', {
+  factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
         radius: 2.0,
         height: 5.0,
@@ -499,11 +499,11 @@ FABRIC.SceneGraph.registerNodeType('Cone',
       })
     ]);
     return coneNode;
-  });
+  }});
 
 
-FABRIC.SceneGraph.registerNodeType('Cylinder',
-  function(options, scene) {
+FABRIC.SceneGraph.registerNodeType('Cylinder', {
+  factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
         radius: 2.0,
         height: 5.0,
@@ -553,11 +553,11 @@ FABRIC.SceneGraph.registerNodeType('Cylinder',
     ]);
 
     return cylinderNode;
-  });
+  }});
 
 
-FABRIC.SceneGraph.registerNodeType('Teapot',
-  function(options, scene) {
+FABRIC.SceneGraph.registerNodeType('Teapot', {
+  factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
         size: 5.0,
         detail: 5
@@ -588,7 +588,7 @@ FABRIC.SceneGraph.registerNodeType('Teapot',
       })
     ]);
     return teapotNode;
-  });
+  }});
 
 
 

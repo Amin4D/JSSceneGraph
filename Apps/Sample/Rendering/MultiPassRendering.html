@@ -37,14 +37,16 @@
     <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Manipulation.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Kinematics.js" charset="utf-8"></script>
     
+    <script type="text/javascript" src="../../../SceneGraph/Resources/Parsers/parseOBJ.js" charset="utf-8"></script>
     <script type="text/javascript">
     
     
 // These Node definitions are inlined for now, but will
 // be moved to a separate file once they are stabilized. 
-FABRIC.SceneGraph.registerNodeType('ThickGlassMaterial',
-  function(options, scene) {
-    scene.assignDefaults(options, {
+FABRIC.SceneGraph.registerNodeType('ThickGlassMaterial', {
+  factoryFn: function(options, scene) {
+    options = scene.assignDefaults(options, {
+        color:FABRIC.RT.rgba(0.6,0.3,0,1)
       });
     
     var thickGlassMaterialPP = scene.constructNode('PostProcessEffect', {
@@ -55,7 +57,7 @@ FABRIC.SceneGraph.registerNodeType('ThickGlassMaterial',
       OGL_TYPE: 'GL_FLOAT',
       fragmentShader: '\n\
 uniform sampler2D u_fboTexture;\n\
-uniform vec3 u_color;\n\
+uniform vec4 u_color;\n\
 \n\
 void main(){\n\
   vec2 texCoord = vec2(gl_TexCoord[0]);\n\
@@ -63,122 +65,87 @@ void main(){\n\
   if (thickness <= 0.0){\n\
       discard;\n\
   }\n\
-  float sigma = 30.0;\n\
-  float intensity = exp(-sigma * thickness);\n\
-  gl_FragColor = vec4(intensity * u_color, 1);\n\
-}\n\
+  float sigma = 0.2;\n\
+  float fresnel = 1.0 - texture2D(u_fboTexture, texCoord).g; \n\
+  float intensity = fresnel * exp(-sigma * thickness);\n\
+  gl_FragColor = intensity * u_color;\n\
+}\
       ',
       shaderUniforms: {
         fboTexture: { name: 'u_fboTexture', owner: 'fbo' },
-        color: { name: 'u_color', defaultValue:FABRIC.RT.rgba(0.3,0.6,0,1) }
+        color: { name: 'u_color', defaultValue:options.color }
       },
       shaderAttributes: {
         positions: { name: 'a_position' }
       }
     });
       
-      
-    thickGlassMaterialPP.getRedrawEventHandler().postDescendBindings.insert(scene.constructOperator({
-        operatorName: 'setThickGlassMaterialPPAttribs',
+    // Before rendering the geometry to the FBO, set up some OpenGL attribs
+    thickGlassMaterialPP.getRedrawEventHandler().preDescendBindings.append(scene.constructOperator({
+        operatorName: 'setThickGlassMaterialAttribs',
         srcCode: '\n\
-operator setThickGlassMaterialPPAttribs(){\n\
-    glEnable(GL_CULL_FACE);\n\
-    glEnable(GL_BLEND);\n\
-    glBlendFunc(GL_ONE, GL_ONE);\n\
+operator setThickGlassMaterialAttribs(){\n\
+  glClearColor(0, 0, 0, 1);\n\
+  glClear(GL_COLOR_BUFFER_BIT);\n\
+  glDisable(GL_CULL_FACE);\n\
+  glEnable(GL_DEPTH_TEST);\n\
+  glEnable(GL_BLEND);\n\
+  glBlendFunc(GL_ONE, GL_ONE);\n\
 }',
-        entryFunctionName: 'setThickGlassMaterialPPAttribs',
-      }), 0);
-    
+        entryFunctionName: 'setThickGlassMaterialAttribs',
+      }));
     
     
     var thickGlassMaterial = scene.constructNode('Material', {
-      name:'ThickGlassMaterial',
+      name:'ThickGlassMaterialShader',
       parentEventHandler: thickGlassMaterialPP.getRedrawEventHandler(),
       vertexShader: '\
-attribute vec4 a_position;\
-uniform mat4 u_modelViewProjectionMatrix;\
-void main(){\
-    gl_Position = u_modelViewProjectionMatrix * a_position;\
-}',
-      fragmentShader: '\
-uniform float u_depthScale;\
-\
-void main(){\
-    float depth = u_depthScale * gl_FragCoord.z;\
-    gl_FragColor = vec4(depth, 0, 0, 0);\
-}',
+attribute vec4 a_position;\n\
+attribute vec3 a_normal;\n\
+uniform mat4 u_modelViewProjectionMatrix;\n\
+uniform mat4 u_modelViewMatrix;\n\
+uniform mat3 u_normalMatrix;\n\
+varying vec4 position;\n\
+varying vec3 normal;\n\
+void main(){\n\
+  position = u_modelViewMatrix * a_position;\n\
+  normal = u_normalMatrix * a_normal;\n\
+  gl_Position = u_modelViewProjectionMatrix * a_position;\n\
+}\n\
+',
+      fragmentShader: '\n\
+varying vec4 position;\n\
+varying vec3 normal;\n\
+\n\
+void main(){\n\
+  vec3 N = normalize(normal);\n\
+  vec3 P = vec3(position.x,position.y,position.z);\n\
+  vec3 I = normalize(P);\n\
+  float cosTheta = abs(dot(I, N));\n\
+  float fresnel = pow(1.0 - cosTheta, 4.0);\n\
+\n\
+  float depth;\n\
+  if(gl_FrontFacing) \n\
+    depth =  position.z;//gl_FragCoord.z; \n\
+  else \n\
+    depth = -position.z;//gl_FragCoord.z; \n\
+  gl_FragColor = vec4(depth, fresnel, 0, 0);\n\
+}\
+',
       shaderUniforms: {
-        modelViewProjectionMatrix: { name: 'u_modelViewProjectionMatrix' },
-        depthScale: { name: 'u_depthScale', defaultValue: 1.0, owner:'childNode' }
+        modelViewProjectionMatrix: { name: 'u_modelViewProjectionMatrix', owner:'instance' },
+        modelViewMatrix: { name: 'u_modelViewMatrix', owner:'instance' },
+        normalMatrix: { name: 'u_normalMatrix', owner:'instance' }
       },
       shaderAttributes: {
-        positions: { name: 'a_position' }
+        positions: { name: 'a_position' },
+        normals: { name: 'a_normal' }
       },
       separateShaderNode: false
     });
     
-    ////////////////////////////////////////////////////////
-    // Now prepare the front and back materials
-    
-    var frontMaterial = scene.constructNode('Material', {
-      separateShaderNode: true,
-      shaderNode: thickGlassMaterial,
-      shaderUniforms: {
-        depthScale: { name: 'u_depthScale', defaultValue: 1.0 }
-      }
-    });
-    frontMaterial.getRedrawEventHandler().preDescendBindings.append(scene.constructOperator({
-        operatorName: 'setFrontFaceCulling',
-        srcCode: '\
-operator setFrontFaceCulling(){\
-  glEnable(GL_CULL_FACE);\
-  glEnable(GL_BLEND);\
-  glBlendFunc(GL_ONE, GL_ONE);\
-  glCullFace(GL_FRONT);\
-}',
-        entryFunctionName: 'setFrontFaceCulling',
-      }));
-    
-    var backMaterial = scene.constructNode('Material', {
-      separateShaderNode: true,
-      shaderNode: thickGlassMaterial,
-      shaderUniforms: {
-        depthScale: { name: 'u_depthScale', defaultValue: -1.0 }
-      }
-    });
-    backMaterial.getRedrawEventHandler().preDescendBindings.append(scene.constructOperator({
-        operatorName: 'setBackFaceCulling',
-        srcCode: '\
-operator setBackFaceCulling(){\
-  glCullFace(GL_BACK);\
-}',
-        entryFunctionName: 'setBackFaceCulling',
-      }));
-    
-    
-    var drawPropagateEventHandler = thickGlassMaterial.constructEventHandlerNode('Propagate');
-    frontMaterial.getRedrawEventHandler().appendChildEventHandler(drawPropagateEventHandler);
-    backMaterial.getRedrawEventHandler().appendChildEventHandler(drawPropagateEventHandler);
-
-    var parentIsTypeOf = thickGlassMaterial.pub.isTypeOf;
-    thickGlassMaterial.pub.isTypeOf = function(type){
-      if(type === 'Material'){
-        return true;
-      }
-      return parentIsTypeOf;
-    }
-    
-    thickGlassMaterial.getVBORequirements = function() {
-      return {
-        positions: { name: 'a_position' }
-      };
-    };
-    thickGlassMaterial.getRedrawEventHandler = function() {
-      return drawPropagateEventHandler;
-    };
- 
     return thickGlassMaterial;
-  });
+  }});
     
     
 $(document).ready(function() {
@@ -186,36 +153,39 @@ $(document).ready(function() {
   var scene = FABRIC.SceneGraph.createScene();
   var viewport = scene.constructNode('Viewport', {
     windowElement: document.getElementById('FabricContainer'),
-    backgroundColor: FABRIC.RT.rgb(0.0, 0.05, 0.15)
+    backgroundColor: FABRIC.RT.rgb(0.75, 0.75, 0.75)
   });
 
   // Create a camera to draw the scene from
-  var camera = scene.constructNode('TargetCamera', {
-      position: FABRIC.RT.vec3(40, 70, 100),
-      target: FABRIC.RT.vec3(0, 0, 0)
+  camera = scene.constructNode('TargetCamera', {
+      nearDistance: 5,
+      farDistance: 100,
+      position: FABRIC.RT.vec3(4, 15, 42),
+      target: FABRIC.RT.vec3(0, 14, 0)
     });
 
   scene.constructNode("CameraManipulator", { targetNode:camera } );
 
   viewport.setCameraNode(camera);
 
-  var light = scene.constructNode('PointLight', { position: FABRIC.RT.vec3(420.0, 1000.0, 600.0) });
-  var sphere = scene.constructNode('Sphere', { radius: 10, detail: 10, needUVs: true, tangentsFromUV: 0 });
+  var light = scene.constructNode('PointLight', { position: FABRIC.RT.vec3(1420.0, 1000.0, 600.0) });
 
   // Flat Shader
   var thickGlassMaterial = scene.constructNode('ThickGlassMaterial', {
-      color: FABRIC.RT.rgb(0.8, 0, 0, 1)
+      color: FABRIC.RT.rgb(0.0, 0.75, 0, 1)
     });
-  /*
+  
+  var assets = scene.importAssetFile('../BasicDemos/Models/venusm.obj', { scaleFactor:0.01 } );
+  
   scene.constructNode('Instance', {
       transformNode: scene.constructNode('Transform', {
           hierarchical: false,
-          globalXfo: FABRIC.RT.xfo({ tr: FABRIC.RT.vec3(-30, 0, 0) })
+          globalXfo: FABRIC.RT.xfo({ tr: FABRIC.RT.vec3(0, 0, 0) })
         }),
-      geometryNode: sphere,
+      geometryNode: assets['venusm'],
       materialNode: thickGlassMaterial
     });
-  */
+  
   var errors = scene.getErrors();
   if (errors.length > 0) {
     throw (errors.toString());

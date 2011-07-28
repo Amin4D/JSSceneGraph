@@ -117,7 +117,7 @@ $(document).ready(function() {
       })
     });
   scene.constructNode('PivotRotationManipulator', { parentNode: cube3Draw });
-
+/*
   // Bone
   var bone = scene.constructNode('Cuboid', { length: 30, width: 3, height: 3 });
   var cube4Draw = scene.constructNode('Instance', {
@@ -133,7 +133,7 @@ $(document).ready(function() {
     });
   scene.constructNode('BoneManipulator', { parentNode: cube4Draw });
 
-/*    // first create a skeleton
+    // first create a skeleton
     var skeletonNode = scene.constructNode("CharacterSkeleton");
     skeletonNode.addBone({name:"root",
       referencePose:FABRIC.RT.xfo( {

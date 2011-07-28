@@ -7,8 +7,8 @@
 // It is bound to a 'Geometry' which it renders for each Instance.
 
 // Particles is similar to 'Points' except it is set up for multi-threading.
-FABRIC.SceneGraph.registerNodeType('Particles',
-  function(options, scene) {
+FABRIC.SceneGraph.registerNodeType('Particles', {
+  factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
       materialNode: undefined,
       color: FABRIC.RT.rgb(0.75, 0.75, 0.75),
@@ -122,10 +122,10 @@ FABRIC.SceneGraph.registerNodeType('Particles',
 
     return particlesNode;
 
-  });
+  }});
 
-FABRIC.SceneGraph.registerNodeType('Flock',
-  function(options, scene) {
+FABRIC.SceneGraph.registerNodeType('Flock', {
+  factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
     });
 
@@ -163,6 +163,6 @@ FABRIC.SceneGraph.registerNodeType('Flock',
       ]
     }));
     return flockNode;
-  });
+  }});
 
 

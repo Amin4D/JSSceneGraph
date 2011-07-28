@@ -3,8 +3,8 @@
 // Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
 //
 
-FABRIC.SceneGraph.registerNodeType('CharacterMesh',
-  function(options, scene) {
+FABRIC.SceneGraph.registerNodeType('CharacterMesh', {
+  factoryFn: function(options, scene) {
 
     options.uvSets = 1;
     options.tangentsFromUV = 0;
@@ -63,10 +63,10 @@ FABRIC.SceneGraph.registerNodeType('CharacterMesh',
         });
     }
     return characterMeshNode;
-  });
+  }});
 
-FABRIC.SceneGraph.registerNodeType('CharacterSkeleton',
-  function(options, scene) {
+FABRIC.SceneGraph.registerNodeType('CharacterSkeleton', {
+  factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
       calcReferenceLocalPose: false,
       calcReferenceGlobalPose: false,
@@ -250,10 +250,10 @@ FABRIC.SceneGraph.registerNodeType('CharacterSkeleton',
     }
 
     return characterSkeletonNode;
-  });
+  }});
 
-FABRIC.SceneGraph.registerNodeType('CharacterSkeletonDebug',
-  function(options, scene) {
+FABRIC.SceneGraph.registerNodeType('CharacterSkeletonDebug', {
+  factoryFn: function(options, scene) {
 
     scene.assignDefaults(options, {
       boneradius: 1.0,
@@ -325,11 +325,11 @@ FABRIC.SceneGraph.registerNodeType('CharacterSkeletonDebug',
         }));
     }
     return characterSkeletonDebug;
-  });
+  }});
 
 
-FABRIC.SceneGraph.registerNodeType('CharacterVariables',
-  function(options, scene) {
+FABRIC.SceneGraph.registerNodeType('CharacterVariables', {
+  factoryFn: function(options, scene) {
 
     var characterVariablesNode = scene.constructNode('SceneGraphNode', options);
     var dgnode = characterVariablesNode.constructDGNode('DGNode');
@@ -358,15 +358,15 @@ FABRIC.SceneGraph.registerNodeType('CharacterVariables',
     };
 
     return characterVariablesNode;
-  });
+  }});
 
   /*
 // TODO: Come back to this one.
 
 // This node represents a branch in an animation graph
 // Where multiple rig input values are being blended together
-FABRIC.SceneGraph.registerNodeType("NLerpCharacterVariables",
-  function(options, scene){
+FABRIC.SceneGraph.registerNodeType("NLerpCharacterVariables", {
+  factoryFn: function(options, scene){
     scene.assignDefaults(options, {
       });
     var rigVariablesNode = scene.constructNode("RigVariables");
@@ -391,23 +391,23 @@ FABRIC.SceneGraph.registerNodeType("NLerpCharacterVariables",
         skeletonNode = node;
       };
     return rigVariablesNode;
-  });
+  }});
   */
 
 // These are the values that represent the evaluation
 // algorithm for this character instance.
 //
 //
-FABRIC.SceneGraph.registerNodeType('CharacterConstants',
-  function(options, scene) {
+FABRIC.SceneGraph.registerNodeType('CharacterConstants', {
+  factoryFn: function(options, scene) {
 
     var characterConstantsNode = scene.constructNode('CharacterVariables', options);
     return characterConstantsNode;
-  });
+  }});
 
 // The character rig computes the pose of a character
-FABRIC.SceneGraph.registerNodeType('CharacterRig',
-  function(options, scene) {
+FABRIC.SceneGraph.registerNodeType('CharacterRig', {
+  factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
       });
 
@@ -551,32 +551,32 @@ FABRIC.SceneGraph.registerNodeType('CharacterRig',
       characterRigNode.pub.setConstantsNode(scene.constructNode('CharacterConstants').pub);
     }
     return characterRigNode;
-  });
+  }});
 
 
 
 // The character rig computes the pose of a character
-FABRIC.SceneGraph.registerNodeType('FKCharacterRig',
-  function(options, scene) {
+FABRIC.SceneGraph.registerNodeType('FKCharacterRig', {
+  factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
       });
 
 
-  });
+  }});
 
 // The character rig computes the pose of a character
-FABRIC.SceneGraph.registerNodeType('GlobalCharacterRig',
-  function(options, scene) {
+FABRIC.SceneGraph.registerNodeType('GlobalCharacterRig', {
+  factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
       });
 
     var globalCharacterRigNode = scene.constructNode('CharacterRig', options);
     globalCharacterRigNode.pub.addSolver('solveGlobalPose', 'ReferencePoseSolver');
     return globalCharacterRigNode;
-  });
+  }});
 
-FABRIC.SceneGraph.registerNodeType('CharacterRigDebug',
-  function(options, scene) {
+FABRIC.SceneGraph.registerNodeType('CharacterRigDebug', {
+  factoryFn: function(options, scene) {
 
     scene.assignDefaults(options, {
       dynamic: true,
@@ -667,11 +667,11 @@ FABRIC.SceneGraph.registerNodeType('CharacterRigDebug',
     }
 
     return characterRigDebugNode;
-  });
+  }});
 
 // The character instance draws a deformed mesh on screen.
-FABRIC.SceneGraph.registerNodeType('CharacterInstance',
-  function(options, scene) {
+FABRIC.SceneGraph.registerNodeType('CharacterInstance', {
+  factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
       });
 
@@ -710,5 +710,5 @@ FABRIC.SceneGraph.registerNodeType('CharacterInstance',
       characterInstanceNode.pub.setRigNode(options.rigNode);
     }
     return characterInstanceNode;
-  });
+  }});
 

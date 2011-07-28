@@ -3,7 +3,7 @@
     Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
     -->
   <head> 
-    <title>FABRIC - Background Texture</title> 
+    <title>FABRIC - SceneGraphNodes Help</title> 
     
     <meta charset="iso-8859-1"/>
     <link href="../../../themes/default/style.css" rel="stylesheet" type="text/css" />
@@ -11,6 +11,7 @@
     
     <script type="text/javascript" src="../../../ThirdParty/jQuery/jquery-1.4.2.min.js"></script>
     <script type="text/javascript" src="../../../ThirdParty/jQuery/jquery-ui-1.8.5.custom.min.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/jQuery/jquery.dataTables.min.js"></script>
 
     <link type="text/css" href="../../../ThirdParty/jQuery/css/vader/jquery-ui-1.8.5.custom.css" rel="stylesheet" />
 
@@ -36,6 +37,9 @@
     <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Materials.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Manipulation.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Kinematics.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Particles.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Characters.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Animation.js" charset="utf-8"></script>
     
 <script type="text/javascript">
 
@@ -43,17 +47,17 @@
 $(document).ready(function() {
 
   var scene = FABRIC.SceneGraph.createScene();
-  var viewport = scene.constructNode('Viewport', {
-    windowElement: document.getElementById('FabricContainer'),
-    backgroundColor: FABRIC.RT.rgb(0.0, 0.05, 0.15)
+  
+  // get all descriptions
+  var help = FABRIC.SceneGraph.help();
+  var descriptions = [];
+  for (var type in help) {
+    descriptions.push( [type, help[type].brief]);
+  }
+  
+  var table = $('#content').dataTable( {
+    aaData: descriptions
   });
-
-  viewport.setBackgroundTextureImage(scene.constructNode('Image', {
-    url: 'Resources/tomatoes_960_640.png'
-  }));
-
-  // We cannot enable pose processing effectds untill we can removeChildEventHandlers
-  viewport.addPostProcessEffectShader(scene.constructNode('EdgeDetectionPostProcessEffect'));
 
   var errors = scene.getErrors();
   if (errors.length > 0) {
@@ -72,27 +76,24 @@ $(document).ready(function() {
 
   </head> 
   <body>
-    <div id="wrapper">
+    <div id="wrapper" style='background-color:#CCCCCC;font: bold 15px/100% Arial, Helvetica, sans-serif;'>
       <ul id="nav">
         <li><a href="#" id="fabric-logo"><img src="../../../themes/default/_img/projects/fabric-logo.png" /></a></li>
       </ul>
       <div id="editor">
-        <div id="viewer">
-          <div id="FabricContainer"></div> 
-        </div><!--viewer-->
-        <div id="sidebar">
-          
-          <div class="box">
-            <h2>INFO</h2>
-            <div class="content">
-              Background Texture.<br>
-              This very basic sample shows the use of a background texture that is filtered through OpenGL. Have a look
-              at the source code of this page to see how this is set up.
-            </div><!--content-->
-          </div><!--box-->
-            
-        </div><!--sidebar-->
-      </div> <!--editor-->
+        <div id="dataContainer">
+          <table id="content">
+            <thead>
+              <tr>
+                <th>Node Type</th>
+                <th>Brief Description</th>
+              </tr>
+            </thead>
+            <tbody>
+            </tbody>
+          </table>
+        </div><!--dataContainer-->
+      </div><!--editor-->
     </div><!--wrapper-->
-  </body> 
-  </html>
+  </body>
+</html>

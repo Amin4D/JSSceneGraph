@@ -3,7 +3,7 @@
     Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
     -->
   <head> 
-    <title>FABRIC - Background Texture</title> 
+    <title>FABRIC - Per-Point Deformation</title> 
     
     <meta charset="iso-8859-1"/>
     <link href="../../../themes/default/style.css" rel="stylesheet" type="text/css" />
@@ -14,7 +14,7 @@
 
     <link type="text/css" href="../../../ThirdParty/jQuery/css/vader/jquery-ui-1.8.5.custom.css" rel="stylesheet" />
 
-    <script type="text/javascript" src="../../../Core/FABRIC.Wrappers.js" charset="utf-8"></script>
+      <script type="text/javascript" src="../../../Core/FABRIC.Wrappers.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../Core/FABRIC.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Math.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Vec2.js" charset="utf-8"></script>
@@ -25,42 +25,98 @@
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Mat44.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Quat.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Xfo.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Euler.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/RGBA.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Color.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Euler.js" charset="utf-8"></script>
-
+    
     <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Geometry.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Primitives.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Kinematics.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Lights.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Materials.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Manipulation.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Kinematics.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/Parsers/parseOBJ.js" charset="utf-8"></script>
     
-<script type="text/javascript">
-
-
+    <script type="text/javascript">
 $(document).ready(function() {
+  var $twistAmount = $('#twistAmount').slider({
+      min: -0.5,
+      max: 0.5,
+      step: 0.001
+    });
+
+  $('#importModel').button().change(function(e) {
+      // TODO: Enable file importing
+        console.log($(this).val());
+      var assets = scene.importAssetFile($(this).val());
+      for (i in assets) {
+        assets[i].setMaterialNode(redMaterial);
+        drawNode.setGeometryNode(assets[i]);
+      }
+
+      var errors = scene.getErrors();
+      if (errors.length > 0) {
+        throw (errors.toString());
+      }
+    });
 
   var scene = FABRIC.SceneGraph.createScene();
   var viewport = scene.constructNode('Viewport', {
-    windowElement: document.getElementById('FabricContainer'),
-    backgroundColor: FABRIC.RT.rgb(0.0, 0.05, 0.15)
+    enableRaycasting: false,
+    windowElement: document.getElementById('FabricContainer')
+  });
+  var light = scene.constructNode('PointLight', {
+    position: FABRIC.RT.vec3(420.0, 1000.0, 600.0)
   });
 
-  scene.constructNode('ObjLoad', {
+  // Create a camera to draw the scene from
+  var camera = scene.constructNode('TargetCamera', {
+      nearDistance: 1,
+      farDistance: 20,
+      position: FABRIC.RT.vec3(0, 5, 10)
+    });
+  scene.constructNode('CameraManipulator', { targetNode: camera });
+
+  viewport.setCameraNode(camera);
+
+  triangles = scene.constructNode('ObjLoadTriangles', {
     url: 'Models/cow.obj'
   });
+
+  deformationBuffer = triangles.addDeformationBuffer(['positions', 'normals']);
+  triangles.addUniformValue('twist', 'Scalar', 0.02, true);
+  deformationBuffer.assignOperator({
+    operatorName: 'twistOp',
+    srcFile: 'KL/twistOp.kl',
+    entryFunctionName: 'twistOp',
+    parameterBinding: [
+      'self.positions',
+      'self.normals',
+      'uniforms.twist'
+    ]
+  });
+
+  var material = scene.constructNode('PhongMaterial', {
+      diffuseColor: FABRIC.RT.rgb(0.8, 0, 0, 1),
+      lightNode: light
+    });
+
+  instanceNode = scene.constructNode('Instance', { geometryNode: triangles, materialNode: material });
 
   var errors = scene.getErrors();
   if (errors.length > 0) {
     throw (errors.toString());
-  } else {
+  }
+  else {
+    console.log(scene.getTimerProfiles());
     scene.redrawAllWindows();
 
-    console.log(scene.getTimerProfiles());
-
-    console.log('Done');
+    $twistAmount.slider('value', triangles.getTwist());
+    $twistAmount.bind('slide',
+      function(event, ui) {
+        triangles.setTwist(ui.value);
+        viewport.redraw();
+      });
   }
 
 });
@@ -82,11 +138,21 @@ $(document).ready(function() {
           <div class="box">
             <h2>INFO</h2>
             <div class="content">
-              Background Texture.<br>
-              This very basic sample shows the use of a background texture that is filtered through OpenGL. Have a look
-              at the source code of this page to see how this is set up.
+              Per Point Deformation.<br>
+              This scenes illustrates the use of FABRIC's geometry pipeline. The model is imported using
+              the OBJ parser, and then is deformed using the deformation buffer. Each deformation is processed
+              using a separate slice, to utilize FABRIC's multithreading framework. Play with the slider below
+              to see it in action.
             </div><!--content-->
           </div><!--box-->
+
+                <div class="box">
+                    <h2>CONTROLS</h2>
+                    <div class="content">
+                        <div>Twist Amount:</div>
+                        <div id='twistAmount' style="margin-top:10px;"></div>
+                    </div><!--content-->
+                </div><!--box-->
             
         </div><!--sidebar-->
       </div> <!--editor-->

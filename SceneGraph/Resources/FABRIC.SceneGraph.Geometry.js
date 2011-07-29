@@ -441,47 +441,6 @@ FABRIC.SceneGraph.registerNodeType('Geometry', {
     return geometryNode;
   }});
 
-  FABRIC.SceneGraph.registerNodeType('ObjLoad', {
-    factoryFn: function(options, scene) {
-      scene.assignDefaults(options, {
-        createGeometryNode: true
-      });
-
-      alert('Obj load BEGIN');
-
-      var resourceLoadNode,
-      resourceloaddgnode;
-
-      resourceLoadNode = scene.constructNode('ResourceLoad', options);
-      resourceloaddgnode = resourceLoadNode.getDGLoadNode();
-
-      resourceloaddgnode.addMember('handle', 'Data');
-
-      resourceloaddgnode.bindings.append(scene.constructOperator({
-        operatorName: 'loadObj',
-        parameterBinding: [
-            'self.resource',
-            'self.handle'
-          ],
-        entryFunctionName: 'loadObj',
-        srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadObj.kl'
-      }));
-
-      //JCGTemp!!
-      resourceloaddgnode.evaluate();
-
-      resourceLoadNode.pub.addOnLoadCallback(function() {
-        alert('Obj load CALLBACK');
-        resourceloaddgnode.evaluate();
-      });
-
-      alert('Obj load END');
-
-      return resourceLoadNode;
-    }
-  });
-
-
 FABRIC.SceneGraph.registerNodeType('Points', {
   factoryFn: function(options, scene) {
 
@@ -883,4 +842,63 @@ FABRIC.SceneGraph.registerNodeType('Instance', {
     }
     return instanceNode;
   }});
+
+  FABRIC.SceneGraph.registerNodeType('ObjLoadTriangles', {
+    factoryFn: function(options, scene) {
+      scene.assignDefaults(options, {
+        createGeometryNode: true
+      });
+
+      options.uvSets = 1; //To refine... what if there is no UV set??
+
+      var resourceLoadNode = scene.constructNode('ResourceLoad', options),
+        resourceloaddgnode = resourceLoadNode.getDGLoadNode(),
+        trianglesNode = scene.constructNode('Triangles', options);
+
+      resourceloaddgnode.addMember('handle', 'Data');
+
+      resourceloaddgnode.bindings.append(scene.constructOperator({
+        operatorName: 'loadObj',
+        parameterBinding: [
+          'self.resource',
+          'self.handle'
+        ],
+        entryFunctionName: 'loadObj',
+        srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadObj.kl'
+      }));
+
+      trianglesNode.getAttributesDGNode().addDependency(resourceloaddgnode, 'resource');
+      trianglesNode.getUniformsDGNode().addDependency(resourceloaddgnode, 'resource');
+
+      trianglesNode.setGeneratorOps([
+        scene.constructOperator({
+          operatorName: 'setObjVertexCount',
+          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadObj.kl',
+          entryFunctionName: 'setObjVertexCount',
+          parameterBinding: [
+            'resource.handle',
+            'self.newCount'
+          ]
+        }),
+        scene.constructOperator({
+          operatorName: 'setObjGeom',
+          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadObj.kl',
+          entryFunctionName: 'setObjGeom',
+          parameterBinding: [
+            'resource.handle',
+            'uniforms.indices',
+            'self.positions[]',
+            'self.normals[]',
+            'self.uvs0[]'
+          ]
+        })
+      ]);
+
+      trianglesNode.pub.getResourceLoadNode = function() {
+        return resourceLoadNode;
+      }
+
+      return trianglesNode;
+    }
+  });
 

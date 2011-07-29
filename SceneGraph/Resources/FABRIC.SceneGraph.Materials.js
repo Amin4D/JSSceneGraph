@@ -683,9 +683,7 @@ FABRIC.SceneGraph.registerNodeType('PostProcessEffect', {
         parentEventHandler: false,
         separateShaderNode: false,
         assignUniformsOnPostDescend:true,
-        OGL_INTERNALFORMAT: 'GL_RGBA16F_ARB',/* GL_RGBA8 */
-        OGL_FORMAT: 'GL_RGBA',
-        OGL_TYPE: 'GL_UNSIGNED_BYTE'
+        renderTarget: FABRIC.RT.oglPostProcessingRenderTarget(0)
       });
 
     if (options.fragmentShader === undefined) {
@@ -713,52 +711,37 @@ FABRIC.SceneGraph.registerNodeType('PostProcessEffect', {
     var redrawEventHandler = postProcessEffect.getRedrawEventHandler();
 
     // Set up FBO rendering and draw the textured quad on the way back
-    redrawEventHandler.addMember('offscreenFBO', 'Integer', 0);
-    redrawEventHandler.addMember('offscreenPrevFBO', 'Integer', 0);
-    redrawEventHandler.addMember('offscreenColorID', 'Integer', 0);
-    redrawEventHandler.addMember('offscreenDepthID', 'Integer', 0);
-    redrawEventHandler.addMember('prevProgramID', 'Integer', 0);
-
+    
+    redrawEventHandler.addMember('renderTarget', 'OGLRenderTarget', options.renderTarget);
+    
     redrawEventHandler.preDescendBindings.append(
       scene.constructOperator({
-          operatorName: 'prepareOffscreenRenderingOp',
-          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/offscreenRendering.kl',
-          preProcessorDefinitions: {
-            OGL_INTERNALFORMAT: options.OGL_INTERNALFORMAT,
-            OGL_FORMAT: options.OGL_FORMAT,
-            OGL_TYPE: options.OGL_TYPE
-          },
-          entryFunctionName: 'prepareOffscreenRendering',
+          operatorName: 'bindScreenRenderTarget',
+          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/renderTarget.kl',
+          entryFunctionName: 'bindScreenRenderTarget',
           parameterBinding: [
             'window.width',
             'window.height',
-            'self.offscreenFBO',
-            'self.offscreenPrevFBO',
-            'self.offscreenColorID',
-            'self.offscreenDepthID',
-            'self.prevProgramID',
-            'viewPort.backgroundColor'
+            'self.renderTarget'
           ]
         }));
-
+    redrawEventHandler.postDescendBindings.insert(
+      scene.constructOperator({
+          operatorName: 'unbindRenderTarget',
+          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/renderTarget.kl',
+          entryFunctionName: 'unbindRenderTarget',
+          parameterBinding: [
+            'self.renderTarget'
+          ]
+        }), 0);
     redrawEventHandler.postDescendBindings.append(
       scene.constructOperator({
-          operatorName: 'renderOffscreenToViewOp',
-          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/offscreenRendering.kl',
-          preProcessorDefinitions: {
-            OGL_INTERNALFORMAT: options.OGL_INTERNALFORMAT,
-            OGL_FORMAT: options.OGL_FORMAT,
-            OGL_TYPE: options.OGL_TYPE
-          },
-          entryFunctionName: 'renderOffscreenToView',
+          operatorName: 'drawRenderTargetToView',
+          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/renderTarget.kl',
+          entryFunctionName: 'drawRenderTargetToView',
           parameterBinding: [
-            'window.width',
-            'window.height',
-            'self.offscreenPrevFBO',
-            'self.offscreenColorID',
-            'self.program',
-            'self.prevProgramID',
-            'viewPort.backgroundColor'
+            'self.renderTarget',
+            'self.shaderProgram'
           ]
         }));
     return postProcessEffect;

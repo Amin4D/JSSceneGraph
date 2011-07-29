@@ -33,6 +33,10 @@ function OGLRenderTarget.genTextures() {
   textureIDs.resize(1);
   
   for(i=0; i<self.textures.size(); i++){
+    if(self.textures[i].texture.bufferID!=0){
+      report("Error: texture is already generated");
+      break;
+    }
     switch(self.textures[i].type){
       case 1://self.DEPTH_BUFFER:
         {
@@ -114,7 +118,12 @@ function OGLRenderTarget.prebind(
   Integer currWidth,
   Integer currHeight
 ) {
-  if(self.fbo > 0){
+//  report("prebind:"+currWidth + ","+currHeight );
+  if(self.fbo == 0){
+    self.width = currWidth;
+    self.height = currHeight;
+  }
+  else {
     if (self.width != currWidth || self.height != currHeight) {
       // If this FBO is a full screen FBO, then we check to see
       // if the viewport dimensions have changed, and rebuild
@@ -139,6 +148,8 @@ function OGLRenderTarget.prebind(
       self.fbo = 0;
       self.depthBuffer = -1;
       self.hasDepthBufferTexture = false;
+      self.width = currWidth;
+      self.height = currHeight;
     }
   }
 }
@@ -195,11 +206,4 @@ function OGLRenderTarget.unbind() {
   glBindFramebuffer(GL_FRAMEBUFFER, self.prevFbo);
 }
 
-function OGLRenderTarget.draw() {
-  if(self.fbo==0){
-    report("Error: FBO not generated");
-  }
-  // restore the OpenGL state
-  glPopAttrib();
-  glBindFramebuffer(GL_FRAMEBUFFER, self.prevFbo);		
-}
+

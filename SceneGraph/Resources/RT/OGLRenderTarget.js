@@ -103,3 +103,26 @@ FABRIC.RT.oglDepthRenderTarget = function(size){
   )
 }
 
+
+
+FABRIC.RT.oglPostProcessingRenderTarget = function(){
+  return new FABRIC.RT.OGLRenderTarget(
+    0,
+    0,
+    [
+      new FABRIC.RT.OGLRenderTargetTextureDesc(
+        2,
+        new FABRIC.RT.OGLTexture2D(
+          FABRIC.SceneGraph.OpenGLConstants.GL_RGBA16F_ARB,
+          FABRIC.SceneGraph.OpenGLConstants.GL_RGBA,
+          FABRIC.SceneGraph.OpenGLConstants.GL_UNSIGNED_BYTE)
+      )
+    ],
+    {
+      enableOptions:[FABRIC.SceneGraph.OpenGLConstants.GL_DEPTH_TEST,
+                     FABRIC.SceneGraph.OpenGLConstants.GL_CULL_FACE],
+      cullFace:FABRIC.SceneGraph.OpenGLConstants.GL_BACK
+    }
+  )
+}
+

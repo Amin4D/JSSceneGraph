@@ -3,10 +3,12 @@
 // Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
 //
 
+#include 'FABRIC_ROOT/SceneGraph/Resources/KL/drawTexture.kl'
+
 operator bindRenderTarget(
   io OGLRenderTarget renderTarget
 ) {
-//  report("bindRenderTarget");
+  report("bindRenderTarget");
   renderTarget.bind();
 }
 
@@ -15,7 +17,7 @@ operator bindScreenRenderTarget(
   io Integer height,
   io OGLRenderTarget renderTarget
 ) {
-//  report("bindRenderTarget");
+  report("bindRenderTarget");
   renderTarget.prebind(width, height);
   renderTarget.bind();
 }
@@ -29,11 +31,33 @@ operator unbindRenderTarget(
 
 
 operator drawRenderTargetToView(
-  io Integer width,
-  io Integer height,
-  io OGLRenderTarget renderTarget
+  io OGLRenderTarget renderTarget,
+  io OGLShaderProgram shaderProgram
 ) {
-  renderTarget.draw();
-//  report("<<<renderOffscreenToView");
+  report("drawRenderTargetToView>>>");
+//  renderTarget.unbind();
+//  renderTarget.draw(program);
+
+  OGLTexture2D colorTexture;// = depthRenderTarget.getFirstColorTexture();
+  for(Integer i=0; i<renderTarget.textures.size(); i++){
+    if(renderTarget.textures[i].type == 2){//self.COLOR_BUFFER
+      colorTexture = renderTarget.textures[i].texture;
+    }
+  }
+  report(colorTexture);
+  if(colorTexture.bufferID > 0 ){
+    Integer textureUnit = GL_TEXTURE0;
+    glActiveTexture(textureUnit);
+    glBindTexture(GL_TEXTURE_2D, colorTexture.bufferID);
+    
+    Vec2 tl(-1.0, 1.0);
+    Vec2 br(1.0, -1.0);
+    drawTexture(textureUnit, shaderProgram.programId, tl, br);
+  }else{
+    report("Error: no color textures found");
+  }
+
+
+  report("<<<drawRenderTargetToView");
 }
 

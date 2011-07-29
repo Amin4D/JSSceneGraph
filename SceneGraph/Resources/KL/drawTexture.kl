@@ -5,10 +5,12 @@
 
 
 function drawTexture(
-  io Integer textureUnit,
+  Integer textureUnit,
   io Integer program,
-  io Vec2 tl,
-  io Vec2 br
+  Vec2 tl,
+  Vec2 br,
+  Boolean flipY
+  
 ) {
   // report(">>>renderTextureToView");
 
@@ -62,7 +64,7 @@ function drawTexture(
   glDisable(GL_CULL_FACE);
 
   // PT 29-06-11 : I'm not sure why this is here.
-  // Do we nned to set the 
+  // Do we need to set the texture unit here?
 //  glUniform1i(smpLocation, GL_TEXTURE0);
   
   // Draw a quad in the upper left with debugging info
@@ -73,10 +75,18 @@ function drawTexture(
   p[3] = Vec3(tl.x, br.y, 0.0);
   
   var Vec2 t[4];
-  t[0] = Vec2(0.0, 0.0);
-  t[1] = Vec2(1.0, 0.0);
-  t[2] = Vec2(1.0, 1.0);
-  t[3] = Vec2(0.0, 1.0);
+  if(flipY){
+    t[0] = Vec2(0.0, 0.0);
+    t[1] = Vec2(1.0, 0.0);
+    t[2] = Vec2(1.0, 1.0);
+    t[3] = Vec2(0.0, 1.0);
+  }else{
+    t[0] = Vec2(0.0, 1.0);
+    t[1] = Vec2(1.0, 1.0);
+    t[2] = Vec2(1.0, 0.0);
+    t[3] = Vec2(0.0, 0.0);
+  }
+  
   var Integer idx[6];
   idx[0] = 0; idx[1] = 2; idx[2] = 1;
   idx[3] = 0; idx[4] = 3; idx[5] = 2;
@@ -126,10 +136,5 @@ operator drawTextureFullScreen(
 ) {
   Vec2 tl(-1.0, 1.0);
   Vec2 br(1.0, -1.0);
-  drawTexture(
-    textureUnit,
-    program,
-    tl,
-    br
-  );
+  drawTexture(textureUnit, program, tl, br, true);
 }

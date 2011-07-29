@@ -6,7 +6,7 @@
 
 
 function OGLRenderTarget.genTextures() {
-  report("OGLTexture2D.genTextures width:" + self.width + " height:" + self.height);
+//  report("OGLTexture2D.genTextures width:" + self.width + " height:" + self.height);
 
   Integer i, maxColorBuffers;
 //  glGetIntegerv(GL_MAX_COLOR_ATTACHMENTS, maxColorBuffers);

@@ -36,7 +36,6 @@ function OGLRenderTarget.genTextures() {
     switch(self.textures[i].type){
       case 1://self.DEPTH_BUFFER:
         {
-          report("DEPTH_BUFFER");
           if(self.depthBuffer != -1){
             report( "Creating 2 or more depth buffers is not possible!");
             break;
@@ -64,8 +63,6 @@ function OGLRenderTarget.genTextures() {
         break;
       case 2://self.COLOR_BUFFER:
         {
-          report("COLOR_BUFFER");
-          
           self.textures[i].texture.genTexture(self.width, self.height);
           if(self.textures[i].texture.bufferID==0){
             report("Error generating texture");
@@ -79,12 +76,13 @@ function OGLRenderTarget.genTextures() {
     }
   }
 
-  
+  /*
   //Depth buffer only
   if(self.numColorBuffers <= 0){
     glDrawBuffer(GL_NONE);
     glReadBuffer(GL_NONE);
   }
+  */
   
   var Integer status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
   if (status != GL_FRAMEBUFFER_COMPLETE){
@@ -110,7 +108,8 @@ function OGLRenderTarget.genTextures() {
     }
   }
 }
-  
+
+
 function OGLRenderTarget.prebind(
   Integer currWidth,
   Integer currHeight
@@ -142,19 +141,20 @@ function OGLRenderTarget.prebind(
 }
 
 function OGLRenderTarget.bind() {
-  report("OGLRenderTarget.bind()");
-  if(self.fbo==0){
-    self.genTextures();
-  }
+//  report("OGLRenderTarget.bind()");
+  
   Integer prevFbos[];
   prevFbos.resize(1);
   glGetIntegerv(GL_FRAMEBUFFER_BINDING, prevFbos);
   self.prevFbo = prevFbos[0];
   
+  if(self.fbo==0){
+    self.genTextures();
+  }
+  
   glBindFramebuffer(GL_FRAMEBUFFER, self.fbo);
   
-  glPushAttrib(GL_VIEWPORT_BIT);
-  glViewport(0,0, self.width, self.height);
+  glPushAttrib(GL_DEPTH_BUFFER_BIT | GL_VIEWPORT_BIT | GL_TEXTURE_BIT);
   
   Size options = 0;
   if(self.clearDepth){
@@ -164,38 +164,32 @@ function OGLRenderTarget.bind() {
     options = options | GL_COLOR_BUFFER_BIT;
     glClearColor(self.clearColor.r, self.clearColor.g, self.clearColor.b, 1.0);
   }
+  
+  glViewport(0,0, self.width, self.height);
   glClear(options);
   
-  // Note: I'mnot sure if I need to do this every frame
+  // Note: I'm not sure if I need to do this every frame
   //Depth buffer only
   if(self.numColorBuffers <= 0){
     glDrawBuffer(GL_NONE);
     glReadBuffer(GL_NONE);
   }
   
-  report("OGLRenderTarget.bind()>>>>>>>>>>>>");
-  
-  report("self.enableOptions" + self.enableOptions);
-  
   for(Integer i=0; i<self.enableOptions.size(); i++){
     glEnable(self.enableOptions[i]);
   }
-  glEnable(GL_DEPTH_TEST);
-  glEnable(GL_CULL_FACE);
-  
   glCullFace(self.cullFace);
-  report("OGLRenderTarget.bind()<<<");
 }
 
 function OGLRenderTarget.unbind() {
-  report("OGLRenderTarget.unbind():" + self.prevFbo);
+//  report("OGLRenderTarget.unbind() prevFbo:" + self.prevFbo);
+  
   if(self.fbo==0){
     report("Error: FBO not generated");
   }
   // restore the OpenGL state
   glPopAttrib();
   glBindFramebuffer(GL_FRAMEBUFFER, self.prevFbo);
-  report("OGLRenderTarget.unbind()<<<");
 }
 
 function OGLRenderTarget.draw() {

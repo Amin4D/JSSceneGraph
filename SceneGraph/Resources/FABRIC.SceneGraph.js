@@ -1023,14 +1023,9 @@ FABRIC.SceneGraph.registerNodeType('Viewport', {
         textureStub.addMember('program', 'Integer', 0);
         textureStub.postDescendBindings.append(
           scene.constructOperator({
-              operatorName: 'renderTextureToView',
-              srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/renderTextureToView.kl',
-              preProcessorDefinitions: {
-                OGL_INTERNALFORMAT: 'GL_RGBA16F_ARB',
-                OGL_FORMAT: 'GL_RGBA',
-                OGL_TYPE: 'GL_UNSIGNED_BYTE'
-              },
-              entryFunctionName: 'renderTextureToView',
+              operatorName: 'drawTextureFullScreen',
+              srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/drawTexture.kl',
+              entryFunctionName: 'drawTextureFullScreen',
               parameterBinding: [
                 'self.textureUnit',
                 'self.program'

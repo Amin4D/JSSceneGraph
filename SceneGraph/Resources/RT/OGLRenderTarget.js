@@ -4,10 +4,10 @@
 //
 
 /**
- * Constructor function to create a Ray object.
+ * Constructor function to create a OGLRenderTargetTextureDesc.
  * @constructor
- * @param {object} start A Vec3 defining the start of the ray.
- * @param {object} direction A Vec3 defining the direction of the ray.
+ * @param {object} the type of texture. E.g. color/depth.
+ * @param {object} the texture object used.
  */
 FABRIC.RT.OGLRenderTargetTextureDesc = function(type, texture) {
   this.type = type ? type : 0;
@@ -28,8 +28,10 @@ FABRIC.appendOnCreateContextCallback(function(context) {
 /**
  * Constructor function to create a OGLRenderTarget object.
  * @constructor
- * @param {width} start A Vec3 defining the start of the ray.
- * @param {height} direction A Vec3 defining the direction of the ray.
+ * @param {width} width of all the texture buffers.
+ * @param {height} height of all the texture buffers.
+ * @param {textures} an array of texture desc objects.
+ * @param {options} optional parameters for initialization.
  */
 FABRIC.RT.OGLRenderTarget = function(width, height, textures, options) {
   this.width = width ? width : 0;

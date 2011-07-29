@@ -4,9 +4,11 @@
 //
 
 
-operator renderTextureToView(
+function drawTexture(
   io Integer textureUnit,
-  io Integer program
+  io Integer program,
+  io Vec2 tl,
+  io Vec2 br
 ) {
   // report(">>>renderTextureToView");
 
@@ -31,6 +33,7 @@ operator renderTextureToView(
       }';
     
     OGLShaderProgram shaderProgram('renderTextureToView');
+    shaderProgram.debug = false;
     shaderProgram.shaderSources.push(pixelShader);
     shaderProgram.shaderSources.push(fragmentShader);
     shaderProgram.loadShader();
@@ -50,19 +53,25 @@ operator renderTextureToView(
   name = 'u_rgbaImage';
   var Integer smpLocation = glGetUniformLocation(program, name);
 
-  // Set the sampler
+//  glPushAttrib(GL_TEXTURE_BIT);
+  glDisable(GL_DEPTH_TEST);
+  glDisable(GL_CULL_FACE);
+
   glEnable(GL_TEXTURE_2D);
   glDisable(GL_DEPTH_TEST);
   glDisable(GL_CULL_FACE);
 
-  glUniform1i(smpLocation, textureUnit);
-
+  // PT 29-06-11 : I'm not sure why this is here.
+  // Do we nned to set the 
+//  glUniform1i(smpLocation, GL_TEXTURE0);
+  
   // Draw a quad in the upper left with debugging info
   var Vec3 p[4];
-  p[0] = Vec3(-1.0, 1.0, 0.0);
-  p[1] = Vec3(1.0, 1.0, 0.0);
-  p[2] = Vec3(1.0, - 1.0, 0.0);
-  p[3] = Vec3(-1.0, - 1.0, 0.0);
+  p[0] = Vec3(tl.x, tl.y, 0.0);
+  p[1] = Vec3(br.x, tl.y, 0.0);
+  p[2] = Vec3(br.x, br.y, 0.0);
+  p[3] = Vec3(tl.x, br.y, 0.0);
+  
   var Vec2 t[4];
   t[0] = Vec2(0.0, 0.0);
   t[1] = Vec2(1.0, 0.0);
@@ -85,7 +94,7 @@ operator renderTextureToView(
   bufferID1 = bufferIDArray[0];
   glGenBuffers(1, bufferIDArray);
   bufferID2 = bufferIDArray[0];
-
+  
   glBindBuffer(GL_ARRAY_BUFFER, bufferID0);
   glBufferData(GL_ARRAY_BUFFER, p.dataSize(), p.data(), GL_STATIC_DRAW);
   glEnableVertexAttribArray(posLocation);
@@ -99,12 +108,28 @@ operator renderTextureToView(
   glBindBuffer(GL_ARRAY_BUFFER, bufferID2);
   glBufferData(GL_ARRAY_BUFFER, idx.dataSize(), idx.data(), GL_STATIC_DRAW);
   glBindBuffer(GL_ARRAY_BUFFER, 0);
-
+  
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, bufferID2);
   glDrawElements(GL_TRIANGLES, idx.size(), GL_UNSIGNED_INT, NULL);
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
   glEnable(GL_DEPTH_TEST);
   glEnable(GL_CULL_FACE);
-  // report("<<<renderTextureToView");
+//  glPopAttrib();
+//  report("<<<drawTexture");
+}
+
+
+operator drawTextureFullScreen(
+  io Integer textureUnit,
+  io Integer program
+) {
+  Vec2 tl(-1.0, 1.0);
+  Vec2 br(1.0, -1.0);
+  drawTexture(
+    textureUnit,
+    program,
+    tl,
+    br
+  );
 }

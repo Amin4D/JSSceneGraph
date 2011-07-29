@@ -12,7 +12,7 @@ function OGLTexture2D.bind(
   Size glSrcDataType,
   io Integer textureUnit
 ) {
-  report("OGLTexture2D.bind:" + textureUnit + " nbPixels:" + nbPixels);
+//  report("OGLTexture2D.bind:" + textureUnit + " nbPixels:" + nbPixels);
 //  report("createTextureFromImage  bufferID:"+self.bufferID + " textureUnit:"+textureUnit  + " nbPixels:"+nbPixels );
   if(nbPixels > 0){
     if (self.bufferID == 0) {
@@ -130,8 +130,7 @@ function OGLTexture2D.genTexture(
   Size width,
   Size height
 ) {
-  
-  report("OGLTexture2D.genTexture width:" + width + " height:" + height);
+//  report("OGLTexture2D.genTexture width:" + width + " height:" + height);
   
   var Data NULL;
   /////////////////////////////////////////////////////
@@ -146,7 +145,6 @@ function OGLTexture2D.genTexture(
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
   
   if(self.glInternalFormat == GL_DEPTH_COMPONENT){
-    report("GL_DEPTH_COMPONENT");
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     

@@ -116,6 +116,9 @@ function OGLRenderTarget.prebind(
 ) {
   if(self.fbo > 0){
     if (self.width != currWidth || self.height != currHeight) {
+      // If this FBO is a full screen FBO, then we check to see
+      // if the viewport dimensions have changed, and rebuild
+      // the textures if they have.
     
       Size numTextures = (self.hasDepthBufferTexture ? 1 : 0) + self.numColorBuffers;
       Size bufferIDs[];

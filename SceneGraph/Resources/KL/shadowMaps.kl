@@ -65,7 +65,7 @@ operator debugShadowMapBuffer(
     glBindTexture(GL_TEXTURE_2D, colorTexture.bufferID);
     
     Vec2 tl(-1.0, 1.0);
-    Vec2 br(0.0, -0.0);
+    Vec2 br(-0.5, 0.5);
     drawTexture(textureUnit, program, tl, br);
   }else{
     report("Error: no color textures found");

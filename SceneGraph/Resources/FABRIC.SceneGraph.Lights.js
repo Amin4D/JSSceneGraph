@@ -345,7 +345,7 @@ FABRIC.SceneGraph.registerNodeType('SpotLight', {
                 'camera.cameraMat44'
               ]
             }));
-        /*
+        
         redrawEventHandler.preDescendBindings.append(
           scene.constructOperator({
               operatorName: 'bindShadowMapBufferOp',
@@ -356,7 +356,6 @@ FABRIC.SceneGraph.registerNodeType('SpotLight', {
                 'light.depthRenderTarget'
               ]
             }));
-*/
      }
       return redrawEventHandler;
     };

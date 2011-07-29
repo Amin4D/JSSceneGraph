@@ -14,7 +14,7 @@
 
     <link type="text/css" href="../../../ThirdParty/jQuery/css/vader/jquery-ui-1.8.5.custom.css" rel="stylesheet" />
 
-      <script type="text/javascript" src="../../../Core/FABRIC.Wrappers.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../Core/FABRIC.Wrappers.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../Core/FABRIC.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Math.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Vec2.js" charset="utf-8"></script>
@@ -70,13 +70,13 @@ $(document).ready(function() {
     coneAngle: 80.0 * FABRIC.RT.degToRad,
     farDistance: 60,
     castShadows: true,
-    displayShadowDebug: true,
+    displayShadowDebug: false,
     display: false
   });
-/*
+
   var lightTrManip = scene.constructNode('3AxisTranslationManipulator', { parentNode: spotLightNode.getTransformNode(), size: 4 });
   var lightOriManip = scene.constructNode('3AxisRotationManipulator', { parentNode: spotLightNode.getTransformNode(), radius: 3 });
-*/
+
   var bluePhongMaterial = scene.constructNode('PhongMaterial', {
     diffuseColor: FABRIC.RT.rgb(0, 0, 0.8),
     lightNode: spotLightNode

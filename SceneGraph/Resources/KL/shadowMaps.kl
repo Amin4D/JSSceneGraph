@@ -37,11 +37,12 @@ operator calcLightProjectionMatricies(
 }
 
 operator bindShadowMapBuffer(
-  io Size textureIndex,
+  io Size textureUnit,
   io OGLRenderTarget depthRenderTarget
 ) {
-  glActiveTexture(GL_TEXTURE0 + textureIndex);
   Integer depthTextureID = depthRenderTarget.textures[depthRenderTarget.depthBuffer].texture.bufferID;
+  report("bindShadowMapBuffer textureUnit:"+textureUnit+" depthTextureID:"+ depthTextureID);
+  glActiveTexture(GL_TEXTURE0 + textureUnit);
   glBindTexture(GL_TEXTURE_2D, depthTextureID);
 }
 

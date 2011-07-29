@@ -43,7 +43,7 @@ FABRIC.RT.OGLRenderTarget = function(width, height, textures, options) {
   this.clearDepth = true;
   this.clearColorFlag = true;
   this.clearColor = (options && options.clearColor) ? options.clearColor : FABRIC.RT.rgba();
-  this.enableOptions = (options && options.enableOptions) ? options.enableOptions : 0;
+  this.enableOptions = (options && options.enableOptions) ? options.enableOptions : [];
   this.cullFace = (options && options.cullFace) ? options.cullFace : 0;
   // Here we define some constants that are used to define the type
   // of buffer. We need a way of defining constants in KL.
@@ -65,7 +65,7 @@ FABRIC.appendOnCreateContextCallback(function(context) {
       clearDepth: 'Boolean',
       clearColorFlag: 'Boolean',
       clearColor: 'Color',
-      enableOptions: 'Size',
+      enableOptions: 'Size[]',
       cullFace: 'Size'
     },
     constructor: FABRIC.RT.OGLRenderTarget,
@@ -77,10 +77,25 @@ FABRIC.RT.oglDepthRenderTarget = function(size){
   return new FABRIC.RT.OGLRenderTarget(
     size,
     size,
-    [new FABRIC.RT.OGLRenderTargetTextureDesc(1,FABRIC.RT.oglDepthBuffer2D())],
+    [
+      new FABRIC.RT.OGLRenderTargetTextureDesc(
+        1,
+        new FABRIC.RT.OGLTexture2D(
+          FABRIC.SceneGraph.OpenGLConstants.GL_DEPTH_COMPONENT,
+          FABRIC.SceneGraph.OpenGLConstants.GL_DEPTH_COMPONENT,
+          FABRIC.SceneGraph.OpenGLConstants.GL_FLOAT)
+      ),
+      new FABRIC.RT.OGLRenderTargetTextureDesc(
+        2,
+        new FABRIC.RT.OGLTexture2D(
+          FABRIC.SceneGraph.OpenGLConstants.GL_RGBA8,
+          FABRIC.SceneGraph.OpenGLConstants.GL_RGBA,
+          FABRIC.SceneGraph.OpenGLConstants.GL_UNSIGNED_BYTE)
+      )
+    ],
     {
-      enableOptions:(FABRIC.SceneGraph.OpenGLConstants.GL_DEPTH_TEST |
-                     FABRIC.SceneGraph.OpenGLConstants.GL_CULL_FACE),
+      enableOptions:[FABRIC.SceneGraph.OpenGLConstants.GL_DEPTH_TEST,
+                     FABRIC.SceneGraph.OpenGLConstants.GL_CULL_FACE],
       cullFace:FABRIC.SceneGraph.OpenGLConstants.GL_FRONT
     }
   )

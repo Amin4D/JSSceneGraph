@@ -6,6 +6,7 @@
 
 
 function OGLRenderTarget.genTextures() {
+  report("OGLTexture2D.genTextures width:" + self.width + " height:" + self.height);
 
   Integer i, maxColorBuffers;
 //  glGetIntegerv(GL_MAX_COLOR_ATTACHMENTS, maxColorBuffers);
@@ -35,6 +36,7 @@ function OGLRenderTarget.genTextures() {
     switch(self.textures[i].type){
       case 1://self.DEPTH_BUFFER:
         {
+          report("DEPTH_BUFFER");
           if(self.depthBuffer != -1){
             report( "Creating 2 or more depth buffers is not possible!");
             break;
@@ -48,7 +50,7 @@ function OGLRenderTarget.genTextures() {
             break;
           }
           
-          self.textures[i].texture.getTexture(self.width, self.height);
+          self.textures[i].texture.genTexture(self.width, self.height);
           if(self.textures[i].texture.bufferID==0){
             report("Error generating texture");
             break;
@@ -62,8 +64,9 @@ function OGLRenderTarget.genTextures() {
         break;
       case 2://self.COLOR_BUFFER:
         {
+          report("COLOR_BUFFER");
           
-          self.textures[i].texture.getTexture(self.width, self.height);
+          self.textures[i].texture.genTexture(self.width, self.height);
           if(self.textures[i].texture.bufferID==0){
             report("Error generating texture");
             continue;
@@ -82,37 +85,30 @@ function OGLRenderTarget.genTextures() {
     glDrawBuffer(GL_NONE);
     glReadBuffer(GL_NONE);
   }
-  /*
+  
   var Integer status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
   if (status != GL_FRAMEBUFFER_COMPLETE){
     switch(status){
       case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT:
-        report( "Error: incomplete attachment");
+        report( "ERROR: incomplete attachment");
         break;
       case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:
-        report( "Error: missing attachment");
-        break;
-      case GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS:
-        report( "Error: dimensions of rendertarget errorness");
-        break;
-      case GL_FRAMEBUFFER_INCOMPLETE_FORMATS:
-        report( "Error: errorness format");
+        report( "ERROR: missing attachment");
         break;
       case GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER:
-        report( "Error: missing draw buffer");
+        report( "ERROR: missing draw buffer");
         break;
       case GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER:
-        report( "Error: missing read buffer");
+        report( "ERROR: missing read buffer");
         break;
       case GL_FRAMEBUFFER_UNSUPPORTED:
-        report( "Error: rendertarget not supported");
+        report( "ERROR: rendertarget not supported");
         break;
       default:
-        report( "Error: unkown error");
+        report( "ERROR: unkown error");
         break;
     }
   }
-*/
 }
   
 function OGLRenderTarget.prebind(
@@ -146,6 +142,7 @@ function OGLRenderTarget.prebind(
 }
 
 function OGLRenderTarget.bind() {
+  report("OGLRenderTarget.bind()");
   if(self.fbo==0){
     self.genTextures();
   }
@@ -158,7 +155,6 @@ function OGLRenderTarget.bind() {
   
   glPushAttrib(GL_VIEWPORT_BIT);
   glViewport(0,0, self.width, self.height);
-  
   
   Size options = 0;
   if(self.clearDepth){
@@ -177,17 +173,29 @@ function OGLRenderTarget.bind() {
     glReadBuffer(GL_NONE);
   }
   
-  glEnable(self.enableOptions);
+  report("OGLRenderTarget.bind()>>>>>>>>>>>>");
+  
+  report("self.enableOptions" + self.enableOptions);
+  
+  for(Integer i=0; i<self.enableOptions.size(); i++){
+    glEnable(self.enableOptions[i]);
+  }
+  glEnable(GL_DEPTH_TEST);
+  glEnable(GL_CULL_FACE);
+  
   glCullFace(self.cullFace);
+  report("OGLRenderTarget.bind()<<<");
 }
 
 function OGLRenderTarget.unbind() {
+  report("OGLRenderTarget.unbind():" + self.prevFbo);
   if(self.fbo==0){
     report("Error: FBO not generated");
   }
   // restore the OpenGL state
   glPopAttrib();
-  glBindFramebuffer(GL_FRAMEBUFFER, self.prevFbo);		
+  glBindFramebuffer(GL_FRAMEBUFFER, self.prevFbo);
+  report("OGLRenderTarget.unbind()<<<");
 }
 
 function OGLRenderTarget.draw() {

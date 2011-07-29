@@ -329,20 +329,7 @@ FABRIC.SceneGraph.registerNodeType('SpotLight', {
         this.constructShadowRenderEventHandler();
       
         redrawEventHandler.addMember('shadowMap', 'Size', 0);
-        /*
-        if(options.displayShadowDebug === true){
-          // Display the shadow color map on screen.
-          redrawEventHandler.preDescendBindings.append(
-            scene.constructOperator({
-                operatorName:"debugShadowMapBuffer",
-                srcFile:"FABRIC_ROOT/SceneGraph/Resources/KL/shadowMaps.kl",
-                entryFunctionName:"debugShadowMapBuffer",
-                parameterBinding:[
-                  'light.colorTextureID'
-                ]
-              }));
-        }
-        */
+
         redrawEventHandler.preDescendBindings.append(
           scene.constructOperator({
               operatorName: 'loadLightMatrixUniform',
@@ -362,7 +349,6 @@ FABRIC.SceneGraph.registerNodeType('SpotLight', {
                 'camera.cameraMat44'
               ]
             }));
-
         redrawEventHandler.preDescendBindings.append(
           scene.constructOperator({
               operatorName: 'bindShadowMapBufferOp',
@@ -373,7 +359,6 @@ FABRIC.SceneGraph.registerNodeType('SpotLight', {
                 'light.depthRenderTarget'
               ]
             }));
-
      }
 
       redrawEventHandlerConfigured = true;
@@ -416,7 +401,6 @@ FABRIC.SceneGraph.registerNodeType('SpotLight', {
             'light.depthRenderTarget'
           ]
         }));
-
       shadowRenderEventHandler.postDescendBindings.append(scene.constructOperator({
           operatorName: 'unbindDepthRenderTarget',
           srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/renderTarget.kl',
@@ -425,24 +409,23 @@ FABRIC.SceneGraph.registerNodeType('SpotLight', {
             'light.depthRenderTarget'
           ]
         }));
-      
-      
-        if(options.displayShadowDebug === true){
-          // Display the shadow color map on screen.
-          var shadowDebugRenderEventHandler = spotLightNode.constructEventHandlerNode('renderDebugQuad');
-          scene.getScenePostRedrawEventHandler().appendChildEventHandler(shadowDebugRenderEventHandler);
-          shadowDebugRenderEventHandler.addScope('light', dgnode);
-          shadowDebugRenderEventHandler.preDescendBindings.append(
-            scene.constructOperator({
-                operatorName:"debugShadowMapBuffer",
-                srcFile:"FABRIC_ROOT/SceneGraph/Resources/KL/shadowMaps.kl",
-                entryFunctionName:"debugShadowMapBuffer",
-                parameterBinding:[
-                  'light.colorTextureID'
-                ]
-              }));
-        }
-
+      /*
+      if(options.displayShadowDebug === true){
+        // Display the shadow color map on screen.
+        var shadowDebugRenderEventHandler = spotLightNode.constructEventHandlerNode('renderDebugQuad');
+        scene.getScenePostRedrawEventHandler().appendChildEventHandler(shadowDebugRenderEventHandler);
+        shadowDebugRenderEventHandler.addScope('light', dgnode);
+        shadowDebugRenderEventHandler.preDescendBindings.append(
+          scene.constructOperator({
+              operatorName:"debugShadowMapBuffer",
+              srcFile:"FABRIC_ROOT/SceneGraph/Resources/KL/shadowMaps.kl",
+              entryFunctionName:"debugShadowMapBuffer",
+              parameterBinding:[
+                'light.colorTextureID'
+              ]
+            }));
+      }
+*/
       scene.registerShadowCastingLightSourceHandler(shadowRenderEventHandler);
     }
     

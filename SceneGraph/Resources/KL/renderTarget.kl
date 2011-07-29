@@ -1,0 +1,39 @@
+
+//
+// Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
+//
+
+operator bindRenderTarget(
+  io OGLRenderTarget renderTarget
+) {
+//  report("bindRenderTarget");
+  renderTarget.bind();
+}
+
+operator bindScreenRenderTarget(
+  io Integer width,
+  io Integer height,
+  io OGLRenderTarget renderTarget
+) {
+//  report("bindRenderTarget");
+  renderTarget.prebind(width, height);
+  renderTarget.bind();
+}
+
+operator unbindRenderTarget(
+  io OGLRenderTarget renderTarget
+) {
+//  report("unbindRenderTarget");
+  renderTarget.unbind();
+}
+
+
+operator drawRenderTargetToView(
+  io Integer width,
+  io Integer height,
+  io OGLRenderTarget renderTarget
+) {
+  renderTarget.draw();
+//  report("<<<renderOffscreenToView");
+}
+

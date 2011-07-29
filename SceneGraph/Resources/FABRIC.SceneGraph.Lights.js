@@ -370,7 +370,7 @@ FABRIC.SceneGraph.registerNodeType('SpotLight', {
               entryFunctionName: 'bindShadowMapBuffer',
               parameterBinding: [
                 'self.shadowMap',
-                'light.depthTextureID'
+                'light.depthRenderTarget'
               ]
             }));
 
@@ -389,13 +389,8 @@ FABRIC.SceneGraph.registerNodeType('SpotLight', {
       dgnode.addMember('farDistance', 'Scalar', options.farDistance);
       dgnode.addMember('projectionMat44', 'Mat44');
       dgnode.addMember('shadowMat44', 'Mat44');
-
-      dgnode.addMember('shadowmapsize', 'Integer', options.resolution);
-      dgnode.addMember('shadowFBO', 'Integer', 0);
-      dgnode.addMember('prevFBO', 'Integer', 0);
-      dgnode.addMember('depthTextureID', 'Size', 0);
-      dgnode.addMember('colorTextureID', 'Size', 0);
-
+      dgnode.addMember('depthRenderTarget', 'OGLRenderTarget', FABRIC.RT.oglDepthRenderTarget(options.resolution));
+      
       dgnode.bindings.append(scene.constructOperator({
           operatorName: 'calcLightProjectionMatricies',
           srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/shadowMaps.kl',
@@ -414,24 +409,20 @@ FABRIC.SceneGraph.registerNodeType('SpotLight', {
       shadowRenderEventHandler.addScope('camera', dgnode);
 
       shadowRenderEventHandler.preDescendBindings.append(scene.constructOperator({
-          operatorName: 'genAndBindShadowMapFBO',
-          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/shadowMaps.kl',
-          entryFunctionName: 'genAndBindShadowMapFBO',
+          operatorName: 'bindDepthRenderTarget',
+          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/renderTarget.kl',
+          entryFunctionName: 'bindRenderTarget',
           parameterBinding: [
-            'light.shadowFBO',
-            'light.prevFBO',
-            'light.depthTextureID',
-            'light.colorTextureID',
-            'light.shadowmapsize'
+            'light.depthRenderTarget'
           ]
         }));
 
       shadowRenderEventHandler.postDescendBindings.append(scene.constructOperator({
-          operatorName: 'unbindFBO',
-          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/shadowMaps.kl',
-          entryFunctionName: 'unbindFBO',
+          operatorName: 'unbindDepthRenderTarget',
+          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/renderTarget.kl',
+          entryFunctionName: 'unbindRenderTarget',
           parameterBinding: [
-            'light.prevFBO'
+            'light.depthRenderTarget'
           ]
         }));
       

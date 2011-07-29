@@ -3,7 +3,6 @@
 // Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
 //
 
-#include 'FABRIC_ROOT/SceneGraph/Resources/KL/loadShader.kl'
 
 function Mat44 symmetricFrustum(Scalar r, Scalar t, Scalar n, Scalar f) {
   var Mat44 result(
@@ -37,125 +36,19 @@ operator calcLightProjectionMatricies(
   shadowMat = lightInvMat * lightProjectionMat * biasMat;
 }
 
-function createDepthMap(io Integer textureId, io Integer mapsize) {
-
-}
-
-function createFBO(io Integer fboId, io Integer textureId) {
-
-}
-
-operator genAndBindShadowMapFBO(
-  io Integer shadowFBO,
-  io Integer prevFBO,
-  io Size depthTextureID,
-  io Size colorTextureID,
-  io Integer mapsize
-) {
-  //  report("genAndBindShadowMapFBO");
-  Integer prevFBOs[];
-  prevFBOs.resize(1);
-  glGetIntegerv(GL_FRAMEBUFFER_BINDING, prevFBOs);
-  prevFBO = prevFBOs[0];
-
-  if (depthTextureID == 0) {
-
-    var Data NULL;
-    glEnable(GL_TEXTURE_2D);
-    
-    Size textureIDs[];
-    textureIDs.resize(1);
-    glGenTextures(1, textureIDs);
-    
-    /////////////////////////////////////////////////////
-    // Depth Texture
-    depthTextureID = textureIDs[0];
-    glBindTexture(GL_TEXTURE_2D, depthTextureID);
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_R_TO_TEXTURE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
-    glTexParameteri(GL_TEXTURE_2D, GL_DEPTH_TEXTURE_MODE, GL_INTENSITY);
-
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, mapsize, mapsize, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
-
-    /////////////////////////////////////////////////////
-    // Color Texture
-    glGenTextures(1, textureIDs);
-    colorTextureID = textureIDs[0];
-    
-    glBindTexture(GL_TEXTURE_2D, colorTextureID);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    //NULL means reserve texture memory, but texels are undefined
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, mapsize, mapsize, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-
-    /////////////////////////////////////////////////////
-    // create a framebuffer object
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    Size shadowFBOs[];
-    shadowFBOs.resize(1);
-    glGenFramebuffers(1, shadowFBOs);
-    shadowFBO = shadowFBOs[0];
-    glBindFramebuffer(GL_FRAMEBUFFER, shadowFBO);
-
-    // attach the texture to FBO depth attachment point
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, colorTextureID, 0);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthTextureID, 0);
-
-    // check FBO status
-    var Integer status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-    if (status != GL_FRAMEBUFFER_COMPLETE)
-      report('GL_FRAMEBUFFER_COMPLETE failed, CANNOT use FBO\n');
-  }
-
-  //First step: Render from the light POV to a FBO, store depth values only
-  glBindFramebuffer(GL_FRAMEBUFFER, shadowFBO); //Rendering offscreen
-  
-  // TODO: Check these Attrib sets. Do we need them all?
-  glPushAttrib(GL_DEPTH_BUFFER_BIT | GL_VIEWPORT_BIT | GL_TEXTURE_BIT);
-
-  // In the case we render the shadowmap to a higher resolution, the viewport must be modified accordingly.
-  glViewport(0, 0, mapsize, mapsize);
-
-  // Clear previous frame values
-  glClearColor(0.0, 0.0, 0.0, 1.0);
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-  glEnable(GL_DEPTH_TEST);
-  glEnable(GL_CULL_FACE);
-  // Culling switching, rendering only backface, this is done to avoid self-shadowing
-  glCullFace(GL_FRONT);
-
-}
-
-operator unbindFBO(
-  io Integer prevFBO,
-) {
-  //  report("unbindFBO");
-
-  // unbind FBO
-  glBindFramebuffer(GL_FRAMEBUFFER, prevFBO);
-  // restore the OpenGL state
-  glPopAttrib();
-}
-
 operator bindShadowMapBuffer(
   io Size textureIndex,
-  io Size depthTextureID
+  io OGLRenderTarget depthRenderTarget
 ) {
   glActiveTexture(GL_TEXTURE0 + textureIndex);
+  Integer depthTextureID = depthRenderTarget.textures[depthRenderTarget.depthBuffer].texture.bufferID;
   glBindTexture(GL_TEXTURE_2D, depthTextureID);
 }
 
 operator debugShadowMapBuffer(
   io Size colorTextureID
 ) {
+/*
   // report( "debugBuffer" );
   // Create a simple shader for drawing
 
@@ -164,7 +57,7 @@ operator debugShadowMapBuffer(
   glDisable(GL_DEPTH_TEST);
   glDisable(GL_CULL_FACE);
 
-  ShaderSource vertexShader;
+  OGLShaderSource vertexShader;
   vertexShader.type = GL_VERTEX_SHADER;
   vertexShader.code = " \
     attribute vec4 a_position; \
@@ -175,7 +68,7 @@ operator debugShadowMapBuffer(
     } \
     ";
 
-  ShaderSource fragmentShader;
+  OGLShaderSource fragmentShader;
   fragmentShader.type = GL_FRAGMENT_SHADER;
   fragmentShader.code = " \
     uniform sampler2D u_sampler0; \
@@ -253,4 +146,5 @@ operator debugShadowMapBuffer(
   glDeleteBuffers(3, bufferID);
   
   glPopAttrib();
+  */
 }

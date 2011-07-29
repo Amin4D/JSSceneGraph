@@ -3,42 +3,22 @@
 // Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
 //
 
-function OGLRenderTargetTextureDesc(Size type, OGLTexture2D texture) {
-  self.type = type;
-  self.texture = texture;
-}
 
 
-function RenderTarget(
-  Size width,
-  Size heigth,
-  OGLRenderTargetTextureDesc textureDescs[]
-){
-  self.width = width;
-  self.height = heigth;
-  self.textureDescs = textureDescs;
-  self.fbo = 0;
-  self.depthBuffer = -1;
-  self.hasDepthBufferTexture = false;
-  self.numColorBuffers = 0;
-  self.clearDepth = true;
-  self.clearColor = true;
-}
+function OGLRenderTarget.genTextures() {
 
-function RenderTarget.genTextures() {
   Integer i, maxColorBuffers;
-  glGetIntegerv(GL_MAX_COLOR_ATTACHMENTS, maxColorBuffers);
-  self.numColorBuffers = 0;
-  for(i=0; i<this.textureDescs.size(); i++){
-    if(this.textureDescs[i].type == COLOR_BUFFER)
-      self.numColorBuffers++;
-  }
+//  glGetIntegerv(GL_MAX_COLOR_ATTACHMENTS, maxColorBuffers);
+//  self.numColorBuffers = 0;
+//  for(i=0; i<self.textures.size(); i++){
+//    if(self.textures[i].type == COLOR_BUFFER)
+//      self.numColorBuffers++;
+//  }
   
   if(maxColorBuffers < self.numColorBuffers){
     report("Your OpenGL implementation supports only " + maxColorBuffers + " but " + self.numColorBuffers + " are needed");
     return;
   }
-  
   //Create Frame Buffer Object
   Size fbos[];
   fbos.resize(1);
@@ -51,9 +31,9 @@ function RenderTarget.genTextures() {
   Size textureIDs[];
   textureIDs.resize(1);
   
-  for(i=0; i<this.textureDescs.size(); i++){
-    switch(this.textureDescs[i].type){
-      case DEPTH_BUFFER:
+  for(i=0; i<self.textures.size(); i++){
+    switch(self.textures[i].type){
+      case 1://self.DEPTH_BUFFER:
         {
           if(self.depthBuffer != -1){
             report( "Creating 2 or more depth buffers is not possible!");
@@ -63,32 +43,32 @@ function RenderTarget.genTextures() {
             report( "A depth buffer texture has already been created, can not create another depth texture");
             break;
           }
-          if(this.textureDescs[i].texture.glInternalFormat != GL_DEPTH_COMPONENT){
+          if(self.textures[i].texture.glInternalFormat != GL_DEPTH_COMPONENT){
             report( "A Depth Buffer must impliment a GL_DEPTH_COMPONENT internal format.");
             break;
           }
           
-          this.textureDescs[i].texture.getTexture(this.width, this.height);
-          if(this.textureDescs[i].texture.bufferID==0){
+          self.textures[i].texture.getTexture(self.width, self.height);
+          if(self.textures[i].texture.bufferID==0){
             report("Error generating texture");
             break;
           }
           
-          glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, this.textureDescs[i].texture.bufferID, 0);
+          glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, self.textures[i].texture.bufferID, 0);
           
           self.depthBuffer = i;
           self.hasDepthBufferTexture = true;
         }
         break;
-      case COLOR_BUFFER:
+      case 2://self.COLOR_BUFFER:
         {
           
-          this.textureDescs[i].texture.getTexture(this.width, this.height);
-          if(this.textureDescs[i].texture.bufferID==0){
+          self.textures[i].texture.getTexture(self.width, self.height);
+          if(self.textures[i].texture.bufferID==0){
             report("Error generating texture");
             continue;
           }
-          glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0+self.numColorBuffers, GL_TEXTURE_2D, this.textureDescs[i].texture.bufferID, 0);
+          glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0+self.numColorBuffers, GL_TEXTURE_2D, self.textures[i].texture.bufferID, 0);
           
           self.numColorBuffers++;
         }
@@ -96,12 +76,13 @@ function RenderTarget.genTextures() {
     }
   }
 
+  
   //Depth buffer only
   if(self.numColorBuffers <= 0){
     glDrawBuffer(GL_NONE);
     glReadBuffer(GL_NONE);
   }
-  
+  /*
   var Integer status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
   if (status != GL_FRAMEBUFFER_COMPLETE){
     switch(status){
@@ -131,23 +112,62 @@ function RenderTarget.genTextures() {
         break;
     }
   }
-
+*/
 }
   
+function OGLRenderTarget.prebind(
+  Integer currWidth,
+  Integer currHeight
+) {
+  if(self.fbo > 0){
+    if (self.width != currWidth || self.height != currHeight) {
+    
+      Size numTextures = (self.hasDepthBufferTexture ? 1 : 0) + self.numColorBuffers;
+      Size bufferIDs[];
+      bufferIDs.resize(numTextures);
+      
+      for(Integer i=0; i<self.textures.size(); i++){
+        bufferIDs[i] = self.textures[i].texture.bufferID;
+        self.textures[i].texture.bufferID = 0;
+      }
+      // Textures need to be deleted first.;
+      glDeleteTextures(numTextures, bufferIDs);
 
-function RenderTarget.bind() {
+      glBindFramebuffer(GL_FRAMEBUFFER, 0);
+      bufferIDs.resize(1);
+      bufferIDs[0] = self.fbo;
+      glDeleteFramebuffers(1, bufferIDs);
+
+      self.fbo = 0;
+      self.depthBuffer = -1;
+      self.hasDepthBufferTexture = false;
+    }
+  }
+}
+
+function OGLRenderTarget.bind() {
   if(self.fbo==0){
     self.genTextures();
   }
+  Integer prevFbos[];
+  prevFbos.resize(1);
+  glGetIntegerv(GL_FRAMEBUFFER_BINDING, prevFbos);
+  self.prevFbo = prevFbos[0];
   
-  glBindFramebuffer(GL_FRAMEBUFFER this.fbo);
+  glBindFramebuffer(GL_FRAMEBUFFER, self.fbo);
+  
   glPushAttrib(GL_VIEWPORT_BIT);
   glViewport(0,0, self.width, self.height);
+  
+  
   Size options = 0;
-  if(self.clearDepth)
-    options |= GL_DEPTH_BUFFER_BIT;
-  if(self.numColorBuffers > 0 && this.clearColor)
-    options |= GL_COLOR_BUFFER_BIT;
+  if(self.clearDepth){
+    options = options | GL_DEPTH_BUFFER_BIT;
+  }
+  if(self.numColorBuffers > 0 && self.clearColorFlag){
+    options = options | GL_COLOR_BUFFER_BIT;
+    glClearColor(self.clearColor.r, self.clearColor.g, self.clearColor.b, 1.0);
+  }
   glClear(options);
   
   // Note: I'mnot sure if I need to do this every frame
@@ -156,13 +176,25 @@ function RenderTarget.bind() {
     glDrawBuffer(GL_NONE);
     glReadBuffer(GL_NONE);
   }
+  
+  glEnable(self.enableOptions);
+  glCullFace(self.cullFace);
 }
 
-function RenderTarget.unbind() {
+function OGLRenderTarget.unbind() {
   if(self.fbo==0){
     report("Error: FBO not generated");
   }
-
+  // restore the OpenGL state
   glPopAttrib();
-  glBindFramebuffer(GL_FRAMEBUFFER, 0);		
+  glBindFramebuffer(GL_FRAMEBUFFER, self.prevFbo);		
+}
+
+function OGLRenderTarget.draw() {
+  if(self.fbo==0){
+    report("Error: FBO not generated");
+  }
+  // restore the OpenGL state
+  glPopAttrib();
+  glBindFramebuffer(GL_FRAMEBUFFER, self.prevFbo);		
 }

@@ -860,6 +860,7 @@ FABRIC.SceneGraph.registerNodeType('Instance', {
       resourceloaddgnode.bindings.append(scene.constructOperator({
         operatorName: 'loadObj',
         parameterBinding: [
+          'self.url', //For debugging only
           'self.resource',
           'self.handle'
         ],
@@ -896,7 +897,15 @@ FABRIC.SceneGraph.registerNodeType('Instance', {
 
       trianglesNode.pub.getResourceLoadNode = function() {
         return resourceLoadNode;
-      }
+      };
+
+      trianglesNode.pub.getUniformsDGNode = function() {
+        return trianglesNode.getUniformsDGNode();
+      };
+
+      trianglesNode.pub.getAttributesDGNode = function() {
+        return trianglesNode.getAttributesDGNode();
+      };
 
       return trianglesNode;
     }

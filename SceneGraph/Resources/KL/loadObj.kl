@@ -4,11 +4,22 @@
 //
 
 operator loadObj(
+  io String url,
   io FabricResource resource,
   io Data objParseHandle
 ) {
+  report "OBJ decode" + url;
   FabricOBJDecode(resource.data, resource.dataSize, objParseHandle);
-  report "OBJ decode";
+
+  Boolean hadErrors;
+  FabricOBJHadErrors( objParseHandle, hadErrors );
+  if( hadErrors )
+  {
+    String errors[];
+    FabricOBJGetErrors( objParseHandle, errors );
+    for( Integer i = 0; i < errors.size; i++ )
+      report 'Error while parsing obj file ' + url + ': ' + errors[i];
+  }
 }
 
 operator setObjVertexCount(
@@ -30,5 +41,11 @@ operator setObjGeom(
   FabricOBJGetTriangleIndices( objParseHandle, indices );
   FabricOBJGetPoints( objParseHandle, positions );
   FabricOBJGetNormals( objParseHandle, normals );
-  FabricOBJGetTextureCoords( objParseHandle, uvs );
+
+  Boolean hasTexture = false;
+  FabricOBJHasTextureCoords( objParseHandle, hasTexture );
+  if( hasTexture )
+  {
+    FabricOBJGetTextureCoords( objParseHandle, uvs );
+  }
 }

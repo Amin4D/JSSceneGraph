@@ -30,7 +30,6 @@ FABRIC.SceneGraph.registerNodeType('Image', {
     var imageLoaded = false,
       redrawEventHandler,
       ext = options.url ? options.url.substr(options.url.lastIndexOf('.') + 1) : undefined,
-      url,
       dgnode,
       resourceLoadNode,
       resourceloaddgnode;
@@ -95,7 +94,7 @@ FABRIC.SceneGraph.registerNodeType('Image', {
     }
 
     imageNode.getURL = function() {
-      return url;
+      return resourceLoadNode ? resourceLoadNode.pub.getUrl() : '';
     };
 
     return imageNode;

@@ -1,0 +1,14 @@
+
+//
+// Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
+//
+
+operator loadObj(
+  io FabricResource resource,
+  io Data objParseHandle
+) {
+  FabricOBJDecode(resource.data, resource.dataSize, objParseHandle);
+  Size nbPoints;
+  FabricOBJGetNbPoints(objParseHandle, nbPoints);
+  report "OBJ nbPoints: " + nbPoints;
+}

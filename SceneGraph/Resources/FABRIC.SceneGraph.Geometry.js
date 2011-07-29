@@ -3,7 +3,6 @@
 // Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
 //
 
-
 FABRIC.SceneGraph.registerNodeType('Geometry', {
   factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
@@ -441,6 +440,47 @@ FABRIC.SceneGraph.registerNodeType('Geometry', {
 
     return geometryNode;
   }});
+
+  FABRIC.SceneGraph.registerNodeType('ObjLoad', {
+    factoryFn: function(options, scene) {
+      scene.assignDefaults(options, {
+        createGeometryNode: true
+      });
+
+      alert('Obj load BEGIN');
+
+      var resourceLoadNode,
+      resourceloaddgnode;
+
+      resourceLoadNode = scene.constructNode('ResourceLoad', options);
+      resourceloaddgnode = resourceLoadNode.getDGLoadNode();
+
+      resourceloaddgnode.addMember('handle', 'Data');
+
+      resourceloaddgnode.bindings.append(scene.constructOperator({
+        operatorName: 'loadObj',
+        parameterBinding: [
+            'self.resource',
+            'self.handle'
+          ],
+        entryFunctionName: 'loadObj',
+        srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadObj.kl'
+      }));
+
+      //JCGTemp!!
+      resourceloaddgnode.evaluate();
+
+      resourceLoadNode.pub.addOnLoadCallback(function() {
+        alert('Obj load CALLBACK');
+        resourceloaddgnode.evaluate();
+      });
+
+      alert('Obj load END');
+
+      return resourceLoadNode;
+    }
+  });
+
 
 FABRIC.SceneGraph.registerNodeType('Points', {
   factoryFn: function(options, scene) {

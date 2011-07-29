@@ -3,20 +3,16 @@
 // Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
 //
 
-function RenderTargetTextureDesc(Size type, Size format) {
+function OGLRenderTargetTextureDesc(Size type, OGLTexture2D texture) {
   self.type = type;
-  self.format = format;
-  self.id = 0;
+  self.texture = texture;
 }
 
-function Integer RenderTargetTextureDesc.getId(){
-  return self.id;
-}
 
 function RenderTarget(
   Size width,
   Size heigth,
-  RenderTargetTextureDesc textureDescs[]
+  OGLRenderTargetTextureDesc textureDescs[]
 ){
   self.width = width;
   self.height = heigth;
@@ -28,128 +24,122 @@ function RenderTarget(
   self.clearDepth = true;
   self.clearColor = true;
 }
-/*
-function RenderTarget.bind() {
-  if(self.fbo==0){
-  
-    Integer i, maxColorBuffers;
-    glGetIntegerv(GL_MAX_COLOR_ATTACHMENTS, maxColorBuffers);
-    self.numColorBuffers = 0;
-    for(i=0; i<this.textureDescs.size(); i++){
-      if(this.textureDescs[i].type == COLOR_BUFFER)
-        self.numColorBuffers++;
-    }
-    
-    if(maxColorBuffers < self.numColorBuffers){
-      report("Your OpenGL implementation supports only " + maxColorBuffers + " but " + self.numColorBuffers + " are needed");
-      return;
-    }
-    
-    //Create Frame Buffer Object
-    Size fbos[];
-    fbos.resize(1);
-    glGenFramebuffers(1, fbos);
-    self.fbo = fbos[0];
-    
-    glBindFramebuffer(GL_FRAMEBUFFER, self.fbo);
-    
-    self.numColorBuffers = 0;
-    Size textureIDs[];
-    textureIDs.resize(1);
-    
-    for(i=0; i<this.textureDescs.size(); i++){
-      switch(this.textureDescs[i].type){
-        case DEPTH_BUFFER:
-          {
-            if(self.depthBuffer != -1){
-              report( "Creating 2 or more depth buffers is not possible!");
-              return;
-            }
-            if(self.hasDepthBufferTexture){
-              report( "A depth buffer texture has already been created, can not create another depth texture");
-              return;
-            }
-            
-            glGenTextures(1, textureIDs);
-            Integer depthTextureID = textureIDs[0];
-            glBindTexture(GL_TEXTURE_2D, depthTextureID);
 
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-            glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-            glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_R_TO_TEXTURE);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
-            glTexParameteri(GL_TEXTURE_2D, GL_DEPTH_TEXTURE_MODE, GL_INTENSITY);
-        
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, width, height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
-            
-            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthTextureID, 0);
-            
-            this.textureDescs[i].id = depthTextureID;
-            self.depthBuffer = i;
-          }
-          break;
-        case COLOR_BUFFER:
-          {
-            glGenTextures(1, textureIDs);
-            colorTextureID = textureIDs[0];
-            glBindTexture(GL_TEXTURE_2D, colorTextureID);
-            
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-            
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0+self.numColorBuffers, GL_TEXTURE_2D, colorTextureID, 0);
-            
-            this.textureDescs[i].id = colorTextureID;
-            self.numColorBuffers++;
-          }
-          break;
-      }
-    }
-
-    //Depth buffer only
-    if(self.numColorBuffers <= 0){
-      glDrawBuffer(GL_NONE);
-      glReadBuffer(GL_NONE);
-    }
-    
-    var Integer status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-    if (status != GL_FRAMEBUFFER_COMPLETE){
-      switch(status){
-        case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT:
-          report( "Error: incomplete attachment");
-          break;
-        case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:
-          report( "Error: missing attachment");
-          break;
-        case GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS:
-          report( "Error: dimensions of rendertarget errorness");
-          break;
-        case GL_FRAMEBUFFER_INCOMPLETE_FORMATS:
-          report( "Error: errorness format");
-          break;
-        case GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER:
-          report( "Error: missing draw buffer");
-          break;
-        case GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER:
-          report( "Error: missing read buffer");
-          break;
-        case GL_FRAMEBUFFER_UNSUPPORTED:
-          report( "Error: rendertarget not supported");
-          break;
-        default:
-          report( "Error: unkown error");
-          break;
-      }
-    }
-  
+function RenderTarget.genTextures() {
+  Integer i, maxColorBuffers;
+  glGetIntegerv(GL_MAX_COLOR_ATTACHMENTS, maxColorBuffers);
+  self.numColorBuffers = 0;
+  for(i=0; i<this.textureDescs.size(); i++){
+    if(this.textureDescs[i].type == COLOR_BUFFER)
+      self.numColorBuffers++;
   }
   
+  if(maxColorBuffers < self.numColorBuffers){
+    report("Your OpenGL implementation supports only " + maxColorBuffers + " but " + self.numColorBuffers + " are needed");
+    return;
+  }
+  
+  //Create Frame Buffer Object
+  Size fbos[];
+  fbos.resize(1);
+  glGenFramebuffers(1, fbos);
+  self.fbo = fbos[0];
+  
+  glBindFramebuffer(GL_FRAMEBUFFER, self.fbo);
+  
+  self.numColorBuffers = 0;
+  Size textureIDs[];
+  textureIDs.resize(1);
+  
+  for(i=0; i<this.textureDescs.size(); i++){
+    switch(this.textureDescs[i].type){
+      case DEPTH_BUFFER:
+        {
+          if(self.depthBuffer != -1){
+            report( "Creating 2 or more depth buffers is not possible!");
+            break;
+          }
+          if(self.hasDepthBufferTexture){
+            report( "A depth buffer texture has already been created, can not create another depth texture");
+            break;
+          }
+          if(this.textureDescs[i].texture.glInternalFormat != GL_DEPTH_COMPONENT){
+            report( "A Depth Buffer must impliment a GL_DEPTH_COMPONENT internal format.");
+            break;
+          }
+          
+          this.textureDescs[i].texture.getTexture(this.width, this.height);
+          if(this.textureDescs[i].texture.bufferID==0){
+            report("Error generating texture");
+            break;
+          }
+          
+          glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, this.textureDescs[i].texture.bufferID, 0);
+          
+          self.depthBuffer = i;
+          self.hasDepthBufferTexture = true;
+        }
+        break;
+      case COLOR_BUFFER:
+        {
+          
+          this.textureDescs[i].texture.getTexture(this.width, this.height);
+          if(this.textureDescs[i].texture.bufferID==0){
+            report("Error generating texture");
+            continue;
+          }
+          glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0+self.numColorBuffers, GL_TEXTURE_2D, this.textureDescs[i].texture.bufferID, 0);
+          
+          self.numColorBuffers++;
+        }
+        break;
+    }
+  }
 
+  //Depth buffer only
+  if(self.numColorBuffers <= 0){
+    glDrawBuffer(GL_NONE);
+    glReadBuffer(GL_NONE);
+  }
+  
+  var Integer status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+  if (status != GL_FRAMEBUFFER_COMPLETE){
+    switch(status){
+      case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT:
+        report( "Error: incomplete attachment");
+        break;
+      case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:
+        report( "Error: missing attachment");
+        break;
+      case GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS:
+        report( "Error: dimensions of rendertarget errorness");
+        break;
+      case GL_FRAMEBUFFER_INCOMPLETE_FORMATS:
+        report( "Error: errorness format");
+        break;
+      case GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER:
+        report( "Error: missing draw buffer");
+        break;
+      case GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER:
+        report( "Error: missing read buffer");
+        break;
+      case GL_FRAMEBUFFER_UNSUPPORTED:
+        report( "Error: rendertarget not supported");
+        break;
+      default:
+        report( "Error: unkown error");
+        break;
+    }
+  }
+
+}
+  
+
+function RenderTarget.bind() {
+  if(self.fbo==0){
+    self.genTextures();
+  }
+  
   glBindFramebuffer(GL_FRAMEBUFFER this.fbo);
   glPushAttrib(GL_VIEWPORT_BIT);
   glViewport(0,0, self.width, self.height);
@@ -159,6 +149,13 @@ function RenderTarget.bind() {
   if(self.numColorBuffers > 0 && this.clearColor)
     options |= GL_COLOR_BUFFER_BIT;
   glClear(options);
+  
+  // Note: I'mnot sure if I need to do this every frame
+  //Depth buffer only
+  if(self.numColorBuffers <= 0){
+    glDrawBuffer(GL_NONE);
+    glReadBuffer(GL_NONE);
+  }
 }
 
 function RenderTarget.unbind() {
@@ -169,5 +166,3 @@ function RenderTarget.unbind() {
   glPopAttrib();
   glBindFramebuffer(GL_FRAMEBUFFER, 0);		
 }
-
-*/

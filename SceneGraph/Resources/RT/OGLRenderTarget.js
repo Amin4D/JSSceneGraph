@@ -2,38 +2,39 @@
 //
 // Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
 //
+
 /**
  * Constructor function to create a Ray object.
  * @constructor
  * @param {object} start A Vec3 defining the start of the ray.
  * @param {object} direction A Vec3 defining the direction of the ray.
  */
-FABRIC.RT.RenderTargetTextureDesc = function(type, format) {
+FABRIC.RT.OGLRenderTargetTextureDesc = function(type, texture) {
   this.type = type ? type : 0;
-  this.format = format ? format : 0;
-  this.id = 0;
+  this.texture = texture ? texture : 0;
 };
 
 FABRIC.appendOnCreateContextCallback(function(context) {
-  context.RegisteredTypesManager.registerType('RenderTargetTextureDesc', {
+  context.RegisteredTypesManager.registerType('OGLRenderTargetTextureDesc', {
     members: {
-      type: 'Size', format: 'Size', id: 'Size'
+      type: 'Size', texture: 'OGLTexture2D'
     },
-    constructor: FABRIC.RT.RenderTargetTextureDesc
+    constructor: FABRIC.RT.OGLRenderTargetTextureDesc
   });
 });
 
+ 
 
 /**
- * Constructor function to create a Ray object.
+ * Constructor function to create a OGLRenderTarget object.
  * @constructor
- * @param {object} start A Vec3 defining the start of the ray.
- * @param {object} direction A Vec3 defining the direction of the ray.
+ * @param {width} start A Vec3 defining the start of the ray.
+ * @param {height} direction A Vec3 defining the direction of the ray.
  */
-FABRIC.RT.OGLRenderTarget = function(width, height, textureDescs) {
+FABRIC.RT.OGLRenderTarget = function(width, height, textures) {
   this.width = width ? width : 0;
   this.height = height ? height : 0;
-  this.textureDescs = textureDescs ? textureDescs : [];
+  this.textures = textures ? textures : [];
   this.fbo = 0;
   this.depthBuffer = -1;
   this.hasDepthBufferTexture = false;
@@ -41,12 +42,16 @@ FABRIC.RT.OGLRenderTarget = function(width, height, textureDescs) {
   this.clearDepth = true;
   this.clearColor = FABRIC.RT.rgb();
   this.clearColorFlag = true;
+  // Here we define some constants that are used to define the type
+  // of buffer. We need a way of defining constants in KL.
+  this.DEPTH_BUFFER = 0;
+  this.COLOR_BUFFER = 1;
 };
 
 FABRIC.appendOnCreateContextCallback(function(context) {
   context.RegisteredTypesManager.registerType('RenderTarget', {
     members: {
-      textureDescs: 'RenderTargetTextureDesc[]',
+      textures: 'OGLTexture2D[]',
       width: 'Size',
       height: 'Size',
       fbo: 'Size',
@@ -56,8 +61,8 @@ FABRIC.appendOnCreateContextCallback(function(context) {
       clearDepth: 'Boolean',
       clearColor: 'Boolean'
     },
-    constructor: FABRIC.RT.RenderTarget,
-    kBindings: FABRIC.loadResourceURL('FABRIC_ROOT/SceneGraph/Resources/RT/RenderTarget.kl')
+    constructor: FABRIC.RT.OGLRenderTarget,
+    kBindings: FABRIC.loadResourceURL('FABRIC_ROOT/SceneGraph/Resources/RT/OGLRenderTarget.kl')
   });
 });
 

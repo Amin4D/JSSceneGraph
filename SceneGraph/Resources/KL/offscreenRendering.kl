@@ -2,7 +2,7 @@
 //
 // Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
 //
-
+/*
 operator prepareOffscreenRendering(
   io Integer width,
   io Integer height,
@@ -25,6 +25,7 @@ operator renderOffscreenToView(
   renderTarget.draw();
 //  report("<<<renderOffscreenToView");
 }
+*/
 
 operator renderTextureToView(
   io Integer textureUnit,
@@ -33,8 +34,8 @@ operator renderTextureToView(
   // report(">>>renderTextureToView");
 
   if (!program) {
-    ShaderSource pixelShader;
-    ShaderSource fragmentShader;
+    OGLShaderSource pixelShader;
+    OGLShaderSource fragmentShader;
     pixelShader.type = GL_VERTEX_SHADER;
     pixelShader.code = '\
       attribute vec4 a_position; \
@@ -51,18 +52,19 @@ operator renderTextureToView(
       { \
         gl_FragColor = texture2D( u_rgbaImage, gl_TexCoord[0].st ); \
       }';
-    ShaderSource shaders[];
-    shaders.push(pixelShader);
-    shaders.push(fragmentShader);
-    ShaderProgramParam programParams[];
-    program = fglCreateProgramFromShaders('renderTextureToView', shaders, programParams);
-    if (!program) {
+    
+    OGLShaderProgram shaderProgram('renderTextureToView');
+    shaderProgram.shaderSources.push(pixelShader);
+    shaderProgram.shaderSources.push(fragmentShader);
+    shaderProgram.loadShader();
+    if (!shaderProgram.programId) {
       report('Error in renderTextureToView');
       return;
     }
+    program = shaderProgram.programId;
+  }else{
+    glUseProgram(program);
   }
-
-  glUseProgram(program);
 
   var String name = 'a_position';
   var Integer posLocation = glGetAttribLocation(program, name);

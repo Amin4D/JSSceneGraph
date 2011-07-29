@@ -23,6 +23,13 @@ FABRIC.RT.oglTexture2D = function(){
     FABRIC.SceneGraph.OpenGLConstants.GL_UNSIGNED_BYTE);
 }
 
+FABRIC.RT.oglDepthBuffer2D = function(){
+  return new FABRIC.RT.OGLTexture2D(
+    FABRIC.SceneGraph.OpenGLConstants.GL_DEPTH_COMPONENT,
+    FABRIC.SceneGraph.OpenGLConstants.GL_DEPTH_COMPONENT,
+    FABRIC.SceneGraph.OpenGLConstants.GL_FLOAT);
+}
+
         
 FABRIC.appendOnCreateContextCallback(function(context) {
   context.RegisteredTypesManager.registerType('OGLTexture2D', {

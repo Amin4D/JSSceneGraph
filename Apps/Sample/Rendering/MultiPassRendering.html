@@ -55,9 +55,22 @@ FABRIC.SceneGraph.registerNodeType('ThickGlassMaterial', {
     var thickGlassMaterialPP = scene.constructNode('PostProcessEffect', {
       name: 'ThickGlassMaterialPP',
       parentEventHandler: scene.getSceneRedrawEventHandler(),
-      OGL_INTERNALFORMAT: 'GL_RG16F',
-      OGL_FORMAT: 'GL_RG',
-      OGL_TYPE: 'GL_FLOAT',
+      renderTarget: FABRIC.RT.oglRenderTarget(0,  0, [
+        new FABRIC.RT.OGLRenderTargetTextureDesc(
+            2, /*COLOR*/
+            new FABRIC.RT.OGLTexture2D(
+              FABRIC.SceneGraph.OpenGLConstants.GL_RG16F,
+              FABRIC.SceneGraph.OpenGLConstants.GL_RG,
+              FABRIC.SceneGraph.OpenGLConstants.GL_FLOAT)
+          )
+        ],
+        {
+          clearColor: FABRIC.RT.rgba(0,0,0,1),
+          enableOptions: [FABRIC.SceneGraph.OpenGLConstants.GL_DEPTH_TEST,
+                          FABRIC.SceneGraph.OpenGLConstants.GL_BLEND],
+          cullFace: FABRIC.SceneGraph.OpenGLConstants.GL_BACK
+        }
+      ),
       fragmentShader: '\n\
 uniform sampler2D u_fboTexture;\n\
 uniform vec4 u_color;\n\
@@ -88,11 +101,6 @@ void main(){\n\
         operatorName: 'setThickGlassMaterialAttribs',
         srcCode: '\n\
 operator setThickGlassMaterialAttribs(){\n\
-  glClearColor(0, 0, 0, 1);\n\
-  glClear(GL_COLOR_BUFFER_BIT);\n\
-  glDisable(GL_CULL_FACE);\n\
-  glEnable(GL_DEPTH_TEST);\n\
-  glEnable(GL_BLEND);\n\
   glBlendFunc(GL_ONE, GL_ONE);\n\
 }',
         entryFunctionName: 'setThickGlassMaterialAttribs',

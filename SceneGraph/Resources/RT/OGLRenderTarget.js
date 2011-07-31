@@ -75,6 +75,12 @@ FABRIC.appendOnCreateContextCallback(function(context) {
   });
 });
 
+
+FABRIC.RT.oglRenderTarget = function(width, height, textures, options){
+  return new FABRIC.RT.OGLRenderTarget(width, height, textures, options);
+}
+
+
 FABRIC.RT.oglDepthRenderTarget = function(size){
   return new FABRIC.RT.OGLRenderTarget(
     size,

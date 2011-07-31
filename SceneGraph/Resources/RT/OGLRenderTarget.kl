@@ -168,7 +168,7 @@ function OGLRenderTarget.bind() {
   
   glBindFramebuffer(GL_FRAMEBUFFER, self.fbo);
   
-  glPushAttrib(GL_DEPTH_BUFFER_BIT | GL_VIEWPORT_BIT | GL_TEXTURE_BIT);
+  glPushAttrib(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_VIEWPORT_BIT | GL_TEXTURE_BIT);
   
   Size options = 0;
   if(self.clearDepth){

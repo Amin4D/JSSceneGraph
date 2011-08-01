@@ -118,7 +118,8 @@ FABRIC.SceneGraph.registerNodeType('AnimationTrack', {
             'self.time',
             'self.value',
             'self.keyid'
-          ]
+          ],
+          async: false
         });
     };
     

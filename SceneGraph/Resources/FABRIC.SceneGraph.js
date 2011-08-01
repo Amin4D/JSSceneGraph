@@ -429,20 +429,29 @@ FABRIC.SceneGraph = {
       }
 
       if (!operatorDef.srcCode) {
-      //  FABRIC.addAsyncTask(function(){
+        if(operatorDef.async === false){
+          var code = FABRIC.loadResourceURL(operatorDef.srcFile, 'text/plain');
+          code = scene.preProcessCode(code, operatorDef.preProcessorDefinitions, includedCodeSections);
+          configureOperator(code);
+        }else{
           FABRIC.loadResourceURL(operatorDef.srcFile, 'text/plain', function(code){
             code = scene.preProcessCode(code, operatorDef.preProcessorDefinitions, includedCodeSections);
             configureOperator(code);
           });
-      //  });
+        }
       }
       else{
         // Fake an asynchronous operator construction so that we don't block waiting
         // for the operator compilation.
-        FABRIC.addAsyncTask(function(){
+        if(operatorDef.async === false){
           var code = scene.preProcessCode(operatorDef.srcCode, operatorDef.preProcessorDefinitions, includedCodeSections);
           configureOperator(code);
-        });
+        }else{
+          FABRIC.addAsyncTask(function(){
+            var code = scene.preProcessCode(operatorDef.srcCode, operatorDef.preProcessorDefinitions, includedCodeSections);
+            configureOperator(code);
+          });
+        }
       }
       return constructBinding(operator);
     };
@@ -927,6 +936,7 @@ FABRIC.SceneGraph.registerNodeType('Viewport', {
         if(viewPortRayCastDgNode){
           viewPortRayCastDgNode.addDependency(fabricwindow.windowNode, 'window');
         }
+        return true; // remove this event listener. 
       }
     });
     var propagationRedrawEventHandler = viewportNode.constructEventHandlerNode('DrawPropagation');

@@ -192,7 +192,10 @@ FABRIC = (function() {
   };
   var fireOnResolveAsyncTaskCallbacks = function(label){
     for (i=0; i<onResolveAsyncTaskCallbacks.length; i++){
-        onResolveAsyncTaskCallbacks[i].call(undefined, label, asyncTaskCount);
+      if(onResolveAsyncTaskCallbacks[i].call(undefined, label, asyncTaskCount)){
+        onResolveAsyncTaskCallbacks.splice(i, 1);
+        i--;
+      }
     }
   }
   var loadResourceURL = function(url, mimeType, callback) {

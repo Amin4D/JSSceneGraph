@@ -41,7 +41,7 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('CharacterSolver',
       throw ('You must specify the rigNode.');
     }
 
-    var parameterBinding;
+    var parameterLayout;
 
     var boneIDs = {},
       manipulators = {};
@@ -65,11 +65,11 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('CharacterSolver',
         return manipulators;
       },
       getParameterBinding: function() {
-        return parameterBinding;
+        return parameterLayout;
       },
       setParameterBinding: function(binding) {
-        parameterBinding = binding;
-        return parameterBinding;
+        parameterLayout = binding;
+        return parameterLayout;
       }
     };
 
@@ -129,7 +129,7 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('FKHierarchySolver',
   function(options, scene) {
 
     var solver,
-      parameterBinding,
+      parameterLayout,
       bindToRig;
 
     options.bones = [];
@@ -176,7 +176,7 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('FKHierarchySolver',
           operatorName: 'solveFKHierarchy',
           srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/solveFKHierarchy.kl',
           entryFunctionName: 'solveFKHierarchy',
-          parameterBinding: solver.setParameterBinding([
+          parameterLayout: solver.setParameterBinding([
             'self.pose',
             'skeleton.bones',
             'constants.' + name + 'boneIndices',
@@ -195,7 +195,7 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('ReferencePoseSolver',
   function(options, scene) {
 
     var solver,
-      parameterBinding,
+      parameterLayout,
       bindToRig;
 
     options.bones = [];
@@ -229,7 +229,7 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('ReferencePoseSolver',
           operatorName: 'solveReferencePose',
           srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/solveReferencePose.kl',
           entryFunctionName: 'solveReferencePose',
-          parameterBinding: solver.setParameterBinding([
+          parameterLayout: solver.setParameterBinding([
             'self.pose',
             'skeleton.bones',
             'constants.' + name + 'boneIndices'
@@ -255,7 +255,7 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('FKChainSolver',
       });
 
     var solver,
-      parameterBinding,
+      parameterLayout,
       bindToRig;
 
     options.identifiers = [['bones']];
@@ -305,7 +305,7 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('FKChainSolver',
           operatorName: 'solveChain',
           srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/solveFKHierarchy.kl',
           entryFunctionName: 'solveChain',
-          parameterBinding: solver.setParameterBinding([
+          parameterLayout: solver.setParameterBinding([
             'self.pose',
             'self.' + name + 'globalXfos',
             'skeleton.bones',
@@ -369,7 +369,7 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('RootBoneSolver',
       manipulatorSize: 3
       });
     var solver,
-      parameterBinding,
+      parameterLayout,
       bindToRig;
 
     options.identifiers = ['bone'];
@@ -396,7 +396,7 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('RootBoneSolver',
           operatorName: 'solveFKBone',
           srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/solveFKHierarchy.kl',
           entryFunctionName: 'solveFKBone',
-          parameterBinding: solver.setParameterBinding([
+          parameterLayout: solver.setParameterBinding([
             'self.pose',
             'skeleton.bones',
             'constants.' + name + 'boneIndex',
@@ -446,7 +446,7 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('IK2BoneSolver',
     scene.assignDefaults(options, {
       });
     var solver,
-      parameterBinding,
+      parameterLayout,
       bindToRig;
 
     options.identifiers = ['boneA', 'boneB', 'targetParent', 'upvectorParent'];
@@ -514,7 +514,7 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('IK2BoneSolver',
           operatorName: 'solveIK2Bone',
           srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/solveIK2Bone.kl',
           entryFunctionName: 'solveIK2Bone',
-          parameterBinding: solver.setParameterBinding([
+          parameterLayout: solver.setParameterBinding([
             'self.pose',
             'skeleton.bones',
             'constants.' + name + 'boneA',
@@ -562,7 +562,7 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('SpineSolver',
       });
 
     var solver,
-      parameterBinding,
+      parameterLayout,
       bindToRig;
 
     options.identifiers = [['vertebra'], 'end'];
@@ -618,7 +618,7 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('SpineSolver',
           operatorName: 'solveSpine',
           srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/solveSpine.kl',
           entryFunctionName: 'solveSpine',
-          parameterBinding: solver.setParameterBinding([
+          parameterLayout: solver.setParameterBinding([
             'self.pose',
             'skeleton.bones',
 
@@ -724,7 +724,7 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('TwistBoneSolver',
   function(options, scene) {
 
     var solver,
-      parameterBinding,
+      parameterLayout,
       bindToRig;
 
     options.identifiers = ['start', 'end', ['twistBones']];
@@ -772,7 +772,7 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('TwistBoneSolver',
           operatorName: 'solveTwistBones',
           srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/solveTwistBones.kl',
           entryFunctionName: 'solveTwistBones',
-          parameterBinding: [
+          parameterLayout: [
             'self.pose',
             'skeleton.bones',
             'constants.' + name + 'start',
@@ -795,7 +795,7 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('BlendBoneSolver',
   function(options, scene) {
 
     var solver,
-      parameterBinding,
+      parameterLayout,
       bindToRig;
 
     options.identifiers = ['start', 'end', ['blendBones']];
@@ -843,7 +843,7 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('BlendBoneSolver',
           operatorName: 'solveBlendBones',
           srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/solveTwistBones.kl',
           entryFunctionName: 'solveBlendBones',
-          parameterBinding: [
+          parameterLayout: [
             'self.pose',
             'skeleton.bones',
             'constants.' + name + 'start',
@@ -871,7 +871,7 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('FishingRodSolver',
         targetXfo: FABRIC.RT.xfo()
       });
     var solver,
-      parameterBinding,
+      parameterLayout,
       bindToRig;
 
     options.identifiers = ['rod'];
@@ -915,7 +915,7 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('FishingRodSolver',
           operatorName: 'solveFishingRod',
           srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/solveFishingRod.kl',
           entryFunctionName: 'fishingRodOp',
-          parameterBinding: solver.setParameterBinding([
+          parameterLayout: solver.setParameterBinding([
             'self.pose',
             'skeleton.bones',
             'constants.' + name + 'boneIndex',
@@ -947,7 +947,7 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('NCFIKSolver',
         rigNode: undefined
       });
     var solver,
-      parameterBinding,
+      parameterLayout,
       bindToRig;
 
     options.identifiers = [['bones'], 'targetParent'];
@@ -991,7 +991,7 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('NCFIKSolver',
           operatorName: 'solveNCFIK',
           srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/solveNCFIK.kl',
           entryFunctionName: 'solveNCFIK',
-          parameterBinding: solver.setParameterBinding([
+          parameterLayout: solver.setParameterBinding([
             'self.pose',
             'skeleton.bones',
             'constants.' + name + 'boneIndices',
@@ -1024,7 +1024,7 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('ArmSolver',
     scene.assignDefaults(options, {
       });
     var solver,
-      parameterBinding,
+      parameterLayout,
       bindToRig;
 
     options.identifiers = [['bones']];
@@ -1083,7 +1083,7 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('ArmSolver',
           operatorName: 'solveArmRig',
           srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/solveLimbIK.kl',
           entryFunctionName: 'solveArmRig',
-          parameterBinding: solver.setParameterBinding([
+          parameterLayout: solver.setParameterBinding([
             'self.pose',
             'skeleton.bones',
             'constants.' + name + 'bones',
@@ -1144,7 +1144,7 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('LegSolver',
         rigNode: undefined
       });
     var solver,
-      parameterBinding,
+      parameterLayout,
       bindToRig;
 
     options.identifiers = [['bones']];
@@ -1212,7 +1212,7 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('LegSolver',
           operatorName: 'solveLegRig',
           srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/solveLimbIK.kl',
           entryFunctionName: 'solveLegRig',
-          parameterBinding: solver.setParameterBinding([
+          parameterLayout: solver.setParameterBinding([
             'self.pose',
             'skeleton.bones',
             'constants.' + name + 'bones',

@@ -51,7 +51,7 @@ FABRIC.SceneGraph.registerNodeType('Image', {
 
       dgnode.bindings.append(scene.constructOperator({
         operatorName: (options.wantHDR ? 'loadImageHDR' : 'loadImageLDR'),
-        parameterBinding: [
+        parameterLayout: [
               'resource.resource',
               'self.width',
               'self.height',
@@ -74,23 +74,19 @@ FABRIC.SceneGraph.registerNodeType('Image', {
       // Construct the handler for loading the image into texture memory.
       redrawEventHandler = imageNode.constructEventHandlerNode('Redraw');
       redrawEventHandler.addScope('image', dgnode);
-      redrawEventHandler.addMember('bufferID', 'Size', 0);
+      redrawEventHandler.addMember('oglTexture2D', 'OGLTexture2D', FABRIC.RT.oglTexture2D());
       redrawEventHandler.preDescendBindings.append(scene.constructOperator({
-        operatorName: 'loadTexture',
+        operatorName: 'bindTextureLDR',
         srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadTexture.kl',
-        entryFunctionName: 'createTextureFromImageLDR',
-        parameterBinding: [
-              'image.width',
-              'image.height',
-              'image.pixels',
-              'self.bufferID',
-              'textureStub.textureUnit'
-            ]
+        entryFunctionName: 'bindTextureLDR',
+        parameterLayout: [
+          'image.width',
+          'image.height',
+          'image.pixels',
+          'self.oglTexture2D',
+          'textureStub.textureUnit'
+        ]
       }));
-
-      imageNode.getLoadTextureEventHandler = function() {
-        return redrawEventHandler;
-      };
     }
 
     imageNode.getURL = function() {
@@ -139,7 +135,7 @@ FABRIC.SceneGraph.registerNodeType('Video', {
       operatorName: 'videoLoadInfo',
       srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadVideo.kl',
       entryFunctionName: 'videoLoadInfo',
-      parameterBinding: [
+      parameterLayout: [
         'self.filename',
         'self.stream',
         'self.width',
@@ -153,7 +149,7 @@ FABRIC.SceneGraph.registerNodeType('Video', {
       operatorName: 'videoSeekTime',
       srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadVideo.kl',
       entryFunctionName: 'videoSeekTime',
-      parameterBinding: [
+      parameterLayout: [
         'self.stream',
         'globals.ms'
       ]
@@ -163,7 +159,7 @@ FABRIC.SceneGraph.registerNodeType('Video', {
       operatorName: 'videoGetPixels',
       srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadVideo.kl',
       entryFunctionName: 'videoGetPixels',
-      parameterBinding: [
+      parameterLayout: [
         'self.stream',
         'self.width',
         'self.height',
@@ -171,11 +167,12 @@ FABRIC.SceneGraph.registerNodeType('Video', {
       ]
     }));
 
-    videoNode.getRedrawEventHandler().preDescendBindings.append(scene.constructOperator({
+    var redrawEventHandler = videoNode.constructEventHandlerNode('Redraw');
+    redrawEventHandler.preDescendBindings.append(scene.constructOperator({
         operatorName: 'videoLoadToGPU',
         srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadVideo.kl',
         entryFunctionName: 'videoLoadToGPU',
-        parameterBinding: [
+        parameterLayout: [
           'image.width',
           'image.height',
           'image.pixels',
@@ -216,7 +213,7 @@ FABRIC.SceneGraph.registerNodeType('PointSpriteTexture', {
             operatorName: 'createSpriteTexture',
             srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadTexture.kl',
             entryFunctionName: 'createSpriteTexture',
-            parameterBinding: [
+            parameterLayout: [
               'image.resolution',
               'self.bufferID',
               'textureStub.textureUnit'
@@ -226,63 +223,6 @@ FABRIC.SceneGraph.registerNodeType('PointSpriteTexture', {
     return pointSpriteTextureNode;
   }});
 
-
-/**
- * Struct to store the source code of a shader
- * @constructor
- * @param {string} code The source code of the shader.
- * @param {string} type The type of the shader.
- */
-FABRIC.RT.ShaderSource = function(code, type) {
-  this.code = (code !== undefined) ? code : '';
-  this.type = (type !== undefined) ? type : 0;
-};
-
-FABRIC.appendOnCreateContextCallback(function(context) {
-  context.RegisteredTypesManager.registerType('ShaderSource', {
-      members: { code: 'String', type: 'Integer' },
-      constructor: FABRIC.RT.ShaderSource
-    });
-});
-
-/**
- * Struct to store information about a single shader's value
- * @constructor
- * @param {string} name The name of the shader's value.
- * @param {string} id The id of the shader's value.
- * @param {array} state The state of the shader's value.
- */
-FABRIC.RT.ShaderValue = function(name, id, state) {
-  this.name = (name !== undefined) ? name : '';
-  this.id = (id !== undefined) ? id : 0;
-  this.state = (state !== undefined) ? state : [];
-  this.location = -1;
-};
-
-FABRIC.appendOnCreateContextCallback(function(context) {
-  context.RegisteredTypesManager.registerType('ShaderValue', {
-      members: { name: 'String', id: 'Integer', state: 'String[]', location: 'Integer' },
-      constructor: FABRIC.RT.ShaderValue
-    });
-});
-
-/**
- * Struct to store information about a single shader's program's parameter
- * @constructor
- * @param {string} id The id of the parameter.
- * @param {number} value The value of the parameter.
- */
-FABRIC.RT.ShaderProgramParam = function(id, value) {
-  this.id = (id !== undefined) ? id : 0;
-  this.value = (value !== undefined) ? value : -1;
-};
-
-FABRIC.appendOnCreateContextCallback(function(context) {
-  context.RegisteredTypesManager.registerType('ShaderProgramParam', {
-      members: { id: 'Integer', value: 'Integer' },
-      constructor: FABRIC.RT.ShaderProgramParam
-    });
-});
 
 /**
  * Table storing all of the known shader attributes and their types.
@@ -357,40 +297,36 @@ FABRIC.shaderAttributeTable = {
 FABRIC.SceneGraph.registerNodeType('Shader', {
   factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
-        parentEventHandler: scene.getSceneRedrawEventHandler()
+        parentEventHandler: scene.getSceneRedrawEventHandler(),
+        debug: false
       });
     var shaderNode = scene.constructNode('SceneGraphNode', options),
       redrawEventHandler = shaderNode.constructEventHandlerNode('Redraw'),
-      shaderSources = [],
-      uniformValues = [],
-      programParams = [],
+      shaderProgram = new FABRIC.RT.OGLShaderProgram(options.name);
       i;
 
     if (options.fragmentShader) {
-      shaderSources.push(new FABRIC.RT.ShaderSource(
+      shaderProgram.shaderSources.push(new FABRIC.RT.OGLShaderSource(
         options.fragmentShader, FABRIC.SceneGraph.OpenGLConstants.GL_FRAGMENT_SHADER));
     }
     if (options.vertexShader) {
-      shaderSources.push(new FABRIC.RT.ShaderSource(
+      shaderProgram.shaderSources.push(new FABRIC.RT.OGLShaderSource(
         options.vertexShader, FABRIC.SceneGraph.OpenGLConstants.GL_VERTEX_SHADER));
     }
     if (options.tessControlShader) {
-      shaderSources.push(new FABRIC.RT.ShaderSource(
+      shaderProgram.shaderSources.push(new FABRIC.RT.OGLShaderSource(
         options.tessControlShader, FABRIC.SceneGraph.OpenGLConstants.GL_TESS_CONTROL_SHADER));
     }
     if (options.tessEvalShader) {
-      shaderSources.push(new FABRIC.RT.ShaderSource(
+      shaderProgram.shaderSources.push(new FABRIC.RT.OGLShaderSource(
         options.tessEvalShader, FABRIC.SceneGraph.OpenGLConstants.GL_TESS_EVALUATION_SHADER));
     }
     if (options.geometryShader) {
-      shaderSources.push(new FABRIC.RT.ShaderSource(
+      shaderProgram.shaderSources.push(new FABRIC.RT.OGLShaderSource(
         options.geometryShader, FABRIC.SceneGraph.OpenGLConstants.GL_GEOMETRY_SHADER_EXT));
     }
 
     redrawEventHandler.setScopeName('shader');
-    redrawEventHandler.addMember('shaderSources', 'ShaderSource[]', shaderSources);
-    redrawEventHandler.addMember('name', 'String', options.name);
-    redrawEventHandler.addMember('program', 'Integer', 0);
 
     ///////////////////////////////////////////////////
     // Uniform Values
@@ -398,10 +334,9 @@ FABRIC.SceneGraph.registerNodeType('Shader', {
       if (!FABRIC.shaderAttributeTable[i]) {
         throw ('Error defining ' + options.name + '. Attribute not defined in the AttributeTable:' + i);
       }
-      uniformValues.push(new FABRIC.RT.ShaderValue(
+      shaderProgram.uniformValues.push(new FABRIC.RT.OGLShaderValue(
         options.shaderUniforms[i].name, FABRIC.shaderAttributeTable[i].id));
     }
-    redrawEventHandler.addMember('uniformValues', 'ShaderValue[]', uniformValues);
 
     ///////////////////////////////////////////////////
     // Attribute Values
@@ -410,18 +345,19 @@ FABRIC.SceneGraph.registerNodeType('Shader', {
       if (!FABRIC.shaderAttributeTable[i]) {
         throw ('Attribute not defined in the AttributeTable:' + i);
       }
-      attributeValues.push(new FABRIC.RT.ShaderValue(
+      shaderProgram.attributeValues.push(new FABRIC.RT.OGLShaderValue(
         options.shaderAttributes[i].name, FABRIC.shaderAttributeTable[i].id));
     }
-    redrawEventHandler.addMember('attributeValues', 'ShaderValue[]', attributeValues);
 
     ///////////////////////////////////////////////////
     // EXT Params
     for (i in options.programParams) {
-      programParams.push(new FABRIC.RT.ShaderProgramParam(
+       shaderProgram.programParams.push(new FABRIC.RT.OGLShaderProgramParam(
         FABRIC.SceneGraph.OpenGLConstants[i], options.programParams[i]));
     }
-    redrawEventHandler.addMember('programParams', 'ShaderProgramParam[]', programParams);
+    
+    shaderProgram.debug = options.debug;
+    redrawEventHandler.addMember('shaderProgram', 'OGLShaderProgram', shaderProgram);
   
     var operators = redrawEventHandler.preDescendBindings;
     if(options.assignUniformsOnPostDescend == true){
@@ -431,13 +367,8 @@ FABRIC.SceneGraph.registerNodeType('Shader', {
       operatorName: 'loadShader',
       srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadShader.kl',
       entryFunctionName: 'loadShader',
-      parameterBinding: [
-        'self.name',
-        'self.shaderSources',
-        'self.uniformValues',
-        'self.attributeValues',
-        'self.programParams',
-        'self.program'
+      parameterLayout: [
+        'self.shaderProgram'
       ]
     }));
     
@@ -464,7 +395,8 @@ FABRIC.SceneGraph.registerNodeType('Material', {
     scene.assignDefaults(options, {
         separateShaderNode: true,
         shaderNode: undefined,
-        assignUniformsOnPostDescend:false
+        storeUniformsInDGNode: false,
+        assignUniformsOnPostDescend: false
       });
 
     var materialNode,
@@ -527,8 +459,10 @@ FABRIC.SceneGraph.registerNodeType('Material', {
       redrawEventHandler = materialNode.getRedrawEventHandler();
     }
     
+    var capitalizeFirstLetter = function(str) {
+      return str[0].toUpperCase() + str.substr(1);
+    };
     
-
     /////////////////////////////////
     // Material uniform interface definition.
     // Here we expose define members on our dgnode to store
@@ -550,32 +484,41 @@ FABRIC.SceneGraph.registerNodeType('Material', {
       }
 
       uniformType = FABRIC.shaderAttributeTable[uniformName].type;
+      var uniformOwner;
       if (uniform.owner === undefined) {
-        if(!dgnode){
-          dgnode = materialNode.constructDGNode('DGNode');
-          redrawEventHandler.addScope('material', dgnode);
+        if(options.storeUniformsInDGNode){
+          if(!dgnode){
+            dgnode = materialNode.constructDGNode('DGNode');
+            redrawEventHandler.addScope('material', dgnode);
+          }
+          dgnode.addMember(uniformName, uniformType, uniform.defaultValue);
+          materialNode.addMemberInterface(dgnode, uniformName, true);
+          uniformOwner = 'material';
         }
-        dgnode.addMember(uniformName, uniformType, uniform.defaultValue);
-        materialNode.addMemberInterface(dgnode, uniformName, true);
+        else{
+          redrawEventHandler.addMember(uniformName, uniformType, uniform.defaultValue);
+          materialNode.addMemberInterface(redrawEventHandler, uniformName, true);
+          uniformOwner = 'self';
+        }
+      }else{
+        uniformOwner = uniform.owner;
       }
-      operatorFunction = 'load' + uniformType + 'Uniform';
+      
       operators.append(scene.constructOperator({
-        operatorName: operatorFunction + uniformName,
+        operatorName: 'load' + capitalizeFirstLetter(uniformName),
         srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadUniforms.kl',
         preProcessorDefinitions: {
-          ATTRIBUTE_ID: FABRIC.shaderAttributeTable[uniformName].id
+          ATTRIBUTE_NAME: uniformName,
+          ATTRIBUTE_ID: FABRIC.shaderAttributeTable[uniformName].id,
+          DATA_TYPE: uniformType
         },
-        entryFunctionName: operatorFunction,
-        parameterBinding: [
-          (options.separateShaderNode ? 'shader.uniformValues' : 'self.uniformValues'),
-          (uniform.owner === undefined ? 'material' : uniform.owner) + '.' + uniformName
+        entryFunctionName: 'loadUniform',
+        parameterLayout: [
+          (options.separateShaderNode ? 'shader.shaderProgram' : 'self.shaderProgram'),
+          uniformOwner + '.' + uniformName
         ]
       }));
     }
-
-    var capitalizeFirstLetter = function(str) {
-      return str[0].toUpperCase() + str.substr(1);
-    };
 
     if (options.lights) {
       addLightInterface = function(lightName, lightDef) {
@@ -610,12 +553,13 @@ FABRIC.SceneGraph.registerNodeType('Material', {
           operatorName: 'loadIntegerUniform',
           srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadUniforms.kl',
           preProcessorDefinitions: {
+            ATTRIBUTE_NAME: capitalizeFirstLetter(textureName),
             ATTRIBUTE_ID: FABRIC.shaderAttributeTable[textureName].id,
-            ATTRIBUTE_NAME: textureName
+            DATA_TYPE: 'Integer'
           },
-          entryFunctionName: 'loadIntegerUniform',
-          parameterBinding: [
-            'shader.uniformValues',
+          entryFunctionName: 'loadUniform',
+          parameterLayout: [
+            'shader.shaderProgram',
             'self.textureUnit'
           ]
         }));
@@ -672,9 +616,61 @@ FABRIC.SceneGraph.registerNodeType('PointMaterial', {
         operatorName: 'setPointSize',
         srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/drawPoints.kl',
         entryFunctionName: 'setPointSize',
-        parameterBinding: ['material.pointSize']
+        parameterLayout: ['material.pointSize']
       }));
     return pointMaterial;
+  }});
+
+
+FABRIC.SceneGraph.registerNodeType('PointSpriteMaterial', {
+  factoryFn: function(options, scene) {
+
+    scene.assignDefaults(options, {
+        pointSize: 5,
+        positionsVec4:false
+      });
+
+    var pointSpriteTextureNode = options.spriteTextureNode;
+    if (pointSpriteTextureNode === undefined) {
+      pointSpriteTextureNode = scene.constructNode('PointSpriteTexture');
+    }
+    options.shaderUniforms = {
+      modelViewProjectionMatrix: { name: 'u_modelViewProjectionMatrix', owner: 'instance' },
+      modelViewMatrix: { name: 'u_modelViewMatrix', owner: 'instance' },
+      spriteTexture: { name: 'u_splatSampler', owner: 'texture' }
+    };
+    options.shaderAttributes = {
+      vertexColors: { name: 'a_color' },
+      positions: { name: 'a_position' }
+    };
+    
+    options.textures = {
+      spriteTexture: { node: pointSpriteTextureNode.pub }
+    };
+    options.vertexShader = FABRIC.loadResourceURL('FABRIC_ROOT/SceneGraph/Resources/Shaders/PointSpriteVertexShader.glsl');
+    options.fragmentShader = FABRIC.loadResourceURL('FABRIC_ROOT/SceneGraph/Resources/Shaders/PointSpriteFragmentShader.glsl');
+
+    var pointSpriteMaterialNode = scene.constructNode('Material', options);
+    
+    // TODO: Stop using fixed function pipeline calls. Use Geometry shaders
+    var redrawEventHandler = pointSpriteMaterialNode.getRedrawEventHandler();
+    redrawEventHandler.addMember('pointSize', 'Scalar', options.pointSize);
+    pointSpriteMaterialNode.addMemberInterface(redrawEventHandler, 'pointSize', true);
+    
+    redrawEventHandler.preDescendBindings.append(scene.constructOperator({
+        operatorName: 'preDrawSpritePoints',
+        srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/drawPoints.kl',
+        entryFunctionName: 'preDrawSpritePoints',
+        parameterLayout: ['self.pointSize']
+      }));
+    redrawEventHandler.postDescendBindings.append(scene.constructOperator({
+        operatorName: 'postDrawSpritePoints',
+        srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/drawPoints.kl',
+        entryFunctionName: 'postDrawSpritePoints',
+        parameterLayout: []
+      }));
+
+    return pointSpriteMaterialNode;
   }});
 
 
@@ -687,9 +683,7 @@ FABRIC.SceneGraph.registerNodeType('PostProcessEffect', {
         parentEventHandler: false,
         separateShaderNode: false,
         assignUniformsOnPostDescend:true,
-        OGL_INTERNALFORMAT: 'GL_RGBA16F_ARB',/* GL_RGBA8 */
-        OGL_FORMAT: 'GL_RGBA',
-        OGL_TYPE: 'GL_UNSIGNED_BYTE'
+        renderTarget: FABRIC.RT.oglPostProcessingRenderTarget(0)
       });
 
     if (options.fragmentShader === undefined) {
@@ -717,52 +711,37 @@ FABRIC.SceneGraph.registerNodeType('PostProcessEffect', {
     var redrawEventHandler = postProcessEffect.getRedrawEventHandler();
 
     // Set up FBO rendering and draw the textured quad on the way back
-    redrawEventHandler.addMember('offscreenFBO', 'Integer', 0);
-    redrawEventHandler.addMember('offscreenPrevFBO', 'Integer', 0);
-    redrawEventHandler.addMember('offscreenColorID', 'Integer', 0);
-    redrawEventHandler.addMember('offscreenDepthID', 'Integer', 0);
-    redrawEventHandler.addMember('prevProgramID', 'Integer', 0);
-
+    
+    redrawEventHandler.addMember('renderTarget', 'OGLRenderTarget', options.renderTarget);
+    
     redrawEventHandler.preDescendBindings.append(
       scene.constructOperator({
-          operatorName: 'prepareOffscreenRenderingOp',
-          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/offscreenRendering.kl',
-          preProcessorDefinitions: {
-            OGL_INTERNALFORMAT: options.OGL_INTERNALFORMAT,
-            OGL_FORMAT: options.OGL_FORMAT,
-            OGL_TYPE: options.OGL_TYPE
-          },
-          entryFunctionName: 'prepareOffscreenRendering',
-          parameterBinding: [
+          operatorName: 'bindScreenRenderTarget',
+          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/renderTarget.kl',
+          entryFunctionName: 'bindScreenRenderTarget',
+          parameterLayout: [
             'window.width',
             'window.height',
-            'self.offscreenFBO',
-            'self.offscreenPrevFBO',
-            'self.offscreenColorID',
-            'self.offscreenDepthID',
-            'self.prevProgramID',
-            'viewPort.backgroundColor'
+            'self.renderTarget'
           ]
         }));
-
+    redrawEventHandler.postDescendBindings.insert(
+      scene.constructOperator({
+          operatorName: 'unbindRenderTarget',
+          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/renderTarget.kl',
+          entryFunctionName: 'unbindRenderTarget',
+          parameterLayout: [
+            'self.renderTarget'
+          ]
+        }), 0);
     redrawEventHandler.postDescendBindings.append(
       scene.constructOperator({
-          operatorName: 'renderOffscreenToViewOp',
-          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/offscreenRendering.kl',
-          preProcessorDefinitions: {
-            OGL_INTERNALFORMAT: options.OGL_INTERNALFORMAT,
-            OGL_FORMAT: options.OGL_FORMAT,
-            OGL_TYPE: options.OGL_TYPE
-          },
-          entryFunctionName: 'renderOffscreenToView',
-          parameterBinding: [
-            'window.width',
-            'window.height',
-            'self.offscreenPrevFBO',
-            'self.offscreenColorID',
-            'self.program',
-            'self.prevProgramID',
-            'viewPort.backgroundColor'
+          operatorName: 'drawRenderTargetToView',
+          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/renderTarget.kl',
+          entryFunctionName: 'drawRenderTargetToView',
+          parameterLayout: [
+            'self.renderTarget',
+            'self.shaderProgram'
           ]
         }));
     return postProcessEffect;
@@ -1088,60 +1067,6 @@ FABRIC.SceneGraph.defineEffectFromFile('NormalMaterial', 'FABRIC_ROOT/SceneGraph
 FABRIC.SceneGraph.defineEffectFromFile('PhongTesselationMaterial', 'FABRIC_ROOT/SceneGraph/Resources/Shaders/PhongTesselationShader.xml');
 
 
-FABRIC.SceneGraph.registerNodeType('PointSpriteMaterial', {
-  factoryFn: function(options, scene) {
-
-    scene.assignDefaults(options, {
-        pointSize: 5,
-        positionsVec4:false
-      });
-
-    var pointSpriteTextureNode = options.spriteTextureNode;
-    if (pointSpriteTextureNode === undefined) {
-      pointSpriteTextureNode = scene.constructNode('PointSpriteTexture');
-    }
-    options.shaderUniforms = {
-      modelViewProjectionMatrix: { name: 'u_modelViewProjectionMatrix', owner: 'instance' },
-      modelViewMatrix: { name: 'u_modelViewMatrix', owner: 'instance' },
-      spriteTexture: { name: 'u_splatSampler', owner: 'texture' }
-    };
-    options.shaderAttributes = {
-      vertexColors: { name: 'a_color' },
-      positions: { name: 'a_position' }
-    };
-    
-    options.textures = {
-      spriteTexture: { node: pointSpriteTextureNode.pub }
-    };
-    options.vertexShader = FABRIC.loadResourceURL('FABRIC_ROOT/SceneGraph/Resources/Shaders/PointSpriteVertexShader.glsl');
-    options.fragmentShader = FABRIC.loadResourceURL('FABRIC_ROOT/SceneGraph/Resources/Shaders/PointSpriteFragmentShader.glsl');
-
-    var pointSpriteMaterialNode = scene.constructNode('Material', options);
-    
-    // TODO: Stop using fixed function pipeline calls. Use Geometry shaders
-    var dgnode = pointSpriteMaterialNode.constructDGNode('DGNode');
-    pointSpriteMaterialNode.getRedrawEventHandler().addScope('material', dgnode);
-
-    dgnode.addMember('pointSize', 'Scalar', options.pointSize);
-    pointSpriteMaterialNode.addMemberInterface(dgnode, 'pointSize', true);
-    
-    pointSpriteMaterialNode.getRedrawEventHandler().preDescendBindings.append(scene.constructOperator({
-        operatorName: 'preDrawSpritePoints',
-        srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/drawPoints.kl',
-        entryFunctionName: 'preDrawSpritePoints',
-        parameterBinding: ['material.pointSize']
-      }));
-    pointSpriteMaterialNode.getRedrawEventHandler().postDescendBindings.append(scene.constructOperator({
-        operatorName: 'postDrawSpritePoints',
-        srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/drawPoints.kl',
-        entryFunctionName: 'postDrawSpritePoints',
-        parameterBinding: []
-      }));
-
-    return pointSpriteMaterialNode;
-  }});
-
-
 FABRIC.SceneGraph.registerNodeType('BloomPostProcessEffect', {
   factoryFn: function(options, scene) {
     options.fragmentShader = FABRIC.loadResourceURL('FABRIC_ROOT/SceneGraph/Resources/Shaders/BloomPixelShader.glsl');
@@ -1173,7 +1098,6 @@ FABRIC.SceneGraph.registerNodeType('EdgeDetectionPostProcessEffect', {
     var edgeDetectionEffect = scene.constructNode('PostProcessEffect', options);
     return edgeDetectionEffect;
   }});
-
 
 
 FABRIC.SceneGraph.registerNodeType('GaussianBlurPostProcessEffect', {

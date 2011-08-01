@@ -312,7 +312,7 @@ FABRIC.SceneGraph.registerNodeType('PaintManipulator', {
           operatorName: 'collectPointsInsideBrush',
           srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/collectPointsInsideVolume.kl',
           entryFunctionName: 'collectPointsInsideBrush',
-          parameterBinding: [
+          parameterLayout: [
 
             'paintData.cameraMatrix',
             'paintData.projectionMatrix',
@@ -470,7 +470,7 @@ FABRIC.SceneGraph.registerNodeType('Manipulator', {
       operatorName: 'evaluateGizmo',
       srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/evaluateGizmo.kl',
       entryFunctionName: 'evaluateGizmo',
-      parameterBinding: paramLayout
+      parameterLayout: paramLayout
     }));
 
     ///////////////////////////////////////////////////////////
@@ -582,13 +582,13 @@ FABRIC.SceneGraph.registerNodeType('Manipulator', {
           operatorName: 'disableZBuffer',
           srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/drawAttributes.kl',
           entryFunctionName: 'disableZBuffer',
-          parameterBinding: []
+          parameterLayout: []
         }), 0);
       manipulatorNode.getRedrawEventHandler().postDescendBindings.append(scene.constructOperator({
           operatorName: 'popAttribs',
           srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/drawAttributes.kl',
           entryFunctionName: 'popAttribs',
-          parameterBinding: []
+          parameterLayout: []
         }));
     }
 
@@ -739,7 +739,7 @@ FABRIC.SceneGraph.registerNodeType('3AxisRotationManipulator', {
     var xaxisGizmoNode = scene.pub.constructNode('RotationManipulator', scene.assignDefaults(options, {
         name: name + 'XAxis',
         color: FABRIC.RT.rgb(0.8, 0, 0, 1),
-        localXfo: new FABRIC.RT.Xfo(FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(0, 0, 1), -90)),
+        localXfo: new FABRIC.RT.Xfo({ ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(0, 0, 1), -90) }),
         geometryNode: circle
       }, true));
     var yaxisGizmoNode = scene.pub.constructNode('RotationManipulator', scene.assignDefaults(options, {
@@ -751,7 +751,7 @@ FABRIC.SceneGraph.registerNodeType('3AxisRotationManipulator', {
     var zaxisGizmoNode = scene.pub.constructNode('RotationManipulator', scene.assignDefaults(options, {
         name: name + 'ZAxis',
         color: FABRIC.RT.rgb(0, 0, 0.8, 1),
-        localXfo: new FABRIC.RT.Xfo(FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(1, 0, 0), 90)),
+        localXfo: new FABRIC.RT.Xfo({ ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(1, 0, 0), 90) }),
         geometryNode: circle
       }, true));
 

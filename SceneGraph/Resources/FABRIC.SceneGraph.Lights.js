@@ -17,6 +17,15 @@ FABRIC.SceneGraph.Lights = {
 };
 
 FABRIC.SceneGraph.registerNodeType('Light', {
+  briefDesc: 'The Light node is an abstract base node used by the Light types in the SceneGraph.',
+  detailedDesc: 'The Light node is an abstract base node used by the Light types in the SceneGraph.',
+  parentNodeDesc: 'SceneGraphNode',
+  optionsDesc: {
+    color: 'The color of the light when rendered in OpenGL. Note: Not all shaders use the light color',
+    transformNode: 'The Transform node used to control the position of the light in the scene',
+    transformNodeMember: 'The Xfo member of the transfrom node used ',
+    globalXfo: 'If a transfrom node is not specified, then a default one is constructed, and this is the initial value of the globalXfo on that Transform node.'
+  },
   factoryFn: function (options, scene) {
     scene.assignDefaults(options, {
       color: FABRIC.RT.rgb(1.0, 1.0, 1.0),
@@ -121,10 +130,19 @@ FABRIC.SceneGraph.registerNodeType('Light', {
 
 
 FABRIC.SceneGraph.registerNodeType('PointLight', {
+  briefDesc: 'The PointLight node represents a point light in the SceneGraph.',
+  detailedDesc: 'The PointLight node represents a point light in the SceneGraph. A Point light casts light in all directions from a point in space.',
+  parentNodeDesc: 'Light',
+  optionsDesc: {
+    position: 'The initial positions of the Light if a Transform node is not specified',
+    display: 'Toggle whether this light should display an icon of itself in the screen.',
+    displaySize: 'The size of the displayed icon'
+  },
   factoryFn: function (options, scene) {
 
     scene.assignDefaults(options, {
       position: FABRIC.RT.vec3(420.0, 1000.0, 600.0),
+      display: false,
       displaySize: 5
     });
 
@@ -172,6 +190,16 @@ FABRIC.SceneGraph.registerNodeType('PointLight', {
   }});
 
 FABRIC.SceneGraph.registerNodeType('DirectionalLight', {
+  briefDesc: 'The DirectionalLight node represents a directional light in the SceneGraph.',
+  detailedDesc: 'The DirectionalLight node represents a directional light in the SceneGraph.' +
+                'A Directional Light casts light in only one direction and the position is not used in lighting calculations.',
+  parentNodeDesc: 'Light',
+  optionsDesc: {
+    position: 'The initial position of the Light if a Transform node is not specified',
+    direction: 'The initial direction of the Light if a Transform node is not specified',
+    display: 'Toggle whether this light should display an icon of itself in the screen.',
+    displaySize: 'The size of the displayed icon'
+  },
   factoryFn: function (options, scene) {
 
     if (!options.transformNode) {
@@ -267,15 +295,31 @@ FABRIC.SceneGraph.registerNodeType('DirectionalLight', {
 
 
 FABRIC.SceneGraph.registerNodeType('SpotLight', {
+  briefDesc: 'The SpotLight node represents a spot light in the SceneGraph.',
+  detailedDesc: 'The SpotLight node represents a spot light in the SceneGraph. ' +
+                'A Spot Light casts light in a cone orriginating from a specified position and with an angle specified by the cone angle. ' +
+                'The spot light can also be used to cast shadows using shadowmaps which are rendered prior to the scene being rendered'
+  parentNodeDesc: 'Light',
+  optionsDesc: {
+    coneAngle: 'The angle of the cone in radians used in lighting calculations',
+    castShadows: 'Toggle determining whether this light will be configured to render shadow maps in the pre render stage.',
+    nearDistance: 'The near distance used to define the frustrum when rendering shadow maps',
+    farDistance: 'The far distance used to define the frustrum when rendering shadow maps',
+    resolution: 'The resolution of the shadow map.',
+    displayShadowDebug: 'If set to true, renders a rectangle in the top left of the screen displaying the shadow map',
+    position: 'The initial position of the Light if a Transform node is not specified',
+    target: 'The initial target of the Light if a Transform node is not specified',
+    display: 'Toggle whether this light should display an icon of itself in the screen.',
+    displaySize: 'The size of the displayed icon'
+  },
   factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
         coneAngle: 60 * FABRIC.RT.degToRad,
+        castShadows: true,
         nearDistance: 1,
         farDistance: 1000,
-        color: FABRIC.RT.rgb(1.0, 1.0, 1.0),
-        castShadows: true,
-        displayShadowDebug: false,
         resolution: 1024,
+        displayShadowDebug: false,
         display: false,
         displaySize: 50
       });

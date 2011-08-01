@@ -4,6 +4,13 @@
 //
 
 FABRIC.SceneGraph.registerNodeType('AnimationTrack', {
+  briefDesc: 'The AnimationTrack node implements an array of animation tracks.',
+  detailedDesc: 'The AnimationTrack node is an abstract node type that stores an animation track per-slice. Drived nodes must specify the KeyframeType that is being interpollated',
+  parentNodeDesc: 'SceneGraphNode',
+  optionsDesc: {
+    keyframetype: 'Specified by the derrived node, this option specifies the type of the keyframe tract that will be interpollated.',
+    name:'The name of the track. This value is displayed in the curve Editor'
+  },
   factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
         keyframetype: undefined,
@@ -131,6 +138,9 @@ FABRIC.SceneGraph.registerNodeType('AnimationTrack', {
 
 
 FABRIC.SceneGraph.registerNodeType('LinearKeyAnimationTrack', {
+  briefDesc: 'The LinearKeyAnimationTrack node implements an array of linear keyframe animation tracks.',
+  detailedDesc: 'The LinearKeyAnimationTrack node derrives from AnimationTrack and specifies that the tracks should contains \'LinearKeyframes\'',
+  parentNodeDesc: 'AnimationTrack',
   factoryFn: function(options, scene) {
     options.keyframetype = 'LinearKeyframe';
     return scene.constructNode('AnimationTrack', options);
@@ -138,14 +148,23 @@ FABRIC.SceneGraph.registerNodeType('LinearKeyAnimationTrack', {
 
 
 FABRIC.SceneGraph.registerNodeType('BezierKeyAnimationTrack', {
+  briefDesc: 'The BezierKeyAnimationTrack node implements an array of bezier keyframe animation tracks.',
+  detailedDesc: 'The BezierKeyAnimationTrack node derrives from AnimationTrack and specifies that the tracks should contains \'BezierKeyframe\'',
+  parentNodeDesc: 'AnimationTrack',
   factoryFn: function(options, scene) {
     options.keyframetype = 'BezierKeyframe';
     return scene.constructNode('AnimationTrack', options);
   }});
 
-// The Animation Controller only maintains time values which can be used by
-// animation evaluators. Many evaluators can share an Animation Controller
+
 FABRIC.SceneGraph.registerNodeType('AnimationController', {
+  briefDesc: 'The AnimationController node controls the time at which an AnimationTrack is evaluated.',
+  detailedDesc: 'The Animation Controller only maintains time values which can be used by'+
+                'animation evaluators. Many evaluators can share an Animation Controller',
+  parentNodeDesc: 'SceneGraphNode',
+  optionsDesc: {
+    playbackRate: 'The rate to increment the time values, relative to the global scene time increments.'
+  },
   factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
         playbackRate: 1.0
@@ -198,11 +217,15 @@ FABRIC.SceneGraph.registerNodeType('AnimationController', {
   }});
 
 
-
-// The animation evaluator evaluates the keyframe animation tracks using the
-// time computed in the animation controller. It stores the evaluated values
-// Which are in turn bound to parameters on other nodes.
 FABRIC.SceneGraph.registerNodeType('AnimationEvaluator', {
+  briefDesc: 'The animation evaluator evaluates the keyframe animation tracks using the time computed in the animation controller.',
+  detailedDesc: 'The animation evaluator evaluates the keyframe animation tracks using the time computed in the animation controller.'+
+                'It stores the evaluated values which are in turn bound to parameters on other nodes',
+  parentNodeDesc: 'SceneGraphNode',
+  optionsDesc: {
+    animationControllerNode: 'The AnimationController node to initialize with.',
+    animationTrackNode: 'The AnimationTrack node to initialize with.'
+  },
   factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
         animationControllerNode: undefined,
@@ -400,10 +423,16 @@ FABRIC.SceneGraph.registerNodeType('AnimationEvaluator', {
 
 
 
-// The animation evaluator evaluates the keyframe animation tracks using the
-// time computed in the animation controller. It stores the evaluated values
-// Which are in turn bound to parameters on other nodes.
 FABRIC.SceneGraph.registerNodeType('TrackDisplay', {
+  briefDesc: 'The TrackDisplay evaluates AnimationTracks across time ranges ready for display in the CurveEditor.',
+  detailedDesc: 'The TrackDisplay evaluates AnimationTracks across time ranges ready for display in the CurveEditor.',
+  parentNodeDesc: 'SceneGraphNode',
+  optionsDesc: {
+      animationTrackNode: 'The AnimationTrack node to evaluate.',
+      trackIndex: 'The index of the track in the AnimationTrack node to evaluate.',
+      timeRange: 'The time rage to evaluate.',
+      segmentCount: 'The number of steps to divide the timerange by.'
+  },
   factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
         animationTrackNode: undefined,

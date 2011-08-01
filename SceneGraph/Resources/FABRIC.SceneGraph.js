@@ -22,6 +22,7 @@ FABRIC.SceneGraph = {
       this.nodeDescriptions[type] = {};
       this.nodeDescriptions[type].brief = options.briefDesc ? options.briefDesc : 'Brief description missing. Please implement.';
       this.nodeDescriptions[type].detailed = options.detailedDesc ? options.detailedDesc : 'Detailed description missing. Please implement.';
+      this.nodeDescriptions[type].optionsDesc = options.optionsDesc ? options.optionsDesc : 'Options description missing. Please implement.';
       this.nodeFactories[type] = options.factoryFn;
     }
   },

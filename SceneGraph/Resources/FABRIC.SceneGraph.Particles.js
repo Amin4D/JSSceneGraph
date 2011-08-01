@@ -82,7 +82,7 @@ FABRIC.SceneGraph.registerNodeType('Particles', {
         operatorName: 'calcCellIndex',
         srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/spatialHashTable.kl',
         entryFunctionName: 'calcCellIndex',
-        parameterBinding: [
+        parameterLayout: [
           'self.index',
           'self.positions',
           'self.cellcoords',
@@ -97,7 +97,7 @@ FABRIC.SceneGraph.registerNodeType('Particles', {
         operatorName: 'copyCurrentFrameDataToPrevFrameData',
         srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/spatialHashTable.kl',
         entryFunctionName: 'copyCurrentFrameDataToPrevFrameData',
-        parameterBinding: [
+        parameterLayout: [
           'self.positions',
           'self.velocities',
           'self.previousframe_positions',
@@ -113,7 +113,7 @@ FABRIC.SceneGraph.registerNodeType('Particles', {
         operatorName: 'populateHashTable',
         srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/spatialHashTable.kl',
         entryFunctionName: 'populateHashTable',
-        parameterBinding: [
+        parameterLayout: [
           'hashtable.hashtable',
           'self.cellindices[]'
         ]
@@ -141,7 +141,7 @@ FABRIC.SceneGraph.registerNodeType('Flock', {
       operatorName: 'simulateParticles',
       srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/flocking.kl',
       entryFunctionName: 'simulateParticles',
-      parameterBinding: [
+      parameterLayout: [
         'self.index',
 
         'self.positions',

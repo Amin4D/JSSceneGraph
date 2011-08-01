@@ -54,7 +54,7 @@ FABRIC.SceneGraph.registerNodeType('Geometry', {
         operatorName: 'calcBoundingBox',
         srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/calcBoundingBox.kl',
         entryFunctionName: 'calcBoundingBox',
-        parameterBinding: [
+        parameterLayout: [
           'attributes.positions[]',
           'self.min',
           'self.max'
@@ -226,7 +226,7 @@ FABRIC.SceneGraph.registerNodeType('Geometry', {
           operatorName: 'genAndLoadIndicesVBOs',
           srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadVBOs.kl',
           entryFunctionName: 'genAndLoadIndicesVBOs',
-          parameterBinding: [
+          parameterLayout: [
             'uniforms.indices',
             'self.indicesCount',
             'self.indicesBufferID'
@@ -254,7 +254,7 @@ FABRIC.SceneGraph.registerNodeType('Geometry', {
               ATTRIBUTE_ID: FABRIC.shaderAttributeTable[memberName].id
             },
             entryFunctionName: 'bindVBO',
-            parameterBinding: [
+            parameterLayout: [
               'shader.attributeValues',
               'uniforms.' + bufferIDMemberName,
               'uniforms.' + countMemberName,
@@ -286,7 +286,7 @@ FABRIC.SceneGraph.registerNodeType('Geometry', {
                 ATTRIBUTE_ID:FABRIC.shaderAttributeTable[memberName].id
               },
               entryFunctionName:"genAndLoadDynamicVBO",
-              parameterBinding:[
+              parameterLayout:[
                 "shader.attributeValues",
                 attributeNodeBinding+"."+ memberName+"[]",
                 "self."+countMemberName,
@@ -309,7 +309,7 @@ FABRIC.SceneGraph.registerNodeType('Geometry', {
               ATTRIBUTE_ID: FABRIC.shaderAttributeTable[memberName].id
             },
             entryFunctionName: 'genAndLoadVBO',
-            parameterBinding: [
+            parameterLayout: [
               'shader.attributeValues',
               attributeNodeBinding + '.' + memberName + '[]',
               'self.' + countMemberName,
@@ -362,7 +362,7 @@ FABRIC.SceneGraph.registerNodeType('Geometry', {
             '  selfCount = parentCount;\n' +
             '}',
         entryFunctionName: 'matchCount',
-        parameterBinding: [
+        parameterLayout: [
           'parentattributes.count',
           'self.newCount'
         ]
@@ -382,7 +382,7 @@ FABRIC.SceneGraph.registerNodeType('Geometry', {
                 '  value = elements[ index ];\n' +
                 '}',
             entryFunctionName: 'copyAttribute',
-            parameterBinding: [
+            parameterLayout: [
               'parentattributes.' + attributeName + '[]',
               'self.' + attributeName,
               'self.index'
@@ -439,7 +439,7 @@ FABRIC.SceneGraph.registerNodeType('Geometry', {
               ATTRIBUTE_ID: -1
             },
             entryFunctionName: 'genDGVBOOp',
-            parameterBinding: [
+            parameterLayout: [
               'self.' + memberName + '[]',
               'uniforms.' + countMemberName,
               'uniforms.' + dynamicMemberName,
@@ -469,7 +469,7 @@ FABRIC.SceneGraph.registerNodeType('Points', {
           operatorName: 'drawPoints',
           srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/drawPoints.kl',
           entryFunctionName: 'drawPoints',
-          parameterBinding: [
+          parameterLayout: [
             'self.positionsCount',
             'instance.drawToggle'
           ]
@@ -480,7 +480,7 @@ FABRIC.SceneGraph.registerNodeType('Points', {
           operatorName: 'rayIntersectPoints',
           srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/rayIntersectPoints.kl',
           entryFunctionName: 'rayIntersectPoints',
-          parameterBinding: [
+          parameterLayout: [
             'raycastData.ray',
             'raycastData.threshold',
             'transform.' + transformNodeMember,
@@ -511,7 +511,7 @@ FABRIC.SceneGraph.registerNodeType('Lines', {
       return scene.constructOperator({
           operatorName: 'drawLines',
           srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/drawLines.kl',
-          parameterBinding: [
+          parameterLayout: [
             'self.indicesCount',
             'self.indicesBufferID',
             'instance.drawToggle'
@@ -524,7 +524,7 @@ FABRIC.SceneGraph.registerNodeType('Lines', {
           operatorName: 'rayIntersectLines',
           srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/rayIntersectLines.kl',
           entryFunctionName: 'rayIntersectLines',
-          parameterBinding: [
+          parameterLayout: [
             'raycastData.ray',
             'raycastData.threshold',
             'transform.' + transformNodeMember,
@@ -563,7 +563,7 @@ FABRIC.SceneGraph.registerNodeType('Triangles', {
         return scene.constructOperator({
             operatorName: 'drawPatches',
             srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/drawPatches.kl',
-            parameterBinding: [
+            parameterLayout: [
               'self.indicesCount',
               'self.indicesBufferID',
               'instance.drawToggle'
@@ -574,7 +574,7 @@ FABRIC.SceneGraph.registerNodeType('Triangles', {
         return scene.constructOperator({
             operatorName: 'drawTriangles',
             srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/drawTriangles.kl',
-            parameterBinding: [
+            parameterLayout: [
               'self.indicesCount',
               'self.indicesBufferID',
               'instance.drawToggle'
@@ -588,7 +588,7 @@ FABRIC.SceneGraph.registerNodeType('Triangles', {
           operatorName: 'rayIntersectTriangles',
           srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/rayIntersectTriangles.kl',
           entryFunctionName: 'rayIntersectTriangles',
-          parameterBinding: [
+          parameterLayout: [
             'raycastData.ray',
             'transform.' + transformNodeMember,
             'geometry_attributes.positions[]',
@@ -629,7 +629,7 @@ FABRIC.SceneGraph.registerNodeType('Triangles', {
           operatorName: 'computeTriangleTangents',
           srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/generateTangents.kl',
           entryFunctionName: 'computeTriangleTangents',
-          parameterBinding: [
+          parameterLayout: [
             'uniforms.indices',
             'self.positions[]',
             'self.normals[]',
@@ -701,7 +701,7 @@ FABRIC.SceneGraph.registerNodeType('Instance', {
             srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadModelProjectionMatrices.kl',
             entryFunctionName: 'loadModelProjectionMatrices',
             preProcessorDefinitions: preProcessorDefinitions,
-            parameterBinding: [
+            parameterLayout: [
               'shader.uniformValues',
               'transform.' + transformNodeMember,
               'camera.cameraMat44',
@@ -715,7 +715,7 @@ FABRIC.SceneGraph.registerNodeType('Instance', {
             srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadModelProjectionMatrices.kl',
             entryFunctionName: 'loadIndexedModelProjectionMatrices',
             preProcessorDefinitions: preProcessorDefinitions,
-            parameterBinding: [
+            parameterLayout: [
               'shader.uniformValues',
               'transform.' + transformNodeMember + '[]',
               'self.transformNodeIndex',

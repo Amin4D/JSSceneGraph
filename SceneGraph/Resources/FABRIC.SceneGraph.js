@@ -356,10 +356,6 @@ FABRIC.SceneGraph = {
       return resultCode;
     };
     
-    // Operators are constructed asynchronously, and they are also shared
-    // amongst nodes. When the same operator is requested multiple times
-    // we store the callbacks in this map, so that we can fire them
-    var queuedOperatorConstructions = {};
     scene.constructOperator = function(operatorDef) {
       
       var constructBinding = function(operator) {
@@ -371,6 +367,8 @@ FABRIC.SceneGraph = {
       
       var uid = operatorDef.operatorName;
       if (operatorStore[uid]) {
+        // If this operator has already been constructed,
+        // reuse the exiting one. returne a unique binding.
         return constructBinding(operatorStore[uid]);
       }
       
@@ -428,10 +426,12 @@ FABRIC.SceneGraph = {
       }
 
       if (!operatorDef.srcCode) {
-        this.loadResourceURL(operatorDef.srcFile, 'text/plain', function(code){
-          code = scene.preProcessCode(code, operatorDef.preProcessorDefinitions, includedCodeSections);
-          configureOperator(code);
-        });
+      //  FABRIC.addAsyncTask(function(){
+          FABRIC.loadResourceURL(operatorDef.srcFile, 'text/plain', function(code){
+            code = scene.preProcessCode(code, operatorDef.preProcessorDefinitions, includedCodeSections);
+            configureOperator(code);
+          });
+      //  });
       }
       else{
         // Fake an asynchronous operator construction so that we don't block waiting
@@ -893,10 +893,8 @@ FABRIC.SceneGraph.registerNodeType('Viewport', {
       throw ('Must provide a window to this constructor');
     }
 
-    var cameraNode;
+    var cameraNode, fabricwindow;
     var windowElement = options.windowElement;
-    var fabricwindow = scene.addWindow(windowElement);
-
     var viewportNode = scene.constructNode('SceneGraphNode', options),
       dgnode = viewportNode.constructDGNode('DGNode'),
       redrawEventHandler = viewportNode.constructEventHandlerNode('Redraw');
@@ -904,7 +902,6 @@ FABRIC.SceneGraph.registerNodeType('Viewport', {
     dgnode.addMember('backgroundColor', 'Color', options.backgroundColor);
 
     redrawEventHandler.addScope('viewPort', dgnode);
-    redrawEventHandler.addScope('window', fabricwindow.windowNode);
 
     redrawEventHandler.preDescendBindings.append(scene.constructOperator({
           operatorName: 'viewPortBeginRender',
@@ -920,9 +917,13 @@ FABRIC.SceneGraph.registerNodeType('Viewport', {
 
     FABRIC.appendOnResolveAsyncTaskCallback(function(id){
       if(id===0){
+        fabricwindow = scene.addWindow(windowElement);
+        redrawEventHandler.addScope('window', fabricwindow.windowNode);
         fabricwindow.redrawEvent.appendEventHandler(scene.getScenePreRedrawEventHandler());
         fabricwindow.redrawEvent.appendEventHandler(redrawEventHandler);
         fabricwindow.redrawEvent.appendEventHandler(scene.getScenePostRedrawEventHandler());
+        
+        viewPortRayCastDgNode.addDependency(fabricwindow.windowNode, 'window');
       }
     });
 
@@ -976,8 +977,6 @@ FABRIC.SceneGraph.registerNodeType('Viewport', {
       // the sceneRaycastEventHandler propogates the event throughtout the scene.
       viewPortRaycastEventHandler.appendChildEventHandler(scene.getSceneRaycastEventHandler());
 
-
-      viewPortRayCastDgNode.addDependency(fabricwindow.windowNode, 'window');
     }
 
     var getElementCoords = function(evt) {
@@ -992,9 +991,6 @@ FABRIC.SceneGraph.registerNodeType('Viewport', {
     // private interface
     viewportNode.getWindowElement = function() {
       return windowElement;
-    };
-    viewportNode.getWindow = function() {
-      return fabricwindow;
     };
 
     // public interface

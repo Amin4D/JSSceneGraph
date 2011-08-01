@@ -85,6 +85,9 @@ function OGLShaderProgram.validateShaderBindings() {
       report('ERROR: ' + self.name + ': Attribute does not exist in the shader code: ' + self.attributeValues[i].name);
     }
   }
+  if(!self.debug){
+    return;
+  }
 
   var Integer nbUniforms[];
   nbUniforms.push(0);

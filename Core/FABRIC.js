@@ -177,6 +177,15 @@ FABRIC = (function() {
   
   var asyncTaskCount = 0;
   
+  var addAsyncTask = function(callback){
+    asyncTaskCount++;
+    setTimeout(function(){
+      callback();
+      asyncTaskCount--;
+      fireOnResolveAsyncTaskCallbacks();
+    }, 1);
+  }
+  
   var onResolveAsyncTaskCallbacks = [];
   var appendOnResolveAsyncTaskCallback = function(fn) {
     onResolveAsyncTaskCallbacks.push(fn);
@@ -254,6 +263,7 @@ FABRIC = (function() {
     processURL: processURL,
     loadResourceURL: loadResourceURL,
     asyncResourceLoading: true,
+    addAsyncTask: addAsyncTask,
     getAsyncTaskCount: function(){ return asyncTaskCount; },
     appendOnResolveAsyncTaskCallback: appendOnResolveAsyncTaskCallback,
     convertImageURLToDataURL: convertImageURLToDataURL

@@ -436,10 +436,10 @@ FABRIC.SceneGraph = {
       else{
         // Fake an asynchronous operator construction so that we don't block waiting
         // for the operator compilation.
-        setTimeout(function(){
+        FABRIC.addAsyncTask(function(){
           var code = scene.preProcessCode(operatorDef.srcCode, operatorDef.preProcessorDefinitions, includedCodeSections);
           configureOperator(code);
-        }, 1);
+        });
       }
       return constructBinding(operator);
     };
@@ -918,9 +918,13 @@ FABRIC.SceneGraph.registerNodeType('Viewport', {
         }));
 
 
-    fabricwindow.redrawEvent.appendEventHandler(scene.getScenePreRedrawEventHandler());
-    fabricwindow.redrawEvent.appendEventHandler(redrawEventHandler);
-    fabricwindow.redrawEvent.appendEventHandler(scene.getScenePostRedrawEventHandler());
+    FABRIC.appendOnResolveAsyncTaskCallback(function(id){
+      if(id===0){
+        fabricwindow.redrawEvent.appendEventHandler(scene.getScenePreRedrawEventHandler());
+        fabricwindow.redrawEvent.appendEventHandler(redrawEventHandler);
+        fabricwindow.redrawEvent.appendEventHandler(scene.getScenePostRedrawEventHandler());
+      }
+    });
 
     var propagationRedrawEventHandler = viewportNode.constructEventHandlerNode('DrawPropagation');
     redrawEventHandler.appendChildEventHandler(propagationRedrawEventHandler);

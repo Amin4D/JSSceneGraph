@@ -312,7 +312,7 @@ FABRIC.SceneGraph.registerNodeType('PaintManipulator', {
           operatorName: 'collectPointsInsideBrush',
           srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/collectPointsInsideVolume.kl',
           entryFunctionName: 'collectPointsInsideBrush',
-          parameterBinding: [
+          parameterLayout: [
 
             'paintData.cameraMatrix',
             'paintData.projectionMatrix',
@@ -470,7 +470,7 @@ FABRIC.SceneGraph.registerNodeType('Manipulator', {
       operatorName: 'evaluateGizmo',
       srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/evaluateGizmo.kl',
       entryFunctionName: 'evaluateGizmo',
-      parameterBinding: paramLayout
+      parameterLayout: paramLayout
     }));
 
     ///////////////////////////////////////////////////////////
@@ -582,13 +582,13 @@ FABRIC.SceneGraph.registerNodeType('Manipulator', {
           operatorName: 'disableZBuffer',
           srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/drawAttributes.kl',
           entryFunctionName: 'disableZBuffer',
-          parameterBinding: []
+          parameterLayout: []
         }), 0);
       manipulatorNode.getRedrawEventHandler().postDescendBindings.append(scene.constructOperator({
           operatorName: 'popAttribs',
           srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/drawAttributes.kl',
           entryFunctionName: 'popAttribs',
-          parameterBinding: []
+          parameterLayout: []
         }));
     }
 

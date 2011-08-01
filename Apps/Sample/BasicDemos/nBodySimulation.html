@@ -114,7 +114,7 @@ $(document).ready(function() { $('#play').button({
             operatorName: 'nBodyInitOp',
             entryFunctionName: 'nBodyInit',
             srcFile: 'KL/nBodyOp.kl',
-            parameterBinding: [
+            parameterLayout: [
               'self.index',
               'self.count',
               'self.positions',
@@ -136,7 +136,7 @@ $(document).ready(function() { $('#play').button({
           mainThreadOnly: true,
           entryFunctionName: 'nBodySimulateGPU',
           srcFile: 'KL/nBodyOpGPU.kl',
-          parameterBinding: [
+          parameterLayout: [
             'globals.ms',
             'parentattributes.positions[]',
             'parentattributes.velocities[]',

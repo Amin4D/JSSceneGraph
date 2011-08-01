@@ -42,6 +42,7 @@
 $(document).ready(function() {
 
   FABRIC.SceneGraph.registerNodeType('SwirleyMovementTransform', {
+  factoryFn: function(options, scene) {
     function(options, scene) {
   
       scene.assignDefaults(options, {

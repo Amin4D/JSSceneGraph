@@ -846,7 +846,6 @@ FABRIC.SceneGraph.registerNodeType('Instance', {
   FABRIC.SceneGraph.registerNodeType('ObjLoadTriangles', {
     factoryFn: function(options, scene) {
       scene.assignDefaults(options, {
-        createGeometryNode: true
       });
 
       options.uvSets = 1; //To refine... what if there is no UV set??

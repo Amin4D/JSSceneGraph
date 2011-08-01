@@ -185,7 +185,7 @@ FABRIC.SceneGraph.registerNodeType('Geometry', {
         message;
       for (attributeName in vboRequirements) {
         if (!vertexAttributes[attributeName]) {
-          message = 'Geometry: ' + this.getName() + ' does not meet shader requirements.\n';
+          message = 'Geometry: ' + this.pub.getName() + ' does not meet shader requirements.\n';
           message += 'Shader requires :' + JSON.stringify(vboRequirements) + '\n';
           message += 'But geometry does not support attribute:' + JSON.stringify(attributeName) + '\n';
 

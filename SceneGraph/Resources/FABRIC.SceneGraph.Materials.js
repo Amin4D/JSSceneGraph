@@ -103,7 +103,7 @@ FABRIC.SceneGraph.registerNodeType('Video', {
       });
 
     // ensure to use the right settings for video
-    options.createResouceLoadEventHandler = false;
+    options.createResouceLoadNode = false;
     options.createLoadTextureEventHandler = false;
     options.wantHDR = false;
     options.wantRGBA = false;
@@ -168,14 +168,16 @@ FABRIC.SceneGraph.registerNodeType('Video', {
     }));
 
     var redrawEventHandler = videoNode.constructEventHandlerNode('Redraw');
+    redrawEventHandler.addScope('video', dgnode);
+    redrawEventHandler.addMember('bufferID', 'Size', 0);
     redrawEventHandler.preDescendBindings.append(scene.constructOperator({
         operatorName: 'videoLoadToGPU',
         srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadVideo.kl',
         entryFunctionName: 'videoLoadToGPU',
         parameterLayout: [
-          'image.width',
-          'image.height',
-          'image.pixels',
+          'video.width',
+          'video.height',
+          'video.pixels',
           'self.bufferID',
           'textureStub.textureUnit'
         ]

@@ -174,28 +174,50 @@ FABRIC = (function() {
     }
     return url;
   };
-
-  var loadResourceURL = function(url, mimeType) {
+  
+  var asyncTaskCount = 0;
+  
+  var onResolveAsyncTaskCallbacks = [];
+  var appendOnResolveAsyncTaskCallback = function(fn) {
+    onResolveAsyncTaskCallbacks.push(fn);
+  };
+  var fireOnResolveAsyncTaskCallbacks = function(){
+    for (i=0; i<onResolveAsyncTaskCallbacks.length; i++){
+        onResolveAsyncTaskCallbacks[i].call(undefined, asyncTaskCount);
+    }
+  }
+  var loadResourceURL = function(url, mimeType, callback) {
     if (!url) {
       throw 'missing URL';
     }
-
+    
     if(document.location.href.split('/')[0] === 'file:'){
       alert('Fabric demos must be loaded from localhost.\nNot directly from the file system.\n\ne.g. "http://localhost/Fabric/Apps/Sample/BasicDemos/Flocking.html"');
       thorow('Fabric demos must be loaded from localhost.\nNot directly from the file system.\n\ne.g. "http://localhost/Fabric/Apps/Sample/BasicDemos/Flocking.html"');
     }
     url = processURL(url);
-
+    
+    var async = (FABRIC.asyncResourceLoading && callback!==undefined) ? true : false;
+    if(async){
+      asyncTaskCount++;
+    }
     var result = null;
     var xhreq = new XMLHttpRequest();
     xhreq.onreadystatechange = function() {
       if (xhreq.readyState == 4) {
         if (xhreq.status == 200) {
-          result = xhreq.responseText;
+          if(callback){
+            callback(xhreq.responseText);
+            asyncTaskCount--;
+            fireOnResolveAsyncTaskCallbacks();
+          }
+          else{
+            result = xhreq.responseText;
+          }
         }
       }
     };
-    xhreq.open('GET', url, false);
+    xhreq.open('GET', url, async);
     xhreq.overrideMimeType(mimeType ? mimeType : 'text/plain');
     xhreq.send(null);
     return result;
@@ -231,6 +253,9 @@ FABRIC = (function() {
     appendOnCreateContextCallback: appendOnCreateContextCallback,
     processURL: processURL,
     loadResourceURL: loadResourceURL,
+    asyncResourceLoading: true,
+    getAsyncTaskCount: function(){ return asyncTaskCount; },
+    appendOnResolveAsyncTaskCallback: appendOnResolveAsyncTaskCallback,
     convertImageURLToDataURL: convertImageURLToDataURL
   };
 })();

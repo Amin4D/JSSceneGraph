@@ -141,3 +141,69 @@ operator bindTextureHDR(
 ) {
   oglTexture2D.bindImageHDR(width, height, bitmap, textureUnit);
 }
+
+
+
+operator createSpriteTexture(
+  io Integer res,
+  io Size bufferID,
+  io Integer textureUnit
+) {
+  if (!bufferID && res > 0) {
+    var RGBA texData[];
+    texData.resize(res * res);
+
+    var Size idx = 0;
+    var Scalar dt = 2.0 / Scalar(res);
+    var Scalar ty = - 1.0;
+    for (var Integer y = 0; y < res; y++) {
+      var Scalar tx = - 1.0;
+      for (var Integer x = 0; x < res; x++) {
+        var Scalar t = sqrt(tx * tx + ty * ty);
+        if (t > 1.0) t = 1.0;
+          t = 2.0 * t * t * t - 3.0 * t * t + 1.0;
+        texData[idx].r = texData[idx].g = texData[idx].b = texData[idx].a = Byte(t * 255.0);
+        idx++;
+        tx += dt;
+      }
+      ty += dt;
+    }
+
+    var Size buffers[];
+    buffers.push(Size(bufferID));
+    glGenTextures(1, buffers);
+    glActiveTexture(GL_TEXTURE0 + textureUnit);
+    glBindTexture(GL_TEXTURE_2D, bufferID);
+    glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, 1);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, res, res, 0, GL_RGBA, GL_UNSIGNED_BYTE, texData.data());
+  }
+  else {
+    glActiveTexture(GL_TEXTURE0 + textureUnit);
+    glBindTexture(GL_TEXTURE_2D, bufferID);
+  }
+}
+
+operator createErrorTexture(
+  io Size bufferID,
+  io Integer textureUnit
+) {
+  if (!bufferID) {
+    var RGBA texData[];
+    texData.resize(1);
+    texData[0].r = 1.0;
+    texData[0].g = texData[0].b = texData[0].a = 0.0;
+    var Size buffers[];
+    buffers.resize(1);
+    glGenTextures(1, buffers);
+    bufferID = buffers[0];
+    glActiveTexture(GL_TEXTURE0 + textureUnit);
+    glBindTexture(GL_TEXTURE_2D, bufferID);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, texData.data());
+  }
+  else {
+    glActiveTexture(GL_TEXTURE0 + textureUnit);
+    glBindTexture(GL_TEXTURE_2D, bufferID);
+  }
+}

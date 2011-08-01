@@ -28,6 +28,7 @@
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Color.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Euler.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Ray.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/OGLShaderProgram.js" charset="utf-8"></script>
 
     <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Geometry.js" charset="utf-8"></script>
@@ -38,6 +39,44 @@
     <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Kinematics.js" charset="utf-8"></script>
     
     <script type="text/javascript">
+<<<<<<< HEAD
+=======
+$(document).ready(function() { var startTimeMS = (new Date).getTime();
+
+    $('#play').button({
+      text: true,
+      icons: {
+        primary: 'ui-icon-play'
+      }
+    });
+
+
+FABRIC.SceneGraph.registerNodeType('SwirleyMovementTransform', {
+  factoryFn: function(options, scene) {
+    scene.assignDefaults(options, {
+        baseXfo: FABRIC.RT.xfo(),
+        objId: 0
+      });
+
+    var swirleyMovementTransform = scene.constructNode('Transform', options);
+    var dgnode = swirleyMovementTransform.getDGNode();
+    dgnode.addMember('baseXfo', 'Xfo', options.baseXfo);
+    dgnode.addMember('id', 'Integer', options.objId);
+    dgnode.addDependency(scene.getGlobalsNode(), 'globals');
+    
+    var op = scene.constructOperator({
+      operatorName: 'swirleyMovementOp',
+      srcFile: 'KL/swirleyMovementOp.kl',
+      parameterLayout: [
+        'globals.ms',
+        'self.id',
+        'self.baseXfo',
+        'self.globalXfo'
+      ],
+      entryFunctionName: 'swirleyMovementOp'
+    });
+    dgnode.bindings.append(op);
+>>>>>>> origin/master
     
 $(document).ready(function() {
 

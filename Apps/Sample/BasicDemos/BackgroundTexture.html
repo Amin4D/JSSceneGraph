@@ -42,6 +42,7 @@
 
 $(document).ready(function() {
 
+
   var scene = FABRIC.SceneGraph.createScene();
   var viewport = scene.constructNode('Viewport', {
     windowElement: document.getElementById('FabricContainer'),
@@ -55,9 +56,13 @@ $(document).ready(function() {
   // We cannot enable pose processing effectds untill we can removeChildEventHandlers
   viewport.addPostProcessEffectShader(scene.constructNode('EdgeDetectionPostProcessEffect'));
 
+  $('#loadingDialog').dialog({
+    modal: true
+  });
   var count = FABRIC.getAsyncTaskCount();
   FABRIC.appendOnResolveAsyncTaskCallback(function(id){
 //    $('#loadingDesc').html(name);
+    console.log((1.0-(id/count))*100);
     $('#loadingProgressBar').progressbar({
       value: (1.0-(id/count))*100
     });
@@ -66,8 +71,6 @@ $(document).ready(function() {
       viewport.redraw();
     }
   });
-
-
 });
 
 </script>

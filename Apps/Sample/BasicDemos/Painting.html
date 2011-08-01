@@ -159,31 +159,45 @@ $(document).ready(function() {
       }
     };
 
-  var errors = scene.getErrors();
-  if (errors.length > 0) {
-    throw (errors.toString());
-  }
-  else {
-    var brushColor = FABRIC.RT.rgb(0.8, 0.0, 0.0);
-    paintManipulator.setBrushColor(brushColor);
-    $('#brushColor').ColorPicker({
-        flat: true,
-        color: { r: brushColor.r * 255, g: brushColor.g * 255, b: brushColor.b * 255} ,
-        onChange: function(hsb, hex, rgb) {
-          paintManipulator.setBrushColor(FABRIC.RT.rgb255(rgb.r, rgb.g, rgb.b));
-        }
-      });
+  var brushColor = FABRIC.RT.rgb(0.8, 0.0, 0.0);
+  paintManipulator.setBrushColor(brushColor);
+  $('#brushColor').ColorPicker({
+      flat: true,
+      color: { r: brushColor.r * 255, g: brushColor.g * 255, b: brushColor.b * 255} ,
+      onChange: function(hsb, hex, rgb) {
+        paintManipulator.setBrushColor(FABRIC.RT.rgb255(rgb.r, rgb.g, rgb.b));
+      }
+    });
 
-    console.log(scene.getTimerProfiles());
-    console.log('Done');
-  }
-
+  $('#loadingDialog').dialog({
+    modal: true
+  });
+  var count = FABRIC.getAsyncTaskCount();
+  FABRIC.appendOnResolveAsyncTaskCallback(function(id){
+    console.log((1.0-(id/count))*100);
+    $('#loadingProgressBar').progressbar({
+      value: (1.0-(id/count))*100
+    });
+    if(id===0){
+      $('#loadingDialog').dialog('close');
+      var errors = scene.getErrors();
+      if (errors.length > 0) {
+        throw (errors.toString());
+      }
+      viewport.redraw();
+    }
+  });
+  
 });
 
 </script>
 
   </head> 
   <body>
+    <div id="loadingDialog" title="Loading...">
+      <h4 id="loadingDesc" style="margin-bottom: 10px"></h4>
+      <div id="loadingProgressBar" class="ui-progressbar-value"></div>
+    </div>
     <div id="wrapper">
       <ul id="nav">
         <li><a href="#" id="fabric-logo"><img src="../../../themes/default/_img/projects/fabric-logo.png" /></a></li>

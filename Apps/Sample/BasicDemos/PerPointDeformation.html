@@ -82,7 +82,7 @@ $(document).ready(function() {
   triangles = scene.importAssetFile('Models/cow.obj')['cow'];
 
   deformationBuffer = triangles.addDeformationBuffer(['positions', 'normals']);
-  triangles.addUniformValue('twist', 'Scalar', 0.02, true);
+  deformationBuffer.addUniformValue('twist', 'Scalar', 0.02, true);
   deformationBuffer.assignOperator({
     operatorName: 'twistOp',
     srcFile: 'KL/twistOp.kl',
@@ -90,7 +90,7 @@ $(document).ready(function() {
     parameterBinding: [
       'self.positions',
       'self.normals',
-      'uniforms.twist'
+      'bufferuniforms.twist'
     ]
   });
 

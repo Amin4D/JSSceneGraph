@@ -202,7 +202,7 @@ FABRIC.SceneGraph.registerNodeType('Geometry', {
       redrawEventHandler.addScope('uniforms', uniformsdgnode);
       redrawEventHandler.addScope('attributes', attributesdgnode);
       for (i = 0; i < deformationbufferinterfaces.length; i++) {
-        redrawEventHandler.addScope('attributes' + (i + 1), deformationbufferinterfaces[i].getDGNode());
+        redrawEventHandler.addScope('attributes' + (i + 1), deformationbufferinterfaces[i].getAttributesDGNode());
       }
 
       if (uniformsdgnode.getMembers().indices) {
@@ -256,7 +256,7 @@ FABRIC.SceneGraph.registerNodeType('Geometry', {
         dynamicMember = options.dynamicMembers.indexOf(memberName) != -1;
         attributeNodeBinding = 'attributes';
         for (i = 0; i < deformationbufferinterfaces.length; i++) {
-          if (deformationbufferinterfaces[i].getDGNode().getMembers()[memberName]) {
+          if (deformationbufferinterfaces[i].getAttributesDGNode().getMembers()[memberName]) {
             attributeNodeBinding = 'attributes' + (i + 1);
             dynamicMember = true;
           }
@@ -323,27 +323,35 @@ FABRIC.SceneGraph.registerNodeType('Geometry', {
       throw ('Geometry must define this');
     };
     // This method creates a new dgnode that enables multi-threaded
-    // execution on a copy of the data from the parentBuffer.
+    // execution on a copy of the data from the parent buffer.
     // This is a very simple example on how to create an operator stack
     // similar to those found in traditional DCC applications. Each
     // buffer creates a cache of results, meaning that it is possible
     // to separate out operators for geometry generation and animation.
+    // Note: This whole 'DeformationBuffer' system is up for review, and
+    // may be changes prior to Beta.
     geometryNode.pub.addDeformationBuffer = function(deformableAttributes) {
-      var parentbufferdgnode,
-        bufferdgnode = scene.constructDependencyGraphNode(
-          options.name + '_attributes' + (deformationbufferinterfaces.length + 1)),
+      var parentuniformsdgnode, parentattributesdgnode,
+        bufferuniformsdgnode = geometryNode.constructDGNode('UniformsBuffer' + (deformationbufferinterfaces.length + 1)),
+        bufferattributesdgnode = geometryNode.constructDGNode('AttributesBuffer' + (deformationbufferinterfaces.length + 1)),
         bufferInterface;
 
       if (deformationbufferinterfaces.length == 0) {
-        parentbufferdgnode = attributesdgnode;
+        parentuniformsdgnode = uniformsdgnode;
+        parentattributesdgnode = attributesdgnode;
       }
       else {
-        parentbufferdgnode = deformationbufferinterfaces[deformationbufferinterfaces.length - 1].getDGNode();
+        parentuniformsdgnode = deformationbufferinterfaces[deformationbufferinterfaces.length - 1].getUniformsDGNode();
+        parentattributesdgnode = deformationbufferinterfaces[deformationbufferinterfaces.length - 1].getAttributesDGNode();
       }
-      bufferdgnode.addDependency(parentbufferdgnode, 'parentattributes');
-      bufferdgnode.addDependency(uniformsdgnode, 'uniforms');
+      
+      bufferuniformsdgnode.addDependency(uniformsdgnode, 'uniforms');
+      bufferattributesdgnode.addDependency(attributesdgnode, 'attributes');
+      bufferattributesdgnode.addDependency(bufferuniformsdgnode, 'bufferuniforms');
+      bufferuniformsdgnode.addDependency(parentuniformsdgnode, 'parentuniforms');
+      bufferattributesdgnode.addDependency(parentattributesdgnode, 'parentattributes');
 
-      bufferdgnode.bindings.append(scene.constructOperator({
+      bufferattributesdgnode.bindings.append(scene.constructOperator({
         operatorName: 'matchCount',
         srcCode: 'operator matchCount(Size parentCount, io Size selfCount) {\n' +
             '  selfCount = parentCount;\n' +
@@ -356,13 +364,16 @@ FABRIC.SceneGraph.registerNodeType('Geometry', {
       }));
 
       bufferInterface = {
-        getDGNode: function() {
-          return bufferdgnode;
+        getUniformsDGNode: function() {
+          return bufferuniformsdgnode;
         },
-        propagateMember: function(attributeName) {
-          var attributeType = parentbufferdgnode.getMembers()[attributeName].type;
-          bufferdgnode.addMember(attributeName, attributeType);
-          bufferdgnode.bindings.append(scene.constructOperator({
+        getAttributesDGNode: function() {
+          return bufferattributesdgnode;
+        },
+        propagateAttributeMember: function(attributeName) {
+          var attributeType = parentattributesdgnode.getMembers()[attributeName].type;
+          bufferattributesdgnode.addMember(attributeName, attributeType);
+          bufferattributesdgnode.bindings.append(scene.constructOperator({
             operatorName: 'copyAttribute',
             srcCode: 'operator copyAttribute(io ' + attributeType + ' elements[], ' +
                 'io ' + attributeType + ' value, in Size index) {\n' +
@@ -376,21 +387,33 @@ FABRIC.SceneGraph.registerNodeType('Geometry', {
             ]
           }));
           if (bboxdgnode && attributeName == 'positions') {
-            bboxdgnode.addDependency(bufferdgnode, 'attributes');
+            bboxdgnode.addDependency(bufferattributesdgnode, 'attributes');
           }
         },
         pub: {
           addDependency: function( dgnode, dependencyName){
-            bufferdgnode.addDependency(dgnode, dependencyName);
+            bufferattributesdgnode.addDependency(dgnode, dependencyName);
+          },
+          addUniformValue: function(name, type, value, addGetterSetterInterface) {
+            bufferuniformsdgnode.addMember(name, type, value);
+            if (addGetterSetterInterface) {
+              geometryNode.addMemberInterface(bufferuniformsdgnode, name, true);
+            }
+          },
+          addVertexAttributeValue: function(name, type, defaultValue, dynamic) {
+            bufferattributesdgnode.addMember(name, type, defaultValue);
+            if (dynamic === true) {
+              options.dynamicMembers.push(name);
+            }
           },
           assignOperator: function(operatorDef) {
-            bufferdgnode.bindings.append(scene.constructOperator(operatorDef));
+            bufferattributesdgnode.bindings.append(scene.constructOperator(operatorDef));
           }
         }
       };
       if(deformableAttributes){
         for (i = 0; i < deformableAttributes.length; i++) {
-          bufferInterface.propagateMember(deformableAttributes[i]);
+          bufferInterface.propagateAttributeMember(deformableAttributes[i]);
         }
       }
       deformationbufferinterfaces.push(bufferInterface);

@@ -101,6 +101,7 @@ void main(){\n\
         operatorName: 'setThickGlassMaterialAttribs',
         srcCode: '\n\
 operator setThickGlassMaterialAttribs(){\n\
+  glDisable(GL_CULL_FACE);\n\
   glBlendFunc(GL_ONE, GL_ONE);\n\
 }',
         entryFunctionName: 'setThickGlassMaterialAttribs',

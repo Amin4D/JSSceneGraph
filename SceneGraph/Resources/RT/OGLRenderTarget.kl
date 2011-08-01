@@ -167,18 +167,21 @@ function OGLRenderTarget.bind() {
   }
   
   glBindFramebuffer(GL_FRAMEBUFFER, self.fbo);
-  
-  glPushAttrib(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_VIEWPORT_BIT | GL_TEXTURE_BIT);
-  
+  Size attribs = GL_VIEWPORT_BIT | GL_TEXTURE_BIT;
   Size options = 0;
   if(self.clearDepth){
+    attribs = attribs | GL_DEPTH_BUFFER_BIT;
     options = options | GL_DEPTH_BUFFER_BIT;
   }
   if(self.numColorBuffers > 0 && self.clearColorFlag){
+    attribs = attribs | GL_COLOR_BUFFER_BIT;
     options = options | GL_COLOR_BUFFER_BIT;
-    glClearColor(self.clearColor.r, self.clearColor.g, self.clearColor.b, 1.0);
   }
   
+  glPushAttrib(attribs);
+  if(attribs&GL_COLOR_BUFFER_BIT){
+    glClearColor(self.clearColor.r, self.clearColor.g, self.clearColor.b, 1.0);
+  }
   glViewport(0,0, self.width, self.height);
   glClear(options);
   

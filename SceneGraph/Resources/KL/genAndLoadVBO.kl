@@ -4,101 +4,49 @@
 //
 
 
-#include 'FABRIC_ROOT/SceneGraph/Resources/KL/loadVBOs.kl'
-
 // These must be defined in the preprocessor definitions prior to compilation.
 // #define DATA_TYPE Vec3
 // #define ATTRIBUTE_ID 7
 // #define ATTRIBUTE_NAME "positions"
 
-// TODO: Ask Jerome about this...
-// We often store Vec3 values in attributes of type vec4.
-// in the shader code, what happens if we access the 4th component?
-// Shouldn't we be allocating arraySize * sizeof(vec4) ?
-// #define ATTRIBUTE_ELEMENT_SIZE 16 // positions are stored in a vec4
-
-function genAndLoadVBOFn(
-  DATA_TYPE bufferData[],
-  io Size bufferDataCount,
-  Integer bufferLocation,
-  Boolean dynamic,
-  Boolean reload,
-  io Integer bufferID
-) {
-  if (bufferID <= 0 || bufferData.size() != bufferDataCount || dynamic || reload) {
-    if (bufferID != 0 && (bufferData.size() != bufferDataCount || reload)) {
-      var Size bufferIDs[];
-      bufferIDs.push(Size(bufferID));
-      glDeleteBuffers(1, bufferIDs);
-      bufferID = 0;
-    }
-    // report("Generating VBO for: ATTRIBUTE_NAME" );
-    genBuffer(bufferData.data(), bufferData.dataSize(), dynamic, bufferID);
-    bufferDataCount = bufferData.size();
-  }
-  bindBuffer(bufferData[0].dataSize(), bufferID, bufferLocation);
-}
-
 operator genAndLoadVBO(
-  io ShaderValue attributeValues[],
+  io OGLShaderProgram shaderProgram,
   io DATA_TYPE bufferData[],
   io Size bufferDataCount,
   io Boolean dynamic,
   io Boolean reload,
   io Integer bufferID
 ) {
-  //  report("Loading ATTRIBUTE_NAME :" + bufferID + ":" + bufferDataCount );
-  for (Integer i = 0; i < attributeValues.size(); i++) {
-    if (attributeValues[i].id == ATTRIBUTE_ID) {
-      genAndLoadVBOFn(bufferData, bufferDataCount, attributeValues[i].location, dynamic, reload, bufferID);
-      reload = false;
-      return;
-    }
+  Integer location = shaderProgram.getAttributeLocation(ATTRIBUTE_ID);
+//  report("genAndLoadVBO ATTRIBUTE_NAME bufferID:" + bufferID + " bufferDataCount:" + bufferDataCount + " location:" + location );
+  if(location!=-1){
+    DATA_TYPE val;
+    shaderProgram.genAndBindVBO(
+      bufferData.data(),
+      bufferData.dataSize(),
+      val.dataSize(),
+      bufferDataCount,
+      location,
+      dynamic,
+      reload,
+      bufferID);
+      
+    reload = false;
+    return;
   }
 }
-
-// Load a VBO from the Dependency Graph.
-// An OpenGL shader location is not specified. 
-operator genDGVBOOp(
-  io DATA_TYPE bufferData[],
-  io Size bufferDataCount,
-  io Boolean dynamic,
-  io Boolean reload,
-  io Integer bufferID
-) {
-  // report("genVBOOp2 Loading ATTRIBUTE_NAME :" + bufferID + ":" + bufferData.size() );
-  if (bufferID <= 0 || bufferData.size() != bufferDataCount || dynamic || reload) {
-    if (bufferID != 0 && (bufferData.size() != bufferDataCount || reload)) {
-      var Size bufferIDs[];
-      bufferIDs.push(Size(bufferID));
-      glDeleteBuffers(1, bufferIDs);
-      bufferID = 0;
-    }
-    // report("genDGVBOOp Generating VBO for: ATTRIBUTE_NAME" );
-    // We should be able to gen buffers here. 
-    genBuffer(bufferData.data(), bufferData.dataSize(), dynamic, bufferID);
-    var Size bufferIDs[];
-    bufferIDs.push(Size(0));
-    glGenBuffers(1, bufferIDs);
-    bufferDataCount = bufferData.size();
-  }
-}
-
-
 
 operator bindVBO(
-  io ShaderValue attributeValues[],
+  io OGLShaderProgram shaderProgram,
   io Integer dgbufferID,
   io Size dgbufferDataCount,
   io Size ehbufferDataCount,
 ) {
-//  report("Loading ATTRIBUTE_NAME :" + dgbufferID  );
-  for (Integer i = 0; i < attributeValues.size(); i++) {
-    if (attributeValues[i].id == ATTRIBUTE_ID) {
-      DATA_TYPE val;
-      bindBuffer(val.dataSize(), dgbufferID, attributeValues[i].location);
-      ehbufferDataCount = dgbufferDataCount;
-      return;
-    }
+//  report("bindVBO ATTRIBUTE_NAME :" + dgbufferID  );
+  Integer location = shaderProgram.getAttributeLocation(ATTRIBUTE_ID);
+  if(location!=-1){
+    DATA_TYPE val;
+    shaderProgram.bindBuffer(val.dataSize(), dgbufferID, location);
+    return;
   }
 }

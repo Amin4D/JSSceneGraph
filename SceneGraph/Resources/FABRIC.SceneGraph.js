@@ -29,7 +29,7 @@ FABRIC.SceneGraph = {
   help: function(type) {
     var result = {};
     if (!type) {
-      for (var type in this.nodeDescriptions) {
+      for (type in this.nodeDescriptions) {
         result[type] = {};
         result[type].brief = this.nodeDescriptions[type].brief;
         result[type].detailed = this.nodeDescriptions[type].detailed;
@@ -55,7 +55,25 @@ FABRIC.SceneGraph = {
     }
   },
   createScene: function(sceneOptions) {
-
+    
+    var assignDefaults = function(options, defaults, force) {
+      if (!options) options = {};
+      for (i in defaults) {
+        if (options[i] === undefined || force) options[i] = defaults[i];
+      }
+      return options;
+    };
+    
+    sceneOptions = assignDefaults(sceneOptions, {
+        constructGlobalsNode: true,
+        preDraw: true,
+        postDraw: true,
+        constructAnimationInterface: true,
+        fixedTimeStep: true,
+        timeStep: 20,
+        shadowMaterial:'ShadowMaterial'
+      });
+    
     // first let's create the basic scene object
     // we will have a private (complete) as well as
     // a public interface, which we will return from this
@@ -172,13 +190,8 @@ FABRIC.SceneGraph = {
     scene.readResourceFile = function(filepath) {
       throw ' FS has been depreciated ';
     };
-    scene.assignDefaults = function(options, defaults, force) {
-      if (!options) options = {};
-      for (i in defaults) {
-        if (options[i] === undefined || force) options[i] = defaults[i];
-      }
-      return options;
-    };
+    scene.assignDefaults = assignDefaults;
+    
     scene.cloneObj = function(obj) {
       var newobj = {};
       for (i in obj) {
@@ -504,13 +517,6 @@ FABRIC.SceneGraph = {
 
     /////////////////////////////////////////////////////////////////////
     // Public Scene Interface
-    sceneOptions = scene.assignDefaults(sceneOptions, {
-        constructGlobalsNode: true,
-        shadowMaterial:'ShadowMaterial',
-        constructAnimationInterface: true,
-        fixedTimeStep: true,
-        timeStep: 20
-      });
 
     scene.pub.displayDebugger = function() {
       FABRIC.displayDebugger(context);
@@ -607,22 +613,25 @@ FABRIC.SceneGraph = {
 
     // and the shaders will be left connected to this node. Multiple
     // cameras can render the scene by connecting to this node.
-    var preDrawEventHandler = scene.constructEventHandlerNode('Scene_PreDraw');
-    var postDrawEventHandler = scene.constructEventHandlerNode('Scene_PostDraw');
-
-
-    ///////////////////////////////////////////////////////////////////
-    // Shadowcasting Lightsource <-> SceneGraph draw event handler firewall
-    var propagateRenderShadowMapEvent = scene.constructEventHandlerNode('PropagateRenderShadowMapEvent');
-    var beginRenderShadowMap = scene.constructEventHandlerNode('BeginRenderShadowMap');
-    // The shadow map shader is constructed on demand.
-    var shadowMapMaterial;
-
-    // The 'Parent' node is the first child of the scene redraw event.
-    // This means that the event traversial will propagate down the
-    // shadow casting graph, before propagating down the render graph.
-    preDrawEventHandler.appendChildEventHandler(propagateRenderShadowMapEvent);
-
+    var preDrawEventHandler, postDrawEventHandler;
+    var propagateRenderShadowMapEvent, beginRenderShadowMap, shadowMapMaterial;
+    if(sceneOptions.preDraw){
+      preDrawEventHandler = scene.constructEventHandlerNode('Scene_PreDraw');
+      propagateRenderShadowMapEvent = scene.constructEventHandlerNode('PropagateRenderShadowMapEvent');
+      
+      ///////////////////////////////////////////////////////////////////
+      // Shadowcasting Lightsource <-> SceneGraph draw event handler firewall
+      beginRenderShadowMap = scene.constructEventHandlerNode('BeginRenderShadowMap');
+      
+        
+      // The 'Parent' node is the first child of the scene redraw event.
+      // This means that the event traversial will propagate down the
+      // shadow casting graph, before propagating down the render graph.
+      preDrawEventHandler.appendChildEventHandler(propagateRenderShadowMapEvent);
+    }
+    if(sceneOptions.postDraw){
+      postDrawEventHandler = scene.constructEventHandlerNode('Scene_PostDraw');
+    }
 
     ///////////////////////////////////////////////////////////////////
     // All scene draw event handlers(shaders) are attached to this handler.
@@ -915,11 +924,13 @@ FABRIC.SceneGraph.registerNodeType('Viewport', {
           ]
         }));
 
-
-    fabricwindow.redrawEvent.appendEventHandler(scene.getScenePreRedrawEventHandler());
+    if(scene.getScenePreRedrawEventHandler()){
+      fabricwindow.redrawEvent.appendEventHandler(scene.getScenePreRedrawEventHandler());
+    }
     fabricwindow.redrawEvent.appendEventHandler(redrawEventHandler);
-    fabricwindow.redrawEvent.appendEventHandler(scene.getScenePostRedrawEventHandler());
-
+    if(scene.getScenePostRedrawEventHandler()){
+      fabricwindow.redrawEvent.appendEventHandler(scene.getScenePostRedrawEventHandler());
+    }
     var propagationRedrawEventHandler = viewportNode.constructEventHandlerNode('DrawPropagation');
     redrawEventHandler.appendChildEventHandler(propagationRedrawEventHandler);
 
@@ -1013,14 +1024,9 @@ FABRIC.SceneGraph.registerNodeType('Viewport', {
         textureStub.addMember('program', 'Integer', 0);
         textureStub.postDescendBindings.append(
           scene.constructOperator({
-              operatorName: 'renderTextureToView',
-              srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/offscreenRendering.kl',
-              preProcessorDefinitions: {
-        OGL_INTERNALFORMAT: 'GL_RGBA16F_ARB',
-        OGL_FORMAT: 'GL_RGBA',
-        OGL_TYPE: 'GL_UNSIGNED_BYTE'
-              },
-              entryFunctionName: 'renderTextureToView',
+              operatorName: 'drawTextureFullScreen',
+              srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/drawTexture.kl',
+              entryFunctionName: 'drawTextureFullScreen',
               parameterLayout: [
                 'self.textureUnit',
                 'self.program'

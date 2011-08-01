@@ -6,6 +6,6 @@
 operator loadShader(
   io OGLShaderProgram shaderProgram
 ) {
-//  report("loadShader:" + shaderProgram);
+//  report("loadShader:" + shaderProgram.name);
   shaderProgram.loadShader();
 }

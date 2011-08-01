@@ -168,7 +168,8 @@ FABRIC.SceneGraph.registerNodeType('Video', {
       ]
     }));
 
-    videoNode.getRedrawEventHandler().preDescendBindings.append(scene.constructOperator({
+    var redrawEventHandler = videoNode.constructEventHandlerNode('Redraw');
+    redrawEventHandler.preDescendBindings.append(scene.constructOperator({
         operatorName: 'videoLoadToGPU',
         srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadVideo.kl',
         entryFunctionName: 'videoLoadToGPU',

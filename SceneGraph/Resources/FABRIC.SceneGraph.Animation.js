@@ -84,7 +84,7 @@ FABRIC.SceneGraph.registerNodeType('AnimationTrack', {
             KEYFRAME_EVALUATEDTYPE: defaultKeyframeValue.valueType
           },
           entryFunctionName: 'evaluateKeyframeAnimationTracks',
-          parameterBinding: [
+          parameterLayout: [
             'animationtrack.keys[]',
             'controller.localtime',
             'self.index',
@@ -102,7 +102,7 @@ FABRIC.SceneGraph.registerNodeType('AnimationTrack', {
             KEYFRAME_EVALUATEDTYPE: defaultKeyframeValue.valueType
           },
           entryFunctionName: 'evaluateCurve',
-          parameterBinding: [
+          parameterLayout: [
             'animationtrack.keys[]',
             'parameters.trackIndex',
             'parameters.timeRange',
@@ -174,7 +174,7 @@ FABRIC.SceneGraph.registerNodeType('AnimationController', {
           '  localTime = globalTime;\n' +
           '}',
         entryFunctionName: 'setControllerLocalTime',
-        parameterBinding: [
+        parameterLayout: [
           'globals.ms',
           'self.localtime'
         ]
@@ -186,7 +186,7 @@ FABRIC.SceneGraph.registerNodeType('AnimationController', {
         operatorName:'incrementControllerLocalTime',
         srcFile:'FABRIC_ROOT/SceneGraph/Resources/KL/incrementControllerLocalTime.kl',
         entryFunctionName:'incrementControllerLocalTime',
-        parameterBinding:[
+        parameterLayout:[
           'globals.time',
           'globals.timeStep',
           'self.playbackRate',
@@ -260,7 +260,7 @@ FABRIC.SceneGraph.registerNodeType('AnimationEvaluator', {
       var operatorHeaderSrc = '\noperator ' + operatorName + '(\n\tio ' + evaluatorDatatype + ' curvevalues[]';
       var operatorArraySrc = {};
       var operatorBodySrc = '';
-      var parameterBinding = ['animationevaluator.value[]'];
+      var parameterLayout = ['animationevaluator.value[]'];
       var tempVariables = {};
       for (var memberAccessor in memberBindings) {
         var memberBinding = memberBindings[memberAccessor];
@@ -347,9 +347,9 @@ FABRIC.SceneGraph.registerNodeType('AnimationEvaluator', {
         }
         operatorBodySrc += '\n' + memberBindingCode;
 
-        if (parameterBinding.indexOf('self.' + memberName) == -1) {
+        if (parameterLayout.indexOf('self.' + memberName) == -1) {
           operatorHeaderSrc += ',\n\tio ' + boundMemberType + ' ' + memberName + (isArray ? '[]' : '');
-          parameterBinding.push('self.' + memberName);
+          parameterLayout.push('self.' + memberName);
         }
       }
 
@@ -368,14 +368,14 @@ FABRIC.SceneGraph.registerNodeType('AnimationEvaluator', {
       operatorBodySrc = '\n' + operatorBodySrc + '}';
 
       //console.log(operatorHeaderSrc + operatorBodySrc);
-      //console.log(parameterBinding);
+      //console.log(parameterLayout);
 
       if (targetnode.getDGNode().bindings.length > 0) {
         targetnode.getDGNode().bindings.insert(scene.constructOperator({
             operatorName: operatorName,
             srcCode: operatorHeaderSrc + operatorBodySrc,
             entryFunctionName: operatorName,
-            parameterBinding: parameterBinding
+            parameterLayout: parameterLayout
           }), 0);
       }
       else {
@@ -383,7 +383,7 @@ FABRIC.SceneGraph.registerNodeType('AnimationEvaluator', {
             operatorName: operatorName,
             srcCode: operatorHeaderSrc + operatorBodySrc,
             entryFunctionName: operatorName,
-            parameterBinding: parameterBinding
+            parameterLayout: parameterLayout
           }));
       }
     };

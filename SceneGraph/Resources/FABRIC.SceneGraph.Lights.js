@@ -57,7 +57,7 @@ FABRIC.SceneGraph.registerNodeType('Light', {
           LIGHTVIEWMATRIX_ATTRIBUTE_ID: FABRIC.shaderAttributeTable['lightShadowMapMatrix'].id
         },
         entryFunctionName: 'loadLight',
-        parameterBinding: [
+        parameterLayout: [
         'shader.uniformValues',
         'light.type',
         'light.color',
@@ -96,7 +96,7 @@ FABRIC.SceneGraph.registerNodeType('Light', {
         operatorName: 'loadLightXfo',
         srcCode: 'operator loadLightXfo(io Xfo xfo, io Mat44 lightMat44, io Mat44 cameraMat44){ lightMat44 = xfo; cameraMat44 = lightMat44.inverse(); }',
         entryFunctionName: 'loadLightXfo',
-        parameterBinding: [
+        parameterLayout: [
           'transform.' + transformNodeMember,
           'self.lightMat44',
           'self.cameraMat44',
@@ -211,7 +211,7 @@ FABRIC.SceneGraph.registerNodeType('DirectionalLight', {
           LIGHTVIEWMATRIX_ATTRIBUTE_ID: FABRIC.shaderAttributeTable['lightShadowMapMatrix'].id
         },
         entryFunctionName: 'loadDirectionalLight',
-        parameterBinding: [
+        parameterLayout: [
           'shader.uniformValues',
           'camera.cameraMat44',
           'light.lightMat44'
@@ -316,7 +316,7 @@ FABRIC.SceneGraph.registerNodeType('SpotLight', {
           LIGHTVIEWMATRIX_ATTRIBUTE_ID: FABRIC.shaderAttributeTable['lightShadowMapMatrix'].id
           },
           entryFunctionName: 'loadSpotLight',
-          parameterBinding: [
+          parameterLayout: [
             'shader.uniformValues',
             'light.coneAngle',
             'camera.cameraMat44',
@@ -337,7 +337,7 @@ FABRIC.SceneGraph.registerNodeType('SpotLight', {
                 operatorName:"debugShadowMapBuffer",
                 srcFile:"FABRIC_ROOT/SceneGraph/Resources/KL/shadowMaps.kl",
                 entryFunctionName:"debugShadowMapBuffer",
-                parameterBinding:[
+                parameterLayout:[
                   'light.colorTextureID'
                 ]
               }));
@@ -356,7 +356,7 @@ FABRIC.SceneGraph.registerNodeType('SpotLight', {
                 LIGHTVIEWMATRIX_ATTRIBUTE_ID: FABRIC.shaderAttributeTable['lightShadowMapMatrix'].id
               },
               entryFunctionName: 'loadLightMatrixUniform',
-              parameterBinding: [
+              parameterLayout: [
                 'shader.uniformValues',
                 'light.shadowMat44',
                 'camera.cameraMat44'
@@ -368,7 +368,7 @@ FABRIC.SceneGraph.registerNodeType('SpotLight', {
               operatorName: 'bindShadowMapBufferOp',
               srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/shadowMaps.kl',
               entryFunctionName: 'bindShadowMapBuffer',
-              parameterBinding: [
+              parameterLayout: [
                 'self.shadowMap',
                 'light.depthTextureID'
               ]
@@ -400,7 +400,7 @@ FABRIC.SceneGraph.registerNodeType('SpotLight', {
           operatorName: 'calcLightProjectionMatricies',
           srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/shadowMaps.kl',
           entryFunctionName: 'calcLightProjectionMatricies',
-          parameterBinding: [
+          parameterLayout: [
             'self.nearDistance',
             'self.farDistance',
             'self.coneAngle',
@@ -417,7 +417,7 @@ FABRIC.SceneGraph.registerNodeType('SpotLight', {
           operatorName: 'genAndBindShadowMapFBO',
           srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/shadowMaps.kl',
           entryFunctionName: 'genAndBindShadowMapFBO',
-          parameterBinding: [
+          parameterLayout: [
             'light.shadowFBO',
             'light.prevFBO',
             'light.depthTextureID',
@@ -430,7 +430,7 @@ FABRIC.SceneGraph.registerNodeType('SpotLight', {
           operatorName: 'unbindFBO',
           srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/shadowMaps.kl',
           entryFunctionName: 'unbindFBO',
-          parameterBinding: [
+          parameterLayout: [
             'light.prevFBO'
           ]
         }));
@@ -446,7 +446,7 @@ FABRIC.SceneGraph.registerNodeType('SpotLight', {
                 operatorName:"debugShadowMapBuffer",
                 srcFile:"FABRIC_ROOT/SceneGraph/Resources/KL/shadowMaps.kl",
                 entryFunctionName:"debugShadowMapBuffer",
-                parameterBinding:[
+                parameterLayout:[
                   'light.colorTextureID'
                 ]
               }));

@@ -52,7 +52,7 @@ FABRIC.SceneGraph.registerNodeType('Image', {
 
       dgnode.bindings.append(scene.constructOperator({
         operatorName: (options.wantHDR ? 'loadImageHDR' : 'loadImageLDR'),
-        parameterBinding: [
+        parameterLayout: [
               'resource.resource',
               'self.width',
               'self.height',
@@ -80,7 +80,7 @@ FABRIC.SceneGraph.registerNodeType('Image', {
         operatorName: 'loadTexture',
         srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadTexture.kl',
         entryFunctionName: 'createTextureFromImageLDR',
-        parameterBinding: [
+        parameterLayout: [
               'image.width',
               'image.height',
               'image.pixels',
@@ -140,7 +140,7 @@ FABRIC.SceneGraph.registerNodeType('Video', {
       operatorName: 'videoLoadInfo',
       srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadVideo.kl',
       entryFunctionName: 'videoLoadInfo',
-      parameterBinding: [
+      parameterLayout: [
         'self.filename',
         'self.stream',
         'self.width',
@@ -154,7 +154,7 @@ FABRIC.SceneGraph.registerNodeType('Video', {
       operatorName: 'videoSeekTime',
       srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadVideo.kl',
       entryFunctionName: 'videoSeekTime',
-      parameterBinding: [
+      parameterLayout: [
         'self.stream',
         'globals.ms'
       ]
@@ -164,7 +164,7 @@ FABRIC.SceneGraph.registerNodeType('Video', {
       operatorName: 'videoGetPixels',
       srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadVideo.kl',
       entryFunctionName: 'videoGetPixels',
-      parameterBinding: [
+      parameterLayout: [
         'self.stream',
         'self.width',
         'self.height',
@@ -176,7 +176,7 @@ FABRIC.SceneGraph.registerNodeType('Video', {
         operatorName: 'videoLoadToGPU',
         srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadVideo.kl',
         entryFunctionName: 'videoLoadToGPU',
-        parameterBinding: [
+        parameterLayout: [
           'image.width',
           'image.height',
           'image.pixels',
@@ -217,7 +217,7 @@ FABRIC.SceneGraph.registerNodeType('PointSpriteTexture', {
             operatorName: 'createSpriteTexture',
             srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadTexture.kl',
             entryFunctionName: 'createSpriteTexture',
-            parameterBinding: [
+            parameterLayout: [
               'image.resolution',
               'self.bufferID',
               'textureStub.textureUnit'
@@ -432,7 +432,7 @@ FABRIC.SceneGraph.registerNodeType('Shader', {
       operatorName: 'loadShader',
       srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadShader.kl',
       entryFunctionName: 'loadShader',
-      parameterBinding: [
+      parameterLayout: [
         'self.name',
         'self.shaderSources',
         'self.uniformValues',
@@ -567,7 +567,7 @@ FABRIC.SceneGraph.registerNodeType('Material', {
           ATTRIBUTE_ID: FABRIC.shaderAttributeTable[uniformName].id
         },
         entryFunctionName: operatorFunction,
-        parameterBinding: [
+        parameterLayout: [
           (options.separateShaderNode ? 'shader.uniformValues' : 'self.uniformValues'),
           (uniform.owner === undefined ? 'material' : uniform.owner) + '.' + uniformName
         ]
@@ -615,7 +615,7 @@ FABRIC.SceneGraph.registerNodeType('Material', {
             ATTRIBUTE_NAME: textureName
           },
           entryFunctionName: 'loadIntegerUniform',
-          parameterBinding: [
+          parameterLayout: [
             'shader.uniformValues',
             'self.textureUnit'
           ]
@@ -673,7 +673,7 @@ FABRIC.SceneGraph.registerNodeType('PointMaterial', {
         operatorName: 'setPointSize',
         srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/drawPoints.kl',
         entryFunctionName: 'setPointSize',
-        parameterBinding: ['material.pointSize']
+        parameterLayout: ['material.pointSize']
       }));
     return pointMaterial;
   }});
@@ -734,7 +734,7 @@ FABRIC.SceneGraph.registerNodeType('PostProcessEffect', {
             OGL_TYPE: options.OGL_TYPE
           },
           entryFunctionName: 'prepareOffscreenRendering',
-          parameterBinding: [
+          parameterLayout: [
             'window.width',
             'window.height',
             'self.offscreenFBO',
@@ -756,7 +756,7 @@ FABRIC.SceneGraph.registerNodeType('PostProcessEffect', {
             OGL_TYPE: options.OGL_TYPE
           },
           entryFunctionName: 'renderOffscreenToView',
-          parameterBinding: [
+          parameterLayout: [
             'window.width',
             'window.height',
             'self.offscreenPrevFBO',
@@ -1130,13 +1130,13 @@ FABRIC.SceneGraph.registerNodeType('PointSpriteMaterial', {
         operatorName: 'preDrawSpritePoints',
         srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/drawPoints.kl',
         entryFunctionName: 'preDrawSpritePoints',
-        parameterBinding: ['material.pointSize']
+        parameterLayout: ['material.pointSize']
       }));
     pointSpriteMaterialNode.getRedrawEventHandler().postDescendBindings.append(scene.constructOperator({
         operatorName: 'postDrawSpritePoints',
         srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/drawPoints.kl',
         entryFunctionName: 'postDrawSpritePoints',
-        parameterBinding: []
+        parameterLayout: []
       }));
 
     return pointSpriteMaterialNode;

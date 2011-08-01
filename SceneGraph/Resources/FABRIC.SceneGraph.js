@@ -366,7 +366,7 @@ FABRIC.SceneGraph = {
       constructBinding = function(op) {
         var binding = context.DG.createBinding();
         binding.setOperator(op);
-        binding.setParameterLayout(operatorDef.parameterBinding ? operatorDef.parameterBinding : []);
+        binding.setParameterLayout(operatorDef.parameterLayout ? operatorDef.parameterLayout : []);
         return binding;
       }
 
@@ -648,7 +648,7 @@ FABRIC.SceneGraph = {
             '  ms_prevupdate = ms;\n' +
             '}',
           entryFunctionName: 'setTimestep',
-          parameterBinding: [
+          parameterLayout: [
             'self.ms',
             'self.ms_prevupdate',
             'self.timestep'
@@ -907,7 +907,7 @@ FABRIC.SceneGraph.registerNodeType('Viewport', {
           operatorName: 'viewPortBeginRender',
           srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/viewPortBeginRender.kl',
           entryFunctionName: 'viewPortBeginRender',
-          parameterBinding: [
+          parameterLayout: [
             'window.width',
             'window.height',
             'viewPort.backgroundColor'
@@ -946,7 +946,7 @@ FABRIC.SceneGraph.registerNodeType('Viewport', {
         operatorName: 'ViewportRaycast',
         srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/viewPortUpdateRayCast.kl',
         entryFunctionName: 'viewPortUpdateRayCast',
-        parameterBinding: [
+        parameterLayout: [
           'camera.cameraMat44',
           'camera.projectionMat44',
           'window.width',
@@ -1020,7 +1020,7 @@ FABRIC.SceneGraph.registerNodeType('Viewport', {
         OGL_TYPE: 'GL_UNSIGNED_BYTE'
               },
               entryFunctionName: 'renderTextureToView',
-              parameterBinding: [
+              parameterLayout: [
                 'self.textureUnit',
                 'self.program'
               ]
@@ -1372,7 +1372,7 @@ FABRIC.SceneGraph.registerNodeType('Camera', {
       operatorName: 'UpdateCameraProjection',
       srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/updateCameraProjection.kl',
       entryFunctionName: 'updateCameraProjection',
-      parameterBinding: [
+      parameterLayout: [
         'camera.projectionMat44',
         'window.width',
         'window.height',
@@ -1409,7 +1409,7 @@ FABRIC.SceneGraph.registerNodeType('Camera', {
         operatorName: 'loadXfo',
         srcCode: 'operator loadXfo(io Xfo xfo, io Mat44 mat44){ mat44 = xfo; mat44 = mat44.inverse(); }',
         entryFunctionName: 'loadXfo',
-        parameterBinding: [
+        parameterLayout: [
           'transform.' + transformNodeMember,
           'self.cameraMat44'
         ]
@@ -1476,7 +1476,7 @@ FABRIC.SceneGraph.registerNodeType('TargetCamera', {
       '  focalDist = xfo.tr.dist(target);' +
       '}',
       entryFunctionName: 'loadFocalDist',
-      parameterBinding: [
+      parameterLayout: [
         'transform.globalXfo',
         'transform.target',
         'self.focalDistance'

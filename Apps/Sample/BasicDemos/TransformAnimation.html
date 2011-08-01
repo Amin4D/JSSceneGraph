@@ -43,8 +43,6 @@ $(document).ready(function() {
 
   FABRIC.SceneGraph.registerNodeType('SwirleyMovementTransform', {
   factoryFn: function(options, scene) {
-    function(options, scene) {
-  
       scene.assignDefaults(options, {
           baseXfo: FABRIC.RT.xfo(),
           objId: 0
@@ -59,7 +57,7 @@ $(document).ready(function() {
       var op = scene.constructOperator({
         operatorName: 'swirleyMovementOp',
         srcFile: 'KL/swirleyMovementOp.kl',
-        parameterBinding: [
+        parameterLayout: [
           'globals.ms',
           'self.id',
           'self.baseXfo',

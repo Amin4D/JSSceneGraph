@@ -298,7 +298,7 @@ FABRIC.SceneGraph.registerNodeType('SpotLight', {
   briefDesc: 'The SpotLight node represents a spot light in the SceneGraph.',
   detailedDesc: 'The SpotLight node represents a spot light in the SceneGraph. ' +
                 'A Spot Light casts light in a cone orriginating from a specified position and with an angle specified by the cone angle. ' +
-                'The spot light can also be used to cast shadows using shadowmaps which are rendered prior to the scene being rendered'
+                'The spot light can also be used to cast shadows using shadowmaps which are rendered prior to the scene being rendered',
   parentNodeDesc: 'Light',
   optionsDesc: {
     coneAngle: 'The angle of the cone in radians used in lighting calculations',

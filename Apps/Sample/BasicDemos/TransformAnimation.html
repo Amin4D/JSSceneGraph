@@ -238,12 +238,12 @@ $(document).ready(function() {
     modal: true
   });
   var count = FABRIC.getAsyncTaskCount();
-  FABRIC.appendOnResolveAsyncTaskCallback(function(id){
-    console.log((1.0-(id/count))*100);
+  FABRIC.appendOnResolveAsyncTaskCallback(function(label, countRemaining){
+    console.log((1.0-(countRemaining/count))*100);
     $('#loadingProgressBar').progressbar({
-      value: (1.0-(id/count))*100
+      value: (1.0-(countRemaining/count))*100
     });
-    if(id===0){
+    if(countRemaining===0){
       $('#loadingDialog').dialog('close');
       var errors = scene.getErrors();
       if (errors.length > 0) {

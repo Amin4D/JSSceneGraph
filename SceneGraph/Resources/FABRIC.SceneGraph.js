@@ -54,24 +54,9 @@ FABRIC.SceneGraph = {
       }
     }
   },
-<<<<<<< HEAD
-  createSceneAsync: function(sceneOptions, callback) {
-      var context = FABRIC.createContext();
-      FABRIC.addAsyncTask('createScene', function(){
-        context.flush();
-        callback(FABRIC.SceneGraph.createScene(sceneOptions, context));
-      }, true);
-  },
-  createScene: function(sceneOptions, context) {
-    
-    // Now we create a context. The context is a container for all
-    // data relating to this scene graph. A single HTML file can
-    // define multiple scene graphs with separate contexts.
-    if(!context)
-      context = FABRIC.createContext();
-
-=======
   createScene: function(sceneOptions) {
+    
+    var context = FABRIC.createContext();
     
     var assignDefaults = function(options, defaults, force) {
       if (!options) options = {};
@@ -91,7 +76,6 @@ FABRIC.SceneGraph = {
         shadowMaterial:'ShadowMaterial'
       });
     
->>>>>>> origin/master
     // first let's create the basic scene object
     // we will have a private (complete) as well as
     // a public interface, which we will return from this
@@ -929,8 +913,8 @@ FABRIC.SceneGraph.registerNodeType('Viewport', {
           ]
         }));
 
-    FABRIC.appendOnResolveAsyncTaskCallback(function(id){
-      if(id===0){
+    FABRIC.appendOnResolveAsyncTaskCallback(function(label, countRemaining){
+      if(countRemaining===0){
         fabricwindow = scene.addWindow(windowElement);
         redrawEventHandler.addScope('window', fabricwindow.windowNode);
         if(scene.getScenePreRedrawEventHandler()){

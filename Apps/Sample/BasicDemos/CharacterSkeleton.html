@@ -126,13 +126,13 @@ $(document).ready(function() {
   });
   
   var count = FABRIC.getAsyncTaskCount();
-  FABRIC.appendOnResolveAsyncTaskCallback(function(id){
+  FABRIC.appendOnResolveAsyncTaskCallback(function(label, countRemaining){
 //    $('#loadingDesc').html(name);
-    console.log((1.0-(id/count))*100);
+    console.log((1.0-(countRemaining/count))*100);
     $('#loadingProgressBar').progressbar({
-      value: (1.0-(id/count))*100
+      value: (1.0-(countRemaining/count))*100
     });
-    if(id===0){
+    if(countRemaining===0){
       $('#loadingDialog').dialog('close');
       viewport.redraw();
     }

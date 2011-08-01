@@ -182,7 +182,7 @@ FABRIC = (function() {
     setTimeout(function(){
       callback();
       asyncTaskCount--;
-      fireOnResolveAsyncTaskCallbacks();
+      fireOnResolveAsyncTaskCallbacks('...');
     }, 1);
   }
   
@@ -190,9 +190,9 @@ FABRIC = (function() {
   var appendOnResolveAsyncTaskCallback = function(fn) {
     onResolveAsyncTaskCallbacks.push(fn);
   };
-  var fireOnResolveAsyncTaskCallbacks = function(){
+  var fireOnResolveAsyncTaskCallbacks = function(label){
     for (i=0; i<onResolveAsyncTaskCallbacks.length; i++){
-        onResolveAsyncTaskCallbacks[i].call(undefined, asyncTaskCount);
+        onResolveAsyncTaskCallbacks[i].call(undefined, label, asyncTaskCount);
     }
   }
   var loadResourceURL = function(url, mimeType, callback) {
@@ -206,6 +206,7 @@ FABRIC = (function() {
     }
     url = processURL(url);
     
+    var label = url.split('/').pop().split('.')[0];
     var async = (FABRIC.asyncResourceLoading && callback!==undefined) ? true : false;
     if(async){
       asyncTaskCount++;
@@ -218,7 +219,7 @@ FABRIC = (function() {
           if(callback){
             callback(xhreq.responseText);
             asyncTaskCount--;
-            fireOnResolveAsyncTaskCallbacks();
+            fireOnResolveAsyncTaskCallbacks(label);
           }
           else{
             result = xhreq.responseText;

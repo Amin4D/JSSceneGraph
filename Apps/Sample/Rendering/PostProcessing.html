@@ -142,7 +142,7 @@ $(document).ready(function() { var scene = FABRIC.SceneGraph.createScene();
   });
   var count = FABRIC.getAsyncTaskCount();
   FABRIC.appendOnResolveAsyncTaskCallback(function(label, countRemaining){
-    console.log((1.0-(countRemaining/count))*100);
+    //console.log((1.0-(countRemaining/count))*100);
     $('#loadingProgressBar').progressbar({
       value: (1.0-(countRemaining/count))*100
     });

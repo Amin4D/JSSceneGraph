@@ -64,7 +64,7 @@ $(document).ready(function() {
   var count = FABRIC.getAsyncTaskCount();
   FABRIC.appendOnResolveAsyncTaskCallback(function(label, countRemaining){
 //    $('#loadingDesc').html(name);
-    console.log((1.0-(countRemaining/count))*100 + ":"+label);
+//  console.log((1.0-(countRemaining/count))*100 + ":"+label);
     $('#loadingProgressBar').progressbar({
       value: (1.0-(countRemaining/count))*100
     });

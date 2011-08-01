@@ -6,103 +6,74 @@
 
 
 operator loadLight(
-  io ShaderValue uniformValues[],
+  io OGLShaderProgram shaderProgram,
   io Integer type,
   io Color color,
   io Mat44 cameraMatrix,
   io Mat44 lightMatrix
 ) {
-  Size nbUniforms = uniformValues.size();
-  for (Size i = 0; i < nbUniforms; i++) {
-    var ShaderValue uniform = uniformValues[i];
+//  report("loadLight");
+  Integer location;
 
-    switch (uniform.id) {
-      case LIGHTTYPE_ATTRIBUTE_ID:
-        if (uniform.location != - 1)
-          glUniform1i(uniform.location, type);
-        else
-          report('spotLight: lightType Location uniform not defined');
-        break;
-      case LIGHTCOLOR_ATTRIBUTE_ID:
-        if (uniform.location != - 1)
-          glUniform4f(uniform.location, color.r, color.g, color.b, color.a);
-        else
-          report('spotLight: lightColor Location uniform not defined');
-        break;
-      case LIGHTPOS_ATTRIBUTE_ID:
-        var Vec4 viewPos = lightMatrix.row3 * cameraMatrix;
-        if (uniform.location != - 1)
-          glUniform4f(uniform.location, viewPos.x, viewPos.y, viewPos.z, viewPos.t);
-        else
-          report('pointLight: lightPosition Location uniform not defined');
-        break;
-    }
+  location = shaderProgram.getUniformLocation(LIGHTTYPE_ATTRIBUTE_ID);
+  if(location!=-1){
+    shaderProgram.loadIntegerUniform(location, type);
+  }
+  location = shaderProgram.getUniformLocation(LIGHTCOLOR_ATTRIBUTE_ID);
+  if(location!=-1){
+    shaderProgram.loadColorUniform(location, color);
+  }
+  location = shaderProgram.getUniformLocation(LIGHTPOS_ATTRIBUTE_ID);
+  if(location!=-1){
+    var Vec4 viewPos = lightMatrix.row3 * cameraMatrix;
+    shaderProgram.loadVec4Uniform(location, viewPos);
   }
 }
 
 operator loadDirectionalLight(
-  io ShaderValue uniformValues[],
+  io OGLShaderProgram shaderProgram,
   io Mat44 cameraMatrix,
   io Mat44 lightMatrix
 ) {
-  Size nbUniforms = uniformValues.size();
-  for (Size i = 0; i < nbUniforms; i++) {
-    var ShaderValue uniform = uniformValues[i];
-    switch (uniform.id) {
-      case LIGHTDIR_ATTRIBUTE_ID:
-        var Vec3 viewDir = Vec3(0.0, 0.0, -1.0) * lightMatrix.upperLeft() * cameraMatrix.upperLeft();
-		viewDir = viewDir.unit(); //lightMatrix might have scaling
-        if (uniform.location != - 1)
-          glUniform3f(uniform.location, viewDir.x, viewDir.y, viewDir.z);
-        else
-          report('spotLight: lightDir Location uniform not defined');
-        break;
-    }
+//  report("loadDirectionalLight");
+  Integer location = shaderProgram.getUniformLocation(LIGHTDIR_ATTRIBUTE_ID);
+  if(location!=-1){
+    var Vec3 viewDir = Vec3(0.0, 0.0, -1.0) * lightMatrix.upperLeft() * cameraMatrix.upperLeft();
+    viewDir = viewDir.unit(); //lightMatrix might have scaling
+    shaderProgram.loadVec3Uniform(location, viewDir);
   }
 }
 
 operator loadSpotLight(
-  io ShaderValue uniformValues[],
+  io OGLShaderProgram shaderProgram,
   io Scalar coneAngle,
   io Mat44 cameraMatrix,
   io Mat44 lightMatrix
 ) {
-  Size nbUniforms = uniformValues.size();
-  for (Size i = 0; i < nbUniforms; i++) {
-    var ShaderValue uniform = uniformValues[i];
+//  report("loadSpotLight");
+  Integer location;
 
-    switch (uniform.id) {
-      case LIGHTDIR_ATTRIBUTE_ID:
-        var Vec3 viewDir = Vec3(0.0, 0.0, -1.0) * lightMatrix.upperLeft() * cameraMatrix.upperLeft();
-        viewDir = viewDir.unit(); //lightMatrix might have scaling
-        if (uniform.location != - 1)
-          glUniform3f(uniform.location, viewDir.x, viewDir.y, viewDir.z);
-        else
-          report('spotLight: lightDir Location uniform not defined');
-        break;
-      case LIGHTCOSCUTOFF_ATTRIBUTE_ID:
-        if (uniform.location != - 1)
-          glUniform1f(uniform.location, cos(coneAngle * 0.5));
-        else
-          report('spotLight: lightCosCutoff Location uniform not defined');
-        break;
-    }
+  location = shaderProgram.getUniformLocation(LIGHTDIR_ATTRIBUTE_ID);
+  if(location!=-1){
+    var Vec3 viewDir = Vec3(0.0, 0.0, -1.0) * lightMatrix.upperLeft() * cameraMatrix.upperLeft();
+    viewDir = viewDir.unit(); //lightMatrix might have scaling
+    shaderProgram.loadVec3Uniform(location, viewDir);
+  }
+  location = shaderProgram.getUniformLocation(LIGHTCOSCUTOFF_ATTRIBUTE_ID);
+  if(location!=-1){
+    shaderProgram.loadScalarUniform(location, cos(coneAngle * 0.5));
   }
 }
 
 operator loadLightMatrixUniform(
-  io ShaderValue uniformValues[],
+  io OGLShaderProgram shaderProgram,
   io Mat44 lightShadowMapMatrix,
   io Mat44 cameraMatrix
 ) {
-  for (Integer i = 0; i < uniformValues.size(); i++) {
-    if (uniformValues[i].id == LIGHTVIEWMATRIX_ATTRIBUTE_ID) {
-      if (uniformValues[i].location != - 1) {
-        var Mat44 lightViewShadowMapMatrices[];
-        lightViewShadowMapMatrices.push(cameraMatrix.inverse() * lightShadowMapMatrix);
-        glUniformMatrix4fv(uniformValues[i].location, 1, false, lightViewShadowMapMatrices);
-      }
-      return;
-    }
+//  report("loadLightMatrixUniform");
+  Integer location = shaderProgram.getUniformLocation(LIGHTVIEWMATRIX_ATTRIBUTE_ID);
+  if(location!=-1){
+    Mat44 lightViewMatrix = cameraMatrix.inverse() * lightShadowMapMatrix;
+    shaderProgram.loadMat44Uniform(location, lightViewMatrix);
   }
 }

@@ -6,78 +6,70 @@
 
 
 function loadModelProjectionMatricesFn(
-  io ShaderValue uniformValues[],
-  io Xfo modelXfo,
-  io Mat44 cameraMatrix,
-  io Mat44 projectionMatrix
+  io OGLShaderProgram shaderProgram,
+  Xfo modelXfo,
+  Mat44 cameraMatrix,
+  Mat44 projectionMatrix
 ) {
-  Size nbUniforms = uniformValues.size();
-  for (Size i = 0; i < nbUniforms; i++) {
-    var ShaderValue uniform = uniformValues[i];
-    
-    switch (uniform.id) {
-      case MODELMATRIX_ATTRIBUTE_ID:
-        Mat44 modelMatrices[];
-        modelMatrices.push(Mat44(modelXfo));
-        glUniformMatrix4fv(uniform.location, 1, false, modelMatrices);
-        break;
-      case VIEWMATRIX_ATTRIBUTE_ID:
-        Mat44 cameraMatrices[];
-        cameraMatrices.push(cameraMatrix);
-        glUniformMatrix4fv(uniform.location, 1, false, cameraMatrices);
-        break;
-      case PROJECTIONMATRIX_ATTRIBUTE_ID:
-        Mat44 projectionMatrices[];
-        projectionMatrices.push(projectionMatrix);
-        glUniformMatrix4fv(uniform.location, 1, false, projectionMatrices);
-        break;
-      case NORMALMATRIX_ATTRIBUTE_ID:
-        Mat44 modelViewMatrix = Mat44(modelXfo) * cameraMatrix;
-        Mat33 normalMatrices[];
-        normalMatrices.push(modelViewMatrix.upperLeft().inverse().transpose());
-        glUniformMatrix3fv(uniform.location, 1, false, normalMatrices);
-        break;
-      case PROJECTIONMATRIXINV_ATTRIBUTE_ID:
-        Mat44 projectionMatricesInv[];
-        projectionMatricesInv.push(projectionMatrix.inverse());
-        glUniformMatrix4fv(uniform.location, 1, false, projectionMatricesInv);
-        break;
-      case MODELVIEW_MATRIX_ATTRIBUTE_ID:
-        Mat44 modelViewMatrices[];
-        modelViewMatrices.push(Mat44(modelXfo) * cameraMatrix);
-        glUniformMatrix4fv(uniform.location, 1, false, modelViewMatrices);
-        break;
-      case MODELVIEWPROJECTION_MATRIX_ATTRIBUTE_ID:
-        Mat44 modelViewProjectionMatrices[];
-        modelViewProjectionMatrices.push(Mat44(modelXfo) * cameraMatrix * projectionMatrix);
-        glUniformMatrix4fv(uniform.location, 1, false, modelViewProjectionMatrices);
-        break;
-    }
+//  report("loadModelProjectionMatrices");
+  Integer location;
+
+  location = shaderProgram.getUniformLocation(MODELMATRIX_ATTRIBUTE_ID);
+  if(location!=-1){
+    shaderProgram.loadMat44Uniform(location, Mat44(modelXfo));
+  }
+  location = shaderProgram.getUniformLocation(VIEWMATRIX_ATTRIBUTE_ID);
+  if(location!=-1){
+    shaderProgram.loadMat44Uniform(location, cameraMatrix);
+  }
+  location = shaderProgram.getUniformLocation(PROJECTIONMATRIX_ATTRIBUTE_ID);
+  if(location!=-1){
+    shaderProgram.loadMat44Uniform(location, projectionMatrix);
+  }
+  location = shaderProgram.getUniformLocation(NORMALMATRIX_ATTRIBUTE_ID);
+  if(location!=-1){
+    Mat44 modelViewMatrix = Mat44(modelXfo) * cameraMatrix;
+    Mat33 normalMatrix = modelViewMatrix.upperLeft().inverse().transpose();
+    shaderProgram.loadMat33Uniform(location, normalMatrix);
+  }
+  location = shaderProgram.getUniformLocation(PROJECTIONMATRIXINV_ATTRIBUTE_ID);
+  if(location!=-1){
+    shaderProgram.loadMat44Uniform(location, projectionMatrix.inverse());
+  }
+  location = shaderProgram.getUniformLocation(MODELVIEW_MATRIX_ATTRIBUTE_ID);
+  if(location!=-1){
+    Mat44 modelViewMatrix = Mat44(modelXfo) * cameraMatrix;
+    shaderProgram.loadMat44Uniform(location, modelViewMatrix);
+  }
+  location = shaderProgram.getUniformLocation(MODELVIEWPROJECTION_MATRIX_ATTRIBUTE_ID);
+  if(location!=-1){
+    Mat44 modelViewProjectionMatrix = Mat44(modelXfo) * cameraMatrix * projectionMatrix;
+    shaderProgram.loadMat44Uniform(location, modelViewProjectionMatrix);
   }
 }
 
 operator loadModelProjectionMatrices(
-  io ShaderValue uniformValues[],
+  io OGLShaderProgram shaderProgram,
   io Xfo modelXfo,
   io Mat44 cameraMatrix,
   io Mat44 projectionMatrix
 ) {
   loadModelProjectionMatricesFn(
-    uniformValues,
+    shaderProgram,
     modelXfo,
     cameraMatrix,
     projectionMatrix
   );
 }
 operator loadIndexedModelProjectionMatrices(
-  io ShaderValue uniformValues[],
+  io OGLShaderProgram shaderProgram,
   io Xfo modelXfos[],
   io Size modelXfoIndex,
   io Mat44 cameraMatrix,
   io Mat44 projectionMatrix
 ) {
   loadModelProjectionMatricesFn(
-    uniformValues,
+    shaderProgram,
     modelXfos[modelXfoIndex],
     cameraMatrix,
     projectionMatrix

@@ -922,8 +922,9 @@ FABRIC.SceneGraph.registerNodeType('Viewport', {
         fabricwindow.redrawEvent.appendEventHandler(scene.getScenePreRedrawEventHandler());
         fabricwindow.redrawEvent.appendEventHandler(redrawEventHandler);
         fabricwindow.redrawEvent.appendEventHandler(scene.getScenePostRedrawEventHandler());
-        
-        viewPortRayCastDgNode.addDependency(fabricwindow.windowNode, 'window');
+        if(viewPortRayCastDgNode){
+          viewPortRayCastDgNode.addDependency(fabricwindow.windowNode, 'window');
+        }
       }
     });
 

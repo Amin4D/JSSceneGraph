@@ -923,7 +923,7 @@ FABRIC.SceneGraph.registerNodeType('Instance', {
 
       resourceloaddgnode.bindings.append(scene.constructOperator({
         operatorName: 'loadObj',
-        parameterBinding: [
+        parameterLayout: [
           'self.url', //For debugging only
           'self.resource',
           'self.handle'
@@ -940,7 +940,7 @@ FABRIC.SceneGraph.registerNodeType('Instance', {
           operatorName: 'setObjVertexCount',
           srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadObj.kl',
           entryFunctionName: 'setObjVertexCount',
-          parameterBinding: [
+          parameterLayout: [
             'resource.handle',
             'self.newCount'
           ]
@@ -949,7 +949,7 @@ FABRIC.SceneGraph.registerNodeType('Instance', {
           operatorName: 'setObjGeom',
           srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadObj.kl',
           entryFunctionName: 'setObjGeom',
-          parameterBinding: [
+          parameterLayout: [
             'resource.handle',
             'uniforms.indices',
             'self.positions[]',

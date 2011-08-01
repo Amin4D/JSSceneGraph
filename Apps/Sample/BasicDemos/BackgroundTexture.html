@@ -30,6 +30,7 @@
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Euler.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/OGLShaderProgram.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/OGLTexture2D.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/OGLRenderTarget.js" charset="utf-8"></script>
 
     <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Geometry.js" charset="utf-8"></script>
@@ -54,16 +55,24 @@ $(document).ready(function() {
     url: 'Resources/tomatoes_960_640.png'
   }));
 
-  var errors = scene.getErrors();
-  if (errors.length > 0) {
-    throw (errors.toString());
-  } else {
-    scene.redrawAllWindows();
+  // We cannot enable pose processing effectds untill we can removeChildEventHandlers
+  viewport.addPostProcessEffectShader(scene.constructNode('EdgeDetectionPostProcessEffect'));
 
-    console.log(scene.getTimerProfiles());
-
-    console.log('Done');
-  }
+  $('#loadingDialog').dialog({
+    modal: true
+  });
+  var count = FABRIC.getAsyncTaskCount();
+  FABRIC.appendOnResolveAsyncTaskCallback(function(label, countRemaining){
+//    $('#loadingDesc').html(name);
+//  console.log((1.0-(countRemaining/count))*100 + ":"+label);
+    $('#loadingProgressBar').progressbar({
+      value: (1.0-(countRemaining/count))*100
+    });
+    if(countRemaining===0){
+      $('#loadingDialog').dialog('close');
+      viewport.redraw();
+    }
+  });
 
 });
 
@@ -71,6 +80,10 @@ $(document).ready(function() {
 
   </head> 
   <body>
+    <div id="loadingDialog" title="Loading...">
+      <h4 id="loadingDesc" style="margin-bottom: 10px"></h4>
+      <div id="loadingProgressBar" class="ui-progressbar-value"></div>
+    </div>
     <div id="wrapper">
       <ul id="nav">
         <li><a href="#" id="fabric-logo"><img src="../../../themes/default/_img/projects/fabric-logo.png" /></a></li>

@@ -557,7 +557,7 @@ FABRIC.SceneGraph.registerNodeType('Material', {
             ATTRIBUTE_ID: FABRIC.shaderAttributeTable[textureName].id,
             DATA_TYPE: 'Integer'
           },
-          entryFunctionName: 'loadIntegerUniform',
+          entryFunctionName: 'loadUniform',
           parameterLayout: [
             'shader.shaderProgram',
             'self.textureUnit'

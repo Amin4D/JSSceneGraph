@@ -8,22 +8,20 @@
  * node graph in javascript.
  */
 FABRIC.SceneGraph = {
-  nodeFactories: {},
   nodeDescriptions: {},
   assetLoaders: {},
-  registerNodeType: function(type, options) {
-    if (this.nodeFactories[type]) {
+  registerNodeType: function(type, nodeDescription) {
+    if (this.nodeDescriptions[type]) {
       throw ('Node Constructor already Registered:' + type);
     }else {
-      if (!options.factoryFn)
+      if (!nodeDescription.factoryFn)
         throw ('Node Constructor "'+type+'" does not implement the factoryFn');
-      if (!options.briefDesc || !options.detailedDesc)
-        console.log('WARNING: Node Constructor "'+type+'" does not provide a proper description.');
-      this.nodeDescriptions[type] = {};
-      this.nodeDescriptions[type].brief = options.briefDesc ? options.briefDesc : 'Brief description missing. Please implement.';
-      this.nodeDescriptions[type].detailed = options.detailedDesc ? options.detailedDesc : 'Detailed description missing. Please implement.';
-      this.nodeDescriptions[type].optionsDesc = options.optionsDesc ? options.optionsDesc : 'Options description missing. Please implement.';
-      this.nodeFactories[type] = options.factoryFn;
+        // Commented out till we can finish the documentation.
+  //    if (!nodeDescription.briefDesc || !nodeDescription.detailedDesc)
+  //      console.log('WARNING: Node Constructor "'+type+'" does not provide a proper description.');
+      if(!nodeDescription.optionsDesc) nodeDescription.optionsDesc = {};
+      if(!nodeDescription.parentNodeDesc) nodeDescription.parentNodeDesc = '';
+      this.nodeDescriptions[type] = nodeDescription;
     }
   },
   help: function(type) {
@@ -31,14 +29,20 @@ FABRIC.SceneGraph = {
     if (!type) {
       for (type in this.nodeDescriptions) {
         result[type] = {};
-        result[type].brief = this.nodeDescriptions[type].brief;
-        result[type].detailed = this.nodeDescriptions[type].detailed;
+        result[type].brief = this.nodeDescriptions[type].briefDesc;
+        result[type].detailed = this.nodeDescriptions[type].detailedDesc;
+        result[type].parentDesc = this.nodeDescriptions[type].parentNodeDesc;
+        result[type].optionsDesc = this.nodeDescriptions[type].optionsDesc;
       }
     } else {
       if (!this.nodeDescriptions[type])
         throw ('Node Constructor "'+type+'" is not registered!');
-      result.brief = this.nodeDescriptions[type].brief;
-      result.detailed = this.nodeDescriptions[type].detailed;
+      result.brief = this.nodeDescriptions[type].briefDesc;
+      result.detailed = this.nodeDescriptions[type].detailedDesc;
+      if(this.nodeDescriptions[this.nodeDescriptions[type].parentNodeDesc]){
+        result.parentDesc = this.help(this.nodeDescriptions[type].parentNodeDesc);
+      }
+      result.optionsDesc = this.nodeDescriptions[type].optionsDesc;
     }
     return result;
   },
@@ -230,7 +234,7 @@ FABRIC.SceneGraph = {
     };
 
     scene.constructNode = function(type, options) {
-      if (!FABRIC.SceneGraph.nodeFactories[type]) {
+      if (!FABRIC.SceneGraph.nodeDescriptions[type]) {
         throw ('Node Constructor not Registered:' + type);
       }
       options = (options ? options : {});
@@ -242,7 +246,7 @@ FABRIC.SceneGraph = {
           throw ('Type is readonly');
         });
       }
-      var sceneGraphNode = FABRIC.SceneGraph.nodeFactories[type].call(undefined, options, scene);
+      var sceneGraphNode = FABRIC.SceneGraph.nodeDescriptions[type].factoryFn(options, scene);
       if (!sceneGraphNode) {
         throw (' Factory function method must return an object');
       }

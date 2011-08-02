@@ -22,7 +22,8 @@ FABRIC.SceneGraph.registerNodeType('Geometry', {
         genOpenGLBuffers:[],
         createBoundingBoxNode: true,
         tesselationSupported: false,
-        tesselationVertices: 3
+        tesselationVertices: 3,
+        positionsVec4: false
       });
 
     var geometryNode = geometryNode = scene.constructNode('SceneGraphNode', options),

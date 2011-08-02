@@ -140,7 +140,6 @@ function OGLRenderTarget.prebind(
       // Textures need to be deleted first.;
       glDeleteTextures(numTextures, bufferIDs);
 
-      glBindFramebuffer(GL_FRAMEBUFFER, 0);
       bufferIDs.resize(1);
       bufferIDs[0] = self.fbo;
       glDeleteFramebuffers(1, bufferIDs);

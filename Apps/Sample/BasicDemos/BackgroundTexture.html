@@ -55,9 +55,6 @@ $(document).ready(function() {
     url: 'Resources/tomatoes_960_640.png'
   }));
 
-  // We cannot enable pose processing effectds untill we can removeChildEventHandlers
-  viewport.addPostProcessEffectShader(scene.constructNode('EdgeDetectionPostProcessEffect'));
-
   $('#loadingDialog').dialog({
     modal: true
   });

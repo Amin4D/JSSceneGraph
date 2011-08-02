@@ -362,6 +362,7 @@ FABRIC.SceneGraph.registerNodeType('Geometry', {
       }
       
       bufferuniformsdgnode.addDependency(uniformsdgnode, 'uniforms');
+      bufferattributesdgnode.addDependency(uniformsdgnode, 'uniforms');
       bufferattributesdgnode.addDependency(attributesdgnode, 'attributes');
       bufferattributesdgnode.addDependency(bufferuniformsdgnode, 'bufferuniforms');
       bufferuniformsdgnode.addDependency(parentuniformsdgnode, 'parentuniforms');

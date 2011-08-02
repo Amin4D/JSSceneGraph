@@ -154,17 +154,29 @@ $(document).ready(function() {
   // create the bone debug drawing
   scene.constructNode('CharacterSkeletonDebug', {
       characterRigNode: rigNode,
-      color: FABRIC.RT.rgb(1.0, 0.0, 0.0)
+      color: FABRIC.RT.rgb(1.0, 0.0, 0.0),
+      boneradius: 0.25
     });
 
 
-  var errors = scene.getErrors();
-  if (errors.length > 0) {
-    throw (errors.toString());
-  }
-
-  scene.redrawAllWindows();
-  console.log('Done');
+  $('#loadingDialog').dialog({
+    modal: true
+  });
+  var count = FABRIC.getAsyncTaskCount();
+  FABRIC.appendOnResolveAsyncTaskCallback(function(label, countRemaining){
+    $('#loadingProgressBar').progressbar({
+      value: (1.0-(countRemaining/count))*100
+    });
+    if(countRemaining===0){
+      $('#loadingDialog').dialog('close');
+      var errors = scene.getErrors();
+      if (errors.length > 0) {
+        throw (errors.toString());
+      }
+      viewport.redraw();
+      return true;
+    }
+  });
 
 });
 
@@ -172,6 +184,10 @@ $(document).ready(function() {
 
   </head> 
   <body>
+    <div id="loadingDialog" title="Loading...">
+      <h4 id="loadingDesc" style="margin-bottom: 10px"></h4>
+      <div id="loadingProgressBar" class="ui-progressbar-value"></div>
+    </div>
     <div id="wrapper">
       <ul id="nav">
         <li><a href="#" id="fabric-logo"><img src="../../../themes/default/_img/projects/fabric-logo.png" /></a></li>

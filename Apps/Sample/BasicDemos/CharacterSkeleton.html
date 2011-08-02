@@ -87,7 +87,8 @@ $(document).ready(function() {
   characterRig.addSolver('solveColladaPose', 'FKHierarchySolver', { localxfoMemberName: 'localxfos' });
 
   var geometryNode = scene.constructNode('CharacterSkeletonDebug', {
-      characterRigNode: characterRig
+      characterRigNode: characterRig,
+      boneradius: 1.0
     });
 
   var flatMaterial = scene.constructNode('FlatMaterial', { color: FABRIC.RT.rgb(1.0, 1.0, 1.0, 1.0) });

@@ -125,7 +125,8 @@ $(document).ready(function() {
   // create the bone debug drawing
   scene.constructNode('CharacterSkeletonDebug', {
       characterRigNode: rigNode,
-      color: FABRIC.RT.rgba(1.0, 1.0, 1.0, 1.0)
+      color: FABRIC.RT.rgba(1.0, 1.0, 1.0, 1.0),
+      boneradius: 0.25
     });
 
   var rigVariables = rigNode.getVariablesNode();

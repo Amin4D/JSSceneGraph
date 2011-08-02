@@ -110,6 +110,7 @@ $(document).ready(function() {
     function(event, ui) {
       triangles.setTwist(ui.value);
       viewport.redraw();
+      return true;
     });
     
   $('#loadingDialog').dialog({
@@ -127,6 +128,7 @@ $(document).ready(function() {
         throw (errors.toString());
       }
       viewport.redraw();
+      return true;
     }
   });
   

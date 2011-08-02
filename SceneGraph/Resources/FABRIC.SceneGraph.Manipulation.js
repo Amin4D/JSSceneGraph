@@ -4,6 +4,19 @@
 //
 
 FABRIC.SceneGraph.registerNodeType('CameraManipulator', {
+  briefDesc: 'The CameraManipulator is a basic tool for controling viewport cameras.',
+  detailedDesc: 'The CameraManipulator is a basic tool for controling viewport cameras.' +
+                'Camera manipulation is controlled with the mouse. ' +
+                'The Left mouse button is used to orbit the camera. ' +
+                'The Middle mouse button is used to pan the camera. ' +
+                'The Right mouse button is used to zoom the camera. ',
+  parentNodeDesc: 'SceneGraphNode',
+  optionsDesc: {
+    mouseWheelZoomRate: 'The rate at which the camera will zoom when the mouse wheel it manipulated',
+    mouseDragZoomRate: 'The rate at which the camera will zoom when the mouse is dragged with the right mouse button held down',
+    orbitRate: 'The rate at which the camera will orbit when the mouse is dragged with the left mouse button held down',
+    enabled: 'The manipulator can be disabled, thereby allowing other manipulators to operate.'
+  },
   factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
         mouseWheelZoomRate: 0.3,
@@ -154,6 +167,14 @@ FABRIC.SceneGraph.registerNodeType('CameraManipulator', {
 
 
 FABRIC.SceneGraph.registerNodeType('PaintManipulator', {
+  briefDesc: 'The PaintManipulator collects points using a brush.',
+  detailedDesc: 'Paint manipulators can be used to modify many vertex attributes at once.',
+  parentNodeDesc: 'SceneGraphNode',
+  optionsDesc: {
+    brushSize: 'The radius of the brush',
+    brushScaleSpeed: 'The mouse wheeel is used to modify the brush radius, and this paramter controls how fast the bush is resized',
+    enabled: 'Toggle controlling whther this manipulator traps events.'
+  },
   factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
       brushSize: 0.1,

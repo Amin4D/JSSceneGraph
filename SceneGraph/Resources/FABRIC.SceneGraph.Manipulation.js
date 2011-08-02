@@ -347,7 +347,8 @@ FABRIC.SceneGraph.registerNodeType('PaintManipulator', {
             'geometry_vertexattributes.positions[]',
             'geometry_vertexattributes.normals[]',
             'geometry_vertexattributes.vertexColors[]'
-          ]
+          ],
+          async: false
         }));
 
       // the sceneRaycastEventHandler propogates the event throughtout the scene.

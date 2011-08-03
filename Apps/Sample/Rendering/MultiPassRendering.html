@@ -1,0 +1,255 @@
+<html xmlns="http://www.w3.org/1999/xhtml"> 
+  <!--
+    Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
+    -->
+  <head> 
+    <title>FABRIC - Multi-Pass Rendering</title> 
+    
+    <meta charset="iso-8859-1"/>
+    <link href="../../../themes/default/style.css" rel="stylesheet" type="text/css" />
+    <link href="../../../themes/default/viewer.css" rel="stylesheet" type="text/css" />
+    
+    <script type="text/javascript" src="../../../ThirdParty/jQuery/jquery-1.4.2.min.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/jQuery/jquery-ui-1.8.5.custom.min.js"></script>
+
+    <link type="text/css" href="../../../ThirdParty/jQuery/css/vader/jquery-ui-1.8.5.custom.css" rel="stylesheet" />
+
+    <script type="text/javascript" src="../../../Core/FABRIC.Wrappers.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../Core/FABRIC.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Math.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Vec2.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Vec3.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Vec4.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Mat22.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Mat33.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Mat44.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Quat.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Xfo.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/RGBA.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Color.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Euler.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/OGLShaderProgram.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/OGLTexture2D.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/OGLRenderTarget.js" charset="utf-8"></script>
+
+    <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Geometry.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Primitives.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Lights.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Materials.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Manipulation.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Kinematics.js" charset="utf-8"></script>
+    
+    <script type="text/javascript" src="../../../SceneGraph/Resources/Parsers/parseOBJ.js" charset="utf-8"></script>
+    <script type="text/javascript">
+    
+    
+// These Node definitions are inlined for now, but will
+// be moved to a separate file once they are stabilized. 
+FABRIC.SceneGraph.registerNodeType('ThickGlassMaterial', {
+  factoryFn: function(options, scene) {
+    options = scene.assignDefaults(options, {
+        color:FABRIC.RT.rgba(0.6,0.3,0,1)
+      });
+    
+    var thickGlassMaterialPP = scene.constructNode('PostProcessEffect', {
+      name: 'ThickGlassMaterialPP',
+      parentEventHandler: scene.getSceneRedrawEventHandler(),
+      renderTarget: FABRIC.RT.oglRenderTarget(0,  0, [
+        new FABRIC.RT.OGLRenderTargetTextureDesc(
+            2, /*COLOR*/
+            new FABRIC.RT.OGLTexture2D(
+              FABRIC.SceneGraph.OpenGLConstants.GL_RG16F,
+              FABRIC.SceneGraph.OpenGLConstants.GL_RG,
+              FABRIC.SceneGraph.OpenGLConstants.GL_FLOAT)
+          )
+        ],
+        {
+          clearColor: FABRIC.RT.rgba(0,0,0,1),
+          enableOptions: [FABRIC.SceneGraph.OpenGLConstants.GL_DEPTH_TEST,
+                          FABRIC.SceneGraph.OpenGLConstants.GL_BLEND],
+          cullFace: FABRIC.SceneGraph.OpenGLConstants.GL_BACK
+        }
+      ),
+      fragmentShader: '\n\
+uniform sampler2D u_fboTexture;\n\
+uniform vec4 u_color;\n\
+\n\
+void main(){\n\
+  vec2 texCoord = vec2(gl_TexCoord[0]);\n\
+  float thickness = abs(texture2D(u_fboTexture, texCoord).r);\n\
+  if (thickness <= 0.0){\n\
+      discard;\n\
+  }\n\
+  float sigma = 0.2;\n\
+  float fresnel = 1.0 - texture2D(u_fboTexture, texCoord).g; \n\
+  float intensity = fresnel * exp(-sigma * thickness);\n\
+  gl_FragColor = intensity * u_color;\n\
+}\
+      ',
+      shaderUniforms: {
+        fboTexture: { name: 'u_fboTexture', owner: 'fbo' },
+        color: { name: 'u_color', defaultValue:options.color }
+      },
+      shaderAttributes: {
+        positions: { name: 'a_position' }
+      }
+    });
+      
+    // Before rendering the geometry to the FBO, set up some OpenGL attribs
+    thickGlassMaterialPP.getRedrawEventHandler().preDescendBindings.append(scene.constructOperator({
+        operatorName: 'setThickGlassMaterialAttribs',
+        srcCode: '\n\
+operator setThickGlassMaterialAttribs(){\n\
+  glDisable(GL_CULL_FACE);\n\
+  glBlendFunc(GL_ONE, GL_ONE);\n\
+}',
+        entryFunctionName: 'setThickGlassMaterialAttribs',
+      }));
+    
+    
+    var thickGlassMaterial = scene.constructNode('Material', {
+      name:'ThickGlassMaterialShader',
+      parentEventHandler: thickGlassMaterialPP.getRedrawEventHandler(),
+      vertexShader: '\
+attribute vec4 a_position;\n\
+attribute vec3 a_normal;\n\
+uniform mat4 u_modelViewProjectionMatrix;\n\
+uniform mat4 u_modelViewMatrix;\n\
+uniform mat3 u_normalMatrix;\n\
+varying vec4 position;\n\
+varying vec3 normal;\n\
+void main(){\n\
+  position = u_modelViewMatrix * a_position;\n\
+  normal = u_normalMatrix * a_normal;\n\
+  gl_Position = u_modelViewProjectionMatrix * a_position;\n\
+}\n\
+',
+      fragmentShader: '\n\
+varying vec4 position;\n\
+varying vec3 normal;\n\
+\n\
+void main(){\n\
+  vec3 N = normalize(normal);\n\
+  vec3 P = vec3(position.x,position.y,position.z);\n\
+  vec3 I = normalize(P);\n\
+  float cosTheta = abs(dot(I, N));\n\
+  float fresnel = pow(1.0 - cosTheta, 4.0);\n\
+\n\
+  float depth;\n\
+  if(gl_FrontFacing) \n\
+    depth =  position.z;//gl_FragCoord.z; \n\
+  else \n\
+    depth = -position.z;//gl_FragCoord.z; \n\
+  gl_FragColor = vec4(depth, fresnel, 0, 0);\n\
+}\
+',
+      shaderUniforms: {
+        modelViewProjectionMatrix: { name: 'u_modelViewProjectionMatrix', owner:'instance' },
+        modelViewMatrix: { name: 'u_modelViewMatrix', owner:'instance' },
+        normalMatrix: { name: 'u_normalMatrix', owner:'instance' }
+      },
+      shaderAttributes: {
+        positions: { name: 'a_position' },
+        normals: { name: 'a_normal' }
+      },
+      separateShaderNode: false
+    });
+    
+    return thickGlassMaterial;
+  }});
+    
+    
+$(document).ready(function() {
+  
+  var scene = FABRIC.SceneGraph.createScene();
+  var viewport = scene.constructNode('Viewport', {
+    windowElement: document.getElementById('FabricContainer'),
+    backgroundColor: FABRIC.RT.rgb(0.75, 0.75, 0.75)
+  });
+
+  // Create a camera to draw the scene from
+  camera = scene.constructNode('TargetCamera', {
+      nearDistance: 5,
+      farDistance: 100,
+      position: FABRIC.RT.vec3(4, 15, 42),
+      target: FABRIC.RT.vec3(0, 14, 0)
+    });
+
+  scene.constructNode("CameraManipulator", { targetNode:camera } );
+
+  viewport.setCameraNode(camera);
+
+  var light = scene.constructNode('PointLight', { position: FABRIC.RT.vec3(1420.0, 1000.0, 600.0) });
+
+  // Flat Shader
+  var thickGlassMaterial = scene.constructNode('ThickGlassMaterial', {
+      color: FABRIC.RT.rgb(0.0, 0.75, 0, 1)
+    });
+  
+  var assets = scene.importAssetFile('../BasicDemos/Models/venusm.obj', { scaleFactor:0.01 } );
+  
+  scene.constructNode('Instance', {
+      transformNode: scene.constructNode('Transform', {
+          hierarchical: false,
+          globalXfo: FABRIC.RT.xfo({ tr: FABRIC.RT.vec3(0, 0, 0) })
+        }),
+      geometryNode: assets['venusm'],
+      materialNode: thickGlassMaterial
+    });
+  
+  $('#loadingDialog').dialog({
+    modal: true
+  });
+  var count = FABRIC.getAsyncTaskCount();
+  FABRIC.appendOnResolveAsyncTaskCallback(function(label, countRemaining){
+    $('#loadingProgressBar').progressbar({
+      value: (1.0-(countRemaining/count))*100
+    });
+    if(countRemaining===0){
+      $('#loadingDialog').dialog('close');
+      var errors = scene.getErrors();
+      if (errors.length > 0) {
+        throw (errors.toString());
+      }
+      viewport.redraw();
+      return true;
+    }
+  });
+  
+});
+
+</script>
+
+  </head> 
+  <body>
+    <div id="loadingDialog" title="Loading...">
+      <h4 id="loadingDesc" style="margin-bottom: 10px"></h4>
+      <div id="loadingProgressBar" class="ui-progressbar-value"></div>
+    </div>
+    <div id="wrapper">
+      <ul id="nav">
+        <li><a href="#" id="fabric-logo"><img src="../../../themes/default/_img/projects/fabric-logo.png" /></a></li>
+      </ul>
+      <div id="editor">
+        <div id="viewer">
+          <div id="FabricContainer"></div> 
+        </div><!--viewer-->
+        <div id="sidebar">
+          
+          <div class="box">
+            <h2>INFO</h2>
+            <div class="content">
+              Materials.<br>
+              This sample shows the creation of several materials through FABRIC's JavaScript based SceneGraph.
+              All Materials are implemented using GLSL shaders, from Constant, Phong, Textures, Normal Mapping
+              to Geometry Shaders for drawing the normals of the last object. Check out the source code of this
+              page to see how this works.
+            </div><!--content-->
+          </div><!--box-->
+            
+        </div><!--sidebar-->
+      </div> <!--editor-->
+    </div><!--wrapper-->
+  </body> 
+  </html>

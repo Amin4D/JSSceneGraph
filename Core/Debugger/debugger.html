@@ -1,4 +1,4 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd"> 
+﻿<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd"> 
 <html>
   <head>
 /*
@@ -34,6 +34,7 @@
 	right:251px;
 	top:0;
 	bottom:0;
+  background: #808080;
 }
 
 rect.EditorButton {
@@ -98,7 +99,7 @@ text.ButtonLabel {
 rect.Node {
   stroke:black;
   stroke-opacity:0.75;
-  stroke-width:0.5;
+  stroke-width:0.75;
   fill-opacity:0.75;
 }
 
@@ -220,6 +221,20 @@ g.Highlighted {
     <script type="text/javascript">
 
 $(document).ready(function() {
+  
+  var eventNodeColor = FABRIC.rgb255(90,90,200);
+  var eventHandlerColor = FABRIC.rgb255(90,200,90);
+  var dgnodeColor = FABRIC.rgb255(20,90,250);
+  var operatorColor = FABRIC.rgb255(80,200,200);
+  
+  var preDescendOperatorColor = FABRIC.rgb255(200,100,50);
+  var postDescendOperatorColor = FABRIC.rgb255(150,74,25);
+  
+  var errorColor = FABRIC.rgb255(250,0,0);
+
+  var dependencyConnectionColor = FABRIC.rgb255(100,180,250);
+  var bindingConnectionColor = FABRIC.rgb255(200,200,80);
+  var eventPropagationConnectionColor = FABRIC.rgb255(200,80,80);
   
   
   var contextID = document.location.search.split('?')[1].split('=')[1];
@@ -389,19 +404,27 @@ $(document).ready(function() {
     var tl = FABRIC.vec2(0,0);
     var br = FABRIC.vec2(0,0);
     
-    var displayOperator = function(svgnode, operator){
-        svgnode.addOperator({
-          text: operator.getName(),
-          color: FABRIC.rgb255(80,200,200)
-        }).getButton().addOnClickCallback(function(){
-          window.open(
-              FABRIC.processURL('FABRIC_ROOT/Core/OperatorEditor/operatorEditor.html')
-              + '?id=' + contextID
-              + '?operator=' + operator.getName(),
-              'Fabric Operator Editor: ' + operator.getName(),
-              "status=1,resizable=1,width=550,height=650"
-            );
-        });
+    var displayError = function(name, errorList){
+      $('#errorDisplay').append('<br>'+ name + ': ' + JSON.stringify(errorList) + '</br>');
+    }
+    
+    var displayOperator = function(svgnode, operator, color){
+      if (operator.getErrors().length > 0){
+        displayError(operator.getName(), operator.getErrors());
+        color = errorColor;
+      }
+      svgnode.addOperator({
+        text: operator.getName(),
+        color: color
+      }).getButton().addOnClickCallback(function(){
+        window.open(
+            FABRIC.processURL('FABRIC_ROOT/Core/OperatorEditor/operatorEditor.html')
+            + '?id=' + contextID
+            + '?operator=' + operator.getName(),
+            'Fabric Operator Editor: ' + operator.getName(),
+            "status=1,resizable=1,width=550,height=650"
+          );
+      });
     }
     var addNodeInspectorCallback = function(svgnode, corenode){
       svgnode.getButton().addOnClickCallback(function(){
@@ -415,50 +438,54 @@ $(document).ready(function() {
         });
     }
     
-    var displayOperatorList = function(svgnode, operators){
+    var displayOperatorList = function(svgnode, operators, color){
       for(var i=0; i<operators.getLength(); i++){
-        displayOperator(svgnode, operators.getOperator(i) );
+        displayOperator(svgnode, operators.getOperator(i), color);
       }
     }
     
     var displayEvent = function(name, pos){
+      var event = eventsMap[name];
+      var color = eventNodeColor;
       var svgnode = nodesHolderGroup.createNode({
-          text : name,
-          color:FABRIC.rgb255(90,90,200),
+          text: name,
+          color: color,
           height: 15,
           createEditButton: false,
-          draggable: true,
-          shadow: FABRIC.vec2(0,0)
+          draggable: true
         })
         .translate(pos);
       svgnode.addOutPort({
-          color: FABRIC.rgb255(200,80,80),
+          color: eventPropagationConnectionColor,
           allowMultipleConnections:true,
           createLabelEventCatcher:false
         });
       return svgnode;
     }
     
-    
     var displayEventHandler = function(name, pos){
       var eventHandler = eventHandlersMap[name];
+      var color = eventHandlerColor;
+      if (eventHandler.getErrors().length > 0){
+        displayError(eventHandler.getName(), eventHandler.getErrors());
+        color = errorColor;
+      }
       var svgnode = nodesHolderGroup.createNode({
-          text : name,
-          color:FABRIC.rgb255(90,200,90),
+          text: name,
+          color: color,
           height: 15,
           createEditButton: true,
-          draggable: true,
-          shadow: FABRIC.vec2(0,0)
+          draggable: true
         })
         .translate(pos);
       addNodeInspectorCallback(svgnode, eventHandler);
       svgnode.addInPort({
-          color: FABRIC.rgb255(200,80,80),
+          color: eventPropagationConnectionColor,
           allowMultipleConnections:true,
           createLabelEventCatcher:false
         });
       svgnode.addOutPort({
-          color: FABRIC.rgb255(200,80,80),
+          color: eventPropagationConnectionColor,
           allowMultipleConnections:true,
           createLabelEventCatcher:false
         });
@@ -466,25 +493,29 @@ $(document).ready(function() {
       for(var i in scopes){
         svgnode.addInPort({
             text: i,
-            color: FABRIC.rgb255(200,200,80),
+            color: bindingConnectionColor,
             allowMultipleConnections:false,
             createLabelEventCatcher:false
           });
       }
-      displayOperatorList(svgnode, eventHandler.preDescendBindings);
-      displayOperatorList(svgnode, eventHandler.postDescendBindings);
+      displayOperatorList(svgnode, eventHandler.preDescendBindings, preDescendOperatorColor);
+      displayOperatorList(svgnode, eventHandler.postDescendBindings, postDescendOperatorColor);
       return svgnode;
     }
     
     var displayDGnode = function(name, pos){
       var dgnode = nodesMap[name];
+      var color = dgnodeColor;
+      if (dgnode.getErrors().length > 0){
+        displayError(dgnode.getName(), dgnode.getErrors());
+        color = FABRIC.rgb255(250,0,0);
+      }
       var svgnode = nodesHolderGroup.createNode({
           text : name,
-          color:FABRIC.rgb255(20,90,250),
+          color: color,
           height: 15,
           createEditButton: true,
-          draggable: true,
-          shadow: FABRIC.vec2(0,0)
+          draggable: true
         })
         .translate(pos);
       addNodeInspectorCallback(svgnode, dgnode);
@@ -493,22 +524,22 @@ $(document).ready(function() {
       for(var i in dependencies){
         svgnode.addInPort({
             text: i,
-             color: FABRIC.rgb255(100,180,250),
+            color: dependencyConnectionColor,
             allowMultipleConnections:false,
             createLabelEventCatcher:false
           });
       }
       svgnode.addOutPort({
-          color: FABRIC.rgb255(200,200,80),
+          color: bindingConnectionColor,
           allowMultipleConnections:true,
           createLabelEventCatcher:false
         });
       svgnode.addOutPort({
-          color: FABRIC.rgb255(100,180,250),
+          color: dependencyConnectionColor,
           allowMultipleConnections:true,
           createLabelEventCatcher:false
         });
-      displayOperatorList(svgnode, dgnode.bindings);
+      displayOperatorList(svgnode, dgnode.bindings, operatorColor);
       return svgnode;
     }
     
@@ -539,7 +570,7 @@ $(document).ready(function() {
     
     if(!clear){
       var scale = graphWidth /((br.x - tl.x) * graphSpacing.x);
-      if(scale < 1.0){
+      if(scale < 1.0 && scale > 0.25){
         graphSclGroup.scale(scale);
         graphPosGroup.translate(graphWidth - ((br.x - tl.x) * graphSpacing.x * 0.5), 0);//((br.y - tl.y) * graphSpacing.y * 0.25));
       }
@@ -658,6 +689,11 @@ $(document).ready(function() {
               <button id="rebuild" style="margin-top:10px;">Rebuild</button>
               <input type="checkbox" id="displayEventHandlers" /><label for="displayEventHandlers" style="margin-top:10px;" >Display Event Handlers</label>
               <input type="checkbox" id="displayDependencyGraph"/><label for="displayDependencyGraph" style="margin-top:10px;" >Display Dependency Graph</label>
+            </div><!--content-->
+          </div><!--box-->
+          <div class="box">
+            <h2>ERRORS</h2>
+            <div class="content" id="errorDisplay">
             </div><!--content-->
           </div><!--box-->
         </div><!--sidebar-->

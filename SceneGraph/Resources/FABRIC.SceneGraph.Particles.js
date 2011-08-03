@@ -3,12 +3,12 @@
 // Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
 //
 
-// The Particles node is a relative of the 'Draw' node.
+// The Particles node is a relative of the 'Redraw' node.
 // It is bound to a 'Geometry' which it renders for each Instance.
 
 // Particles is similar to 'Points' except it is set up for multi-threading.
-FABRIC.SceneGraph.registerNodeType('Particles',
-  function(options, scene) {
+FABRIC.SceneGraph.registerNodeType('Particles', {
+  factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
       materialNode: undefined,
       color: FABRIC.RT.rgb(0.75, 0.75, 0.75),
@@ -28,9 +28,6 @@ FABRIC.SceneGraph.registerNodeType('Particles',
       ],
       createDebugLines: true
     });
-    if (options.createSpatialHashTable) {
-      options.dgnodenames.push('SpatialHashDGNode');
-    }
 
     var redrawEventHandler;
     options.createSlicedNode = true;
@@ -51,6 +48,7 @@ FABRIC.SceneGraph.registerNodeType('Particles',
     }
 
     if (options.createSpatialHashTable) {
+      var spatialHashDGNode = particlesNode.constructDGNode('SpatialHashDGNode');
       var neighborInfluenceRange = options.cellsize / 2.0;
       particlesNode.pub.addVertexAttributeValue('neighborinfluencerange', 'Scalar', neighborInfluenceRange);
       particlesNode.pub.addVertexAttributeValue('cellindices', 'Integer', -1);
@@ -60,10 +58,10 @@ FABRIC.SceneGraph.registerNodeType('Particles',
       particlesNode.pub.addVertexAttributeValue('previousframe_velocities', 'Vec3');
       particlesNode.pub.addVertexAttributeValue('previousframe_orientations', 'Vec3');
 
-      particlesNode.getSpatialHashDGNode().addMember('hashtable', 'HashTable',
+      spatialHashDGNode.addMember('hashtable', 'HashTable',
         FABRIC.Simulation.hashTable(options.cellsize, options.x_count, options.y_count, options.z_count));
 
-      particlesNode.getAttributesDGNode().addDependency(particlesNode.getSpatialHashDGNode(), 'hashtable');
+      particlesNode.getAttributesDGNode().addDependency(spatialHashDGNode, 'hashtable');
 
       // Display the Grid
       if (options.displayGrid)
@@ -84,7 +82,7 @@ FABRIC.SceneGraph.registerNodeType('Particles',
         operatorName: 'calcCellIndex',
         srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/spatialHashTable.kl',
         entryFunctionName: 'calcCellIndex',
-        parameterBinding: [
+        parameterLayout: [
           'self.index',
           'self.positions',
           'self.cellcoords',
@@ -99,7 +97,7 @@ FABRIC.SceneGraph.registerNodeType('Particles',
         operatorName: 'copyCurrentFrameDataToPrevFrameData',
         srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/spatialHashTable.kl',
         entryFunctionName: 'copyCurrentFrameDataToPrevFrameData',
-        parameterBinding: [
+        parameterLayout: [
           'self.positions',
           'self.velocities',
           'self.previousframe_positions',
@@ -115,7 +113,7 @@ FABRIC.SceneGraph.registerNodeType('Particles',
         operatorName: 'populateHashTable',
         srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/spatialHashTable.kl',
         entryFunctionName: 'populateHashTable',
-        parameterBinding: [
+        parameterLayout: [
           'hashtable.hashtable',
           'self.cellindices[]'
         ]
@@ -124,10 +122,10 @@ FABRIC.SceneGraph.registerNodeType('Particles',
 
     return particlesNode;
 
-  });
+  }});
 
-FABRIC.SceneGraph.registerNodeType('Flock',
-  function(options, scene) {
+FABRIC.SceneGraph.registerNodeType('Flock', {
+  factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
     });
 
@@ -143,7 +141,7 @@ FABRIC.SceneGraph.registerNodeType('Flock',
       operatorName: 'simulateParticles',
       srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/flocking.kl',
       entryFunctionName: 'simulateParticles',
-      parameterBinding: [
+      parameterLayout: [
         'self.index',
 
         'self.positions',
@@ -165,6 +163,6 @@ FABRIC.SceneGraph.registerNodeType('Flock',
       ]
     }));
     return flockNode;
-  });
+  }});
 
 

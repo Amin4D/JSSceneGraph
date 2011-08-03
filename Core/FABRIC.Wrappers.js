@@ -37,7 +37,7 @@ var wrapFabricClient = function(fabricClient, logCallback, debugLogCallback) {
         var result = results[i];
         var callback = callbacks[i];
         if ('exception' in result) {
-          for (var j = unwinds.length; j-- > i;) {
+          for (var j = unwinds.length; j-- > i; ) {
             var unwind = unwinds[j];
             if (unwind)
               unwind();
@@ -405,22 +405,19 @@ var wrapFabricClient = function(fabricClient, logCallback, debugLogCallback) {
         if ('entryFunctionName' in diff)
           result.entryFunctionName = diff.entryFunctionName;
 
-        if ('fullSourceCode' in diff)
-          result.fullSourceCode = diff.fullSourceCode;
-
         if ('diagnostics' in diff)
           result.diagnostics = diff.diagnostics;
-        
+
         if ('mainThreadOnly' in diff)
           result.mainThreadOnly = diff.mainThreadOnly;
       };
-      
+
       result.pub.getMainThreadOnly = function() {
         if (!('mainThreadOnly' in result))
           executeQueuedCommands();
         return result.mainThreadOnly;
       }
-      
+
       result.pub.setMainThreadOnly = function(mainThreadOnly) {
         var oldMainThreadOnly = result.mainThreadOnly;
         result.mainThreadOnly = mainThreadOnly;
@@ -440,19 +437,10 @@ var wrapFabricClient = function(fabricClient, logCallback, debugLogCallback) {
         result.sourceCode = sourceCode;
         var oldDiagnostics = result.diagnostics;
         delete result.diagnostics;
-        var oldFullSourceCode = result.fullSourceCode;
-        delete result.fullSourceCode;
         result.queueCommand('setSourceCode', sourceCode, function() {
           result.sourceCode = oldSourceCode;
           result.diagnostics = oldDiagnostics;
-          result.fullSourceCode = oldFullSourceCode;
         });
-      };
-
-      result.pub.getFullSourceCode = function() {
-        if (!('fullSourceCode' in result))
-          executeQueuedCommands();
-        return result.fullSourceCode;
       };
 
       result.pub.getEntryFunctionName = function() {
@@ -611,7 +599,7 @@ var wrapFabricClient = function(fabricClient, logCallback, debugLogCallback) {
 
       result.pub.getBulkData = function() {
         var bulkData;
-        result.queueCommand('getBulkData', null, function() {}, function(data) {
+        result.queueCommand('getBulkData', null, function() { }, function(data) {
           for (var memberName in data) {
             var member = data[memberName];
             for (var i = 0; i < member.length; ++i)
@@ -636,7 +624,7 @@ var wrapFabricClient = function(fabricClient, logCallback, debugLogCallback) {
 
       result.pub.getSlicesBulkData = function(indices) {
         var slicesBulkData;
-        result.queueCommand('getSlicesBulkData', indices, function() {}, function(data) {
+        result.queueCommand('getSlicesBulkData', indices, function() { }, function(data) {
           for (var i = 0; i < data.length; i++) {
             for (var memberName in data[i]) {
               RT.assignPrototypes(data[i][memberName], result.members[memberName].type);
@@ -738,7 +726,35 @@ var wrapFabricClient = function(fabricClient, logCallback, debugLogCallback) {
       result.pub.bindings = result.bindings.pub;
 
       return result;
-     };
+    };
+
+    DG.createResourceLoadNode = function(name) {
+      var parentHandle,
+        onloadCallbacks = [];
+
+      var node = DG.createNode(name);
+
+      parentHandle = node.handle;
+
+      node.handle = function(cmd, arg) {
+        var i;
+        switch (cmd) {
+          case 'resourceLoaded':
+            for (i = 0; i < onloadCallbacks.length; i++) {
+              onloadCallbacks[i](node.pub);
+            }
+            break;
+          default:
+            parentHandle(cmd, arg);
+        }
+      };
+
+      node.pub.addOnLoadCallback = function(callback) {
+        //At this 'core' level we don't try to detect same/different URLs or the fact that is it already loaded
+        onloadCallbacks.push(callback);
+      }
+      return node;
+    };
 
     DG.createEvent = function(name) {
       var result = DG.createContainer(name);
@@ -788,11 +804,11 @@ var wrapFabricClient = function(fabricClient, logCallback, debugLogCallback) {
 
       result.pub.select = function(typeName) {
         var results = [];
-        result.queueCommand('select', typeName, function() {}, function(commandResults) {
+        result.queueCommand('select', typeName, function() { }, function(commandResults) {
           for (var i = 0; i < commandResults.length; ++i) {
             var commandResult = commandResults[i];
             results.push({
-              node: DG.namedObjects[commandResult.node],
+              node: DG.namedObjects[commandResult.node].pub,
               value: RT.assignPrototypes(commandResult.data, typeName)
             });
           }
@@ -810,22 +826,7 @@ var wrapFabricClient = function(fabricClient, logCallback, debugLogCallback) {
       };
 
       return result;
-     };
-
-    DG.createResourceLoadEvent = function(name, url) {
-      var result = DG.createEvent(name);
-
-      result.pub.getURL = function() {
-        return url;
-      };
-
-      result.pub.start = function() {
-        result.queueCommand('start');
-        executeQueuedCommands();
-      };
-
-      return result;
-     };
+    };
 
     DG.createEventHandler = function(name) {
       var result = DG.createContainer(name);
@@ -949,7 +950,7 @@ var wrapFabricClient = function(fabricClient, logCallback, debugLogCallback) {
       result.pub.postDescendBindings = result.postDescendBindings.pub;
 
       return result;
-     };
+    };
 
     DG.getOrCreateNamedObject = function(name, type) {
       if (!(name in DG.namedObjects)) {
@@ -1028,31 +1029,28 @@ var wrapFabricClient = function(fabricClient, logCallback, debugLogCallback) {
           node.destroy();
         });
         return node.pub;
-       },
+      },
+      createResourceLoadNode: function(name) {
+        var node = DG.createResourceLoadNode(name);
+        DG.queueCommand([], 'createResourceLoadNode', name, function() {
+          node.destroy();
+        });
+        return node.pub;
+      },
       createEvent: function(name) {
         var event = DG.createEvent(name);
         DG.queueCommand([], 'createEvent', name, function() {
           event.destroy();
         });
         return event.pub;
-       },
-      createResourceLoadEvent: function(name, url) {
-        var resourceLoadEvent = DG.createResourceLoadEvent(name, url);
-        DG.queueCommand([], 'createResourceLoadEvent', {
-          name: name,
-          url: url
-        }, function() {
-          resourceLoadEvent.destroy();
-        });
-        return resourceLoadEvent.pub;
-       },
+      },
       createEventHandler: function(name) {
         var eventHandler = DG.createEventHandler(name);
         DG.queueCommand([], 'createEventHandler', name, function() {
           eventHandler.destroy();
         });
         return eventHandler.pub;
-       },
+      },
 
       createBinding: function() {
         var binding = DG.createBinding();
@@ -1118,7 +1116,7 @@ var wrapFabricClient = function(fabricClient, logCallback, debugLogCallback) {
     EX.pub.getLoadedExts = function() {
       return EX.loadedExts;
     };
-    
+
     return EX;
   };
   var EX = createEX();
@@ -1141,6 +1139,7 @@ var wrapFabricClient = function(fabricClient, logCallback, debugLogCallback) {
 
     VP.createViewPort = function(name) {
       var viewPort = {
+        popUpMenuItems: {}
       };
 
       viewPort.patch = function(diff) {
@@ -1166,6 +1165,10 @@ var wrapFabricClient = function(fabricClient, logCallback, debugLogCallback) {
             if (viewPort.redrawFinishedCallback)
               viewPort.redrawFinishedCallback();
             break;
+          case 'popUpMenuItemSelected':
+            if (arg in viewPort.popUpMenuItems)
+              viewPort.popUpMenuItems[arg]();
+            break;
           default:
             throw 'unrecognized';
         }
@@ -1185,7 +1188,7 @@ var wrapFabricClient = function(fabricClient, logCallback, debugLogCallback) {
       };
 
       viewPort.handleStateNotification = function(state) {
-          viewPort.patch(state);
+        viewPort.patch(state);
       };
 
       viewPort.queueCommand = function(cmd, arg, unwind, callback) {
@@ -1227,6 +1230,13 @@ var wrapFabricClient = function(fabricClient, logCallback, debugLogCallback) {
         },
         setRedrawFinishedCallback: function(callback) {
           viewPort.redrawFinishedCallback = callback;
+        },
+        addPopUpMenuItem: function(name, desc, callback) {
+          viewPort.popUpMenuItems[name] = callback;
+          viewPort.queueCommand('addPopUpMenuItem', {
+            desc: desc,
+            arg: name
+          });
         }
       };
 

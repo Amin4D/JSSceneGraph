@@ -33,6 +33,7 @@
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/CollectedPoints.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/RGBA.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Euler.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/OGLShaderProgram.js" charset="utf-8"></script>
     
 
     <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.js" charset="utf-8"></script>
@@ -159,31 +160,45 @@ $(document).ready(function() {
       }
     };
 
-  var errors = scene.getErrors();
-  if (errors.length > 0) {
-    throw (errors.toString());
-  }
-  else {
-    var brushColor = FABRIC.RT.rgb(0.8, 0.0, 0.0);
-    paintManipulator.brushColor = brushColor;
-    $('#brushColor').ColorPicker({
-        flat: true,
-        color: { r: brushColor.r * 255, g: brushColor.g * 255, b: brushColor.b * 255} ,
-        onChange: function(hsb, hex, rgb) {
-          paintManipulator.brushColor = FABRIC.RT.rgb255(rgb.r, rgb.g, rgb.b);
-        }
-      });
+  var brushColor = FABRIC.RT.rgb(0.8, 0.0, 0.0);
+  paintManipulator.setBrushColor(brushColor);
+  $('#brushColor').ColorPicker({
+      flat: true,
+      color: { r: brushColor.r * 255, g: brushColor.g * 255, b: brushColor.b * 255} ,
+      onChange: function(hsb, hex, rgb) {
+        paintManipulator.setBrushColor(FABRIC.RT.rgb255(rgb.r, rgb.g, rgb.b));
+      }
+    });
 
-    console.log(scene.getTimerProfiles());
-    console.log('Done');
-  }
-
+  $('#loadingDialog').dialog({
+    modal: true
+  });
+  var count = FABRIC.getAsyncTaskCount();
+  FABRIC.appendOnResolveAsyncTaskCallback(function(label, countRemaining){
+    $('#loadingProgressBar').progressbar({
+      value: (1.0-(countRemaining/count))*100
+    });
+    if(countRemaining===0){
+      $('#loadingDialog').dialog('close');
+      var errors = scene.getErrors();
+      if (errors.length > 0) {
+        throw (errors.toString());
+      }
+      viewport.redraw();
+      return true;
+    }
+  });
+  
 });
 
 </script>
 
   </head> 
   <body>
+    <div id="loadingDialog" title="Loading...">
+      <h4 id="loadingDesc" style="margin-bottom: 10px"></h4>
+      <div id="loadingProgressBar" class="ui-progressbar-value"></div>
+    </div>
     <div id="wrapper">
       <ul id="nav">
         <li><a href="#" id="fabric-logo"><img src="../../../themes/default/_img/projects/fabric-logo.png" /></a></li>

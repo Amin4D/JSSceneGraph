@@ -12,7 +12,7 @@ operator nBodyInit(
   in Size index,
   in Size size,
   io Vec4 posV4,
-  io Vec3 vel,
+  io Vec4 velV4,
   io Scalar mass,
   io Color color,
   io Integer systemType,
@@ -22,6 +22,7 @@ operator nBodyInit(
   var Integer seed = Integer(index);
   rand(seed);
   Vec3 pos;
+  Vec3 vel;
 
   if (systemType == 0)// Random
   {
@@ -107,15 +108,21 @@ operator nBodyInit(
   posV4.x = pos.x;
   posV4.y = pos.y;
   posV4.z = pos.z;
+  posV4.t = mass;
+  
+  velV4.x = vel.x;
+  velV4.y = vel.y;
+  velV4.z = vel.z;
+  velV4.t = 1.0/mass;
 }
 
 operator nBodySimulateInit(
   io Scalar time,
-  io Vec3 posInit[],
-  io Vec3 velInit[],
+  io Vec4 posInit[],
+  io Vec4 velInit[],
   io Color colorInit[],
-  io Vec3 posCurrent[],
-  io Vec3 velCurrent[],
+  io Vec4 posCurrent[],
+  io Vec4 velCurrent[],
   io Color colors[],
   io Integer indices[]
 ) {
@@ -134,10 +141,10 @@ operator nBodySimulateInit(
 }
 
 operator nBodySimulateStartFrame(
-  io Vec3 posCurrent[],
-  io Vec3 velCurrent[],
-  io Vec3 posPrev[],
-  io Vec3 velPrev[]
+  io Vec4 posCurrent[],
+  io Vec4 velCurrent[],
+  io Vec4 posPrev[],
+  io Vec4 velPrev[]
 ) {
   var Size count = posCurrent.size();
   for (var Size i = 0; i < count; i++) {

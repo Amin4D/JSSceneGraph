@@ -11,16 +11,13 @@ FABRIC = (function() {
   var bindContextToEmbedTag = function(embedTag) {
     var result = wrapFabricClient(embedTag, function(s) { console.log(s); } /*, function(s){console.debug(s);}*/);
 
-    result.addPopUpItem = function(desc, callback, arg) {
-      //embedTag.addPopUpItem(desc, callback, arg);
-    };
     /*
     {
       contextID: embedTag.contextID,
-      jsonExec: function (jsonEncodedCommands) {
+      jsonExec: function(jsonEncodedCommands) {
         return embedTag.jsonExec(jsonEncodedCommands);
       },
-      setJSONNotifyCallback: function (jsonNotifyCallback) {
+      setJSONNotifyCallback: function(jsonNotifyCallback) {
         embedTag.setJSONNotifyCallback(jsonNotifyCallback);
       },
       RegisteredTypesManager: embedTag.RegisteredTypesManager,
@@ -131,6 +128,9 @@ FABRIC = (function() {
             if (callback)
               callback();
           });
+        },
+        addPopUpMenuItem: function(name, desc, callback) {
+          context.VP.viewPort.addPopUpMenuItem(name, desc, callback);
         }
       };
       result.__defineGetter__('fps', function() {
@@ -174,24 +174,63 @@ FABRIC = (function() {
     }
     return url;
   };
-
-  var loadResourceURL = function(url, mimeType) {
+  
+  var asyncTaskCount = 0;
+  
+  var addAsyncTask = function(callback){
+    asyncTaskCount++;
+    setTimeout(function(){
+      callback();
+      asyncTaskCount--;
+      fireOnResolveAsyncTaskCallbacks('...');
+    }, 1);
+  }
+  
+  var onResolveAsyncTaskCallbacks = [];
+  var appendOnResolveAsyncTaskCallback = function(fn) {
+    onResolveAsyncTaskCallbacks.push(fn);
+  };
+  var fireOnResolveAsyncTaskCallbacks = function(label){
+    for (i=0; i<onResolveAsyncTaskCallbacks.length; i++){
+      if(onResolveAsyncTaskCallbacks[i].call(undefined, label, asyncTaskCount)){
+        onResolveAsyncTaskCallbacks.splice(i, 1);
+        i--;
+      }
+    }
+  }
+  var loadResourceURL = function(url, mimeType, callback) {
     if (!url) {
       throw 'missing URL';
     }
-
+    
+    if(document.location.href.split('/')[0] === 'file:'){
+      alert('Fabric demos must be loaded from localhost.\nNot directly from the file system.\n\ne.g. "http://localhost/Fabric/Apps/Sample/BasicDemos/Flocking.html"');
+      thorow('Fabric demos must be loaded from localhost.\nNot directly from the file system.\n\ne.g. "http://localhost/Fabric/Apps/Sample/BasicDemos/Flocking.html"');
+    }
     url = processURL(url);
-
+    
+    var label = url.split('/').pop().split('.')[0];
+    var async = (FABRIC.asyncResourceLoading && callback!==undefined) ? true : false;
+    if(async){
+      asyncTaskCount++;
+    }
     var result = null;
     var xhreq = new XMLHttpRequest();
     xhreq.onreadystatechange = function() {
       if (xhreq.readyState == 4) {
         if (xhreq.status == 200) {
-          result = xhreq.responseText;
+          if(callback){
+            callback(xhreq.responseText);
+            asyncTaskCount--;
+            fireOnResolveAsyncTaskCallbacks(label);
+          }
+          else{
+            result = xhreq.responseText;
+          }
         }
       }
     };
-    xhreq.open('GET', url, false);
+    xhreq.open('GET', url, async);
     xhreq.overrideMimeType(mimeType ? mimeType : 'text/plain');
     xhreq.send(null);
     return result;
@@ -227,6 +266,10 @@ FABRIC = (function() {
     appendOnCreateContextCallback: appendOnCreateContextCallback,
     processURL: processURL,
     loadResourceURL: loadResourceURL,
+    asyncResourceLoading: true,
+    addAsyncTask: addAsyncTask,
+    getAsyncTaskCount: function(){ return asyncTaskCount; },
+    appendOnResolveAsyncTaskCallback: appendOnResolveAsyncTaskCallback,
     convertImageURLToDataURL: convertImageURLToDataURL
   };
 })();

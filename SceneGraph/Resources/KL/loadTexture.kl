@@ -31,7 +31,7 @@ function Scalar linearTosRGB(Scalar l) {
 function loadImageFromRawData(
   Data rawImageData,
   Size rawImageDataSize,
-  String decoder,
+  String extensionOrMimeType,
   Boolean wantHDR,
   io Size imageWidth,
   io Size imageHeight,
@@ -42,20 +42,24 @@ function loadImageFromRawData(
     return;
   
   var Boolean haveHDR;
-  switch (decoder) {
+  switch (extensionOrMimeType) {
     case'png':
+    case'image/png':
       FabricPNGDecode(rawImageData, rawImageDataSize, imageWidth, imageHeight, imageLDR);
       haveHDR = false;
       break;
     case'tga':
+    case'image/tga':
       FabricTGADecode(rawImageData, rawImageDataSize, imageWidth, imageHeight, imageLDR);
       haveHDR = false;
       break;
     case'hdr':
+    case'image/hdr':
       FabricHDRDecode(rawImageData, rawImageDataSize, imageWidth, imageHeight, imageHDR);
       haveHDR = true;
       break;
     case'exr':
+    case'image/exr':
       FabricHDRDecode(rawImageData, rawImageDataSize, imageWidth, imageHeight, imageHDR);
       haveHDR = true;
       break;
@@ -90,25 +94,20 @@ function loadImageFromRawData(
 }
 
 operator loadImageHDR(
-  io Data rawImageData,
-  io Size rawImageDataSize,
-  io String decoder,
+  io FabricResource resource,
   io Size imageWidth,
   io Size imageHeight,
   io Color imageHDR[],
 ) {
   var RGBA imageLDR[];
-
   var Size width, height;
-  loadImageFromRawData(rawImageData, rawImageDataSize, decoder, true, width, height, imageHDR, imageLDR);
+  loadImageFromRawData(resource.data, resource.dataSize, resource.extension ? resource.extension : resource.mimeType, true, width, height, imageHDR, imageLDR);
   imageWidth = width;
   imageHeight = height;
 }
 
 operator loadImageLDR(
-  io Data rawImageData,
-  io Size rawImageDataSize,
-  io String decoder,
+  io FabricResource resource,
   io Size imageWidth,
   io Size imageHeight,
   io RGBA imageLDR[],
@@ -116,75 +115,38 @@ operator loadImageLDR(
   //  report("loadImageLDR:" + decoder);
   var Color imageHDR[];
   var Size width, height;
-  loadImageFromRawData(rawImageData, rawImageDataSize, decoder, false, width, height, imageHDR, imageLDR);
+  loadImageFromRawData(resource.data, resource.dataSize, resource.extension ? resource.extension : resource.mimeType, false, width, height, imageHDR, imageLDR);
   imageWidth = width;
   imageHeight = height;
 }
 
-function createTextureFromImage(
-  Size width,
-  Size height,
-  Data pixels,
-  Size nbPixels,
-  Integer glFormat,
-  Integer glSrcDataType,
-  io Integer bufferID,
-  io Integer textureUnit
-) {
-  //  report("createTextureFromImage  bufferID:"+bufferID + " textureUnit:"+textureUnit  );
-  if (bufferID == 0 && nbPixels > 0) {
-    var Size buffers[];
-    buffers.push(Size(bufferID));
-    glGenTextures(1, buffers);
-    bufferID = buffers[0];
-    glActiveTexture(GL_TEXTURE0 + textureUnit);
-    glBindTexture(GL_TEXTURE_2D, bufferID);
-    //report("bufferID:"+bufferID);
 
-    // glTexEnv( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE ); //set texture environment parameters
-
-    //Generate the texture
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-    if (nbPixels == (width * height))
-      glTexImage2D(GL_TEXTURE_2D, 0, glFormat, width, height, 0, GL_RGBA, glSrcDataType, pixels);
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-
-  }
-  else {
-    glActiveTexture(GL_TEXTURE0 + textureUnit);
-    glBindTexture(GL_TEXTURE_2D, bufferID);
-  }
-}
-
-operator createTextureFromImageLDR(
+operator bindTextureLDR(
   io Size width,
   io Size height,
   io RGBA bitmap[],
-  io Integer bufferID,
+  io OGLTexture2D oglTexture2D,
   io Integer textureUnit
 ) {
-  //  report("createTextureFromImageLDR -> textureUnit:" + textureUnit + " bufferID:" + bufferID );
-  createTextureFromImage(width, height, bitmap.data(), bitmap.size(), GL_RGBA, GL_UNSIGNED_BYTE, bufferID, textureUnit);
+//  report("createTextureFromImageLDR -> textureUnit:" + textureUnit + " bufferID:" + bufferID );
+  oglTexture2D.bindImageLDR(width, height, bitmap, textureUnit);
 }
 
-operator createTextureFromImageHDR(
+operator bindTextureHDR(
   io Size width,
   io Size height,
   io Color bitmap[],
-  io Integer bufferID,
+  io OGLTexture2D oglTexture2D,
   io Integer textureUnit
 ) {
-  createTextureFromImage(width, height, bitmap.data(), bitmap.size(), GL_RGBA16F_ARB, GL_FLOAT, bufferID, textureUnit);
+  oglTexture2D.bindImageHDR(width, height, bitmap, textureUnit);
 }
+
+
 
 operator createSpriteTexture(
   io Integer res,
-  io Integer bufferID,
+  io Size bufferID,
   io Integer textureUnit
 ) {
   if (!bufferID && res > 0) {
@@ -224,7 +186,7 @@ operator createSpriteTexture(
 }
 
 operator createErrorTexture(
-  io Integer bufferID,
+  io Size bufferID,
   io Integer textureUnit
 ) {
   if (!bufferID) {
@@ -233,8 +195,9 @@ operator createErrorTexture(
     texData[0].r = 1.0;
     texData[0].g = texData[0].b = texData[0].a = 0.0;
     var Size buffers[];
-    buffers.push(Size(bufferID));
+    buffers.resize(1);
     glGenTextures(1, buffers);
+    bufferID = buffers[0];
     glActiveTexture(GL_TEXTURE0 + textureUnit);
     glBindTexture(GL_TEXTURE_2D, bufferID);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, texData.data());

@@ -3,43 +3,40 @@
 // Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
 //
 
-FABRIC.SceneGraph.registerNodeType('Transform',
-  function(options, scene) {
+FABRIC.SceneGraph.registerNodeType('Transform', {
+  briefDesc: 'The Transform node implements a global or hierarchical transform.',
+  detailedDesc: 'The Transform node uses a redraw eventhandler to draw an OpenGL projection. The node can be used in '+
+                'a hierarchical mode, in which is projects its own projection into another Transform node\'s projection. '+
+                'This allows to compute hierarchies in 3D.',
+  parentNodeDesc: 'SceneGraphNode',
+  optionsDesc: {
+    hierarchical: 'Flag determining wether this Transform node should calculate a globalXfo based on a parents globalXfo',
+    parentTransformNode: 'If the TransformNode is hierarchical, this option can optionally provide a parent transform node to immediately assign',
+    globalXfo: 'Optional: Specify the intial globalXfo for this transform.',
+    localXfo: 'Optional: Specify the intial localXfo for this transform.'
+  },
+  factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
-        parentTransformNode: undefined,
         hierarchical: false,
+        parentTransformNode: undefined,
         globalXfo: undefined,
         localXfo: undefined
       });
-    options.dgnodenames.push('DGNode');
 
-    var transformNode;
-    var dgnode;
-    var redrawEventHandler;
-    var parentTransformNode;
-    var children = [];
+    var transformNode = scene.constructNode('SceneGraphNode', options),
+      dgnode = transformNode.constructDGNode('DGNode'),
+      parentTransformNode,
+      children = [];
 
-    transformNode = scene.constructNode('SceneGraphNode', options);
-    dgnode = transformNode.getDGNode();
     dgnode.addMember('globalXfo', 'Xfo', options.globalXfo);
     transformNode.addMemberInterface(dgnode, 'globalXfo');
-
-    transformNode.getRedrawEventHandler = function() {
-      if (redrawEventHandler) {
-        return redrawEventHandler;
-      }
-      redrawEventHandler = scene.constructEventHandlerNode('TransformDraw');
-      return redrawEventHandler;
-    };
-
-    scene.addMemberAndOperatorStackFunctions(transformNode, dgnode);
 
     if (options.hierarchical) {
       dgnode.addMember('localXfo', 'Xfo', options.localXfo);
       dgnode.bindings.append(scene.constructOperator( {
           operatorName: 'calcGlobalXfo',
           srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/calcGlobalXfo.kl',
-          parameterBinding: [
+          parameterLayout: [
             'self.localXfo',
             'parent.globalXfo',
             'self.globalXfo'
@@ -101,14 +98,20 @@ FABRIC.SceneGraph.registerNodeType('Transform',
     }
 
     return transformNode;
-  });
+  }});
 
 
-FABRIC.SceneGraph.registerNodeType('AimTransform',
-  function(options, scene) {
+FABRIC.SceneGraph.registerNodeType('AimTransform', {
+  briefDesc: 'The AimTransform node implements a global lookat transform.',
+  detailedDesc: 'The AimTransform uses the Transform node to implement a lookat transform, using a '+
+                'root position as well as a target position. This node is used for the TargetCamera node.',
+  parentNodeDesc: 'Transform',
+  optionsDesc: {
+    target: 'The target position for the initial direction of the Transform'
+  },
+  factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
-        target: FABRIC.RT.vec3(0, 0, 0),
-        roll: 0.0
+        target: FABRIC.RT.vec3(0, 0, 0)
       });
     
     if(options.position && options.target){
@@ -138,32 +141,15 @@ FABRIC.SceneGraph.registerNodeType('AimTransform',
       operatorName: 'aimTransform',
       srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/aimTransform.kl',
       entryFunctionName: 'aimTransform',
-      parameterBinding: [
+      parameterLayout: [
         'self.globalXfo',
         'self.target'
       ]
     }));
 
     aimTransformNode.addMemberInterface(dgnode, 'target', true);
-    aimTransformNode.addMemberInterface(dgnode, 'roll', true);
-    
     return aimTransformNode;
-  });
-/*
-FABRIC.SceneGraph.registerNodeType('AimCameraTransform',
-  function(options, scene) {
-    if(options.globalXfo && options.target){
-      var dirVec = options.globalXfo.tr.subtract(options.target);
-      var vec1 = options.globalXfo.ori.getZaxis();
-      var vec2 = dirVec.unit();
-      options.globalXfo.ori.postMultiplyInPlace(FABRIC.RT.Quat.makeFrom2Vectors(vec1, vec2, true));
-      var zaxis = options.globalXfo.ori.getZaxis();
-      vec1 = options.globalXfo.ori.getYaxis();
-      vec2 = zaxis.cross(FABRIC.RT.vec3(0, 1, 0) ).cross(zaxis).unit();
-      options.globalXfo.ori.postMultiplyInPlace( FABRIC.RT.Quat.makeFrom2Vectors(vec1, vec2, true));
-    }
-   var aimCameraTransformNode = scene.constructNode('AimTransform', options);
-    return aimCameraTransformNode;
-  });
-  */
+  }});
+
+
 

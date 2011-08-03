@@ -158,6 +158,9 @@ function Scalar distFromPointToLine(in Vec3 P, in Vec3 lineP0, in Vec3 lineP1) {
 
   c1 = w.dot(v);
   c2 = v.dot(v);
+  if(c2 == 0.0){
+    return P.dist(lineP0);
+  }
   b = c1 / c2;
 
   Pb = lineP0 + b * v;
@@ -201,6 +204,15 @@ function Scalar distanceFromLineToLine(
   c = v.dot(v); // always >= 0
   d = u.dot(w);
   e = v.dot(w);
+  if(a == 0.0 && c == 0.0){
+    return l1_p0.dist(l2_p0);
+  }
+  if(a == 0.0){
+    return distFromPointToLine(l1_p0, l2_p0, l2_p1);
+  }
+  if(c == 0.0){
+    return distFromPointToLine(l2_p0, l1_p0, l1_p1);
+  }
   D = a * c - b * b; // always >= 0
 
   // com_pute the line _parameters of the two closest points
@@ -218,98 +230,9 @@ function Scalar distanceFromLineToLine(
     l1_t = (b * e - c * d) / D;
     l2_t = (a * e - b * d) / D;
   }
-
   // get the difference of the two closest points
   dP = w + (l1_t * u) - (l2_t * v);
 
   return dP.norm(); // return the closest distance
 }
 
-function Scalar distanceFromRayToLine(
-  io Vec3 r1_p, io Vec3 r1_d,
-  io Vec3 l2_p0, io Vec3 l2_p1
-) {
-  var Vec3 ray_P1;
-  ray_P1 = r1_p + r1_d;
-
-  var Scalar l1_t, l2_t, dist;
-  dist = distanceFromLineToLine(
-    r1_p, ray_P1,
-    l2_p0, l2_p1,
-    l1_t, l2_t
-  );
-
-  if (l1_t >= 0.0 && l2_t >= 0.0 && l2_t <= 1.0) {
-    return dist;
-  }
-  if (l1_t >= 0.0 && l2_t < 0.0) {
-    return distFromPointToLine(l2_p0, r1_p, ray_P1);
-  }
-  if (l1_t >= 0.0 && l2_t > 1.0) {
-    return distFromPointToLine(l2_p1, r1_p, ray_P1);
-  }
-  // The line segment is behind the ray
-  if (l2_t >= 0.0 && l2_t < 1.0) {
-    return distFromPointToSegment(r1_p, l2_p0, r1_p);
-  }
-  if (l2_t < 0.0) {
-    return l2_p0.dist(r1_p);
-  }else {
-    return l2_p1.dist(r1_p);
-  }
-}
-
-function Boolean intersectRayWithTriangle(
-  Boolean cull,
-  Vec3 rayOri,
-  Vec3 rayDir,
-  Vec3 v0,
-  Vec3 v1,
-  Vec3 v2,
-  io Scalar dist,
-  io Scalar u,
-  io Scalar v
-) {
-  var Vec3 e1 = v1 - v0;
-  var Vec3 e2 = v2 - v0;
-  var Vec3 pvec = rayDir.cross(e2);
-  var Scalar det = e1.dot(pvec);
-  if (cull) {
-    if (det < 0.00001) {
-      return false;
-    }
-    var Vec3 tvec = rayOri - v0;
-    u = tvec.dot(pvec);
-    if (u < 0.0 || u > det) {
-      return false;
-    }
-    var Vec3 qvec = tvec.cross(e1);
-    v = rayDir.dot(qvec);
-    if (v < 0.0 || (u + v) > det) {
-      return false;
-    }
-    var Scalar inv_det = 1.0 / det;
-    dist = e2.dot(qvec);
-    dist *= inv_det;
-    u *= inv_det;
-    v *= inv_det;
-  }
-  else {
-    if (det > - 0.00001 && det < 0.00001) {
-      return false;
-    }
-    var Scalar inv_det = 1.0 / det;
-    var Vec3 tvec = rayOri - v0;
-    u = tvec.dot(pvec) * inv_det;
-    if (u < 0.0 || u > 1.0) {
-      return false;
-    }
-    var Vec3 qvec = tvec.cross(e1);
-    v = rayDir.dot(qvec) * inv_det;
-    if (v < 0.0 || (u + v) > 1.0) {
-      return false;
-    }
-    dist = e2.dot(qvec) * inv_det;
-  }
-  return true;
-}

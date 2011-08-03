@@ -3,7 +3,7 @@
     Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
     -->
   <head> 
-    <title>FABRIC - Shadow Casting Lights</title> 
+    <title>FABRIC - PostProcessing Filters</title> 
     
     <meta charset="iso-8859-1"/>
     <link href="../../../themes/default/style.css" rel="stylesheet" type="text/css" />
@@ -20,15 +20,17 @@
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Vec2.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Vec3.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Vec4.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Quat.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Euler.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Mat22.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Mat33.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Mat44.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Quat.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Xfo.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/RGBA.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Color.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Ray.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Euler.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/OGLShaderProgram.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/OGLTexture2D.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/OGLRenderTarget.js" charset="utf-8"></script>
 
     <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Geometry.js" charset="utf-8"></script>
@@ -39,98 +41,131 @@
     <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Kinematics.js" charset="utf-8"></script>
     
     <script type="text/javascript">
-$(document).ready(function() {
-
-  // Create the scene.
-  var scene = FABRIC.SceneGraph.createScene();
-//  var postProcessEffect = scene.constructNode( "BloomPostProcessEffect" );
-
+    
+    
+$(document).ready(function() { var scene = FABRIC.SceneGraph.createScene();
   var viewport = scene.constructNode('Viewport', {
-    /*postProcessEffect:postProcessEffect,*/
-    windowElement: document.getElementById('FabricContainer'),
-    enableRaycasting: true
+    enableRaycasting: false,
+    windowElement: document.getElementById('FabricContainer')
   });
-
-  // Set the viewPort background to red
-  viewport.backgroundColor = FABRIC.RT.rgb(0.1, 0.1, 0.1);
 
   // Create a camera to draw the scene from
   var camera = scene.constructNode('TargetCamera', {
-    position: FABRIC.RT.vec3(30, 30, 0),
-    target: FABRIC.RT.vec3(2, 0, -3)
-  });
+      position: FABRIC.RT.vec3(30, 50, 100),
+      target: FABRIC.RT.vec3(0, 0, 0)
+    });
 
-  scene.constructNode("CameraManipulator", { targetNode:camera } );
+  scene.constructNode('CameraManipulator', { targetNode: camera });
+
   viewport.setCameraNode(camera);
+  viewport.addPostProcessEffectShader(scene.constructNode('EdgeDetectionPostProcessEffect'));
+  
+  var light = scene.constructNode('PointLight', { position: FABRIC.RT.vec3(420.0, 1000.0, 600.0) });
 
-  var spotLightNode = scene.constructNode('SpotLight', {
-    position: FABRIC.RT.vec3(10, 20, 5),
-    target: FABRIC.RT.vec3(0, 2, -6),
-    coneAngle: 80.0 * FABRIC.RT.degToRad,
-    farDistance: 60,
-    castShadows: true,
-    display: false
+
+  var greyFlatMaterial = scene.constructNode('FlatMaterial', {
+    color: FABRIC.RT.rgb(0.7, 0.7, 0.7)
   });
 
-  var lightTrManip = scene.constructNode('3AxisTranslationManipulator', { parentNode: spotLightNode.getTransformNode(), size: 4 });
-  var lightOriManip = scene.constructNode('3AxisRotationManipulator', { parentNode: spotLightNode.getTransformNode(), radius: 3 });
-
-  var bluePhongMaterial = scene.constructNode('ShadowReceivingPhongMaterial', {
+  var redPhongMaterial = scene.constructNode('PhongMaterial', {
+    diffuseColor: FABRIC.RT.rgb(0.8, 0, 0),
+    lightNode: light
+  });
+  var greenPhongMaterial = scene.constructNode('PhongMaterial', {
+    diffuseColor: FABRIC.RT.rgb(0, 0.8, 0),
+    lightNode: light
+  });
+  var bluePhongMaterial = scene.constructNode('PhongMaterial', {
     diffuseColor: FABRIC.RT.rgb(0, 0, 0.8),
-    lightNode: spotLightNode
-    });
-  var greyPhongMaterial = scene.constructNode('ShadowReceivingPhongMaterial', {
-    diffuseColor: FABRIC.RT.rgb(0.3, 0.9, 0.3),
-    lightNode: spotLightNode
+    lightNode: light
   });
 
+  // Grid
   scene.constructNode('Instance', {
       transformNode: scene.constructNode('Transform', {
-        hierarchical: false,
-        globalXfo: FABRIC.RT.xfo({ tr: FABRIC.RT.vec3(0, 3.8, -16) })
+        hierarchical: false
       }),
-      geometryNode: scene.constructNode('Teapot', { size: 4 }),
-      materialNode: bluePhongMaterial,
-      enableShadowCasting: true
+      geometryNode: scene.constructNode('Grid', {
+          size_x: 75.0,
+          size_z: 75.0,
+          sections_x: 10,
+          sections_y: 1,
+          sections_z: 10
+        }),
+      materialNode: greyFlatMaterial
     });
 
+  // Phong Cuboid
   scene.constructNode('Instance', {
       transformNode: scene.constructNode('Transform', {
         hierarchical: false,
-        globalXfo: FABRIC.RT.xfo({ tr: FABRIC.RT.vec3(0, 2, -5) })
+        globalXfo: FABRIC.RT.xfo({ tr: FABRIC.RT.vec3(-20, 15, -10) })
       }),
       geometryNode: scene.constructNode('Cuboid', {
-        length: 4,
-        width: 4,
-        height: 16
+        length: 15,
+        width: 15,
+        height: 30
       }),
-      materialNode: bluePhongMaterial,
-      enableShadowCasting: true
+      materialNode: redPhongMaterial
     });
 
+  // Phong Cone
   scene.constructNode('Instance', {
       transformNode: scene.constructNode('Transform', {
         hierarchical: false,
-        globalXfo: FABRIC.RT.xfo({ tr: FABRIC.RT.vec3(-10, 0, -10) })
+        globalXfo: FABRIC.RT.xfo({ tr: FABRIC.RT.vec3(0, 15, 0) })
       }),
-      geometryNode: scene.constructNode('Plane', { length: 50, width: 50 }),
-      materialNode: greyPhongMaterial,
-      enableShadowCasting: true
+      geometryNode: scene.constructNode('Cone', {
+        radius: 10.0,
+        height: 30.0,
+        detail: 10
+      }),
+      materialNode: greenPhongMaterial
     });
 
-  var errors = scene.getErrors();
-  if (errors.length > 0) {
-    throw (errors.toString());
-  }
-  else {
-    console.log('Done');
-  }
+  // Phong Sphere
+  scene.constructNode('Instance', {
+      transformNode: scene.constructNode('Transform', {
+        hierarchical: false,
+        globalXfo: FABRIC.RT.xfo({ tr: FABRIC.RT.vec3(20, 10, 20) })
+      }),
+      geometryNode: scene.constructNode('Sphere', {
+        radius: 10,
+        detail: 10
+      }),
+      materialNode: bluePhongMaterial
+    });
+  
+
+  $('#loadingDialog').dialog({
+    modal: true
+  });
+  var count = FABRIC.getAsyncTaskCount();
+  FABRIC.appendOnResolveAsyncTaskCallback(function(label, countRemaining){
+    $('#loadingProgressBar').progressbar({
+      value: (1.0-(countRemaining/count))*100
+    });
+    if(countRemaining===0){
+      $('#loadingDialog').dialog('close');
+      var errors = scene.getErrors();
+      if (errors.length > 0) {
+        throw (errors.toString());
+      }
+      viewport.redraw();
+      return true;
+    }
+  });
+  
 });
 
 </script>
 
   </head> 
   <body>
+    <div id="loadingDialog" title="Loading...">
+      <h4 id="loadingDesc" style="margin-bottom: 10px"></h4>
+      <div id="loadingProgressBar" class="ui-progressbar-value"></div>
+    </div>
     <div id="wrapper">
       <ul id="nav">
         <li><a href="#" id="fabric-logo"><img src="../../../themes/default/_img/projects/fabric-logo.png" /></a></li>
@@ -140,16 +175,15 @@ $(document).ready(function() {
           <div id="FabricContainer"></div> 
         </div><!--viewer-->
         <div id="sidebar">
-          
+
           <div class="box">
             <h2>INFO</h2>
-            <div class="content">
-              Shadow Casting Lights.<br>
-              This sample illustrates the use of FABRIC's drawing pipeline for creating shadows.
-              Refer to the FABRIC documentation for a detailed description of how this works.
+              <div class="content">
+              Primitives.<br>
+              This sample shows the creation of several primitives using FABRIC's JavaScript based SceneGraph.
             </div><!--content-->
           </div><!--box-->
-
+          
         </div><!--sidebar-->
       </div> <!--editor-->
     </div><!--wrapper-->

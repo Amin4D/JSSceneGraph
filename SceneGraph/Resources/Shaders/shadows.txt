@@ -1,74 +1,84 @@
-			
+      
 
 #define USE_SHADOW_SAMPLER 1
 
 
 #ifdef USE_SHADOW_SAMPLER
 float shadowLookupOffset( 
-		in vec2 offset, 
-		in sampler2DShadow shadowMapSampler,
-		in vec4 shadowCoord
+  in vec2 offset, 
+  in sampler2DShadow shadowMapSampler,
+  in vec4 shadowCoord
 ){
-	// Hard-coded for now. Should be added to the uniforms
-	float pixelOffset = 0.0; //1.0 / 1024.0;
-	return shadow2DProj(shadowMapSampler, shadowCoord + vec4(offset.x * shadowCoord.w, offset.y * shadowCoord.w, 0.0, 0.0) + pixelOffset  ).w;
+  // Hard-coded for now. Should be added to the uniforms
+  float pixelOffset = 0.0; //1.0 / 1024.0;
+  return shadow2DProj(shadowMapSampler, shadowCoord + vec4(offset.x * shadowCoord.w, offset.y * shadowCoord.w, 0.05, 0.0) ).x;
 }
 
 float getLightFactor_PCF( 
-		in sampler2DShadow shadowMapSampler,
-		in vec4 shadowCoord
+  in sampler2DShadow shadowMapSampler,
+  in vec4 shadowCoord
 ){
-	float x, y, lightFactor, variation = 5.5;
-	float numSamples = 7.0;
-	float increment = (variation * 2.0)/numSamples;
-	for (y = -variation ; y <=variation ; y+=increment){
-		for (x = -variation ; x <=variation ; x+=increment){
-			lightFactor += shadowLookupOffset( vec2(x,y), shadowMapSampler, shadowCoord );
-		}
-	}
-
-	return lightFactor / (numSamples*numSamples);
+  shadowCoord.w += 0.001;
+  if(shadowCoord.w > 1.0){
+  int x, y;
+  float lightFactor, variation = 0.01;
+  vec2 uv;
+  int numSamples = 5;
+  float increment = (variation * 2.0)/float(numSamples);
+  for (y = 0 ; y <=numSamples ; y++){
+    for (x = 0 ; x <=numSamples ; x++){
+      uv.x = (variation * -0.5) + ((float(x)/float(numSamples)) * variation);
+      uv.y = (variation * -0.5) + ((float(y)/float(numSamples)) * variation);
+      lightFactor += shadowLookupOffset( uv, shadowMapSampler, shadowCoord );
+    }
+  }
+  return lightFactor / float(numSamples*numSamples);
+  }
+  else{
+    return 0.0;
+  }
 }
 
 float getLightFactor_Dither( 
-		in sampler2DShadow shadowMapSampler,
-		in vec4 shadowCoord
+  in sampler2DShadow shadowMapSampler,
+  in vec4 shadowCoord
 ){
-	vec2 o = mod(floor(gl_FragCoord.xy), 2.0);
+  vec2 o = mod(floor(gl_FragCoord.xy), 2.0);
 
-	float lightFactor;
-	lightFactor += shadowLookupOffset(vec2(-1.5, 1.5) + o, shadowMapSampler, shadowCoord );
-	lightFactor += shadowLookupOffset(vec2( 0.5, 1.5) + o, shadowMapSampler, shadowCoord );
-	lightFactor += shadowLookupOffset(vec2(-1.5, -0.5) + o, shadowMapSampler, shadowCoord );
-	lightFactor += shadowLookupOffset(vec2( 0.5, -0.5) + o, shadowMapSampler, shadowCoord );
-	return lightFactor * 0.25 ;
+  float lightFactor;
+  lightFactor += shadowLookupOffset(vec2(-1.5, 1.5) + o, shadowMapSampler, shadowCoord );
+  lightFactor += shadowLookupOffset(vec2( 0.5, 1.5) + o, shadowMapSampler, shadowCoord );
+  lightFactor += shadowLookupOffset(vec2(-1.5, -0.5) + o, shadowMapSampler, shadowCoord );
+  lightFactor += shadowLookupOffset(vec2( 0.5, -0.5) + o, shadowMapSampler, shadowCoord );
+  return lightFactor * 0.25 ;
 }
 
 float getLightFactor_Hard( 
-		in sampler2DShadow shadowMapSampler,
-		in vec4 shadowCoord
+    in sampler2DShadow shadowMapSampler,
+    in vec4 shadowCoord
 ){
-    return shadow2DProj(shadowMapSampler, vec4(shadowCoord.x, shadowCoord.y, shadowCoord.z - 0.01, shadowCoord.w) ).w;
+//  shadowCoord.z -= 0.0001;
+  return shadow2DProj(shadowMapSampler, shadowCoord).x;
 }
 
 #else
 
 float getLightFactor_Hard( 
-		in sampler2D shadowMapSampler,
-		in vec4 shadowCoord
+  in sampler2D shadowMapSampler,
+  in vec4 shadowCoord
 ){
-	vec4 shadowCoordinateWdivide = shadowCoord / shadowCoord.w;
+  vec4 shadowCoordinateWdivide = shadowCoord / shadowCoord.w;
 
-	// Used to lower moir√© pattern and self-shadowing
-	shadowCoordinateWdivide.z += 0.0005;
+  // Used to lower moir√© pattern and self-shadowing
+  shadowCoordinateWdivide.z -= 0.0001;
 
-	float distanceFromLight = texture2D(shadowMapSampler,shadowCoordinateWdivide.st).z;
+  float distanceFromLight = texture2D(shadowMapSampler,shadowCoordinateWdivide.st).z;
 
-	float lightFactor = 1.0;
-	if( shadowCoord.w > 0.0 && distanceFromLight < shadowCoordinateWdivide.z ){
-		lightFactor = 0.0;
-	}
-	return lightFactor;
+  float lightFactor = 1.0;
+  if( shadowCoord.w > 0.0 && distanceFromLight <= shadowCoordinateWdivide.z ){
+    lightFactor = 0.0;
+  }
+  return lightFactor;
 }
 
 #endif

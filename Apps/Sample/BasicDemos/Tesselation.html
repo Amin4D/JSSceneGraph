@@ -27,6 +27,8 @@
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/RGBA.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Color.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Euler.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/OGLShaderProgram.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/OGLTexture2D.js" charset="utf-8"></script>
 
     <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Geometry.js" charset="utf-8"></script>
@@ -39,7 +41,9 @@
     
     <script type="text/javascript">
     
-$(document).ready(function() { var scene = FABRIC.SceneGraph.createScene();
+$(document).ready(function() {
+  
+  var scene = FABRIC.SceneGraph.createScene();
   var viewport = scene.constructNode('Viewport', {
     windowElement: document.getElementById('FabricContainer'),
     backgroundColor: FABRIC.RT.rgb(0.0, 0.05, 0.15)
@@ -48,7 +52,7 @@ $(document).ready(function() { var scene = FABRIC.SceneGraph.createScene();
   // Create a camera to draw the scene from
   var camera = scene.constructNode('TargetCamera', {
       nearDistance: 0.1,
-      farDistance: 50,
+      farDistance: 500,
       position: FABRIC.RT.vec3(0, 5, 10).scale(2.0)
     });
 
@@ -83,12 +87,12 @@ $(document).ready(function() { var scene = FABRIC.SceneGraph.createScene();
       min: 1.0,
       max: 64.0,
       step: 1.0,
-      value: tesselationMaterial.tesselationInner,
+      value: tesselationMaterial.getTesselationInner(),
     })
   .bind('slide',
     function(event, ui) {
-      tesselationMaterial.tesselationInner = ui.value;
-      tesselationMaterial.tesselationOuter = ui.value;
+      tesselationMaterial.setTesselationInner(ui.value);
+      tesselationMaterial.setTesselationOuter(ui.value);
       scene.redrawAllWindows();
     });
 
@@ -97,31 +101,44 @@ $(document).ready(function() { var scene = FABRIC.SceneGraph.createScene();
       min: 0.0,
       max: 1.0,
       step: 0.01,
-      value: tesselationMaterial.wireOpacity,
+      value: tesselationMaterial.getWireOpacity(),
     })
   .bind('slide',
     function(event, ui) {
-      tesselationMaterial.wireOpacity = ui.value
+      tesselationMaterial.setWireOpacity(ui.value);
       scene.redrawAllWindows();
     });
   
-  var errors = scene.getErrors();
-  if (errors.length > 0) {
-    throw (errors.toString());
-  }
-  else {
-    scene.redrawAllWindows();
 
-    console.log(scene.getTimerProfiles());
-
-    console.log('Done');
-  }
+  $('#loadingDialog').dialog({
+    modal: true
+  });
+  var count = FABRIC.getAsyncTaskCount();
+  FABRIC.appendOnResolveAsyncTaskCallback(function(label, countRemaining){
+    $('#loadingProgressBar').progressbar({
+      value: (1.0-(countRemaining/count))*100
+    });
+    if(countRemaining===0){
+      $('#loadingDialog').dialog('close');
+      var errors = scene.getErrors();
+      if (errors.length > 0) {
+        throw (errors.toString());
+      }
+      viewport.redraw();
+      return true;
+    }
+  });
+  
 });
 
 </script>
 
   </head> 
   <body>
+    <div id="loadingDialog" title="Loading...">
+      <h4 id="loadingDesc" style="margin-bottom: 10px"></h4>
+      <div id="loadingProgressBar" class="ui-progressbar-value"></div>
+    </div>
     <div id="wrapper">
       <ul id="nav">
         <li><a href="#" id="fabric-logo"><img src="../../../themes/default/_img/projects/fabric-logo.png" /></a></li>

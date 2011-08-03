@@ -28,10 +28,11 @@
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Xfo.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Color.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Euler.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/OGLShaderProgram.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/OGLTexture2D.js" charset="utf-8"></script>
     
     <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Geometry.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Particles.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Lights.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Materials.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Manipulation.js" charset="utf-8"></script>
@@ -72,14 +73,15 @@ $(document).ready(function() { $('#play').button({
   
   
   
-  FABRIC.SceneGraph.registerNodeType('NBodySimulation',
-    function(options, scene) {
+  FABRIC.SceneGraph.registerNodeType('NBodySimulation', {
+    factoryFn: function(options, scene) {
       scene.assignDefaults(options, {
           nBodies: 1024
         });
       options.positionsVec4 = true;
+      options.velocitiesVec4 = true;
       options.createBoundingBoxNode = false;
-      var nBodyGeometry = scene.constructNode('Particles', options);
+      var nBodyGeometry = scene.constructNode('Points', options);
       
       // Add all the paramters, and add getters/setters at the same time.
       nBodyGeometry.pub.addUniformValue('timeStep', 'Scalar', 0.1, true);
@@ -87,10 +89,13 @@ $(document).ready(function() { $('#play').button({
       nBodyGeometry.pub.addUniformValue('velocityScale', 'Scalar', 8.0, true);
       nBodyGeometry.pub.addUniformValue('softening', 'Scalar', 0.15, true);
       nBodyGeometry.pub.addUniformValue('damping', 'Scalar', 0.9, true);
-      nBodyGeometry.pub.addUniformValue('systemType', 'Integer', 0, true);
+      nBodyGeometry.pub.addUniformValue('systemType', 'Integer', 2, true);
     
+      nBodyGeometry.pub.addVertexAttributeValue('velocities', 'Vec4');
       nBodyGeometry.pub.addVertexAttributeValue('mass', 'Scalar');
       nBodyGeometry.pub.addVertexAttributeValue('vertexColors', 'Color');
+      nBodyGeometry.pub.addVertexAttributeValue('posPrev', 'Vec4');
+      nBodyGeometry.pub.addVertexAttributeValue('velPrev', 'Vec4');
 
       var nBodyKernelGPUSrc = FABRIC.loadResourceURL('CL/nBodyKernel.cl');
     
@@ -111,7 +116,7 @@ $(document).ready(function() { $('#play').button({
             operatorName: 'nBodyInitOp',
             entryFunctionName: 'nBodyInit',
             srcFile: 'KL/nBodyOp.kl',
-            parameterBinding: [
+            parameterLayout: [
               'self.index',
               'self.count',
               'self.positions',
@@ -125,41 +130,7 @@ $(document).ready(function() { $('#play').button({
           }));
       nBodyGeometry.pub.setVertexCount(options.nBodies);
       
-      var memberName = 'positions';
-      var memberType = 'Vec4';
-      var bufferIDMemberName = memberName + 'BufferID';
-      var countMemberName = memberName + 'Count';
-      var attributeNodeBinding = 'attributes';
-        
-      var reloadMemberName = memberName + 'Reload';
-      var dynamicMemberName = memberName + 'Dynamic';
-      
-      nBodyGeometry.pub.addUniformValue(bufferIDMemberName, 'Integer', 0);
-      nBodyGeometry.pub.addUniformValue(countMemberName, 'Size', 0);
-      nBodyGeometry.pub.addUniformValue(reloadMemberName, 'Boolean', false);
-      nBodyGeometry.pub.addUniformValue(dynamicMemberName, 'Boolean', false);
-
-      // TODO: Move this into the 'geometry' class and tidy up. 
-      nBodySimulateNodeGPU.bindings.append(scene.constructOperator({
-            operatorName: 'gen' + memberName + 'OpenGLBuffer',
-            mainThreadOnly: true,
-            srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/genAndLoadVBO.kl',
-            preProcessorDefinitions: {
-              DATA_TYPE: memberType,
-              ATTRIBUTE_NAME: memberName,
-              ATTRIBUTE_ID: FABRIC.shaderAttributeTable[memberName].id
-            },
-            entryFunctionName: 'genDGVBOOp',
-            parameterBinding: [
-              'self.' + memberName + '[]',
-              'uniforms.' + countMemberName,
-              'uniforms.' + dynamicMemberName,
-              'uniforms.' + reloadMemberName,
-              'uniforms.' + bufferIDMemberName
-            ]
-          }));
-    
-      deformationBuffer = nBodyGeometry.pub.addDeformationBuffer();//['positions']);
+      deformationBuffer = nBodyGeometry.pub.addDeformationBuffer(["positions"]);
       deformationBuffer.addDependency(scene.getGlobalsNode(), 'globals');
     
       deformationBuffer.assignOperator({
@@ -167,7 +138,7 @@ $(document).ready(function() { $('#play').button({
           mainThreadOnly: true,
           entryFunctionName: 'nBodySimulateGPU',
           srcFile: 'KL/nBodyOpGPU.kl',
-          parameterBinding: [
+          parameterLayout: [
             'globals.ms',
             'parentattributes.positions[]',
             'parentattributes.velocities[]',
@@ -176,7 +147,6 @@ $(document).ready(function() { $('#play').button({
             'uniforms.clCommandQueue',
             'uniforms.clKernel',
             'uniforms.kernelSrc',
-            'uniforms.' + bufferIDMemberName,
             'uniforms.positionMem',
             'uniforms.velocityMem',
             'uniforms.positionPrevMem',
@@ -184,17 +154,21 @@ $(document).ready(function() { $('#play').button({
             'uniforms.pointCount',
             'uniforms.timeStep',
             'uniforms.softening',
-            'uniforms.damping'
+            'uniforms.damping',
+            'self.positions[]'
           ]
         });
   
       return nBodyGeometry;
-    });
+    }});
 
 
   // Create the scene.
   var scene = FABRIC.SceneGraph.createScene();
-  var viewport = scene.constructNode('Viewport', { windowElement: document.getElementById('FabricContainer'), backgroundColor: FABRIC.RT.rgb(0.0, 0.0, 0.0) });
+  var viewport = scene.constructNode('Viewport', {
+      windowElement: document.getElementById('FabricContainer'),
+      backgroundColor: FABRIC.RT.rgb(0.0, 0.0, 0.0)
+    });
 
   // Create a camera to draw the scene from
   camera = scene.constructNode('TargetCamera', {
@@ -204,25 +178,20 @@ $(document).ready(function() { $('#play').button({
 
   scene.constructNode('CameraManipulator', { targetNode: camera });
   viewport.setCameraNode(camera);
+  
+  var nBodies = 8192;
 
   var materialNode = scene.constructNode('PointSpriteMaterial', { pointSize: 1.0 });
-  var nBodyGeometry = scene.constructNode('NBodySimulation', { nBodies:7680 });
+  var nBodyGeometry = scene.constructNode('NBodySimulation', { nBodies: nBodies });
   var xformNode = scene.constructNode('Transform', { hierarchical: false });
 
-  document.getElementById('nbodiesDisp').childNodes[0].data = 'Num Bodies: ' +  + 7680;
+  document.getElementById('nbodiesDisp').childNodes[0].data = 'Num Bodies: ' + nBodies;
       
   var nBodyInstanceNode = scene.constructNode('Instance', {
       transformNode: xformNode,
       geometryNode: nBodyGeometry,
       materialNode: materialNode
     });
-
-  var errors = scene.getErrors();
-  if (errors.length > 0) {
-    throw (errors.toString());
-  }
-
-  console.log('Done');
 
   var resetSimulation = function() {
     if ($('#play').text() == 'Pause') {
@@ -274,9 +243,6 @@ $(document).ready(function() { $('#play').button({
       resetSimulation();
     });
     
-  setInterval(function() {
-      document.getElementById('frameRate').childNodes[0].data = 'Frame Rate:' + viewport.getFPS().toFixed(2);
-    }, 600);
     
   $('#nbodies').slider('value', nBodyGeometry.getVertexCount());
   $('#nbodies').bind('slidechange',
@@ -325,12 +291,38 @@ $(document).ready(function() { $('#play').button({
       scene.redrawAllWindows();
     });
 
+  $('#loadingDialog').dialog({
+    modal: true
+  });
+  var count = FABRIC.getAsyncTaskCount();
+  FABRIC.appendOnResolveAsyncTaskCallback(function(label, countRemaining){
+    $('#loadingProgressBar').progressbar({
+      value: (1.0-(countRemaining/count))*100
+    });
+    if(countRemaining===0){
+      $('#loadingDialog').dialog('close');
+      var errors = scene.getErrors();
+      if (errors.length > 0) {
+        throw (errors.toString());
+      }
+      viewport.redraw();
+      
+      setInterval(function() {
+        document.getElementById('frameRate').childNodes[0].data = 'Frame Rate:' + viewport.getFPS().toFixed(2);
+      }, 600);
+    }
+  });
+  
 });
 
 </script>
 
   </head> 
   <body>
+    <div id="loadingDialog" title="Loading...">
+      <h4 id="loadingDesc" style="margin-bottom: 10px"></h4>
+      <div id="loadingProgressBar" class="ui-progressbar-value"></div>
+    </div>
     <div id="wrapper">
       <ul id="nav">
         <li><a href="#" id="fabric-logo"><img src="../../../themes/default/_img/projects/fabric-logo.png" /></a></li>
@@ -356,10 +348,10 @@ $(document).ready(function() { $('#play').button({
           <div class="box">
             <h2>Playback</h2>
             <div class="content">
-              <button id="play" style="margin-top:10px;">Play</button>
-              <button id="step" style="margin-top:10px;">Step</button>
+              <button id="play">Play</button>
+              <button id="step">Step</button>
               <button id="reset" style="margin-top:10px;">Reset</button>
-              <div class="content" id="frameRate">Frame Rate:</div><p></p>
+              <div id="frameRate" style="margin-top:10px;">Frame Rate:</div><p></p>
             </div><!--content-->
           </div><!--box-->
           <div class="box">
@@ -369,13 +361,13 @@ $(document).ready(function() { $('#play').button({
               <select onchange="setSystemType(this.options[this.selectedIndex].value);">
                 <option value="0">Spherical</option>
                 <option value="1">Shell</option>
-                <option value="2">Expand</option>
+                <option value="2" selected>Expand</option>
               </select></div>
-              <div id="nbodiesDisp">Number of Bodies:</div><p></p>
+              <div id="nbodiesDisp" style="margin-top:10px;">Number of Bodies:</div><p></p>
               <div id='nbodies' style="margin-top:10px;"></div>
-              <div>Cluster Scale:</div>
+              <div style="margin-top:10px;">Cluster Scale:</div>
               <div id='clsscale' style="margin-top:10px;"></div>
-              <div>Velocity Scale:</div>
+              <div style="margin-top:10px;">Velocity Scale:</div>
               <div id='velscale' style="margin-top:10px;"></div>
             </div><!--content-->
           </div><!--box-->
@@ -384,11 +376,11 @@ $(document).ready(function() { $('#play').button({
             <div class="content">
               <div>Time Step:</div>
               <div id='timestep' style="margin-top:10px;"></div>
-              <div>Softening:</div>
+              <div style="margin-top:10px;">Softening:</div>
               <div id='softening' style="margin-top:10px;"></div>
-              <div>Damping:</div>
+              <div style="margin-top:10px;">Damping:</div>
               <div id='damping' style="margin-top:10px;"></div>
-              <div>Size of Bodies:</div>
+              <div style="margin-top:10px;">Size of Bodies:</div>
               <div id='pointSize' style="margin-top:10px;"></div>
             </div><!--content-->
           </div><!--box-->

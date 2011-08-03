@@ -29,6 +29,7 @@
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Color.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Euler.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Ray.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/OGLShaderProgram.js" charset="utf-8"></script>
 
     <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Geometry.js" charset="utf-8"></script>
@@ -44,8 +45,9 @@ $(document).ready(function() {
   // Create the scene.
   var scene = FABRIC.SceneGraph.createScene();
   var viewport = scene.constructNode('Viewport', {
+    windowElement: document.getElementById('FabricContainer'),
     enableRaycasting: true,
-    windowElement: document.getElementById('FabricContainer')
+    rayIntersectionThreshold: 0.8
   });
 
   // Create a camera to draw the scene from
@@ -89,36 +91,50 @@ $(document).ready(function() {
     });
   scene.constructNode('3AxisTranslationManipulator', { parentNode: cube2Draw });
 
-  // Pivot
-  var cube3Draw = scene.constructNode('Instance', {
+  // Screen Space Translation
+  var cube2Draw = scene.constructNode('Instance', {
       transformNode: scene.constructNode('Transform', {
         hierarchical: false,
         globalXfo: FABRIC.RT.xfo({ tr: FABRIC.RT.vec3(35, 0, 0) })
       }),
       geometryNode: cube,
       materialNode: scene.constructNode('PhongMaterial', {
-        diffuseColor: FABRIC.RT.rgb(0.0, 0.8, 0, 1),
+        diffuseColor: FABRIC.RT.rgb(0.0, 0.0, 0.8, 1),
+        lightNode: light
+      })
+    });
+  scene.constructNode('ScreenTranslationManipulator', { parentNode: cube2Draw, radius:2 });
+
+  // Pivot
+  var cube3Draw = scene.constructNode('Instance', {
+      transformNode: scene.constructNode('Transform', {
+        hierarchical: false,
+        globalXfo: FABRIC.RT.xfo({ tr: FABRIC.RT.vec3(70, 0, 0) })
+      }),
+      geometryNode: cube,
+      materialNode: scene.constructNode('PhongMaterial', {
+        diffuseColor: FABRIC.RT.rgb(0.8, 0.5, 0.2, 1),
         lightNode: light
       })
     });
   scene.constructNode('PivotRotationManipulator', { parentNode: cube3Draw });
-
+/*
   // Bone
   var bone = scene.constructNode('Cuboid', { length: 30, width: 3, height: 3 });
   var cube4Draw = scene.constructNode('Instance', {
       transformNode: scene.constructNode('Transform', {
         hierarchical: false,
-        globalXfo: FABRIC.RT.xfo({ tr: FABRIC.RT.vec3(75, 0, 0) })
+        globalXfo: FABRIC.RT.xfo({ tr: FABRIC.RT.vec3(100, 0, 0) })
       }),
       geometryNode: bone,
       materialNode: scene.constructNode('PhongMaterial', {
-        diffuseColor: FABRIC.RT.rgb(0.0, 0.8, 0, 1),
+        diffuseColor: FABRIC.RT.rgb(0.2, 0.5, 0.8, 1),
         lightNode: light
       })
     });
   scene.constructNode('BoneManipulator', { parentNode: cube4Draw });
 
-/*    // first create a skeleton
+    // first create a skeleton
     var skeletonNode = scene.constructNode("CharacterSkeleton");
     skeletonNode.addBone({name:"root",
       referencePose:FABRIC.RT.xfo( {
@@ -169,19 +185,35 @@ $(document).ready(function() {
       });
   */
 
-  var errors = scene.getErrors();
-  if (errors.length > 0) {
-    throw (errors.toString());
-  }else {
-    console.log(scene.getTimerProfiles());
-    console.log('Done');
-  }
+  $('#loadingDialog').dialog({
+    modal: true
+  });
+  var count = FABRIC.getAsyncTaskCount();
+  FABRIC.appendOnResolveAsyncTaskCallback(function(label, countRemaining){
+    $('#loadingProgressBar').progressbar({
+      value: (1.0-(countRemaining/count))*100
+    });
+    if(countRemaining===0){
+      $('#loadingDialog').dialog('close');
+      var errors = scene.getErrors();
+      if (errors.length > 0) {
+        throw (errors.toString());
+      }
+      viewport.redraw();
+      return true;
+    }
+  });
+  
 });
 
 </script>
 
   </head> 
   <body>
+    <div id="loadingDialog" title="Loading...">
+      <h4 id="loadingDesc" style="margin-bottom: 10px"></h4>
+      <div id="loadingProgressBar" class="ui-progressbar-value"></div>
+    </div>
     <div id="wrapper">
       <ul id="nav">
         <li><a href="#" id="fabric-logo"><img src="../../../themes/default/_img/projects/fabric-logo.png" /></a></li>

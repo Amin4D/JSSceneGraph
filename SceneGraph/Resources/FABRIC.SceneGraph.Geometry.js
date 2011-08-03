@@ -296,7 +296,9 @@ FABRIC.SceneGraph.registerNodeType('Geometry', {
       return redrawEventHandler;
     };
     geometryNode.pub.reloadVBO = function(memberName) {
-      redrawEventHandler.setData(memberName + 'Reload', true);
+      var buffer = redrawEventHandler.getData(memberName + 'Buffer');
+      buffer.reload = true;
+      redrawEventHandler.setData(memberName + 'Buffer', 0, buffer);
     };
     geometryNode.getDrawOperator = function() {
       throw ('Geometry must define this');

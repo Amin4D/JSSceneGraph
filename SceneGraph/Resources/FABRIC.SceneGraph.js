@@ -19,6 +19,8 @@ FABRIC.SceneGraph = {
         // Commented out till we can finish the documentation.
   //    if (!nodeDescription.briefDesc || !nodeDescription.detailedDesc)
   //      console.log('WARNING: Node Constructor "'+type+'" does not provide a proper description.');
+      if(!nodeDescription.briefDesc) nodeDescription.briefDesc = '';
+      if(!nodeDescription.detailedDesc) nodeDescription.detailedDesc = '';
       if(!nodeDescription.optionsDesc) nodeDescription.optionsDesc = {};
       if(!nodeDescription.parentNodeDesc) nodeDescription.parentNodeDesc = '';
       this.nodeDescriptions[type] = nodeDescription;

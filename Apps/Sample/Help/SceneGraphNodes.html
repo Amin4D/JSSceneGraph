@@ -45,8 +45,6 @@
 
 
 $(document).ready(function() {
-
-  var scene = FABRIC.SceneGraph.createScene();
   
   // get all descriptions
   var help = FABRIC.SceneGraph.help();
@@ -59,16 +57,6 @@ $(document).ready(function() {
     aaData: descriptions
   });
 
-  var errors = scene.getErrors();
-  if (errors.length > 0) {
-    throw (errors.toString());
-  } else {
-    scene.redrawAllWindows();
-
-    console.log(scene.getTimerProfiles());
-
-    console.log('Done');
-  }
 
 });
 

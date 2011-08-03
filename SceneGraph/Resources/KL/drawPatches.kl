@@ -4,7 +4,7 @@
 //
 
 operator drawPatches(
-  io Integer indicesBufferID,
+  io OGLBuffer indicesBuffer,
   io Boolean drawToggle
 ) {
   if (drawToggle) {

@@ -263,14 +263,17 @@ FABRIC.SceneGraph.registerNodeType('Geometry', {
         }
         
         var buffer = new FABRIC.RT.OGLBuffer(memberName, attributeID, typeDesc);
-        buffer.dynamic = options.dynamicMembers.indexOf(memberName) != -1;
+        var dynamicBuffer = options.dynamicMembers.indexOf(memberName) != -1;
         var attributeNodeBinding = 'attributes';
         for (i = 0; i < deformationbufferinterfaces.length; i++) {
           if (deformationbufferinterfaces[i].getAttributesDGNode().getMembers()[memberName]) {
             attributeNodeBinding = 'attributes' + (i + 1);
-            buffer.dynamic = true;
+            dynamicBuffer = true;
             break;
           }
+        }
+        if(dynamicBuffer){
+          buffer.bufferType = FABRIC.SceneGraph.OpenGLConstants.GL_DYNAMIC_DRAW;
         }
         
         redrawEventHandler.addMember(bufferMemberName, 'OGLBuffer', buffer);
@@ -553,7 +556,6 @@ FABRIC.SceneGraph.registerNodeType('Triangles', {
             operatorName: 'drawPatches',
             srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/drawPatches.kl',
             parameterLayout: [
-              'self.indicesCount',
               'self.indicesBuffer',
               'instance.drawToggle'
             ],

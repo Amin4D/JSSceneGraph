@@ -10,8 +10,7 @@ operator drawCharacterInstance(
   io Mat44 boneMatrices[],
   io Mat44 cameraMatrix,
   io Mat44 projectionMatrix,
-  io Integer indicesBufferID,
-  io Size indicesCount
+  io OGLBuffer indicesBuffer
 ) {
 //  report("drawCharacterInstance");
   Data NULL;
@@ -19,16 +18,15 @@ operator drawCharacterInstance(
   if(location!=-1){
     shaderProgram.loadMat44UniformArray(location, boneMatrices);
     
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indicesBufferID);
-    glDrawElements(GL_TRIANGLES, indicesCount, GL_UNSIGNED_INT, NULL);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indicesBuffer.bufferID);
+    glDrawElements(GL_TRIANGLES, indicesBuffer.elementCount, GL_UNSIGNED_INT, NULL);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
   }
   else{
     report("ERROR: Character Material must use bone matrices.");
     
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indicesBufferID);
-    glDrawElements(GL_TRIANGLES, indicesCount, GL_UNSIGNED_INT, NULL);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indicesBuffer.bufferID);
+    glDrawElements(GL_TRIANGLES, indicesBuffer.elementCount, GL_UNSIGNED_INT, NULL);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
   }
-
 }

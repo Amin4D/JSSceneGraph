@@ -22,6 +22,14 @@ FABRIC.RT.OGLBuffer = function(name, id, dataType, dynamic) {
   this.elementCount = 0;
   this.elementDataSize = dataType ? dataType.size : 0;
   this.numBufferElementComponents = this.elementDataSize/4; // TODO: review this member.
+  if(this.numBufferElementComponents > 4){
+    // We are currenlty storing vertex weights and bone indices for defomation
+    // in mat33 values. While it seems to work, openGL buffers are only supposed
+    // to be able to store up to 16 bytes per vertex. Interestingly its been working
+    // on all GPUs. Note: We should probably split the vertex bones weights/indices
+    //  into 2 vec4s instead of one mat33.
+    this.numBufferElementComponents = 3;
+  }
   this.bufferType = FABRIC.SceneGraph.OpenGLConstants ? FABRIC.SceneGraph.OpenGLConstants.GL_STATIC_DRAW : 0;
   this.bufferElementComponentType = FABRIC.SceneGraph.OpenGLConstants ? FABRIC.SceneGraph.OpenGLConstants.GL_FLOAT : 0;
 };

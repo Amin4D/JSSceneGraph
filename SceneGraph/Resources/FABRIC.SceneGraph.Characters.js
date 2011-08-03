@@ -57,8 +57,7 @@ FABRIC.SceneGraph.registerNodeType('CharacterMesh', {
             'rig.boneMatrices',
             'camera.cameraMat44',
             'camera.projectionMat44',
-            'self.indicesBufferID',
-            'self.indicesCount'
+            'self.indicesBuffer'
           ]
         });
     }

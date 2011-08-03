@@ -35,11 +35,11 @@ operator setPointCount(
 }
 
 operator drawPoints(
-  io Size pointCount,
+  io OGLBuffer positionsBuffer,
   io Boolean drawToggle
 ) {
   //  report( "drawPoints:" + pointCount );
   if (drawToggle) {
-    glDrawArrays(GL_POINTS, 0, pointCount);
+    glDrawArrays(GL_POINTS, 0, positionsBuffer.elementCount);
   }
 }

@@ -275,7 +275,7 @@ FABRIC.SceneGraph.registerNodeType('Geometry', {
         
         redrawEventHandler.addMember(bufferMemberName, 'OGLBuffer', buffer);
         redrawEventHandler.preDescendBindings.append(scene.constructOperator({
-          operatorName: 'load' + capitalizeFirstLetter(memberType),
+          operatorName: 'load' + capitalizeFirstLetter(memberType) +'VBO',
           srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadVBO.kl',
           preProcessorDefinitions: {
             DATA_TYPE: memberType
@@ -460,7 +460,7 @@ FABRIC.SceneGraph.registerNodeType('Points', {
           srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/drawPoints.kl',
           entryFunctionName: 'drawPoints',
           parameterLayout: [
-            'self.positionsCount',
+            'self.positionsBuffer',
             'instance.drawToggle'
           ]
         });

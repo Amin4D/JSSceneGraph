@@ -533,12 +533,12 @@ function OGLShaderProgram.bindBuffer(
   }
   if (bufferID > 0) {
     Integer numComponents = datumSize/4;
-//    report("OGLShaderProgram.bindBuffer datumSize:" + datumSize + " numComponents:" + numComponents );
+    report("OGLShaderProgram.bindBuffer datumSize:" + datumSize + " numComponents:" + numComponents );
     var Data NULL;
     glBindBuffer(GL_ARRAY_BUFFER, bufferID);
     if (bufferLocation != - 1) {
       glEnableVertexAttribArray(bufferLocation);
-      glVertexAttribPointer(bufferLocation, numComponents, GL_FLOAT, GL_FALSE, datumSize, NULL);
+      glVertexAttribPointer(bufferLocation, 3, GL_FLOAT, GL_FALSE, datumSize, NULL);
     }
     else {
       report('Invalid shader attribute location for VBO.');

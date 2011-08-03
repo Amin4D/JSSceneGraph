@@ -44,17 +44,18 @@ $(document).ready(function() {
     backgroundColor: FABRIC.RT.rgb(0.0, 0.05, 0.15)
   });
 
-  // parse the scene for errors
-  var errors = scene.getErrors();
-  if (errors.length > 0) {
-    throw (errors.toString());
-  } else {
-    scene.redrawAllWindows();
-
-    console.log(scene.getTimerProfiles());
-
-    console.log('Done');
-  }
+  // Wait for all the operators to be compiled. 
+  var count = FABRIC.getAsyncTaskCount();
+  FABRIC.appendOnResolveAsyncTaskCallback(function(label, countRemaining){
+    if(countRemaining===0){
+      var errors = scene.getErrors();
+      if (errors.length > 0) {
+        throw (errors.toString());
+      }
+      scene.redrawAllWindows();
+      return true;
+    }
+  });
 
 });
 

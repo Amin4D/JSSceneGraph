@@ -4,15 +4,14 @@
 //
 
 operator drawPatches(
-  io Size indicesCount,
   io Integer indicesBufferID,
   io Boolean drawToggle
 ) {
   if (drawToggle) {
     var Data NULL;
     glPatchParameteri(GL_PATCH_VERTICES, 3);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indicesBufferID);
-    glDrawElements(GL_PATCHES, indicesCount, GL_UNSIGNED_INT, NULL);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indicesBuffer.bufferID);
+    glDrawElements(GL_PATCHES, indicesBuffer.elementCount, GL_UNSIGNED_INT, NULL);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
   }
 }

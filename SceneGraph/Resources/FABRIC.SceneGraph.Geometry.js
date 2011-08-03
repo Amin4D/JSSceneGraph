@@ -201,13 +201,7 @@ FABRIC.SceneGraph.registerNodeType('Geometry', {
     geometryNode.getRedrawEventHandler = function() {
       var vertexAttributes = attributesdgnode.getMembers(),
         uniformValues = uniformsdgnode.getMembers(),
-        memberName,
-        memberType,
-        bufferIDMemberName,
-        countMemberName,
-        reloadMemberName,
-        dynamicMember = false,
-        attributeNodeBinding,
+        registeredTypes = scene.getContext().RegisteredTypesManager.getRegisteredTypes(),
         i;
 
       // This call will replace the 'getRedrawEventHandler' with an accessor.
@@ -223,92 +217,79 @@ FABRIC.SceneGraph.registerNodeType('Geometry', {
       };
 
       if (uniformsdgnode.getMembers().indices) {
-        redrawEventHandler.addMember('indicesBufferID', 'Integer', 0);
-        redrawEventHandler.addMember('indicesCount', 'Size', 0);
+        
+        var indicesBuffer = new FABRIC.RT.OGLBuffer(memberName, attributeID, registeredTypes.Integer);
+        redrawEventHandler.addMember('indicesBuffer', 'OGLBuffer', indicesBuffer);
 
         redrawEventHandler.preDescendBindings.append(scene.constructOperator({
-          operatorName: 'loadIndices',
-          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadVBOs.kl',
-          entryFunctionName: 'loadIndicesVBO',
+          operatorName: 'genVBO',
+          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadVBO.kl',
+          preProcessorDefinitions: {
+            DATA_TYPE: 'Integer'
+          },
+          entryFunctionName: 'genVBO',
           parameterLayout: [
             'uniforms.indices',
-            'self.indicesCount',
-            'self.indicesBufferID'
+            'self.indicesBuffer'
           ]
         }));
       }
 
-      for (memberName in vertexAttributes) {
+      for (var memberName in vertexAttributes) {
         if (!FABRIC.shaderAttributeTable[memberName]) {
           continue;
         }
-        memberType = vertexAttributes[memberName].type;
-        bufferIDMemberName = memberName + 'BufferID';
-        countMemberName = memberName + 'Count';
+        var memberType = vertexAttributes[memberName].type;
+        var typeDesc = registeredTypes[memberType];
+        var attributeID = FABRIC.shaderAttributeTable[memberName].id;
+        var bufferMemberName = memberName + 'Buffer';
         
-        redrawEventHandler.addMember(countMemberName, 'Size', 0);
-        
-        if(uniformValues[bufferIDMemberName] && uniformValues[countMemberName]){
+        if(uniformValues[bufferMemberName]){
           // If this buffer has already been generated in the Dependency Graph,
           // then here we just need to bind the exsisting bufferID.
           redrawEventHandler.preDescendBindings.append(scene.constructOperator({
-            operatorName: 'bindVBO',
-            srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/genAndLoadVBO.kl',
+            operatorName: 'bind'+memberType+'VBO',
+            srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadVBO.kl',
             preProcessorDefinitions: {
-              DATA_TYPE: memberType,
-              ATTRIBUTE_NAME: memberName,
-              ATTRIBUTE_ID: FABRIC.shaderAttributeTable[memberName].id
+              DATA_TYPE: memberType
             },
             entryFunctionName: 'bindVBO',
             parameterLayout: [
               'shader.shaderProgram',
-              'uniforms.' + bufferIDMemberName,
-              'uniforms.' + countMemberName,
-              'self.' + countMemberName
+              'uniforms.' + bufferMemberName
             ]
           }));
           continue;
         }
         
-        redrawEventHandler.addMember(bufferIDMemberName, 'Integer', 0);
-        
-        dynamicMember = options.dynamicMembers.indexOf(memberName) != -1;
-        attributeNodeBinding = 'attributes';
+        var buffer = new FABRIC.RT.OGLBuffer(memberName, attributeID, typeDesc);
+        buffer.dynamic = options.dynamicMembers.indexOf(memberName) != -1;
+        var attributeNodeBinding = 'attributes';
         for (i = 0; i < deformationbufferinterfaces.length; i++) {
           if (deformationbufferinterfaces[i].getAttributesDGNode().getMembers()[memberName]) {
             attributeNodeBinding = 'attributes' + (i + 1);
-            dynamicMember = true;
+            buffer.dynamic = true;
+            break;
           }
         }
         
-        reloadMemberName = memberName + 'Reload';
-        dynamicMemberName = memberName + 'Dynamic';
-        redrawEventHandler.addMember(reloadMemberName, 'Boolean', false);
-        redrawEventHandler.addMember(dynamicMemberName, 'Boolean', dynamicMember);
-
+        redrawEventHandler.addMember(bufferMemberName, 'OGLBuffer', buffer);
         redrawEventHandler.preDescendBindings.append(scene.constructOperator({
-          operatorName: 'load' + capitalizeFirstLetter(memberName),
-          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/genAndLoadVBO.kl',
+          operatorName: 'load' + capitalizeFirstLetter(memberType),
+          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadVBO.kl',
           preProcessorDefinitions: {
-            DATA_TYPE: memberType,
-            ATTRIBUTE_NAME: capitalizeFirstLetter(memberName),
-            ATTRIBUTE_ID: FABRIC.shaderAttributeTable[memberName].id
+            DATA_TYPE: memberType
           },
-          entryFunctionName: 'genAndLoadVBO',
+          entryFunctionName: 'genAndBindVBO',
           parameterLayout: [
             'shader.shaderProgram',
             attributeNodeBinding + '.' + memberName + '[]',
-            'self.' + countMemberName,
-            'self.' + dynamicMemberName,
-            'self.' + reloadMemberName,
-            'self.' + bufferIDMemberName
+            'self.' + bufferMemberName
           ]
         }));
       }
       
-      
       redrawEventHandler.postDescendBindings.append(this.getDrawOperator());
-
       return redrawEventHandler;
     };
     geometryNode.pub.reloadVBO = function(memberName) {
@@ -427,13 +408,13 @@ FABRIC.SceneGraph.registerNodeType('Geometry', {
         throw(memberName + " is not an attribute.");
       }
       var memberType = vertexAttributes[memberName].type;
-      var bufferIDMemberName = memberName + 'BufferID';
+      var bufferMemberName = memberName + 'Buffer';
       var countMemberName = memberName + 'Count';
         
       var reloadMemberName = memberName + 'Reload';
       var dynamicMemberName = memberName + 'Dynamic';
       
-      geometryNode.pub.addUniformValue(bufferIDMemberName, 'Integer', 0);
+      geometryNode.pub.addUniformValue(bufferMemberName, 'Integer', 0);
       geometryNode.pub.addUniformValue(countMemberName, 'Size', 0);
       geometryNode.pub.addUniformValue(reloadMemberName, 'Boolean', false);
       geometryNode.pub.addUniformValue(dynamicMemberName, 'Boolean', false);
@@ -453,10 +434,10 @@ FABRIC.SceneGraph.registerNodeType('Geometry', {
               'uniforms.' + countMemberName,
               'uniforms.' + dynamicMemberName,
               'uniforms.' + reloadMemberName,
-              'uniforms.' + bufferIDMemberName
+              'uniforms.' + bufferMemberName
             ]
           }));
-      return bufferIDMemberName;
+      return bufferMemberName;
     }
 
     return geometryNode;
@@ -521,8 +502,7 @@ FABRIC.SceneGraph.registerNodeType('Lines', {
           operatorName: 'drawLines',
           srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/drawLines.kl',
           parameterLayout: [
-            'self.indicesCount',
-            'self.indicesBufferID',
+            'self.indicesBuffer',
             'instance.drawToggle'
           ],
           entryFunctionName: 'drawLines'
@@ -574,7 +554,7 @@ FABRIC.SceneGraph.registerNodeType('Triangles', {
             srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/drawPatches.kl',
             parameterLayout: [
               'self.indicesCount',
-              'self.indicesBufferID',
+              'self.indicesBuffer',
               'instance.drawToggle'
             ],
             entryFunctionName: 'drawPatches'
@@ -584,8 +564,7 @@ FABRIC.SceneGraph.registerNodeType('Triangles', {
             operatorName: 'drawTriangles',
             srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/drawTriangles.kl',
             parameterLayout: [
-              'self.indicesCount',
-              'self.indicesBufferID',
+              'self.indicesBuffer',
               'instance.drawToggle'
             ],
             entryFunctionName: 'drawTriangles'

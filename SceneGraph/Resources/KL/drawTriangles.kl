@@ -4,15 +4,14 @@
 //
 
 operator drawTriangles(
-  io Size indicesCount,
-  io Integer indicesBufferID,
+  io OGLBuffer indicesBuffer,
   io Boolean drawToggle
 ) {
   //  report("drawTriangles:"+indicesBufferID+":"+indicesCount);
   if (drawToggle) {
     var Data NULL;
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indicesBufferID);
-    glDrawElements(GL_TRIANGLES, indicesCount, GL_UNSIGNED_INT, NULL);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indicesBuffer.bufferID);
+    glDrawElements(GL_TRIANGLES, indicesBuffer.elementCount, GL_UNSIGNED_INT, NULL);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
   }
 }

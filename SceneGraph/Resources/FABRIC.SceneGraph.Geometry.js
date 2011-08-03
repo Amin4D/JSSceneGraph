@@ -229,7 +229,7 @@ FABRIC.SceneGraph.registerNodeType('Geometry', {
         redrawEventHandler.preDescendBindings.append(scene.constructOperator({
           operatorName: 'loadIndices',
           srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadVBOs.kl',
-          entryFunctionName: 'genAndLoadIndicesVBOs',
+          entryFunctionName: 'loadIndicesVBO',
           parameterLayout: [
             'uniforms.indices',
             'self.indicesCount',
@@ -249,6 +249,8 @@ FABRIC.SceneGraph.registerNodeType('Geometry', {
         redrawEventHandler.addMember(countMemberName, 'Size', 0);
         
         if(uniformValues[bufferIDMemberName] && uniformValues[countMemberName]){
+          // If this buffer has already been generated in the Dependency Graph,
+          // then here we just need to bind the exsisting bufferID.
           redrawEventHandler.preDescendBindings.append(scene.constructOperator({
             operatorName: 'bindVBO',
             srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/genAndLoadVBO.kl',
@@ -279,50 +281,29 @@ FABRIC.SceneGraph.registerNodeType('Geometry', {
           }
         }
         
-        /*
-        if(dynamicMember){
-          redrawEventHandler.preDescendBindings.append(scene.constructOperator({
-              operatorName:"genAndLoadDynamicVBO"+memberType+FABRIC.shaderAttributeTable[memberName].id,
-              srcFile:"../../../SceneGraph/Resources/KL/genAndLoadVBO.kl",
-              preProcessorDefinitions:{
-                DATA_TYPE:memberType,
-                ATTRIBUTE_NAME:memberName,
-                ATTRIBUTE_ID:FABRIC.shaderAttributeTable[memberName].id
-              },
-              entryFunctionName:"genAndLoadDynamicVBO",
-              parameterLayout:[
-                "shader.attributeValues",
-                attributeNodeBinding+"."+ memberName+"[]",
-                "self."+countMemberName,
-                "self."+bufferIDMemberName
-              ]
-            }));
-        }
-        else{ */
-          reloadMemberName = memberName + 'Reload';
-          dynamicMemberName = memberName + 'Dynamic';
-          redrawEventHandler.addMember(reloadMemberName, 'Boolean', false);
-          redrawEventHandler.addMember(dynamicMemberName, 'Boolean', dynamicMember);
+        reloadMemberName = memberName + 'Reload';
+        dynamicMemberName = memberName + 'Dynamic';
+        redrawEventHandler.addMember(reloadMemberName, 'Boolean', false);
+        redrawEventHandler.addMember(dynamicMemberName, 'Boolean', dynamicMember);
 
-          redrawEventHandler.preDescendBindings.append(scene.constructOperator({
-            operatorName: 'load' + capitalizeFirstLetter(memberName),
-            srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/genAndLoadVBO.kl',
-            preProcessorDefinitions: {
-              DATA_TYPE: memberType,
-              ATTRIBUTE_NAME: capitalizeFirstLetter(memberName),
-              ATTRIBUTE_ID: FABRIC.shaderAttributeTable[memberName].id
-            },
-            entryFunctionName: 'genAndLoadVBO',
-            parameterLayout: [
-              'shader.shaderProgram',
-              attributeNodeBinding + '.' + memberName + '[]',
-              'self.' + countMemberName,
-              'self.' + dynamicMemberName,
-              'self.' + reloadMemberName,
-              'self.' + bufferIDMemberName
-            ]
-          }));
-        //}
+        redrawEventHandler.preDescendBindings.append(scene.constructOperator({
+          operatorName: 'load' + capitalizeFirstLetter(memberName),
+          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/genAndLoadVBO.kl',
+          preProcessorDefinitions: {
+            DATA_TYPE: memberType,
+            ATTRIBUTE_NAME: capitalizeFirstLetter(memberName),
+            ATTRIBUTE_ID: FABRIC.shaderAttributeTable[memberName].id
+          },
+          entryFunctionName: 'genAndLoadVBO',
+          parameterLayout: [
+            'shader.shaderProgram',
+            attributeNodeBinding + '.' + memberName + '[]',
+            'self.' + countMemberName,
+            'self.' + dynamicMemberName,
+            'self.' + reloadMemberName,
+            'self.' + bufferIDMemberName
+          ]
+        }));
       }
       
       

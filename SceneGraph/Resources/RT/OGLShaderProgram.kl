@@ -532,11 +532,13 @@ function OGLShaderProgram.bindBuffer(
     return;
   }
   if (bufferID > 0) {
+    Integer numComponents = datumSize/4;
+//    report("OGLShaderProgram.bindBuffer datumSize:" + datumSize + " numComponents:" + numComponents );
     var Data NULL;
     glBindBuffer(GL_ARRAY_BUFFER, bufferID);
     if (bufferLocation != - 1) {
       glEnableVertexAttribArray(bufferLocation);
-      glVertexAttribPointer(bufferLocation, 3, GL_FLOAT, GL_FALSE, datumSize, NULL);
+      glVertexAttribPointer(bufferLocation, numComponents, GL_FLOAT, GL_FALSE, datumSize, NULL);
     }
     else {
       report('Invalid shader attribute location for VBO.');
@@ -594,21 +596,22 @@ function OGLShaderProgram.genAndBindVBO(
   Data bufferData,
   Size bufferDataSize,
   Size bufferDataElementSize,
+  Size bufferDataElementCount,
   io Size bufferDataCount,
   Integer bufferLocation,
   Boolean dynamic,
   Boolean reload,
   io Integer bufferID
 ) {
-  if (bufferID <= 0 || bufferDataSize != bufferDataCount || dynamic || reload) {
-    if (bufferID != 0 && (bufferDataSize != bufferDataCount || reload)) {
+  if (bufferID <= 0 || bufferDataElementCount != bufferDataCount || dynamic || reload) {
+    if (bufferID != 0 && (bufferDataElementCount != bufferDataCount || reload)) {
       var Size bufferIDs[];
       bufferIDs.push(Size(bufferID));
       glDeleteBuffers(1, bufferIDs);
       bufferID = 0;
     }
     self.genBuffer(bufferData, bufferDataSize, dynamic, bufferID);
-    bufferDataCount = bufferDataSize;
+    bufferDataCount = bufferDataElementCount;
   }
   self.bindBuffer(bufferDataElementSize, bufferID, bufferLocation);
 }

@@ -25,6 +25,7 @@ operator genAndLoadVBO(
       bufferData.data(),
       bufferData.dataSize(),
       val.dataSize(),
+      bufferData.size(),
       bufferDataCount,
       location,
       dynamic,

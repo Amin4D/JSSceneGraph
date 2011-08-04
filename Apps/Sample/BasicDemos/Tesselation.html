@@ -63,7 +63,6 @@ $(document).ready(function() {
 
   var light = scene.constructNode('PointLight', { position: FABRIC.RT.vec3(420.0, 1000.0, 600.0) });
   var triangles = scene.importAssetFile('Models/bricks.dae')['sphere'];
-  triangles.setTesselationSupported(true);
   
   var depthTexture = scene.constructNode('Image', { url: 'Resources/bricks_depth.png' });
   

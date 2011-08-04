@@ -11,8 +11,11 @@ operator drawTriangles(
   //  report("drawTriangles:"+indicesBufferID+":"+indicesCount);
   if (drawToggle) {
     var Data NULL;
+    // By default triangles are drawn using GL_TRIANGLES
     Integer drawMode = GL_TRIANGLES;
     if(shaderProgram.drawMode != -1){
+      // The shader can specify a custom draw mode, such as patches for tesselation.
+      // the same geometry can be drawn by multiple shader with different draw modes.
       drawMode = shaderProgram.drawMode;
     }
     

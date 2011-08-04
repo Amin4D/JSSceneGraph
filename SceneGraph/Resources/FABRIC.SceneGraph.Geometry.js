@@ -12,17 +12,13 @@ FABRIC.SceneGraph.registerNodeType('Geometry', {
   optionsDesc: {
     dynamicMembers: 'An array of members that will be used to generate dynamci VBOs. Add vertex attributes that will change during scene evaluation',
     genOpenGLBuffers: 'An array of members that will be used to generate VBOs in the dependency graph. Add vertex attributes that are used in OpenCL programs',
-    createBoundingBoxNode: 'Flag instructing whether to construct a bounding box node. Bounding boxes are used in raycasting, so not always necessary',
-    tesselationSupported: 'To be depricated',
-    tesselationVertices: 'To be depricated'
+    createBoundingBoxNode: 'Flag instructing whether to construct a bounding box node. Bounding boxes are used in raycasting, so not always necessary'
   },
   factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
         dynamicMembers: [],
         genOpenGLBuffers:[],
         createBoundingBoxNode: true,
-        tesselationSupported: false,
-        tesselationVertices: 3,
         positionsVec4: false
       });
 
@@ -32,8 +28,6 @@ FABRIC.SceneGraph.registerNodeType('Geometry', {
       bboxdgnode,
       redrawEventHandler,
       deformationbufferinterfaces = [],
-      tesselationSupported = options.tesselationSupported,
-      tesselationVertices = options.tesselationVertices,
       shaderUniforms = [];
       shaderAttributes = [];
 
@@ -94,15 +88,6 @@ FABRIC.SceneGraph.registerNodeType('Geometry', {
     };
     geometryNode.pub.setVertexCount = function(count) {
       attributesdgnode.setCount(count);
-    };
-    geometryNode.pub.getTesselationSupported = function() {
-      return tesselationSupported;
-    };
-    geometryNode.pub.getTesselationVertices= function() {
-      return tesselationVertices;
-    };
-    geometryNode.pub.setTesselationSupported = function(enabled) {
-      tesselationSupported = enabled;
     };
     geometryNode.pub.loadGeometryData = function(data, datatype, sliceindex) {
       var i,
@@ -559,28 +544,16 @@ FABRIC.SceneGraph.registerNodeType('Triangles', {
 
     // implement the geometry relevant interfaces
     trianglesNode.getDrawOperator = function() {
-      if(trianglesNode.pub.getTesselationSupported()) {
-        return scene.constructOperator({
-            operatorName: 'drawPatches',
-            srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/drawPatches.kl',
-            parameterLayout: [
-              'self.indicesBuffer',
-              'instance.drawToggle'
-            ],
-            entryFunctionName: 'drawPatches'
-          });
-      } else {
-        return scene.constructOperator({
-            operatorName: 'drawTriangles',
-            srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/drawTriangles.kl',
-            parameterLayout: [
-              'shader.shaderProgram',
-              'self.indicesBuffer',
-              'instance.drawToggle'
-            ],
-            entryFunctionName: 'drawTriangles'
-          });
-      }
+      return scene.constructOperator({
+          operatorName: 'drawTriangles',
+          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/drawTriangles.kl',
+          parameterLayout: [
+            'shader.shaderProgram',
+            'self.indicesBuffer',
+            'instance.drawToggle'
+          ],
+          entryFunctionName: 'drawTriangles'
+        });
     };
     trianglesNode.getRayintersectionOperator = function(transformNodeMember) {
       return scene.constructOperator({

@@ -18,8 +18,8 @@ FABRIC.SceneGraph.registerNodeType('CharacterMesh', {
     characterMeshNode.pub.addUniformValue('boneCountArray', 'Integer[]');
     characterMeshNode.pub.addUniformValue('boneIdsArray', 'Integer[]');
     characterMeshNode.pub.addUniformValue('boneWeightsArray', 'Scalar[]');
-    characterMeshNode.pub.addVertexAttributeValue('boneIds', 'Mat33');
-    characterMeshNode.pub.addVertexAttributeValue('boneWeights', 'Mat33');
+    characterMeshNode.pub.addVertexAttributeValue('boneIds', 'Mat33', { genVBO:true } );
+    characterMeshNode.pub.addVertexAttributeValue('boneWeights', 'Mat33', { genVBO:true } );
 
     // The enveloping shader can only accept bone bindings in Mat33 values.
     // Here we take the list of bone weights, sort them, and pick the top
@@ -42,14 +42,14 @@ FABRIC.SceneGraph.registerNodeType('CharacterMesh', {
           operatorName: 'drawCharacterInstance',
           srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/drawCharacterInstance.kl',
           preProcessorDefinitions: {
-            BONE_MATRICIES_ATTRIBUTE_ID: FABRIC.shaderAttributeTable.boneMatrices.id,
-            MODELMATRIX_ATTRIBUTE_ID: FABRIC.shaderAttributeTable.modelMatrix.id,
-            VIEWMATRIX_ATTRIBUTE_ID: FABRIC.shaderAttributeTable.viewMatrix.id,
-            PROJECTIONMATRIX_ATTRIBUTE_ID: FABRIC.shaderAttributeTable.projectionMatrix.id,
-            PROJECTIONMATRIXINV_ATTRIBUTE_ID: FABRIC.shaderAttributeTable.projectionMatrixInv.id,
-            NORMALMATRIX_ATTRIBUTE_ID: FABRIC.shaderAttributeTable.normalMatrix.id,
-            MODELVIEW_MATRIX_ATTRIBUTE_ID: FABRIC.shaderAttributeTable.modelViewMatrix.id,
-            MODELVIEWPROJECTION_MATRIX_ATTRIBUTE_ID: FABRIC.shaderAttributeTable.modelViewProjectionMatrix.id
+            BONE_MATRICIES_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('boneMatrices'),
+            MODELMATRIX_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('modelMatrix'),
+            VIEWMATRIX_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('viewMatrix'),
+            PROJECTIONMATRIX_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('projectionMatrix'),
+            PROJECTIONMATRIXINV_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('projectionMatrixInv'),
+            NORMALMATRIX_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('normalMatrix'),
+            MODELVIEW_MATRIX_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('modelViewMatrix'),
+            MODELVIEWPROJECTION_MATRIX_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('modelViewProjectionMatrix')
           },
           entryFunctionName: 'drawCharacterInstance',
           parameterLayout: [
@@ -578,7 +578,7 @@ FABRIC.SceneGraph.registerNodeType('CharacterRigDebug', {
 
       rigNode = scene.getPrivateInterface(node);
 
-      characterRigDebugNode.pub.addVertexAttributeValue('vertexColors', 'Color');
+      characterRigDebugNode.pub.addVertexAttributeValue('vertexColors', 'Color', { genVBO:true } );
       characterRigDebugNode.getUniformsDGNode().addDependency(rigNode.getDGNode(), 'rig');
       characterRigDebugNode.getUniformsDGNode().addDependency(rigNode.getConstantsNode().getDGNode(), 'constants');
       characterRigDebugNode.getUniformsDGNode().addDependency(rigNode.getVariablesNode().getDGNode(), 'variables');

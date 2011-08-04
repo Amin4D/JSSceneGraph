@@ -32,13 +32,12 @@ FABRIC.appendOnCreateContextCallback(function(context) {
 FABRIC.RT.OGLShaderValue = function(name, id, state) {
   this.name = (name !== undefined) ? name : '';
   this.id = (id !== undefined) ? id : 0;
-  this.state = (state !== undefined) ? state : [];
   this.location = -1;
 };
 
 FABRIC.appendOnCreateContextCallback(function(context) {
   context.RegisteredTypesManager.registerType('OGLShaderValue', {
-      members: { name: 'String', id: 'Integer', state: 'String[]', location: 'Integer' },
+      members: { name: 'String', id: 'Integer', location: 'Integer' },
       constructor: FABRIC.RT.OGLShaderValue
     });
 });

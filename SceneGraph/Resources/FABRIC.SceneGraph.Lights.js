@@ -58,12 +58,12 @@ FABRIC.SceneGraph.registerNodeType('Light', {
         operatorName: 'loadLight',
         srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadLights.kl',
         preProcessorDefinitions: {
-          LIGHTTYPE_ATTRIBUTE_ID: FABRIC.shaderAttributeTable['lightType'].id,
-          LIGHTCOLOR_ATTRIBUTE_ID: FABRIC.shaderAttributeTable['lightColor'].id,
-          LIGHTPOS_ATTRIBUTE_ID: FABRIC.shaderAttributeTable['lightPosition'].id,
-          LIGHTDIR_ATTRIBUTE_ID: FABRIC.shaderAttributeTable['lightDir'].id,
-          LIGHTCOSCUTOFF_ATTRIBUTE_ID: FABRIC.shaderAttributeTable['lightCosCutoff'].id,
-          LIGHTVIEWMATRIX_ATTRIBUTE_ID: FABRIC.shaderAttributeTable['lightShadowMapMatrix'].id
+          LIGHTTYPE_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('lightType'),
+          LIGHTCOLOR_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('lightColor'),
+          LIGHTPOS_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('lightPosition'),
+          LIGHTDIR_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('lightDir'),
+          LIGHTCOSCUTOFF_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('lightCosCutoff'),
+          LIGHTVIEWMATRIX_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('lightShadowMapMatrix')
         },
         entryFunctionName: 'loadLight',
         parameterLayout: [
@@ -230,12 +230,12 @@ FABRIC.SceneGraph.registerNodeType('DirectionalLight', {
         operatorName: 'loadDirectionalLight',
         srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadLights.kl',
         preProcessorDefinitions: {
-          LIGHTTYPE_ATTRIBUTE_ID: FABRIC.shaderAttributeTable['lightType'].id,
-          LIGHTCOLOR_ATTRIBUTE_ID: FABRIC.shaderAttributeTable['lightColor'].id,
-          LIGHTPOS_ATTRIBUTE_ID: FABRIC.shaderAttributeTable['lightPosition'].id,
-          LIGHTDIR_ATTRIBUTE_ID: FABRIC.shaderAttributeTable['lightDir'].id,
-          LIGHTCOSCUTOFF_ATTRIBUTE_ID: FABRIC.shaderAttributeTable['lightCosCutoff'].id,
-          LIGHTVIEWMATRIX_ATTRIBUTE_ID: FABRIC.shaderAttributeTable['lightShadowMapMatrix'].id
+          LIGHTTYPE_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('lightType'),
+          LIGHTCOLOR_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('lightColor'),
+          LIGHTPOS_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('lightPosition'),
+          LIGHTDIR_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('lightDir'),
+          LIGHTCOSCUTOFF_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('lightCosCutoff'),
+          LIGHTVIEWMATRIX_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('lightShadowMapMatrix')
         },
         entryFunctionName: 'loadDirectionalLight',
         parameterLayout: [
@@ -348,12 +348,12 @@ FABRIC.SceneGraph.registerNodeType('SpotLight', {
           operatorName: 'loadSpotLight',
           srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadLights.kl',
           preProcessorDefinitions: {
-          LIGHTTYPE_ATTRIBUTE_ID: FABRIC.shaderAttributeTable['lightType'].id,
-          LIGHTCOLOR_ATTRIBUTE_ID: FABRIC.shaderAttributeTable['lightColor'].id,
-          LIGHTPOS_ATTRIBUTE_ID: FABRIC.shaderAttributeTable['lightPosition'].id,
-          LIGHTDIR_ATTRIBUTE_ID: FABRIC.shaderAttributeTable['lightDir'].id,
-          LIGHTCOSCUTOFF_ATTRIBUTE_ID: FABRIC.shaderAttributeTable['lightCosCutoff'].id,
-          LIGHTVIEWMATRIX_ATTRIBUTE_ID: FABRIC.shaderAttributeTable['lightShadowMapMatrix'].id
+          LIGHTTYPE_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('lightType'),
+          LIGHTCOLOR_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('lightColor'),
+          LIGHTPOS_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('lightPosition'),
+          LIGHTDIR_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('lightDir'),
+          LIGHTCOSCUTOFF_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('lightCosCutoff'),
+          LIGHTVIEWMATRIX_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('lightShadowMapMatrix')
           },
           entryFunctionName: 'loadSpotLight',
           parameterLayout: [
@@ -375,12 +375,12 @@ FABRIC.SceneGraph.registerNodeType('SpotLight', {
               operatorName: 'loadLightMatrixUniform',
               srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadLights.kl',
               preProcessorDefinitions: {
-                LIGHTTYPE_ATTRIBUTE_ID: FABRIC.shaderAttributeTable['lightType'].id,
-                LIGHTCOLOR_ATTRIBUTE_ID: FABRIC.shaderAttributeTable['lightColor'].id,
-                LIGHTPOS_ATTRIBUTE_ID: FABRIC.shaderAttributeTable['lightPosition'].id,
-                LIGHTDIR_ATTRIBUTE_ID: FABRIC.shaderAttributeTable['lightDir'].id,
-                LIGHTCOSCUTOFF_ATTRIBUTE_ID: FABRIC.shaderAttributeTable['lightCosCutoff'].id,
-                LIGHTVIEWMATRIX_ATTRIBUTE_ID: FABRIC.shaderAttributeTable['lightShadowMapMatrix'].id
+                LIGHTTYPE_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('lightType'),
+                LIGHTCOLOR_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('lightColor'),
+                LIGHTPOS_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('lightPosition'),
+                LIGHTDIR_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('lightDir'),
+                LIGHTCOSCUTOFF_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('lightCosCutoff'),
+                LIGHTVIEWMATRIX_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('lightShadowMapMatrix')
               },
               entryFunctionName: 'loadLightMatrixUniform',
               parameterLayout: [

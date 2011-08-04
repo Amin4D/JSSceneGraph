@@ -229,72 +229,21 @@ FABRIC.SceneGraph.registerNodeType('PointSpriteTexture', {
 /**
  * Table storing all of the known shader attributes and their types.
  */
-FABRIC.shaderAttributeTable = {
-  indices: { id: 1, type: 'Integer[]' },
-  positions: { id: 2, type: 'Vec3[]' },
-  normals: { id: 3, type: 'Vec3[]' },
-  tangents: { id: 4, type: 'Vec4[]' },
-  vertexColors: { id: 5, type: 'Color[]' },
+FABRIC.SceneGraph.getShaderParamID = ( function(){
+  var paramCount = 0;
+  var paramMap = {};
+  return function(name){
+    if(paramMap[name]){
+      return paramMap[name];
+    }
+    else{
+      paramCount++;
+      paramMap[name] = paramCount;
+      return paramCount;
+    }
+  }
+})();
 
-  uvs0: { id: 15, type: 'Vec2[]' },
-  uvs1: { id: 16, type: 'Vec2[]' },
-  uvs2: { id: 17, type: 'Vec2[]' },
-
-  boneWeights: { id: 18, type: 'Mat33[]' },
-  boneIds: { id: 19, type: 'Mat33[]' },
-
-  color: { id: 30, type: 'Color' },
-  ambientColor: { id: 31, type: 'Color' },
-  diffuseColor: { id: 32, type: 'Color' },
-  specularColor: { id: 33, type: 'Color' },
-  shininess: { id: 34, type: 'Scalar' },
-  bumpiness: { id: 35, type: 'Scalar' },
-  normalLength: { id: 36, type: 'Scalar' },
-  depthScale: { id: 37, type: 'Scalar' },
-
-  light: { id: 50, type: 'Vec3' },
-  lightType: { id: 51, type: 'Integer' },
-  lightPosition: { id: 52, type: 'Vec3' },
-  lightDir: { id: 53, type: 'Vec3' },
-  lightColor: { id: 54, type: 'Color' },
-  lightCosCutoff: { id: 55, type: 'Scalar' },
-  lightShadowMap: { id: 56, type: 'Integer' },
-  lightShadowMapMatrix: { id: 57, type: 'Mat44' },
-  lightObjectMatrix: { id: 58, type: 'Mat44' },
-
-  texture: { id: 80, type: 'Integer' },
-  diffuseTexture: { id: 81, type: 'Integer' },
-  specularTexture: { id: 82, type: 'Integer' },
-  normalTexture: { id: 83, type: 'Integer' },
-  spriteTexture: { id: 84, type: 'Integer' },
-  fboTexture: { id: 85, type: 'Integer' },
-  backgroundTexture: { id: 86, type: 'Integer' },
-  depthTexture: { id: 87, type: 'Integer' },
-
-  boneMatrices: { id: 100, type: 'Mat44[]' },
-  boneMatrixTexture: { id: 101, type: 'Integer' },
-
-  modelMatrix: { id: 147, type: 'Mat44' },
-  viewMatrix: { id: 146, type: 'Mat44' },
-  normalMatrix: { id: 152, type: 'Mat33' },
-  projectionMatrix: { id: 153, type: 'Mat44' },
-  projectionMatrixInv: { id: 154, type: 'Mat44' },
-  modelViewMatrix: { id: 148, type: 'Mat44' },
-  modelViewProjectionMatrix: { id: 149, type: 'Mat44' },
-
-  width: { id: 200, type: 'Integer' },
-  height: { id: 201, type: 'Integer' },
-  colorMix: { id: 202, type: 'Scalar' },
-  blurSize: { id: 203, type: 'Scalar' },
-  
-  wireColor: { id: 250, type: 'Color' },
-  wireOpacity: { id: 251, type: 'Scalar' },
-  tesselationCount: { id: 252, type: 'Integer' },
-  tesselationInner: { id: 253, type: 'Scalar' },
-  tesselationOuter: { id: 254, type: 'Scalar' },
-  tesselationDepthMin: { id: 255, type: 'Scalar' },
-  tesselationDepthMax: { id: 256, type: 'Scalar' }
-};
 
 FABRIC.SceneGraph.registerNodeType('Shader', {
   factoryFn: function(options, scene) {
@@ -333,22 +282,16 @@ FABRIC.SceneGraph.registerNodeType('Shader', {
     ///////////////////////////////////////////////////
     // Uniform Values
     for (i in options.shaderUniforms) {
-      if (!FABRIC.shaderAttributeTable[i]) {
-        throw ('Error defining ' + options.name + '. Attribute not defined in the AttributeTable:' + i);
-      }
       shaderProgram.uniformValues.push(new FABRIC.RT.OGLShaderValue(
-        options.shaderUniforms[i].name, FABRIC.shaderAttributeTable[i].id));
+        options.shaderUniforms[i].name, FABRIC.SceneGraph.getShaderParamID(i)));
     }
 
     ///////////////////////////////////////////////////
     // Attribute Values
     var attributeValues = [];
     for (i in options.shaderAttributes) {
-      if (!FABRIC.shaderAttributeTable[i]) {
-        throw ('Attribute not defined in the AttributeTable:' + i);
-      }
       shaderProgram.attributeValues.push(new FABRIC.RT.OGLShaderValue(
-        options.shaderAttributes[i].name, FABRIC.shaderAttributeTable[i].id));
+        options.shaderAttributes[i].name, FABRIC.SceneGraph.getShaderParamID(i)));
     }
 
     ///////////////////////////////////////////////////
@@ -480,12 +423,7 @@ FABRIC.SceneGraph.registerNodeType('Material', {
       if (uniform.owner !== undefined && uniform.owner !== 'window') {
         continue;
       }
-      if (!FABRIC.shaderAttributeTable[uniformName]) {
-        throw 'Error defining ' + materialType + '. Undefined shader attribute. ' +
-          'Please add to the shader Attribute table:' + uniformName;
-      }
-
-      uniformType = FABRIC.shaderAttributeTable[uniformName].type;
+      uniformType = uniform.type;
       var uniformOwner;
       if (uniform.owner === undefined) {
         if(options.storeUniformsInDGNode){
@@ -511,7 +449,7 @@ FABRIC.SceneGraph.registerNodeType('Material', {
         srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadUniforms.kl',
         preProcessorDefinitions: {
           ATTRIBUTE_NAME: uniformName,
-          ATTRIBUTE_ID: FABRIC.shaderAttributeTable[uniformName].id,
+          ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID(uniformName),
           DATA_TYPE: uniformType
         },
         entryFunctionName: 'loadUniform',
@@ -556,7 +494,7 @@ FABRIC.SceneGraph.registerNodeType('Material', {
           srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadUniforms.kl',
           preProcessorDefinitions: {
             ATTRIBUTE_NAME: capitalizeFirstLetter(textureName),
-            ATTRIBUTE_ID: FABRIC.shaderAttributeTable[textureName].id,
+            ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID(textureName),
             DATA_TYPE: 'Integer'
           },
           entryFunctionName: 'loadUniform',
@@ -681,7 +619,6 @@ FABRIC.SceneGraph.registerNodeType('PostProcessEffect', {
     scene.assignDefaults(options, {
         fragmentShader: undefined,
         shaderUniforms: undefined,
-        
         parentEventHandler: false,
         separateShaderNode: false,
         assignUniformsOnPostDescend:true,
@@ -713,7 +650,6 @@ FABRIC.SceneGraph.registerNodeType('PostProcessEffect', {
     var redrawEventHandler = postProcessEffect.getRedrawEventHandler();
 
     // Set up FBO rendering and draw the textured quad on the way back
-    
     redrawEventHandler.addMember('renderTarget', 'OGLRenderTarget', options.renderTarget);
     
     redrawEventHandler.preDescendBindings.append(
@@ -807,6 +743,11 @@ FABRIC.SceneGraph.defineEffectFromFile = function(effectName, effectfile) {
         effectParameters.shaderUniforms[uniformName] = {
           name: uniformNode.getAttribute('name')
         };
+        if (uniformNode.getAttribute('type')) {
+          effectParameters.shaderUniforms[uniformName].type = uniformNode.getAttribute('type');
+        }else{
+          throw 'missing type information';
+        }
         if (uniformNode.getAttribute('defaultValue')) {
           effectParameters.shaderUniforms[uniformName].defaultValue = eval(uniformNode.getAttribute('defaultValue'));
         }
@@ -1092,9 +1033,9 @@ FABRIC.SceneGraph.registerNodeType('EdgeDetectionPostProcessEffect', {
     options.fragmentShader = FABRIC.loadResourceURL('FABRIC_ROOT/SceneGraph/Resources/Shaders/EdgeDetectionPixelShader.glsl');
 
     options.shaderUniforms = {
-      width: { name: 'u_width', owner: 'window' },
-      height: { name: 'u_height', owner: 'window' },
-      colorMix: { name: 'u_colorMix' }
+      width: { name: 'u_width', owner: 'window', type:'Integer' },
+      height: { name: 'u_height', owner: 'window', type:'Integer' },
+      colorMix: { name: 'u_colorMix', type:'Scalar' }
     };
 
     var edgeDetectionEffect = scene.constructNode('PostProcessEffect', options);
@@ -1107,7 +1048,7 @@ FABRIC.SceneGraph.registerNodeType('GaussianBlurPostProcessEffect', {
     options.fragmentShader = FABRIC.loadResourceURL('FABRIC_ROOT/SceneGraph/Resources/Shaders/GaussianBlurFragmentShader.glsl');
 
     options.shaderUniforms = {
-      blurSize: { name: 'u_blurSize', defaultValue: 1.0 / 512.0 }
+      blurSize: { name: 'u_blurSize', defaultValue: 1.0 / 512.0, type:'Scalar' }
     };
 
     var edgeDetectionEffect = scene.constructNode('PostProcessEffect', options);

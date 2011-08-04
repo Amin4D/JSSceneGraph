@@ -33,18 +33,12 @@ FABRIC.SceneGraph.registerNodeType('Geometry', {
       redrawEventHandler,
       deformationbufferinterfaces = [],
       tesselationSupported = options.tesselationSupported,
-      tesselationVertices = options.tesselationVertices;
+      tesselationVertices = options.tesselationVertices,
+      shaderUniforms = [];
+      shaderAttributes = [];
 
-    if(options.positionsVec4 == true ){
-      attributesdgnode.addMember('positions', 'Vec4');
-    }else{
-      attributesdgnode.addMember('positions', 'Vec3');
-    }
     attributesdgnode.addDependency(uniformsdgnode, 'uniforms');
-
-    var uniformsname = uniformsdgnode.getName();
-    var attributesname = attributesdgnode.getName();
-
+    
     if (options.createBoundingBoxNode) {
       bboxdgnode = geometryNode.constructDGNode('BoundingBoxDGNode');
       bboxdgnode.addMember('min', 'Vec3');
@@ -73,10 +67,13 @@ FABRIC.SceneGraph.registerNodeType('Geometry', {
         geometryNode.addMemberInterface(uniformsdgnode, name, true);
       }
     };
-    geometryNode.pub.addVertexAttributeValue = function(name, type, defaultValue, dynamic) {
-      attributesdgnode.addMember(name, type, defaultValue);
-      if (dynamic === true) {
+    geometryNode.pub.addVertexAttributeValue = function(name, type, options) {
+      attributesdgnode.addMember(name, type, options.defaultValue);
+      if (options.dynamic === true) {
         options.dynamicMembers.push(name);
+      }
+      if(options.genVBO){
+        shaderAttributes.push(name);
       }
     };
     geometryNode.pub.setAttributeDynamic = function(name) {
@@ -180,18 +177,18 @@ FABRIC.SceneGraph.registerNodeType('Geometry', {
       }
     };
     geometryNode.checkVBORequirements = function(vboRequirements) {
-      var vertexAttributes = attributesdgnode.getMembers(),
+      var vertexMembers = attributesdgnode.getMembers(),
         attributeName,
         message;
       for (attributeName in vboRequirements) {
-        if (!vertexAttributes[attributeName]) {
+        if(shaderAttributes.indexOf(attributeName) == -1){
           message = 'Geometry: ' + this.pub.getName() + ' does not meet shader requirements.\n';
           message += 'Shader requires :' + JSON.stringify(vboRequirements) + '\n';
           message += 'But geometry does not support attribute:' + JSON.stringify(attributeName) + '\n';
 
           message += 'Geometry supports :\n';
-          for (attributeName in vertexAttributes) {
-            message += '\t\t' + attributeName + ' : ' + vertexAttributes[attributeName].type + '\n';
+          for (var i=0; i<shaderAttributes.length; i++) {
+            message += '\t\t' + shaderAttributes[i] + ' : ' + vertexMembers[shaderAttributes[i]].type + '\n';
           }
           throw (message);
         }
@@ -199,8 +196,8 @@ FABRIC.SceneGraph.registerNodeType('Geometry', {
       return true;
     };
     geometryNode.getRedrawEventHandler = function() {
-      var vertexAttributes = attributesdgnode.getMembers(),
-        uniformValues = uniformsdgnode.getMembers(),
+      var vertexMembers = attributesdgnode.getMembers(),
+        uniformMembers = uniformsdgnode.getMembers(),
         registeredTypes = scene.getContext().RegisteredTypesManager.getRegisteredTypes(),
         i;
 
@@ -235,16 +232,17 @@ FABRIC.SceneGraph.registerNodeType('Geometry', {
         }));
       }
 
-      for (var memberName in vertexAttributes) {
-        if (!FABRIC.shaderAttributeTable[memberName]) {
+      for (var memberName in vertexMembers) {
+        if(shaderAttributes.indexOf(memberName) == -1){
           continue;
         }
-        var memberType = vertexAttributes[memberName].type;
+        
+        var attributeID = FABRIC.SceneGraph.getShaderParamID(memberName);
+        var memberType = vertexMembers[memberName].type;
         var typeDesc = registeredTypes[memberType];
-        var attributeID = FABRIC.shaderAttributeTable[memberName].id;
         var bufferMemberName = memberName + 'Buffer';
         
-        if(uniformValues[bufferMemberName]){
+        if(uniformMembers[bufferMemberName]){
           // If this buffer has already been generated in the Dependency Graph,
           // then here we just need to bind the exsisting bufferID.
           redrawEventHandler.preDescendBindings.append(scene.constructOperator({
@@ -407,12 +405,12 @@ FABRIC.SceneGraph.registerNodeType('Geometry', {
     
     
     geometryNode.genDGVBO = function(memberName){
-      var vertexAttributes = attributesdgnode.getMembers();
-      var uniformValues = uniformsdgnode.getMembers();
-      if (!vertexAttributes[memberName]) {
+      var vertexMembers = attributesdgnode.getMembers();
+      var uniformMembers = uniformsdgnode.getMembers();
+      if (!vertexMembers[memberName]) {
         throw(memberName + " is not an attribute.");
       }
-      var memberType = vertexAttributes[memberName].type;
+      var memberType = vertexMembers[memberName].type;
       var bufferMemberName = memberName + 'Buffer';
       var countMemberName = memberName + 'Count';
         
@@ -445,6 +443,12 @@ FABRIC.SceneGraph.registerNodeType('Geometry', {
       return bufferMemberName;
     }
 
+    if(options.positionsVec4 == true ){
+      geometryNode.pub.addVertexAttributeValue('positions', 'Vec4', { genVBO:true } );
+    }else{
+      geometryNode.pub.addVertexAttributeValue('positions', 'Vec3', { genVBO:true } );
+    }
+    
     return geometryNode;
   }});
 
@@ -602,21 +606,21 @@ FABRIC.SceneGraph.registerNodeType('Triangles', {
     };
 
     trianglesNode.pub.addUniformValue('indices', 'Integer[]');
-    trianglesNode.pub.addVertexAttributeValue('normals', 'Vec3');
+    trianglesNode.pub.addVertexAttributeValue('normals', 'Vec3', { genVBO:true } );
 
     var nbUVs = 0;
 
     if (typeof options.uvSets === 'number') {
       var nbUVs = parseInt(options.uvSets);
       for (var i = 0; i < nbUVs; i++) {
-        trianglesNode.pub.addVertexAttributeValue('uvs' + i, 'Vec2');
+        trianglesNode.pub.addVertexAttributeValue('uvs' + i, 'Vec2', { genVBO:true } );
       }
       if (typeof options.tangentsFromUV === 'number') {
         var tangentUVIndex = parseInt(options.tangentsFromUV);
         if (tangentUVIndex >= nbUVs)
           throw 'Invalid UV index for tangent space generation';
 
-        trianglesNode.pub.addVertexAttributeValue('tangents', 'Vec4');
+        trianglesNode.pub.addVertexAttributeValue('tangents', 'Vec4', { genVBO:true } );
         trianglesNode.getAttributesDGNode().bindings.append(scene.constructOperator({
           operatorName: 'computeTriangleTangents',
           srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/generateTangents.kl',
@@ -679,13 +683,13 @@ FABRIC.SceneGraph.registerNodeType('Instance', {
     var bindToSceneGraph = function() {
       redrawEventHandler.addScope('transform', transformNode.getDGNode());
       var preProcessorDefinitions = {
-              MODELMATRIX_ATTRIBUTE_ID: FABRIC.shaderAttributeTable.modelMatrix.id,
-              VIEWMATRIX_ATTRIBUTE_ID: FABRIC.shaderAttributeTable.viewMatrix.id,
-              PROJECTIONMATRIX_ATTRIBUTE_ID: FABRIC.shaderAttributeTable.projectionMatrix.id,
-              PROJECTIONMATRIXINV_ATTRIBUTE_ID: FABRIC.shaderAttributeTable.projectionMatrixInv.id,
-              NORMALMATRIX_ATTRIBUTE_ID: FABRIC.shaderAttributeTable.normalMatrix.id,
-              MODELVIEW_MATRIX_ATTRIBUTE_ID: FABRIC.shaderAttributeTable.modelViewMatrix.id,
-              MODELVIEWPROJECTION_MATRIX_ATTRIBUTE_ID: FABRIC.shaderAttributeTable.modelViewProjectionMatrix.id
+              MODELMATRIX_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('modelMatrix'),
+              VIEWMATRIX_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('viewMatrix'),
+              PROJECTIONMATRIX_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('projectionMatrix'),
+              PROJECTIONMATRIXINV_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('projectionMatrixInv'),
+              NORMALMATRIX_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('normalMatrix'),
+              MODELVIEW_MATRIX_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('modelViewMatrix'),
+              MODELVIEWPROJECTION_MATRIX_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('modelViewProjectionMatrix')
             };
       if(!options.transformNodeIndex){
         redrawEventHandler.preDescendBindings.append(scene.constructOperator({

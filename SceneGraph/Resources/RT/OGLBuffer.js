@@ -7,11 +7,11 @@
 
 
 /**
- * Struct to store information about a single shader's value
+ * Struct to store information about an opernGL buffer (VBO)
  * @constructor
- * @param {string} name The name of the shader's value.
- * @param {string} id The id of the shader's value.
- * @param {array} state The state of the shader's value.
+ * @param {string} name The name of the VBO
+ * @param {string} id The id of the VBO.
+ * @param {string} dataType The state of the shader's value.
  */
 FABRIC.RT.OGLBuffer = function(name, id, dataType, dynamic) {
   this.name = (name !== undefined) ? name : '';

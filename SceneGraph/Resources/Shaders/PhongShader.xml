@@ -8,6 +8,7 @@
 		<uniform name="u_lightDir" constant="lightDir" type="Vec3" owner="light"/>
 		<uniform name="u_lightColor" constant="lightColor" type="Color" owner="light"/>
 		<uniform name="u_lightCosCutoff" constant="lightCosCutoff" type="Scalar" owner="light"/>
+		
 		<uniform name="u_materialAmbientColor" constant="ambientColor" type="Color" defaultValue="FABRIC.RT.rgba(0.0,0.0,0.0,1)"/>
 		<uniform name="u_materialDiffuseColor" constant="diffuseColor" type="Color" defaultValue="FABRIC.RT.rgba(0.8,0,0,1)"/>
 		<uniform name="u_materialSpecularColor" constant="specularColor" type="Color" defaultValue="FABRIC.RT.rgba(0.5,0.5,0.5,1)"/>

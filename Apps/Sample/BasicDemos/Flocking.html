@@ -173,7 +173,7 @@ $(document).ready(function() {
     lengthSections:gridSize/3,
     widthSections:gridSize/3
   });
-  groundPlane.addVertexAttributeValue( "vertexColors", "Color", FABRIC.RT.rgb( 0.0, 0.6, 0.0 ) );
+  groundPlane.addVertexAttributeValue( "vertexColors", "Color", { defaultValue: FABRIC.RT.rgb( 0.0, 0.6, 0.0 ) } );
   var groundPlaneInstance = scene.constructNode("Instance", {
       transformNode:scene.constructNode("Transform", {
         hierarchical:false,

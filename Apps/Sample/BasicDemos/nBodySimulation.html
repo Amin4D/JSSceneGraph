@@ -94,7 +94,7 @@ $(document).ready(function() { $('#play').button({
     
       nBodyGeometry.pub.addVertexAttributeValue('velocities', 'Vec4');
       nBodyGeometry.pub.addVertexAttributeValue('mass', 'Scalar');
-      nBodyGeometry.pub.addVertexAttributeValue('vertexColors', 'Color');
+      nBodyGeometry.pub.addVertexAttributeValue('vertexColors', 'Color', { genVBO:true } );
       nBodyGeometry.pub.addVertexAttributeValue('posPrev', 'Vec4');
       nBodyGeometry.pub.addVertexAttributeValue('velPrev', 'Vec4');
 

@@ -2,8 +2,8 @@
 <shader>
 	<name>FlatScreenSpaceMaterial</name>
 	<uniforms>
-		<uniform name="u_materialColor" constant="color"/>
-		<uniform name="u_modelMatrix" constant="modelMatrix" owner="instance"/>
+		<uniform name="u_materialColor" constant="color" type="Color"/>
+		<uniform name="u_modelMatrix" constant="modelMatrix" type="Mat44" owner="instance"/>
 	</uniforms>
 	<attributes>
 		<attribute name="a_position" binding="positions"/>

@@ -746,7 +746,7 @@ FABRIC.SceneGraph.defineEffectFromFile = function(effectName, effectfile) {
         if (uniformNode.getAttribute('type')) {
           effectParameters.shaderUniforms[uniformName].type = uniformNode.getAttribute('type');
         }else{
-          throw 'missing type information';
+          throw 'missing type information :' + uniformName + ' in effect file :' + effectfile;
         }
         if (uniformNode.getAttribute('defaultValue')) {
           effectParameters.shaderUniforms[uniformName].defaultValue = eval(uniformNode.getAttribute('defaultValue'));

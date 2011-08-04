@@ -8,9 +8,6 @@ function OGLShaderProgram(String name) {
   self.programId = 0;
 }
 
-function Integer OGLShaderProgram.getId(){
-  return self.programId;
-}
 
 
 function Integer OGLShaderProgram.createAndCompileShader(OGLShaderSource shadersrc) {

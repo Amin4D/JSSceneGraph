@@ -100,7 +100,7 @@ $(document).ready(function() {
   var assets = scene.importAssetFile('Models/bunny.obj');
   geometry = assets['bunny'];
 
-  geometry.addVertexAttributeValue('vertexColors', 'Color', { defaultValue:FABRIC.RT.rgb(0.0, 0.6, 0.0) });
+  geometry.addVertexAttributeValue('vertexColors', 'Color', { defaultValue:FABRIC.RT.rgb(0.0, 0.6, 0.0), genVBO:true });
 
   var instanceNode = scene.constructNode('Instance', { geometryNode: geometry, materialNode: material });
 

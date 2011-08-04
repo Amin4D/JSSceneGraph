@@ -29,7 +29,7 @@ FABRIC.appendOnCreateContextCallback(function(context) {
  * @param {string} id The id of the shader's value.
  * @param {array} state The state of the shader's value.
  */
-FABRIC.RT.OGLShaderValue = function(name, id, state) {
+FABRIC.RT.OGLShaderValue = function(name, id) {
   this.name = (name !== undefined) ? name : '';
   this.id = (id !== undefined) ? id : 0;
   this.location = -1;
@@ -75,6 +75,9 @@ FABRIC.RT.OGLShaderProgram = function(name) {
   this.programParams = [];
   this.uniformValues = [];
   this.attributeValues = [];
+  this.drawMode = -1;
+  this.patchVertices = -1;
+  this.numInstances = -1;
   this.debug = false;
 };
 
@@ -87,6 +90,9 @@ FABRIC.appendOnCreateContextCallback(function(context) {
       programParams: 'OGLShaderProgramParam[]',
       uniformValues: 'OGLShaderValue[]',
       attributeValues: 'OGLShaderValue[]',
+      drawMode: 'Integer',
+      patchVertices: 'Integer',
+      numInstances: 'Integer',
       debug: 'Boolean'
     },
     constructor: FABRIC.RT.OGLShaderProgram,

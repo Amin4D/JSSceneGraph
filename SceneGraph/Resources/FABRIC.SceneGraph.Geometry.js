@@ -574,6 +574,7 @@ FABRIC.SceneGraph.registerNodeType('Triangles', {
             operatorName: 'drawTriangles',
             srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/drawTriangles.kl',
             parameterLayout: [
+              'shader.shaderProgram',
               'self.indicesBuffer',
               'instance.drawToggle'
             ],

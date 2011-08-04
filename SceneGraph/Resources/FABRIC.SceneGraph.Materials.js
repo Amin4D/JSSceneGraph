@@ -255,6 +255,8 @@ FABRIC.SceneGraph.registerNodeType('Shader', {
       redrawEventHandler = shaderNode.constructEventHandlerNode('Redraw'),
       shaderProgram = new FABRIC.RT.OGLShaderProgram(options.name);
       i;
+      
+    redrawEventHandler.setScopeName('shader');
 
     if (options.fragmentShader) {
       shaderProgram.shaderSources.push(new FABRIC.RT.OGLShaderSource(
@@ -277,8 +279,6 @@ FABRIC.SceneGraph.registerNodeType('Shader', {
         options.geometryShader, FABRIC.SceneGraph.OpenGLConstants.GL_GEOMETRY_SHADER_EXT));
     }
 
-    redrawEventHandler.setScopeName('shader');
-
     ///////////////////////////////////////////////////
     // Uniform Values
     for (i in options.shaderUniforms) {
@@ -299,6 +299,17 @@ FABRIC.SceneGraph.registerNodeType('Shader', {
     for (i in options.programParams) {
        shaderProgram.programParams.push(new FABRIC.RT.OGLShaderProgramParam(
         FABRIC.SceneGraph.OpenGLConstants[i], options.programParams[i]));
+    }
+    
+    ///////////////////////////////////////////////////
+    // Draw Params
+    if(options.drawParams) {
+      if(options.drawParams.drawMode){
+        shaderProgram.drawMode = FABRIC.SceneGraph.OpenGLConstants[options.drawParams.drawMode];
+      }
+      if(options.drawParams.patchVertices){
+        shaderProgram.patchVertices = options.drawParams.patchVertices;
+      }
     }
     
     shaderProgram.debug = options.debug;
@@ -368,6 +379,7 @@ FABRIC.SceneGraph.registerNodeType('Material', {
           shaderUniforms: options.shaderUniforms,
           shaderAttributes: options.shaderAttributes,
           programParams: options.programParams,
+          drawParams: options.drawParams,
           parentEventHandler: options.parentEventHandler,
           assignUniformsOnPostDescend: options.assignUniformsOnPostDescend
         });
@@ -818,6 +830,26 @@ FABRIC.SceneGraph.defineEffectFromFile = function(effectName, effectfile) {
       }
     };
   
+  
+    collectDrawParams = function(node) {
+      var len, j, paramNode, paramValue;
+      effectParameters.drawParams = {};
+      len = node.childNodes.length;
+      for (j = 0; j < len; j++) {
+        paramNode = node.childNodes[j];
+        switch (node.childNodes[j].nodeName ) {
+          case '#text':
+            continue;
+          case 'drawMode':
+            effectParameters.drawParams.drawMode = paramNode.getAttribute('value');
+            break;
+          case 'patchVertices':
+            effectParameters.drawParams.patchVertices = parseInt(paramNode.getAttribute('value'));
+            break;
+        }
+      }
+    };
+  
     collectPreprocessorDirectives = function(node) {
       var len, j, directiveNode;
       len = node.childNodes.length;
@@ -869,6 +901,9 @@ FABRIC.SceneGraph.defineEffectFromFile = function(effectName, effectfile) {
           break;
         case 'programParams':
           collectProgramParams(childNode);
+          break;
+        case 'drawParams':
+          collectDrawParams(childNode);
           break;
         case 'preprocessordirectives':
           collectPreprocessorDirectives(childNode);

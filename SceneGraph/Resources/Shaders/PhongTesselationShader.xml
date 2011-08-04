@@ -17,14 +17,22 @@
 		<uniform name="u_tesselationDepthMax" constant="tesselationDepthMax" type="Scalar" defaultValue="0.5"/>
 		<uniform name="u_samplerDepthMap" constant="depthTexture" type="Integer" owner="texture"/>
 	</uniforms>
+  
 	<attributes>
 		<attribute name="a_position" binding="positions"/>
 		<attribute name="a_normal" binding="normals"/>
 		<attribute name="a_texCoord" binding="uvs0"/>
 	</attributes>
+  
 	<textures>
 		<texture binding="depthTexture"/>
-  </textures>	
+  </textures>
+  
+  <drawParams>
+    <drawMode value="GL_PATCHES"/>
+    <patchVertices value="3"/>
+  </drawParams>
+  
 	<vertexshader>
 		<source>
                   #version 400

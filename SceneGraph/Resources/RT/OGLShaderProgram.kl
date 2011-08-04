@@ -8,8 +8,6 @@ function OGLShaderProgram(String name) {
   self.programId = 0;
 }
 
-
-
 function Integer OGLShaderProgram.createAndCompileShader(OGLShaderSource shadersrc) {
   var Integer shaderID = glCreateShader(shadersrc.type);
   if (shaderID == 0) {

@@ -4,14 +4,29 @@
 //
 
 operator drawTriangles(
+  io OGLShaderProgram shaderProgram,
   io OGLBuffer indicesBuffer,
   io Boolean drawToggle
 ) {
   //  report("drawTriangles:"+indicesBufferID+":"+indicesCount);
   if (drawToggle) {
     var Data NULL;
+    Integer drawMode = GL_TRIANGLES;
+    if(shaderProgram.drawMode != -1){
+      drawMode = shaderProgram.drawMode;
+    }
+    
+    if(drawMode == GL_PATCHES){
+      glPatchParameteri(GL_PATCH_VERTICES, 3);
+    }
+    
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indicesBuffer.bufferID);
-    glDrawElements(GL_TRIANGLES, indicesBuffer.elementCount, GL_UNSIGNED_INT, NULL);
+    if(shaderProgram.numInstances>1){
+      glDrawElementsInstanced(drawMode, indicesBuffer.elementCount, GL_UNSIGNED_INT, NULL, shaderProgram.numInstances);
+    }
+    else{
+      glDrawElements(drawMode, indicesBuffer.elementCount, GL_UNSIGNED_INT, NULL);
+    }
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
   }
 }

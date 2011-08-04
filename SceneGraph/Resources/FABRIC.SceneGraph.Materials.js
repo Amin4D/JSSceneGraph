@@ -871,8 +871,11 @@ FABRIC.SceneGraph.defineEffectFromFile = function(effectName, effectfile) {
         }
         if (node.childNodes[j].nodeName === 'include') {
           // Included file paths are relative to the effect file.
-          source = source + FABRIC.loadResourceURL(
-            effectFilePath + node.childNodes[j].getAttribute('file'), 'text/plain');
+          var path = node.childNodes[j].getAttribute('file');
+          if (path.split('/')[0] !== 'FABRIC_ROOT') {
+            path = effectFilePath + path;
+          }
+          source = source + FABRIC.loadResourceURL(path, 'text/plain');
         }
       }
       return source;
@@ -992,12 +995,12 @@ FABRIC.SceneGraph.defineEffectFromFile = function(effectName, effectfile) {
         return str[0].toUpperCase() + str.substr(1);
       };
       for (uniformName in effectParameters.shaderUniforms) {
-        if (options[uniformName] !== undefined) {
+        if (options[uniformName] && materialNode.pub['set' + capitalizeFirstLetter(uniformName)]) {
           materialNode.pub['set' + capitalizeFirstLetter(uniformName)](options[uniformName]);
         }
       }
       for (lightName in effectParameters.lights) {
-        if (options[lightName + 'Node']) {
+        if (options[lightName + 'Node'] && materialNode.pub['set' + capitalizeFirstLetter(lightName) + 'Node']) {
           materialNode.pub['set' + capitalizeFirstLetter(lightName) + 'Node'](options[lightName + 'Node']);
         }
       }

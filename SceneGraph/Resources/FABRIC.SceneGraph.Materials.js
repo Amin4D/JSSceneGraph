@@ -306,6 +306,8 @@ FABRIC.SceneGraph.registerNodeType('Shader', {
   
     var operators = redrawEventHandler.preDescendBindings;
     if(options.assignUniformsOnPostDescend == true){
+      // Post Processing operators invoke the shader on the post
+      // decent pass. After thegeometry in the sub tree is drawn.
       operators = redrawEventHandler.postDescendBindings;
     }
     operators.append(scene.constructOperator({
@@ -322,10 +324,7 @@ FABRIC.SceneGraph.registerNodeType('Shader', {
       // handle passing render events to the shader from the cameras.
       options.parentEventHandler.appendChildEventHandler(redrawEventHandler);
     }
-
-    shaderNode.getRedrawEventHandler = function() {
-      return redrawEventHandler;
-    };
+    
     shaderNode.getVBORequirements = function() {
       return options.shaderAttributes;
     };
@@ -348,20 +347,8 @@ FABRIC.SceneGraph.registerNodeType('Material', {
       dgnode,
       redrawEventHandler,
       materialType = options.type,
-      shaderPrefix,
-      index,
       shader,
-      addAccessors,
-      uniform,
-      uniformName,
-      uniformType,
-      operatorFunction,
-      i,
-      lightNodes = {},
-      addLightInterface,
-      textureNodes = {},
-      addTextureInterface,
-      textureUnit = 0;
+      i;
 
     if (options.separateShaderNode) {
       if(options.shaderNode){
@@ -417,13 +404,12 @@ FABRIC.SceneGraph.registerNodeType('Material', {
     if(options.assignUniformsOnPostDescend===true){
       operators = redrawEventHandler.postDescendBindings;
     }
-    for (uniformName in options.shaderUniforms) {
-      uniform = options.shaderUniforms[uniformName];
+    for (var uniformName in options.shaderUniforms) {
+      var uniform = options.shaderUniforms[uniformName];
       // TODO: generalize a method for looking up uniform values from 'known owners'.
       if (uniform.owner !== undefined && uniform.owner !== 'window') {
         continue;
       }
-      uniformType = uniform.type;
       var uniformOwner;
       if (uniform.owner === undefined) {
         if(options.storeUniformsInDGNode){
@@ -431,12 +417,12 @@ FABRIC.SceneGraph.registerNodeType('Material', {
             dgnode = materialNode.constructDGNode('DGNode');
             redrawEventHandler.addScope('material', dgnode);
           }
-          dgnode.addMember(uniformName, uniformType, uniform.defaultValue);
+          dgnode.addMember(uniformName, uniform.type, uniform.defaultValue);
           materialNode.addMemberInterface(dgnode, uniformName, true);
           uniformOwner = 'material';
         }
         else{
-          redrawEventHandler.addMember(uniformName, uniformType, uniform.defaultValue);
+          redrawEventHandler.addMember(uniformName, uniform.type, uniform.defaultValue);
           materialNode.addMemberInterface(redrawEventHandler, uniformName, true);
           uniformOwner = 'self';
         }
@@ -450,7 +436,7 @@ FABRIC.SceneGraph.registerNodeType('Material', {
         preProcessorDefinitions: {
           ATTRIBUTE_NAME: uniformName,
           ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID(uniformName),
-          DATA_TYPE: uniformType
+          DATA_TYPE: uniform.type
         },
         entryFunctionName: 'loadUniform',
         parameterLayout: [
@@ -461,7 +447,7 @@ FABRIC.SceneGraph.registerNodeType('Material', {
     }
 
     if (options.lights) {
-      addLightInterface = function(lightName, lightDef) {
+      var addLightInterface = function(lightName, lightDef) {
         var lightStub = materialNode.constructEventHandlerNode('Draw_' + lightName);
         redrawEventHandler.appendChildEventHandler(lightStub);
         
@@ -470,7 +456,6 @@ FABRIC.SceneGraph.registerNodeType('Material', {
             throw ('Incorrect type assignment. Must assign a ' + lightDef.type);
           }
           node = scene.getPrivateInterface(node);
-          lightNodes[lightName] = node;
           lightStub.appendChildEventHandler(node.getRedrawEventHandler());
         };
         materialNode.pub['set' + capitalizeFirstLetter(lightName) + 'Node'] = setLightNodeFn;
@@ -483,7 +468,7 @@ FABRIC.SceneGraph.registerNodeType('Material', {
       }
     }
     if (options.textures) {
-      addTextureInterface = function(textureName, textureDef, textureUnit) {
+      var addTextureInterface = function(textureName, textureDef, textureUnit) {
         var textureStub = materialNode.constructEventHandlerNode(textureName + '_Stub');
         textureStub.setScopeName('textureStub');
         textureStub.addMember('textureUnit', 'Integer', textureUnit);
@@ -510,7 +495,6 @@ FABRIC.SceneGraph.registerNodeType('Material', {
             throw ('Incorrect type assignment. Must assign a Texture');
           }
           node = scene.getPrivateInterface(node);
-          textureNodes[textureName] = node;
           textureStub.appendChildEventHandler(node.getRedrawEventHandler());
         };
         materialNode.pub['set' + capitalizeFirstLetter(textureName) + 'Node'] = setTextureFn;
@@ -519,6 +503,7 @@ FABRIC.SceneGraph.registerNodeType('Material', {
           setTextureFn(textureDef.node);
         }
       };
+      var textureUnit = 0;
       for (i in options.textures) {
         if (options.textures[i].owner !== undefined) {
           continue;

@@ -51,10 +51,6 @@ FABRIC.SceneGraph.defineEffectFromFile('PhongInstancingShaderBase', './Shaders/P
 // be moved to a separate file once they are stabilized. 
 FABRIC.SceneGraph.registerNodeType('PhongInstancingShader', {
   factoryFn: function(options, scene) {
-    options = scene.assignDefaults(options, {
-      numInstances: 10,
-      instanceOffsets: []
-    });
     
     var phongInstancingShader = scene.constructNode('PhongInstancingShaderBase', options );
     var redrawEventHandler = phongInstancingShader.getRedrawEventHandler();
@@ -84,6 +80,21 @@ operator loadUniform(\n\
         ]
       }));
     
+    redrawEventHandler.preDescendBindings.append(scene.constructOperator({
+        operatorName: 'setNumInstances',
+        srcCode: '\n\
+operator setNumInstances(\n\
+  io OGLShaderProgram shaderProgram,\n\
+) {\n\
+  shaderProgram.numInstances = '+options.instanceOffsets.length+';\n\
+}\n\
+        ',
+        entryFunctionName: 'setNumInstances',
+        parameterLayout: [
+          'shader.shaderProgram'
+        ]
+      }));
+    
     return phongInstancingShader;
   }});
     
@@ -108,10 +119,11 @@ $(document).ready(function() {
   var viewport = scene.constructNode('Viewport', { windowElement: document.getElementById('FabricContainer') });
 
   // Create a camera to draw the scene from
-  var camera = scene.constructNode('TargetCamera', {
-      nearDistance: 1,
-      farDistance: 20,
-      position: FABRIC.RT.vec3(0, 5, 10)
+  camera = scene.constructNode('TargetCamera', {
+      nearDistance: 10,
+      farDistance: 1200,
+      position: FABRIC.RT.vec3(37, 27, 70),
+      target: FABRIC.RT.vec3(10, -5, 30)
     });
 
   scene.constructNode('CameraManipulator', { targetNode: camera });
@@ -119,15 +131,18 @@ $(document).ready(function() {
 
   var light = scene.constructNode('PointLight', { position: FABRIC.RT.vec3(420.0, 1000.0, 600.0) });
   
-  var gridSize = 10;
-  var numInstances = 10;
+  var gridSize = 100;
+  var numInstances = 60;
   var instancePositions = [];
   for (i = 0; i < numInstances; i++) {
+    var scl = Math.random() + 0.5;
     instancePositions.push(FABRIC.RT.xfo( {
       tr: FABRIC.RT.vec3(
         (Math.random() - 0.5) * gridSize * 0.95,
-        0.0,
-        (Math.random() - 0.5) * gridSize * 0.95)
+        -2.5/scl,
+        (Math.random() - 0.5) * gridSize * 0.95),
+      ori:FABRIC.RT.Quat.makeFromAxisAndAngle( FABRIC.RT.vec3(0,1,0), (Math.random() - 0.5) * 360.0 ), /* TODO: Transtion the whole math libary to radians. */
+      sc: FABRIC.RT.vec3(scl, scl, scl)
     }).makeMat44()
     );
   }

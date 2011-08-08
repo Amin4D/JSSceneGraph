@@ -34,6 +34,7 @@
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/RGBA.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Euler.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/OGLShaderProgram.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/OGLBuffer.js" charset="utf-8"></script>
     
 
     <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.js" charset="utf-8"></script>
@@ -99,7 +100,7 @@ $(document).ready(function() {
   var assets = scene.importAssetFile('Models/bunny.obj');
   geometry = assets['bunny'];
 
-  geometry.addVertexAttributeValue('vertexColors', 'Color', FABRIC.RT.rgb(0.0, 0.6, 0.0));
+  geometry.addVertexAttributeValue('vertexColors', 'Color', { defaultValue:FABRIC.RT.rgb(0.0, 0.6, 0.0), genVBO:true });
 
   var instanceNode = scene.constructNode('Instance', { geometryNode: geometry, materialNode: material });
 

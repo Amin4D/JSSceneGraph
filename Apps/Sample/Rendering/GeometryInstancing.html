@@ -3,7 +3,7 @@
     Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
     -->
   <head> 
-    <title>FABRIC - Tesselation</title> 
+    <title>FABRIC - Geometry Instancing</title> 
     
     <meta charset="iso-8859-1"/>
     <link href="../../../themes/default/style.css" rel="stylesheet" type="text/css" />
@@ -14,12 +14,13 @@
 
     <link type="text/css" href="../../../ThirdParty/jQuery/css/vader/jquery-ui-1.8.5.custom.css" rel="stylesheet" />
 
-    <script type="text/javascript" src="../../../Core/FABRIC.Wrappers.js" charset="utf-8"></script>
+      <script type="text/javascript" src="../../../Core/FABRIC.Wrappers.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../Core/FABRIC.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Math.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Vec2.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Vec3.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Vec4.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Mat22.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Mat33.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Mat44.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Quat.js" charset="utf-8"></script>
@@ -28,87 +29,132 @@
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Color.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Euler.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/OGLShaderProgram.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/OGLTexture2D.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/OGLBuffer.js" charset="utf-8"></script>
 
     <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Geometry.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Primitives.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Lights.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Materials.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Manipulation.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Kinematics.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/Parsers/parseCollada.js" charset="utf-8"></script>
-    
+
+    <script type="text/javascript" src="../../../SceneGraph/Resources/Parsers/parseOBJ.js" charset="utf-8"></script>
+
     <script type="text/javascript">
     
-$(document).ready(function() {
-  
-  var scene = FABRIC.SceneGraph.createScene();
-  var viewport = scene.constructNode('Viewport', {
-    windowElement: document.getElementById('FabricContainer'),
-    backgroundColor: FABRIC.RT.rgb(0.0, 0.05, 0.15)
-  });
+    
+FABRIC.SceneGraph.defineEffectFromFile('PhongInstancingShaderBase', './Shaders/PhongInstancingShader.xml');
 
-  // Create a camera to draw the scene from
-  var camera = scene.constructNode('TargetCamera', {
-      nearDistance: 0.1,
-      farDistance: 500,
-      position: FABRIC.RT.vec3(0, 5, 10).scale(2.0)
+
+    
+// These Node definitions are inlined for now, but will
+// be moved to a separate file once they are stabilized. 
+FABRIC.SceneGraph.registerNodeType('PhongInstancingShader', {
+  factoryFn: function(options, scene) {
+    
+    var phongInstancingShader = scene.constructNode('PhongInstancingShaderBase', options );
+    var redrawEventHandler = phongInstancingShader.getRedrawEventHandler();
+    var instanceOffsetsID = FABRIC.SceneGraph.getShaderParamID('instanceOffsets');
+    
+    
+    redrawEventHandler.addMember('instanceOffsets', 'Mat44[]', options.instanceOffsets);
+    
+    redrawEventHandler.preDescendBindings.append(scene.constructOperator({
+        operatorName: 'loadInstanceOffsets',
+        srcCode: '\n\
+operator loadUniform(\n\
+  io OGLShaderProgram shaderProgram,\n\
+  io Mat44 value[]\n\
+) {\n\
+  Integer location = shaderProgram.getUniformLocation('+instanceOffsetsID+');\n\
+//  report("loadUniform:" + location);\n\
+  if(location!=-1){\n\
+    shaderProgram.loadMat44UniformArray(location, value);\n\
+  }\n\
+}\n\
+        ',
+        entryFunctionName: 'loadUniform',
+        parameterLayout: [
+          'shader.shaderProgram',
+          'self.instanceOffsets'
+        ]
+      }));
+    
+    redrawEventHandler.preDescendBindings.append(scene.constructOperator({
+        operatorName: 'setNumInstances',
+        srcCode: '\n\
+operator setNumInstances(\n\
+  io OGLShaderProgram shaderProgram,\n\
+) {\n\
+  shaderProgram.numInstances = '+options.instanceOffsets.length+';\n\
+}\n\
+        ',
+        entryFunctionName: 'setNumInstances',
+        parameterLayout: [
+          'shader.shaderProgram'
+        ]
+      }));
+    
+    return phongInstancingShader;
+  }});
+    
+$(document).ready(function() {
+
+  $('#importModel').button().change(function(e) {
+      // TODO: Enable file importing
+        console.log($(this).val());
+      var assets = scene.importAssetFile($(this).val());
+      for (i in assets) {
+        assets[i].setMaterialNode(redMaterial);
+        drawNode.setGeometryNode(assets[i]);
+      }
+
+      var errors = scene.getErrors();
+      if (errors.length > 0) {
+        throw (errors.toString());
+      }
     });
 
-  scene.constructNode("CameraManipulator", { targetNode:camera } );
+  var scene = FABRIC.SceneGraph.createScene();
+  var viewport = scene.constructNode('Viewport', { windowElement: document.getElementById('FabricContainer') });
 
+  // Create a camera to draw the scene from
+  camera = scene.constructNode('TargetCamera', {
+      nearDistance: 10,
+      farDistance: 1200,
+      position: FABRIC.RT.vec3(37, 27, 70),
+      target: FABRIC.RT.vec3(10, -5, 30)
+    });
+
+  scene.constructNode('CameraManipulator', { targetNode: camera });
   viewport.setCameraNode(camera);
 
   var light = scene.constructNode('PointLight', { position: FABRIC.RT.vec3(420.0, 1000.0, 600.0) });
-  var triangles = scene.importAssetFile('Models/bricks.dae')['sphere'];
   
-  var depthTexture = scene.constructNode('Image', { url: 'Resources/bricks_depth.png' });
+  var gridSize = 100;
+  var numInstances = 60;
+  var instancePositions = [];
+  for (i = 0; i < numInstances; i++) {
+    var scl = Math.random() + 0.5;
+    instancePositions.push(FABRIC.RT.xfo( {
+      tr: FABRIC.RT.vec3(
+        (Math.random() - 0.5) * gridSize * 0.95,
+        -2.5/scl,
+        (Math.random() - 0.5) * gridSize * 0.95),
+      ori:FABRIC.RT.Quat.makeFromAxisAndAngle( FABRIC.RT.vec3(0,1,0), (Math.random() - 0.5) * 360.0 ), /* TODO: Transtion the whole math libary to radians. */
+      sc: FABRIC.RT.vec3(scl, scl, scl)
+    }).makeMat44()
+    );
+  }
+  var redMaterial = scene.constructNode('PhongInstancingShader', {
+          diffuseColor: FABRIC.RT.rgb(0.8, 0, 0, 1),
+          lightNode: light,
+          numInstances: numInstances,
+          instanceOffsets: instancePositions
+        });
   
-  var tesselationMaterial = scene.constructNode('PhongTesselationMaterial', {
-      color: FABRIC.RT.rgb(0.7, 0.7, 0.7, 1),
-      wireColor: FABRIC.RT.rgb(0, 0, 0, 1),
-      wireOpacity: 1.0,
-      lightNode: light,
-      depthTextureNode: depthTexture
-    });
-
-  scene.constructNode('Instance', {
-      transformNode: scene.constructNode('Transform', {
-          hierarchical: false
-        }),
-      geometryNode: triangles,
-      materialNode: tesselationMaterial
-    });
-
-  $('#tesselationlevel')
-  .slider({
-      min: 1.0,
-      max: 64.0,
-      step: 1.0,
-      value: tesselationMaterial.getTesselationInner(),
-    })
-  .bind('slide',
-    function(event, ui) {
-      tesselationMaterial.setTesselationInner(ui.value);
-      tesselationMaterial.setTesselationOuter(ui.value);
-      scene.redrawAllWindows();
-    });
-
-  $('#wireopacity')
-  .slider({
-      min: 0.0,
-      max: 1.0,
-      step: 0.01,
-      value: tesselationMaterial.getWireOpacity(),
-    })
-  .bind('slide',
-    function(event, ui) {
-      tesselationMaterial.setWireOpacity(ui.value);
-      scene.redrawAllWindows();
-    });
-  
+  var assets = scene.importAssetFile('../BasicDemos/Models/cow.obj');
+  var instanceNode = scene.constructNode('Instance', { geometryNode: assets['cow'], materialNode: redMaterial });
 
   $('#loadingDialog').dialog({
     modal: true
@@ -152,21 +198,22 @@ $(document).ready(function() {
           <div class="box">
             <h2>INFO</h2>
             <div class="content">
-              Tesselation.<br>
-              This sample shows the use of GPU based tesselation. This is achieved by implementing a
-              GLSL geometry shader.
+              ModelViewer.<br>
+              The model seen in this sample is imported using FABRIC's OBJ parser, and then drawn using
+              a phong material. This very basic sample makes use of FABRIC's parser features, and illustrates
+              how to utilize external models for visualization resp. inspection.
             </div><!--content-->
           </div><!--box-->
+
+<!--
+// TODO: Figure out how to load files from HTML
           <div class="box">
-            <h2>CONTROLS</h2>
-            <div class="content">
-                <div>Tesselation Level:</div>
-                <div id='tesselationlevel' style="margin-top:10px;"></div>
-                <div>Wire Opacity:</div>
-                <div id='wireopacity' style="margin-top:10px;"></div>
-            </div><!--content-->
-          </div><!--box-->
-            
+                    <h2>MODEL</h2>
+                    <div class="content">
+                      <input type="file" id="importModel">
+                    </div><!--content- ->
+                </div><!--box- ->
+-->
         </div><!--sidebar-->
       </div> <!--editor-->
     </div><!--wrapper-->

@@ -229,72 +229,21 @@ FABRIC.SceneGraph.registerNodeType('PointSpriteTexture', {
 /**
  * Table storing all of the known shader attributes and their types.
  */
-FABRIC.shaderAttributeTable = {
-  indices: { id: 1, type: 'Integer[]' },
-  positions: { id: 2, type: 'Vec3[]' },
-  normals: { id: 3, type: 'Vec3[]' },
-  tangents: { id: 4, type: 'Vec4[]' },
-  vertexColors: { id: 5, type: 'Color[]' },
+FABRIC.SceneGraph.getShaderParamID = ( function(){
+  var paramCount = 0;
+  var paramMap = {};
+  return function(name){
+    if(paramMap[name]){
+      return paramMap[name];
+    }
+    else{
+      paramCount++;
+      paramMap[name] = paramCount;
+      return paramCount;
+    }
+  }
+})();
 
-  uvs0: { id: 15, type: 'Vec2[]' },
-  uvs1: { id: 16, type: 'Vec2[]' },
-  uvs2: { id: 17, type: 'Vec2[]' },
-
-  boneWeights: { id: 18, type: 'Mat33[]' },
-  boneIds: { id: 19, type: 'Mat33[]' },
-
-  color: { id: 30, type: 'Color' },
-  ambientColor: { id: 31, type: 'Color' },
-  diffuseColor: { id: 32, type: 'Color' },
-  specularColor: { id: 33, type: 'Color' },
-  shininess: { id: 34, type: 'Scalar' },
-  bumpiness: { id: 35, type: 'Scalar' },
-  normalLength: { id: 36, type: 'Scalar' },
-  depthScale: { id: 37, type: 'Scalar' },
-
-  light: { id: 50, type: 'Vec3' },
-  lightType: { id: 51, type: 'Integer' },
-  lightPosition: { id: 52, type: 'Vec3' },
-  lightDir: { id: 53, type: 'Vec3' },
-  lightColor: { id: 54, type: 'Color' },
-  lightCosCutoff: { id: 55, type: 'Scalar' },
-  lightShadowMap: { id: 56, type: 'Integer' },
-  lightShadowMapMatrix: { id: 57, type: 'Mat44' },
-  lightObjectMatrix: { id: 58, type: 'Mat44' },
-
-  texture: { id: 80, type: 'Integer' },
-  diffuseTexture: { id: 81, type: 'Integer' },
-  specularTexture: { id: 82, type: 'Integer' },
-  normalTexture: { id: 83, type: 'Integer' },
-  spriteTexture: { id: 84, type: 'Integer' },
-  fboTexture: { id: 85, type: 'Integer' },
-  backgroundTexture: { id: 86, type: 'Integer' },
-  depthTexture: { id: 87, type: 'Integer' },
-
-  boneMatrices: { id: 100, type: 'Mat44[]' },
-  boneMatrixTexture: { id: 101, type: 'Integer' },
-
-  modelMatrix: { id: 147, type: 'Mat44' },
-  viewMatrix: { id: 146, type: 'Mat44' },
-  normalMatrix: { id: 152, type: 'Mat33' },
-  projectionMatrix: { id: 153, type: 'Mat44' },
-  projectionMatrixInv: { id: 154, type: 'Mat44' },
-  modelViewMatrix: { id: 148, type: 'Mat44' },
-  modelViewProjectionMatrix: { id: 149, type: 'Mat44' },
-
-  width: { id: 200, type: 'Integer' },
-  height: { id: 201, type: 'Integer' },
-  colorMix: { id: 202, type: 'Scalar' },
-  blurSize: { id: 203, type: 'Scalar' },
-  
-  wireColor: { id: 250, type: 'Color' },
-  wireOpacity: { id: 251, type: 'Scalar' },
-  tesselationCount: { id: 252, type: 'Integer' },
-  tesselationInner: { id: 253, type: 'Scalar' },
-  tesselationOuter: { id: 254, type: 'Scalar' },
-  tesselationDepthMin: { id: 255, type: 'Scalar' },
-  tesselationDepthMax: { id: 256, type: 'Scalar' }
-};
 
 FABRIC.SceneGraph.registerNodeType('Shader', {
   factoryFn: function(options, scene) {
@@ -306,6 +255,8 @@ FABRIC.SceneGraph.registerNodeType('Shader', {
       redrawEventHandler = shaderNode.constructEventHandlerNode('Redraw'),
       shaderProgram = new FABRIC.RT.OGLShaderProgram(options.name);
       i;
+      
+    redrawEventHandler.setScopeName('shader');
 
     if (options.fragmentShader) {
       shaderProgram.shaderSources.push(new FABRIC.RT.OGLShaderSource(
@@ -328,27 +279,19 @@ FABRIC.SceneGraph.registerNodeType('Shader', {
         options.geometryShader, FABRIC.SceneGraph.OpenGLConstants.GL_GEOMETRY_SHADER_EXT));
     }
 
-    redrawEventHandler.setScopeName('shader');
-
     ///////////////////////////////////////////////////
     // Uniform Values
     for (i in options.shaderUniforms) {
-      if (!FABRIC.shaderAttributeTable[i]) {
-        throw ('Error defining ' + options.name + '. Attribute not defined in the AttributeTable:' + i);
-      }
       shaderProgram.uniformValues.push(new FABRIC.RT.OGLShaderValue(
-        options.shaderUniforms[i].name, FABRIC.shaderAttributeTable[i].id));
+        options.shaderUniforms[i].name, FABRIC.SceneGraph.getShaderParamID(i)));
     }
 
     ///////////////////////////////////////////////////
     // Attribute Values
     var attributeValues = [];
     for (i in options.shaderAttributes) {
-      if (!FABRIC.shaderAttributeTable[i]) {
-        throw ('Attribute not defined in the AttributeTable:' + i);
-      }
       shaderProgram.attributeValues.push(new FABRIC.RT.OGLShaderValue(
-        options.shaderAttributes[i].name, FABRIC.shaderAttributeTable[i].id));
+        options.shaderAttributes[i].name, FABRIC.SceneGraph.getShaderParamID(i)));
     }
 
     ///////////////////////////////////////////////////
@@ -358,11 +301,24 @@ FABRIC.SceneGraph.registerNodeType('Shader', {
         FABRIC.SceneGraph.OpenGLConstants[i], options.programParams[i]));
     }
     
+    ///////////////////////////////////////////////////
+    // Draw Params
+    if(options.drawParams) {
+      if(options.drawParams.drawMode){
+        shaderProgram.drawMode = FABRIC.SceneGraph.OpenGLConstants[options.drawParams.drawMode];
+      }
+      if(options.drawParams.patchVertices){
+        shaderProgram.patchVertices = options.drawParams.patchVertices;
+      }
+    }
+    
     shaderProgram.debug = options.debug;
     redrawEventHandler.addMember('shaderProgram', 'OGLShaderProgram', shaderProgram);
   
     var operators = redrawEventHandler.preDescendBindings;
     if(options.assignUniformsOnPostDescend == true){
+      // Post Processing operators invoke the shader on the post
+      // decent pass. After thegeometry in the sub tree is drawn.
       operators = redrawEventHandler.postDescendBindings;
     }
     operators.append(scene.constructOperator({
@@ -379,10 +335,7 @@ FABRIC.SceneGraph.registerNodeType('Shader', {
       // handle passing render events to the shader from the cameras.
       options.parentEventHandler.appendChildEventHandler(redrawEventHandler);
     }
-
-    shaderNode.getRedrawEventHandler = function() {
-      return redrawEventHandler;
-    };
+    
     shaderNode.getVBORequirements = function() {
       return options.shaderAttributes;
     };
@@ -405,20 +358,8 @@ FABRIC.SceneGraph.registerNodeType('Material', {
       dgnode,
       redrawEventHandler,
       materialType = options.type,
-      shaderPrefix,
-      index,
       shader,
-      addAccessors,
-      uniform,
-      uniformName,
-      uniformType,
-      operatorFunction,
-      i,
-      lightNodes = {},
-      addLightInterface,
-      textureNodes = {},
-      addTextureInterface,
-      textureUnit = 0;
+      i;
 
     if (options.separateShaderNode) {
       if(options.shaderNode){
@@ -438,6 +379,7 @@ FABRIC.SceneGraph.registerNodeType('Material', {
           shaderUniforms: options.shaderUniforms,
           shaderAttributes: options.shaderAttributes,
           programParams: options.programParams,
+          drawParams: options.drawParams,
           parentEventHandler: options.parentEventHandler,
           assignUniformsOnPostDescend: options.assignUniformsOnPostDescend
         });
@@ -474,18 +416,12 @@ FABRIC.SceneGraph.registerNodeType('Material', {
     if(options.assignUniformsOnPostDescend===true){
       operators = redrawEventHandler.postDescendBindings;
     }
-    for (uniformName in options.shaderUniforms) {
-      uniform = options.shaderUniforms[uniformName];
+    for (var uniformName in options.shaderUniforms) {
+      var uniform = options.shaderUniforms[uniformName];
       // TODO: generalize a method for looking up uniform values from 'known owners'.
       if (uniform.owner !== undefined && uniform.owner !== 'window') {
         continue;
       }
-      if (!FABRIC.shaderAttributeTable[uniformName]) {
-        throw 'Error defining ' + materialType + '. Undefined shader attribute. ' +
-          'Please add to the shader Attribute table:' + uniformName;
-      }
-
-      uniformType = FABRIC.shaderAttributeTable[uniformName].type;
       var uniformOwner;
       if (uniform.owner === undefined) {
         if(options.storeUniformsInDGNode){
@@ -493,12 +429,12 @@ FABRIC.SceneGraph.registerNodeType('Material', {
             dgnode = materialNode.constructDGNode('DGNode');
             redrawEventHandler.addScope('material', dgnode);
           }
-          dgnode.addMember(uniformName, uniformType, uniform.defaultValue);
+          dgnode.addMember(uniformName, uniform.type, uniform.defaultValue);
           materialNode.addMemberInterface(dgnode, uniformName, true);
           uniformOwner = 'material';
         }
         else{
-          redrawEventHandler.addMember(uniformName, uniformType, uniform.defaultValue);
+          redrawEventHandler.addMember(uniformName, uniform.type, uniform.defaultValue);
           materialNode.addMemberInterface(redrawEventHandler, uniformName, true);
           uniformOwner = 'self';
         }
@@ -511,8 +447,8 @@ FABRIC.SceneGraph.registerNodeType('Material', {
         srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadUniforms.kl',
         preProcessorDefinitions: {
           ATTRIBUTE_NAME: uniformName,
-          ATTRIBUTE_ID: FABRIC.shaderAttributeTable[uniformName].id,
-          DATA_TYPE: uniformType
+          ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID(uniformName),
+          DATA_TYPE: uniform.type
         },
         entryFunctionName: 'loadUniform',
         parameterLayout: [
@@ -523,7 +459,7 @@ FABRIC.SceneGraph.registerNodeType('Material', {
     }
 
     if (options.lights) {
-      addLightInterface = function(lightName, lightDef) {
+      var addLightInterface = function(lightName, lightDef) {
         var lightStub = materialNode.constructEventHandlerNode('Draw_' + lightName);
         redrawEventHandler.appendChildEventHandler(lightStub);
         
@@ -532,7 +468,6 @@ FABRIC.SceneGraph.registerNodeType('Material', {
             throw ('Incorrect type assignment. Must assign a ' + lightDef.type);
           }
           node = scene.getPrivateInterface(node);
-          lightNodes[lightName] = node;
           lightStub.appendChildEventHandler(node.getRedrawEventHandler());
         };
         materialNode.pub['set' + capitalizeFirstLetter(lightName) + 'Node'] = setLightNodeFn;
@@ -545,7 +480,7 @@ FABRIC.SceneGraph.registerNodeType('Material', {
       }
     }
     if (options.textures) {
-      addTextureInterface = function(textureName, textureDef, textureUnit) {
+      var addTextureInterface = function(textureName, textureDef, textureUnit) {
         var textureStub = materialNode.constructEventHandlerNode(textureName + '_Stub');
         textureStub.setScopeName('textureStub');
         textureStub.addMember('textureUnit', 'Integer', textureUnit);
@@ -556,7 +491,7 @@ FABRIC.SceneGraph.registerNodeType('Material', {
           srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadUniforms.kl',
           preProcessorDefinitions: {
             ATTRIBUTE_NAME: capitalizeFirstLetter(textureName),
-            ATTRIBUTE_ID: FABRIC.shaderAttributeTable[textureName].id,
+            ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID(textureName),
             DATA_TYPE: 'Integer'
           },
           entryFunctionName: 'loadUniform',
@@ -572,7 +507,6 @@ FABRIC.SceneGraph.registerNodeType('Material', {
             throw ('Incorrect type assignment. Must assign a Texture');
           }
           node = scene.getPrivateInterface(node);
-          textureNodes[textureName] = node;
           textureStub.appendChildEventHandler(node.getRedrawEventHandler());
         };
         materialNode.pub['set' + capitalizeFirstLetter(textureName) + 'Node'] = setTextureFn;
@@ -581,6 +515,7 @@ FABRIC.SceneGraph.registerNodeType('Material', {
           setTextureFn(textureDef.node);
         }
       };
+      var textureUnit = 0;
       for (i in options.textures) {
         if (options.textures[i].owner !== undefined) {
           continue;
@@ -681,7 +616,6 @@ FABRIC.SceneGraph.registerNodeType('PostProcessEffect', {
     scene.assignDefaults(options, {
         fragmentShader: undefined,
         shaderUniforms: undefined,
-        
         parentEventHandler: false,
         separateShaderNode: false,
         assignUniformsOnPostDescend:true,
@@ -713,7 +647,6 @@ FABRIC.SceneGraph.registerNodeType('PostProcessEffect', {
     var redrawEventHandler = postProcessEffect.getRedrawEventHandler();
 
     // Set up FBO rendering and draw the textured quad on the way back
-    
     redrawEventHandler.addMember('renderTarget', 'OGLRenderTarget', options.renderTarget);
     
     redrawEventHandler.preDescendBindings.append(
@@ -807,6 +740,11 @@ FABRIC.SceneGraph.defineEffectFromFile = function(effectName, effectfile) {
         effectParameters.shaderUniforms[uniformName] = {
           name: uniformNode.getAttribute('name')
         };
+        if (uniformNode.getAttribute('type')) {
+          effectParameters.shaderUniforms[uniformName].type = uniformNode.getAttribute('type');
+        }else{
+          throw 'missing type information :' + uniformName + ' in effect file :' + effectfile;
+        }
         if (uniformNode.getAttribute('defaultValue')) {
           effectParameters.shaderUniforms[uniformName].defaultValue = eval(uniformNode.getAttribute('defaultValue'));
         }
@@ -892,6 +830,26 @@ FABRIC.SceneGraph.defineEffectFromFile = function(effectName, effectfile) {
       }
     };
   
+  
+    collectDrawParams = function(node) {
+      var len, j, paramNode, paramValue;
+      effectParameters.drawParams = {};
+      len = node.childNodes.length;
+      for (j = 0; j < len; j++) {
+        paramNode = node.childNodes[j];
+        switch (node.childNodes[j].nodeName ) {
+          case '#text':
+            continue;
+          case 'drawMode':
+            effectParameters.drawParams.drawMode = paramNode.getAttribute('value');
+            break;
+          case 'patchVertices':
+            effectParameters.drawParams.patchVertices = parseInt(paramNode.getAttribute('value'));
+            break;
+        }
+      }
+    };
+  
     collectPreprocessorDirectives = function(node) {
       var len, j, directiveNode;
       len = node.childNodes.length;
@@ -913,8 +871,11 @@ FABRIC.SceneGraph.defineEffectFromFile = function(effectName, effectfile) {
         }
         if (node.childNodes[j].nodeName === 'include') {
           // Included file paths are relative to the effect file.
-          source = source + FABRIC.loadResourceURL(
-            effectFilePath + node.childNodes[j].getAttribute('file'), 'text/plain');
+          var path = node.childNodes[j].getAttribute('file');
+          if (path.split('/')[0] !== 'FABRIC_ROOT') {
+            path = effectFilePath + path;
+          }
+          source = source + FABRIC.loadResourceURL(path, 'text/plain');
         }
       }
       return source;
@@ -943,6 +904,9 @@ FABRIC.SceneGraph.defineEffectFromFile = function(effectName, effectfile) {
           break;
         case 'programParams':
           collectProgramParams(childNode);
+          break;
+        case 'drawParams':
+          collectDrawParams(childNode);
           break;
         case 'preprocessordirectives':
           collectPreprocessorDirectives(childNode);
@@ -1031,12 +995,12 @@ FABRIC.SceneGraph.defineEffectFromFile = function(effectName, effectfile) {
         return str[0].toUpperCase() + str.substr(1);
       };
       for (uniformName in effectParameters.shaderUniforms) {
-        if (options[uniformName] !== undefined) {
+        if (options[uniformName] && materialNode.pub['set' + capitalizeFirstLetter(uniformName)]) {
           materialNode.pub['set' + capitalizeFirstLetter(uniformName)](options[uniformName]);
         }
       }
       for (lightName in effectParameters.lights) {
-        if (options[lightName + 'Node']) {
+        if (options[lightName + 'Node'] && materialNode.pub['set' + capitalizeFirstLetter(lightName) + 'Node']) {
           materialNode.pub['set' + capitalizeFirstLetter(lightName) + 'Node'](options[lightName + 'Node']);
         }
       }
@@ -1092,9 +1056,9 @@ FABRIC.SceneGraph.registerNodeType('EdgeDetectionPostProcessEffect', {
     options.fragmentShader = FABRIC.loadResourceURL('FABRIC_ROOT/SceneGraph/Resources/Shaders/EdgeDetectionPixelShader.glsl');
 
     options.shaderUniforms = {
-      width: { name: 'u_width', owner: 'window' },
-      height: { name: 'u_height', owner: 'window' },
-      colorMix: { name: 'u_colorMix' }
+      width: { name: 'u_width', owner: 'window', type:'Integer' },
+      height: { name: 'u_height', owner: 'window', type:'Integer' },
+      colorMix: { name: 'u_colorMix', type:'Scalar' }
     };
 
     var edgeDetectionEffect = scene.constructNode('PostProcessEffect', options);
@@ -1107,7 +1071,7 @@ FABRIC.SceneGraph.registerNodeType('GaussianBlurPostProcessEffect', {
     options.fragmentShader = FABRIC.loadResourceURL('FABRIC_ROOT/SceneGraph/Resources/Shaders/GaussianBlurFragmentShader.glsl');
 
     options.shaderUniforms = {
-      blurSize: { name: 'u_blurSize', defaultValue: 1.0 / 512.0 }
+      blurSize: { name: 'u_blurSize', defaultValue: 1.0 / 512.0, type:'Scalar' }
     };
 
     var edgeDetectionEffect = scene.constructNode('PostProcessEffect', options);

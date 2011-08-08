@@ -2,7 +2,7 @@
 <shader>
 	<name>VertexColorMaterial</name>
 	<uniforms>
-		<uniform name="u_modelViewProjectionMatrix" constant="modelViewProjectionMatrix" owner="instance"/>
+		<uniform name="u_modelViewProjectionMatrix" constant="modelViewProjectionMatrix" type="Mat44" owner="instance"/>
 	</uniforms>
 	<attributes>
 		<attribute name="a_position" binding="positions"/>

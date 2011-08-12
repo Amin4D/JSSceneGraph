@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<shader>
+	<name>ConstantMaterial</name>
+	<uniforms>
+    <uniform name="u_materialColor" constant="color" type="Color"/>
+		<uniform name="u_modelViewProjectionMatrix" constant="modelViewProjectionMatrix" type="Mat44" owner="instance"/>
+	</uniforms>
+	<attributes>
+		<attribute name="a_position" binding="positions"/>
+	</attributes>
+	
+	<vertexshader>
+		<source>
+		
+			uniform mat4 u_modelViewProjectionMatrix;
+			attribute vec4 a_position;
+			
+			void main(){
+				gl_Position = u_modelViewProjectionMatrix * a_position;
+			}
+
+		</source>
+	</vertexshader>
+	
+	<fragmentshader>
+		<source>
+      
+      uniform vec4 u_materialColor;
+
+			void main(){
+				gl_FragColor = u_materialColor;
+			}
+
+		</source>
+	</fragmentshader>
+</shader>

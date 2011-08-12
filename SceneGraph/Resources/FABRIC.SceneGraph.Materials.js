@@ -995,7 +995,7 @@ FABRIC.SceneGraph.defineEffectFromFile = function(effectName, effectfile) {
         return str[0].toUpperCase() + str.substr(1);
       };
       for (uniformName in effectParameters.shaderUniforms) {
-        if (options[uniformName] && materialNode.pub['set' + capitalizeFirstLetter(uniformName)]) {
+        if (options[uniformName] != undefined && materialNode.pub['set' + capitalizeFirstLetter(uniformName)]) {
           materialNode.pub['set' + capitalizeFirstLetter(uniformName)](options[uniformName]);
         }
       }
@@ -1013,6 +1013,7 @@ FABRIC.SceneGraph.defineEffectFromFile = function(effectName, effectfile) {
     }});
 };
 
+FABRIC.SceneGraph.defineEffectFromFile('EmptyMaterial', 'FABRIC_ROOT/SceneGraph/Resources/Shaders/EmptyShader.xml');
 FABRIC.SceneGraph.defineEffectFromFile('FlatMaterial', 'FABRIC_ROOT/SceneGraph/Resources/Shaders/FlatShader.xml');
 FABRIC.SceneGraph.defineEffectFromFile('FlatScreenSpaceMaterial', 'FABRIC_ROOT/SceneGraph/Resources/Shaders/FlatScreenSpaceShader.xml');
 FABRIC.SceneGraph.defineEffectFromFile('PhongMaterial', 'FABRIC_ROOT/SceneGraph/Resources/Shaders/PhongShader.xml');

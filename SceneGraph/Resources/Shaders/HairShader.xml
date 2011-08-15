@@ -2,11 +2,11 @@
 <shader>
 	<name>HairMaterial</name>
 	<uniforms>
-		<uniform name="u_lightPosition" constant="lightPosition" owner="light"/>
-		<uniform name="u_modelViewProjectionMatrix" constant="modelViewProjectionMatrix" owner="instance"/>
-		<uniform name="u_modelViewMatrix" constant="modelViewMatrix"  owner="instance"/>
-		<uniform name="u_normalMatrix" constant="normalMatrix"  owner="instance"/>
-		<uniform name="u_materialSpecularColor" constant="specularColor" defaultValue="FABRIC.RT.rgba(1.0,1.0,0.8,1.0)"/>
+		<uniform name="u_lightPosition" constant="lightPosition" owner="light" type="Vec3"/>
+		<uniform name="u_modelViewProjectionMatrix" constant="modelViewProjectionMatrix" owner="instance" type="Mat44"/>
+		<uniform name="u_modelViewMatrix" constant="modelViewMatrix"  owner="instance" type="Mat44"/>
+		<uniform name="u_normalMatrix" constant="normalMatrix"  owner="instance" type="Mat33"/>
+		<uniform name="u_materialSpecularColor" constant="specularColor" type="Color" defaultValue="FABRIC.RT.rgba(1.0,1.0,0.8,1.0)"/>
 	</uniforms>
 	<attributes>
 		<attribute name="a_position" binding="positions"/>

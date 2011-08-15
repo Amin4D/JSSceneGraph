@@ -32,6 +32,10 @@
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/LinearKeyframe.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Ray.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Bone.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/OGLShaderProgram.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/OGLTexture2D.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/OGLRenderTarget.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/OGLBuffer.js" charset="utf-8"></script>
 
     <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Geometry.js" charset="utf-8"></script>
@@ -126,10 +130,10 @@ FABRIC.SceneGraph.registerNodeType('Hair', {
     // create the node to perform the simulation
     var hairNode = scene.constructNode('Lines', options);
     hairNode.pub.setVertexCount(options.count * (options.segments+1));
-    hairNode.pub.addVertexAttributeValue('normals','Vec3');
+    hairNode.pub.addVertexAttributeValue('normals','Vec3',{genVBO: true});
     hairNode.pub.addVertexAttributeValue('prevpositions','Vec3');
     hairNode.pub.addVertexAttributeValue('prevnormals','Vec3');
-    hairNode.pub.addVertexAttributeValue('vertexColors','Color');
+    hairNode.pub.addVertexAttributeValue('vertexColors','Color',{genVBO: true});
     hairNode.pub.setAttributeDynamic("positions");
     hairNode.pub.setAttributeDynamic("normals");
     
@@ -180,6 +184,7 @@ FABRIC.SceneGraph.registerNodeType('Hair', {
       },
       entryFunctionName: 'simulateHair'
     }));
+    
     hairDGNode.bindings.append(scene.constructOperator({
       operatorName: 'shiftPositions',
       srcFile: 'HairSimulation.kl',
@@ -200,7 +205,7 @@ FABRIC.SceneGraph.registerNodeType('Hair', {
 
 $(document).ready(function() { var scene = FABRIC.SceneGraph.createScene();
   var viewport = scene.constructNode('Viewport', {
-    enableRaycasting: true,
+    enableRaycasting: false,
     windowElement: document.getElementById('FabricContainer')
   });
 
@@ -292,20 +297,34 @@ $(document).ready(function() { var scene = FABRIC.SceneGraph.createScene();
 
   scene.animation.play();
 
-  var errors = scene.getErrors();
-  if (errors.length > 0) {
-    throw (errors.toString());
-  }
-  else {
-    console.log('Done');
-    console.log(scene.getTimerProfiles());
-  }
+  $('#loadingDialog').dialog({
+    modal: true
+  });
+  var count = FABRIC.getAsyncTaskCount();
+  FABRIC.appendOnResolveAsyncTaskCallback(function(label, countRemaining){
+    $('#loadingProgressBar').progressbar({
+      value: (1.0-(countRemaining/count))*100
+    });
+    if(countRemaining===0){
+      $('#loadingDialog').dialog('close');
+      var errors = scene.getErrors();
+      if (errors.length > 0) {
+        throw (errors.toString());
+      }
+      viewport.redraw();
+      return true;
+    }
+  });
 });
 
 </script>
 
   </head> 
   <body>
+    <div id="loadingDialog" title="Loading...">
+      <h4 id="loadingDesc" style="margin-bottom: 10px"></h4>
+      <div id="loadingProgressBar" class="ui-progressbar-value"></div>
+    </div>
     <div id="wrapper">
       <ul id="nav">
         <li><a href="#" id="fabric-logo"><img src="../../../themes/default/_img/projects/fabric-logo.png" /></a></li>

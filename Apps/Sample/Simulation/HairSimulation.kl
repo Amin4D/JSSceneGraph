@@ -160,6 +160,9 @@ operator shiftPositions(
   io Vec3 prevnormals[]
 )
 {
-  incShiftVec3Array(positions,prevpositions);
-  incShiftVec3Array(normals,prevnormals);
+  for ( Size i=1; i<prevpositions.size(); ++i )
+  {
+    prevpositions[i] = positions[i-1];
+    prevnormals[i] = normals[i-1];
+  }
 }

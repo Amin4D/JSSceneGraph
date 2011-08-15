@@ -99,6 +99,7 @@ operator simulateHair(
     
     position = pose[bone].transform(localposition[index]) * weight;
     normal = pose[bone].ori.transform(localnormal[index]) * weight;
+
     weight = boneWeights[rootIndex].row0.y;
     if(weight > 0.00001)
     {

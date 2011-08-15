@@ -33,8 +33,6 @@
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Ray.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Bone.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/OGLShaderProgram.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/OGLTexture2D.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/OGLRenderTarget.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/OGLBuffer.js" charset="utf-8"></script>
 
     <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.js" charset="utf-8"></script>
@@ -96,10 +94,11 @@ FABRIC.SceneGraph.registerNodeType('Hair', {
     var pointDGNode = pointNode.getAttributesDGNode();
     pointDGNode.addDependency(characterMeshNode.getAttributesDGNode(),'meshattributes');
     pointDGNode.addDependency(characterMeshNode.getUniformsDGNode(),'meshuniforms');
+    
     pointDGNode.bindings.append(scene.constructOperator({
       operatorName: 'initHair',
       srcFile: 'HairSimulation.kl',
-      parameterBinding: [
+      parameterLayout: [
         "self.index",
         "meshattributes.positions[]",
         "meshattributes.normals[]",
@@ -161,7 +160,7 @@ FABRIC.SceneGraph.registerNodeType('Hair', {
     hairDGNode.bindings.append(scene.constructOperator({
       operatorName: 'simulateHair',
       srcFile: 'HairSimulation.kl',
-      parameterBinding: [
+      parameterLayout: [
         "self.index",
         "points.positions[]",
         "points.normals[]",
@@ -184,11 +183,11 @@ FABRIC.SceneGraph.registerNodeType('Hair', {
       },
       entryFunctionName: 'simulateHair'
     }));
-    
+
     hairDGNode.bindings.append(scene.constructOperator({
       operatorName: 'shiftPositions',
       srcFile: 'HairSimulation.kl',
-      parameterBinding: [
+      parameterLayout: [
         "self.positions[]",
         "self.prevpositions[]",
         "self.normals[]",
@@ -211,7 +210,7 @@ $(document).ready(function() { var scene = FABRIC.SceneGraph.createScene();
 
   // Create a camera to draw the scene from
   var camera = scene.constructNode('TargetCamera', {
-      position: FABRIC.RT.vec3(32, 20, 0),
+      position: FABRIC.RT.vec3(0, 10, 12).scale(0.5),
       target: FABRIC.RT.vec3(0, 2, 0),
       nearDistance: 0.1,
       farDistance: 200
@@ -232,7 +231,7 @@ $(document).ready(function() { var scene = FABRIC.SceneGraph.createScene();
     lightNode: light
   });
 
-  //* T - character
+  // T - character
   var assetNodes = scene.importAssetFile('../BasicDemos/Models/envelope.dae', { bindToGlobalTime: false });
   var skinMaterial = scene.constructNode('PhongSkinningMaterial', {
       lightNode: light,
@@ -251,32 +250,6 @@ $(document).ready(function() { var scene = FABRIC.SceneGraph.createScene();
       gravity: FABRIC.RT.vec2(0.4,0.6),
       count: 25000
     });
-  //*/
-
-  /* Monster Character - not yet working
-  var assetNodes = scene.importAssetFile('../../Private/Monster/Models/monster_low_mocap_02.dae', {
-    scaleFactor: 1.0,
-    bindToGlobalTime: false,
-    nodesToIgnore: {image: true}
-  });
-  var skinMaterial = scene.constructNode('PhongSkinningMaterial', {
-      lightNode: light,
-      diffuseColor: FABRIC.RT.rgba(0.0, 0.25, 1.0, 1.0),
-      numBones: assetNodes.bodyCharacterSkeleton.getNumBones()
-    });
-  assetNodes.bodyInstance.setMaterialNode(skinMaterial);
-  var animationController = assetNodes.bodyAnimationController;
-
-  var hairGeometry = scene.constructNode('Hair', {
-      characterMeshNode: assetNodes.body,
-      characterRigNode: assetNodes.bodyCharacterRig,
-      segments: 5,
-      length: FABRIC.RT.vec2(0.5,1),
-      stiffness: FABRIC.RT.vec2(0.75,1.5),
-      gravity: FABRIC.RT.vec2(0.4,0.6),
-      count: 2//25000
-    });
-  //*/
 
   var hairLines = scene.constructNode('Instance', {
       geometryNode: hairGeometry,
@@ -295,8 +268,6 @@ $(document).ready(function() { var scene = FABRIC.SceneGraph.createScene();
       scene.redrawAllWindows();
     });
 
-  scene.animation.play();
-
   $('#loadingDialog').dialog({
     modal: true
   });
@@ -311,6 +282,7 @@ $(document).ready(function() { var scene = FABRIC.SceneGraph.createScene();
       if (errors.length > 0) {
         throw (errors.toString());
       }
+      scene.animation.play();
       viewport.redraw();
       return true;
     }

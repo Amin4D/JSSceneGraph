@@ -527,7 +527,7 @@ FABRIC.SceneGraph.registerNodeType('CharacterRig', {
             operatorName: 'calcSkinningXfos',
             srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/characterRig.kl',
             entryFunctionName: 'calcSkinningXfos',
-            parameterBinding: ['self.pose', 'skeleton.bones', 'self.boneXfos']
+            parameterLayout: ['self.pose', 'skeleton.bones', 'self.boneXfos']
           }));
         
         // remove the function once more

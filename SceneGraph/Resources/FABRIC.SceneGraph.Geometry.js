@@ -28,7 +28,7 @@ FABRIC.SceneGraph.registerNodeType('Geometry', {
       bboxdgnode,
       redrawEventHandler,
       deformationbufferinterfaces = [],
-      shaderUniforms = [];
+      shaderUniforms = [],
       shaderAttributes = [];
 
     attributesdgnode.addDependency(uniformsdgnode, 'uniforms');

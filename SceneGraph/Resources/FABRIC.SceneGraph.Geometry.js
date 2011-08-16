@@ -111,6 +111,15 @@ FABRIC.SceneGraph.registerNodeType('Geometry', {
       }
       attributesdgnode.setBulkData(attributeData);
     };
+    geometryNode.pub.getBoundingBox = function(){
+      if(!bboxdgnode){
+        throw("Goemetry does not support a Bounding Box");
+      }
+      return {
+        min: bboxdgnode.getData('min'),
+        max: bboxdgnode.getData('max')
+      }
+    };
     geometryNode.pub.loadResourceFiles = function(filepath) {
 
       var fileArray = filepath.split('.');

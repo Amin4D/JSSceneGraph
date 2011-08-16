@@ -9,6 +9,8 @@ var constructCurveEditor = function(domRootID, keyframeTrackNode, options){
   var rootDomNode = document.getElementById(domRootID);
   var windowWidth = rootDomNode.clientWidth;
   var windowHeight = rootDomNode.clientHeight;
+  var isBezier = keyframeTrackNode.isTypeOf('BezierKeyAnimationTrack');
+  console.log(isBezier);
   
   var svgRoot = FABRIC.createSVGRootElem(domRootID);
 
@@ -112,8 +114,10 @@ var constructCurveEditor = function(domRootID, keyframeTrackNode, options){
       }
   
       var drawKey = function(keyIndex, keyData) {
-        if((keyData.time + keyData.intangent.x) < timeRange.y &&
-           (keyData.time + keyData.outtangent.x) > timeRange.x ){
+        
+        if(isBezier ? ((keyData.time + keyData.intangent.x) < timeRange.y &&
+           (keyData.time + keyData.outtangent.x) > timeRange.x) :
+           keyData.time < timeRange.y && keyData.time > timeRange.x ){
           ///////////////////////////////////////////////
           // Key
           var keySsVal = screenXfo.toScreenSpace(FABRIC.vec2(keyData.time, keyData.value));
@@ -131,17 +135,21 @@ var constructCurveEditor = function(domRootID, keyframeTrackNode, options){
                 var deltat, i=0;
                 if(keyIndex > 0){
                   deltat = keyData.time - prevKey.time;
-                  tangentNormalizedValues[i++] = prevKey.outtangent.x / deltat;
-                  tangentNormalizedValues[i++] = prevKey.outtangent.y / prevKey.outtangent.x;
-                  tangentNormalizedValues[i++] = keyData.intangent.x / deltat;
-                  tangentNormalizedValues[i++] = keyData.intangent.y / keyData.intangent.x;
+                  if(isBezier) {
+                    tangentNormalizedValues[i++] = prevKey.outtangent.x / deltat;
+                    tangentNormalizedValues[i++] = prevKey.outtangent.y / prevKey.outtangent.x;
+                    tangentNormalizedValues[i++] = keyData.intangent.x / deltat;
+                    tangentNormalizedValues[i++] = keyData.intangent.y / keyData.intangent.x;
+                  }
                 }
                 if(keyIndex < trackData.keys.length-1){;
                   deltat = nextKey.time - keyData.time;
-                  tangentNormalizedValues[i++] = keyData.outtangent.x / deltat;
-                  tangentNormalizedValues[i++] = keyData.outtangent.y / keyData.outtangent.x;
-                  tangentNormalizedValues[i++] = nextKey.intangent.x / deltat;
-                  tangentNormalizedValues[i++] = nextKey.intangent.y / nextKey.intangent.x;
+                  if(isBezier) {
+                    tangentNormalizedValues[i++] = keyData.outtangent.x / deltat;
+                    tangentNormalizedValues[i++] = keyData.outtangent.y / keyData.outtangent.x;
+                    tangentNormalizedValues[i++] = nextKey.intangent.x / deltat;
+                    tangentNormalizedValues[i++] = nextKey.intangent.y / nextKey.intangent.x;
+                  }
                 }
             })
             .addOnDragCallback(
@@ -152,21 +160,25 @@ var constructCurveEditor = function(domRootID, keyframeTrackNode, options){
                 var deltat, i=0;
                 if(keyIndex > 0){
                   deltat = keyData.time - prevKey.time;
-                  prevKey.outtangent.x = deltat * tangentNormalizedValues[i++];
-                  prevKey.outtangent.y = prevKey.outtangent.x * tangentNormalizedValues[i++];
-                  keyData.intangent.x = deltat * tangentNormalizedValues[i++];
-                  keyData.intangent.y = keyData.intangent.x * tangentNormalizedValues[i++];
-                  prevKey.setOutTan(prevKey.outtangent, true);
-                  keyData.setInTan(keyData.intangent);
+                  if(isBezier) {
+                    prevKey.outtangent.x = deltat * tangentNormalizedValues[i++];
+                    prevKey.outtangent.y = prevKey.outtangent.x * tangentNormalizedValues[i++];
+                    keyData.intangent.x = deltat * tangentNormalizedValues[i++];
+                    keyData.intangent.y = keyData.intangent.x * tangentNormalizedValues[i++];
+                    prevKey.setOutTan(prevKey.outtangent, true);
+                    keyData.setInTan(keyData.intangent);
+                  }
                 }
                 if(keyIndex < trackData.keys.length){
                   deltat = nextKey.time - keyData.time;
-                  keyData.outtangent.x = deltat * tangentNormalizedValues[i++];
-                  keyData.outtangent.y = keyData.outtangent.x * tangentNormalizedValues[i++];
-                  nextKey.intangent.x = deltat * tangentNormalizedValues[i++];
-                  nextKey.intangent.y = nextKey.intangent.x * tangentNormalizedValues[i++];
-                  keyData.setOutTan(keyData.outtangent);
-                  nextKey.setInTan(nextKey.intangent, true);
+                  if(isBezier) {
+                    keyData.outtangent.x = deltat * tangentNormalizedValues[i++];
+                    keyData.outtangent.y = keyData.outtangent.x * tangentNormalizedValues[i++];
+                    nextKey.intangent.x = deltat * tangentNormalizedValues[i++];
+                    nextKey.intangent.y = nextKey.intangent.x * tangentNormalizedValues[i++];
+                    keyData.setOutTan(keyData.outtangent);
+                    nextKey.setInTan(nextKey.intangent, true);
+                  }
                 }
                 
                 keyframeTrackNode.setKeyData(trackIndex, keyIndex, keyData);
@@ -175,94 +187,95 @@ var constructCurveEditor = function(domRootID, keyframeTrackNode, options){
               });
           var keyNode = keyGroupNode.createRect().translate(-4, -4).size(8, 8).stroke(FABRIC.rgb(1, 1, 1));
           
-          
-          ///////////////////////////////////////////////
-          // In Tangent
-          if(keyData.time > timeRange.x){
-            var inTanSsVal = screenXfo.toScreenSpace(keyData.intangent, true);
-            var inTanLineNode = keyGroupNode.createPath().addClass('KeyframeHandle');
-            inTanLineNode.attr('d', 'M 0 0 L ' + inTanSsVal.x + ' ' + inTanSsVal.y);
-            var inTanNode = keyGroupNode.createRect()
-                                                .translate(inTanSsVal.x - 3, inTanSsVal.y - 3)
-                                                .size(6, 6).stroke(FABRIC.rgb(1, 1, 1));
-            inTanNode.draggable({ mouseButton: 0 })
-              .addOnDragBeginCallback(
-                function(evt){
-                })
-              .addOnDragCallback(
-                function(evt) {
-                  keyData.intangent = screenXfo.toGraphSpace(evt.localPos, true);
-                  // Clamp the handle lengths > 0 && < deltat
-                  if(!evt.altKey && keyIndex > 0){
-                    var deltat = prevKey.time - keyData.time;
-                    keyData.intangent.x = keyData.intangent.x < deltat ? deltat : keyData.intangent.x;
-                  }
-                  keyData.intangent.x = keyData.intangent.x > -0.1 ? -0.1 : keyData.intangent.x;
-                  
-                  if(!evt.altKey && keyIndex < trackData.keys.length-1){
-                    keyData.outtangent.y = (keyData.intangent.y / keyData.intangent.x) * keyData.outtangent.x;
-                    keyData.setOutTan(keyData.outtangent);
-                  }
-                  keyData.setInTan(keyData.intangent);
-                  keyframeTrackNode.setKeyData(trackIndex, keyIndex, keyData);
-                  updateCurve();
-                  scene.redrawAllWindows();
-                });
-          }
-          keyData.setInTan = function(intangent, setKeyData){
-            if(inTanNode){
-              var inTanSsVal = screenXfo.toScreenSpace(intangent, true);
-              inTanNode.translate(inTanSsVal.x - 3, inTanSsVal.y - 3)
+          if(isBezier) {
+            ///////////////////////////////////////////////
+            // In Tangent
+            if(keyData.time > timeRange.x){
+              var inTanSsVal = screenXfo.toScreenSpace(keyData.intangent, true);
+              var inTanLineNode = keyGroupNode.createPath().addClass('KeyframeHandle');
               inTanLineNode.attr('d', 'M 0 0 L ' + inTanSsVal.x + ' ' + inTanSsVal.y);
-            }
-            if(setKeyData){
-              keyData.intangent = intangent;
-              keyframeTrackNode.setKeyData(trackIndex, keyIndex, keyData);
-            }
-          }
-          ///////////////////////////////////////////////
-          // Out Tangent
-          if(keyData.time < timeRange.y){
-            var outTanSsVal = screenXfo.toScreenSpace(keyData.outtangent, true);
-            var outTanLineNode = keyGroupNode.createPath().addClass('KeyframeHandle');
-            outTanLineNode.attr('d', 'M 0 0 L ' + outTanSsVal.x + ' ' + outTanSsVal.y);
-            var outTanNode = keyGroupNode.createRect()
-                                                 .translate(outTanSsVal.x - 3, outTanSsVal.y - 3)
-                                                 .size(6, 6).stroke(FABRIC.rgb(1, 1, 1));
-    
-            outTanNode.draggable({ mouseButton: 0 })
-              .addOnDragBeginCallback(
-                function(evt){
-                })
-              .addOnDragCallback(
-                function(evt) {
-                  keyData.outtangent = screenXfo.toGraphSpace(evt.localPos, true);
-                  // Clamp the handle lengths > 0 && < deltat
-                 if(keyIndex < trackData.keys.length){
-                    var deltat = nextKey.time - keyData.time;
-                    keyData.outtangent.x = keyData.outtangent.x > deltat ? deltat : keyData.outtangent.x;
-                  }
-                  keyData.outtangent.x = keyData.outtangent.x < 0.1 ? 0.1 : keyData.outtangent.x;
-                  
-                  if(!evt.altKey && keyIndex < trackData.keys.length-1){
-                    keyData.intangent.y = (keyData.outtangent.y / keyData.outtangent.x) * keyData.intangent.x;
+              var inTanNode = keyGroupNode.createRect()
+                                                  .translate(inTanSsVal.x - 3, inTanSsVal.y - 3)
+                                                  .size(6, 6).stroke(FABRIC.rgb(1, 1, 1));
+              inTanNode.draggable({ mouseButton: 0 })
+                .addOnDragBeginCallback(
+                  function(evt){
+                  })
+                .addOnDragCallback(
+                  function(evt) {
+                    keyData.intangent = screenXfo.toGraphSpace(evt.localPos, true);
+                    // Clamp the handle lengths > 0 && < deltat
+                    if(!evt.altKey && keyIndex > 0){
+                      var deltat = prevKey.time - keyData.time;
+                      keyData.intangent.x = keyData.intangent.x < deltat ? deltat : keyData.intangent.x;
+                    }
+                    keyData.intangent.x = keyData.intangent.x > -0.1 ? -0.1 : keyData.intangent.x;
+                    
+                    if(!evt.altKey && keyIndex < trackData.keys.length-1){
+                      keyData.outtangent.y = (keyData.intangent.y / keyData.intangent.x) * keyData.outtangent.x;
+                      keyData.setOutTan(keyData.outtangent);
+                    }
                     keyData.setInTan(keyData.intangent);
-                  }
-                  keyData.setOutTan(keyData.outtangent);
-                  keyframeTrackNode.setKeyData(trackIndex, keyIndex, keyData);
-                  updateCurve();
-                  scene.redrawAllWindows();
-                });
-          }
-          keyData.setOutTan = function(outtangent, setKeyData){
-            if(outTanNode){
-              var outTanSsVal = screenXfo.toScreenSpace(outtangent, true);
-              outTanNode.translate(outTanSsVal.x - 3, outTanSsVal.y - 3)
-              outTanLineNode.attr('d', 'M 0 0 L ' + outTanSsVal.x + ' ' + outTanSsVal.y);
+                    keyframeTrackNode.setKeyData(trackIndex, keyIndex, keyData);
+                    updateCurve();
+                    scene.redrawAllWindows();
+                  });
             }
-            if(setKeyData){
-              keyData.outtangent = outtangent;
-              keyframeTrackNode.setKeyData(trackIndex, keyIndex, keyData);
+            keyData.setInTan = function(intangent, setKeyData){
+              if(inTanNode){
+                var inTanSsVal = screenXfo.toScreenSpace(intangent, true);
+                inTanNode.translate(inTanSsVal.x - 3, inTanSsVal.y - 3)
+                inTanLineNode.attr('d', 'M 0 0 L ' + inTanSsVal.x + ' ' + inTanSsVal.y);
+              }
+              if(setKeyData){
+                keyData.intangent = intangent;
+                keyframeTrackNode.setKeyData(trackIndex, keyIndex, keyData);
+              }
+            }
+            ///////////////////////////////////////////////
+            // Out Tangent
+            if(keyData.time < timeRange.y){
+              var outTanSsVal = screenXfo.toScreenSpace(keyData.outtangent, true);
+              var outTanLineNode = keyGroupNode.createPath().addClass('KeyframeHandle');
+              outTanLineNode.attr('d', 'M 0 0 L ' + outTanSsVal.x + ' ' + outTanSsVal.y);
+              var outTanNode = keyGroupNode.createRect()
+                                                   .translate(outTanSsVal.x - 3, outTanSsVal.y - 3)
+                                                   .size(6, 6).stroke(FABRIC.rgb(1, 1, 1));
+      
+              outTanNode.draggable({ mouseButton: 0 })
+                .addOnDragBeginCallback(
+                  function(evt){
+                  })
+                .addOnDragCallback(
+                  function(evt) {
+                    keyData.outtangent = screenXfo.toGraphSpace(evt.localPos, true);
+                    // Clamp the handle lengths > 0 && < deltat
+                   if(keyIndex < trackData.keys.length){
+                      var deltat = nextKey.time - keyData.time;
+                      keyData.outtangent.x = keyData.outtangent.x > deltat ? deltat : keyData.outtangent.x;
+                    }
+                    keyData.outtangent.x = keyData.outtangent.x < 0.1 ? 0.1 : keyData.outtangent.x;
+                    
+                    if(!evt.altKey && keyIndex < trackData.keys.length-1){
+                      keyData.intangent.y = (keyData.outtangent.y / keyData.outtangent.x) * keyData.intangent.x;
+                      keyData.setInTan(keyData.intangent);
+                    }
+                    keyData.setOutTan(keyData.outtangent);
+                    keyframeTrackNode.setKeyData(trackIndex, keyIndex, keyData);
+                    updateCurve();
+                    scene.redrawAllWindows();
+                  });
+            }
+            keyData.setOutTan = function(outtangent, setKeyData){
+              if(outTanNode){
+                var outTanSsVal = screenXfo.toScreenSpace(outtangent, true);
+                outTanNode.translate(outTanSsVal.x - 3, outTanSsVal.y - 3)
+                outTanLineNode.attr('d', 'M 0 0 L ' + outTanSsVal.x + ' ' + outTanSsVal.y);
+              }
+              if(setKeyData){
+                keyData.outtangent = outtangent;
+                keyframeTrackNode.setKeyData(trackIndex, keyIndex, keyData);
+              }
             }
           }
         }

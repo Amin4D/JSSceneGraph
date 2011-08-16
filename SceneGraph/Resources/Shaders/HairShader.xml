@@ -60,7 +60,7 @@
         vec3 N = normalize(normal);
         vec3 L = normalize(lightDir);
         vec3 V = normalize(viewDir);
-        float td = clamp(0.7 + dot(N,L),0.3,1);
+        float td = clamp(0.7 + dot(N,L),0.3,1.0);
         float nd = 1.0 - abs(dot(N,V));
         nd = nd * nd * nd * nd * nd;
       

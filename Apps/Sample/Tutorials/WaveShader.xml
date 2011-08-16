@@ -41,7 +41,7 @@
 				gl_Position = u_modelViewProjectionMatrix * wavePosition;
         
         // deform the normal
-        normal = u_normalMatrix * (a_normal + vec3(0.0,1.0,0.0) * waveFactor * clamp(u_amplitude * 0.5,0,1));
+        normal = u_normalMatrix * (a_normal + vec3(0.0,1.0,0.0) * waveFactor * clamp(u_amplitude * 0.5,0.0,1.0));
 			}
 
 		</source>

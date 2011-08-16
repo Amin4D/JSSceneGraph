@@ -463,6 +463,7 @@ FABRIC.SceneGraph = {
     };
     //////////////////////////////////////////////////////////
     // Accessors
+    var globalsNode;
     scene.getGlobalsNode = function() {
       return globalsNode;
     };
@@ -648,7 +649,6 @@ FABRIC.SceneGraph = {
     // Window <-> SceneGraph raycast event handler firewall
     var sceneRaycastEventHandler = scene.constructEventHandlerNode('Scene_raycast');
 
-    var globalsNode;
     if (sceneOptions.constructGlobalsNode) {
       globalsNode = scene.constructDependencyGraphNode('Scene_globals');
 

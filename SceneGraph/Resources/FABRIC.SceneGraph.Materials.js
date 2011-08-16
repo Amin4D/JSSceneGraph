@@ -16,14 +16,14 @@ FABRIC.SceneGraph.registerNodeType('Texture', {
 FABRIC.SceneGraph.registerNodeType('Image', {
   briefDesc: 'The Image node holds image data, and optionally creates an URL image loader and an OpenGL texture.',
   detailedDesc: 'The Image node holds generic image data (members: pixels, width, height), which might be HDR (member: hdr). ' +
-                'If \'options.createResouceLoadNode\', an URL-based image loader will be incorporated, and currently supports ' +
+                'If \'options.createResourceLoadNode\', an URL-based image loader will be incorporated, and currently supports ' +
                 '.png, .tga, .exr and .hdr image formats. If \'options.createLoadTextureEventHandler\', an OpenGL texture ' +
                 'will be created from the image.',
   factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
       wantHDR: false,
       wantRGBA: true,
-      createResouceLoadNode: true,
+      createResourceLoadNode: true,
       createLoadTextureEventHandler: true
     });
 
@@ -44,7 +44,7 @@ FABRIC.SceneGraph.registerNodeType('Image', {
     imageNode.addMemberInterface(dgnode, 'width');
     imageNode.addMemberInterface(dgnode, 'height');
 
-    if (options.createResouceLoadNode) {
+    if (options.createResourceLoadNode) {
       resourceLoadNode = scene.constructNode('ResourceLoad', options);
       resourceloaddgnode = resourceLoadNode.getDGLoadNode();
       dgnode.addDependency(resourceloaddgnode, 'resource');
@@ -103,7 +103,7 @@ FABRIC.SceneGraph.registerNodeType('Video', {
       });
 
     // ensure to use the right settings for video
-    options.createResouceLoadNode = false;
+    options.createResourceLoadNode = false;
     options.createLoadTextureEventHandler = false;
     options.wantHDR = false;
     options.wantRGBA = false;

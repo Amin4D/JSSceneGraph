@@ -688,7 +688,7 @@ FABRIC.SceneGraph.registerNodeType('Instance', {
             entryFunctionName: 'loadIndexedModelProjectionMatrices',
             preProcessorDefinitions: preProcessorDefinitions,
             parameterLayout: [
-              'shader.uniformValues',
+              'shader.shaderProgram',
               'transform.' + transformNodeMember + '[]',
               'self.transformNodeIndex',
               'camera.cameraMat44',

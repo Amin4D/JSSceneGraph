@@ -23,7 +23,7 @@ operator drawCharacterInstance(
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
   }
   else{
-    report("ERROR: Character Material must use bone matrices.");
+    //report("ERROR: Character Material must use bone matrices.");
     
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indicesBuffer.bufferID);
     glDrawElements(GL_TRIANGLES, indicesBuffer.elementCount, GL_UNSIGNED_INT, NULL);

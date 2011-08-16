@@ -1034,59 +1034,6 @@ FABRIC.SceneGraph.defineEffectFromFile('NormalMaterial', 'FABRIC_ROOT/SceneGraph
 FABRIC.SceneGraph.defineEffectFromFile('PhongTesselationMaterial', 'FABRIC_ROOT/SceneGraph/Resources/Shaders/PhongTesselationShader.xml');
 FABRIC.SceneGraph.defineEffectFromFile('HairMaterial', 'FABRIC_ROOT/SceneGraph/Resources/Shaders/HairShader.xml');
 
-FABRIC.SceneGraph.registerNodeType('PointSpriteMaterial', {
-  factoryFn: function(options, scene) {
-
-    scene.assignDefaults(options, {
-        pointSize: 5,
-        positionsVec4:false
-      });
-
-    var pointSpriteTextureNode = options.spriteTextureNode;
-    if (pointSpriteTextureNode === undefined) {
-      pointSpriteTextureNode = scene.constructNode('PointSpriteTexture');
-    }
-    options.shaderUniforms = {
-      modelViewProjectionMatrix: { name: 'u_modelViewProjectionMatrix', owner: 'instance' },
-      modelViewMatrix: { name: 'u_modelViewMatrix', owner: 'instance' },
-      spriteTexture: { name: 'u_splatSampler', owner: 'texture' }
-    };
-    options.shaderAttributes = {
-      vertexColors: { name: 'a_color' },
-      positions: { name: 'a_position' }
-    };
-    
-    options.textures = {
-      spriteTexture: { node: pointSpriteTextureNode.pub }
-    };
-    options.vertexShader = FABRIC.loadResourceURL('FABRIC_ROOT/SceneGraph/Resources/Shaders/PointSpriteVertexShader.glsl');
-    options.fragmentShader = FABRIC.loadResourceURL('FABRIC_ROOT/SceneGraph/Resources/Shaders/PointSpriteFragmentShader.glsl');
-
-    var pointSpriteMaterialNode = scene.constructNode('Material', options);
-    
-    // TODO: Stop using fixed function pipeline calls. Use Geometry shaders
-    var dgnode = pointSpriteMaterialNode.constructDGNode('DGNode');
-    pointSpriteMaterialNode.getRedrawEventHandler().addScope('material', dgnode);
-
-    dgnode.addMember('pointSize', 'Scalar', options.pointSize);
-    pointSpriteMaterialNode.addMemberInterface(dgnode, 'pointSize', true);
-    
-    pointSpriteMaterialNode.getRedrawEventHandler().preDescendBindings.append(scene.constructOperator({
-        operatorName: 'preDrawSpritePoints',
-        srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/drawPoints.kl',
-        entryFunctionName: 'preDrawSpritePoints',
-        parameterBinding: ['material.pointSize']
-      }));
-    pointSpriteMaterialNode.getRedrawEventHandler().postDescendBindings.append(scene.constructOperator({
-        operatorName: 'postDrawSpritePoints',
-        srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/drawPoints.kl',
-        entryFunctionName: 'postDrawSpritePoints',
-        parameterBinding: []
-      }));
-
-    return pointSpriteMaterialNode;
-  }});
-
 FABRIC.SceneGraph.registerNodeType('BloomPostProcessEffect', {
   factoryFn: function(options, scene) {
     options.fragmentShader = FABRIC.loadResourceURL('FABRIC_ROOT/SceneGraph/Resources/Shaders/BloomPixelShader.glsl');

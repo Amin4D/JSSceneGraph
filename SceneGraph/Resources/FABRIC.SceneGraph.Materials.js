@@ -670,14 +670,6 @@ FABRIC.SceneGraph.registerNodeType('PointSpriteMaterial', {
 
 FABRIC.SceneGraph.registerNodeType('TransparentMaterial', {
   factoryFn: function(options, scene) {
-    scene.assignDefaults(options, {
-        enableOptions: [FABRIC.SceneGraph.OpenGLConstants.GL_DEPTH_TEST,
-                             FABRIC.SceneGraph.OpenGLConstants.GL_BLEND],
-        cullFace: FABRIC.SceneGraph.OpenGLConstants.GL_BACK,
-        blendModeSfactor: FABRIC.SceneGraph.OpenGLConstants.GL_SRC_ALPHA,/*GL_SRC_ALPHA*/
-        blendModeDfactor: FABRIC.SceneGraph.OpenGLConstants.GL_ONE_MINUS_SRC_ALPHA/*GL_ONE_MINUS_SRC_ALPHA*/
-      });
-    
     options.parentEventHandler = scene.getSceneRedrawTransparentObjectsEventHandler();
     var transparentMaterial = scene.constructNode('Material', options);
     return transparentMaterial;
@@ -906,9 +898,8 @@ FABRIC.SceneGraph.defineEffectFromFile = function(effectName, effectfile) {
       }
     };
   
-  
     collectDrawParams = function(node) {
-      var len, j, paramNode, paramValue;
+      var len, j, paramNode;
       effectParameters.drawParams = {};
       len = node.childNodes.length;
       for (j = 0; j < len; j++) {
@@ -921,6 +912,51 @@ FABRIC.SceneGraph.defineEffectFromFile = function(effectName, effectfile) {
             break;
           case 'patchVertices':
             effectParameters.drawParams.patchVertices = parseInt(paramNode.getAttribute('value'));
+            break;
+        }
+      }
+    };
+    
+    collectOGLStateParams = function(node) {
+      var collectParamArray = function(node) {
+        var len, j, paramNode;
+        var vals = [];
+        len = node.childNodes.length;
+        for (j = 0; j < len; j++) {
+          paramNode = node.childNodes[j];
+          switch (paramNode.nodeName ) {
+            case '#text':
+              continue;
+            default:
+              vals.push(FABRIC.SceneGraph.OpenGLConstants[paramNode.firstChild.data]);
+              break;
+          }
+        }
+        return vals;
+      }
+      
+      var len, j, paramNode, paramValue;
+      effectParameters.drawParams = {};
+      len = node.childNodes.length;
+      for (j = 0; j < len; j++) {
+        paramNode = node.childNodes[j];
+        switch (paramNode.nodeName ) {
+          case '#text':
+            continue;
+          case 'disableOptions':
+            effectParameters.disableOptions = collectParamArray(paramNode);
+            break;
+          case 'enableOptions':
+            effectParameters.enableOptions = collectParamArray(paramNode);
+            break;
+          case 'cullFace':
+            effectParameters.cullFace = FABRIC.SceneGraph.OpenGLConstants[paramNode.firstChild.data];
+            break;
+          case 'blendModeSfactor':
+            effectParameters.blendModeSfactor = FABRIC.SceneGraph.OpenGLConstants[paramNode.firstChild.data];
+            break;
+          case 'blendModeDfactor':
+            effectParameters.blendModeSfactor = FABRIC.SceneGraph.OpenGLConstants[paramNode.firstChild.data];
             break;
         }
       }
@@ -984,8 +1020,8 @@ FABRIC.SceneGraph.defineEffectFromFile = function(effectName, effectfile) {
         case 'programParams':
           collectProgramParams(childNode);
           break;
-        case 'drawParams':
-          collectDrawParams(childNode);
+        case 'openglstateparams':
+          collectOGLStateParams(childNode);
           break;
         case 'preprocessordirectives':
           collectPreprocessorDirectives(childNode);

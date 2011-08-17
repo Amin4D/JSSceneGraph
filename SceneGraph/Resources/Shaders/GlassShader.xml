@@ -26,6 +26,17 @@
   <lights>
     <light type="Light" binding="light"/>
   </lights>
+  
+  <openglstateparams>
+    <enableOptions>
+      <option>GL_DEPTH_TEST</option>
+      <option>GL_BLEND</option>
+    </enableOptions>
+    <cullFace>GL_BACK</cullFace>
+    <blendModeSfactor>GL_SRC_ALPHA</blendModeSfactor>
+    <blendModeDfactor>GL_ONE_MINUS_SRC_ALPHA</blendModeDfactor>
+  </openglstateparams>
+  
   <vertexshader>
     <source>
       uniform mat4 u_modelViewProjectionMatrix;

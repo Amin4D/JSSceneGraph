@@ -350,8 +350,15 @@ FABRIC.SceneGraph.registerNodeType('Shader', {
     }else{
       redrawEventHandler.preDescendBindings.append(loadShaderOp);
     }
-    if(options.disableOptions.length > 0 || options.enableOptions.length > 0){
-      redrawEventHandler.postDescendBindings.append(scene.constructOperator({
+    
+    // Note: This optimization causes the lamborgini scene to crash
+    // after a few seconds. The OpenGL stack is probably overflowing.
+    // Ideally we don't need this when we aren't changing options.
+  /*  if((options.disableOptions &&
+        options.disableOptions.length > 0) ||
+       (options.enableOptions &&
+        options.enableOptions.length > 0)){
+  */  redrawEventHandler.postDescendBindings.append(scene.constructOperator({
         operatorName: 'unloadShader',
         srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadShader.kl',
         entryFunctionName: 'unloadShader',
@@ -359,7 +366,7 @@ FABRIC.SceneGraph.registerNodeType('Shader', {
           'self.shaderProgram'
         ]
       }));
-    }
+// }
     
     if (options.parentEventHandler !== false) {
       // The shader is registered with the scenegraph, which will

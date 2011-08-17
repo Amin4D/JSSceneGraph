@@ -8,7 +8,7 @@ operator loadObj(
   io FabricResource resource,
   io Data objParseHandle
 ) {
-//  report "OBJ decode " + url;
+  report "OBJ decode " + url;
   FabricOBJDecode(resource.data, resource.dataSize, objParseHandle);
 
   Boolean hadErrors;
@@ -27,7 +27,7 @@ operator setObjVertexCount(
   io Size newCount
 ) {
   FabricOBJGetNbPoints(objParseHandle, newCount);
-//  report "OBJ setObjVertexCount: " + newCount;
+  report "OBJ setObjVertexCount: " + newCount;
 }
 
 operator setObjGeom(
@@ -48,4 +48,5 @@ operator setObjGeom(
   {
     FabricOBJGetTextureCoords( objParseHandle, uvs );
   }
+  report "OBJ setObjGeom: Done";
 }

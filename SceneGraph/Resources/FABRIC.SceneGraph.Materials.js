@@ -1004,6 +1004,9 @@ FABRIC.SceneGraph.defineEffectFromFile = function(effectName, effectfile) {
       if(!effectParameters){
         parseEffectFile();
       }
+    scene.assignDefaults(options, {
+      prototypeMaterialType: effectParameters.prototypeMaterialType
+    });
       var effectInstanceParameters,
         directives = {},
         preProcessCode = false,
@@ -1051,7 +1054,7 @@ FABRIC.SceneGraph.defineEffectFromFile = function(effectName, effectfile) {
         }
       }
 
-      materialNode = scene.constructNode(effectParameters.prototypeMaterialType, effectInstanceParameters);
+      materialNode = scene.constructNode(options.prototypeMaterialType, effectInstanceParameters);
       
       var capitalizeFirstLetter = function(str) {
         return str[0].toUpperCase() + str.substr(1);

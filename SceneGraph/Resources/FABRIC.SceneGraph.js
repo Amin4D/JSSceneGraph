@@ -1156,7 +1156,7 @@ FABRIC.SceneGraph.registerNodeType('Viewport', {
     var onOsX = navigator.userAgent.search("Mac OS X");
     viewportNode.pub.redraw = function(animating) {
       fabricwindow.needsRedraw();
-      if(onOsX && !animating){
+      if(onOsX && !animating && !scene.pub.animation.isPlaying()){
         fabricwindow.setRedrawFinishedCallback(function(){
           fabricwindow.setRedrawFinishedCallback(null);
           fabricwindow.needsRedraw();

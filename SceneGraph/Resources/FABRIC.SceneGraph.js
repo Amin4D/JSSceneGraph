@@ -1134,6 +1134,10 @@ FABRIC.SceneGraph.registerNodeType('Viewport', {
     };
     viewportNode.pub.redraw = function() {
       fabricwindow.needsRedraw();
+      fabricwindow.setRedrawFinishedCallback(function(){
+        fabricwindow.setRedrawFinishedCallback(null);
+        fabricwindow.needsRedraw();
+      });
     };
     viewportNode.pub.writeData = function(sceneSaver, constructionOptions, nodeData) {
       nodeData.camera = sceneSaver.wrapQuotes(cameraNode.name);

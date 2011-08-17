@@ -3,13 +3,15 @@
     Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
     -->
   <head> 
-    <title>FABRIC - Tutorial 11 - 3D Drawing Pipeline</title> 
+    <title>FABRIC - Tutorial 17 - Static Character</title> 
     
     <meta charset="iso-8859-1"/>
     <link href="../../../themes/default/style.css" rel="stylesheet" type="text/css" />
     <link href="../../../themes/default/viewer.css" rel="stylesheet" type="text/css" />
 
     <script type="text/javascript" src="../../../ThirdParty/jQuery/jquery-1.4.2.min.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/jQuery/jquery-ui-1.8.5.custom.min.js"></script>
+    <link type="text/css" href="../../../ThirdParty/jQuery/css/vader/jquery-ui-1.8.5.custom.css" rel="stylesheet" />
 
     <script type="text/javascript" src="../../../Core/FABRIC.Wrappers.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../Core/FABRIC.js" charset="utf-8"></script>
@@ -26,80 +28,110 @@
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/RGBA.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Color.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Euler.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Ray.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/OGLShaderProgram.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/OGLTexture2D.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/OGLBuffer.js" charset="utf-8"></script>
 
     <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Kinematics.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Lights.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Materials.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Geometry.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Primitives.js" charset="utf-8"></script>
-    
+    <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Lights.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Materials.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Manipulation.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Kinematics.js" charset="utf-8"></script>
+
+    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Bone.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Characters.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/Parsers/parseCollada.js" charset="utf-8"></script>
 
 <script type="text/javascript">
 
 $(document).ready(function() {
-
+  
   // create a scene (this creates a context)
   var scene = FABRIC.SceneGraph.createScene();
   
   // create the first scenegraph node, the viewport
   var viewport = scene.constructNode('Viewport', {
     windowElement: document.getElementById('FabricContainer'),
-    backgroundColor: FABRIC.RT.rgb(0.0, 0.05, 0.15)
+    backgroundColor: FABRIC.RT.rgb(0.0, 0.05, 0.15),
+    enableRaycasting: true
   });
 
   // create a camera, to be able to see something
   var camera = scene.constructNode('TargetCamera', {
       position: FABRIC.RT.vec3(15, 15, 15),
-      target: FABRIC.RT.vec3(0, 0, 0)
+      target: FABRIC.RT.vec3(6, 3, 0),
+      nearDistance: 0.1,
+      farDistance: 200
     });
   viewport.setCameraNode(camera);
+  scene.constructNode("CameraManipulator", { targetNode:camera } );
+
+  var assets = scene.importAssetFile('Resources/tuscany_static.dae', {});
+
+  // query the rig  
+  var rig = assets.tuscanyCharacterRig;
+  var skeleton = rig.getSkeletonNode();
+  var bones = skeleton.getBones();
+  
+  // set the bone lengths
+  for(var i=0;i<bones.length;i++)
+  {
+    if(bones[i].name.substr(0,4) == "foot"){
+      bones[i].length = 2.0;
+    } else if(bones[i].name.substr(0,3) == "leg"){
+      bones[i].length = 3.0;
+    } else {
+      bones[i].length = 1.0;
+    }
+    bones[i].radius = 0.25;
+  }
+  skeleton.setBones(bones);
+  console.log(bones);
+
+  scene.constructNode('CharacterSkeletonDebug', {
+    characterRigNode: assets.tuscanyCharacterRig,
+    boneradius: 1.0,
+    offsetpose: FABRIC.RT.xfo({ tr: FABRIC.RT.vec3(12, 0, 0) })
+  });
 
   // create a light node  
   var light = scene.constructNode('PointLight', {
-    position: FABRIC.RT.vec3(100,100,100)
+    position: FABRIC.RT.vec3(-20,100,100)
   });
 
   // create a material node
-  var material = scene.constructNode('PhongMaterial', {
-    diffuseColor: FABRIC.RT.rgb(0.8, 0, 0),
-    lightNode: light
-  });
-  
-  // create a transform node
-  var transform = scene.constructNode('Transform', {
-    hierarchical: false,
-    globalXfo: FABRIC.RT.xfo({ tr: FABRIC.RT.vec3(0, 2, 0) })
-  })
-  
-  // create a geometry node
-  var cone = scene.constructNode('Cone', {
-    radius: 4.0,
-    height: 16.0,
-    detail: 10
-  })
-
-  // create an instance, using the material, the transform and the geometry
-  scene.constructNode('Instance', {
-      transformNode: transform, 
-      geometryNode: cone,
-      materialNode: material
+  var material = scene.constructNode('PhongBumpReflectMaterial', {
+      diffuseTextureNode: scene.constructNode('Image', { url: 'Resources/tuscany_n.png' }),
+      specularTextureNode: scene.constructNode('Image', { url: 'Resources/tuscany_s.png' }),
+      normalTextureNode: scene.constructNode('Image', { url: 'Resources/tuscany_d.png' }),
+      lightNode: light,
+      numBones: skeleton.getNumBones()
     });
 
-  // Wait for all the operators to be compiled. 
+  // draw a phong version of the couch
+  assets.tuscanyInstance.setMaterialNode(material);
+
+  $('#loadingDialog').dialog({
+    modal: true
+  });
   var count = FABRIC.getAsyncTaskCount();
   FABRIC.appendOnResolveAsyncTaskCallback(function(label, countRemaining){
+    $('#loadingProgressBar').progressbar({
+      value: (1.0-(countRemaining/count))*100
+    });
     if(countRemaining===0){
+      $('#loadingDialog').dialog('close');
       var errors = scene.getErrors();
       if (errors.length > 0) {
         throw (errors.toString());
       }
-      scene.redrawAllWindows();
+      viewport.redraw();
       return true;
     }
-  });
+  });  // Wait for all the operators to be compiled. 
 });
 
 </script>
@@ -114,6 +146,13 @@ $(document).ready(function() {
         <div id="viewer">
           <div id="FabricContainer"></div> 
         </div><!--viewer-->
+        <div id="sidebar">
+          <div class="box">
+            <h2>CONTROLS</h2>
+            <div class="content">
+            </div><!--content-->
+          </div><!--box-->
+        </div><!--sidebar-->
       </div> <!--editor-->
     </div><!--wrapper-->
   </body> 

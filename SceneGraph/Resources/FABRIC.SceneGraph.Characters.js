@@ -57,7 +57,8 @@ FABRIC.SceneGraph.registerNodeType('CharacterMesh', {
             'rig.boneMatrices',
             'camera.cameraMat44',
             'camera.projectionMat44',
-            'self.indicesBuffer'
+            'self.indicesBuffer',
+            'instance.drawToggle'
           ]
         });
     }
@@ -306,10 +307,12 @@ FABRIC.SceneGraph.registerNodeType('CharacterSkeletonDebug', {
         geometryNode: characterSkeletonDebug.pub,
         materialNode: scene.constructNode('FlatMaterial', {
           color: options.color,
-          enableOptions:[],
-          disableOptions:[FABRIC.SceneGraph.OpenGLConstants.GL_DEPTH_TEST]
+          disableZBuffer: options.drawOverlayed
         }).pub
       });
+    characterSkeletonDebug.pub.getInstanceNode = function() {
+      return instanceNode.pub;
+    }
 
     return characterSkeletonDebug;
   }});
@@ -410,10 +413,8 @@ FABRIC.SceneGraph.registerNodeType('CharacterRig', {
       solvers = [];
 
     // extend the public interface
-    characterRigNode.pub.getPose = function() {
-      dgnode.evaluate();
-      return dgnode.getData('pose');
-    };
+    characterRigNode.addMemberInterface(dgnode, 'pose', true);
+
     characterRigNode.pub.getSkeletonNode = function() {
       return scene.getPublicInterface(skeletonNode);
     };

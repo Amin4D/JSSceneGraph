@@ -345,7 +345,7 @@ FABRIC.SceneGraph.registerNodeType('Shader', {
     
     if(options.assignUniformsOnPostDescend == true){
       // Post Processing operators invoke the shader on the post
-      // decent pass. After thegeometry in the sub tree is drawn.
+      // decent pass. After the geometry in the sub tree is drawn.
       redrawEventHandler.postDescendBindings.append(loadShaderOp);
     }else{
       redrawEventHandler.preDescendBindings.append(loadShaderOp);
@@ -399,6 +399,18 @@ FABRIC.SceneGraph.registerNodeType('Material', {
       shader,
       i;
 
+    if (options.disableZBuffer) {
+      if(options.enableOptions &&
+         options.enableOptions.indexOf(FABRIC.SceneGraph.OpenGLConstants.GL_DEPTH_TEST) != -1 ){
+        options.enableOptions.splice(options.enableOptions.indexOf(FABRIC.SceneGraph.OpenGLConstants.GL_DEPTH_TEST), 1);
+      }
+      if(!options.disableOptions){
+        options.disableOptions = [FABRIC.SceneGraph.OpenGLConstants.GL_DEPTH_TEST];
+      }else if(options.disableOptions.indexOf(FABRIC.SceneGraph.OpenGLConstants.GL_DEPTH_TEST) === -1 ){
+        options.disableOptions.push(FABRIC.SceneGraph.OpenGLConstants.GL_DEPTH_TEST);
+      }
+    }
+
     if (options.separateShaderNode) {
       if(options.shaderNode){
         shader = options.shaderNode;
@@ -427,9 +439,11 @@ FABRIC.SceneGraph.registerNodeType('Material', {
           assignUniformsOnPostDescend: options.assignUniformsOnPostDescend
         });
       }
-
+      
       materialNode = scene.constructNode('SceneGraphNode', options);
       redrawEventHandler = materialNode.constructEventHandlerNode('Redraw');
+
+
       shader.getRedrawEventHandler().appendChildEventHandler(redrawEventHandler);
 
       materialNode.getShaderNode = function() {
@@ -445,7 +459,7 @@ FABRIC.SceneGraph.registerNodeType('Material', {
       materialNode = scene.constructNode('Shader', options);
       redrawEventHandler = materialNode.getRedrawEventHandler();
     }
-    
+
     var capitalizeFirstLetter = function(str) {
       return str[0].toUpperCase() + str.substr(1);
     };
@@ -1004,16 +1018,8 @@ FABRIC.SceneGraph.defineEffectFromFile = function(effectName, effectfile) {
       if(!effectParameters){
         parseEffectFile();
       }
-      scene.assignDefaults(options, {
-        prototypeMaterialType: effectParameters.prototypeMaterialType,
-        disableOptions: effectParameters.disableOptions,
-        enableOptions: effectParameters.enableOptions,
-        cullFace: effectParameters.cullFace,
-        blendModeSfactor: effectParameters.blendModeSfactor,
-        blendModeDfactor: effectParameters.blendModeDfactor
-      });
-      var effectInstanceParameters,
-        directives = {},
+      scene.assignDefaults(options, effectParameters);
+      var directives = {},
         preProcessCode = false,
         i,
         materialNode,
@@ -1021,16 +1027,6 @@ FABRIC.SceneGraph.defineEffectFromFile = function(effectName, effectfile) {
         lightName,
         textureName,
         setterName;
-
-      effectInstanceParameters = scene.cloneObj(effectParameters);
-      effectInstanceParameters.name = options.name;
-      effectInstanceParameters.type = options.type;
-      effectInstanceParameters.parentEventHandler = options.parentEventHandler;
-      effectInstanceParameters.disableOptions = options.disableOptions;
-      effectInstanceParameters.enableOptions = options.enableOptions;
-      effectInstanceParameters.cullFace = options.cullFace;
-      effectInstanceParameters.blendModeSfactor = options.blendModeSfactor;
-      effectInstanceParameters.blendModeDfactor = options.blendModeDfactor;
 
       directives = {};
       preProcessCode = false;
@@ -1044,19 +1040,19 @@ FABRIC.SceneGraph.defineEffectFromFile = function(effectName, effectfile) {
       }
       if (preProcessCode) {
         if (effectParameters.vertexShader) {
-          effectInstanceParameters.vertexShader = scene.preProcessCode(effectParameters.vertexShader, directives);
+          options.vertexShader = scene.preProcessCode(effectParameters.vertexShader, directives);
         }
         if (effectParameters.tessControlShader) {
-          effectInstanceParameters.tessControlShader = scene.preProcessCode(effectParameters.tessControlShader, directives);
+          options.tessControlShader = scene.preProcessCode(effectParameters.tessControlShader, directives);
         }
         if (effectParameters.tessEvalShader) {
-          effectInstanceParameters.tessEvalShader = scene.preProcessCode(effectParameters.tessEvalShader, directives);
+          options.tessEvalShader = scene.preProcessCode(effectParameters.tessEvalShader, directives);
         }
         if (effectParameters.geometryShader) {
-          effectInstanceParameters.geometryShader = scene.preProcessCode(effectParameters.geometryShader, directives);
+          options.geometryShader = scene.preProcessCode(effectParameters.geometryShader, directives);
         }
         if (effectParameters.fragmentShader) {
-          effectInstanceParameters.fragmentShader = scene.preProcessCode(effectParameters.fragmentShader, directives);
+          options.fragmentShader = scene.preProcessCode(effectParameters.fragmentShader, directives);
         }
         options.shaderNameDecoration = '';
         for (i in directives) {
@@ -1064,7 +1060,7 @@ FABRIC.SceneGraph.defineEffectFromFile = function(effectName, effectfile) {
         }
       }
 
-      materialNode = scene.constructNode(options.prototypeMaterialType, effectInstanceParameters);
+      materialNode = scene.constructNode(options.prototypeMaterialType, options);
       
       var capitalizeFirstLetter = function(str) {
         return str[0].toUpperCase() + str.substr(1);

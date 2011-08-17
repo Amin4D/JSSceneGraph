@@ -473,6 +473,12 @@ FABRIC.SceneGraph = {
     scene.getSceneRedrawEventHandler = function() {
       return beginDrawEventHandler;
     };
+    scene.getSceneRedrawOpaqueObjectsEventHandler = function() {
+      return beginDrawOpaqueObjectsEventHandler;
+    };
+    scene.getSceneRedrawTransparentObjectsEventHandler = function() {
+      return beginDrawTransparentObjectsEventHandler;
+    };
     scene.getScenePostRedrawEventHandler = function() {
       return postDrawEventHandler;
     };
@@ -642,6 +648,15 @@ FABRIC.SceneGraph = {
     ///////////////////////////////////////////////////////////////////
     // All scene draw event handlers(shaders) are attached to this handler.
     var beginDrawEventHandler = scene.constructEventHandlerNode('Scene_Draw');
+    
+    var beginDrawOpaqueObjectsEventHandler = scene.constructEventHandlerNode('Scene_DrawOpaqueObjects');
+    beginDrawEventHandler.appendChildEventHandler(beginDrawOpaqueObjectsEventHandler);
+    
+    // Transparent objects are always drawn after opaque objectsf
+    var beginDrawTransparentObjectsEventHandler = scene.constructEventHandlerNode('Scene_DrawTransparentObjects');
+    beginDrawEventHandler.appendChildEventHandler(beginDrawTransparentObjectsEventHandler);
+    
+    
 
     ///////////////////////////////////////////////////////////////////
     // Window <-> SceneGraph raycast event handler firewall

@@ -137,6 +137,22 @@ $(document).ready(function() {
       materialNode: normalMaterial
     });
 
+  // Transparence Shader
+  var transparentMaterial = scene.constructNode('GlassMaterial', {
+      diffuseColor: FABRIC.RT.rgba(0.2, 0.8, 0, 0.5),
+      lightNode: light
+    });
+
+  scene.constructNode('Instance', {
+      transformNode: scene.constructNode('Transform', {
+          hierarchical: false,
+          globalXfo: FABRIC.RT.xfo({ tr: FABRIC.RT.vec3(50, 0, 0) })
+        }),
+      geometryNode: sphere,
+      materialNode: transparentMaterial
+    });
+
+
   $('#loadingDialog').dialog({
     modal: true
   });

@@ -75,9 +75,19 @@ FABRIC.RT.OGLShaderProgram = function(name) {
   this.programParams = [];
   this.uniformValues = [];
   this.attributeValues = [];
-  this.enableOptions = [FABRIC.SceneGraph.OpenGLConstants.GL_DEPTH_TEST,
-                        FABRIC.SceneGraph.OpenGLConstants.GL_CULL_FACE];
-  this.cullFace = FABRIC.SceneGraph.OpenGLConstants.GL_BACK;
+  this.enableOptions = FABRIC.SceneGraph.OpenGLConstants ?
+    [FABRIC.SceneGraph.OpenGLConstants.GL_DEPTH_TEST,
+     FABRIC.SceneGraph.OpenGLConstants.GL_CULL_FACE] :
+    [];
+  this.cullFace = FABRIC.SceneGraph.OpenGLConstants ?
+    FABRIC.SceneGraph.OpenGLConstants.GL_BACK : 0;
+  
+  // If Blending is enabled, we need to set the blend params
+  this.blendModeSfactor = FABRIC.SceneGraph.OpenGLConstants ?
+    FABRIC.SceneGraph.OpenGLConstants.GL_SRC_ALPHA : 0;
+  this.blendModeDfactor = FABRIC.SceneGraph.OpenGLConstants ?
+    FABRIC.SceneGraph.OpenGLConstants.GL_ONE_MINUS_SRC_ALPHA : 0;
+    
   this.drawMode = -1;
   this.patchVertices = -1;
   this.numInstances = -1;
@@ -95,6 +105,8 @@ FABRIC.appendOnCreateContextCallback(function(context) {
       attributeValues: 'OGLShaderValue[]',
       enableOptions: 'Size[]',
       cullFace: 'Size',
+      blendModeSfactor: 'Size',
+      blendModeDfactor: 'Size',
       drawMode: 'Integer',
       patchVertices: 'Integer',
       numInstances: 'Integer',

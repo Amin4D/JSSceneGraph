@@ -248,14 +248,14 @@ FABRIC.SceneGraph.getShaderParamID = ( function(){
 FABRIC.SceneGraph.registerNodeType('Shader', {
   factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
-        parentEventHandler: scene.getSceneRedrawEventHandler(),
+        parentEventHandler: scene.getSceneRedrawOpaqueObjectsEventHandler(),
         debug: false
       });
     var shaderNode = scene.constructNode('SceneGraphNode', options),
       redrawEventHandler = shaderNode.constructEventHandlerNode('Redraw'),
       shaderProgram = new FABRIC.RT.OGLShaderProgram(options.name);
       i;
-      
+    
     redrawEventHandler.setScopeName('shader');
 
     if (options.fragmentShader) {
@@ -299,6 +299,12 @@ FABRIC.SceneGraph.registerNodeType('Shader', {
     if(options.enableOptions){
       shaderProgram.enableOptions = options.enableOptions;
     }
+    if(options.blendModeSfactor){
+      shaderProgram.blendModeSfactor = options.blendModeSfactor;
+    }
+    if(options.blendModeDfactor){
+      shaderProgram.blendModeDfactor = options.blendModeDfactor;
+    }
     if(options.cullFace){
       shaderProgram.cullFace = options.cullFace;
     }
@@ -338,6 +344,16 @@ FABRIC.SceneGraph.registerNodeType('Shader', {
         'self.shaderProgram'
       ]
     }));
+    redrawEventHandler.postDescendBindings.append(scene.constructOperator({
+      operatorName: 'unloadShader',
+      srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadShader.kl',
+      entryFunctionName: 'unloadShader',
+      parameterLayout: [
+        'self.shaderProgram'
+      ]
+    }));
+    
+    
     
     if (options.parentEventHandler !== false) {
       // The shader is registered with the scenegraph, which will
@@ -389,6 +405,10 @@ FABRIC.SceneGraph.registerNodeType('Material', {
           shaderAttributes: options.shaderAttributes,
           programParams: options.programParams,
           drawParams: options.drawParams,
+          enableOptions: options.enableOptions,
+          cullFace: options.cullFace,
+          blendModeSfactor: options.blendModeSfactor,
+          blendModeDfactor: options.blendModeDfactor,
           parentEventHandler: options.parentEventHandler,
           assignUniformsOnPostDescend: options.assignUniformsOnPostDescend
         });
@@ -620,6 +640,22 @@ FABRIC.SceneGraph.registerNodeType('PointSpriteMaterial', {
   }});
 
 
+FABRIC.SceneGraph.registerNodeType('TransparentMaterial', {
+  factoryFn: function(options, scene) {
+    scene.assignDefaults(options, {
+        enableOptions: [FABRIC.SceneGraph.OpenGLConstants.GL_DEPTH_TEST,
+                             FABRIC.SceneGraph.OpenGLConstants.GL_BLEND],
+        cullFace: FABRIC.SceneGraph.OpenGLConstants.GL_BACK,
+        blendModeSfactor: FABRIC.SceneGraph.OpenGLConstants.GL_SRC_ALPHA,/*GL_SRC_ALPHA*/
+        blendModeDfactor: FABRIC.SceneGraph.OpenGLConstants.GL_ONE_MINUS_SRC_ALPHA/*GL_ONE_MINUS_SRC_ALPHA*/
+      });
+    
+    options.parentEventHandler = scene.getSceneRedrawTransparentObjectsEventHandler();
+    var transparentMaterial = scene.constructNode('Material', options);
+    return transparentMaterial;
+  }});
+
+
 FABRIC.SceneGraph.registerNodeType('PostProcessEffect', {
   factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
@@ -722,7 +758,10 @@ FABRIC.SceneGraph.defineEffectFromFile = function(effectName, effectfile) {
       childNode;
       
     preprocessorDirectives = {};
-    effectParameters = { separateShaderNode:false };
+    effectParameters = {
+      prototypeMaterialType: 'Material',
+      separateShaderNode:false
+    };
   
     xmlText = FABRIC.loadResourceURL(effectfile, 'text/xml');
     parser = new DOMParser();
@@ -899,6 +938,9 @@ FABRIC.SceneGraph.defineEffectFromFile = function(effectName, effectfile) {
         case 'name':
           effectParameters.name = childNode.firstChild.data;
           break;
+        case 'prototypeMaterialType':
+          effectParameters.prototypeMaterialType = childNode.firstChild.data;
+          break;
         case 'uniforms':
           collectUniforms(childNode);
           break;
@@ -948,9 +990,6 @@ FABRIC.SceneGraph.defineEffectFromFile = function(effectName, effectfile) {
       if(!effectParameters){
         parseEffectFile();
       }
-      scene.assignDefaults(options, {
-          prototypeMaterialType: 'Material'
-        });
       var effectInstanceParameters,
         directives = {},
         preProcessCode = false,
@@ -998,7 +1037,7 @@ FABRIC.SceneGraph.defineEffectFromFile = function(effectName, effectfile) {
         }
       }
 
-      materialNode = scene.constructNode(options.prototypeMaterialType, effectInstanceParameters);
+      materialNode = scene.constructNode(effectParameters.prototypeMaterialType, effectInstanceParameters);
       
       var capitalizeFirstLetter = function(str) {
         return str[0].toUpperCase() + str.substr(1);
@@ -1042,6 +1081,9 @@ FABRIC.SceneGraph.defineEffectFromFile('NormalMaterial', 'FABRIC_ROOT/SceneGraph
 
 FABRIC.SceneGraph.defineEffectFromFile('PhongTesselationMaterial', 'FABRIC_ROOT/SceneGraph/Resources/Shaders/PhongTesselationShader.xml');
 FABRIC.SceneGraph.defineEffectFromFile('HairMaterial', 'FABRIC_ROOT/SceneGraph/Resources/Shaders/HairShader.xml');
+
+FABRIC.SceneGraph.defineEffectFromFile('GlassMaterial', 'FABRIC_ROOT/SceneGraph/Resources/Shaders/GlassShader.xml');
+
 
 FABRIC.SceneGraph.registerNodeType('BloomPostProcessEffect', {
   factoryFn: function(options, scene) {

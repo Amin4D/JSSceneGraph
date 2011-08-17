@@ -304,25 +304,13 @@ FABRIC.SceneGraph.registerNodeType('CharacterSkeletonDebug', {
 
     instanceNode = scene.constructNode('Instance', {
         geometryNode: characterSkeletonDebug.pub,
-        materialNode: scene.constructNode('FlatMaterial', { color: options.color }).pub
+        materialNode: scene.constructNode('FlatMaterial', {
+          color: options.color,
+          enableOptions:[],
+          disableOptions:[FABRIC.SceneGraph.OpenGLConstants.GL_DEPTH_TEST]
+        }).pub
       });
 
-    // setup the postdescend operators for disable and enable zbuffer
-    // PT - This could be done at the shader/material stage
-    if (options.drawOverlayed) {
-      instanceNode.getRedrawEventHandler().preDescendBindings.insert(scene.constructOperator({
-          operatorName: 'disableZBuffer',
-          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/drawAttributes.kl',
-          entryFunctionName: 'disableZBuffer',
-          parameterLayout: []
-        }), 0);
-      instanceNode.getRedrawEventHandler().postDescendBindings.append(scene.constructOperator({
-          operatorName: 'popAttribs',
-          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/drawAttributes.kl',
-          entryFunctionName: 'popAttribs',
-          parameterLayout: []
-        }));
-    }
     return characterSkeletonDebug;
   }});
 

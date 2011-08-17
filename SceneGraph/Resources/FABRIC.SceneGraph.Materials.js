@@ -1004,9 +1004,14 @@ FABRIC.SceneGraph.defineEffectFromFile = function(effectName, effectfile) {
       if(!effectParameters){
         parseEffectFile();
       }
-    scene.assignDefaults(options, {
-      prototypeMaterialType: effectParameters.prototypeMaterialType
-    });
+      scene.assignDefaults(options, {
+        prototypeMaterialType: effectParameters.prototypeMaterialType,
+        disableOptions: effectParameters.disableOptions,
+        enableOptions: effectParameters.enableOptions,
+        cullFace: effectParameters.cullFace,
+        blendModeSfactor: effectParameters.blendModeSfactor,
+        blendModeDfactor: effectParameters.blendModeDfactor
+      });
       var effectInstanceParameters,
         directives = {},
         preProcessCode = false,
@@ -1021,6 +1026,11 @@ FABRIC.SceneGraph.defineEffectFromFile = function(effectName, effectfile) {
       effectInstanceParameters.name = options.name;
       effectInstanceParameters.type = options.type;
       effectInstanceParameters.parentEventHandler = options.parentEventHandler;
+      effectInstanceParameters.disableOptions = options.disableOptions;
+      effectInstanceParameters.enableOptions = options.enableOptions;
+      effectInstanceParameters.cullFace = options.cullFace;
+      effectInstanceParameters.blendModeSfactor = options.blendModeSfactor;
+      effectInstanceParameters.blendModeDfactor = options.blendModeDfactor;
 
       directives = {};
       preProcessCode = false;

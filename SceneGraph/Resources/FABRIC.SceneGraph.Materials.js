@@ -24,18 +24,12 @@ FABRIC.SceneGraph.registerNodeType('Image', {
       wantHDR: false,
       wantRGBA: true,
       createResourceLoadNode: true,
-      createLoadTextureEventHandler: true
+      createLoadTextureEventHandler: true,
+      url: undefined
     });
-
-    var imageLoaded = false,
-      redrawEventHandler,
-      ext = options.url ? options.url.substr(options.url.lastIndexOf('.') + 1) : undefined,
-      dgnode,
-      resourceLoadNode,
-      resourceloaddgnode;
-
-    imageNode = scene.constructNode('Texture', options);
-    dgnode = imageNode.constructDGNode('DGNode')
+    
+    var imageNode = scene.constructNode('Texture', options);
+    var dgnode = imageNode.constructDGNode('DGNode')
     dgnode.addMember('hdr', 'Boolean', options.wantHDR);
     dgnode.addMember('width', 'Size');
     dgnode.addMember('height', 'Size');
@@ -45,8 +39,8 @@ FABRIC.SceneGraph.registerNodeType('Image', {
     imageNode.addMemberInterface(dgnode, 'height');
 
     if (options.createResourceLoadNode) {
-      resourceLoadNode = scene.constructNode('ResourceLoad', options);
-      resourceloaddgnode = resourceLoadNode.getDGLoadNode();
+      var resourceLoadNode = scene.constructNode('ResourceLoad', options);
+      var resourceloaddgnode = resourceLoadNode.getDGLoadNode();
       dgnode.addDependency(resourceloaddgnode, 'resource');
 
       dgnode.bindings.append(scene.constructOperator({
@@ -72,7 +66,7 @@ FABRIC.SceneGraph.registerNodeType('Image', {
 
     if (options.createLoadTextureEventHandler) {
       // Construct the handler for loading the image into texture memory.
-      redrawEventHandler = imageNode.constructEventHandlerNode('Redraw');
+      var redrawEventHandler = imageNode.constructEventHandlerNode('Redraw');
       redrawEventHandler.addScope('image', dgnode);
       redrawEventHandler.addMember('oglTexture2D', 'OGLTexture2D', FABRIC.RT.oglTexture2D());
       redrawEventHandler.preDescendBindings.append(scene.constructOperator({

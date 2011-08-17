@@ -113,13 +113,15 @@ FABRIC.SceneGraph.registerNodeType('CameraManipulator', {
       newcameraXfo.tr = cameraTarget.subtract(newCameraOffset);
       
       cameraNode.getTransformNode().setGlobalXfo(newcameraXfo);
-      viewportNode.redraw();
+      viewportNode.redraw(true);
       evt.stopPropagation();
     }
 
     var releaseOrbitFn = function(evt) {
+      viewportNode.redraw();
       document.removeEventListener('mousemove', dragOrbitFn, true);
       document.removeEventListener('mouseup', releaseOrbitFn, true);
+      evt.stopPropagation();
     }
     var dragPanFn = function(evt) {
       if(!enabled){
@@ -136,10 +138,11 @@ FABRIC.SceneGraph.registerNodeType('CameraManipulator', {
       if (cameraNode.getTransformNode().getTarget) {
         cameraNode.getTransformNode().setTarget(cameraTarget.add(dragDist));
       }
-      viewportNode.redraw();
+      viewportNode.redraw(true);
       evt.stopPropagation();
     }
     var releasePanFn = function(evt) {
+      viewportNode.redraw();
       document.removeEventListener('mousemove', dragPanFn, true);
       document.removeEventListener('mouseup', releasePanFn, true);
       evt.stopPropagation();
@@ -153,10 +156,11 @@ FABRIC.SceneGraph.registerNodeType('CameraManipulator', {
       var mouseDragScreenDelta = evt.screenX - mouseDownScreenPos.x;
       cameraNode.position = cameraPos.add(cameraPos.subtract(cameraTarget)
                                      .mulInPlace(mouseDragScreenDelta * options.mouseDragZoomRate));
-      viewportNode.redraw();
+      viewportNode.redraw(true);
       evt.stopPropagation();
     }
     var releaseZoomFn = function(evt) {
+      viewportNode.redraw();
       document.removeEventListener('mousemove', dragZoomFn, true);
       document.removeEventListener('mouseup', releaseZoomFn, true);
       evt.stopPropagation();
@@ -630,7 +634,7 @@ FABRIC.SceneGraph.registerNodeType('Manipulator', {
       evt.mouseDragScreenDelta = evt.mouseDragScreenPos.subtract(mouseDownScreenPos);
       manipulatorNode.pub.fireEvent('drag', evt);
       evt.stopPropagation();
-      viewportNode.redraw();
+      viewportNode.redraw(true);
     }
     var releaseFn = function(evt) {
       manipulatorNode.pub.fireEvent('dragend', evt);

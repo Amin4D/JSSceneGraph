@@ -918,14 +918,6 @@ FABRIC.SceneGraph.registerNodeType('Instance', {
         return resourceLoadNode;
       };
 
-      trianglesNode.pub.getUniformsDGNode = function() {
-        return trianglesNode.getUniformsDGNode();
-      };
-
-      trianglesNode.pub.getAttributesDGNode = function() {
-        return trianglesNode.getAttributesDGNode();
-      };
-
       return trianglesNode;
     }
   });

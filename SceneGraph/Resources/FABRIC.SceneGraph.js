@@ -1303,7 +1303,8 @@ FABRIC.SceneGraph.registerNodeType('Viewport', {
                 'will automatically trigger a redraw. Note that operators can dynamically modify the URL.',
   factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
-      redrawOnLoad: true
+      redrawOnLoad: true,
+      onLoadCallback: undefined
     });
 
     var onloadCallbacks = [];

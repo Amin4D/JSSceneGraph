@@ -224,6 +224,11 @@ function OGLShaderProgram.loadShader() {
     self.createProgramFromShaders();
   }
   glUseProgram(self.programId);
+  
+  for(Integer i=0; i<self.enableOptions.size(); i++){
+    glEnable(self.enableOptions[i]);
+  }
+  glCullFace(self.cullFace);
 }
 
 

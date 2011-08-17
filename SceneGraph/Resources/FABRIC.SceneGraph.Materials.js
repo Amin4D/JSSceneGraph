@@ -295,6 +295,15 @@ FABRIC.SceneGraph.registerNodeType('Shader', {
     }
 
     ///////////////////////////////////////////////////
+    // Enable Options
+    if(options.enableOptions){
+      shaderProgram.enableOptions = options.enableOptions;
+    }
+    if(options.cullFace){
+      shaderProgram.cullFace = options.cullFace;
+    }
+    
+    ///////////////////////////////////////////////////
     // EXT Params
     for (i in options.programParams) {
        shaderProgram.programParams.push(new FABRIC.RT.OGLShaderProgramParam(

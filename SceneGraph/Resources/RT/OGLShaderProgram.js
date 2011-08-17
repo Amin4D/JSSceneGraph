@@ -75,6 +75,9 @@ FABRIC.RT.OGLShaderProgram = function(name) {
   this.programParams = [];
   this.uniformValues = [];
   this.attributeValues = [];
+  this.enableOptions = [FABRIC.SceneGraph.OpenGLConstants.GL_DEPTH_TEST,
+                        FABRIC.SceneGraph.OpenGLConstants.GL_CULL_FACE];
+  this.cullFace = FABRIC.SceneGraph.OpenGLConstants.GL_BACK;
   this.drawMode = -1;
   this.patchVertices = -1;
   this.numInstances = -1;
@@ -90,6 +93,8 @@ FABRIC.appendOnCreateContextCallback(function(context) {
       programParams: 'OGLShaderProgramParam[]',
       uniformValues: 'OGLShaderValue[]',
       attributeValues: 'OGLShaderValue[]',
+      enableOptions: 'Size[]',
+      cullFace: 'Size',
       drawMode: 'Integer',
       patchVertices: 'Integer',
       numInstances: 'Integer',

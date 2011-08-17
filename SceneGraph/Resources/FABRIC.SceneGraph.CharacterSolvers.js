@@ -144,7 +144,7 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('FKHierarchySolver',
         variablesNode = scene.getPrivateInterface(rigNode.getVariablesNode()),
         skeletonNode = rigNode.getSkeletonNode(),
         bones = skeletonNode.getBones(),
-        referenceLocalPose = skeletonNode.getReferencePose(),
+        referenceLocalPose = skeletonNode.getReferenceLocalPose(),
         boneIDs = solver.getBoneIDs(),
         size,
         name = options.name;
@@ -168,6 +168,10 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('FKHierarchySolver',
         }
         variablesNode.pub.addMember(name + 'localXfos', 'Xfo[]', localXfos);
         options.localxfoMemberName = name + 'localXfos';
+      }
+      
+      solver.getLocalXfoMemberName = function() {
+        return options.localxfoMemberName;
       }
 
       // insert at the previous to last position to ensure that we keep the last operator
@@ -494,6 +498,10 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('IK2BoneSolver',
       height = referencePose[boneIDs.boneB].tr.subtract(center);
       upvectorPos = referencePose[boneIDs.boneB].tr.add(height).add(height);
       upvector = referencePose[boneIDs.upvectorParent].multiplyInv(FABRIC.RT.xfo({ tr: upvectorPos }));
+      
+      if(options.projectTargetToUpvectorFactor != undefined) {
+        upvector.tr = targetXfo.tr.scale(options.projectTargetToUpvectorFactor);
+      }
 
       constantsNode.pub.addMember(name + 'boneA', 'Integer', boneIDs.boneA);
       constantsNode.pub.addMember(name + 'boneB', 'Integer', boneIDs.boneB);
@@ -537,7 +545,8 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('IK2BoneSolver',
           parentNode: rigNode.pub,
           parentMember: 'pose',
           parentMemberIndex: boneIDs['targetParent'],
-          color: options.color
+          color: options.color,
+          radius: options.radius
         });
         solver.constructManipulator(name + 'upvectorScreen', 'ScreenTranslationManipulator', {
           targetNode: variablesNode.pub,
@@ -545,7 +554,8 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('IK2BoneSolver',
           parentNode: rigNode.pub,
           parentMember: 'pose',
           parentMemberIndex: boneIDs['upvectorParent'],
-          color: options.color
+          color: options.color,
+          radius: options.radius
         });
       }
     }

@@ -3,7 +3,7 @@
     Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
     -->
   <head> 
-    <title>FABRIC - Tutorial 17 - Static Character</title> 
+    <title>FABRIC - Tutorial 19 - Character FK</title> 
     
     <meta charset="iso-8859-1"/>
     <link href="../../../themes/default/style.css" rel="stylesheet" type="text/css" />
@@ -43,6 +43,7 @@
 
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Bone.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Characters.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.CharacterSolvers.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/Parsers/parseCollada.js" charset="utf-8"></script>
 
 <script type="text/javascript">
@@ -62,7 +63,7 @@ $(document).ready(function() {
   // create a camera, to be able to see something
   var camera = scene.constructNode('TargetCamera', {
       position: FABRIC.RT.vec3(15, 15, 15),
-      target: FABRIC.RT.vec3(6, 3, 0),
+      target: FABRIC.RT.vec3(0, 3, 0),
       nearDistance: 0.1,
       farDistance: 200
     });
@@ -99,13 +100,13 @@ $(document).ready(function() {
     bones[i].radius = 0.25;
   }
   skeleton.setBones(bones);
-  console.log(bones);
 
-  scene.constructNode('CharacterSkeletonDebug', {
-    characterRigNode: assets.tuscanyCharacterRig,
-    boneradius: 1.0,
-    offsetpose: FABRIC.RT.xfo({ tr: FABRIC.RT.vec3(12, 0, 0) })
+  var debug = scene.constructNode('CharacterSkeletonDebug', {
+    characterRigNode: rig,
+    boneradius: 1.0
   });
+  var debugInstance = debug.getInstanceNode();
+  debugInstance.setDrawToggle(false);
 
   // create a light node  
   var light = scene.constructNode('PointLight', {
@@ -113,7 +114,7 @@ $(document).ready(function() {
   });
 
   // create a material node
-  var material = scene.constructNode('PhongBumpReflectMaterial', {
+  var material = scene.constructNode('PhongBumpReflectSkinningMaterial', {
       diffuseTextureNode: scene.constructNode('Image', { url: 'Resources/tuscany_n.png' }),
       specularTextureNode: scene.constructNode('Image', { url: 'Resources/tuscany_s.png' }),
       normalTextureNode: scene.constructNode('Image', { url: 'Resources/tuscany_d.png' }),
@@ -123,6 +124,44 @@ $(document).ready(function() {
 
   // draw a phong version of the couch
   assets.tuscanyInstance.setMaterialNode(material);
+  
+  // assign a FK solver
+  var fksolver = rig.addSolver('solveFKHierarchy', 'FKHierarchySolver');
+  
+  // get the character variables node
+  var variables = rig.getVariablesNode();
+  
+  // construct the manipulators
+  for(var i=0;i<bones.length;i++) {
+    if(bones[i].parent == -1) {
+      scene.constructNode('3AxisRotationManipulator', {
+        parentNode: variables,
+        parentMember: fksolver.getLocalXfoMemberName(),
+        parentMemberIndex: i,
+        radius: 1.5,
+        disableZBuffer: true
+      });
+    } else {
+      scene.constructNode('3AxisRotationManipulator', {
+        parentNode: rig,
+        parentMember: 'pose',
+        parentMemberIndex: bones[i].parent,
+        targetNode: variables,
+        targetMember: fksolver.getLocalXfoMemberName(),
+        targetMemberIndex: i,
+        radius: 1.5,
+        disableZBuffer: true
+      });
+    }
+  }
+
+  $('#toggleVisibility').button()
+    .click(function() {
+      var toggle = !assets.tuscanyInstance.getDrawToggle();
+      assets.tuscanyInstance.setDrawToggle(toggle);
+      debugInstance.setDrawToggle(!toggle);
+      viewport.redraw();
+    });
 
   $('#loadingDialog').dialog({
     modal: true
@@ -164,6 +203,7 @@ $(document).ready(function() {
           <div class="box">
             <h2>CONTROLS</h2>
             <div class="content">
+              <button id="toggleVisibility" style="margin-top:30px;">Toggle Visibility</button>
             </div><!--content-->
           </div><!--box-->
         </div><!--sidebar-->

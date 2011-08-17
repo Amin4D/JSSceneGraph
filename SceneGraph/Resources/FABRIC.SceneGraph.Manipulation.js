@@ -391,7 +391,7 @@ FABRIC.SceneGraph.registerNodeType('Manipulator', {
     var compensation = true,
        color = options.color,
        highlightColor = options.highlightcolor,
-       material = scene.pub.constructNode('FlatMaterial', { color: options.color });
+       material = scene.pub.constructNode('FlatMaterial', { color: options.color, disableZBuffer: options.disableZBuffer });
 
     var parentNode = options.parentNode;
     if (parentNode && parentNode.isTypeOf('Instance')) {
@@ -519,8 +519,13 @@ FABRIC.SceneGraph.registerNodeType('Manipulator', {
         targetNode.pub.setData(targetMember, xfo, targetMemberIndex);
       }
       else {
-        var targetMembeSetter = "set"+targetMember.charAt(0).toUpperCase()+targetMember.slice(1);
-        targetNode.pub[targetMembeSetter](xfo);
+        var targetMemberSetter = "set"+targetMember.charAt(0).toUpperCase()+targetMember.slice(1);
+        var data = xfo;
+        if(targetMemberIndex != undefined) {
+          data = targetNode.pub['g'+targetMemberSetter.substr(1,1000)]();
+          data[targetMemberIndex] = xfo;
+        }
+        targetNode.pub[targetMemberSetter](data);
       }
     }
 
@@ -596,23 +601,6 @@ FABRIC.SceneGraph.registerNodeType('Manipulator', {
         setTargetOri(getParentXfo().ori.invert().postMultiply(ori));
       }
     };
-
-    // setup the postdescend operators for disable and enable zbuffer
-    // PT - This could be done at the shader/material stage
-    if (options.disableZBuffer) {
-      manipulatorNode.getRedrawEventHandler().preDescendBindings.insert(scene.constructOperator({
-          operatorName: 'disableZBuffer',
-          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/drawAttributes.kl',
-          entryFunctionName: 'disableZBuffer',
-          parameterLayout: []
-        }), 0);
-      manipulatorNode.getRedrawEventHandler().postDescendBindings.append(scene.constructOperator({
-          operatorName: 'popAttribs',
-          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/drawAttributes.kl',
-          entryFunctionName: 'popAttribs',
-          parameterLayout: []
-        }));
-    }
 
     manipulatorNode.pub.addEventListener('mouseover_geom', function(evt) {
         material.setColor(highlightColor);

@@ -3,7 +3,7 @@
     Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
     -->
   <head> 
-    <title>FABRIC - Tutorial 17 - Static Character</title> 
+    <title>FABRIC - Tutorial 18 - Character Global Manipulation</title> 
     
     <meta charset="iso-8859-1"/>
     <link href="../../../themes/default/style.css" rel="stylesheet" type="text/css" />
@@ -62,12 +62,22 @@ $(document).ready(function() {
   // create a camera, to be able to see something
   var camera = scene.constructNode('TargetCamera', {
       position: FABRIC.RT.vec3(15, 15, 15),
-      target: FABRIC.RT.vec3(6, 3, 0),
+      target: FABRIC.RT.vec3(0, 3, 0),
       nearDistance: 0.1,
       farDistance: 200
     });
   viewport.setCameraNode(camera);
   scene.constructNode("CameraManipulator", { targetNode:camera } );
+
+  // create the scene grid
+  scene.constructNode('Instance', {
+          geometryNode: scene.constructNode('Grid', {
+              size_x: 40.0,
+              size_z: 40.0,
+              sections_x: 20,
+              sections_z: 20 }),
+          materialNode: scene.constructNode('FlatMaterial')
+      });
 
   var assets = scene.importAssetFile('Resources/tuscany_static.dae', {});
 
@@ -89,13 +99,13 @@ $(document).ready(function() {
     bones[i].radius = 0.25;
   }
   skeleton.setBones(bones);
-  console.log(bones);
 
-  scene.constructNode('CharacterSkeletonDebug', {
+  var debug = scene.constructNode('CharacterSkeletonDebug', {
     characterRigNode: assets.tuscanyCharacterRig,
-    boneradius: 1.0,
-    offsetpose: FABRIC.RT.xfo({ tr: FABRIC.RT.vec3(12, 0, 0) })
+    boneradius: 1.0
   });
+  var debugInstance = debug.getInstanceNode();
+  debugInstance.setDrawToggle(false);
 
   // create a light node  
   var light = scene.constructNode('PointLight', {
@@ -103,16 +113,33 @@ $(document).ready(function() {
   });
 
   // create a material node
-  var material = scene.constructNode('PhongBumpReflectMaterial', {
+  var material = scene.constructNode('PhongBumpReflectSkinningMaterial', {
       diffuseTextureNode: scene.constructNode('Image', { url: 'Resources/tuscany_n.png' }),
       specularTextureNode: scene.constructNode('Image', { url: 'Resources/tuscany_s.png' }),
       normalTextureNode: scene.constructNode('Image', { url: 'Resources/tuscany_d.png' }),
       lightNode: light,
       numBones: skeleton.getNumBones()
     });
-
-  // draw a phong version of the couch
   assets.tuscanyInstance.setMaterialNode(material);
+
+  // construct the manipulators
+  for(var i=0;i<bones.length;i++) {
+    scene.constructNode('3AxisRotationManipulator', {
+      parentNode: assets.tuscanyCharacterRig,
+      parentMember: 'pose',
+      parentMemberIndex: i,
+      radius: 1.5,
+      disableZBuffer: true
+    });
+  }
+
+  $('#toggleVisibility').button()
+    .click(function() {
+      var toggle = !assets.tuscanyInstance.getDrawToggle();
+      assets.tuscanyInstance.setDrawToggle(toggle);
+      debugInstance.setDrawToggle(!toggle);
+      viewport.redraw();
+    });
 
   $('#loadingDialog').dialog({
     modal: true
@@ -138,6 +165,10 @@ $(document).ready(function() {
 
   </head> 
   <body>
+    <div id="loadingDialog" title="Loading...">
+      <h4 id="loadingDesc" style="margin-bottom: 10px"></h4>
+      <div id="loadingProgressBar" class="ui-progressbar-value"></div>
+    </div>
     <div id="wrapper">
       <ul id="nav">
         <li><a href="#" id="fabric-logo"><img src="../../../themes/default/_img/projects/fabric-logo.png" /></a></li>
@@ -150,6 +181,7 @@ $(document).ready(function() {
           <div class="box">
             <h2>CONTROLS</h2>
             <div class="content">
+              <button id="toggleVisibility" style="margin-top:30px;">Toggle Visibility</button>
             </div><!--content-->
           </div><!--box-->
         </div><!--sidebar-->

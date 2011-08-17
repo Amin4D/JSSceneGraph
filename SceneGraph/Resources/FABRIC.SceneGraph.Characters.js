@@ -57,7 +57,8 @@ FABRIC.SceneGraph.registerNodeType('CharacterMesh', {
             'rig.boneMatrices',
             'camera.cameraMat44',
             'camera.projectionMat44',
-            'self.indicesBuffer'
+            'self.indicesBuffer',
+            'instance.drawToggle'
           ]
         });
     }
@@ -306,6 +307,9 @@ FABRIC.SceneGraph.registerNodeType('CharacterSkeletonDebug', {
         geometryNode: characterSkeletonDebug.pub,
         materialNode: scene.constructNode('FlatMaterial', { color: options.color }).pub
       });
+    characterSkeletonDebug.pub.getInstanceNode = function() {
+      return instanceNode.pub;
+    }
 
     // setup the postdescend operators for disable and enable zbuffer
     // PT - This could be done at the shader/material stage
@@ -422,10 +426,8 @@ FABRIC.SceneGraph.registerNodeType('CharacterRig', {
       solvers = [];
 
     // extend the public interface
-    characterRigNode.pub.getPose = function() {
-      dgnode.evaluate();
-      return dgnode.getData('pose');
-    };
+    characterRigNode.addMemberInterface(dgnode, 'pose', true);
+
     characterRigNode.pub.getSkeletonNode = function() {
       return scene.getPublicInterface(skeletonNode);
     };

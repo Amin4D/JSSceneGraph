@@ -321,6 +321,7 @@ FABRIC.SceneGraph.registerNodeType('Shader', {
       // decent pass. After thegeometry in the sub tree is drawn.
       operators = redrawEventHandler.postDescendBindings;
     }
+
     operators.append(scene.constructOperator({
       operatorName: 'loadShader',
       srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadShader.kl',
@@ -387,6 +388,29 @@ FABRIC.SceneGraph.registerNodeType('Material', {
 
       materialNode = scene.constructNode('SceneGraphNode', options);
       redrawEventHandler = materialNode.constructEventHandlerNode('Redraw');
+
+      /*
+      if (options.disableZBuffer) {
+        var zbufferEventHandler = materialNode.constructEventHandlerNode('ZBuffer');
+        zbufferEventHandler.preDescendBindings.append(scene.constructOperator({
+            operatorName: 'disableZBuffer',
+            srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/drawAttributes.kl',
+            entryFunctionName: 'disableZBuffer',
+            parameterLayout: []
+          }), 0);
+
+        zbufferEventHandler.postDescendBindings.append(scene.constructOperator({
+            operatorName: 'popAttribs',
+            srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/drawAttributes.kl',
+            entryFunctionName: 'popAttribs',
+            parameterLayout: []
+          }));
+
+        //shader.getRedrawEventHandler().appendChildEventHandler(zbufferEventHandler);
+        //zbufferEventHandler.appendChildEventHandler(redrawEventHandler);
+      }
+      */
+
       shader.getRedrawEventHandler().appendChildEventHandler(redrawEventHandler);
 
       materialNode.getShaderNode = function() {
@@ -402,7 +426,7 @@ FABRIC.SceneGraph.registerNodeType('Material', {
       materialNode = scene.constructNode('Shader', options);
       redrawEventHandler = materialNode.getRedrawEventHandler();
     }
-    
+
     var capitalizeFirstLetter = function(str) {
       return str[0].toUpperCase() + str.substr(1);
     };
@@ -956,6 +980,7 @@ FABRIC.SceneGraph.defineEffectFromFile = function(effectName, effectfile) {
       effectInstanceParameters.name = options.name;
       effectInstanceParameters.type = options.type;
       effectInstanceParameters.parentEventHandler = options.parentEventHandler;
+      effectInstanceParameters.disableZBuffer = options.disableZBuffer;
 
       directives = {};
       preProcessCode = false;

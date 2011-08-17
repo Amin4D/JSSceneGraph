@@ -224,19 +224,25 @@ function OGLShaderProgram.loadShader() {
     self.createProgramFromShaders();
   }
   glUseProgram(self.programId);
-  
-  glPushAttrib(GL_ENABLE_BIT);
-  for(Integer i=0; i<self.enableOptions.size(); i++){
-    glEnable(self.enableOptions[i]);
-    if(self.enableOptions[i]==GL_BLEND){
-      glBlendFunc(self.blendModeSfactor, self.blendModeDfactor);
+  if(self.disableOptions.size() > 0 || self.enableOptions.size() > 0){
+    glPushAttrib(GL_ENABLE_BIT);
+    for(Integer i=0; i<self.disableOptions.size(); i++){
+      glDisable(self.disableOptions[i]);
+    }
+    for(Integer i=0; i<self.enableOptions.size(); i++){
+      glEnable(self.enableOptions[i]);
+      if(self.enableOptions[i]==GL_BLEND){
+        glBlendFunc(self.blendModeSfactor, self.blendModeDfactor);
+      }
     }
   }
   glCullFace(self.cullFace);
 }
 
 function OGLShaderProgram.unloadShader() {
-  glPopAttrib();
+  if(self.disableOptions.size() > 0 || self.enableOptions.size() > 0){
+    glPopAttrib();
+  }
 }
 
 //////////////////////////////////////////////////////////

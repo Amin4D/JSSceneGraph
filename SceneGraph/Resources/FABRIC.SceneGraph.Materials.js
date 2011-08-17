@@ -249,7 +249,8 @@ FABRIC.SceneGraph.registerNodeType('Shader', {
   factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
         parentEventHandler: scene.getSceneRedrawOpaqueObjectsEventHandler(),
-        debug: false
+        debug: false,
+        unloadShader: true
       });
     var shaderNode = scene.constructNode('SceneGraphNode', options),
       redrawEventHandler = shaderNode.constructEventHandlerNode('Redraw'),
@@ -296,6 +297,9 @@ FABRIC.SceneGraph.registerNodeType('Shader', {
 
     ///////////////////////////////////////////////////
     // Enable Options
+    if(options.disableOptions){
+      shaderProgram.disableOptions = options.disableOptions;
+    }
     if(options.enableOptions){
       shaderProgram.enableOptions = options.enableOptions;
     }
@@ -330,30 +334,32 @@ FABRIC.SceneGraph.registerNodeType('Shader', {
     shaderProgram.debug = options.debug;
     redrawEventHandler.addMember('shaderProgram', 'OGLShaderProgram', shaderProgram);
   
-    var operators = redrawEventHandler.preDescendBindings;
-    if(options.assignUniformsOnPostDescend == true){
-      // Post Processing operators invoke the shader on the post
-      // decent pass. After thegeometry in the sub tree is drawn.
-      operators = redrawEventHandler.postDescendBindings;
-    }
-    operators.append(scene.constructOperator({
+    var loadShaderOp = scene.constructOperator({
       operatorName: 'loadShader',
       srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadShader.kl',
       entryFunctionName: 'loadShader',
       parameterLayout: [
         'self.shaderProgram'
       ]
-    }));
-    redrawEventHandler.postDescendBindings.append(scene.constructOperator({
-      operatorName: 'unloadShader',
-      srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadShader.kl',
-      entryFunctionName: 'unloadShader',
-      parameterLayout: [
-        'self.shaderProgram'
-      ]
-    }));
+    });
     
-    
+    if(options.assignUniformsOnPostDescend == true){
+      // Post Processing operators invoke the shader on the post
+      // decent pass. After thegeometry in the sub tree is drawn.
+      redrawEventHandler.postDescendBindings.append(loadShaderOp);
+    }else{
+      redrawEventHandler.preDescendBindings.append(loadShaderOp);
+    }
+    if(options.disableOptions.length > 0 || options.enableOptions.length > 0){
+      redrawEventHandler.postDescendBindings.append(scene.constructOperator({
+        operatorName: 'unloadShader',
+        srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadShader.kl',
+        entryFunctionName: 'unloadShader',
+        parameterLayout: [
+          'self.shaderProgram'
+        ]
+      }));
+    }
     
     if (options.parentEventHandler !== false) {
       // The shader is registered with the scenegraph, which will
@@ -405,6 +411,7 @@ FABRIC.SceneGraph.registerNodeType('Material', {
           shaderAttributes: options.shaderAttributes,
           programParams: options.programParams,
           drawParams: options.drawParams,
+          disableOptions: options.disableOptions,
           enableOptions: options.enableOptions,
           cullFace: options.cullFace,
           blendModeSfactor: options.blendModeSfactor,

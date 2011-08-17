@@ -75,6 +75,7 @@ FABRIC.RT.OGLShaderProgram = function(name) {
   this.programParams = [];
   this.uniformValues = [];
   this.attributeValues = [];
+  this.disableOptions = [];
   this.enableOptions = FABRIC.SceneGraph.OpenGLConstants ?
     [FABRIC.SceneGraph.OpenGLConstants.GL_DEPTH_TEST,
      FABRIC.SceneGraph.OpenGLConstants.GL_CULL_FACE] :
@@ -103,6 +104,7 @@ FABRIC.appendOnCreateContextCallback(function(context) {
       programParams: 'OGLShaderProgramParam[]',
       uniformValues: 'OGLShaderValue[]',
       attributeValues: 'OGLShaderValue[]',
+      disableOptions: 'Size[]',
       enableOptions: 'Size[]',
       cullFace: 'Size',
       blendModeSfactor: 'Size',

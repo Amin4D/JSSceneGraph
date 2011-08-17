@@ -67,10 +67,7 @@ FABRIC.SceneGraph.registerNodeType('ThickGlassMaterial', {
           )
         ],
         {
-          clearColor: FABRIC.RT.rgba(0,0,0,1),
-          enableOptions: [FABRIC.SceneGraph.OpenGLConstants.GL_DEPTH_TEST,
-                          FABRIC.SceneGraph.OpenGLConstants.GL_BLEND],
-          cullFace: FABRIC.SceneGraph.OpenGLConstants.GL_BACK
+          clearColor: FABRIC.RT.rgba(0,0,0,1)
         }
       ),
       fragmentShader: '\n\
@@ -96,19 +93,11 @@ void main(){\n\
       },
       shaderAttributes: {
         positions: { name: 'a_position' }
-      }
+      },
+      disableOptions: [],
+      enableOptions: []
     });
-      
-    // Before rendering the geometry to the FBO, set up some OpenGL attribs
-    thickGlassMaterialPP.getRedrawEventHandler().preDescendBindings.append(scene.constructOperator({
-        operatorName: 'setThickGlassMaterialAttribs',
-        srcCode: '\n\
-operator setThickGlassMaterialAttribs(){\n\
-  glDisable(GL_CULL_FACE);\n\
-  glBlendFunc(GL_ONE, GL_ONE);\n\
-}',
-        entryFunctionName: 'setThickGlassMaterialAttribs',
-      }));
+    
     
     
     var thickGlassMaterial = scene.constructNode('Material', {
@@ -156,9 +145,14 @@ void main(){\n\
         positions: { name: 'a_position' },
         normals: { name: 'a_normal' }
       },
-      separateShaderNode: false
+      separateShaderNode: false,
+      disableOptions: [FABRIC.SceneGraph.OpenGLConstants.GL_CULL_FACE],
+      enableOptions: [FABRIC.SceneGraph.OpenGLConstants.GL_DEPTH_TEST,
+                      FABRIC.SceneGraph.OpenGLConstants.GL_BLEND],
+      blendModeSfactor: FABRIC.SceneGraph.OpenGLConstants.GL_ONE,
+      blendModeDfactor: FABRIC.SceneGraph.OpenGLConstants.GL_ONE
     });
-    
+
     thickGlassMaterialPP.getRedrawEventHandler = thickGlassMaterial.getRedrawEventHandler;
     
     return thickGlassMaterialPP;

@@ -119,8 +119,7 @@
         vec3 Rn = normalize(reflectDir);
         
         
-        float reflect_factor = dot( Ln, Rn );
-        
+        float reflect_factor = mix(dot( Ln, Rn ), 1.0, 0.5);
         // Perform a cube map look up.
         vec4 cube_color = textureCube(u_samplerCube, Rn);
         cube_color.a = 0.0;

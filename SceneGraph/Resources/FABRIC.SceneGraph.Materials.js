@@ -454,18 +454,6 @@ FABRIC.SceneGraph.registerNodeType('Material', {
       shader,
       i;
 
-    if (options.disableZBuffer) {
-      if(options.enableOptions &&
-         options.enableOptions.indexOf(FABRIC.SceneGraph.OpenGLConstants.GL_DEPTH_TEST) != -1 ){
-        options.enableOptions.splice(options.enableOptions.indexOf(FABRIC.SceneGraph.OpenGLConstants.GL_DEPTH_TEST), 1);
-      }
-      if(!options.disableOptions){
-        options.disableOptions = [FABRIC.SceneGraph.OpenGLConstants.GL_DEPTH_TEST];
-      }else if(options.disableOptions.indexOf(FABRIC.SceneGraph.OpenGLConstants.GL_DEPTH_TEST) === -1 ){
-        options.disableOptions.push(FABRIC.SceneGraph.OpenGLConstants.GL_DEPTH_TEST);
-      }
-    }
-
     if (options.separateShaderNode) {
       if(options.shaderNode){
         shader = options.shaderNode;
@@ -634,6 +622,21 @@ FABRIC.SceneGraph.registerNodeType('Material', {
         addTextureInterface(i, options.textures[i], textureUnit);
         textureUnit++;
       }
+    }
+    
+    if (options.disableZBuffer) {
+      redrawEventHandler.preDescendBindings.append(scene.constructOperator({
+          operatorName: 'disableZBuffer',
+          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/drawAttributes.kl',
+          entryFunctionName: 'disableZBuffer',
+          parameterLayout: []
+        }));
+      redrawEventHandler.postDescendBindings.append(scene.constructOperator({
+          operatorName: 'popAttribs',
+          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/drawAttributes.kl',
+          entryFunctionName: 'popAttribs',
+          parameterLayout: []
+        }));
     }
 
     return materialNode;

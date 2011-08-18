@@ -34,42 +34,43 @@ operator bindCubeMap(
   io OGLTextureCube cubeMap,
   io Integer textureUnit
 ){
-  if(oglTexture2D.bufferID == 0){
+  if(cubeMap.bufferID == 0){
     Size width, height;
     RGBA imageLDR[];
+    var Data NULL;
     if(resource1.dataSize != 0){
       decodeLDRImageData(resource1, width, height, imageLDR);
-      cubeMap.storeData(imageLDR, 0);
+      cubeMap.storeData(imageLDR, width, height, 0);
       resource1.data = NULL;
       resource1.dataSize = 0;
     }
     if(resource2.dataSize != 0){
       decodeLDRImageData(resource2, width, height, imageLDR);
-      cubeMap.storeData(imageLDR, 1);
+      cubeMap.storeData(imageLDR, width, height, 1);
       resource2.data = NULL;
       resource2.dataSize = 0;
     }
     if(resource3.dataSize != 0){
       decodeLDRImageData(resource3, width, height, imageLDR);
-      cubeMap.storeData(imageLDR, 2);
+      cubeMap.storeData(imageLDR, width, height, 2);
       resource3.data = NULL;
       resource3.dataSize = 0;
     }
     if(resource4.dataSize != 0){
       decodeLDRImageData(resource4, width, height, imageLDR);
-      cubeMap.storeData(imageLDR, 3);
+      cubeMap.storeData(imageLDR, width, height, 3);
       resource4.data = NULL;
       resource4.dataSize = 0;
     }
     if(resource5.dataSize != 0){
       decodeLDRImageData(resource5, width, height, imageLDR);
-      cubeMap.storeData(imageLDR, 4);
+      cubeMap.storeData(imageLDR, width, height, 4);
       resource5.data = NULL;
       resource5.dataSize = 0;
     }
     if(resource6.dataSize != 0){
       decodeLDRImageData(resource6, width, height, imageLDR);
-      cubeMap.storeData(imageLDR, 5);
+      cubeMap.storeData(imageLDR, width, height, 5);
       resource6.data = NULL;
       resource6.dataSize = 0;
     }

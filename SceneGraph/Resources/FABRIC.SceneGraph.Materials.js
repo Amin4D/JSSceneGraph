@@ -126,28 +126,29 @@ FABRIC.SceneGraph.registerNodeType('CubeMap', {
       var resourceloaddgnode = resourceLoadNode.getDGLoadNode();
       redrawEventHandler.addScope('resource'+faceId, resourceloaddgnode);
     }
-    createTextureLoaderNode(urls[0], 0);
-    createTextureLoaderNode(urls[1], 1);
-    createTextureLoaderNode(urls[2], 2);
-    createTextureLoaderNode(urls[3], 3);
-    createTextureLoaderNode(urls[4], 4);
-    createTextureLoaderNode(urls[5], 5);
+    createTextureLoaderNode(options.urls[0], 0);
+    createTextureLoaderNode(options.urls[1], 1);
+    createTextureLoaderNode(options.urls[2], 2);
+    createTextureLoaderNode(options.urls[3], 3);
+    createTextureLoaderNode(options.urls[4], 4);
+    createTextureLoaderNode(options.urls[5], 5);
 
     redrawEventHandler.preDescendBindings.append(scene.constructOperator({
         operatorName: 'bindCubeMap',
-        srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadTexture.kl',
+        srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadCubeMap.kl',
         entryFunctionName: 'bindCubeMap',
         parameterLayout: [
-          'resource.resource0',
-          'resource.resource1',
-          'resource.resource2',
-          'resource.resource3',
-          'resource.resource4',
-          'resource.resource5',
+          'resource0.resource',
+          'resource1.resource',
+          'resource2.resource',
+          'resource3.resource',
+          'resource4.resource',
+          'resource5.resource',
           'self.cubeMap',
           'textureStub.textureUnit'
         ]
       }));
+    return cubMapNode;
   }});
 
 FABRIC.SceneGraph.registerNodeType('Video', {
@@ -337,6 +338,7 @@ FABRIC.SceneGraph.registerNodeType('Shader', {
     ///////////////////////////////////////////////////
     // Uniform Values
     for (i in options.shaderUniforms) {
+      console.log(i+":" + FABRIC.SceneGraph.getShaderParamID(i));
       shaderProgram.uniformValues.push(new FABRIC.RT.OGLShaderValue(
         options.shaderUniforms[i].name, FABRIC.SceneGraph.getShaderParamID(i)));
     }
@@ -497,7 +499,6 @@ FABRIC.SceneGraph.registerNodeType('Material', {
       materialNode = scene.constructNode('SceneGraphNode', options);
       redrawEventHandler = materialNode.constructEventHandlerNode('Redraw');
 
-
       shader.getRedrawEventHandler().appendChildEventHandler(redrawEventHandler);
 
       materialNode.getShaderNode = function() {
@@ -597,6 +598,8 @@ FABRIC.SceneGraph.registerNodeType('Material', {
         textureStub.addMember('textureUnit', 'Integer', textureUnit);
         redrawEventHandler.appendChildEventHandler(textureStub);
 
+      console.log(textureName+":" + FABRIC.SceneGraph.getShaderParamID(textureName));
+      
         textureStub.preDescendBindings.append(scene.constructOperator({
           operatorName: 'loadIntegerUniform',
           srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadUniforms.kl',

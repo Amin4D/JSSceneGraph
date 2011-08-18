@@ -8,19 +8,39 @@
 
 
 function OGLTextureCube.storeData(
-  RGBA imageLDR,
+  RGBA imageLDR[],
+  Size width,
+  Size height,
   Integer faceID
 ) {
+  if(width != height){
+    report("ERROR: cube map images must be square");
+  }
+  report("storeData:" + faceID + " = " +imageLDR.dataSize());
   if(self.textureData.size() == 0){
     self.textureData.resize(6);
     self.textureDataSize.resize(6);
+    self.size = width;
   }
-  self.textureData[0] = imageLDR.data();
-  self.textureDataSize[0] = imageLDR.dataSize();
+  self.textureData[faceID] = imageLDR.data();
+  self.textureDataSize[faceID] = imageLDR.dataSize();
 }
 
 function OGLTextureCube.configure(io Integer textureUnit) {
-//  report("OGLTextureCube.bind width:" + self.size);
+  report("OGLTextureCube.configure >");
+  var Data NULL;
+  if(self.textureDataSize.size() == 0 ||
+     self.textureDataSize[0] == 0 ||
+     self.textureDataSize[1] == 0 ||
+     self.textureDataSize[2] == 0 ||
+     self.textureDataSize[3] == 0 ||
+     self.textureDataSize[4] == 0 ||
+     self.textureDataSize[5] == 0
+    ){
+    return;
+  }
+  
+  report("OGLTextureCube.configure raedy:" + self.size);
   
   var Size buffers[];
   buffers.resize(1);
@@ -43,7 +63,7 @@ function OGLTextureCube.configure(io Integer textureUnit) {
   glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
 }
 
-function OGLTexture2D.bind(io Integer textureUnit){
+function OGLTextureCube.bind(io Integer textureUnit){
   glActiveTexture(GL_TEXTURE0 + textureUnit);
   glBindTexture(GL_TEXTURE_CUBE_MAP, self.bufferID);
 }

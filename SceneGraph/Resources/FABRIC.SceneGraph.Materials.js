@@ -23,37 +23,41 @@ FABRIC.SceneGraph.registerNodeType('Image', {
     scene.assignDefaults(options, {
       wantHDR: false,
       wantRGBA: true,
+      createDgNode: false,
       createResourceLoadNode: true,
       createLoadTextureEventHandler: true,
       url: undefined
     });
     
     var imageNode = scene.constructNode('Texture', options);
-    var dgnode = imageNode.constructDGNode('DGNode')
-    dgnode.addMember('hdr', 'Boolean', options.wantHDR);
-    dgnode.addMember('width', 'Size');
-    dgnode.addMember('height', 'Size');
-    dgnode.addMember('pixels', (options.wantHDR ? 'Color' : (options.wantRGBA ? 'RGBA' : 'RGB')) + '[]');
-
-    imageNode.addMemberInterface(dgnode, 'width');
-    imageNode.addMemberInterface(dgnode, 'height');
+    if(options.createDgNode){
+      var dgnode = imageNode.constructDGNode('DGNode')
+      dgnode.addMember('hdr', 'Boolean', options.wantHDR);
+      dgnode.addMember('width', 'Size');
+      dgnode.addMember('height', 'Size');
+      dgnode.addMember('pixels', (options.wantHDR ? 'Color' : (options.wantRGBA ? 'RGBA' : 'RGB')) + '[]');
+  
+      imageNode.addMemberInterface(dgnode, 'width');
+      imageNode.addMemberInterface(dgnode, 'height');
+    }
 
     if (options.createResourceLoadNode) {
       var resourceLoadNode = scene.constructNode('ResourceLoad', options);
       var resourceloaddgnode = resourceLoadNode.getDGLoadNode();
-      dgnode.addDependency(resourceloaddgnode, 'resource');
-
-      dgnode.bindings.append(scene.constructOperator({
-        operatorName: (options.wantHDR ? 'loadImageHDR' : 'loadImageLDR'),
-        parameterLayout: [
-              'resource.resource',
-              'self.width',
-              'self.height',
-              'self.pixels'
-            ],
-        entryFunctionName: (options.wantHDR ? 'loadImageHDR' : 'loadImageLDR'),
-        srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadTexture.kl'
-      }));
+      if(options.createDgNode){
+        dgnode.addDependency(resourceloaddgnode, 'resource');
+        dgnode.bindings.append(scene.constructOperator({
+          operatorName: (options.wantHDR ? 'loadImageHDR' : 'loadImageLDR'),
+          parameterLayout: [
+            'resource.resource',
+            'self.width',
+            'self.height',
+            'self.pixels'
+          ],
+          entryFunctionName: (options.wantHDR ? 'loadImageHDR' : 'loadImageLDR'),
+          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadTexture.kl'
+        }));
+      };
 
       imageNode.getResourceLoadNode = function() {
         return resourceLoadNode;
@@ -67,20 +71,35 @@ FABRIC.SceneGraph.registerNodeType('Image', {
     if (options.createLoadTextureEventHandler) {
       // Construct the handler for loading the image into texture memory.
       var redrawEventHandler = imageNode.constructEventHandlerNode('Redraw');
-      redrawEventHandler.addScope('image', dgnode);
       redrawEventHandler.addMember('oglTexture2D', 'OGLTexture2D', FABRIC.RT.oglTexture2D());
-      redrawEventHandler.preDescendBindings.append(scene.constructOperator({
-        operatorName: 'bindTextureLDR',
-        srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadTexture.kl',
-        entryFunctionName: 'bindTextureLDR',
-        parameterLayout: [
-          'image.width',
-          'image.height',
-          'image.pixels',
-          'self.oglTexture2D',
-          'textureStub.textureUnit'
-        ]
-      }));
+      if(options.createDgNode){
+        redrawEventHandler.addScope('image', dgnode);
+        redrawEventHandler.preDescendBindings.append(scene.constructOperator({
+          operatorName: 'bindTextureLDR',
+          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadTexture.kl',
+          entryFunctionName: 'bindTextureLDR',
+          parameterLayout: [
+            'image.width',
+            'image.height',
+            'image.pixels',
+            'self.oglTexture2D',
+            'textureStub.textureUnit'
+          ]
+        }));
+      }
+      else if(options.createResourceLoadNode){
+        redrawEventHandler.addScope('resource', resourceloaddgnode);
+        redrawEventHandler.preDescendBindings.append(scene.constructOperator({
+          operatorName: 'loadAndBindTextureLDR',
+          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadTexture.kl',
+          entryFunctionName: 'loadAndBindTextureLDR',
+          parameterLayout: [
+            'resource.resource',
+            'self.oglTexture2D',
+            'textureStub.textureUnit'
+          ]
+        }));
+      }
     }
 
     imageNode.getURL = function() {
@@ -88,6 +107,47 @@ FABRIC.SceneGraph.registerNodeType('Image', {
     };
 
     return imageNode;
+  }});
+
+FABRIC.SceneGraph.registerNodeType('CubeMap', {
+  briefDesc: '...',
+  detailedDesc: '...',
+  factoryFn: function(options, scene) {
+    scene.assignDefaults(options, {
+      urls: []
+    });
+    
+    var cubMapNode = scene.constructNode('Texture', options);
+    var redrawEventHandler = cubMapNode.constructEventHandlerNode('Redraw');
+    redrawEventHandler.addMember('cubeMap', 'OGLTextureCube', FABRIC.RT.oglTextureCube());
+    
+    var createTextureLoaderNode = function(url, faceId){
+      var resourceLoadNode = scene.constructNode('ResourceLoad', { url: url });
+      var resourceloaddgnode = resourceLoadNode.getDGLoadNode();
+      redrawEventHandler.addScope('resource'+faceId, resourceloaddgnode);
+    }
+    createTextureLoaderNode(urls[0], 0);
+    createTextureLoaderNode(urls[1], 1);
+    createTextureLoaderNode(urls[2], 2);
+    createTextureLoaderNode(urls[3], 3);
+    createTextureLoaderNode(urls[4], 4);
+    createTextureLoaderNode(urls[5], 5);
+
+    redrawEventHandler.preDescendBindings.append(scene.constructOperator({
+        operatorName: 'bindCubeMap',
+        srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadTexture.kl',
+        entryFunctionName: 'bindCubeMap',
+        parameterLayout: [
+          'resource.resource0',
+          'resource.resource1',
+          'resource.resource2',
+          'resource.resource3',
+          'resource.resource4',
+          'resource.resource5',
+          'self.cubeMap',
+          'textureStub.textureUnit'
+        ]
+      }));
   }});
 
 FABRIC.SceneGraph.registerNodeType('Video', {

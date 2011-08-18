@@ -74,6 +74,29 @@ operator bindTextureLDR(
   oglTexture2D.bindImageLDR(width, height, bitmap, textureUnit);
 }
 
+// This operator takes a resource, decodes it, and immediately
+// uploads it to the GPU. This simplifies the graph, because 
+// a node is not created to store the data in main memory. 
+operator loadAndBindTextureLDR(
+  io FabricResource resource,
+  io OGLTexture2D oglTexture2D,
+  io Integer textureUnit
+) {
+//  report("loadAndBindTextureLDR -> textureUnit:" + textureUnit + " textureUnit:" + textureUnit );
+  if(resource.dataSize == 0)
+    return;
+  if(oglTexture2D.bufferID == 0){
+    Size width, height;
+    RGBA imageLDR[];
+    decodeLDRImageData(resource, width, height, imageLDR);
+    oglTexture2D.configure(width, height, imageLDR.data(), imageLDR.size(), GL_RGBA, textureUnit);
+    var Data NULL;
+    resource.data = NULL;
+    resource.dataSize = 0;
+  }
+  oglTexture2D.bind(textureUnit);
+}
+
 operator bindTextureHDR(
   io Size width,
   io Size height,

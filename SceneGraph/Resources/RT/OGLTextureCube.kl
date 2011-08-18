@@ -1,0 +1,51 @@
+
+//
+// Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
+//
+
+// The 6 sides of the cube area loaded in as individual textures,
+// and the data pointers are stored in the cube
+
+
+function OGLTextureCube.storeData(
+  RGBA imageLDR,
+  Integer faceID
+) {
+  if(self.textureData.size() == 0){
+    self.textureData.resize(6);
+    self.textureDataSize.resize(6);
+  }
+  self.textureData[0] = imageLDR.data();
+  self.textureDataSize[0] = imageLDR.dataSize();
+}
+
+function OGLTextureCube.configure(io Integer textureUnit) {
+//  report("OGLTextureCube.bind width:" + self.size);
+  
+  var Size buffers[];
+  buffers.resize(1);
+  glGenTextures(1, buffers);
+  self.bufferID = buffers[0];
+  
+  glBindTexture(GL_TEXTURE_CUBE_MAP, self.bufferID);
+  glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  
+  glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X, 0, GL_RGBA8, self.size, self.size, 0, GL_BGRA, GL_UNSIGNED_BYTE, self.textureData[0]);
+  glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_X, 0, GL_RGBA8, self.size, self.size, 0, GL_BGRA, GL_UNSIGNED_BYTE, self.textureData[1]);
+  glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Y, 0, GL_RGBA8, self.size, self.size, 0, GL_BGRA, GL_UNSIGNED_BYTE, self.textureData[2]);
+  glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, GL_RGBA8, self.size, self.size, 0, GL_BGRA, GL_UNSIGNED_BYTE, self.textureData[3]);
+  glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, 0, GL_RGBA8, self.size, self.size, 0, GL_BGRA, GL_UNSIGNED_BYTE, self.textureData[4]);
+  glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, GL_RGBA8, self.size, self.size, 0, GL_BGRA, GL_UNSIGNED_BYTE, self.textureData[5]);
+  glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
+}
+
+function OGLTexture2D.bind(io Integer textureUnit){
+  glActiveTexture(GL_TEXTURE0 + textureUnit);
+  glBindTexture(GL_TEXTURE_CUBE_MAP, self.bufferID);
+}
+
+

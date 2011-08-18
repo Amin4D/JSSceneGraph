@@ -18,6 +18,10 @@ function loadModelProjectionMatricesFn(
   if(location!=-1){
     shaderProgram.loadMat44Uniform(location, Mat44(modelXfo));
   }
+  location = shaderProgram.getUniformLocation(MODELMATRIXINVERSE_ATTRIBUTE_ID);
+  if(location!=-1){
+    shaderProgram.loadMat44Uniform(location, Mat44(modelXfo).inverse());
+  }
   location = shaderProgram.getUniformLocation(VIEWMATRIX_ATTRIBUTE_ID);
   if(location!=-1){
     shaderProgram.loadMat44Uniform(location, cameraMatrix);

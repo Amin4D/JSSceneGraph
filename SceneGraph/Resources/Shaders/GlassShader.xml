@@ -20,6 +20,10 @@
     <uniform name="u_modelViewProjectionMatrix" constant="modelViewProjectionMatrix" type="Mat44" owner="instance"/>
     <uniform name="u_modelViewMatrix" constant="modelViewMatrix" type="Mat44" owner="instance"/>
     <uniform name="u_normalMatrix" constant="normalMatrix" type="Mat33" owner="instance"/>
+    
+    <uniform name="u_modelMatrix" constant="modelMatrix" type="Mat44" owner="instance"/>
+    <uniform name="u_modelMatrixInverse" constant="modelMatrixInverse" type="Mat44" owner="instance"/>
+    <uniform name="u_viewMatrix" constant="viewMatrix" type="Mat44" owner="instance"/>
   </uniforms>
   <attributes>
     <attribute name="a_position" binding="positions"/>
@@ -50,22 +54,31 @@
       uniform mat3 u_normalMatrix;
       uniform vec4 u_lightPosition;
       
+      
+      uniform mat4 u_modelMatrix;
+      uniform mat4 u_modelMatrixInverse;
+      uniform mat4 u_viewMatrix;
+      
+      
       attribute vec4 a_position;
       attribute vec3 a_normal;
 
       varying vec3 normal;
-      varying vec3 worldnormal;
       varying vec3 lightDir;
       varying vec3 viewDir;
+      varying vec3 reflectDir;
 
       void main(){
-        worldnormal = a_normal;
-        normal = u_normalMatrix * a_normal;
         vec4 modelCameraPosition = u_modelViewMatrix * a_position;
-  
-        lightDir = vec3(u_lightPosition - modelCameraPosition);
-
+        
+        normal = u_normalMatrix * a_normal;
         viewDir = vec3(-modelCameraPosition);
+        lightDir = vec3(u_lightPosition - modelCameraPosition);
+        
+        // Calculate reflected vector
+      //  vec3 normalDir = normalize(vec3(vec4(a_normal, 0.0) * u_modelMatrixInverse));
+        reflectDir = reflect(viewDir, normal);
+        
         gl_Position = u_modelViewProjectionMatrix * a_position;
       }
     </source>
@@ -87,11 +100,10 @@
 
       uniform samplerCube u_samplerCube;
 
-      varying vec3 worldnormal;
       varying vec3 normal;
       varying vec3 lightDir;
       varying vec3 viewDir;
-    
+      varying vec3 reflectDir;
       
       ]]>
       </source>
@@ -99,19 +111,18 @@
       <source>
       <![CDATA[
       
-      const float reflect_factor = 0.5;
+      const float reflect_factor = 0.9;
       
       void main(){
         
         vec3 Ln = normalize(lightDir);
         vec3 Vn = normalize(viewDir);
         vec3 Nn = normalize(normal);
-        vec3 worldNn = normalize(worldnormal);
-        
-        vec3 reflected = normalize(reflect(Vn, Nn));
+        vec3 Rn = normalize(reflectDir);
         
         // Perform a cube map look up.
-        vec4 cube_color = textureCube(u_samplerCube, worldNn);
+        vec4 cube_color = textureCube(u_samplerCube, Rn);
+        cube_color.a = 0.0;
         vec4 base_color = u_materialDiffuseColor;
         float lightFactor = 1.0;
         gl_FragColor = mix(base_color, cube_color, reflect_factor);

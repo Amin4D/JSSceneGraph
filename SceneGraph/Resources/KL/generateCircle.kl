@@ -13,13 +13,12 @@ operator setCircleVertexCount(
 }
 
 operator generateCircle(
-  io Vec3 positions[],
+  io Vec3 positions<>,
   io Integer indices[],
   io Scalar radius,
   io Scalar arcAngle,
   io Integer numSegments
 ) {
-  //  positions.resize( numSegments );
   indices.resize(numSegments * 2);
 
   // +z-plane

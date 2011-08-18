@@ -150,7 +150,7 @@ FABRIC.SceneGraph.registerNodeType('Flock', {
         'self.cellindices',
         'self.cellcoords',
 
-        'self.previousframe_positions[]',
+        'self.previousframe_positions<>',
         'self.previousframe_velocities[]',
 
         'self.neighborinfluencerange',

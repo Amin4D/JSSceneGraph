@@ -33,9 +33,9 @@ operator setObjVertexCount(
 operator setObjGeom(
   io Data objParseHandle,
   io Integer indices[],
-  io Vec3 positions[],
-  io Vec3 normals[],
-  io Vec2 uvs[]
+  io Vec3 positions<>,
+  io Vec3 normals<>,
+  io Vec2 uvs<>
 ) {
 //  report "OBJ setObjGeom";
   FabricOBJGetTriangleIndices( objParseHandle, indices );

@@ -6,25 +6,24 @@
 // Algorithm copied from http://www.terathon.com/code/tangent.html
 
 operator computeTriangleTangents(
-  io Integer indexList[],
-  io Vec3 positions[],
-  io Vec3 normals[],
-  io Vec2 uvCoords[],
-  io Vec4 tangents[]
+  io Integer indices[],
+  io Vec3 positions<>,
+  io Vec3 normals<>,
+  io Vec2 uvCoords<>,
+  io Vec4 tangents<>
 ) {
   if (uvCoords.size() != positions.size()) {
     report('Error: uvCoords.size() !== positions.size()');
     return;
   }
 
-  var Size iSize = indexList.size();
+  var Size iSize = indices.size();
   var Size vSize = positions.size();
 
   var Vec3 tanS[], tanT[];
 
   tanS.resize(vSize);
   tanT.resize(vSize);
-  tangents.resize(vSize);
 
   for (var Size i = 0; i < vSize; i++) {
     tanS[i].setNull();
@@ -32,7 +31,7 @@ operator computeTriangleTangents(
   }
 
   for (var Size i = 0; i < iSize; i += 3) {
-    var Integer i0 = indexList[i + 0], i1 = indexList[i + 1], i2 = indexList[i + 2];
+    var Integer i0 = indices[i + 0], i1 = indices[i + 1], i2 = indices[i + 2];
     var Vec3 p0 = positions[i0];
     var Vec3 p1 = positions[i1];
     var Vec3 p2 = positions[i2];

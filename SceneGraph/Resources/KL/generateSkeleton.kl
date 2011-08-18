@@ -3,10 +3,27 @@
 // Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
 //
 
+operator setSkeletonVertexCount(
+  io Bone bones[],
+  io Size newCount
+) {
+  // first loop over all bones and count the ones with a length
+  var Integer nbBones = 0;
+  var Integer nbAxes = 0;
+  for (var Integer i = 0; i < bones.size(); i++) {
+    if (bones[i].length > 0.0) {
+      nbBones++;
+    }else{
+      nbAxes++;
+    }
+  }
+  newCount = (nbBones * 12) + (nbAxes * 6);
+}
+
 operator generateSkeleton(
   io Bone bones[],
   io Xfo pose[],
-  io Vec3 positions[],
+  io Vec3 positions<>,
   io Integer indices[],
   io Scalar boneradius,
   io Xfo offsetpose
@@ -31,8 +48,9 @@ operator generateSkeleton(
     return;
   }
   
+  // TODO: Clean up this op once we have sub-graph slicing working.
+  // We should only need one operator.
   indices.resize(nbPos);
-  positions.resize(nbPos);
 
   var Vec3 y(0.0, boneradius * 3.0, 0.0);
   var Vec3 z(0.0, 0.0, boneradius);

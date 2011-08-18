@@ -19,9 +19,9 @@ operator generateSphere(
   io Integer detail,
 
   io Integer indices[],
-  io Vec3 positions[],
-  io Vec3 normals[],
-  io Vec2 uvs[]
+  io Vec3 positions<>,
+  io Vec3 normals<>,
+  io Vec2 uvs<>
 ) {
   var Integer slices = (detail >= 0) ? (detail * 2 + 3) : 3;
   var Integer loops = (detail >= 0) ? (detail + 1) : 1;
@@ -34,9 +34,6 @@ operator generateSphere(
   numVertices = (1 + slices) * (2 + loops);
   nbGenSlices = slices + 1;
 
-  //  uvs.resize( numVertices );
-  //  positions.resize( numVertices );
-  //  normals.resize( numVertices );
   indices.resize(numTriangles * 3);
 
   var Integer voff = 0;

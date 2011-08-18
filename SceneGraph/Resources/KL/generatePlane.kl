@@ -36,9 +36,9 @@ operator generatePlane(
   io Integer widthSections,
   io Boolean doubleSided,
 
-  io Vec3 positions[],
-  io Vec3 normals[],
-  io Vec2 uvs[]
+  io Vec3 positions<>,
+  io Vec3 normals<>,
+  io Vec2 uvs<>
 ) {
   var Integer vi = 0;
   var Integer ii = 0;
@@ -51,9 +51,6 @@ operator generatePlane(
   }
 
   Integer numPoints = (lengthSections + 1) * (widthSections + 1);
-  //  positions.resize( numPoints );
-  //  normals.resize( numPoints );
-  //  uvs.resize( numPoints );
   if(doubleSided){
     idx.resize(2 * 6 * lengthSections * widthSections);
   }else{

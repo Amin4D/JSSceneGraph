@@ -62,7 +62,7 @@ FABRIC.SceneGraph.registerNodeType('Cross', {
         srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/generateCross.kl',
         entryFunctionName: 'generateCross',
         parameterLayout: [
-          'self.positions[]',
+          'self.positions<>',
           'uniforms.indices',
           'uniforms.crosssize'
         ]
@@ -96,7 +96,7 @@ FABRIC.SceneGraph.registerNodeType('Rectangle', {
         srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/generateRectangle.kl',
         entryFunctionName: 'generateRectangle',
         parameterLayout: [
-          'self.positions[]',
+          'self.positions<>',
           'uniforms.indices',
           'uniforms.length',
           'uniforms.width'
@@ -133,7 +133,7 @@ FABRIC.SceneGraph.registerNodeType('BoundingBox', {
         srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/generateBoundingBox.kl',
         entryFunctionName: 'generateBoundingBox',
         parameterLayout: [
-          'self.positions[]',
+          'self.positions<>',
           'uniforms.indices',
           'uniforms.bboxmin',
           'uniforms.bboxmax'
@@ -191,7 +191,7 @@ FABRIC.SceneGraph.registerNodeType('Grid', {
         srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/generateGrid.kl',
         entryFunctionName: 'generateGrid',
         parameterLayout: [
-          'self.positions[]',
+          'self.positions<>',
           'uniforms.indices',
           'uniforms.size_x',
           'uniforms.size_y',
@@ -236,7 +236,7 @@ FABRIC.SceneGraph.registerNodeType('Axes', {
         srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/generateAxes.kl',
         entryFunctionName: 'generateAxes',
         parameterLayout: [
-          'self.positions[]',
+          'self.positions<>',
           'uniforms.indices',
           'uniforms.size'
         ]
@@ -288,7 +288,7 @@ FABRIC.SceneGraph.registerNodeType('Circle', {
         srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/generateCircle.kl',
         entryFunctionName: 'generateCircle',
         parameterLayout: [
-          'self.positions[]',
+          'self.positions<>',
           'uniforms.indices',
           'uniforms.radius',
           'uniforms.arcAngle',
@@ -360,9 +360,9 @@ FABRIC.SceneGraph.registerNodeType('Plane', {
           'uniforms.widthSections',
           'uniforms.doubleSided',
 
-          'self.positions[]',
-          'self.normals[]',
-          'self.uvs0[]'
+          'self.positions<>',
+          'self.normals<>',
+          'self.uvs0<>'
         ]
       })
     ]);
@@ -411,8 +411,8 @@ FABRIC.SceneGraph.registerNodeType('Cuboid', {
         srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/generateCuboid.kl',
         entryFunctionName: 'generateCuboid',
         parameterLayout: [
-          'self.positions[]',
-          'self.normals[]',
+          'self.positions<>',
+          'self.normals<>',
           'uniforms.indices',
           'uniforms.length',
           'uniforms.height',
@@ -468,9 +468,9 @@ FABRIC.SceneGraph.registerNodeType('Sphere', {
           'uniforms.detail',
 
           'uniforms.indices',
-          'self.positions[]',
-          'self.normals[]',
-          'self.uvs0[]'
+          'self.positions<>',
+          'self.normals<>',
+          'self.uvs0<>'
         ]
       })
     ]);
@@ -527,8 +527,8 @@ FABRIC.SceneGraph.registerNodeType('Torus', {
           'uniforms.detail',
 
           'uniforms.indices',
-          'self.positions[]',
-          'self.normals[]'
+          'self.positions<>',
+          'self.normals<>'
         ]
       })
     ]);
@@ -589,8 +589,8 @@ FABRIC.SceneGraph.registerNodeType('Cone', {
           'uniforms.detail',
 
           'uniforms.indices',
-          'self.positions[]',
-          'self.normals[]'
+          'self.positions<>',
+          'self.normals<>'
         ]
       })
     ]);
@@ -651,8 +651,8 @@ FABRIC.SceneGraph.registerNodeType('Cylinder', {
           'uniforms.detail',
 
           'uniforms.indices',
-          'self.positions[]',
-          'self.normals[]'
+          'self.positions<>',
+          'self.normals<>'
         ]
       })
     ]);
@@ -694,8 +694,8 @@ FABRIC.SceneGraph.registerNodeType('Teapot', {
           'uniforms.detail',
 
           'uniforms.indices',
-          'self.positions[]',
-          'self.normals[]'
+          'self.positions<>',
+          'self.normals<>'
         ]
       })
     ]);

@@ -348,8 +348,8 @@ FABRIC.SceneGraph.registerNodeType('PaintManipulator', {
             'paintData.brushColor',
 
             'transform.' + instanceNode.pub.getTransformNodeMember(),
-            'geometry_vertexattributes.positions[]',
-            'geometry_vertexattributes.normals[]',
+            'geometry_vertexattributes.positions<>',
+            'geometry_vertexattributes.normals<>',
             'geometry_vertexattributes.vertexColors[]'
           ],
           async: false

@@ -30,8 +30,8 @@ operator generateCylinder(
   io Integer detail,
 
   io Integer indices[],
-  io Vec3 positions[],
-  io Vec3 normals[],
+  io Vec3 positions<>,
+  io Vec3 normals<>,
 ) {
   //  report( "Generate cylinder. Radius: " + radius + " Height: " + height + " Caps: " + caps + " Detail: " + detail );
   Scalar PI = 3.141592653589793238462643;
@@ -46,8 +46,6 @@ operator generateCylinder(
     nbTri += nbSides * 2;
   }
 
-  //  positions.resize( numVertices );
-  //  normals.resize( numVertices );
   indices.resize(nbTri * 3);
 
   for (var Integer i = 0; i < nbSides; i++) {

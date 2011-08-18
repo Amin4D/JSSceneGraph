@@ -334,11 +334,11 @@ operator generateTeapot(
   io Integer detail,
 
   io Integer idx[],
-  io Vec3 v[],
-  io Vec3 n[]
+  io Vec3 positions<>,
+  io Vec3 normals<>
 ) {
-  var Vec2 t[];
-  generateTeapotBase(size, detail, false, idx, v, n, t);
+  var Vec2 uvs[];
+  generateTeapotBase(size, detail, false, idx, positions, normals, uvs);
 }
 
 operator generateTeapotTex(
@@ -346,9 +346,9 @@ operator generateTeapotTex(
   io Integer detail,
 
   io Integer idx[],
-  io Vec3 v[],
-  io Vec3 n[],
-  io Vec2 t[]
+  io Vec3 positions<>,
+  io Vec3 normals<>,
+  io Vec2 uvs<>
 ) {
-  generateTeapotBase(size, detail, true, idx, v, n, t);
+  generateTeapotBase(size, detail, true, idx, positions, normals, uvs);
 }

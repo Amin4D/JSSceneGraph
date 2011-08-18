@@ -98,7 +98,7 @@ FABRIC.SceneGraph = {
 
     // EAch Viewport creates a new fabricwindow which is the origin of
     // window redraw events.
-    var windows = [];
+    var viewports = [];
 
     ///////////////////////////////////////////////////////////////////
     // Maps
@@ -167,7 +167,7 @@ FABRIC.SceneGraph = {
     scene.pub.getContextId = function() {
       return context.getContextID();
     };
-    scene.addWindow = function(element, options) {
+    scene.bindViewportToWindow = function(element, viewPort, options) {
       var fabricwindow = context.createWindow(element, options);
       // [pzion 20110326] Add a context menu item for any windows
       // in the context that pops up a Fabric debugger for the context
@@ -178,7 +178,7 @@ FABRIC.SceneGraph = {
           scene.pub.displayDebugger();
         }
       );
-      windows.push(fabricwindow);
+      viewports.push(viewPort);
       return fabricwindow;
     };
     scene.getRegisteredTypesManager = function() {
@@ -473,6 +473,12 @@ FABRIC.SceneGraph = {
     scene.getSceneRedrawEventHandler = function() {
       return beginDrawEventHandler;
     };
+    scene.getSceneRedrawOpaqueObjectsEventHandler = function() {
+      return beginDrawOpaqueObjectsEventHandler;
+    };
+    scene.getSceneRedrawTransparentObjectsEventHandler = function() {
+      return beginDrawTransparentObjectsEventHandler;
+    };
     scene.getScenePostRedrawEventHandler = function() {
       return postDrawEventHandler;
     };
@@ -562,10 +568,8 @@ FABRIC.SceneGraph = {
       }
     };
     scene.pub.redrawAllWindows = function() {
-      for (i in windows) {
-        if (windows.hasOwnProperty(i)) {
-          windows[i].needsRedraw();
-        }
+      for (var i=0; i<viewports.length; i++) {
+        viewports[i].pub.redraw(isPlaying);
       }
     };
     scene.pub.getErrors = function() {
@@ -644,6 +648,15 @@ FABRIC.SceneGraph = {
     ///////////////////////////////////////////////////////////////////
     // All scene draw event handlers(shaders) are attached to this handler.
     var beginDrawEventHandler = scene.constructEventHandlerNode('Scene_Draw');
+    
+    var beginDrawOpaqueObjectsEventHandler = scene.constructEventHandlerNode('Scene_DrawOpaqueObjects');
+    beginDrawEventHandler.appendChildEventHandler(beginDrawOpaqueObjectsEventHandler);
+    
+    // Transparent objects are always drawn after opaque objectsf
+    var beginDrawTransparentObjectsEventHandler = scene.constructEventHandlerNode('Scene_DrawTransparentObjects');
+    beginDrawEventHandler.appendChildEventHandler(beginDrawTransparentObjectsEventHandler);
+    
+    
 
     ///////////////////////////////////////////////////////////////////
     // Window <-> SceneGraph raycast event handler firewall
@@ -686,23 +699,26 @@ FABRIC.SceneGraph = {
             var currTime = (new Date).getTime();
             var deltaTime = currTime - prevTime;
             prevTime = currTime;
-            scene.pub.animation.setTime(animationTime + (deltaTime * playspeed));
+            scene.pub.animation.setTime(animationTime + (deltaTime * playspeed), false);
           }
           if( onAdvanceCallback){
             onAdvanceCallback.call();
           }
+          scene.pub.redrawAllWindows();
         }
 
         /////////////////////////////////////////////////////////
         // Animation Interface
         scene.pub.animation = {
-          setTime:function(t) {
+          setTime:function(t, redraw) {
             if (looping && animationTime > timerange.y){
               t = timerange.x;
             }
             animationTime = t;
             globalsNode.setData('ms', t);
-            scene.pub.redrawAllWindows();
+            if(redraw !== false){
+              scene.pub.redrawAllWindows();
+            }
           },
           getTime:function() {
             return animationTime;
@@ -740,9 +756,9 @@ FABRIC.SceneGraph = {
             onAdvanceCallback = callback;
             // Note: this is a big ugly hack to work arround the fact that
             // we have zero or more windows. What happens when we have
-            // multiple windows? Should the 'play' controls be moved to
+            // multiple viewports? Should the 'play' controls be moved to
             // Viewport?
-            windows[0].setRedrawFinishedCallback(advanceTime);
+            viewports[0].getFabricWindowObject().setRedrawFinishedCallback(advanceTime);
             scene.pub.redrawAllWindows();
           },
           isPlaying: function(){
@@ -750,14 +766,14 @@ FABRIC.SceneGraph = {
           },
           pause: function() {
             isPlaying = false;
-            windows[0].setRedrawFinishedCallback(null);
+            viewports[0].getFabricWindowObject().setRedrawFinishedCallback(null);
             scene.pub.redrawAllWindows();
           },
           reset: function() {
             isPlaying = false;
             animationTime = 0.0;
             globalsNode.setData('ms', 0.0);
-            windows[0].setRedrawFinishedCallback(null);
+            viewports[0].getFabricWindowObject().setRedrawFinishedCallback(null);
             scene.pub.redrawAllWindows();
           },
           step: function() {
@@ -930,7 +946,7 @@ FABRIC.SceneGraph.registerNodeType('Viewport', {
 
     FABRIC.appendOnResolveAsyncTaskCallback(function(label, countRemaining){
       if(countRemaining===0){
-        fabricwindow = scene.addWindow(windowElement);
+        fabricwindow = scene.bindViewportToWindow(windowElement, viewportNode);
         redrawEventHandler.addScope('window', fabricwindow.windowNode);
         if(scene.getScenePreRedrawEventHandler()){
           fabricwindow.redrawEvent.appendEventHandler(scene.getScenePreRedrawEventHandler());
@@ -1009,6 +1025,9 @@ FABRIC.SceneGraph.registerNodeType('Viewport', {
     // private interface
     viewportNode.getWindowElement = function() {
       return windowElement;
+    };
+    viewportNode.getFabricWindowObject = function() {
+      return fabricwindow;
     };
 
     // public interface
@@ -1132,8 +1151,17 @@ FABRIC.SceneGraph.registerNodeType('Viewport', {
       var ray = viewPortRayCastDgNode.getData('ray');
       return ray;
     };
-    viewportNode.pub.redraw = function() {
+    // TODO: Not all browsers on OSX features this redraw issue.
+    // figures out exactly which ones do and detect only those.
+    var onOsX = navigator.userAgent.search("Mac OS X");
+    viewportNode.pub.redraw = function(animating) {
       fabricwindow.needsRedraw();
+      if(onOsX && !animating && !scene.pub.animation.isPlaying()){
+        fabricwindow.setRedrawFinishedCallback(function(){
+          fabricwindow.setRedrawFinishedCallback(null);
+          fabricwindow.needsRedraw();
+        });
+      }
     };
     viewportNode.pub.writeData = function(sceneSaver, constructionOptions, nodeData) {
       nodeData.camera = sceneSaver.wrapQuotes(cameraNode.name);
@@ -1303,7 +1331,8 @@ FABRIC.SceneGraph.registerNodeType('Viewport', {
                 'will automatically trigger a redraw. Note that operators can dynamically modify the URL.',
   factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
-      redrawOnLoad: true
+      redrawOnLoad: true,
+      onLoadCallback: undefined
     });
 
     var onloadCallbacks = [];

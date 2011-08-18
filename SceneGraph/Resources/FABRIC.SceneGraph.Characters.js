@@ -57,7 +57,8 @@ FABRIC.SceneGraph.registerNodeType('CharacterMesh', {
             'rig.boneMatrices',
             'camera.cameraMat44',
             'camera.projectionMat44',
-            'self.indicesBuffer'
+            'self.indicesBuffer',
+            'instance.drawToggle'
           ]
         });
     }
@@ -304,25 +305,15 @@ FABRIC.SceneGraph.registerNodeType('CharacterSkeletonDebug', {
 
     instanceNode = scene.constructNode('Instance', {
         geometryNode: characterSkeletonDebug.pub,
-        materialNode: scene.constructNode('FlatMaterial', { color: options.color }).pub
+        materialNode: scene.constructNode('FlatMaterial', {
+          color: options.color,
+          disableZBuffer: options.drawOverlayed
+        }).pub
       });
-
-    // setup the postdescend operators for disable and enable zbuffer
-    // PT - This could be done at the shader/material stage
-    if (options.drawOverlayed) {
-      instanceNode.getRedrawEventHandler().preDescendBindings.insert(scene.constructOperator({
-          operatorName: 'disableZBuffer',
-          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/drawAttributes.kl',
-          entryFunctionName: 'disableZBuffer',
-          parameterLayout: []
-        }), 0);
-      instanceNode.getRedrawEventHandler().postDescendBindings.append(scene.constructOperator({
-          operatorName: 'popAttribs',
-          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/drawAttributes.kl',
-          entryFunctionName: 'popAttribs',
-          parameterLayout: []
-        }));
+    characterSkeletonDebug.pub.getInstanceNode = function() {
+      return instanceNode.pub;
     }
+
     return characterSkeletonDebug;
   }});
 
@@ -422,10 +413,8 @@ FABRIC.SceneGraph.registerNodeType('CharacterRig', {
       solvers = [];
 
     // extend the public interface
-    characterRigNode.pub.getPose = function() {
-      dgnode.evaluate();
-      return dgnode.getData('pose');
-    };
+    characterRigNode.addMemberInterface(dgnode, 'pose', true);
+
     characterRigNode.pub.getSkeletonNode = function() {
       return scene.getPublicInterface(skeletonNode);
     };

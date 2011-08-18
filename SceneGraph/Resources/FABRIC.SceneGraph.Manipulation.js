@@ -113,13 +113,15 @@ FABRIC.SceneGraph.registerNodeType('CameraManipulator', {
       newcameraXfo.tr = cameraTarget.subtract(newCameraOffset);
       
       cameraNode.getTransformNode().setGlobalXfo(newcameraXfo);
-      viewportNode.redraw();
+      viewportNode.redraw(true);
       evt.stopPropagation();
     }
 
     var releaseOrbitFn = function(evt) {
+      viewportNode.redraw();
       document.removeEventListener('mousemove', dragOrbitFn, true);
       document.removeEventListener('mouseup', releaseOrbitFn, true);
+      evt.stopPropagation();
     }
     var dragPanFn = function(evt) {
       if(!enabled){
@@ -136,10 +138,11 @@ FABRIC.SceneGraph.registerNodeType('CameraManipulator', {
       if (cameraNode.getTransformNode().getTarget) {
         cameraNode.getTransformNode().setTarget(cameraTarget.add(dragDist));
       }
-      viewportNode.redraw();
+      viewportNode.redraw(true);
       evt.stopPropagation();
     }
     var releasePanFn = function(evt) {
+      viewportNode.redraw();
       document.removeEventListener('mousemove', dragPanFn, true);
       document.removeEventListener('mouseup', releasePanFn, true);
       evt.stopPropagation();
@@ -153,10 +156,11 @@ FABRIC.SceneGraph.registerNodeType('CameraManipulator', {
       var mouseDragScreenDelta = evt.screenX - mouseDownScreenPos.x;
       cameraNode.position = cameraPos.add(cameraPos.subtract(cameraTarget)
                                      .mulInPlace(mouseDragScreenDelta * options.mouseDragZoomRate));
-      viewportNode.redraw();
+      viewportNode.redraw(true);
       evt.stopPropagation();
     }
     var releaseZoomFn = function(evt) {
+      viewportNode.redraw();
       document.removeEventListener('mousemove', dragZoomFn, true);
       document.removeEventListener('mouseup', releaseZoomFn, true);
       evt.stopPropagation();
@@ -391,7 +395,7 @@ FABRIC.SceneGraph.registerNodeType('Manipulator', {
     var compensation = true,
        color = options.color,
        highlightColor = options.highlightcolor,
-       material = scene.pub.constructNode('FlatMaterial', { color: options.color });
+       material = scene.pub.constructNode('FlatMaterial', { color: options.color, disableZBuffer: options.disableZBuffer });
 
     var parentNode = options.parentNode;
     if (parentNode && parentNode.isTypeOf('Instance')) {
@@ -519,8 +523,13 @@ FABRIC.SceneGraph.registerNodeType('Manipulator', {
         targetNode.pub.setData(targetMember, xfo, targetMemberIndex);
       }
       else {
-        var targetMembeSetter = "set"+targetMember.charAt(0).toUpperCase()+targetMember.slice(1);
-        targetNode.pub[targetMembeSetter](xfo);
+        var targetMemberSetter = "set"+targetMember.charAt(0).toUpperCase()+targetMember.slice(1);
+        var data = xfo;
+        if(targetMemberIndex != undefined) {
+          data = targetNode.pub['g'+targetMemberSetter.substr(1,1000)]();
+          data[targetMemberIndex] = xfo;
+        }
+        targetNode.pub[targetMemberSetter](data);
       }
     }
 
@@ -597,23 +606,6 @@ FABRIC.SceneGraph.registerNodeType('Manipulator', {
       }
     };
 
-    // setup the postdescend operators for disable and enable zbuffer
-    // PT - This could be done at the shader/material stage
-    if (options.disableZBuffer) {
-      manipulatorNode.getRedrawEventHandler().preDescendBindings.insert(scene.constructOperator({
-          operatorName: 'disableZBuffer',
-          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/drawAttributes.kl',
-          entryFunctionName: 'disableZBuffer',
-          parameterLayout: []
-        }), 0);
-      manipulatorNode.getRedrawEventHandler().postDescendBindings.append(scene.constructOperator({
-          operatorName: 'popAttribs',
-          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/drawAttributes.kl',
-          entryFunctionName: 'popAttribs',
-          parameterLayout: []
-        }));
-    }
-
     manipulatorNode.pub.addEventListener('mouseover_geom', function(evt) {
         material.setColor(highlightColor);
         evt.viewportNode.redraw();
@@ -630,7 +622,7 @@ FABRIC.SceneGraph.registerNodeType('Manipulator', {
       evt.mouseDragScreenDelta = evt.mouseDragScreenPos.subtract(mouseDownScreenPos);
       manipulatorNode.pub.fireEvent('drag', evt);
       evt.stopPropagation();
-      viewportNode.redraw();
+      viewportNode.redraw(true);
     }
     var releaseFn = function(evt) {
       manipulatorNode.pub.fireEvent('dragend', evt);

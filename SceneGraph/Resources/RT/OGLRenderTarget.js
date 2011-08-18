@@ -45,8 +45,6 @@ FABRIC.RT.OGLRenderTarget = function(width, height, textures, options) {
   this.clearDepth = true;
   this.clearColorFlag = true;
   this.clearColor = (options && options.clearColor) ? options.clearColor : FABRIC.RT.rgba();
-  this.enableOptions = (options && options.enableOptions) ? options.enableOptions : [];
-  this.cullFace = (options && options.cullFace) ? options.cullFace : 0;
   // Here we define some constants that are used to define the type
   // of buffer. We need a way of defining constants in KL.
   this.DEPTH_BUFFER = 1;
@@ -66,9 +64,7 @@ FABRIC.appendOnCreateContextCallback(function(context) {
       numColorBuffers: 'Integer',
       clearDepth: 'Boolean',
       clearColorFlag: 'Boolean',
-      clearColor: 'Color',
-      enableOptions: 'Size[]',
-      cullFace: 'Size'
+      clearColor: 'Color'
     },
     constructor: FABRIC.RT.OGLRenderTarget,
     kBindings: FABRIC.loadResourceURL('FABRIC_ROOT/SceneGraph/Resources/RT/OGLRenderTarget.kl')
@@ -100,12 +96,7 @@ FABRIC.RT.oglDepthRenderTarget = function(size){
           FABRIC.SceneGraph.OpenGLConstants.GL_RGBA,
           FABRIC.SceneGraph.OpenGLConstants.GL_UNSIGNED_BYTE)
       )
-    ],
-    {
-      enableOptions:[FABRIC.SceneGraph.OpenGLConstants.GL_DEPTH_TEST,
-                     FABRIC.SceneGraph.OpenGLConstants.GL_CULL_FACE],
-      cullFace:FABRIC.SceneGraph.OpenGLConstants.GL_FRONT
-    }
+    ]
   )
 }
 
@@ -123,12 +114,7 @@ FABRIC.RT.oglPostProcessingRenderTarget = function(){
           FABRIC.SceneGraph.OpenGLConstants.GL_RGBA,
           FABRIC.SceneGraph.OpenGLConstants.GL_UNSIGNED_BYTE)
       )
-    ],
-    {
-      enableOptions:[FABRIC.SceneGraph.OpenGLConstants.GL_DEPTH_TEST,
-                     FABRIC.SceneGraph.OpenGLConstants.GL_CULL_FACE],
-      cullFace:FABRIC.SceneGraph.OpenGLConstants.GL_BACK
-    }
+    ]
   )
 }
 

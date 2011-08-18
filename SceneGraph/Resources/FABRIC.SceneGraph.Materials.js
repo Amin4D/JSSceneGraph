@@ -23,43 +23,41 @@ FABRIC.SceneGraph.registerNodeType('Image', {
     scene.assignDefaults(options, {
       wantHDR: false,
       wantRGBA: true,
+      createDgNode: false,
       createResourceLoadNode: true,
-      createLoadTextureEventHandler: true
+      createLoadTextureEventHandler: true,
+      url: undefined
     });
-
-    var imageLoaded = false,
-      redrawEventHandler,
-      ext = options.url ? options.url.substr(options.url.lastIndexOf('.') + 1) : undefined,
-      dgnode,
-      resourceLoadNode,
-      resourceloaddgnode;
-
-    imageNode = scene.constructNode('Texture', options);
-    dgnode = imageNode.constructDGNode('DGNode')
-    dgnode.addMember('hdr', 'Boolean', options.wantHDR);
-    dgnode.addMember('width', 'Size');
-    dgnode.addMember('height', 'Size');
-    dgnode.addMember('pixels', (options.wantHDR ? 'Color' : (options.wantRGBA ? 'RGBA' : 'RGB')) + '[]');
-
-    imageNode.addMemberInterface(dgnode, 'width');
-    imageNode.addMemberInterface(dgnode, 'height');
+    
+    var imageNode = scene.constructNode('Texture', options);
+    if(options.createDgNode){
+      var dgnode = imageNode.constructDGNode('DGNode')
+      dgnode.addMember('hdr', 'Boolean', options.wantHDR);
+      dgnode.addMember('width', 'Size');
+      dgnode.addMember('height', 'Size');
+      dgnode.addMember('pixels', (options.wantHDR ? 'Color' : (options.wantRGBA ? 'RGBA' : 'RGB')) + '[]');
+  
+      imageNode.addMemberInterface(dgnode, 'width');
+      imageNode.addMemberInterface(dgnode, 'height');
+    }
 
     if (options.createResourceLoadNode) {
-      resourceLoadNode = scene.constructNode('ResourceLoad', options);
-      resourceloaddgnode = resourceLoadNode.getDGLoadNode();
-      dgnode.addDependency(resourceloaddgnode, 'resource');
-
-      dgnode.bindings.append(scene.constructOperator({
-        operatorName: (options.wantHDR ? 'loadImageHDR' : 'loadImageLDR'),
-        parameterLayout: [
-              'resource.resource',
-              'self.width',
-              'self.height',
-              'self.pixels'
-            ],
-        entryFunctionName: (options.wantHDR ? 'loadImageHDR' : 'loadImageLDR'),
-        srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadTexture.kl'
-      }));
+      var resourceLoadNode = scene.constructNode('ResourceLoad', options);
+      var resourceloaddgnode = resourceLoadNode.getDGLoadNode();
+      if(options.createDgNode){
+        dgnode.addDependency(resourceloaddgnode, 'resource');
+        dgnode.bindings.append(scene.constructOperator({
+          operatorName: (options.wantHDR ? 'loadImageHDR' : 'loadImageLDR'),
+          parameterLayout: [
+            'resource.resource',
+            'self.width',
+            'self.height',
+            'self.pixels'
+          ],
+          entryFunctionName: (options.wantHDR ? 'loadImageHDR' : 'loadImageLDR'),
+          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadTexture.kl'
+        }));
+      };
 
       imageNode.getResourceLoadNode = function() {
         return resourceLoadNode;
@@ -72,21 +70,36 @@ FABRIC.SceneGraph.registerNodeType('Image', {
 
     if (options.createLoadTextureEventHandler) {
       // Construct the handler for loading the image into texture memory.
-      redrawEventHandler = imageNode.constructEventHandlerNode('Redraw');
-      redrawEventHandler.addScope('image', dgnode);
+      var redrawEventHandler = imageNode.constructEventHandlerNode('Redraw');
       redrawEventHandler.addMember('oglTexture2D', 'OGLTexture2D', FABRIC.RT.oglTexture2D());
-      redrawEventHandler.preDescendBindings.append(scene.constructOperator({
-        operatorName: 'bindTextureLDR',
-        srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadTexture.kl',
-        entryFunctionName: 'bindTextureLDR',
-        parameterLayout: [
-          'image.width',
-          'image.height',
-          'image.pixels',
-          'self.oglTexture2D',
-          'textureStub.textureUnit'
-        ]
-      }));
+      if(options.createDgNode){
+        redrawEventHandler.addScope('image', dgnode);
+        redrawEventHandler.preDescendBindings.append(scene.constructOperator({
+          operatorName: 'bindTextureLDR',
+          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadTexture.kl',
+          entryFunctionName: 'bindTextureLDR',
+          parameterLayout: [
+            'image.width',
+            'image.height',
+            'image.pixels',
+            'self.oglTexture2D',
+            'textureStub.textureUnit'
+          ]
+        }));
+      }
+      else if(options.createResourceLoadNode){
+        redrawEventHandler.addScope('resource', resourceloaddgnode);
+        redrawEventHandler.preDescendBindings.append(scene.constructOperator({
+          operatorName: 'loadAndBindTextureLDR',
+          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadTexture.kl',
+          entryFunctionName: 'loadAndBindTextureLDR',
+          parameterLayout: [
+            'resource.resource',
+            'self.oglTexture2D',
+            'textureStub.textureUnit'
+          ]
+        }));
+      }
     }
 
     imageNode.getURL = function() {
@@ -94,6 +107,48 @@ FABRIC.SceneGraph.registerNodeType('Image', {
     };
 
     return imageNode;
+  }});
+
+FABRIC.SceneGraph.registerNodeType('CubeMap', {
+  briefDesc: '...',
+  detailedDesc: '...',
+  factoryFn: function(options, scene) {
+    scene.assignDefaults(options, {
+      urls: []
+    });
+    
+    var cubMapNode = scene.constructNode('Texture', options);
+    var redrawEventHandler = cubMapNode.constructEventHandlerNode('Redraw');
+    redrawEventHandler.addMember('cubeMap', 'OGLTextureCube', FABRIC.RT.cubeMapLDR());
+    
+    var createTextureLoaderNode = function(url, faceId){
+      var resourceLoadNode = scene.constructNode('ResourceLoad', { url: url });
+      var resourceloaddgnode = resourceLoadNode.getDGLoadNode();
+      redrawEventHandler.addScope('resource'+faceId, resourceloaddgnode);
+    }
+    createTextureLoaderNode(options.urls[0], 0);
+    createTextureLoaderNode(options.urls[1], 1);
+    createTextureLoaderNode(options.urls[2], 2);
+    createTextureLoaderNode(options.urls[3], 3);
+    createTextureLoaderNode(options.urls[4], 4);
+    createTextureLoaderNode(options.urls[5], 5);
+
+    redrawEventHandler.preDescendBindings.append(scene.constructOperator({
+        operatorName: 'bindCubeMap',
+        srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadCubeMap.kl',
+        entryFunctionName: 'bindCubeMap',
+        parameterLayout: [
+          'resource0.resource',
+          'resource1.resource',
+          'resource2.resource',
+          'resource3.resource',
+          'resource4.resource',
+          'resource5.resource',
+          'self.cubeMap',
+          'textureStub.textureUnit'
+        ]
+      }));
+    return cubMapNode;
   }});
 
 FABRIC.SceneGraph.registerNodeType('Video', {
@@ -248,14 +303,15 @@ FABRIC.SceneGraph.getShaderParamID = ( function(){
 FABRIC.SceneGraph.registerNodeType('Shader', {
   factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
-        parentEventHandler: scene.getSceneRedrawEventHandler(),
-        debug: false
+        parentEventHandler: scene.getSceneRedrawOpaqueObjectsEventHandler(),
+        debug: false,
+        unloadShader: true
       });
     var shaderNode = scene.constructNode('SceneGraphNode', options),
       redrawEventHandler = shaderNode.constructEventHandlerNode('Redraw'),
       shaderProgram = new FABRIC.RT.OGLShaderProgram(options.name);
       i;
-      
+    
     redrawEventHandler.setScopeName('shader');
 
     if (options.fragmentShader) {
@@ -295,6 +351,24 @@ FABRIC.SceneGraph.registerNodeType('Shader', {
     }
 
     ///////////////////////////////////////////////////
+    // Enable Options
+    if(options.disableOptions){
+      shaderProgram.disableOptions = options.disableOptions;
+    }
+    if(options.enableOptions){
+      shaderProgram.enableOptions = options.enableOptions;
+    }
+    if(options.blendModeSfactor){
+      shaderProgram.blendModeSfactor = options.blendModeSfactor;
+    }
+    if(options.blendModeDfactor){
+      shaderProgram.blendModeDfactor = options.blendModeDfactor;
+    }
+    if(options.cullFace){
+      shaderProgram.cullFace = options.cullFace;
+    }
+    
+    ///////////////////////////////////////////////////
     // EXT Params
     for (i in options.programParams) {
        shaderProgram.programParams.push(new FABRIC.RT.OGLShaderProgramParam(
@@ -315,20 +389,39 @@ FABRIC.SceneGraph.registerNodeType('Shader', {
     shaderProgram.debug = options.debug;
     redrawEventHandler.addMember('shaderProgram', 'OGLShaderProgram', shaderProgram);
   
-    var operators = redrawEventHandler.preDescendBindings;
-    if(options.assignUniformsOnPostDescend == true){
-      // Post Processing operators invoke the shader on the post
-      // decent pass. After thegeometry in the sub tree is drawn.
-      operators = redrawEventHandler.postDescendBindings;
-    }
-    operators.append(scene.constructOperator({
+    var loadShaderOp = scene.constructOperator({
       operatorName: 'loadShader',
       srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadShader.kl',
       entryFunctionName: 'loadShader',
       parameterLayout: [
         'self.shaderProgram'
       ]
-    }));
+    });
+    
+    if(options.assignUniformsOnPostDescend == true){
+      // Post Processing operators invoke the shader on the post
+      // decent pass. After the geometry in the sub tree is drawn.
+      redrawEventHandler.postDescendBindings.append(loadShaderOp);
+    }else{
+      redrawEventHandler.preDescendBindings.append(loadShaderOp);
+    }
+    
+    // Note: This optimization causes the lamborgini scene to crash
+    // after a few seconds. The OpenGL stack is probably overflowing.
+    // Ideally we don't need this when we aren't changing options.
+  /*  if((options.disableOptions &&
+        options.disableOptions.length > 0) ||
+       (options.enableOptions &&
+        options.enableOptions.length > 0)){
+  */  redrawEventHandler.postDescendBindings.append(scene.constructOperator({
+        operatorName: 'unloadShader',
+        srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadShader.kl',
+        entryFunctionName: 'unloadShader',
+        parameterLayout: [
+          'self.shaderProgram'
+        ]
+      }));
+// }
     
     if (options.parentEventHandler !== false) {
       // The shader is registered with the scenegraph, which will
@@ -380,13 +473,19 @@ FABRIC.SceneGraph.registerNodeType('Material', {
           shaderAttributes: options.shaderAttributes,
           programParams: options.programParams,
           drawParams: options.drawParams,
+          disableOptions: options.disableOptions,
+          enableOptions: options.enableOptions,
+          cullFace: options.cullFace,
+          blendModeSfactor: options.blendModeSfactor,
+          blendModeDfactor: options.blendModeDfactor,
           parentEventHandler: options.parentEventHandler,
           assignUniformsOnPostDescend: options.assignUniformsOnPostDescend
         });
       }
-
+      
       materialNode = scene.constructNode('SceneGraphNode', options);
       redrawEventHandler = materialNode.constructEventHandlerNode('Redraw');
+
       shader.getRedrawEventHandler().appendChildEventHandler(redrawEventHandler);
 
       materialNode.getShaderNode = function() {
@@ -402,7 +501,7 @@ FABRIC.SceneGraph.registerNodeType('Material', {
       materialNode = scene.constructNode('Shader', options);
       redrawEventHandler = materialNode.getRedrawEventHandler();
     }
-    
+
     var capitalizeFirstLetter = function(str) {
       return str[0].toUpperCase() + str.substr(1);
     };
@@ -485,7 +584,7 @@ FABRIC.SceneGraph.registerNodeType('Material', {
         textureStub.setScopeName('textureStub');
         textureStub.addMember('textureUnit', 'Integer', textureUnit);
         redrawEventHandler.appendChildEventHandler(textureStub);
-
+        
         textureStub.preDescendBindings.append(scene.constructOperator({
           operatorName: 'loadIntegerUniform',
           srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadUniforms.kl',
@@ -523,6 +622,21 @@ FABRIC.SceneGraph.registerNodeType('Material', {
         addTextureInterface(i, options.textures[i], textureUnit);
         textureUnit++;
       }
+    }
+    
+    if (options.disableZBuffer) {
+      redrawEventHandler.preDescendBindings.append(scene.constructOperator({
+          operatorName: 'disableZBuffer',
+          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/drawAttributes.kl',
+          entryFunctionName: 'disableZBuffer',
+          parameterLayout: []
+        }));
+      redrawEventHandler.postDescendBindings.append(scene.constructOperator({
+          operatorName: 'popAttribs',
+          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/drawAttributes.kl',
+          entryFunctionName: 'popAttribs',
+          parameterLayout: []
+        }));
     }
 
     return materialNode;
@@ -608,6 +722,14 @@ FABRIC.SceneGraph.registerNodeType('PointSpriteMaterial', {
       }));
 
     return pointSpriteMaterialNode;
+  }});
+
+
+FABRIC.SceneGraph.registerNodeType('TransparentMaterial', {
+  factoryFn: function(options, scene) {
+    options.parentEventHandler = scene.getSceneRedrawTransparentObjectsEventHandler();
+    var transparentMaterial = scene.constructNode('Material', options);
+    return transparentMaterial;
   }});
 
 
@@ -713,7 +835,10 @@ FABRIC.SceneGraph.defineEffectFromFile = function(effectName, effectfile) {
       childNode;
       
     preprocessorDirectives = {};
-    effectParameters = { separateShaderNode:false };
+    effectParameters = {
+      prototypeMaterialType: 'Material',
+      separateShaderNode:false
+    };
   
     xmlText = FABRIC.loadResourceURL(effectfile, 'text/xml');
     parser = new DOMParser();
@@ -830,9 +955,8 @@ FABRIC.SceneGraph.defineEffectFromFile = function(effectName, effectfile) {
       }
     };
   
-  
     collectDrawParams = function(node) {
-      var len, j, paramNode, paramValue;
+      var len, j, paramNode;
       effectParameters.drawParams = {};
       len = node.childNodes.length;
       for (j = 0; j < len; j++) {
@@ -845,6 +969,51 @@ FABRIC.SceneGraph.defineEffectFromFile = function(effectName, effectfile) {
             break;
           case 'patchVertices':
             effectParameters.drawParams.patchVertices = parseInt(paramNode.getAttribute('value'));
+            break;
+        }
+      }
+    };
+    
+    collectOGLStateParams = function(node) {
+      var collectParamArray = function(node) {
+        var len, j, paramNode;
+        var vals = [];
+        len = node.childNodes.length;
+        for (j = 0; j < len; j++) {
+          paramNode = node.childNodes[j];
+          switch (paramNode.nodeName ) {
+            case '#text':
+              continue;
+            default:
+              vals.push(FABRIC.SceneGraph.OpenGLConstants[paramNode.firstChild.data]);
+              break;
+          }
+        }
+        return vals;
+      }
+      
+      var len, j, paramNode, paramValue;
+      effectParameters.drawParams = {};
+      len = node.childNodes.length;
+      for (j = 0; j < len; j++) {
+        paramNode = node.childNodes[j];
+        switch (paramNode.nodeName ) {
+          case '#text':
+            continue;
+          case 'disableOptions':
+            effectParameters.disableOptions = collectParamArray(paramNode);
+            break;
+          case 'enableOptions':
+            effectParameters.enableOptions = collectParamArray(paramNode);
+            break;
+          case 'cullFace':
+            effectParameters.cullFace = FABRIC.SceneGraph.OpenGLConstants[paramNode.firstChild.data];
+            break;
+          case 'blendModeSfactor':
+            effectParameters.blendModeSfactor = FABRIC.SceneGraph.OpenGLConstants[paramNode.firstChild.data];
+            break;
+          case 'blendModeDfactor':
+            effectParameters.blendModeSfactor = FABRIC.SceneGraph.OpenGLConstants[paramNode.firstChild.data];
             break;
         }
       }
@@ -890,6 +1059,9 @@ FABRIC.SceneGraph.defineEffectFromFile = function(effectName, effectfile) {
         case 'name':
           effectParameters.name = childNode.firstChild.data;
           break;
+        case 'prototypeMaterialType':
+          effectParameters.prototypeMaterialType = childNode.firstChild.data;
+          break;
         case 'uniforms':
           collectUniforms(childNode);
           break;
@@ -905,8 +1077,8 @@ FABRIC.SceneGraph.defineEffectFromFile = function(effectName, effectfile) {
         case 'programParams':
           collectProgramParams(childNode);
           break;
-        case 'drawParams':
-          collectDrawParams(childNode);
+        case 'openglstateparams':
+          collectOGLStateParams(childNode);
           break;
         case 'preprocessordirectives':
           collectPreprocessorDirectives(childNode);
@@ -939,11 +1111,8 @@ FABRIC.SceneGraph.defineEffectFromFile = function(effectName, effectfile) {
       if(!effectParameters){
         parseEffectFile();
       }
-      scene.assignDefaults(options, {
-          prototypeMaterialType: 'Material'
-        });
-      var effectInstanceParameters,
-        directives = {},
+      scene.assignDefaults(options, effectParameters);
+      var directives = {},
         preProcessCode = false,
         i,
         materialNode,
@@ -951,11 +1120,6 @@ FABRIC.SceneGraph.defineEffectFromFile = function(effectName, effectfile) {
         lightName,
         textureName,
         setterName;
-
-      effectInstanceParameters = scene.cloneObj(effectParameters);
-      effectInstanceParameters.name = options.name;
-      effectInstanceParameters.type = options.type;
-      effectInstanceParameters.parentEventHandler = options.parentEventHandler;
 
       directives = {};
       preProcessCode = false;
@@ -969,19 +1133,19 @@ FABRIC.SceneGraph.defineEffectFromFile = function(effectName, effectfile) {
       }
       if (preProcessCode) {
         if (effectParameters.vertexShader) {
-          effectInstanceParameters.vertexShader = scene.preProcessCode(effectParameters.vertexShader, directives);
+          options.vertexShader = scene.preProcessCode(effectParameters.vertexShader, directives);
         }
         if (effectParameters.tessControlShader) {
-          effectInstanceParameters.tessControlShader = scene.preProcessCode(effectParameters.tessControlShader, directives);
+          options.tessControlShader = scene.preProcessCode(effectParameters.tessControlShader, directives);
         }
         if (effectParameters.tessEvalShader) {
-          effectInstanceParameters.tessEvalShader = scene.preProcessCode(effectParameters.tessEvalShader, directives);
+          options.tessEvalShader = scene.preProcessCode(effectParameters.tessEvalShader, directives);
         }
         if (effectParameters.geometryShader) {
-          effectInstanceParameters.geometryShader = scene.preProcessCode(effectParameters.geometryShader, directives);
+          options.geometryShader = scene.preProcessCode(effectParameters.geometryShader, directives);
         }
         if (effectParameters.fragmentShader) {
-          effectInstanceParameters.fragmentShader = scene.preProcessCode(effectParameters.fragmentShader, directives);
+          options.fragmentShader = scene.preProcessCode(effectParameters.fragmentShader, directives);
         }
         options.shaderNameDecoration = '';
         for (i in directives) {
@@ -989,7 +1153,7 @@ FABRIC.SceneGraph.defineEffectFromFile = function(effectName, effectfile) {
         }
       }
 
-      materialNode = scene.constructNode(options.prototypeMaterialType, effectInstanceParameters);
+      materialNode = scene.constructNode(options.prototypeMaterialType, options);
       
       var capitalizeFirstLetter = function(str) {
         return str[0].toUpperCase() + str.substr(1);
@@ -1033,6 +1197,10 @@ FABRIC.SceneGraph.defineEffectFromFile('NormalMaterial', 'FABRIC_ROOT/SceneGraph
 
 FABRIC.SceneGraph.defineEffectFromFile('PhongTesselationMaterial', 'FABRIC_ROOT/SceneGraph/Resources/Shaders/PhongTesselationShader.xml');
 FABRIC.SceneGraph.defineEffectFromFile('HairMaterial', 'FABRIC_ROOT/SceneGraph/Resources/Shaders/HairShader.xml');
+
+FABRIC.SceneGraph.defineEffectFromFile('PhongReflectMaterial', 'FABRIC_ROOT/SceneGraph/Resources/Shaders/PhongReflectShader.xml');
+FABRIC.SceneGraph.defineEffectFromFile('GlassMaterial', 'FABRIC_ROOT/SceneGraph/Resources/Shaders/GlassShader.xml');
+
 
 FABRIC.SceneGraph.registerNodeType('BloomPostProcessEffect', {
   factoryFn: function(options, scene) {

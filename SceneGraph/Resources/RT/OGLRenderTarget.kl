@@ -190,11 +190,6 @@ function OGLRenderTarget.bind() {
     glDrawBuffer(GL_NONE);
     glReadBuffer(GL_NONE);
   }
-  
-  for(Integer i=0; i<self.enableOptions.size(); i++){
-    glEnable(self.enableOptions[i]);
-  }
-  glCullFace(self.cullFace);
 }
 
 function OGLRenderTarget.unbind() {

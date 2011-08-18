@@ -15,7 +15,7 @@ operator solveIK2Bone(
   io Scalar directionBlend,
   io Scalar upvectorBlend
 ) {
-  report('solveIK2Bone');
+  //report('solveIK2Bone, boneA: '+boneA+', boneB: '+boneB+', targetParent: '+targetParent+', upvectorParent: '+upvectorParent);
   if (bones[boneA].parent != - 1) {
     pose[boneA] = bones[boneA].referenceLocalPose * pose[bones[boneA].parent];
   }

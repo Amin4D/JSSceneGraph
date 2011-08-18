@@ -9,9 +9,9 @@
  * @param {object} direction A Vec3 defining the direction of the ray.
  */
 FABRIC.RT.OGLTexture2D = function(glInternalFormat, glFormat, glType) {
-  this.glInternalFormat = glInternalFormat ? glInternalFormat : 0;//FABRIC.SceneGraph.OpenGLConstants.GL_RGBA8;
-  this.glFormat = glFormat ? glFormat : 0;//FABRIC.SceneGraph.OpenGLConstants.GL_RGBA;
-  this.glType = glType ? glType : 0;//FABRIC.SceneGraph.OpenGLConstants.GL_UNSIGNED_BYTE;
+  this.glInternalFormat = glInternalFormat ? glInternalFormat : 0;
+  this.glFormat = glFormat ? glFormat : 0;
+  this.glType = glType ? glType : 0;
   this.bufferID = 0;
   this.nbPixels = 0;
 };

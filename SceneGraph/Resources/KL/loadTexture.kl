@@ -3,93 +3,45 @@
 // Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
 //
 
-
-function Scalar sRGBtoLinear(Scalar c) {
-  if (c <= 0.04045) {
-    return c / 12.92;
-  }
-  else {
-    return pow((c + 0.055) / 1.055, 2.4);
-  }
-}
-
-function Scalar linearTosRGB(Scalar l) {
-  if (l < 0.0) {
-    return 0.0;
-  }
-  if (l > 1.0) {
-    return 1.0;
-  }
-  if (l <= 0.0031308) {
-    return l * 12.92;
-  }
-  else {
-    return pow(1.055 * l, 1.0 / 2.4) - 0.055;
-  }
-}
-
-function loadImageFromRawData(
-  Data rawImageData,
-  Size rawImageDataSize,
-  String extensionOrMimeType,
-  Boolean wantHDR,
+function decodeLDRImageData(
+  io FabricResource resource,
   io Size imageWidth,
   io Size imageHeight,
-  io Color imageHDR[],
   io RGBA imageLDR[]
 ) {
-  if(rawImageDataSize == 0)
+  if(resource.dataSize == 0)
     return;
-  
-  var Boolean haveHDR;
-  switch (extensionOrMimeType) {
+  String ext = resource.extension ? resource.extension : resource.mimeType;
+  switch (ext) {
     case'png':
     case'image/png':
-      FabricPNGDecode(rawImageData, rawImageDataSize, imageWidth, imageHeight, imageLDR);
-      haveHDR = false;
+      FabricPNGDecode(resource.data, resource.dataSize, imageWidth, imageHeight, imageLDR);
       break;
     case'tga':
     case'image/tga':
-      FabricTGADecode(rawImageData, rawImageDataSize, imageWidth, imageHeight, imageLDR);
-      haveHDR = false;
+      FabricTGADecode(resource.data, resource.dataSize, imageWidth, imageHeight, imageLDR);
       break;
+  }
+}
+
+function decodeHDRImageData(
+  io FabricResource resource,
+  io Size imageWidth,
+  io Size imageHeight,
+  io Color imageHDR[]
+) {
+  if(resource.dataSize == 0)
+    return;
+  String ext = resource.extension ? resource.extension : resource.mimeType;
+  switch (ext) {
     case'hdr':
     case'image/hdr':
-      FabricHDRDecode(rawImageData, rawImageDataSize, imageWidth, imageHeight, imageHDR);
-      haveHDR = true;
+      FabricHDRDecode(resource.data, resource.dataSize, imageWidth, imageHeight, imageHDR);
       break;
     case'exr':
     case'image/exr':
-      FabricHDRDecode(rawImageData, rawImageDataSize, imageWidth, imageHeight, imageHDR);
-      haveHDR = true;
+      FabricHDRDecode(resource.data, resource.dataSize, imageWidth, imageHeight, imageHDR);
       break;
-  }
-
-  // [hi There's no == or != operators for boolean to boolean]
-  var Size nbPixels = imageWidth * imageHeight;
-  if (wantHDR && !haveHDR) {
-    // Linearize the incoming data
-    imageHDR.resize(nbPixels);
-
-    for (Size i = 0; i < nbPixels; i++) {
-      imageHDR[i].r = sRGBtoLinear(Scalar(imageLDR[i].r) / 255.0);
-      imageHDR[i].g = sRGBtoLinear(Scalar(imageLDR[i].g) / 255.0);
-      imageHDR[i].b = sRGBtoLinear(Scalar(imageLDR[i].b) / 255.0);
-      imageHDR[i].a = Scalar(imageLDR[i].a) / 255.0;
-    }
-    imageLDR.resize(0);
-  }
-  else if (!wantHDR && haveHDR) {
-    // Convert linear data to sRGB
-    imageHDR.resize(nbPixels);
-
-    for (Size i = 0; i < nbPixels; i++) {
-      imageLDR[i].r = Byte(linearTosRGB(imageHDR[i].r) * 255.0);
-      imageLDR[i].g = Byte(linearTosRGB(imageHDR[i].g) * 255.0);
-      imageLDR[i].b = Byte(linearTosRGB(imageHDR[i].b) * 255.0);
-      imageLDR[i].a = Byte(imageHDR[i].a * 255.0);
-    }
-    imageHDR.resize(0);
   }
 }
 
@@ -99,11 +51,7 @@ operator loadImageHDR(
   io Size imageHeight,
   io Color imageHDR[],
 ) {
-  var RGBA imageLDR[];
-  var Size width, height;
-  loadImageFromRawData(resource.data, resource.dataSize, resource.extension ? resource.extension : resource.mimeType, true, width, height, imageHDR, imageLDR);
-  imageWidth = width;
-  imageHeight = height;
+  decodeHDRImageData(resource, imageWidth, imageHeight, imageHDR);
 }
 
 operator loadImageLDR(
@@ -112,14 +60,8 @@ operator loadImageLDR(
   io Size imageHeight,
   io RGBA imageLDR[],
 ) {
-  //  report("loadImageLDR:" + decoder);
-  var Color imageHDR[];
-  var Size width, height;
-  loadImageFromRawData(resource.data, resource.dataSize, resource.extension ? resource.extension : resource.mimeType, false, width, height, imageHDR, imageLDR);
-  imageWidth = width;
-  imageHeight = height;
+  decodeLDRImageData(resource, imageWidth, imageHeight, imageLDR);
 }
-
 
 operator bindTextureLDR(
   io Size width,
@@ -130,6 +72,29 @@ operator bindTextureLDR(
 ) {
 //  report("createTextureFromImageLDR -> textureUnit:" + textureUnit + " bufferID:" + bufferID );
   oglTexture2D.bindImageLDR(width, height, bitmap, textureUnit);
+}
+
+// This operator takes a resource, decodes it, and immediately
+// uploads it to the GPU. This simplifies the graph, because 
+// a node is not created to store the data in main memory. 
+operator loadAndBindTextureLDR(
+  io FabricResource resource,
+  io OGLTexture2D oglTexture2D,
+  io Integer textureUnit
+) {
+//  report("loadAndBindTextureLDR -> textureUnit:" + textureUnit + " textureUnit:" + textureUnit );
+  if(resource.dataSize == 0)
+    return;
+  if(oglTexture2D.bufferID == 0){
+    Size width, height;
+    RGBA imageLDR[];
+    decodeLDRImageData(resource, width, height, imageLDR);
+    oglTexture2D.configure(width, height, imageLDR.data(), imageLDR.size(), GL_RGBA, textureUnit);
+    var Data NULL;
+    resource.data = NULL;
+    resource.dataSize = 0;
+  }
+  oglTexture2D.bind(textureUnit);
 }
 
 operator bindTextureHDR(

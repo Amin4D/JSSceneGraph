@@ -111,6 +111,15 @@ FABRIC.SceneGraph.registerNodeType('Geometry', {
       }
       attributesdgnode.setBulkData(attributeData);
     };
+    geometryNode.pub.getBoundingBox = function(){
+      if(!bboxdgnode){
+        throw("Goemetry does not support a Bounding Box");
+      }
+      return {
+        min: bboxdgnode.getData('min'),
+        max: bboxdgnode.getData('max')
+      }
+    };
     geometryNode.pub.loadResourceFiles = function(filepath) {
 
       var fileArray = filepath.split('.');
@@ -660,6 +669,7 @@ FABRIC.SceneGraph.registerNodeType('Instance', {
       redrawEventHandler.addScope('transform', transformNode.getDGNode());
       var preProcessorDefinitions = {
               MODELMATRIX_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('modelMatrix'),
+              MODELMATRIXINVERSE_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('modelMatrixInverse'),
               VIEWMATRIX_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('viewMatrix'),
               PROJECTIONMATRIX_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('projectionMatrix'),
               PROJECTIONMATRIXINV_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('projectionMatrixInv'),
@@ -907,14 +917,6 @@ FABRIC.SceneGraph.registerNodeType('Instance', {
 
       trianglesNode.pub.getResourceLoadNode = function() {
         return resourceLoadNode;
-      };
-
-      trianglesNode.pub.getUniformsDGNode = function() {
-        return trianglesNode.getUniformsDGNode();
-      };
-
-      trianglesNode.pub.getAttributesDGNode = function() {
-        return trianglesNode.getAttributesDGNode();
       };
 
       return trianglesNode;

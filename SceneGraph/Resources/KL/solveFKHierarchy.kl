@@ -26,10 +26,10 @@ operator solveFKHierarchy(
 ) {
   for (var Integer i = 0; i < indices.size(); i++) {
     if (bones[indices[i]].parent == - 1) {
-      pose[indices[i]] = local[indices[i]];
+      pose[indices[i]] = local[i];
     }
     else {
-      pose[indices[i]] = pose[bones[indices[i]].parent].project(local[indices[i]]);
+      pose[indices[i]] = pose[bones[indices[i]].parent].project(local[i]);
     }
   }
 }

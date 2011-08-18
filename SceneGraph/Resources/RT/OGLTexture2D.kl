@@ -4,7 +4,7 @@
 //
 
 
-function OGLTexture2D.bind(
+function OGLTexture2D.configure(
   Size width,
   Size height,
   Data pixels,
@@ -15,34 +15,34 @@ function OGLTexture2D.bind(
 //  report("OGLTexture2D.bind:" + textureUnit + " nbPixels:" + nbPixels);
 //  report("createTextureFromImage  bufferID:"+self.bufferID + " textureUnit:"+textureUnit  + " nbPixels:"+nbPixels );
   if(nbPixels > 0){
-    if (self.bufferID == 0) {
-      var Size buffers[];
-      buffers.resize(1);
-      glGenTextures(1, buffers);
-      self.bufferID = buffers[0];
-      glActiveTexture(GL_TEXTURE0 + textureUnit);
-      glBindTexture(GL_TEXTURE_2D, self.bufferID);
-  
-      // glTexEnv( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE ); //set texture environment parameters
-  
-      //Generate the texture
-      glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-      if (nbPixels == (width * height))
-        glTexImage2D(GL_TEXTURE_2D, 0, self.glInternalFormat, width, height, 0, self.glFormat, self.glType, pixels);
-  
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-  
-    }
-    else {
-      glActiveTexture(GL_TEXTURE0 + textureUnit);
-      glBindTexture(GL_TEXTURE_2D, self.bufferID);
-    }
+    var Size buffers[];
+    buffers.resize(1);
+    glGenTextures(1, buffers);
+    self.bufferID = buffers[0];
+    glActiveTexture(GL_TEXTURE0 + textureUnit);
+    glBindTexture(GL_TEXTURE_2D, self.bufferID);
+
+    // glTexEnv( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE ); //set texture environment parameters
+
+    //Generate the texture
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    if (nbPixels == (width * height))
+      glTexImage2D(GL_TEXTURE_2D, 0, self.glInternalFormat, width, height, 0, self.glFormat, self.glType, pixels);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
   }
 }
+
+
+function OGLTexture2D.bind(io Integer textureUnit){
+  glActiveTexture(GL_TEXTURE0 + textureUnit);
+  glBindTexture(GL_TEXTURE_2D, self.bufferID);
+}
+
 
 function OGLTexture2D.bindImageLDR(
   io Size width,
@@ -50,8 +50,12 @@ function OGLTexture2D.bindImageLDR(
   io RGBA bitmap[],
   io Integer textureUnit
 ) {
-  self.bind(width, height, bitmap.data(), bitmap.size(), GL_RGBA, textureUnit);
+  if (self.bufferID == 0) {
+    self.configure(width, height, bitmap.data(), bitmap.size(), GL_RGBA, textureUnit);
+  }
+  self.bind(textureUnit);
 }
+
 
 function OGLTexture2D.bindImageHDR(
   io Size width,
@@ -59,70 +63,10 @@ function OGLTexture2D.bindImageHDR(
   io Color bitmap[],
   io Integer textureUnit
 ) {
-  self.bind(width, height, bitmap.data(), bitmap.size(), GL_RGBA16F_ARB, textureUnit);
-}
-
-
-function OGLTexture2D.createSpriteTexture(
-  io Integer res,
-  io Integer textureUnit
-) {
-  if (!self.bufferID && res > 0) {
-    var RGBA texData[];
-    texData.resize(res * res);
-
-    var Size idx = 0;
-    var Scalar dt = 2.0 / Scalar(res);
-    var Scalar ty = - 1.0;
-    for (var Integer y = 0; y < res; y++) {
-      var Scalar tx = - 1.0;
-      for (var Integer x = 0; x < res; x++) {
-        var Scalar t = sqrt(tx * tx + ty * ty);
-        if (t > 1.0) t = 1.0;
-          t = 2.0 * t * t * t - 3.0 * t * t + 1.0;
-        texData[idx].r = texData[idx].g = texData[idx].b = texData[idx].a = Byte(t * 255.0);
-        idx++;
-        tx += dt;
-      }
-      ty += dt;
-    }
-
-    var Size buffers[];
-    buffers.push(Size(self.bufferID));
-    glGenTextures(1, buffers);
-    glActiveTexture(GL_TEXTURE0 + textureUnit);
-    glBindTexture(GL_TEXTURE_2D, self.bufferID);
-    glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, 1);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, res, res, 0, GL_RGBA, GL_UNSIGNED_BYTE, texData.data());
+  if (self.bufferID == 0) {
+    self.configure(width, height, bitmap.data(), bitmap.size(), GL_RGBA16F_ARB, textureUnit);
   }
-  else {
-    glActiveTexture(GL_TEXTURE0 + textureUnit);
-    glBindTexture(GL_TEXTURE_2D, self.bufferID);
-  }
-}
-
-function OGLTexture2D.createErrorTexture(
-  io Integer textureUnit
-) {
-  if (!self.bufferID) {
-    var RGBA texData[];
-    texData.resize(1);
-    texData[0].r = 1.0;
-    texData[0].g = texData[0].b = texData[0].a = 0.0;
-    var Size bufferIDs[];
-    bufferIDs.resize(1);
-    glGenTextures(1, bufferIDs);
-    self.bufferID = bufferIDs[0];
-    glActiveTexture(GL_TEXTURE0 + textureUnit);
-    glBindTexture(GL_TEXTURE_2D, self.bufferID);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, texData.data());
-  }
-  else {
-    glActiveTexture(GL_TEXTURE0 + textureUnit);
-    glBindTexture(GL_TEXTURE_2D, self.bufferID);
-  }
+  self.bind(textureUnit);
 }
 
 

@@ -9,3 +9,10 @@ operator loadShader(
 //  report("loadShader:" + shaderProgram.name);
   shaderProgram.loadShader();
 }
+
+operator unloadShader(
+  io OGLShaderProgram shaderProgram
+) {
+//  report("loadShader:" + shaderProgram.name);
+  shaderProgram.unloadShader();
+}

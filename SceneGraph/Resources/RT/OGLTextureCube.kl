@@ -4,7 +4,8 @@
 //
 
 // The 6 sides of the cube area loaded in as individual textures,
-// and the data pointers are stored in the cube
+// and the data pointers are stored in the OGLTextureCube member.
+// Once all the 6 sides have been loaded, then the cube map can be generated.
 
 
 function OGLTextureCube.storeData(
@@ -16,37 +17,48 @@ function OGLTextureCube.storeData(
   if(width != height){
     report("ERROR: cube map images must be square");
   }
-  report("storeData:" + faceID + " = " +imageLDR.dataSize());
   if(self.textureData.size() == 0){
     self.textureData.resize(6);
     self.textureDataSize.resize(6);
     self.size = width;
   }
+  else if(width != self.size){
+    report("ERROR: cube map images must all be the same size");
+  }
   self.textureData[faceID] = imageLDR.data();
   self.textureDataSize[faceID] = imageLDR.dataSize();
 }
 
+function Boolean OGLTextureCube.isFaceDataStored(
+  Integer faceID
+){
+  return (self.textureData.size() == 6 && self.textureDataSize[faceID] > 0);
+}
+
+function Boolean OGLTextureCube.isLoaded(){
+  return (self.textureDataSize.size() == 6 &&
+     self.textureDataSize[0] > 0 &&
+     self.textureDataSize[1] > 0 &&
+     self.textureDataSize[2] > 0 &&
+     self.textureDataSize[3] > 0 &&
+     self.textureDataSize[4] > 0 &&
+     self.textureDataSize[5] > 0
+    );
+}
+
 function OGLTextureCube.configure(io Integer textureUnit) {
-  report("OGLTextureCube.configure >");
   var Data NULL;
-  if(self.textureDataSize.size() == 0 ||
-     self.textureDataSize[0] == 0 ||
-     self.textureDataSize[1] == 0 ||
-     self.textureDataSize[2] == 0 ||
-     self.textureDataSize[3] == 0 ||
-     self.textureDataSize[4] == 0 ||
-     self.textureDataSize[5] == 0
-    ){
+//  report("OGLTextureCube.configure:");
+  if(!self.isLoaded()){
     return;
   }
-  
-  report("OGLTextureCube.configure raedy:" + self.size);
   
   var Size buffers[];
   buffers.resize(1);
   glGenTextures(1, buffers);
   self.bufferID = buffers[0];
   
+  glActiveTexture(GL_TEXTURE0 + textureUnit);
   glBindTexture(GL_TEXTURE_CUBE_MAP, self.bufferID);
   glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
   glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
@@ -54,13 +66,14 @@ function OGLTextureCube.configure(io Integer textureUnit) {
   glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   
-  glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X, 0, GL_RGBA8, self.size, self.size, 0, GL_BGRA, GL_UNSIGNED_BYTE, self.textureData[0]);
-  glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_X, 0, GL_RGBA8, self.size, self.size, 0, GL_BGRA, GL_UNSIGNED_BYTE, self.textureData[1]);
-  glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Y, 0, GL_RGBA8, self.size, self.size, 0, GL_BGRA, GL_UNSIGNED_BYTE, self.textureData[2]);
-  glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, GL_RGBA8, self.size, self.size, 0, GL_BGRA, GL_UNSIGNED_BYTE, self.textureData[3]);
-  glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, 0, GL_RGBA8, self.size, self.size, 0, GL_BGRA, GL_UNSIGNED_BYTE, self.textureData[4]);
-  glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, GL_RGBA8, self.size, self.size, 0, GL_BGRA, GL_UNSIGNED_BYTE, self.textureData[5]);
+  glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X, 0, self.glInternalFormat, self.size, self.size, 0, self.glFormat, self.glType, self.textureData[0]);
+  glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_X, 0, self.glInternalFormat, self.size, self.size, 0, self.glFormat, self.glType, self.textureData[1]);
+  glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Y, 0, self.glInternalFormat, self.size, self.size, 0, self.glFormat, self.glType, self.textureData[2]);
+  glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, self.glInternalFormat, self.size, self.size, 0, self.glFormat, self.glType, self.textureData[3]);
+  glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, 0, self.glInternalFormat, self.size, self.size, 0, self.glFormat, self.glType, self.textureData[4]);
+  glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, self.glInternalFormat, self.size, self.size, 0, self.glFormat, self.glType, self.textureData[5]);
   glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
+  
 }
 
 function OGLTextureCube.bind(io Integer textureUnit){

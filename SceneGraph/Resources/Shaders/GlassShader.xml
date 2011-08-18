@@ -54,10 +54,12 @@
       attribute vec3 a_normal;
 
       varying vec3 normal;
+      varying vec3 worldnormal;
       varying vec3 lightDir;
       varying vec3 viewDir;
 
       void main(){
+        worldnormal = a_normal;
         normal = u_normalMatrix * a_normal;
         vec4 modelCameraPosition = u_modelViewMatrix * a_position;
   
@@ -85,6 +87,7 @@
 
       uniform samplerCube u_samplerCube;
 
+      varying vec3 worldnormal;
       varying vec3 normal;
       varying vec3 lightDir;
       varying vec3 viewDir;
@@ -103,14 +106,15 @@
         vec3 Ln = normalize(lightDir);
         vec3 Vn = normalize(viewDir);
         vec3 Nn = normalize(normal);
+        vec3 worldNn = normalize(worldnormal);
         
         vec3 reflected = normalize(reflect(Vn, Nn));
         
         // Perform a cube map look up.
-        vec3 cube_color = textureCube(u_samplerCube, Nn).rgb;
-        vec3 base_color = u_materialDiffuseColor.rgb;
+        vec4 cube_color = textureCube(u_samplerCube, worldNn);
+        vec4 base_color = u_materialDiffuseColor;
         float lightFactor = 1.0;
-        gl_FragColor = vec4( mix(base_color, cube_color, reflect_factor), 1.0);
+        gl_FragColor = mix(base_color, cube_color, reflect_factor);
       }
 
       ]]>

@@ -75,13 +75,15 @@ $(document).ready(function() {
           globalXfo: FABRIC.RT.xfo({ tr: FABRIC.RT.vec3(-30, 0, 0) })
         }),
       geometryNode: sphere,
-      materialNode: flatMaterial
+      materialNode: normalMaterial
     });
   
+  inst.setMaterialNode(flatMaterial );
   inst.setMaterialNode( scene.constructNode('WireframeMaterial', {
       color: FABRIC.RT.rgb(0.8, 0.6, 0.6, 1)
-    }) )
+    }) );
   
+
   // Phong Shader
   var phongMaterial = scene.constructNode('PhongMaterial', {
       diffuseColor: FABRIC.RT.rgb(0.8, 0, 0, 1),
@@ -101,7 +103,6 @@ $(document).ready(function() {
   var flatTexturedMaterial = scene.constructNode('FlatTextureMaterial', {
       textureNode: scene.constructNode('Image', { url: 'Resources/earth.png' })
     });
-
   scene.constructNode('Instance', {
       transformNode: scene.constructNode('Transform', {
         hierarchical: false,

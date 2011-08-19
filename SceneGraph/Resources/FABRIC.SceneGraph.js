@@ -1020,6 +1020,7 @@ FABRIC.SceneGraph.registerNodeType('Viewport', {
       else if (evt.layerX) {
         return FABRIC.RT.vec2(evt.layerX, evt.layerY);
       }
+      throw("Unsupported Browser");
     }
 
     // private interface

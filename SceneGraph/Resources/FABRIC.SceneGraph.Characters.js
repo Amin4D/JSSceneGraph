@@ -43,8 +43,10 @@ FABRIC.SceneGraph.registerNodeType('CharacterMesh', {
           srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/drawCharacterInstance.kl',
           preProcessorDefinitions: {
             BONE_MATRICIES_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('boneMatrices'),
+            MODELMATRIXINVERSE_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('modelMatrixInverse'),
             MODELMATRIX_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('modelMatrix'),
             VIEWMATRIX_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('viewMatrix'),
+            CAMERAPOS_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('cameraPos'),
             PROJECTIONMATRIX_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('projectionMatrix'),
             PROJECTIONMATRIXINV_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('projectionMatrixInv'),
             NORMALMATRIX_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('normalMatrix'),

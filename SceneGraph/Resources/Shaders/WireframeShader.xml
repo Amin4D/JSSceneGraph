@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<shader>
+  <name>WireframeShader</name>
+  <uniforms>
+    <uniform name="u_materialColor" constant="color" type="Color" />
+    <uniform name="u_modelViewProjectionMatrix" constant="modelViewProjectionMatrix" type="Mat44" owner="instance"/>
+  </uniforms>
+  
+  <attributes>
+    <attribute name="a_position" binding="positions"/>
+  </attributes>
+  
+  <programParams>
+    <attribute name="GL_GEOMETRY_INPUT_TYPE_EXT" value="GL_TRIANGLES"/>
+    <attribute name="GL_GEOMETRY_OUTPUT_TYPE_EXT" value="GL_LINE_STRIP"/>
+    <attribute name="GL_GEOMETRY_VERTICES_OUT_EXT" value="4"/>
+  </programParams>
+  
+  <vertexshader>
+    <source>
+
+  uniform mat4 u_modelViewProjectionMatrix;
+  attribute vec4 a_position;
+  
+  void main(){
+    gl_Position = u_modelViewProjectionMatrix * a_position;
+  }
+      
+    </source>
+  </vertexshader>
+
+  <geometryshader>
+    <source>
+      #version 120
+      #extension GL_EXT_geometry_shader4 : enable
+      
+      void main(){
+        vec4 V0, V1, V2;
+        V0 = gl_PositionIn[0];
+        V1 = gl_PositionIn[1];
+        V2 = gl_PositionIn[2];
+        
+        gl_Position = V0;
+        EmitVertex();
+        gl_Position = V1;
+        EmitVertex();
+        gl_Position = V2;
+        EmitVertex();
+        gl_Position = V0;
+        EmitVertex();
+        EndPrimitive();
+      }
+    </source>
+  </geometryshader>
+  
+  <fragmentshader>
+    <source>
+      uniform vec4 u_materialColor;
+      
+      void main(){
+        gl_FragColor = u_materialColor;
+      }
+    </source>
+  </fragmentshader>
+</shader>

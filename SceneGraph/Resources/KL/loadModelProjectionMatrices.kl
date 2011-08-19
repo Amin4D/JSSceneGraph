@@ -18,9 +18,19 @@ function loadModelProjectionMatricesFn(
   if(location!=-1){
     shaderProgram.loadMat44Uniform(location, Mat44(modelXfo));
   }
+  location = shaderProgram.getUniformLocation(MODELMATRIXINVERSE_ATTRIBUTE_ID);
+  if(location!=-1){
+    shaderProgram.loadMat44Uniform(location, Mat44(modelXfo).inverse());
+  }
   location = shaderProgram.getUniformLocation(VIEWMATRIX_ATTRIBUTE_ID);
   if(location!=-1){
-    shaderProgram.loadMat44Uniform(location, cameraMatrix);
+    // Some shaders need the world space transform of the camera.
+    // The camera matrix is inverted. 
+    shaderProgram.loadMat44Uniform(location, cameraMatrix.inverse());
+  }
+  location = shaderProgram.getUniformLocation(CAMERAPOS_ATTRIBUTE_ID);
+  if(location!=-1){
+    shaderProgram.loadVec3Uniform(location, cameraMatrix.inverse().translation());
   }
   location = shaderProgram.getUniformLocation(PROJECTIONMATRIX_ATTRIBUTE_ID);
   if(location!=-1){

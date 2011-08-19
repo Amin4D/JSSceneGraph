@@ -89,7 +89,7 @@ $(document).ready(function() {
 
   var geometryNode = scene.constructNode('CharacterSkeletonDebug', {
       characterRigNode: characterRig,
-      boneradius: 1.0
+      boneradius: 0.3
     });
 
   var flatMaterial = scene.constructNode('FlatMaterial', { color: FABRIC.RT.rgb(1.0, 1.0, 1.0, 1.0) });
@@ -107,13 +107,13 @@ $(document).ready(function() {
 
   // create the scene grid
   scene.constructNode('Instance', {
-          geometryNode: scene.constructNode('Grid', {
-              size_x: 40.0,
-              size_z: 40.0,
-              sections_x: 20,
-              sections_z: 20 }),
-          materialNode: scene.constructNode('FlatMaterial')
-      });
+    geometryNode: scene.constructNode('Grid', {
+      size_x: 40.0,
+      size_z: 40.0,
+      sections_x: 20,
+      sections_z: 20 }),
+    materialNode: scene.constructNode('FlatMaterial')
+  });
 
   $globalTimeSlider.slider('value', 0.0);
   $globalTimeSlider.bind('slide',

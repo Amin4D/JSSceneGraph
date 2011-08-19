@@ -2,79 +2,79 @@
 
 
 vec3 apply_normal_map(
-	in vec3 Nn,
-	in vec3 Tn,
-	in vec3 Bn,
-	in float bumpStrength,
-	in sampler2D samplerNormalMap
+  in vec3 Nn,
+  in vec3 Tn,
+  in vec3 Bn,
+  in float bumpStrength,
+  in sampler2D samplerNormalMap
 ){
-	vec3 bump = bumpStrength * (texture2D( samplerNormalMap, gl_TexCoord[0].st ).xyz * 2.0 - 1.0);
-	Nn = Nn + bump.x*Tn + bump.y*Bn;
-	Nn = normalize(Nn);
-	return Nn;
+  vec3 bump = bumpStrength * (texture2D( samplerNormalMap, gl_TexCoord[0].st ).xyz * 2.0 - 1.0);
+  Nn = Nn + bump.x*Tn + bump.y*Bn;
+  Nn = normalize(Nn);
+  return Nn;
 }
 
 // Utility function for phong shading
 vec4 lit (float ndotl, float ndoth, float m){
-	vec4 result = vec4(0.0, 0.0, 0.0, 1.0);
-	result.r = 1.0;
-	result.g = max(0.0, ndotl);
-	if (ndotl > 0.0)
-	result.b = max(0.0, ndoth) * m;
-	
-	return result;
+  vec4 result = vec4(0.0, 0.0, 0.0, 1.0);
+  result.r = 1.0;
+  result.g = max(0.0, ndotl);
+  if (ndotl > 0.0)
+  result.b = max(0.0, ndoth) * m;
+  
+  return result;
 }
 
 vec4 phong_shading(
-	in vec3 Nn,
-	in vec3 Ln,
-	in vec3 Vn,
-	in int lightType,
-	in vec3 lightDir,
-	in float lightFactor,
-	in float lightCosCutoff,
-	in vec4 lightColor,
-	in vec4 diffuseColor,
-	in vec4 specularColor,
-	in float shininess,
-	in vec4 ambientColor
+  in vec3 Nn,
+  in vec3 Ln,
+  in vec3 Vn,
+  in int lightType,
+  in vec3 lightDir,
+  in float lightFactor,
+  in float lightCosCutoff,
+  in vec4 lightColor,
+  in vec4 diffuseColor,
+  in vec4 specularColor,
+  in float shininess,
+  in vec4 ambientColor
 ){
-	vec4 final_color = vec4( 0, 0, 0, 1 );
-	final_color += ambientColor * lightColor;
+  vec4 final_color = vec4( 0, 0, 0, 1 );
+  final_color += ambientColor * lightColor;
 
-	if( lightType == 0 ){			// Point Light
-		float lambertTerm = dot(Nn,Ln) * lightFactor;
-		if ( lambertTerm > 0.0 ){
-			final_color += diffuseColor * lightColor * lambertTerm;
+  if( lightType == 0 ){      // Point Light
+    float lambertTerm = dot(Nn,Ln) * lightFactor;
+    if ( lambertTerm > 0.0 ){
+      final_color += diffuseColor * lightColor * lambertTerm;
 
-			vec3 Rn = reflect(-Ln, Nn);
-			float specular = pow( max(dot(Rn, Vn), 0.0), shininess );
-			final_color += specularColor * lightColor * specular;
-		}
-	}
-	else if( lightType == 1 ){	// Directional Light
-		float lambertTerm = -dot(Nn,lightDir) * lightFactor;
-		if ( lambertTerm > 0.0 ){
-			final_color += diffuseColor * lightColor * lambertTerm;
+      vec3 Rn = reflect(-Ln, Nn);
+      float specular = pow( max(dot(Rn, Vn), 0.0), shininess );
+      final_color += specularColor * lightColor * specular;
+    }
+  }
+  else if( lightType == 1 ){  // Directional Light
+    float lambertTerm = -dot(Nn,lightDir) * lightFactor;
+    if ( lambertTerm > 0.0 ){
+      final_color += diffuseColor * lightColor * lambertTerm;
 
-			vec3 Rn = reflect(lightDir, Nn);
-			float specular = pow( max(dot(Rn, Vn), 0.0), shininess );
-			final_color += specularColor * lightColor * specular;
-		}
-	}
-	else if( lightType == 2 ){	// Spot Light
-		if( -dot( Ln, lightDir ) > lightCosCutoff ){
-			float lambertTerm = dot(Nn,Ln) * lightFactor;
-			if ( lambertTerm > 0.0 ){
-				final_color += diffuseColor * lightColor * lambertTerm;
+      vec3 Rn = reflect(lightDir, Nn);
+      float specular = pow( max(dot(Rn, Vn), 0.0), shininess );
+      final_color += specularColor * lightColor * specular;
+    }
+  }
+  else if( lightType == 2 ){  // Spot Light
+    if( -dot( Ln, lightDir ) > lightCosCutoff ){
+      float lambertTerm = dot(Nn,Ln) * lightFactor;
+      if ( lambertTerm > 0.0 ){
+        final_color += diffuseColor * lightColor * lambertTerm;
 
-				vec3 Rn = reflect(-Ln, Nn);
-				float specular = pow( max(dot(Rn, Vn), 0.0), shininess );
-				final_color += specularColor * lightColor * specular;
-			}
-		}
-	}
-	return final_color;
+        vec3 Rn = reflect(-Ln, Nn);
+        float specular = pow( max(dot(Rn, Vn), 0.0), shininess );
+        final_color += specularColor * lightColor * specular;
+      }
+    }
+  }
+  return final_color;
 }
 
 
@@ -85,13 +85,13 @@ vec4 blinn_shading(
     vec3 Nn,
     vec3 Tn,
     vec3 Bn,
-	
-	in vec4 lightColor,
-	in vec4 diffuseColor,
-	in vec4 specularColor,
-	in float shininess,
-	in float eccentricity,
-	in vec4 ambientColor
+  
+  in vec4 lightColor,
+  in vec4 diffuseColor,
+  in vec4 specularColor,
+  in float shininess,
+  in float eccentricity,
+  in vec4 ambientColor
 ){
     vec3 Hn = normalize(Vn + Ln);
     float hdn = dot(Hn,Nn);
@@ -112,6 +112,6 @@ vec4 blinn_shading(
     hdn = distrib * Ga * fresnelHack / ndv;
     vec4 diffContrib = ldn * lightColor;
     vec4 specContrib = hdn * shininess * lightColor;
-	
+  
     return specContrib+(diffuseColor*(diffContrib+ambientColor));
 }

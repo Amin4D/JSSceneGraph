@@ -3,7 +3,7 @@
     Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
     -->
   <head> 
-    <title>FABRIC - Materials</title> 
+    <title>FABRIC - Basic Muscle</title> 
     
     <meta charset="iso-8859-1"/>
     <link href="../../../themes/default/style.css" rel="stylesheet" type="text/css" />
@@ -20,7 +20,6 @@
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Vec2.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Vec3.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Vec4.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Mat22.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Mat33.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Mat44.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Quat.js" charset="utf-8"></script>
@@ -30,7 +29,6 @@
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Euler.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/OGLShaderProgram.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/OGLTexture2D.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/OGLTextureCube.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/OGLBuffer.js" charset="utf-8"></script>
 
     <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.js" charset="utf-8"></script>
@@ -40,6 +38,7 @@
     <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Materials.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Manipulation.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Kinematics.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/Parsers/parseCollada.js" charset="utf-8"></script>
     
     <script type="text/javascript">
     
@@ -53,122 +52,15 @@ $(document).ready(function() {
 
   // Create a camera to draw the scene from
   var camera = scene.constructNode('TargetCamera', {
-      position: FABRIC.RT.vec3(40, 70, 100),
-      target: FABRIC.RT.vec3(0, 0, 0)
+      nearDistance: 0.1,
+      farDistance: 500,
+      position: FABRIC.RT.vec3(0, 5, 10).scale(2.0)
     });
 
   scene.constructNode("CameraManipulator", { targetNode:camera } );
 
   viewport.setCameraNode(camera);
 
-  var light = scene.constructNode('PointLight', { position: FABRIC.RT.vec3(420.0, 1000.0, 600.0) });
-  var sphere = scene.constructNode('Sphere', { radius: 10, detail: 10, needUVs: true, tangentsFromUV: 0 });
-
-  // Flat Shader
-  var flatMaterial = scene.constructNode('FlatMaterial', {
-      color: FABRIC.RT.rgb(0.8, 0, 0, 1)
-    });
-
-  var inst = scene.constructNode('Instance', {
-      transformNode: scene.constructNode('Transform', {
-          hierarchical: false,
-          globalXfo: FABRIC.RT.xfo({ tr: FABRIC.RT.vec3(-30, 0, 0) })
-        }),
-      geometryNode: sphere,
-      materialNode: normalMaterial
-    });
-  
-  inst.setMaterialNode(flatMaterial );
-  inst.setMaterialNode( scene.constructNode('WireframeMaterial', {
-      color: FABRIC.RT.rgb(0.8, 0.6, 0.6, 1)
-    }) );
-  
-
-  // Phong Shader
-  var phongMaterial = scene.constructNode('PhongMaterial', {
-      diffuseColor: FABRIC.RT.rgb(0.8, 0, 0, 1),
-      lightNode: light
-    });
-
-  scene.constructNode('Instance', {
-      transformNode: scene.constructNode('Transform', {
-          hierarchical: false,
-          globalXfo: FABRIC.RT.xfo({ tr: FABRIC.RT.vec3(-10, 0, 0) })
-        }),
-      geometryNode: sphere,
-      materialNode: phongMaterial
-    });
-
-  // Flat Textured Shader
-  var flatTexturedMaterial = scene.constructNode('FlatTextureMaterial', {
-      textureNode: scene.constructNode('Image', { url: 'Resources/earth.png' })
-    });
-  scene.constructNode('Instance', {
-      transformNode: scene.constructNode('Transform', {
-        hierarchical: false,
-        globalXfo: FABRIC.RT.xfo({ tr: FABRIC.RT.vec3(10, 0, 0) })
-      }),
-      geometryNode: sphere,
-      materialNode: flatTexturedMaterial
-    });
-
-  // Normal Mapped Shader
-  var phongBumpReflectMaterial = scene.constructNode('PhongBumpReflectMaterial', {
-      diffuseTextureNode: scene.constructNode('Image', { url: 'Resources/brick_d.png' }),
-      specularTextureNode: scene.constructNode('Image', { url: 'Resources/brick_s.png' }),
-      normalTextureNode: scene.constructNode('Image', { url: 'Resources/brick_n.png' }),
-      lightNode: light
-    });
-
-  scene.constructNode('Instance', {
-      transformNode: scene.constructNode('Transform', {
-          hierarchical: false,
-          globalXfo: FABRIC.RT.xfo({ tr: FABRIC.RT.vec3(30, 0, 0) })
-        }),
-      geometryNode: sphere,
-      materialNode: phongBumpReflectMaterial
-    });
-
-  // Normal Geometry Shader
-  var normalMaterial = scene.constructNode('NormalMaterial', {
-      color: FABRIC.RT.rgb(0.8, .8, 0.8, 1)
-    });
-
-  scene.constructNode('Instance', {
-      transformNode: scene.constructNode('Transform', {
-        hierarchical: false,
-        globalXfo: FABRIC.RT.xfo({ tr: FABRIC.RT.vec3(30, 0, 0) })
-      }),
-      geometryNode: sphere,
-      materialNode: normalMaterial
-    });
-  
-  // Transparency Shader
-  var cubeTextureMap = scene.constructNode('CubeMap', {
-        urls: [
-          'Resources/cubemap_opensea/opensea_positive_x.png',
-          'Resources/cubemap_opensea/opensea_negative_x.png',
-          'Resources/cubemap_opensea/opensea_positive_y.png',
-          'Resources/cubemap_opensea/opensea_negative_y.png',
-          'Resources/cubemap_opensea/opensea_positive_z.png',
-          'Resources/cubemap_opensea/opensea_negative_z.png'
-        ]
-      });
-  
-  var transparentMaterial = scene.constructNode('GlassMaterial', {
-      diffuseColor: FABRIC.RT.rgba(0.0, 0.75, 1, 0.0),
-      cubeMapTextureNode: cubeTextureMap,
-      lightNode: light
-    });
-
-  scene.constructNode('Instance', {
-      transformNode: scene.constructNode('Transform', {
-          hierarchical: false,
-          globalXfo: FABRIC.RT.xfo({ tr: FABRIC.RT.vec3(50, 0, 0) })
-        }),
-      geometryNode: sphere,
-      materialNode: transparentMaterial
-    });
 
   $('#loadingDialog').dialog({
     modal: true
@@ -212,11 +104,12 @@ $(document).ready(function() {
           <div class="box">
             <h2>INFO</h2>
             <div class="content">
-              Materials.<br>
-              This sample shows the creation of several materials through FABRIC's JavaScript based SceneGraph.
-              All Materials are implemented using GLSL shaders, from Constant, Phong, Textures, Normal Mapping
-              to Geometry Shaders for drawing the normals of the last object. Check out the source code of this
-              page to see how this works.
+              Tesselation.<br>
+            </div><!--content-->
+          </div><!--box-->
+          <div class="box">
+            <h2>CONTROLS</h2>
+            <div class="content">
             </div><!--content-->
           </div><!--box-->
             

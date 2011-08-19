@@ -211,11 +211,17 @@ function OGLShaderProgram.createProgramFromShaders() {
       }
     }
   }
+  
   for (var Size i = 0; i < shaderIDs.size(); i++) {
     glDeleteShader(shaderIDs[i]);
   }
+  
   if (self.programId != 0) {
     self.validateShaderBindings();
+  }
+  
+  if(self.debug){
+    report("createProgramFromShaders Successful :"+ self.programId);
   }
 }
 
@@ -235,8 +241,11 @@ function OGLShaderProgram.loadShader() {
     for(Integer i=0; i<self.disableOptions.size(); i++){
       glDisable(self.disableOptions[i]);
     }
+    // The culling value can only be modified if the draw options are also modified.
+    if(self.cullFace!=0){
+      glCullFace(self.cullFace);
+    }
   }
-  glCullFace(self.cullFace);
 }
 
 function OGLShaderProgram.unloadShader() {

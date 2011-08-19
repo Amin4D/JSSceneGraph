@@ -117,6 +117,9 @@ FABRIC = (function() {
         getContextID: function() {
           return context.getContextID();
         },
+        getLicenses: function() {
+          return context.getLicenses();
+        },
         domElement: embedTag,
         windowNode: context.VP.viewPort.getWindowNode(),
         redrawEvent: context.VP.viewPort.getRedrawEvent(),

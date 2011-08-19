@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<shader>
+  <name>WireframeShader</name>
+  <uniforms>
+    <uniform name="u_lightPosition" constant="lightPosition" type="Vec3" owner="light"/>
+    <uniform name="u_materialColor" constant="color" type="Color" />
+    <uniform name="u_wireColor" constant="wireColor" type="Color" />
+    <uniform name="u_wireOpacity" constant="wireOpacity" type="Scalar" defaultValue="1.0"/>
+    
+    <uniform name="u_modelViewMatrix" constant="modelViewMatrix" type="Mat44" owner="instance"/>
+    <uniform name="u_modelViewProjectionMatrix" constant="modelViewProjectionMatrix" type="Mat44" owner="instance"/>
+    <uniform name="u_normalMatrix" constant="normalMatrix" type="Mat33" owner="instance"/>
+    
+    <uniform name="u_tesselationInner" constant="tesselationInner" type="Scalar" defaultValue="1.0"/>
+    <uniform name="u_tesselationOuter" constant="tesselationOuter" type="Scalar" defaultValue="1.0"/>
+    <uniform name="u_tesselationDepthMin" constant="tesselationDepthMin" type="Scalar" defaultValue="-0.5"/>
+    <uniform name="u_tesselationDepthMax" constant="tesselationDepthMax" type="Scalar" defaultValue="0.5"/>
+    <uniform name="u_samplerDepthMap" constant="depthTexture" type="Integer" owner="texture"/>
+  </uniforms>
+  
+  <attributes>
+    <attribute name="a_position" binding="positions"/>
+    <attribute name="a_normal" binding="normals"/>
+    <attribute name="a_texCoord" binding="uvs0"/>
+  </attributes>
+  
+  <programParams>
+    <attribute name="GL_GEOMETRY_INPUT_TYPE_EXT" value="GL_TRIANGLES"/>
+    <attribute name="GL_GEOMETRY_OUTPUT_TYPE_EXT" value="GL_LINE_STRIP"/>
+    <attribute name="GL_GEOMETRY_VERTICES_OUT_EXT" value="4"/>
+  </programParams>
+  
+  <vertexshader>
+    <source>
+
+  uniform mat4 u_modelViewProjectionMatrix;
+  attribute vec4 a_position;
+  
+  void main(){
+    gl_Position = u_modelViewProjectionMatrix * a_position;
+  }
+      
+    </source>
+  </vertexshader>
+
+  <geometryshader>
+    <source>
+      #version 120
+      #extension GL_EXT_geometry_shader4 : enable
+      
+      void main(){
+        vec4 V0, V1, V2;
+        V0 = gl_PositionIn[0];
+        V1 = gl_PositionIn[1];
+        V2 = gl_PositionIn[2];
+        
+        gl_Position = V0;
+        EmitVertex();
+        gl_Position = V1;
+        EmitVertex();
+        gl_Position = V2;
+        EmitVertex();
+        gl_Position = V0;
+        EmitVertex();
+        EndPrimitive();
+      }
+    </source>
+  </geometryshader>
+  
+  <fragmentshader>
+    <source>
+      uniform vec4 u_materialColor;
+      
+      void main(){
+        gl_FragColor = u_materialColor;
+      }
+    </source>
+  </fragmentshader>
+</shader>

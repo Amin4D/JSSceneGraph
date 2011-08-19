@@ -34,9 +34,6 @@ operator generateSphere(
   numVertices = (1 + slices) * (2 + loops);
   nbGenSlices = slices + 1;
 
-  //  uvs.resize( numVertices );
-  //  positions.resize( numVertices );
-  //  normals.resize( numVertices );
   indices.resize(numTriangles * 3);
 
   var Integer voff = 0;

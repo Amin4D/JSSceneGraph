@@ -28,6 +28,8 @@
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Color.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Euler.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Ray.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/OGLShaderProgram.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/OGLBuffer.js" charset="utf-8"></script>
 
     <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Geometry.js" charset="utf-8"></script>
@@ -38,50 +40,40 @@
     <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Kinematics.js" charset="utf-8"></script>
     
     <script type="text/javascript">
-$(document).ready(function() { var startTimeMS = (new Date).getTime();
+    
+$(document).ready(function() {
 
-    $('#play').button({
-      text: true,
-      icons: {
-        primary: 'ui-icon-play'
-      }
-    });
-
-
-FABRIC.SceneGraph.registerNodeType('SwirleyMovementTransform', {
-  function(options, scene) {
-
-    scene.assignDefaults(options, {
-        baseXfo: FABRIC.RT.xfo(),
-        objId: 0
+  FABRIC.SceneGraph.registerNodeType('SwirleyMovementTransform', {
+  factoryFn: function(options, scene) {
+      scene.assignDefaults(options, {
+          baseXfo: FABRIC.RT.xfo(),
+          objId: 0
+        });
+  
+      var swirleyMovementTransform = scene.constructNode('Transform', options);
+      var dgnode = swirleyMovementTransform.getDGNode();
+      dgnode.addMember('baseXfo', 'Xfo', options.baseXfo);
+      dgnode.addMember('id', 'Integer', options.objId);
+      dgnode.addDependency(scene.getGlobalsNode(), 'globals');
+      
+      var op = scene.constructOperator({
+        operatorName: 'swirleyMovementOp',
+        srcFile: 'KL/swirleyMovementOp.kl',
+        parameterLayout: [
+          'globals.ms',
+          'self.id',
+          'self.baseXfo',
+          'self.globalXfo'
+        ],
+        entryFunctionName: 'swirleyMovementOp'
       });
-
-    var swirleyMovementTransform = scene.constructNode('Transform', options);
-    var dgnode = swirleyMovementTransform.getDGNode();
-    dgnode.addMember('baseXfo', 'Xfo', options.baseXfo);
-    dgnode.addMember('id', 'Integer', options.objId);
-    dgnode.addDependency(scene.getGlobalsNode(), 'globals');
-    
-    var op = scene.constructOperator({
-      operatorName: 'swirleyMovementOp',
-      srcFile: 'KL/swirleyMovementOp.kl',
-      parameterBinding: [
-        'globals.ms',
-        'self.id',
-        'self.baseXfo',
-        'self.globalXfo'
-      ],
-      entryFunctionName: 'swirleyMovementOp'
-    });
-    dgnode.bindings.append(op);
-    
-    swirleyMovementTransform.pub.getOperatorBinding = function(){
-      return op;
-    }
-    return swirleyMovementTransform;
-  }});
-
-
+      dgnode.bindings.append(op);
+      
+      swirleyMovementTransform.pub.getOperatorBinding = function(){
+        return op;
+      }
+      return swirleyMovementTransform;
+    }});
 
   var scene = FABRIC.SceneGraph.createScene();
   var viewport = scene.constructNode('Viewport', {
@@ -160,64 +152,80 @@ FABRIC.SceneGraph.registerNodeType('SwirleyMovementTransform', {
     }
   }
   
-  console.log( "Num Cubes:" + objId);
-
-  var errors = scene.getErrors();
-  if (errors.length > 0) {
-    throw (errors.toString());
-  }
-  else {
-
-    console.log(scene.getTimerProfiles());
-
-    scene.redrawAllWindows();
-
-    $('#play').button()
-      .click(function() {
-        var options;
-        if ($(this).text() == 'Play') {
-          $(this).button('option', {
-            label: 'Pause',
-            icons: {
-              primary: 'ui-icon-pause'
-            }
-          });
-          scene.animation.play();
-        } else {
-          $(this).button('option', {
-            label: 'Play',
-            icons: {
-              primary: 'ui-icon-play'
-            }
-          });
-          scene.animation.pause();
-        }
-      });
 
 
-    $('#displayOperatorEditor').button()
-      .click(function() {
-        var binding = transformNode.getOperatorBinding();
-        var operatorEditorWindow = window.open(
-            FABRIC.processURL('FABRIC_ROOT/Core/OperatorEditor/operatorEditor.html')
-             + '?id=' + scene.getContextId()
-             + '?operator=' + binding.getOperator().getName(),
-            'Fabric Operator Editor:' + binding.getOperator().getName(),
-            'status=1,resizable=1,width=700,height=300'
-          );
-      //  operatorEditorWindow.FABRIC = FABRIC;
-      //  operatorEditorWindow.operatorBinding = transformNode.getOperatorBinding();
-      });
-  }
+  $('#play').button({
+      text: true,
+      icons: {
+        primary: 'ui-icon-play'
+      }
+    })
+    .click(function() {
+      var options;
+      if ($(this).text() == 'Play') {
+        $(this).button('option', {
+          label: 'Pause',
+          icons: {
+            primary: 'ui-icon-pause'
+          }
+        });
+        scene.animation.play();
+      } else {
+        $(this).button('option', {
+          label: 'Play',
+          icons: {
+            primary: 'ui-icon-play'
+          }
+        });
+        scene.animation.pause();
+      }
+    });
 
-  var endTimeMS = (new Date).getTime();
-  console.log('Total time elapsed: ' + (endTimeMS - startTimeMS) + 'ms');
+
+  $('#displayOperatorEditor').button()
+    .click(function() {
+      var binding = transformNode.getOperatorBinding();
+      var operatorEditorWindow = window.open(
+          FABRIC.processURL('FABRIC_ROOT/Core/OperatorEditor/operatorEditor.html')
+           + '?id=' + scene.getContextId()
+           + '?operator=' + binding.getOperator().getName(),
+          'Fabric Operator Editor:' + binding.getOperator().getName(),
+          'status=1,resizable=1,width=700,height=300'
+        );
+    //  operatorEditorWindow.FABRIC = FABRIC;
+    //  operatorEditorWindow.operatorBinding = transformNode.getOperatorBinding();
+    });
+
+
+  $('#loadingDialog').dialog({
+    modal: true
+  });
+  var count = FABRIC.getAsyncTaskCount();
+  FABRIC.appendOnResolveAsyncTaskCallback(function(label, countRemaining){
+    $('#loadingProgressBar').progressbar({
+      value: (1.0-(countRemaining/count))*100
+    });
+    if(countRemaining===0){
+      $('#loadingDialog').dialog('close');
+      var errors = scene.getErrors();
+      if (errors.length > 0) {
+        throw (errors.toString());
+      }
+      viewport.redraw();
+      return true;
+    }
+  });
+  
 });
 
 </script>
 
   </head> 
   <body>
+    <div id="loadingDialog" title="Loading...">
+      <h4 id="loadingDesc" style="margin-bottom: 10px"></h4>
+      <div id="loadingProgressBar" class="ui-progressbar-value"></div>
+    </div>
     <div id="wrapper">
       <ul id="nav">
         <li><a href="#" id="fabric-logo"><img src="../../../themes/default/_img/projects/fabric-logo.png" /></a></li>

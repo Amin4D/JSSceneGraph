@@ -1,0 +1,26 @@
+
+    
+path.CurvePath {
+  fill: none;
+  stroke-opacity:1.0;
+  stroke-width:1.5;
+}
+
+path.TimeStripePath {
+  fill: none;
+  stroke:white;
+  stroke-opacity:1.0;
+  stroke-width:1;
+}
+
+path.KeyframeHandle {
+  fill: none;
+  stroke:white;
+  stroke-opacity:1.0;
+  stroke-width:1.0;
+}
+
+rect.EventCatcher {
+  fill-opacity:0.0;
+  stroke-opacity:0.0;
+}

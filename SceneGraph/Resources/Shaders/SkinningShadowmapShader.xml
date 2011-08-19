@@ -3,9 +3,8 @@
 	<name>SkinningShadowmapMaterial</name>
 
 	<uniforms>
-		<uniform name="u_modelViewProjectionMatrix" constant="modelViewProjectionMatrix" owner="instance"/>
-		<uniform name="u_boneMatrices" constant="boneMatrices" owner="characterInstance"/>
-		
+		<uniform name="u_modelViewProjectionMatrix" constant="modelViewProjectionMatrix" type="Mat44" owner="instance"/>
+		<uniform name="u_boneMatrices" constant="boneMatrices" type="Mat44" owner="characterInstance"/>
 	</uniforms>
 
 	<attributes>

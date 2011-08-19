@@ -18,8 +18,8 @@ FABRIC.SceneGraph.registerNodeType('CharacterMesh', {
     characterMeshNode.pub.addUniformValue('boneCountArray', 'Integer[]');
     characterMeshNode.pub.addUniformValue('boneIdsArray', 'Integer[]');
     characterMeshNode.pub.addUniformValue('boneWeightsArray', 'Scalar[]');
-    characterMeshNode.pub.addVertexAttributeValue('boneIds', 'Mat33');
-    characterMeshNode.pub.addVertexAttributeValue('boneWeights', 'Mat33');
+    characterMeshNode.pub.addVertexAttributeValue('boneIds', 'Mat33', { genVBO:true } );
+    characterMeshNode.pub.addVertexAttributeValue('boneWeights', 'Mat33', { genVBO:true } );
 
     // The enveloping shader can only accept bone bindings in Mat33 values.
     // Here we take the list of bone weights, sort them, and pick the top
@@ -28,7 +28,7 @@ FABRIC.SceneGraph.registerNodeType('CharacterMesh', {
       operatorName: 'reduceBoneBindingOp',
       srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/reduceBoneBinding.kl',
       entryFunctionName: 'reduceBoneBinding',
-      parameterBinding: [
+      parameterLayout: [
         'uniforms.boneCountArray',
         'uniforms.boneIdsArray',
         'uniforms.boneWeightsArray',
@@ -42,23 +42,23 @@ FABRIC.SceneGraph.registerNodeType('CharacterMesh', {
           operatorName: 'drawCharacterInstance',
           srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/drawCharacterInstance.kl',
           preProcessorDefinitions: {
-            BONE_MATRICIES_ATTRIBUTE_ID: FABRIC.shaderAttributeTable.boneMatrices.id,
-            MODELMATRIX_ATTRIBUTE_ID: FABRIC.shaderAttributeTable.modelMatrix.id,
-            VIEWMATRIX_ATTRIBUTE_ID: FABRIC.shaderAttributeTable.viewMatrix.id,
-            PROJECTIONMATRIX_ATTRIBUTE_ID: FABRIC.shaderAttributeTable.projectionMatrix.id,
-            PROJECTIONMATRIXINV_ATTRIBUTE_ID: FABRIC.shaderAttributeTable.projectionMatrixInv.id,
-            NORMALMATRIX_ATTRIBUTE_ID: FABRIC.shaderAttributeTable.normalMatrix.id,
-            MODELVIEW_MATRIX_ATTRIBUTE_ID: FABRIC.shaderAttributeTable.modelViewMatrix.id,
-            MODELVIEWPROJECTION_MATRIX_ATTRIBUTE_ID: FABRIC.shaderAttributeTable.modelViewProjectionMatrix.id
+            BONE_MATRICIES_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('boneMatrices'),
+            MODELMATRIX_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('modelMatrix'),
+            VIEWMATRIX_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('viewMatrix'),
+            PROJECTIONMATRIX_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('projectionMatrix'),
+            PROJECTIONMATRIXINV_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('projectionMatrixInv'),
+            NORMALMATRIX_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('normalMatrix'),
+            MODELVIEW_MATRIX_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('modelViewMatrix'),
+            MODELVIEWPROJECTION_MATRIX_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('modelViewProjectionMatrix')
           },
           entryFunctionName: 'drawCharacterInstance',
-          parameterBinding: [
-            'shader.uniformValues',
+          parameterLayout: [
+            'shader.shaderProgram',
             'rig.boneMatrices',
             'camera.cameraMat44',
             'camera.projectionMat44',
-            'self.indicesBufferID',
-            'self.indicesCount'
+            'self.indicesBuffer',
+            'instance.drawToggle'
           ]
         });
     }
@@ -201,7 +201,7 @@ FABRIC.SceneGraph.registerNodeType('CharacterSkeleton', {
         operatorName: 'calcReferencePoseFromInverseBindPose',
         srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/characterSkeleton.kl',
         entryFunctionName: 'calcReferencePoseFromInverseBindPose',
-        parameterBinding: [
+        parameterLayout: [
           'self.bones',
           'self.invmatrices'
         ]
@@ -216,7 +216,7 @@ FABRIC.SceneGraph.registerNodeType('CharacterSkeleton', {
         operatorName: 'calcReferenceLocalPose',
         srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/characterSkeleton.kl',
         entryFunctionName: 'calcReferenceLocalPose',
-        parameterBinding: [
+        parameterLayout: [
           'self.bones'
         ]
       }));
@@ -229,7 +229,7 @@ FABRIC.SceneGraph.registerNodeType('CharacterSkeleton', {
         operatorName: 'calcReferenceGlobalPose',
         srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/characterSkeleton.kl',
         entryFunctionName: 'calcReferenceGlobalPose',
-        parameterBinding: [
+        parameterLayout: [
           'self.bones'
         ]
       }));
@@ -242,7 +242,7 @@ FABRIC.SceneGraph.registerNodeType('CharacterSkeleton', {
         operatorName: 'calcInverseBindPose',
         srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/characterSkeleton.kl',
         entryFunctionName: 'calcInverseBindPose',
-        parameterBinding: [
+        parameterLayout: [
           'self.bones',
           'self.invmatrices'
         ]
@@ -282,7 +282,7 @@ FABRIC.SceneGraph.registerNodeType('CharacterSkeletonDebug', {
           operatorName: 'generateSkeletonOp',
           srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/generateSkeleton.kl',
           entryFunctionName: 'generateSkeleton',
-          parameterBinding: [
+          parameterLayout: [
             'skeleton.bones',
             'rig.pose',
             'self.positions[]',
@@ -305,25 +305,15 @@ FABRIC.SceneGraph.registerNodeType('CharacterSkeletonDebug', {
 
     instanceNode = scene.constructNode('Instance', {
         geometryNode: characterSkeletonDebug.pub,
-        materialNode: scene.constructNode('FlatMaterial', { color: options.color }).pub
+        materialNode: scene.constructNode('FlatMaterial', {
+          color: options.color,
+          disableZBuffer: options.drawOverlayed
+        }).pub
       });
-
-    // setup the postdescend operators for disable and enable zbuffer
-    // PT - This could be done at the shader/material stage
-    if (options.drawOverlayed) {
-      instanceNode.getRedrawEventHandler().preDescendBindings.insert(scene.constructOperator({
-          operatorName: 'disableZBuffer',
-          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/drawAttributes.kl',
-          entryFunctionName: 'disableZBuffer',
-          parameterBinding: []
-        }), 0);
-      instanceNode.getRedrawEventHandler().postDescendBindings.append(scene.constructOperator({
-          operatorName: 'popAttribs',
-          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/drawAttributes.kl',
-          entryFunctionName: 'popAttribs',
-          parameterBinding: []
-        }));
+    characterSkeletonDebug.pub.getInstanceNode = function() {
+      return instanceNode.pub;
     }
+
     return characterSkeletonDebug;
   }});
 
@@ -375,7 +365,7 @@ FABRIC.SceneGraph.registerNodeType("NLerpCharacterVariables", {
         operatorName:"lerpRigVariablesOp",
         srcFile:"../../../SceneGraph/Resources/KL/lerpRigVariables.kl",
         entryFunctionName:"lerpRigVariables",
-        parameterBinding:[
+        parameterLayout:[
           "self.time",
           "input1.rigparams",
           "input2.rigparams",
@@ -423,10 +413,8 @@ FABRIC.SceneGraph.registerNodeType('CharacterRig', {
       solvers = [];
 
     // extend the public interface
-    characterRigNode.pub.getPose = function() {
-      dgnode.evaluate();
-      return dgnode.getData('pose');
-    };
+    characterRigNode.addMemberInterface(dgnode, 'pose', true);
+
     characterRigNode.pub.getSkeletonNode = function() {
       return scene.getPublicInterface(skeletonNode);
     };
@@ -516,11 +504,27 @@ FABRIC.SceneGraph.registerNodeType('CharacterRig', {
           operatorName: 'calcSkinningMatrices',
           srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/characterRig.kl',
           entryFunctionName: 'calcSkinningMatrices',
-          parameterBinding: ['self.pose', 'skeleton.invmatrices', 'self.boneMatrices']
+          parameterLayout: ['self.pose', 'skeleton.invmatrices', 'self.boneMatrices']
         }));
+      
+      // offer to create an operator which computes the inverse as a xfo[]
+      characterRigNode.pub.computeInverseXfos = function()
+      {
+        dgnode.addMember('boneXfos', 'Xfo[]');
+        
+        dgnode.bindings.append(scene.constructOperator({
+            operatorName: 'calcSkinningXfos',
+            srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/characterRig.kl',
+            entryFunctionName: 'calcSkinningXfos',
+            parameterLayout: ['self.pose', 'skeleton.bones', 'self.boneXfos']
+          }));
+        
+        // remove the function once more
+        characterRigNode.pub.computeInverseXfos  = function(){};
+      }
     }
     setSkeletonNode(options.skeletonNode);
-
+    
     if (options.variablesNode) {
       characterRigNode.pub.setVariablesNode(options.variablesNode);
     }
@@ -579,7 +583,7 @@ FABRIC.SceneGraph.registerNodeType('CharacterRigDebug', {
 
       rigNode = scene.getPrivateInterface(node);
 
-      characterRigDebugNode.pub.addVertexAttributeValue('vertexColors', 'Color');
+      characterRigDebugNode.pub.addVertexAttributeValue('vertexColors', 'Color', { genVBO:true } );
       characterRigDebugNode.getUniformsDGNode().addDependency(rigNode.getDGNode(), 'rig');
       characterRigDebugNode.getUniformsDGNode().addDependency(rigNode.getConstantsNode().getDGNode(), 'constants');
       characterRigDebugNode.getUniformsDGNode().addDependency(rigNode.getVariablesNode().getDGNode(), 'variables');
@@ -594,7 +598,7 @@ FABRIC.SceneGraph.registerNodeType('CharacterRigDebug', {
           operatorName: 'clearDebugXfos',
           srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/characterDebug.kl',
           entryFunctionName: 'clearDebugXfos',
-          parameterBinding: [
+          parameterLayout: [
             'self.debugpose'
           ]
         }));
@@ -607,7 +611,7 @@ FABRIC.SceneGraph.registerNodeType('CharacterRigDebug', {
           operatorName: 'generateDebugPoints',
           srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/characterDebug.kl',
           entryFunctionName: 'generateDebugPoints',
-          parameterBinding: [
+          parameterLayout: [
             'uniforms.debugpose',
             'uniforms.offsetpose',
             'self.positions[]',

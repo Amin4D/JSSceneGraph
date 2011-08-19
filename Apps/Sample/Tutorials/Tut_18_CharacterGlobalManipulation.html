@@ -1,0 +1,191 @@
+<html xmlns="http://www.w3.org/1999/xhtml"> 
+  <!--
+    Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
+    -->
+  <head> 
+    <title>FABRIC - Tutorial 18 - Character Global Manipulation</title> 
+    
+    <meta charset="iso-8859-1"/>
+    <link href="../../../themes/default/style.css" rel="stylesheet" type="text/css" />
+    <link href="../../../themes/default/viewer.css" rel="stylesheet" type="text/css" />
+
+    <script type="text/javascript" src="../../../ThirdParty/jQuery/jquery-1.4.2.min.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/jQuery/jquery-ui-1.8.5.custom.min.js"></script>
+    <link type="text/css" href="../../../ThirdParty/jQuery/css/vader/jquery-ui-1.8.5.custom.css" rel="stylesheet" />
+
+    <script type="text/javascript" src="../../../Core/FABRIC.Wrappers.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../Core/FABRIC.js" charset="utf-8"></script>
+
+    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Math.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Vec2.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Vec3.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Vec4.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Mat22.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Mat33.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Mat44.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Quat.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Xfo.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/RGBA.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Color.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Euler.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Ray.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/OGLShaderProgram.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/OGLTexture2D.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/OGLBuffer.js" charset="utf-8"></script>
+
+    <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Geometry.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Primitives.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Lights.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Materials.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Manipulation.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Kinematics.js" charset="utf-8"></script>
+
+    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Bone.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Characters.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/Parsers/parseCollada.js" charset="utf-8"></script>
+
+<script type="text/javascript">
+
+$(document).ready(function() {
+  
+  // create a scene (this creates a context)
+  var scene = FABRIC.SceneGraph.createScene();
+  
+  // create the first scenegraph node, the viewport
+  var viewport = scene.constructNode('Viewport', {
+    windowElement: document.getElementById('FabricContainer'),
+    backgroundColor: FABRIC.RT.rgb(0.0, 0.05, 0.15),
+    enableRaycasting: true
+  });
+
+  // create a camera, to be able to see something
+  var camera = scene.constructNode('TargetCamera', {
+      position: FABRIC.RT.vec3(15, 15, 15),
+      target: FABRIC.RT.vec3(0, 3, 0),
+      nearDistance: 0.1,
+      farDistance: 200
+    });
+  viewport.setCameraNode(camera);
+  scene.constructNode("CameraManipulator", { targetNode:camera } );
+
+  // create the scene grid
+  scene.constructNode('Instance', {
+          geometryNode: scene.constructNode('Grid', {
+              size_x: 40.0,
+              size_z: 40.0,
+              sections_x: 20,
+              sections_z: 20 }),
+          materialNode: scene.constructNode('FlatMaterial')
+      });
+
+  var assets = scene.importAssetFile('Resources/tuscany_static.dae', {});
+
+  // query the rig  
+  var rig = assets.tuscanyCharacterRig;
+  var skeleton = rig.getSkeletonNode();
+  var bones = skeleton.getBones();
+  
+  // set the bone lengths
+  for(var i=0;i<bones.length;i++)
+  {
+    if(bones[i].name.substr(0,4) == "foot"){
+      bones[i].length = 2.0;
+    } else if(bones[i].name.substr(0,3) == "leg"){
+      bones[i].length = 3.0;
+    } else {
+      bones[i].length = 1.0;
+    }
+    bones[i].radius = 0.25;
+  }
+  skeleton.setBones(bones);
+
+  var debug = scene.constructNode('CharacterSkeletonDebug', {
+    characterRigNode: assets.tuscanyCharacterRig,
+    boneradius: 1.0
+  });
+  var debugInstance = debug.getInstanceNode();
+  debugInstance.setDrawToggle(false);
+
+  // create a light node  
+  var light = scene.constructNode('PointLight', {
+    position: FABRIC.RT.vec3(-20,100,100)
+  });
+
+  // create a material node
+  var material = scene.constructNode('PhongBumpReflectSkinningMaterial', {
+      diffuseTextureNode: scene.constructNode('Image', { url: 'Resources/tuscany_n.png' }),
+      specularTextureNode: scene.constructNode('Image', { url: 'Resources/tuscany_s.png' }),
+      normalTextureNode: scene.constructNode('Image', { url: 'Resources/tuscany_d.png' }),
+      lightNode: light,
+      numBones: skeleton.getNumBones()
+    });
+  assets.tuscanyInstance.setMaterialNode(material);
+
+  // construct the manipulators
+  for(var i=0;i<bones.length;i++) {
+    scene.constructNode('3AxisRotationManipulator', {
+      parentNode: assets.tuscanyCharacterRig,
+      parentMember: 'pose',
+      parentMemberIndex: i,
+      radius: 1.5,
+      disableZBuffer: true
+    });
+  }
+
+  $('#toggleVisibility').button()
+    .click(function() {
+      var toggle = !assets.tuscanyInstance.getDrawToggle();
+      assets.tuscanyInstance.setDrawToggle(toggle);
+      debugInstance.setDrawToggle(!toggle);
+      viewport.redraw();
+    });
+
+  $('#loadingDialog').dialog({
+    modal: true
+  });
+  var count = FABRIC.getAsyncTaskCount();
+  FABRIC.appendOnResolveAsyncTaskCallback(function(label, countRemaining){
+    $('#loadingProgressBar').progressbar({
+      value: (1.0-(countRemaining/count))*100
+    });
+    if(countRemaining===0){
+      $('#loadingDialog').dialog('close');
+      var errors = scene.getErrors();
+      if (errors.length > 0) {
+        throw (errors.toString());
+      }
+      viewport.redraw();
+      return true;
+    }
+  });  // Wait for all the operators to be compiled. 
+});
+
+</script>
+
+  </head> 
+  <body>
+    <div id="loadingDialog" title="Loading...">
+      <h4 id="loadingDesc" style="margin-bottom: 10px"></h4>
+      <div id="loadingProgressBar" class="ui-progressbar-value"></div>
+    </div>
+    <div id="wrapper">
+      <ul id="nav">
+        <li><a href="#" id="fabric-logo"><img src="../../../themes/default/_img/projects/fabric-logo.png" /></a></li>
+      </ul>
+      <div id="editor">
+        <div id="viewer">
+          <div id="FabricContainer"></div> 
+        </div><!--viewer-->
+        <div id="sidebar">
+          <div class="box">
+            <h2>CONTROLS</h2>
+            <div class="content">
+              <button id="toggleVisibility" style="margin-top:30px;">Toggle Visibility</button>
+            </div><!--content-->
+          </div><!--box-->
+        </div><!--sidebar-->
+      </div> <!--editor-->
+    </div><!--wrapper-->
+  </body> 
+  </html>

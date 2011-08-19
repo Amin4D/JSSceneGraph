@@ -28,6 +28,10 @@
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/RGBA.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Color.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Euler.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/OGLShaderProgram.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/OGLTexture2D.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/OGLRenderTarget.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/OGLBuffer.js" charset="utf-8"></script>
 
     <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Geometry.js" charset="utf-8"></script>
@@ -46,16 +50,28 @@
 FABRIC.SceneGraph.registerNodeType('ThickGlassMaterial', {
   factoryFn: function(options, scene) {
     options = scene.assignDefaults(options, {
-        color:FABRIC.RT.rgba(0.6,0.3,0,1)
+        color:FABRIC.RT.rgba(0.6,0.3,0,1),
+        sigma: 0.5
       });
     
     var thickGlassMaterialPP = scene.constructNode('PostProcessEffect', {
       name: 'ThickGlassMaterialPP',
       parentEventHandler: scene.getSceneRedrawEventHandler(),
-      OGL_INTERNALFORMAT: 'GL_RG16F',
-      OGL_FORMAT: 'GL_RG',
-      OGL_TYPE: 'GL_FLOAT',
+      renderTarget: FABRIC.RT.oglRenderTarget(0,  0, [
+        new FABRIC.RT.OGLRenderTargetTextureDesc(
+            2, /*COLOR*/
+            new FABRIC.RT.OGLTexture2D(
+              FABRIC.SceneGraph.OpenGLConstants.GL_RG16F,
+              FABRIC.SceneGraph.OpenGLConstants.GL_RG,
+              FABRIC.SceneGraph.OpenGLConstants.GL_FLOAT)
+          )
+        ],
+        {
+          clearColor: FABRIC.RT.rgba(0,0,0,1)
+        }
+      ),
       fragmentShader: '\n\
+uniform float u_sigma;\n\
 uniform sampler2D u_fboTexture;\n\
 uniform vec4 u_color;\n\
 \n\
@@ -65,35 +81,23 @@ void main(){\n\
   if (thickness <= 0.0){\n\
       discard;\n\
   }\n\
-  float sigma = 0.2;\n\
   float fresnel = 1.0 - texture2D(u_fboTexture, texCoord).g; \n\
-  float intensity = fresnel * exp(-sigma * thickness);\n\
+  float intensity = fresnel * exp(-u_sigma * thickness);\n\
   gl_FragColor = intensity * u_color;\n\
 }\
       ',
       shaderUniforms: {
-        fboTexture: { name: 'u_fboTexture', owner: 'fbo' },
-        color: { name: 'u_color', defaultValue:options.color }
+        fboTexture: { name: 'u_fboTexture', type:'Integer', owner: 'fbo' },
+        color: { name: 'u_color', type:'Color', defaultValue:options.color },
+        sigma: { name: 'u_sigma', type:'Scalar', defaultValue:options.sigma }
       },
       shaderAttributes: {
         positions: { name: 'a_position' }
-      }
+      },
+      disableOptions: [],
+      enableOptions: []
     });
-      
-    // Before rendering the geometry to the FBO, set up some OpenGL attribs
-    thickGlassMaterialPP.getRedrawEventHandler().preDescendBindings.append(scene.constructOperator({
-        operatorName: 'setThickGlassMaterialAttribs',
-        srcCode: '\n\
-operator setThickGlassMaterialAttribs(){\n\
-  glClearColor(0, 0, 0, 1);\n\
-  glClear(GL_COLOR_BUFFER_BIT);\n\
-  glDisable(GL_CULL_FACE);\n\
-  glEnable(GL_DEPTH_TEST);\n\
-  glEnable(GL_BLEND);\n\
-  glBlendFunc(GL_ONE, GL_ONE);\n\
-}',
-        entryFunctionName: 'setThickGlassMaterialAttribs',
-      }));
+    
     
     
     var thickGlassMaterial = scene.constructNode('Material', {
@@ -141,10 +145,17 @@ void main(){\n\
         positions: { name: 'a_position' },
         normals: { name: 'a_normal' }
       },
-      separateShaderNode: false
+      separateShaderNode: false,
+      disableOptions: [FABRIC.SceneGraph.OpenGLConstants.GL_CULL_FACE],
+      enableOptions: [FABRIC.SceneGraph.OpenGLConstants.GL_DEPTH_TEST,
+                      FABRIC.SceneGraph.OpenGLConstants.GL_BLEND],
+      blendModeSfactor: FABRIC.SceneGraph.OpenGLConstants.GL_ONE,
+      blendModeDfactor: FABRIC.SceneGraph.OpenGLConstants.GL_ONE
     });
+
+    thickGlassMaterialPP.getRedrawEventHandler = thickGlassMaterial.getRedrawEventHandler;
     
-    return thickGlassMaterial;
+    return thickGlassMaterialPP;
   }});
     
     
@@ -160,8 +171,8 @@ $(document).ready(function() {
   camera = scene.constructNode('TargetCamera', {
       nearDistance: 5,
       farDistance: 100,
-      position: FABRIC.RT.vec3(4, 15, 42),
-      target: FABRIC.RT.vec3(0, 14, 0)
+      position: FABRIC.RT.vec3(4, 1, 42).scale(0.3),
+      target: FABRIC.RT.vec3(0, 0, 0)
     });
 
   scene.constructNode("CameraManipulator", { targetNode:camera } );
@@ -172,37 +183,63 @@ $(document).ready(function() {
 
   // Flat Shader
   var thickGlassMaterial = scene.constructNode('ThickGlassMaterial', {
-      color: FABRIC.RT.rgb(0.0, 0.75, 0, 1)
+      color: FABRIC.RT.rgb(0.0, 0.75, 0, 1),
+      sigma: 0.6
     });
   
-  var assets = scene.importAssetFile('../BasicDemos/Models/venusm.obj', { scaleFactor:0.01 } );
+  var assets = scene.importAssetFile('../BasicDemos/Models/beethovan.obj');//, { scaleFactor:0.01 } );
   
   scene.constructNode('Instance', {
       transformNode: scene.constructNode('Transform', {
           hierarchical: false,
           globalXfo: FABRIC.RT.xfo({ tr: FABRIC.RT.vec3(0, 0, 0) })
         }),
-      geometryNode: assets['venusm'],
+      geometryNode: assets['beethovan'],
       materialNode: thickGlassMaterial
     });
   
-  var errors = scene.getErrors();
-  if (errors.length > 0) {
-    throw (errors.toString());
-  }
-  else {
-    scene.redrawAllWindows();
-
-    console.log(scene.getTimerProfiles());
-
-    console.log('Done');
-  }
+  $('#loadingDialog').dialog({
+    modal: true
+  });
+  var count = FABRIC.getAsyncTaskCount();
+  FABRIC.appendOnResolveAsyncTaskCallback(function(label, countRemaining){
+    $('#loadingProgressBar').progressbar({
+      value: (1.0-(countRemaining/count))*100
+    });
+    if(countRemaining===0){
+      $('#loadingDialog').dialog('close');
+      var errors = scene.getErrors();
+      if (errors.length > 0) {
+        throw (errors.toString());
+      }
+      
+      $('#sigma').slider({
+          min: 0.0,
+          max: 1.0,
+          step: 0.1,
+          value: thickGlassMaterial.getSigma()
+        })
+      .bind('slide',
+        function(event, ui) {
+          thickGlassMaterial.setSigma( ui.value );
+          scene.redrawAllWindows();
+        });
+    
+      viewport.redraw();
+      return true;
+    }
+  });
+  
 });
 
 </script>
 
   </head> 
   <body>
+    <div id="loadingDialog" title="Loading...">
+      <h4 id="loadingDesc" style="margin-bottom: 10px"></h4>
+      <div id="loadingProgressBar" class="ui-progressbar-value"></div>
+    </div>
     <div id="wrapper">
       <ul id="nav">
         <li><a href="#" id="fabric-logo"><img src="../../../themes/default/_img/projects/fabric-logo.png" /></a></li>
@@ -221,6 +258,14 @@ $(document).ready(function() {
               All Materials are implemented using GLSL shaders, from Constant, Phong, Textures, Normal Mapping
               to Geometry Shaders for drawing the normals of the last object. Check out the source code of this
               page to see how this works.
+            </div><!--content-->
+          </div><!--box-->
+          
+          <div class="box">
+            <h2>CONTROLS</h2>
+            <div class="content">
+              <div>Glass Density:</div>
+              <div id='sigma' style="margin-top:10px;"></div>
             </div><!--content-->
           </div><!--box-->
             

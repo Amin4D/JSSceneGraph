@@ -3,8 +3,8 @@
 	<name>ShadowMaterial</name>
 
 	<uniforms>
-		<uniform name="u_modelViewProjectionMatrix" constant="modelViewProjectionMatrix" owner="instance"/>
-		<uniform name="u_normalMatrix" constant="normalMatrix" owner="instance"/>
+		<uniform name="u_modelViewProjectionMatrix" constant="modelViewProjectionMatrix" type="Mat44" owner="instance"/>
+		<uniform name="u_normalMatrix" constant="normalMatrix" type="Mat33" owner="instance"/>
 	</uniforms>
 
 	<attributes>

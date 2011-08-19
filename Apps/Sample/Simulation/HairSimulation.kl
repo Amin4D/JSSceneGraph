@@ -1,0 +1,167 @@
+operator initHair(
+  in Size index,
+  io Vec3 trianglePositions[],
+  io Vec3 triangleNormals[],
+  io Mat33 localBoneIds[],
+  io Mat33 localBoneWeights[],
+  io Integer triangleIndices[],
+  io Color rootColorLimits[2],
+  io Color tipColorLimits[2],
+  io Vec3 position,
+  io Vec3 normal,
+  io Mat33 boneIds,
+  io Mat33 boneWeights,
+  io Color vertexColor,
+  io Vec2 stiffnessLimits,
+  io Scalar stiffness,
+  io Vec2 gravityLimits,
+  io Scalar gravity,
+  io Vec2 lengthLimits,
+  io Scalar segmentlength
+)
+{
+  // compute the indices inside the hair
+  var Size elementIndex = index % SEGMENT_COUNT;
+  var Size rootIndex = index - elementIndex;
+  var Scalar ratio = Scalar(elementIndex) / Scalar(SEGMENT_COUNT-1);
+
+  // compute the length of each hair
+  var Scalar lengthBlend = mathRandomScalar(317,rootIndex * 412 + 71);
+  segmentlength = (lengthLimits.x * lengthBlend + lengthLimits.y * (1.0 - lengthBlend)) / Scalar(SEGMENT_COUNT-1);
+  
+  // compute the coordinate
+  var Size triangleIndex = Size(mathRandomScalar(0,rootIndex * 97312 + 212) * Scalar(triangleIndices.size()) / 3.0) * 3;
+  var Scalar u = mathRandomScalar(1,rootIndex * 317231451 + 3);
+  var Scalar v = mathRandomScalar(2,rootIndex * 31812314 + 41);
+  var Scalar r = mathRandomScalar(3,rootIndex * 1742342 + 19);
+  u *= r;
+  v *= (1.0 - r);
+  
+  // take care of position and normal
+  var Vec3 edge1 = trianglePositions[triangleIndices[triangleIndex+2]] - trianglePositions[triangleIndices[triangleIndex]];
+  var Vec3 edge2 = trianglePositions[triangleIndices[triangleIndex+1]] - trianglePositions[triangleIndices[triangleIndex]];
+  position = trianglePositions[triangleIndices[triangleIndex]] + edge1 * u + edge2 * v;
+  edge1 = triangleNormals[triangleIndices[triangleIndex+2]] - triangleNormals[triangleIndices[triangleIndex]];
+  edge2 = triangleNormals[triangleIndices[triangleIndex+1]] - triangleNormals[triangleIndices[triangleIndex]];
+  normal = (triangleNormals[triangleIndices[triangleIndex]] + edge1 * u + edge2 * v);
+  normal.x += mathRandomScalar(517,rootIndex * 315 + 27);
+  normal.y += mathRandomScalar(518,rootIndex * 316 + 28);
+  normal.z += mathRandomScalar(519,rootIndex * 317 + 29);
+  normal.setUnit();
+  position += normal * Scalar(elementIndex) * segmentlength;
+  
+  // now compute the color
+  var Scalar rootBlend = mathRandomScalar(17,rootIndex * 314 + 47);
+  var Scalar tipBlend = mathRandomScalar(19,rootIndex * 317 + 19);
+  var Color rootColor = rootColorLimits[0] * rootBlend + rootColorLimits[1] * (1.0 - rootBlend);
+  var Color tipColor = tipColorLimits[0] * tipBlend + tipColorLimits[1] * (1.0 - tipBlend);
+  vertexColor = rootColor * (1.0 - ratio) + tipColor * ratio;
+  
+  // compute the stiffness
+  var Scalar stiffnessBlend = mathRandomScalar(27,rootIndex * 762 + 417);
+  stiffness = stiffnessLimits.x * stiffnessBlend + stiffnessLimits.y * (1.0 - stiffnessBlend);
+
+  // compute the gravity
+  var Scalar gravityBlend = mathRandomScalar(97,rootIndex * 762 + 417);
+  gravity = gravityLimits.x * gravityBlend + gravityLimits.y * (1.0 - gravityBlend);
+  
+  // now compute the blend between the weights for now let's just use the first point
+  boneIds = localBoneIds[triangleIndices[triangleIndex]];
+  boneWeights = localBoneWeights[triangleIndices[triangleIndex]];
+}
+
+operator simulateHair(
+  in Size index,
+  io Vec3 localposition[],
+  io Vec3 localnormal[],
+  io Mat33 boneIds[],
+  io Mat33 boneWeights[],
+  io Scalar stiffness[],
+  io Scalar gravity[],
+  io Scalar segmentlength[],
+  io Color color[],
+  io Vec3 position,
+  io Vec3 prevposition,
+  io Vec3 normal,
+  io Vec3 prevnormal,
+  io Color vertexColor,
+  io Scalar time,
+  io Xfo pose[]
+)
+{
+  var Size elementIndex = index % SEGMENT_COUNT;
+  var Size rootIndex = index - elementIndex;
+  
+  if(elementIndex == 0 || time == 0.0)
+  {
+    Scalar weight = boneWeights[index].row0.x;
+    Size bone = Size(boneIds[index].row0.x);
+    
+    position = pose[bone].transform(localposition[index]) * weight;
+    normal = pose[bone].ori.transform(localnormal[index]) * weight;
+
+    weight = boneWeights[rootIndex].row0.y;
+    if(weight > 0.00001)
+    {
+      bone = Size(boneIds[rootIndex].row0.y);
+      position += pose[bone].transform(localposition[index]) * weight;
+      normal += pose[bone].ori.transform(localnormal[index]) * weight;
+      weight = boneWeights[rootIndex].row0.z;
+      if(weight > 0.00001)
+      {
+        bone = Size(boneIds[rootIndex].row0.z);
+        position += pose[bone].transform(localposition[index]) * weight;
+        normal += pose[bone].ori.transform(localnormal[index]) * weight;
+        weight = boneWeights[rootIndex].row1.x;
+        if(weight > 0.00001)
+        {
+          bone = Size(boneIds[rootIndex].row1.x);
+          position += pose[bone].transform(localposition[index]) * weight;
+          normal += pose[bone].ori.transform(localnormal[index]) * weight;
+          weight = boneWeights[rootIndex].row1.y;
+          if(weight > 0.00001)
+          {
+            bone = Size(boneIds[rootIndex].row1.y);
+            position += pose[bone].transform(localposition[index]) * weight;
+            normal += pose[bone].ori.transform(localnormal[index]) * weight;
+            weight = boneWeights[rootIndex].row1.z;
+            if(weight > 0.00001)
+            {
+              bone = Size(boneIds[rootIndex].row1.z);
+              position += pose[bone].transform(localposition[index]) * weight;
+              normal += pose[bone].ori.transform(localnormal[index]) * weight;
+            }
+          }
+        }
+      }
+    }
+    normal.setUnit();
+  }
+  else
+  {
+    position += prevnormal * stiffness[index];
+    position.y -= gravity[index] * segmentlength[index];
+    normal = (position - prevposition);
+    var Scalar length = normal.norm();
+    if(length > 0.0001)
+    {
+      normal *= segmentlength[index] / length;
+      position = prevposition + normal;
+    }
+  }
+  vertexColor = color[index];
+}
+
+operator shiftPositions(
+  io Vec3 positions[],
+  io Vec3 prevpositions[],
+  io Vec3 normals[],
+  io Vec3 prevnormals[]
+)
+{
+  for(Size i=1; i<prevpositions.size(); ++i )
+  {
+    prevpositions[i] = positions[i-1];
+    prevnormals[i] = normals[i-1];
+  }
+}

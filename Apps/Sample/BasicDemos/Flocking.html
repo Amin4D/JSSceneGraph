@@ -32,6 +32,8 @@
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/RGBA.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Euler.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/HashTable.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/OGLShaderProgram.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/OGLBuffer.js" charset="utf-8"></script>
     
 
     <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.js" charset="utf-8"></script>
@@ -43,10 +45,10 @@
     <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Particles.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Kinematics.js" charset="utf-8"></script>
     
-    <script type="text/javascript" src="../../../SceneGraph/Resources/Parsers/parsePLY.js" charset="utf-8"></script>
-    
     <script type="text/javascript">
+    
 $(document).ready(function() {
+  
     $('#play').button({
       text: true,
       icons: {
@@ -109,8 +111,6 @@ $(document).ready(function() {
 
   scene.constructNode('CameraManipulator', { targetNode: camera });
 
-
-
   /////////////////////////////////////////////////
   // Create the Flock
   var flockMaterial = scene.constructNode('FlatMaterial', {
@@ -171,7 +171,7 @@ $(document).ready(function() {
     lengthSections:gridSize/3,
     widthSections:gridSize/3
   });
-  groundPlane.addVertexAttributeValue( "vertexColors", "Color", FABRIC.RT.rgb( 0.0, 0.6, 0.0 ) );
+  groundPlane.addVertexAttributeValue( "vertexColors", "Color", { defaultValue: FABRIC.RT.rgb( 0.0, 0.6, 0.0 ) } );
   var groundPlaneInstance = scene.constructNode("Instance", {
       transformNode:scene.constructNode("Transform", {
         hierarchical:false,
@@ -192,54 +192,69 @@ $(document).ready(function() {
 
   paintManipulator.addEventListener( "onpaint", onPaintFn );
 */
-  var errors = scene.getErrors();
-  if (errors.length > 0) {
-    throw (errors.toString());
-  }
-  else {
 
-    document.getElementById('numAgents').childNodes[0].data = 'Num Agents:' + numAgents;
 
-    setInterval(function() {
-        document.getElementById('frameRate').childNodes[0].data = 'Frame Rate:' + viewport.getFPS().toFixed(2);
-      }, 600);
+  document.getElementById('numAgents').childNodes[0].data = 'Num Agents:' + numAgents;
 
-    console.log(scene.getTimerProfiles());
-    console.log('Done');
-
-    $('#play').button()
-      .click(function() {
-        var options;
-        if ($(this).text() == 'Play') {
-          $(this).button('option', {
-            label: 'Pause',
-            icons: {
-              primary: 'ui-icon-pause'
-            }
-          });
-          scene.animation.play();
-        } else {
-          $(this).button('option', {
-            label: 'Play',
-            icons: {
-              primary: 'ui-icon-play'
-            }
-          });
-          scene.animation.pause();
-        }
-      });
-    $('#step').button()
-      .click(function() {
-        scene.animation.step();
-      });
-
-  }
+  $('#play').button()
+    .click(function() {
+      var options;
+      if ($(this).text() == 'Play') {
+        $(this).button('option', {
+          label: 'Pause',
+          icons: {
+            primary: 'ui-icon-pause'
+          }
+        });
+        scene.animation.play();
+      } else {
+        $(this).button('option', {
+          label: 'Play',
+          icons: {
+            primary: 'ui-icon-play'
+          }
+        });
+        scene.animation.pause();
+      }
+    });
+  $('#step').button()
+    .click(function() {
+      scene.animation.step();
+    });
+      
+  
+  $('#loadingDialog').dialog({
+    modal: true
+  });
+  var count = FABRIC.getAsyncTaskCount();
+  FABRIC.appendOnResolveAsyncTaskCallback(function(label, countRemaining){
+    $('#loadingProgressBar').progressbar({
+      value: (1.0-(countRemaining/count))*100
+    });
+    if(countRemaining===0){
+      $('#loadingDialog').dialog('close');
+      var errors = scene.getErrors();
+      if (errors.length > 0) {
+        throw (errors.toString());
+      }
+      viewport.redraw();
+      
+      setInterval(function() {
+          document.getElementById('frameRate').childNodes[0].data = 'Frame Rate:' + viewport.getFPS().toFixed(2);
+        }, 600);
+    }
+  });
+  
 });
 
 </script>
 
   </head> 
   <body>
+    <div id="loadingDialog" title="Loading...">
+      <h4 id="loadingDesc" style="margin-bottom: 10px"></h4>
+      <div id="loadingProgressBar" class="ui-progressbar-value"></div>
+    </div>
     <div id="wrapper">
       <ul id="nav">
         <li><a href="#" id="fabric-logo"><img src="../../../themes/default/_img/projects/fabric-logo.png" /></a></li>

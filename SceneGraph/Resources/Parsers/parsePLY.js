@@ -88,7 +88,7 @@ FABRIC.SceneGraph.registerParser("ply", function(scene, assetFile, options ) {
     
     
     var assetNode = scene.constructNode("Points");
-    assetNode.addVertexAttributeValue("vertexColors", "Color");
+    assetNode.addVertexAttributeValue("vertexColors", "Color", { genVBO:true } );
     assetNode.loadGeometryData(parseResults, "object");
     assets[options.baseName] = assetNode;
     

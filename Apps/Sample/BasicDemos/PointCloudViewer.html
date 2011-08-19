@@ -28,6 +28,8 @@
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Color.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Euler.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/RGBA.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/OGLShaderProgram.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/OGLBuffer.js" charset="utf-8"></script>
 
     <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Geometry.js" charset="utf-8"></script>
@@ -40,7 +42,9 @@
     <script type="text/javascript" src="../../../SceneGraph/Resources/Parsers/parsePLY.js" charset="utf-8"></script>
     
     <script type="text/javascript">
+    
 $(document).ready(function() {
+  
   $('#importModel').button().change(function(e) {
       // TODO: Enable file importing
         console.log($(this).val());
@@ -99,21 +103,35 @@ $(document).ready(function() {
       materialNode: scene.constructNode('FlatMaterial')
     });
 
-
-  var errors = scene.getErrors();
-  if (errors.length > 0) {
-    throw (errors.toString());
-  }
-  else {
-    console.log(scene.getTimerProfiles());
-    console.log('Done');
-  }
+  $('#loadingDialog').dialog({
+    modal: true
+  });
+  var count = FABRIC.getAsyncTaskCount();
+  FABRIC.appendOnResolveAsyncTaskCallback(function(label, countRemaining){
+    $('#loadingProgressBar').progressbar({
+      value: (1.0-(countRemaining/count))*100
+    });
+    if(countRemaining===0){
+      $('#loadingDialog').dialog('close');
+      var errors = scene.getErrors();
+      if (errors.length > 0) {
+        throw (errors.toString());
+      }
+      viewport.redraw();
+      return true;
+    }
+  });
+  
 });
 
 </script>
 
   </head> 
   <body>
+    <div id="loadingDialog" title="Loading...">
+      <h4 id="loadingDesc" style="margin-bottom: 10px"></h4>
+      <div id="loadingProgressBar" class="ui-progressbar-value"></div>
+    </div>
     <div id="wrapper">
       <ul id="nav">
         <li><a href="#" id="fabric-logo"><img src="../../../themes/default/_img/projects/fabric-logo.png" /></a></li>

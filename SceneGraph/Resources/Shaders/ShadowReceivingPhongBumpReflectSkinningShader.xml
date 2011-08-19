@@ -12,19 +12,19 @@
 		<uniform name="u_shadowMapSampler" constant="lightShadowMap" defaultValue="0.0" owner="light"/>
 		<uniform name="u_shadowMapMatrix" constant="lightShadowMapMatrix" owner="light"/>
 		
-		<uniform name="u_materialAmbientColor" constant="ambientColor"/>
-		<uniform name="u_materialShininess" constant="shininess" defaultValue="20.7"/>
-		<uniform name="u_materialBumpStrength" constant="bumpiness" defaultValue="1.0"/>
+		<uniform name="u_materialAmbientColor" constant="ambientColor" type="Color" defaultValue="FABRIC.RT.rgba(0.0,0.0,0.0,1)"/>
+		<uniform name="u_materialShininess" constant="shininess" type="Scalar" defaultValue="20.0"/>
+		<uniform name="u_materialBumpStrength" constant="bumpiness" type="Scalar" defaultValue="1.0"/>
 		
-		<uniform name="u_samplerDiffuseMap" constant="diffuseTexture" owner="texture"/>
-		<uniform name="u_samplerSpecularMap" constant="specularTexture" owner="texture"/>
-		<uniform name="u_samplerNormalMap" constant="normalTexture" owner="texture"/>
+		<uniform name="u_samplerDiffuseMap" constant="diffuseTexture" type="Integer" owner="texture"/>
+		<uniform name="u_samplerSpecularMap" constant="specularTexture" type="Integer" owner="texture"/>
+		<uniform name="u_samplerNormalMap" constant="normalTexture" type="Integer" owner="texture"/>
 		
-		<uniform name="u_modelViewProjectionMatrix" constant="modelViewProjectionMatrix" owner="instance"/>
-		<uniform name="u_modelViewMatrix" constant="modelViewMatrix" owner="instance"/>
-		<uniform name="u_normalMatrix" constant="normalMatrix" owner="instance"/>
+		<uniform name="u_modelViewProjectionMatrix" constant="modelViewProjectionMatrix" type="Mat44" owner="instance"/>
+		<uniform name="u_modelViewMatrix" constant="modelViewMatrix" type="Mat44" owner="instance"/>
+		<uniform name="u_normalMatrix" constant="normalMatrix" type="Mat33" owner="instance"/>
 		
-		<uniform name="u_boneMatrices" constant="boneMatrices" owner="characterInstance"/>
+		<uniform name="u_boneMatrices" constant="boneMatrices" type="Mat44" owner="characterInstance"/>
 	</uniforms>
 	
 	<attributes>

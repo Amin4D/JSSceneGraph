@@ -1,0 +1,329 @@
+<html xmlns="http://www.w3.org/1999/xhtml"> 
+  <!--
+    Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
+    -->
+  <head> 
+    <title>FABRIC - HairSimulation</title> 
+    
+    <meta charset="iso-8859-1"/>
+    <link href="../../../themes/default/style.css" rel="stylesheet" type="text/css" />
+    <link href="../../../themes/default/viewer.css" rel="stylesheet" type="text/css" />
+    
+    <script type="text/javascript" src="../../../ThirdParty/jQuery/jquery-1.4.2.min.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/jQuery/jquery-ui-1.8.5.custom.min.js"></script>
+
+    <link type="text/css" href="../../../ThirdParty/jQuery/css/vader/jquery-ui-1.8.5.custom.css" rel="stylesheet" />
+
+      <script type="text/javascript" src="../../../Core/FABRIC.Wrappers.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../Core/FABRIC.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Math.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Vec2.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Vec3.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Vec4.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Mat22.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Mat33.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Mat44.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Quat.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Xfo.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/RGBA.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Color.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Euler.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/BezierKeyframe.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/LinearKeyframe.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Ray.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Bone.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/OGLShaderProgram.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/OGLBuffer.js" charset="utf-8"></script>
+
+    <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Geometry.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Primitives.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Lights.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Materials.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Manipulation.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Animation.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Characters.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.CharacterSolvers.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Kinematics.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/Parsers/parseCollada.js" charset="utf-8"></script>
+    
+    <script type="text/javascript">
+
+FABRIC.SceneGraph.registerNodeType('Hair', {
+  factoryFn: function(options, scene) {
+    scene.assignDefaults(options, {
+      characterMeshNode: undefined,
+      count: 50,
+      segments: 14,
+      length: FABRIC.RT.vec2(1,1.5),
+      stiffness: FABRIC.RT.vec2(0.2,0.5),
+      gravity: FABRIC.RT.vec2(0.2,0.5),
+      rootColorMin: FABRIC.RT.rgba(0.0, 0.05, 1.0, 1.0),
+      rootColorMax: FABRIC.RT.rgba(0.0, 0.45, 1.0, 1.0),
+      tipColorMin: FABRIC.RT.rgba(0.2, 0.25, 1.0, 1.0),
+      tipColorMax: FABRIC.RT.rgba(0.2, 0.65, 1.0, 1.0),
+      });
+
+    if (!options.characterMeshNode) {
+      throw ('characterMeshNode not specified');
+    }
+    if (!options.characterRigNode) {
+      throw ('characterRigNode not specified');
+    }
+    
+    var characterMeshNode = scene.getPrivateInterface(options.characterMeshNode);
+    var characterRigNode = scene.getPrivateInterface(options.characterRigNode);
+    characterRigNode.pub.computeInverseXfos();
+    
+    // create a pointnode to prepare the values
+    var pointNode = scene.constructNode('Points', {name: options.name+'_Points'} );
+    pointNode.pub.setVertexCount(options.count * (options.segments+1));
+    pointNode.pub.addVertexAttributeValue('normals','Vec3');
+    pointNode.pub.addVertexAttributeValue('vertexColors','Color');
+    pointNode.pub.addVertexAttributeValue('stiffness','Scalar');
+    pointNode.pub.addVertexAttributeValue('gravity','Scalar');
+    pointNode.pub.addVertexAttributeValue('segmentlength','Scalar');
+    pointNode.pub.addUniformValue('rootColor', 'Color[2]', [options.rootColorMin,options.rootColorMax]);
+    pointNode.pub.addUniformValue('tipColor', 'Color[2]', [options.tipColorMin,options.tipColorMax]);
+    pointNode.pub.addUniformValue('stiffnessLimits', 'Vec2', options.stiffness);
+    pointNode.pub.addUniformValue('gravityLimits', 'Vec2', options.gravity);
+    pointNode.pub.addUniformValue('lengthLimits', 'Vec2', options.length);
+    pointNode.pub.addVertexAttributeValue('boneIds', 'Mat33');
+    pointNode.pub.addVertexAttributeValue('boneWeights', 'Mat33');
+
+    var pointDGNode = pointNode.getAttributesDGNode();
+    pointDGNode.addDependency(characterMeshNode.getAttributesDGNode(),'meshattributes');
+    pointDGNode.addDependency(characterMeshNode.getUniformsDGNode(),'meshuniforms');
+    
+    pointDGNode.bindings.append(scene.constructOperator({
+      operatorName: 'initHair',
+      srcFile: 'HairSimulation.kl',
+      parameterLayout: [
+        "self.index",
+        "meshattributes.positions[]",
+        "meshattributes.normals[]",
+        "meshattributes.boneIds[]",
+        "meshattributes.boneWeights[]",
+        "meshuniforms.indices",
+        "uniforms.rootColor",
+        "uniforms.tipColor",
+        "self.positions",
+        'self.normals',
+        'self.boneIds',
+        'self.boneWeights',
+        'self.vertexColors',
+        'uniforms.stiffnessLimits',
+        'self.stiffness',
+        'uniforms.gravityLimits',
+        'self.gravity',
+        'uniforms.lengthLimits',
+        'self.segmentlength'
+      ],
+      preProcessorDefinitions: {
+        SEGMENT_COUNT: options.segments + 1,
+        HAIR_COUNT: options.count
+      },
+      entryFunctionName: 'initHair'
+    }));
+
+    // create the node to perform the simulation
+    var hairNode = scene.constructNode('Lines', options);
+    hairNode.pub.setVertexCount(options.count * (options.segments+1));
+    hairNode.pub.addVertexAttributeValue('normals','Vec3',{genVBO: true});
+    hairNode.pub.addVertexAttributeValue('prevpositions','Vec3');
+    hairNode.pub.addVertexAttributeValue('prevnormals','Vec3');
+    hairNode.pub.addVertexAttributeValue('vertexColors','Color',{genVBO: true});
+    hairNode.pub.setAttributeDynamic("positions");
+    hairNode.pub.setAttributeDynamic("normals");
+    
+    // precompute the indices
+    var singleCount = options.segments-1;
+    var indicesOffset = 0;
+    var indices = [];
+    for(var i=0;i<options.count;i++)
+    {
+      indices.push(indicesOffset++);
+      for(var j=0;j<singleCount;j++)
+      {
+        indices.push(indicesOffset);
+        indices.push(indicesOffset++);
+      }
+      indices.push(indicesOffset++);
+    }
+    hairNode.getUniformsDGNode().setData("indices",0,indices);
+
+    var hairDGNode = hairNode.getAttributesDGNode();
+    hairDGNode.addDependency(pointNode.getAttributesDGNode(),'points');
+    hairDGNode.addDependency(scene.getGlobalsNode(), 'globals');
+    hairDGNode.addDependency(characterRigNode.getDGNode(), 'rig');
+    
+    hairDGNode.bindings.append(scene.constructOperator({
+      operatorName: 'simulateHair',
+      srcFile: 'HairSimulation.kl',
+      parameterLayout: [
+        "self.index",
+        "points.positions[]",
+        "points.normals[]",
+        "points.boneIds[]",
+        "points.boneWeights[]",
+        "points.stiffness[]",
+        "points.gravity[]",
+        "points.segmentlength[]",
+        "points.vertexColors[]",
+        "self.positions",
+        "self.prevpositions",
+        "self.normals",
+        "self.prevnormals",
+        "self.vertexColors",
+        "globals.ms",
+        "rig.boneXfos"
+      ],
+      preProcessorDefinitions: {
+        SEGMENT_COUNT: options.segments + 1
+      },
+      entryFunctionName: 'simulateHair'
+    }));
+
+    hairDGNode.bindings.append(scene.constructOperator({
+      operatorName: 'shiftPositions',
+      srcFile: 'HairSimulation.kl',
+      parameterLayout: [
+        "self.positions[]",
+        "self.prevpositions[]",
+        "self.normals[]",
+        "self.prevnormals[]"
+      ],
+      preProcessorDefinitions: {
+        SEGMENT_COUNT: options.segments + 1
+      },
+      entryFunctionName: 'shiftPositions'
+    }));
+    
+    return hairNode;
+  }});    
+
+$(document).ready(function() { var scene = FABRIC.SceneGraph.createScene();
+  var viewport = scene.constructNode('Viewport', {
+    enableRaycasting: false,
+    windowElement: document.getElementById('FabricContainer')
+  });
+
+  // Create a camera to draw the scene from
+  var camera = scene.constructNode('TargetCamera', {
+      position: FABRIC.RT.vec3(0, 10, 12).scale(0.5),
+      target: FABRIC.RT.vec3(0, 2, 0),
+      nearDistance: 0.1,
+      farDistance: 200
+    });
+
+  scene.constructNode('CameraManipulator', { targetNode: camera });
+
+  viewport.setCameraNode(camera);
+
+  var light = scene.constructNode('PointLight', { position: FABRIC.RT.vec3(420.0, 1000.0, 600.0) });
+
+  var hairMaterial = scene.constructNode('HairMaterial', {
+    lightNode: light,
+    specularColor: FABRIC.RT.rgba(0.4, 0.85, 1.0, 1.0)
+  });
+  var phongMaterial = scene.constructNode('PhongMaterial', {
+    diffuseColor: FABRIC.RT.rgb(0.4, 0.4, 0.4),
+    lightNode: light
+  });
+
+  // T - character
+  var assetNodes = scene.importAssetFile('../BasicDemos/Models/envelope.dae', { bindToGlobalTime: false });
+  var skinMaterial = scene.constructNode('PhongSkinningMaterial', {
+      lightNode: light,
+      diffuseColor: FABRIC.RT.rgba(0.0, 0.25, 1.0, 1.0),
+      numBones: assetNodes.polymshCharacterSkeleton.getNumBones()
+    });
+  assetNodes.polymshInstance.setMaterialNode(skinMaterial);
+  var animationController = assetNodes.polymshAnimationController;
+
+  var hairGeometry = scene.constructNode('Hair', {
+      characterMeshNode: assetNodes.polymsh,
+      characterRigNode: assetNodes.polymshCharacterRig,
+      segments: 5,
+      length: FABRIC.RT.vec2(0.5,1),
+      stiffness: FABRIC.RT.vec2(0.75,1.5),
+      gravity: FABRIC.RT.vec2(0.4,0.6),
+      count: 25000
+    });
+
+  var hairLines = scene.constructNode('Instance', {
+      geometryNode: hairGeometry,
+      materialNode: hairMaterial
+    });
+  
+  $('#animationTime').slider({
+      min: 0.0,
+      max: 5.0,
+      step: 0.001,
+      value: 0.0
+  })
+  .bind('slide',
+    function(event, ui) {
+      animationController.setLocaltime(ui.value);
+      scene.redrawAllWindows();
+    });
+
+  $('#loadingDialog').dialog({
+    modal: true
+  });
+  var count = FABRIC.getAsyncTaskCount();
+  FABRIC.appendOnResolveAsyncTaskCallback(function(label, countRemaining){
+    $('#loadingProgressBar').progressbar({
+      value: (1.0-(countRemaining/count))*100
+    });
+    if(countRemaining===0){
+      $('#loadingDialog').dialog('close');
+      var errors = scene.getErrors();
+      if (errors.length > 0) {
+        throw (errors.toString());
+      }
+      scene.animation.play();
+      viewport.redraw();
+      return true;
+    }
+  });
+});
+
+</script>
+
+  </head> 
+  <body>
+    <div id="loadingDialog" title="Loading...">
+      <h4 id="loadingDesc" style="margin-bottom: 10px"></h4>
+      <div id="loadingProgressBar" class="ui-progressbar-value"></div>
+    </div>
+    <div id="wrapper">
+      <ul id="nav">
+        <li><a href="#" id="fabric-logo"><img src="../../../themes/default/_img/projects/fabric-logo.png" /></a></li>
+      </ul>
+      <div id="editor">
+        <div id="viewer">
+          <div id="FabricContainer"></div> 
+        </div><!--viewer-->
+        <div id="sidebar">
+
+          <div class="box">
+            <h2>INFO</h2>
+              <div class="content">
+              Hair Simulation.<br>
+              TODO some text
+            </div><!--content-->
+          </div><!--box-->
+          <div class="box">
+            <h2>CONTROLS</h2>
+            <div class="content">
+              <div>Animation Time:</div>
+              <div id='animationTime' style="margin-top:10px;"></div>
+            </div><!--content-->
+          </div><!--box-->
+          
+        </div><!--sidebar-->
+      </div> <!--editor-->
+    </div><!--wrapper-->
+  </body> 
+  </html>

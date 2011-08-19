@@ -14,7 +14,7 @@
 
     <link type="text/css" href="../../../ThirdParty/jQuery/css/vader/jquery-ui-1.8.5.custom.css" rel="stylesheet" />
 
-      <script type="text/javascript" src="../../../Core/FABRIC.Wrappers.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../Core/FABRIC.Wrappers.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../Core/FABRIC.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Math.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Vec2.js" charset="utf-8"></script>
@@ -29,6 +29,10 @@
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/RGBA.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Color.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Ray.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/OGLShaderProgram.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/OGLTexture2D.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/OGLRenderTarget.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/OGLBuffer.js" charset="utf-8"></script>
 
     <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Geometry.js" charset="utf-8"></script>
@@ -67,17 +71,18 @@ $(document).ready(function() {
     coneAngle: 80.0 * FABRIC.RT.degToRad,
     farDistance: 60,
     castShadows: true,
+    displayShadowDebug: false,
     display: false
   });
 
   var lightTrManip = scene.constructNode('3AxisTranslationManipulator', { parentNode: spotLightNode.getTransformNode(), size: 4 });
   var lightOriManip = scene.constructNode('3AxisRotationManipulator', { parentNode: spotLightNode.getTransformNode(), radius: 3 });
 
-  var bluePhongMaterial = scene.constructNode('ShadowReceivingPhongMaterial', {
+  var bluePhongMaterial = scene.constructNode('PhongMaterial', {
     diffuseColor: FABRIC.RT.rgb(0, 0, 0.8),
     lightNode: spotLightNode
     });
-  var greyPhongMaterial = scene.constructNode('ShadowReceivingPhongMaterial', {
+  var greenPhongMaterial = scene.constructNode('ShadowReceivingPhongMaterial', {
     diffuseColor: FABRIC.RT.rgb(0.3, 0.9, 0.3),
     lightNode: spotLightNode
   });
@@ -112,23 +117,38 @@ $(document).ready(function() {
         globalXfo: FABRIC.RT.xfo({ tr: FABRIC.RT.vec3(-10, 0, -10) })
       }),
       geometryNode: scene.constructNode('Plane', { length: 50, width: 50, doubleSided: false }),
-      materialNode: greyPhongMaterial,
-      enableShadowCasting: true
+      materialNode: greenPhongMaterial
     });
 
-  var errors = scene.getErrors();
-  if (errors.length > 0) {
-    throw (errors.toString());
-  }
-  else {
-    console.log('Done');
-  }
+  $('#loadingDialog').dialog({
+    modal: true
+  });
+  var count = FABRIC.getAsyncTaskCount();
+  FABRIC.appendOnResolveAsyncTaskCallback(function(label, countRemaining){
+    $('#loadingProgressBar').progressbar({
+      value: (1.0-(countRemaining/count))*100
+    });
+    if(countRemaining===0){
+      $('#loadingDialog').dialog('close');
+      var errors = scene.getErrors();
+      if (errors.length > 0) {
+        throw (errors.toString());
+      }
+      viewport.redraw();
+      return true;
+    }
+  });
+  
 });
 
 </script>
 
   </head> 
   <body>
+    <div id="loadingDialog" title="Loading...">
+      <h4 id="loadingDesc" style="margin-bottom: 10px"></h4>
+      <div id="loadingProgressBar" class="ui-progressbar-value"></div>
+    </div>
     <div id="wrapper">
       <ul id="nav">
         <li><a href="#" id="fabric-logo"><img src="../../../themes/default/_img/projects/fabric-logo.png" /></a></li>

@@ -17,6 +17,8 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
   var data = {};
   var currentTechnique = false;
   var exportedNodes = {};
+  options.bindToGlobalTime = options.bindToGlobalTime == undefined ? true : options.bindToGlobalTime;
+  options.createCharacterInstance = options.createCharacterInstance == undefined ? true : options.createCharacterInstance;
 
   var createSkeletonFromHierarchy = function(skeletonName, rootNodeName, calcReferencePoseFromInverseBindPose) {
     if (!data[rootNodeName]) {
@@ -171,7 +173,7 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
       variablesNode.addMember('localxfos', 'Xfo[]', skeletonNode.getReferenceLocalPose());
 
       // create the base animation nodes
-      var controllerNode = scene.constructNode('AnimationController');
+      var controllerNode = scene.constructNode('AnimationController', { bindToGlobalTime: options.bindToGlobalTime } );
       var trackNode = scene.constructNode('LinearKeyAnimationTrack');
       trackNode.setTrackCount(tracks.length);
       trackNode.setTracksData(jsonData);
@@ -410,11 +412,13 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
           }
 
           // create a character instance!
-          var characterNode = scene.constructNode('CharacterInstance', {
-              geometryNode: geometryNode,
-              rigNode: rigNode
-            });
-
+          if(options.createCharacterInstance) {
+            var characterNode = scene.constructNode('CharacterInstance', {
+                geometryNode: geometryNode,
+                rigNode: rigNode
+              });
+            assetNodes[assetData.id + 'Instance'] = characterNode;
+          }
 
           // eventually we need to flatten the data as well
           var skinningData = {};
@@ -451,9 +455,6 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
 
           // convert to skinningData and set it
           geometryNode.loadGeometryData(finalData);
-
-          // Store the created CharacterInstance in the returned assets map.
-          assetNodes[assetData.id + 'Instance'] = characterNode;
         }
       }
 

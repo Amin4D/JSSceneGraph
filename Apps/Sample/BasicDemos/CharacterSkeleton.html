@@ -32,6 +32,8 @@
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/LinearKeyframe.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Ray.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Bone.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/OGLShaderProgram.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/OGLBuffer.js" charset="utf-8"></script>
 
     <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Lights.js" charset="utf-8"></script>
@@ -46,7 +48,9 @@
     <script type="text/javascript" src="../../../SceneGraph/Resources/Parsers/parseCollada.js" charset="utf-8"></script>
     
     <script type="text/javascript">
+    
 $(document).ready(function() {
+  
   var $globalTimeSlider = $('#globalTime').slider({
       min: 0.0,
       max: 1.5,
@@ -84,7 +88,8 @@ $(document).ready(function() {
   characterRig.addSolver('solveColladaPose', 'FKHierarchySolver', { localxfoMemberName: 'localxfos' });
 
   var geometryNode = scene.constructNode('CharacterSkeletonDebug', {
-      characterRigNode: characterRig
+      characterRigNode: characterRig,
+      boneradius: 1.0
     });
 
   var flatMaterial = scene.constructNode('FlatMaterial', { color: FABRIC.RT.rgb(1.0, 1.0, 1.0, 1.0) });
@@ -110,26 +115,40 @@ $(document).ready(function() {
           materialNode: scene.constructNode('FlatMaterial')
       });
 
-  var errors = scene.getErrors();
-  if (errors.length > 0) {
-    throw (errors.toString());
-  }
-  else {
-    console.log('Done');
-  }
-
   $globalTimeSlider.slider('value', 0.0);
   $globalTimeSlider.bind('slide',
     function(event, ui) {
       scene.animation.setTime(ui.value);
       scene.redrawAllWindows();
     });
+  
+  
+  $('#loadingDialog').dialog({
+    modal: true
+  });
+  
+  var count = FABRIC.getAsyncTaskCount();
+  FABRIC.appendOnResolveAsyncTaskCallback(function(label, countRemaining){
+    $('#loadingProgressBar').progressbar({
+      value: (1.0-(countRemaining/count))*100
+    });
+    if(countRemaining===0){
+      $('#loadingDialog').dialog('close');
+      viewport.redraw();
+      return true;
+    }
+  });
+
 });
 
 </script>
 
   </head> 
   <body>
+    <div id="loadingDialog" title="Loading...">
+      <h4 id="loadingDesc" style="margin-bottom: 10px"></h4>
+      <div id="loadingProgressBar" class="ui-progressbar-value"></div>
+    </div>
     <div id="wrapper">
       <ul id="nav">
         <li><a href="#" id="fabric-logo"><img src="../../../themes/default/_img/projects/fabric-logo.png" /></a></li>

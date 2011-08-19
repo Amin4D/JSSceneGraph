@@ -4,6 +4,19 @@
 //
 
 FABRIC.SceneGraph.registerNodeType('CameraManipulator', {
+  briefDesc: 'The CameraManipulator is a basic tool for controling viewport cameras.',
+  detailedDesc: 'The CameraManipulator is a basic tool for controling viewport cameras.' +
+                'Camera manipulation is controlled with the mouse. ' +
+                'The Left mouse button is used to orbit the camera. ' +
+                'The Middle mouse button is used to pan the camera. ' +
+                'The Right mouse button is used to zoom the camera. ',
+  parentNodeDesc: 'SceneGraphNode',
+  optionsDesc: {
+    mouseWheelZoomRate: 'The rate at which the camera will zoom when the mouse wheel it manipulated',
+    mouseDragZoomRate: 'The rate at which the camera will zoom when the mouse is dragged with the right mouse button held down',
+    orbitRate: 'The rate at which the camera will orbit when the mouse is dragged with the left mouse button held down',
+    enabled: 'The manipulator can be disabled, thereby allowing other manipulators to operate.'
+  },
   factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
         mouseWheelZoomRate: 0.3,
@@ -100,13 +113,15 @@ FABRIC.SceneGraph.registerNodeType('CameraManipulator', {
       newcameraXfo.tr = cameraTarget.subtract(newCameraOffset);
       
       cameraNode.getTransformNode().setGlobalXfo(newcameraXfo);
-      viewportNode.redraw();
+      viewportNode.redraw(true);
       evt.stopPropagation();
     }
 
     var releaseOrbitFn = function(evt) {
+      viewportNode.redraw();
       document.removeEventListener('mousemove', dragOrbitFn, true);
       document.removeEventListener('mouseup', releaseOrbitFn, true);
+      evt.stopPropagation();
     }
     var dragPanFn = function(evt) {
       if(!enabled){
@@ -123,10 +138,11 @@ FABRIC.SceneGraph.registerNodeType('CameraManipulator', {
       if (cameraNode.getTransformNode().getTarget) {
         cameraNode.getTransformNode().setTarget(cameraTarget.add(dragDist));
       }
-      viewportNode.redraw();
+      viewportNode.redraw(true);
       evt.stopPropagation();
     }
     var releasePanFn = function(evt) {
+      viewportNode.redraw();
       document.removeEventListener('mousemove', dragPanFn, true);
       document.removeEventListener('mouseup', releasePanFn, true);
       evt.stopPropagation();
@@ -140,10 +156,11 @@ FABRIC.SceneGraph.registerNodeType('CameraManipulator', {
       var mouseDragScreenDelta = evt.screenX - mouseDownScreenPos.x;
       cameraNode.position = cameraPos.add(cameraPos.subtract(cameraTarget)
                                      .mulInPlace(mouseDragScreenDelta * options.mouseDragZoomRate));
-      viewportNode.redraw();
+      viewportNode.redraw(true);
       evt.stopPropagation();
     }
     var releaseZoomFn = function(evt) {
+      viewportNode.redraw();
       document.removeEventListener('mousemove', dragZoomFn, true);
       document.removeEventListener('mouseup', releaseZoomFn, true);
       evt.stopPropagation();
@@ -154,6 +171,14 @@ FABRIC.SceneGraph.registerNodeType('CameraManipulator', {
 
 
 FABRIC.SceneGraph.registerNodeType('PaintManipulator', {
+  briefDesc: 'The PaintManipulator collects points using a brush.',
+  detailedDesc: 'Paint manipulators can be used to modify many vertex attributes at once.',
+  parentNodeDesc: 'SceneGraphNode',
+  optionsDesc: {
+    brushSize: 'The radius of the brush',
+    brushScaleSpeed: 'The mouse wheeel is used to modify the brush radius, and this paramter controls how fast the bush is resized',
+    enabled: 'Toggle controlling whther this manipulator traps events.'
+  },
   factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
       brushSize: 0.1,
@@ -312,7 +337,7 @@ FABRIC.SceneGraph.registerNodeType('PaintManipulator', {
           operatorName: 'collectPointsInsideBrush',
           srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/collectPointsInsideVolume.kl',
           entryFunctionName: 'collectPointsInsideBrush',
-          parameterBinding: [
+          parameterLayout: [
 
             'paintData.cameraMatrix',
             'paintData.projectionMatrix',
@@ -326,7 +351,8 @@ FABRIC.SceneGraph.registerNodeType('PaintManipulator', {
             'geometry_vertexattributes.positions[]',
             'geometry_vertexattributes.normals[]',
             'geometry_vertexattributes.vertexColors[]'
-          ]
+          ],
+          async: false
         }));
 
       // the sceneRaycastEventHandler propogates the event throughtout the scene.
@@ -369,7 +395,7 @@ FABRIC.SceneGraph.registerNodeType('Manipulator', {
     var compensation = true,
        color = options.color,
        highlightColor = options.highlightcolor,
-       material = scene.pub.constructNode('FlatMaterial', { color: options.color });
+       material = scene.pub.constructNode('FlatMaterial', { color: options.color, disableZBuffer: options.disableZBuffer });
 
     var parentNode = options.parentNode;
     if (parentNode && parentNode.isTypeOf('Instance')) {
@@ -470,7 +496,7 @@ FABRIC.SceneGraph.registerNodeType('Manipulator', {
       operatorName: 'evaluateGizmo',
       srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/evaluateGizmo.kl',
       entryFunctionName: 'evaluateGizmo',
-      parameterBinding: paramLayout
+      parameterLayout: paramLayout
     }));
 
     ///////////////////////////////////////////////////////////
@@ -497,8 +523,13 @@ FABRIC.SceneGraph.registerNodeType('Manipulator', {
         targetNode.pub.setData(targetMember, xfo, targetMemberIndex);
       }
       else {
-        var targetMembeSetter = "set"+targetMember.charAt(0).toUpperCase()+targetMember.slice(1);
-        targetNode.pub[targetMembeSetter](xfo);
+        var targetMemberSetter = "set"+targetMember.charAt(0).toUpperCase()+targetMember.slice(1);
+        var data = xfo;
+        if(targetMemberIndex != undefined) {
+          data = targetNode.pub['g'+targetMemberSetter.substr(1,1000)]();
+          data[targetMemberIndex] = xfo;
+        }
+        targetNode.pub[targetMemberSetter](data);
       }
     }
 
@@ -575,23 +606,6 @@ FABRIC.SceneGraph.registerNodeType('Manipulator', {
       }
     };
 
-    // setup the postdescend operators for disable and enable zbuffer
-    // PT - This could be done at the shader/material stage
-    if (options.disableZBuffer) {
-      manipulatorNode.getRedrawEventHandler().preDescendBindings.insert(scene.constructOperator({
-          operatorName: 'disableZBuffer',
-          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/drawAttributes.kl',
-          entryFunctionName: 'disableZBuffer',
-          parameterBinding: []
-        }), 0);
-      manipulatorNode.getRedrawEventHandler().postDescendBindings.append(scene.constructOperator({
-          operatorName: 'popAttribs',
-          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/drawAttributes.kl',
-          entryFunctionName: 'popAttribs',
-          parameterBinding: []
-        }));
-    }
-
     manipulatorNode.pub.addEventListener('mouseover_geom', function(evt) {
         material.setColor(highlightColor);
         evt.viewportNode.redraw();
@@ -608,7 +622,7 @@ FABRIC.SceneGraph.registerNodeType('Manipulator', {
       evt.mouseDragScreenDelta = evt.mouseDragScreenPos.subtract(mouseDownScreenPos);
       manipulatorNode.pub.fireEvent('drag', evt);
       evt.stopPropagation();
-      viewportNode.redraw();
+      viewportNode.redraw(true);
     }
     var releaseFn = function(evt) {
       manipulatorNode.pub.fireEvent('dragend', evt);
@@ -739,7 +753,7 @@ FABRIC.SceneGraph.registerNodeType('3AxisRotationManipulator', {
     var xaxisGizmoNode = scene.pub.constructNode('RotationManipulator', scene.assignDefaults(options, {
         name: name + 'XAxis',
         color: FABRIC.RT.rgb(0.8, 0, 0, 1),
-        localXfo: new FABRIC.RT.Xfo(FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(0, 0, 1), -90)),
+        localXfo: new FABRIC.RT.Xfo({ ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(0, 0, 1), -90) }),
         geometryNode: circle
       }, true));
     var yaxisGizmoNode = scene.pub.constructNode('RotationManipulator', scene.assignDefaults(options, {
@@ -751,7 +765,7 @@ FABRIC.SceneGraph.registerNodeType('3AxisRotationManipulator', {
     var zaxisGizmoNode = scene.pub.constructNode('RotationManipulator', scene.assignDefaults(options, {
         name: name + 'ZAxis',
         color: FABRIC.RT.rgb(0, 0, 0.8, 1),
-        localXfo: new FABRIC.RT.Xfo(FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(1, 0, 0), 90)),
+        localXfo: new FABRIC.RT.Xfo({ ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(1, 0, 0), 90) }),
         geometryNode: circle
       }, true));
 

@@ -50,8 +50,8 @@ FABRIC.SceneGraph.registerNodeType('Particles', {
     if (options.createSpatialHashTable) {
       var spatialHashDGNode = particlesNode.constructDGNode('SpatialHashDGNode');
       var neighborInfluenceRange = options.cellsize / 2.0;
-      particlesNode.pub.addVertexAttributeValue('neighborinfluencerange', 'Scalar', neighborInfluenceRange);
-      particlesNode.pub.addVertexAttributeValue('cellindices', 'Integer', -1);
+      particlesNode.pub.addVertexAttributeValue('neighborinfluencerange', 'Scalar', { defaultValue:neighborInfluenceRange });
+      particlesNode.pub.addVertexAttributeValue('cellindices', 'Integer', { defaultValue:-1 });
       particlesNode.pub.addVertexAttributeValue('cellcoords', 'Vec3');
 
       particlesNode.pub.addVertexAttributeValue('previousframe_positions', 'Vec3');
@@ -82,7 +82,7 @@ FABRIC.SceneGraph.registerNodeType('Particles', {
         operatorName: 'calcCellIndex',
         srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/spatialHashTable.kl',
         entryFunctionName: 'calcCellIndex',
-        parameterBinding: [
+        parameterLayout: [
           'self.index',
           'self.positions',
           'self.cellcoords',
@@ -97,7 +97,7 @@ FABRIC.SceneGraph.registerNodeType('Particles', {
         operatorName: 'copyCurrentFrameDataToPrevFrameData',
         srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/spatialHashTable.kl',
         entryFunctionName: 'copyCurrentFrameDataToPrevFrameData',
-        parameterBinding: [
+        parameterLayout: [
           'self.positions',
           'self.velocities',
           'self.previousframe_positions',
@@ -113,7 +113,7 @@ FABRIC.SceneGraph.registerNodeType('Particles', {
         operatorName: 'populateHashTable',
         srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/spatialHashTable.kl',
         entryFunctionName: 'populateHashTable',
-        parameterBinding: [
+        parameterLayout: [
           'hashtable.hashtable',
           'self.cellindices[]'
         ]
@@ -141,7 +141,7 @@ FABRIC.SceneGraph.registerNodeType('Flock', {
       operatorName: 'simulateParticles',
       srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/flocking.kl',
       entryFunctionName: 'simulateParticles',
-      parameterBinding: [
+      parameterLayout: [
         'self.index',
 
         'self.positions',

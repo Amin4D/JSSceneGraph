@@ -4,6 +4,13 @@
 //
 
 FABRIC.SceneGraph.registerNodeType('AnimationTrack', {
+  briefDesc: 'The AnimationTrack node implements an array of animation tracks.',
+  detailedDesc: 'The AnimationTrack node is an abstract node type that stores an animation track per-slice. Drived nodes must specify the KeyframeType that is being interpollated',
+  parentNodeDesc: 'SceneGraphNode',
+  optionsDesc: {
+    keyframetype: 'Specified by the derrived node, this option specifies the type of the keyframe tract that will be interpollated.',
+    name:'The name of the track. This value is displayed in the curve Editor'
+  },
   factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
         keyframetype: undefined,
@@ -84,7 +91,7 @@ FABRIC.SceneGraph.registerNodeType('AnimationTrack', {
             KEYFRAME_EVALUATEDTYPE: defaultKeyframeValue.valueType
           },
           entryFunctionName: 'evaluateKeyframeAnimationTracks',
-          parameterBinding: [
+          parameterLayout: [
             'animationtrack.keys[]',
             'controller.localtime',
             'self.index',
@@ -102,7 +109,7 @@ FABRIC.SceneGraph.registerNodeType('AnimationTrack', {
             KEYFRAME_EVALUATEDTYPE: defaultKeyframeValue.valueType
           },
           entryFunctionName: 'evaluateCurve',
-          parameterBinding: [
+          parameterLayout: [
             'animationtrack.keys[]',
             'parameters.trackIndex',
             'parameters.timeRange',
@@ -111,7 +118,8 @@ FABRIC.SceneGraph.registerNodeType('AnimationTrack', {
             'self.time',
             'self.value',
             'self.keyid'
-          ]
+          ],
+          async: false
         });
     };
     
@@ -131,6 +139,9 @@ FABRIC.SceneGraph.registerNodeType('AnimationTrack', {
 
 
 FABRIC.SceneGraph.registerNodeType('LinearKeyAnimationTrack', {
+  briefDesc: 'The LinearKeyAnimationTrack node implements an array of linear keyframe animation tracks.',
+  detailedDesc: 'The LinearKeyAnimationTrack node derrives from AnimationTrack and specifies that the tracks should contains \'LinearKeyframes\'',
+  parentNodeDesc: 'AnimationTrack',
   factoryFn: function(options, scene) {
     options.keyframetype = 'LinearKeyframe';
     return scene.constructNode('AnimationTrack', options);
@@ -138,23 +149,37 @@ FABRIC.SceneGraph.registerNodeType('LinearKeyAnimationTrack', {
 
 
 FABRIC.SceneGraph.registerNodeType('BezierKeyAnimationTrack', {
+  briefDesc: 'The BezierKeyAnimationTrack node implements an array of bezier keyframe animation tracks.',
+  detailedDesc: 'The BezierKeyAnimationTrack node derrives from AnimationTrack and specifies that the tracks should contains \'BezierKeyframe\'',
+  parentNodeDesc: 'AnimationTrack',
   factoryFn: function(options, scene) {
     options.keyframetype = 'BezierKeyframe';
     return scene.constructNode('AnimationTrack', options);
   }});
 
-// The Animation Controller only maintains time values which can be used by
-// animation evaluators. Many evaluators can share an Animation Controller
+
 FABRIC.SceneGraph.registerNodeType('AnimationController', {
+  briefDesc: 'The AnimationController node controls the time at which an AnimationTrack is evaluated.',
+  detailedDesc: 'The Animation Controller only maintains time values which can be used by'+
+                'animation evaluators. Many evaluators can share an Animation Controller',
+  parentNodeDesc: 'SceneGraphNode',
+  optionsDesc: {
+    playbackRate: 'The rate to increment the time values, relative to the global scene time increments.'
+  },
   factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
-        playbackRate: 1.0
+        playbackRate: 1.0,
+        bindToGlobalTime: true
       });
 
     var animationControllerNode = scene.constructNode('SceneGraphNode', options);
     var dgnode = animationControllerNode.constructDGNode('DGNode');
     dgnode.addMember('playbackRate', 'Scalar', options.playbackRate);
     dgnode.addMember('localtime', 'Scalar');
+    
+    // create a getter and setter for the local time
+    animationControllerNode.addMemberInterface(dgnode, 'playbackRate', true);
+    animationControllerNode.addMemberInterface(dgnode, 'localtime', true);
 
     // extend public interface
     animationControllerNode.pub.setTime = function(time) {
@@ -164,45 +189,51 @@ FABRIC.SceneGraph.registerNodeType('AnimationController', {
     // Here, the animation controllers time is locked to
     // global time. Often the time context for an animation
     // is computed, or simulated based on scene events.
-    dgnode.addDependency(scene.getGlobalsNode(), 'globals');
-    dgnode.bindings.append(scene.constructOperator(
-      {
-        operatorName: 'setControllerLocalTime.kl',
-        srcCode:
-          '\noperator setControllerLocalTime(io Scalar globalTime, io Scalar localTime) \n' +
-          '{\n' +
-          '  localTime = globalTime;\n' +
-          '}',
-        entryFunctionName: 'setControllerLocalTime',
-        parameterBinding: [
-          'globals.ms',
-          'self.localtime'
-        ]
-      }));
-    // This operator might simulate the platback local time by incrementing
-    // it each frame by a rate specified by the playbackRate parameter.
-  /*  dgnode.bindings.append(scene.constructOperator(
-      {
-        operatorName:'incrementControllerLocalTime',
-        srcFile:'FABRIC_ROOT/SceneGraph/Resources/KL/incrementControllerLocalTime.kl',
-        entryFunctionName:'incrementControllerLocalTime',
-        parameterBinding:[
-          'globals.time',
-          'globals.timeStep',
-          'self.playbackRate',
-          'self.localtime'
-        ]
-      }));
-  */
+    if(options.bindToGlobalTime) {
+      dgnode.addDependency(scene.getGlobalsNode(), 'globals');
+      dgnode.bindings.append(scene.constructOperator(
+        {
+          operatorName: 'setControllerLocalTime.kl',
+          srcCode:
+            '\noperator setControllerLocalTime(io Scalar globalTime, io Scalar localTime) \n' +
+            '{\n' +
+            '  localTime = globalTime;\n' +
+            '}',
+          entryFunctionName: 'setControllerLocalTime',
+          parameterLayout: [
+            'globals.ms',
+            'self.localtime'
+          ]
+        }));
+      // This operator might simulate the platback local time by incrementing
+      // it each frame by a rate specified by the playbackRate parameter.
+    /*  dgnode.bindings.append(scene.constructOperator(
+        {
+          operatorName:'incrementControllerLocalTime',
+          srcFile:'FABRIC_ROOT/SceneGraph/Resources/KL/incrementControllerLocalTime.kl',
+          entryFunctionName:'incrementControllerLocalTime',
+          parameterLayout:[
+            'globals.time',
+            'globals.timeStep',
+            'self.playbackRate',
+            'self.localtime'
+          ]
+        }));
+    */
+    }
     return animationControllerNode;
   }});
 
 
-
-// The animation evaluator evaluates the keyframe animation tracks using the
-// time computed in the animation controller. It stores the evaluated values
-// Which are in turn bound to parameters on other nodes.
 FABRIC.SceneGraph.registerNodeType('AnimationEvaluator', {
+  briefDesc: 'The animation evaluator evaluates the keyframe animation tracks using the time computed in the animation controller.',
+  detailedDesc: 'The animation evaluator evaluates the keyframe animation tracks using the time computed in the animation controller.'+
+                'It stores the evaluated values which are in turn bound to parameters on other nodes',
+  parentNodeDesc: 'SceneGraphNode',
+  optionsDesc: {
+    animationControllerNode: 'The AnimationController node to initialize with.',
+    animationTrackNode: 'The AnimationTrack node to initialize with.'
+  },
   factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
         animationControllerNode: undefined,
@@ -260,7 +291,7 @@ FABRIC.SceneGraph.registerNodeType('AnimationEvaluator', {
       var operatorHeaderSrc = '\noperator ' + operatorName + '(\n\tio ' + evaluatorDatatype + ' curvevalues[]';
       var operatorArraySrc = {};
       var operatorBodySrc = '';
-      var parameterBinding = ['animationevaluator.value[]'];
+      var parameterLayout = ['animationevaluator.value[]'];
       var tempVariables = {};
       for (var memberAccessor in memberBindings) {
         var memberBinding = memberBindings[memberAccessor];
@@ -347,9 +378,9 @@ FABRIC.SceneGraph.registerNodeType('AnimationEvaluator', {
         }
         operatorBodySrc += '\n' + memberBindingCode;
 
-        if (parameterBinding.indexOf('self.' + memberName) == -1) {
+        if (parameterLayout.indexOf('self.' + memberName) == -1) {
           operatorHeaderSrc += ',\n\tio ' + boundMemberType + ' ' + memberName + (isArray ? '[]' : '');
-          parameterBinding.push('self.' + memberName);
+          parameterLayout.push('self.' + memberName);
         }
       }
 
@@ -368,14 +399,14 @@ FABRIC.SceneGraph.registerNodeType('AnimationEvaluator', {
       operatorBodySrc = '\n' + operatorBodySrc + '}';
 
       //console.log(operatorHeaderSrc + operatorBodySrc);
-      //console.log(parameterBinding);
+      //console.log(parameterLayout);
 
       if (targetnode.getDGNode().bindings.length > 0) {
         targetnode.getDGNode().bindings.insert(scene.constructOperator({
             operatorName: operatorName,
             srcCode: operatorHeaderSrc + operatorBodySrc,
             entryFunctionName: operatorName,
-            parameterBinding: parameterBinding
+            parameterLayout: parameterLayout
           }), 0);
       }
       else {
@@ -383,7 +414,7 @@ FABRIC.SceneGraph.registerNodeType('AnimationEvaluator', {
             operatorName: operatorName,
             srcCode: operatorHeaderSrc + operatorBodySrc,
             entryFunctionName: operatorName,
-            parameterBinding: parameterBinding
+            parameterLayout: parameterLayout
           }));
       }
     };
@@ -400,10 +431,16 @@ FABRIC.SceneGraph.registerNodeType('AnimationEvaluator', {
 
 
 
-// The animation evaluator evaluates the keyframe animation tracks using the
-// time computed in the animation controller. It stores the evaluated values
-// Which are in turn bound to parameters on other nodes.
 FABRIC.SceneGraph.registerNodeType('TrackDisplay', {
+  briefDesc: 'The TrackDisplay evaluates AnimationTracks across time ranges ready for display in the CurveEditor.',
+  detailedDesc: 'The TrackDisplay evaluates AnimationTracks across time ranges ready for display in the CurveEditor.',
+  parentNodeDesc: 'SceneGraphNode',
+  optionsDesc: {
+      animationTrackNode: 'The AnimationTrack node to evaluate.',
+      trackIndex: 'The index of the track in the AnimationTrack node to evaluate.',
+      timeRange: 'The time rage to evaluate.',
+      segmentCount: 'The number of steps to divide the timerange by.'
+  },
   factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
         animationTrackNode: undefined,

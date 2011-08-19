@@ -26,6 +26,8 @@
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/RGBA.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Color.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Euler.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/OGLShaderProgram.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/OGLBuffer.js" charset="utf-8"></script>
 
     <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Kinematics.js" charset="utf-8"></script>
@@ -111,18 +113,20 @@ FABRIC.SceneGraph.registerNodeType('Square', {
       geometryNode: square,
       materialNode: material
     });
+  
+  // Wait for all the operators to be compiled. 
+  var count = FABRIC.getAsyncTaskCount();
+  FABRIC.appendOnResolveAsyncTaskCallback(function(label, countRemaining){
+    if(countRemaining===0){
+      var errors = scene.getErrors();
+      if (errors.length > 0) {
+        throw (errors.toString());
+      }
+      scene.redrawAllWindows();
+      return true;
+    }
+  });
 
-  // parse the scene for errors
-  var errors = scene.getErrors();
-  if (errors.length > 0) {
-    throw (errors.toString());
-  } else {
-    scene.redrawAllWindows();
-
-    console.log(scene.getTimerProfiles());
-
-    console.log('Done');
-  }
 });
 
 </script>

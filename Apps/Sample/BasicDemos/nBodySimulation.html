@@ -28,6 +28,9 @@
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Xfo.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Color.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Euler.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/OGLShaderProgram.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/OGLTexture2D.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/OGLBuffer.js" charset="utf-8"></script>
     
     <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Geometry.js" charset="utf-8"></script>
@@ -91,7 +94,7 @@ $(document).ready(function() { $('#play').button({
     
       nBodyGeometry.pub.addVertexAttributeValue('velocities', 'Vec4');
       nBodyGeometry.pub.addVertexAttributeValue('mass', 'Scalar');
-      nBodyGeometry.pub.addVertexAttributeValue('vertexColors', 'Color');
+      nBodyGeometry.pub.addVertexAttributeValue('vertexColors', 'Color', { genVBO:true } );
       nBodyGeometry.pub.addVertexAttributeValue('posPrev', 'Vec4');
       nBodyGeometry.pub.addVertexAttributeValue('velPrev', 'Vec4');
 
@@ -114,7 +117,7 @@ $(document).ready(function() { $('#play').button({
             operatorName: 'nBodyInitOp',
             entryFunctionName: 'nBodyInit',
             srcFile: 'KL/nBodyOp.kl',
-            parameterBinding: [
+            parameterLayout: [
               'self.index',
               'self.count',
               'self.positions',
@@ -136,7 +139,7 @@ $(document).ready(function() { $('#play').button({
           mainThreadOnly: true,
           entryFunctionName: 'nBodySimulateGPU',
           srcFile: 'KL/nBodyOpGPU.kl',
-          parameterBinding: [
+          parameterLayout: [
             'globals.ms',
             'parentattributes.positions[]',
             'parentattributes.velocities[]',
@@ -191,13 +194,6 @@ $(document).ready(function() { $('#play').button({
       materialNode: materialNode
     });
 
-  var errors = scene.getErrors();
-  if (errors.length > 0) {
-    throw (errors.toString());
-  }
-
-  console.log('Done');
-
   var resetSimulation = function() {
     if ($('#play').text() == 'Pause') {
       console.log('Reset');
@@ -248,9 +244,6 @@ $(document).ready(function() { $('#play').button({
       resetSimulation();
     });
     
-  setInterval(function() {
-      document.getElementById('frameRate').childNodes[0].data = 'Frame Rate:' + viewport.getFPS().toFixed(2);
-    }, 600);
     
   $('#nbodies').slider('value', nBodyGeometry.getVertexCount());
   $('#nbodies').bind('slidechange',
@@ -299,12 +292,38 @@ $(document).ready(function() { $('#play').button({
       scene.redrawAllWindows();
     });
 
+  $('#loadingDialog').dialog({
+    modal: true
+  });
+  var count = FABRIC.getAsyncTaskCount();
+  FABRIC.appendOnResolveAsyncTaskCallback(function(label, countRemaining){
+    $('#loadingProgressBar').progressbar({
+      value: (1.0-(countRemaining/count))*100
+    });
+    if(countRemaining===0){
+      $('#loadingDialog').dialog('close');
+      var errors = scene.getErrors();
+      if (errors.length > 0) {
+        throw (errors.toString());
+      }
+      viewport.redraw();
+      
+      setInterval(function() {
+        document.getElementById('frameRate').childNodes[0].data = 'Frame Rate:' + viewport.getFPS().toFixed(2);
+      }, 600);
+    }
+  });
+  
 });
 
 </script>
 
   </head> 
   <body>
+    <div id="loadingDialog" title="Loading...">
+      <h4 id="loadingDesc" style="margin-bottom: 10px"></h4>
+      <div id="loadingProgressBar" class="ui-progressbar-value"></div>
+    </div>
     <div id="wrapper">
       <ul id="nav">
         <li><a href="#" id="fabric-logo"><img src="../../../themes/default/_img/projects/fabric-logo.png" /></a></li>

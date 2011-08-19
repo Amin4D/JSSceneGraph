@@ -19,12 +19,17 @@
 // and will be resolved elegantly with the graph nesting solution mentioned above.
 
 FABRIC.SceneGraph.registerNodeType('LineVector', {
+  briefDesc: 'The LineVector node is a line between 2 points.',
+  detailedDesc: 'The LineVector node is a line between 2 points.',
+  parentNodeDesc: 'Lines',
+  optionsDesc: {
+    from: 'The start position of the line segment in local space.',
+    to: 'The end position of the line segment in local space.'
+  },
   factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
         from: FABRIC.RT.vec3(0, 0, 0),
-        to: FABRIC.RT.vec3(1, 0, 0),
-        width: 1,
-        arrowhead: false
+        to: FABRIC.RT.vec3(1, 0, 0)
       });
 
     var lineSegmentNode = scene.constructNode('Lines', options);
@@ -37,6 +42,12 @@ FABRIC.SceneGraph.registerNodeType('LineVector', {
 
 
 FABRIC.SceneGraph.registerNodeType('Cross', {
+  briefDesc: 'A Cross drawn using 2 line segments.',
+  detailedDesc: 'A Cross drawn using 2 line segments.',
+  parentNodeDesc: 'Lines',
+  optionsDesc: {
+    size: 'The size of the cross.'
+  },
   factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
       size: 1.0
@@ -50,7 +61,7 @@ FABRIC.SceneGraph.registerNodeType('Cross', {
         operatorName: 'generateCross',
         srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/generateCross.kl',
         entryFunctionName: 'generateCross',
-        parameterBinding: [
+        parameterLayout: [
           'self.positions[]',
           'uniforms.indices',
           'uniforms.crosssize'
@@ -62,6 +73,13 @@ FABRIC.SceneGraph.registerNodeType('Cross', {
 
 
 FABRIC.SceneGraph.registerNodeType('Rectangle', {
+  briefDesc: 'A Rectangle drawn using 4 line segments.',
+  detailedDesc: 'A Rectangle drawn using 4 line segments.',
+  parentNodeDesc: 'Lines',
+  optionsDesc: {
+    length: 'The length of the cross along the X axis.',
+    width: 'The length of the cross along the Z axis.'
+  },
   factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
       length: 4.0,
@@ -77,7 +95,7 @@ FABRIC.SceneGraph.registerNodeType('Rectangle', {
         operatorName: 'generateRectangle',
         srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/generateRectangle.kl',
         entryFunctionName: 'generateRectangle',
-        parameterBinding: [
+        parameterLayout: [
           'self.positions[]',
           'uniforms.indices',
           'uniforms.length',
@@ -91,6 +109,14 @@ FABRIC.SceneGraph.registerNodeType('Rectangle', {
 
 
 FABRIC.SceneGraph.registerNodeType('BoundingBox', {
+  briefDesc: 'The BoundingBox primitive draws a Cuboid according to corner positions.',
+  detailedDesc: 'The BoundingBox primitive draws a Cuboid according to corner positions.' +
+                'The corner positions define an axis aligned bounding box in the coordinate space it is specified. ',
+  parentNodeDesc: 'Lines',
+  optionsDesc: {
+    bboxmin: 'The min values of the Bounding Box. e.g. -X, -Y, -Z',
+    bboxmax: 'The max values of the Bounding Box. e.g. +X, +Y, +Z'
+  },
   factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
       bboxmin: FABRIC.RT.vec3(-2, -3, -4),
@@ -106,7 +132,7 @@ FABRIC.SceneGraph.registerNodeType('BoundingBox', {
         operatorName: 'generateBoundingBox',
         srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/generateBoundingBox.kl',
         entryFunctionName: 'generateBoundingBox',
-        parameterBinding: [
+        parameterLayout: [
           'self.positions[]',
           'uniforms.indices',
           'uniforms.bboxmin',
@@ -120,6 +146,17 @@ FABRIC.SceneGraph.registerNodeType('BoundingBox', {
 
 
 FABRIC.SceneGraph.registerNodeType('Grid', {
+  briefDesc: 'The Grid primitive draws a grid of lines.',
+  detailedDesc: 'The Grid primitive draws a grid of lines.',
+  parentNodeDesc: 'Lines',
+  optionsDesc: {
+    size_x: 'The size of the grid in the X axis',
+    size_y: 'The size of the grid in the Y axis',
+    size_z: 'The size of the grid in the Z axis',
+    sections_x: 'The number of sections of the grid along the X axis',
+    sections_y: 'The number of sections of the grid along the Y axis',
+    sections_z: 'The number of sections of the grid along the Z axis'
+  },
   factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
       size_x: 10.0,
@@ -142,7 +179,7 @@ FABRIC.SceneGraph.registerNodeType('Grid', {
         operatorName: 'setGridVertexCount',
         srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/generateGrid.kl',
         entryFunctionName: 'setGridVertexCount',
-        parameterBinding: [
+        parameterLayout: [
           'uniforms.sections_x',
           'uniforms.sections_y',
           'uniforms.sections_z',
@@ -153,7 +190,7 @@ FABRIC.SceneGraph.registerNodeType('Grid', {
         operatorName: 'generateGrid',
         srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/generateGrid.kl',
         entryFunctionName: 'generateGrid',
-        parameterBinding: [
+        parameterLayout: [
           'self.positions[]',
           'uniforms.indices',
           'uniforms.size_x',
@@ -171,6 +208,13 @@ FABRIC.SceneGraph.registerNodeType('Grid', {
 
 
 FABRIC.SceneGraph.registerNodeType('Axes', {
+  briefDesc: 'The Axis primitive draws a labled coordinate system axis.',
+  detailedDesc: 'The Axis primitive draws a labled coordinate system axis.' +
+                'The axes are labeled \'X\', \'Y\', and \'Z\'',
+  parentNodeDesc: 'Lines',
+  optionsDesc: {
+    size: 'The size of the draw coordinate system axes.'
+  },
   factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
         size: 1.0
@@ -183,7 +227,7 @@ FABRIC.SceneGraph.registerNodeType('Axes', {
         operatorName: 'setAxesVertexCount',
         srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/generateAxes.kl',
         entryFunctionName: 'setAxesVertexCount',
-        parameterBinding: [
+        parameterLayout: [
           'self.newCount'
         ]
       }),
@@ -191,7 +235,7 @@ FABRIC.SceneGraph.registerNodeType('Axes', {
         operatorName: 'generateAxes',
         srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/generateAxes.kl',
         entryFunctionName: 'generateAxes',
-        parameterBinding: [
+        parameterLayout: [
           'self.positions[]',
           'uniforms.indices',
           'uniforms.size'
@@ -203,6 +247,14 @@ FABRIC.SceneGraph.registerNodeType('Axes', {
 
 
 FABRIC.SceneGraph.registerNodeType('Circle', {
+  briefDesc: 'The Circle primitive draws a circle or arc using line segments.',
+  detailedDesc: 'The Circle primitive draws a circle or arc using line segments.',
+  parentNodeDesc: 'Lines',
+  optionsDesc: {
+    radius: 'The radius of the draw circle',
+    arcAngle: 'The arc of the drawn circle in radians. By default, it specifies a full cicle, but can be used to draw arcs of any angle.',
+    numSegments: 'The number of line segments to use when drawing the circle or arc.'
+  },
   factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
         radius: 10,
@@ -226,7 +278,7 @@ FABRIC.SceneGraph.registerNodeType('Circle', {
         operatorName: 'setCircleVertexCount',
         srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/generateCircle.kl',
         entryFunctionName: 'setCircleVertexCount',
-        parameterBinding: [
+        parameterLayout: [
           'uniforms.numSegments',
           'self.newCount'
         ]
@@ -235,7 +287,7 @@ FABRIC.SceneGraph.registerNodeType('Circle', {
         operatorName: 'generateCircle',
         srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/generateCircle.kl',
         entryFunctionName: 'generateCircle',
-        parameterBinding: [
+        parameterLayout: [
           'self.positions[]',
           'uniforms.indices',
           'uniforms.radius',
@@ -249,6 +301,16 @@ FABRIC.SceneGraph.registerNodeType('Circle', {
 
 
 FABRIC.SceneGraph.registerNodeType('Plane', {
+  briefDesc: 'The Plane primitive draws a plane or arc using triangles.',
+  detailedDesc: 'The Plane primitive draws a plane or arc using triangles.',
+  parentNodeDesc: 'Triangles',
+  optionsDesc: {
+    length: 'The length of the plane in the X axis',
+    width: 'The width of the plane in the Z axis',
+    lengthSections: 'The number of length sections to use when building the plane.',
+    widthSections: 'The number of width sections to use when building the plane.',
+    doubleSided: 'If set to true, triangles are constructed with normals facing in both directions'
+  },
   factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
         length: 10,
@@ -279,7 +341,7 @@ FABRIC.SceneGraph.registerNodeType('Plane', {
         operatorName: 'setPlaneVertexCount',
         srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/generatePlane.kl',
         entryFunctionName: 'setPlaneVertexCount',
-        parameterBinding: [
+        parameterLayout: [
           'uniforms.lengthSections',
           'uniforms.widthSections',
           'uniforms.doubleSided',
@@ -290,7 +352,7 @@ FABRIC.SceneGraph.registerNodeType('Plane', {
         operatorName: 'generatePlane',
         srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/generatePlane.kl',
         entryFunctionName: 'generatePlane',
-        parameterBinding: [
+        parameterLayout: [
           'uniforms.indices',
           'uniforms.length',
           'uniforms.width',
@@ -309,6 +371,16 @@ FABRIC.SceneGraph.registerNodeType('Plane', {
 
 
 FABRIC.SceneGraph.registerNodeType('Cuboid', {
+  briefDesc: 'The Cuboid primitive draws a cuboid or arc using triangles.',
+  detailedDesc: 'The Cuboid primitive draws a cuboid or arc using triangles.' +
+                ' A cuboid is an irregualr cube.',
+  parentNodeDesc: 'Triangles',
+  optionsDesc: {
+    length: 'The length of the Cuboid in the X axis.',
+    width: 'The width of the cuboid in the Z axis.',
+    height: 'The height of the cuboid in the Y axis.',
+    size: 'If specified, set the length, width and height.'
+  },
   factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
         length: 10,
@@ -338,7 +410,7 @@ FABRIC.SceneGraph.registerNodeType('Cuboid', {
         operatorName: 'generateCuboid',
         srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/generateCuboid.kl',
         entryFunctionName: 'generateCuboid',
-        parameterBinding: [
+        parameterLayout: [
           'self.positions[]',
           'self.normals[]',
           'uniforms.indices',
@@ -353,6 +425,13 @@ FABRIC.SceneGraph.registerNodeType('Cuboid', {
 
 
 FABRIC.SceneGraph.registerNodeType('Sphere', {
+  briefDesc: 'The Sphere primitive draws a sphere using triangles.',
+  detailedDesc: 'The Sphere primitive draws a sphere using triangles.',
+  parentNodeDesc: 'Triangles',
+  optionsDesc: {
+    radius: 'The radius of the Spehre.',
+    detail: 'The detail parameter controls the number of triangles used to construct the sphere.'
+  },
   factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
         radius: 5.0,
@@ -375,7 +454,7 @@ FABRIC.SceneGraph.registerNodeType('Sphere', {
         operatorName: 'setSphereVertexCount',
         srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/generateSphere.kl',
         entryFunctionName: 'setSphereVertexCount',
-        parameterBinding: [
+        parameterLayout: [
           'uniforms.detail',
           'self.newCount'
         ]
@@ -384,7 +463,7 @@ FABRIC.SceneGraph.registerNodeType('Sphere', {
         operatorName: 'generateSphere',
         srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/generateSphere.kl',
         entryFunctionName: 'generateSphere',
-        parameterBinding: [
+        parameterLayout: [
           'uniforms.radius',
           'uniforms.detail',
 
@@ -400,6 +479,14 @@ FABRIC.SceneGraph.registerNodeType('Sphere', {
 
 
 FABRIC.SceneGraph.registerNodeType('Torus', {
+  briefDesc: 'The Torus primitive draws a torus using triangles.',
+  detailedDesc: 'The Torus primitive draws a torus using triangles.',
+  parentNodeDesc: 'Triangles',
+  optionsDesc: {
+    inner_radius: 'The inner radius of the torus. The inner radius is the size of the hole in the middle of the torus.',
+    outer_radius: 'The outer radius of the torus.',
+    detail: 'The detail parameter controls the number of triangles used to construct the torus.'
+  },
   factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
         inner_radius: 2.0,
@@ -423,7 +510,7 @@ FABRIC.SceneGraph.registerNodeType('Torus', {
         operatorName: 'setTorusVertexCount',
         srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/generateTorus.kl',
         entryFunctionName: 'setTorusVertexCount',
-        parameterBinding: [
+        parameterLayout: [
           'uniforms.inner_radius',
           'uniforms.outer_radius',
           'uniforms.detail',
@@ -434,7 +521,7 @@ FABRIC.SceneGraph.registerNodeType('Torus', {
         operatorName: 'generateTorus',
         srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/generateTorus.kl',
         entryFunctionName: 'generateTorus',
-        parameterBinding: [
+        parameterLayout: [
           'uniforms.inner_radius',
           'uniforms.outer_radius',
           'uniforms.detail',
@@ -450,6 +537,15 @@ FABRIC.SceneGraph.registerNodeType('Torus', {
 
 
 FABRIC.SceneGraph.registerNodeType('Cone', {
+  briefDesc: 'The Cone primitive draws a cone using triangles.',
+  detailedDesc: 'The Cone primitive draws a cone using triangles.',
+  parentNodeDesc: 'Triangles',
+  optionsDesc: {
+    radius: 'The radius of the cone.',
+    height: 'The height of the cone.',
+    cap: 'If true, the base of the cone is filled with a disc.',
+    detail: 'The detail parameter controls the number of triangles used to construct the cone.'
+  },
   factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
         radius: 2.0,
@@ -476,7 +572,7 @@ FABRIC.SceneGraph.registerNodeType('Cone', {
         operatorName: 'setConeVertexCount',
         srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/generateCone.kl',
         entryFunctionName: 'setConeVertexCount',
-        parameterBinding: [
+        parameterLayout: [
           'uniforms.cap',
           'uniforms.detail',
           'self.newCount'
@@ -486,7 +582,7 @@ FABRIC.SceneGraph.registerNodeType('Cone', {
         operatorName: 'generateCone',
         srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/generateCone.kl',
         entryFunctionName: 'generateCone',
-        parameterBinding: [
+        parameterLayout: [
           'uniforms.radius',
           'uniforms.height',
           'uniforms.cap',
@@ -503,6 +599,15 @@ FABRIC.SceneGraph.registerNodeType('Cone', {
 
 
 FABRIC.SceneGraph.registerNodeType('Cylinder', {
+  briefDesc: 'The Cylinder primitive draws a cylinder using triangles.',
+  detailedDesc: 'The Cylinder primitive draws a cylinder using triangles.',
+  parentNodeDesc: 'Triangles',
+  optionsDesc: {
+    radius: 'The radius of the cylinder.',
+    height: 'The height of the cylinder.',
+    caps: 'If true, the ends of the cylinder are capped',
+    detail: 'The detail parameter controls the number of triangles used to construct the Cylinder.'
+  },
   factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
         radius: 2.0,
@@ -529,7 +634,7 @@ FABRIC.SceneGraph.registerNodeType('Cylinder', {
         operatorName: 'setCylinderVertexCount',
         srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/generateCylinder.kl',
         entryFunctionName: 'setCylinderVertexCount',
-        parameterBinding: [
+        parameterLayout: [
           'uniforms.caps',
           'uniforms.detail',
           'self.newCount'
@@ -539,7 +644,7 @@ FABRIC.SceneGraph.registerNodeType('Cylinder', {
         operatorName: 'generateCylinder',
         srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/generateCylinder.kl',
         entryFunctionName: 'generateCylinder',
-        parameterBinding: [
+        parameterLayout: [
           'uniforms.radius',
           'uniforms.height',
           'uniforms.caps',
@@ -557,6 +662,13 @@ FABRIC.SceneGraph.registerNodeType('Cylinder', {
 
 
 FABRIC.SceneGraph.registerNodeType('Teapot', {
+  briefDesc: 'The Teapot primitive draws a classic teapot using triangles.',
+  detailedDesc: 'The Teapot primitive draws a classic teapot using triangles.',
+  parentNodeDesc: 'Triangles',
+  optionsDesc: {
+    size: 'The size of the teapot',
+    detail: 'The detail parameter controls the number of triangles used to construct the Teapot.'
+  },
   factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
         size: 5.0,
@@ -577,7 +689,7 @@ FABRIC.SceneGraph.registerNodeType('Teapot', {
         operatorName: 'generateTeapot',
         srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/generateTeapot.kl',
         entryFunctionName: 'generateTeapot',
-        parameterBinding: [
+        parameterLayout: [
           'uniforms.size',
           'uniforms.detail',
 

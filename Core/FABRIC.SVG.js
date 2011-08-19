@@ -1870,7 +1870,7 @@ FABRIC.createSVGRootElem = function(domRootID) {
                 sourcePortOwner: targetPort.getOwnerNode(),
                 targetPort: portGroup,
                 targetPortOwner: options.ownerNode,
-                connectable: options.connectable,
+                connectable: portConnectionOptions.connectable && options.connectable,
                 wrt: nodeHolderGroup,
                 color: options.color
               });
@@ -1881,7 +1881,7 @@ FABRIC.createSVGRootElem = function(domRootID) {
                 targetPort: targetPort,
                 targetPortOwner: targetPort.getOwnerNode(),
                 wrt: nodeHolderGroup,
-                connectable: options.connectable,
+                connectable: portConnectionOptions.connectable && options.connectable,
                 color: options.color
               });
             }
@@ -1956,7 +1956,7 @@ FABRIC.createSVGRootElem = function(domRootID) {
               case 'Up': sourceDirection = FABRIC.vec2(0, -1); break;
               case 'Down': sourceDirection = FABRIC.vec2(0, 1); break;
             }
-          }else {
+          } else {
             sourceDirection = FABRIC.vec2(1, 0);
           }
         }
@@ -2013,17 +2013,15 @@ FABRIC.createSVGRootElem = function(domRootID) {
         calcTargetConnectionDirection();
 
 
-        connectorGroup.highlight(
-          {
-            setCursor: false,
-            highlightObj: lineBorder
-          });
-
         var graphHolderGroup = this.svgRoot.graphHolderGroup;
         var svgRoot = this.svgRoot;
 
-        if (options.connectable)
-        {
+        if (options.connectable){
+
+          connectorGroup.highlight({
+            setCursor: false,
+            highlightObj: lineBorder
+          });
           connectorGroup.elem.addEventListener('mousedown',
             function(evt) {
               var mouseDownPos = graphHolderGroup.screenToLocalPos(FABRIC.vec2(evt.offsetX, evt.offsetY));
@@ -2231,6 +2229,7 @@ FABRIC.createSVGRootElem = function(domRootID) {
           targetPos = options.targetPort.localPos(options.wrt);
         }
         else {
+            // This connection is in the middle of being constructed.
           bindTargetToMouseFn();
         }
         updatePaths();

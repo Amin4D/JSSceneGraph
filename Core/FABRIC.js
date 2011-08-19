@@ -38,64 +38,10 @@ FABRIC = (function() {
         subString: "Chrome",
         identity: "Chrome"
       },
-      { string: navigator.userAgent,
-        subString: "OmniWeb",
-        versionSearch: "OmniWeb/",
-        identity: "OmniWeb"
-      },
-      {
-        string: navigator.vendor,
-        subString: "Apple",
-        identity: "Safari",
-        versionSearch: "Version"
-      },
-      {
-        prop: window.opera,
-        identity: "Opera",
-        versionSearch: "Version"
-      },
-      {
-        string: navigator.vendor,
-        subString: "iCab",
-        identity: "iCab"
-      },
-      {
-        string: navigator.vendor,
-        subString: "KDE",
-        identity: "Konqueror"
-      },
       {
         string: navigator.userAgent,
         subString: "Firefox",
         identity: "Firefox"
-      },
-      {
-        string: navigator.vendor,
-        subString: "Camino",
-        identity: "Camino"
-      },
-      { // for newer Netscapes (6+)
-        string: navigator.userAgent,
-        subString: "Netscape",
-        identity: "Netscape"
-      },
-      {
-        string: navigator.userAgent,
-        subString: "MSIE",
-        identity: "Explorer",
-        versionSearch: "MSIE"
-      },
-      {
-        string: navigator.userAgent,
-        subString: "Gecko",
-        identity: "Mozilla",
-        versionSearch: "rv"
-      },
-      { // for older Netscapes (4-)
-        string: navigator.userAgent,
-        subString: "Mozilla",
-        identity: "Netscape",
-        versionSearch: "Mozilla"
       }
     ],
     dataOS : [
@@ -108,11 +54,6 @@ FABRIC = (function() {
         string: navigator.platform,
         subString: "Mac",
         identity: "Mac"
-      },
-      {
-           string: navigator.userAgent,
-           subString: "iPhone",
-           identity: "iPhone/iPod"
       },
       {
         string: navigator.platform,
@@ -149,15 +90,15 @@ FABRIC = (function() {
         else arch = "x86_64";
         break;
       default:
-        alert("Unsupported Operating system");
-        throw("Unsupported Operating system");
+        alert("Unsupported Operating system. Fabric supports only Windows, Linux and OsX.");
+        throw("Unsupported Operating system. Fabric supports only Windows, Linux and OsX.");
     }
     switch(BrowserDetect.browser){
       case "Chrome": ext = "crx"; break;
       case "Firefox": ext = "xpi"; break;
       default:
-        alert("Unsupported Browser");
-        throw("Unsupported Browser");
+        alert("Unsupported Browser. Fabric supports only Chrome and Firefox.");
+        throw("Unsupported Browser. Fabric supports only Chrome and Firefox.");
     }
     var pluginInstallUrl = "http://dist.fabric-engine.com/latest/FabricEngine-"+os+"-"+arch+"."+ext;
   //  window.open(pluginInstallUrl,'Download');
@@ -282,7 +223,7 @@ FABRIC = (function() {
       });
       return result;
     };
-
+    
     return context;
   };
 

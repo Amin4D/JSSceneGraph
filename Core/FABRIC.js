@@ -4,36 +4,118 @@
 //
 
 FABRIC = (function() {
+  
+  var BrowserDetect = {
+    init: function () {
+      this.browser = this.searchString(this.dataBrowser) || "An unknown browser";
+      this.version = this.searchVersion(navigator.userAgent)
+        || this.searchVersion(navigator.appVersion)
+        || "an unknown version";
+      this.OS = this.searchString(this.dataOS) || "an unknown OS";
+    },
+    searchString: function (data) {
+      for (var i=0;i<data.length;i++)	{
+        var dataString = data[i].string;
+        var dataProp = data[i].prop;
+        this.versionSearchString = data[i].versionSearch || data[i].identity;
+        if (dataString) {
+          if (dataString.indexOf(data[i].subString) != -1)
+            return data[i].identity;
+        }
+        else if (dataProp)
+          return data[i].identity;
+      }
+      return "";
+    },
+    searchVersion: function (dataString) {
+      var index = dataString.indexOf(this.versionSearchString);
+      if (index == -1) return -1;
+      return parseFloat(dataString.substring(index+this.versionSearchString.length+1));
+    },
+    dataBrowser: [
+      {
+        string: navigator.userAgent,
+        subString: "Chrome",
+        identity: "Chrome"
+      },
+      {
+        string: navigator.userAgent,
+        subString: "Firefox",
+        identity: "Firefox"
+      }
+    ],
+    dataOS : [
+      {
+        string: navigator.platform,
+        subString: "Win",
+        identity: "Windows"
+      },
+      {
+        string: navigator.platform,
+        subString: "Mac",
+        identity: "Mac"
+      },
+      {
+        string: navigator.platform,
+        subString: "Linux",
+        identity: "Linux"
+      }
+    ]
+  
+  };
+  BrowserDetect.init();
 
   // we keep an array of context ids,
   // so we can open the debugger with one
   var contextIDs = [];
-  var bindContextToEmbedTag = function(embedTag) {
-    var result = wrapFabricClient(embedTag, function(s) { console.log(s); } /*, function(s){console.debug(s);}*/);
-
-    /*
-    {
-      contextID: embedTag.contextID,
-      jsonExec: function(jsonEncodedCommands) {
-        return embedTag.jsonExec(jsonEncodedCommands);
-      },
-      setJSONNotifyCallback: function(jsonNotifyCallback) {
-        embedTag.setJSONNotifyCallback(jsonNotifyCallback);
-      },
-      RegisteredTypesManager: embedTag.RegisteredTypesManager,
-      DependencyGraph: embedTag.DependencyGraph,
-      DG: embedTag.DependencyGraph,
-      FrontEnds: embedTag.FrontEnds,
-      IO: embedTag.IO,
-      ThirdParty: embedTag.ThirdParty,
-                        Plugins: embedTag.Plugins,
-    };
-    */
-
-    return result;
-  };
+  
+  var createDownloadPrompt = function( div ){
+    var os, arch, ext;
+    switch(BrowserDetect.OS){
+      case "Mac":
+        os = "Darwin";
+        if(navigator.platform == "MacIntel")
+             arch = "i386";
+        else arch = "x86_64";
+        break;
+      case "Windows":
+        os = "Windows";
+        arch = "x86";
+        break;
+      case "Linux":
+        os = "Linux";
+        throw("Helge: Fix me...");
+        if(navigator.platform == "x86")
+             arch = "x86";
+        else arch = "x86_64";
+        break;
+      default:
+        alert("Unsupported Operating system. Fabric supports only Windows, Linux and OsX.");
+        throw("Unsupported Operating system. Fabric supports only Windows, Linux and OsX.");
+    }
+    switch(BrowserDetect.browser){
+      case "Chrome": ext = "crx"; break;
+      case "Firefox": ext = "xpi"; break;
+      default:
+        alert("Unsupported Browser. Fabric supports only Chrome and Firefox.");
+        throw("Unsupported Browser. Fabric supports only Chrome and Firefox.");
+    }
+    var pluginInstallUrl = "http://dist.fabric-engine.com/latest/FabricEngine-"+os+"-"+arch+"."+ext;
+  //  window.open(pluginInstallUrl,'Download');
+    window.location = pluginInstallUrl;
+  }
 
   var createContext = function(options) {
+    
+    // Check to see if the plugin is loaded.
+    if(!navigator.mimeTypes["application/fabric"]){
+      createDownloadPrompt();
+      throw("Fabric not installed");
+    }else if(!navigator.mimeTypes["application/fabric"].enabledPlugin){
+      alert("Fabric plugin not enabled");
+      throw("Fabric plugin not enabled");
+    }
+    
     if (!options)
       options = {};
 
@@ -51,8 +133,8 @@ FABRIC = (function() {
     // if you do so then Chrome disables the plugin.
     //embedTag.style.display = 'none';
     document.body.appendChild(embedTag);
-
-    var context = bindContextToEmbedTag(embedTag);
+    
+    var context = wrapFabricClient(embedTag, function(s) { console.log(s); } );
     
     FABRIC.displayDebugger = function(ctx) {
       if(!ctx) ctx = context;
@@ -141,7 +223,7 @@ FABRIC = (function() {
       });
       return result;
     };
-
+    
     return context;
   };
 

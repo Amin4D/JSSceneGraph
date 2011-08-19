@@ -167,11 +167,13 @@ FABRIC = (function() {
   var createContext = function(options) {
     
     // Check to see if the plugin is loaded.
-    if(!navigator.mimeTypes["application/fabric"] || 
-        navigator.mimeTypes["application/fabric"].enabledPlugin){
+    if(!navigator.mimeTypes["application/fabric"]){
       createDownloadPrompt();
       throw("Fabric not installed");
-    };
+    }else if(!navigator.mimeTypes["application/fabric"].enabledPlugin){
+      alert("Fabric plugin not enabled");
+      throw("Fabric plugin not enabled");
+    }
     
     if (!options)
       options = {};

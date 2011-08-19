@@ -21,9 +21,7 @@ function OGLTexture2D.configure(
     self.bufferID = buffers[0];
     glActiveTexture(GL_TEXTURE0 + textureUnit);
     glBindTexture(GL_TEXTURE_2D, self.bufferID);
-
-    // glTexEnv( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE ); //set texture environment parameters
-
+    
     //Generate the texture
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
     if (nbPixels == (width * height))

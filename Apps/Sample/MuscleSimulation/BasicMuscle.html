@@ -3,7 +3,7 @@
     Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
     -->
   <head> 
-    <title>FABRIC - Point Cloud Viewer</title> 
+    <title>FABRIC - Basic Muscle</title> 
     
     <meta charset="iso-8859-1"/>
     <link href="../../../themes/default/style.css" rel="stylesheet" type="text/css" />
@@ -14,21 +14,21 @@
 
     <link type="text/css" href="../../../ThirdParty/jQuery/css/vader/jquery-ui-1.8.5.custom.css" rel="stylesheet" />
 
-      <script type="text/javascript" src="../../../Core/FABRIC.Wrappers.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../Core/FABRIC.Wrappers.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../Core/FABRIC.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Math.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Vec2.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Vec3.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Vec4.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Mat22.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Mat33.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Mat44.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Quat.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Xfo.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/RGBA.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Color.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Euler.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/RGBA.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/OGLShaderProgram.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/OGLTexture2D.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/OGLBuffer.js" charset="utf-8"></script>
 
     <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.js" charset="utf-8"></script>
@@ -38,70 +38,29 @@
     <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Materials.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Manipulation.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Kinematics.js" charset="utf-8"></script>
-    
-    <script type="text/javascript" src="../../../SceneGraph/Resources/Parsers/parsePLY.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/Parsers/parseCollada.js" charset="utf-8"></script>
     
     <script type="text/javascript">
     
 $(document).ready(function() {
   
-  $('#importModel').button().change(function(e) {
-      // TODO: Enable file importing
-        console.log($(this).val());
-      var assets = scene.importAssetFile($(this).val());
-      for (i in assets) {
-        assets[i].setMaterialNode(material);
-        drawNode.setGeometryNode(assets[i]);
-      }
-
-      var errors = scene.getErrors();
-      if (errors.length > 0) {
-        throw (errors.toString());
-      }
-    });
-
-  // Create the scene.
   var scene = FABRIC.SceneGraph.createScene();
-  var viewport = scene.constructNode('Viewport', { windowElement: document.getElementById('FabricContainer') });
-  var light = scene.constructNode('PointLight', { position: FABRIC.RT.vec3(420.0, 1000.0, 600.0) });
+  var viewport = scene.constructNode('Viewport', {
+    windowElement: document.getElementById('FabricContainer'),
+    backgroundColor: FABRIC.RT.rgb(0.0, 0.05, 0.15)
+  });
 
   // Create a camera to draw the scene from
   var camera = scene.constructNode('TargetCamera', {
-      position: FABRIC.RT.vec3(271.35863603830336, 321.9770694518089, 480.3632724285126).scale(0.13),
-      target: FABRIC.RT.vec3(0, 0, 0)
+      nearDistance: 0.1,
+      farDistance: 500,
+      position: FABRIC.RT.vec3(0, 5, 10).scale(2.0)
     });
 
-  scene.constructNode('CameraManipulator', { targetNode: camera });
+  scene.constructNode("CameraManipulator", { targetNode:camera } );
 
   viewport.setCameraNode(camera);
 
-  var material = scene.constructNode('VertexColorMaterial', {
-    prototypeMaterialType: 'PointMaterial',
-    pointSize: 3.0
-  });
-
-  var assets = scene.importAssetFile('Models/PointCloud.ply', {
-    sliceData: false,
-    xfo: FABRIC.RT.xfo({
-      sc: FABRIC.RT.vec3(10, 10, 10),
-      tr: FABRIC.RT.vec3(0, 14, 0),
-      ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(1, 0, 0), -88)
-    })
-  });
-
-  var pointNode = assets['PointCloud'];
-  var drawNode = scene.constructNode('Instance', { geometryNode: pointNode, materialNode: material });
-
-
-  scene.constructNode('Instance', {
-      geometryNode: scene.constructNode('Grid', {
-        size_x: 70.0,
-        size_y: 70.0,
-        size_z: 70.0,
-        sections_x: 20,
-        sections_z: 20 }),
-      materialNode: scene.constructNode('FlatMaterial')
-    });
 
   $('#loadingDialog').dialog({
     modal: true
@@ -145,13 +104,15 @@ $(document).ready(function() {
           <div class="box">
             <h2>INFO</h2>
             <div class="content">
-              Point Cloud Viewer.<br>
-              This sample makes use of the PLY parser to create a point SceneGraphNode.
-              The geometry is drawn using OpenGL VBOs, which provides excellent performance
-              for complex structures.
+              Tesselation.<br>
             </div><!--content-->
           </div><!--box-->
-
+          <div class="box">
+            <h2>CONTROLS</h2>
+            <div class="content">
+            </div><!--content-->
+          </div><!--box-->
+            
         </div><!--sidebar-->
       </div> <!--editor-->
     </div><!--wrapper-->

@@ -1121,6 +1121,84 @@ var wrapFabricClient = function(fabricClient, logCallback, debugLogCallback) {
   };
   var EX = createEX();
 
+  var createBuild = function() {
+    var build = {
+      pub: {}
+    };
+
+    build.patch = function(diff) {
+      for (var name in diff) {
+        build[name] = diff[name];
+      }
+    };
+
+    build.handleStateNotification = function(state) {
+      build.patch(state);
+    };
+
+    build.handle = function(cmd, arg) {
+      switch (cmd) {
+        case 'delta':
+          build.patch(arg);
+          break;
+        default:
+          throw 'unrecognized';
+      }
+    };
+
+    build.route = function(src, cmd, arg) {
+      if (src.length == 0) {
+        try {
+          build.handle(cmd, arg);
+        }
+        catch (e) {
+          throw "command '" + cmd + "': " + e;
+        }
+      }
+      else
+        throw 'unroutable';
+    };
+
+    build.pub.isExpired = function() {
+      return build.isExpired;
+    };
+
+    build.pub.getName = function() {
+      return build.name;
+    };
+
+    build.pub.getPureVersion = function() {
+      return build.pureVersion;
+    };
+
+    build.pub.getFullVersion = function() {
+      return build.fullVersion;
+    };
+
+    build.pub.getDesc = function() {
+      return build.desc;
+    };
+
+    build.pub.getCopyright = function() {
+      return build.copyright;
+    };
+
+    build.pub.getURL = function() {
+      return build.url;
+    };
+
+    build.pub.getOS = function() {
+      return build.os;
+    };
+
+    build.pub.getArch = function() {
+      return build.arch;
+    };
+
+    return build;
+  };
+  var build = createBuild();
+
   var state = {
   };
 
@@ -1288,6 +1366,8 @@ var wrapFabricClient = function(fabricClient, logCallback, debugLogCallback) {
   var handleStateNotification = function(newState) {
     state = {};
     patch(newState);
+    if ('build' in newState)
+      build.handleStateNotification(newState.build);
     DG.handleStateNotification(newState.DG);
     RT.handleStateNotification(newState.RT);
     EX.handleStateNotification(newState.EX);
@@ -1383,6 +1463,7 @@ var wrapFabricClient = function(fabricClient, logCallback, debugLogCallback) {
   });
 
   return {
+    build: build.pub,
     RT: RT.pub,
     RegisteredTypesManager: RT.pub,
     DG: DG.pub,

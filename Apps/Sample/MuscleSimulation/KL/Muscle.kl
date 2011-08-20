@@ -1,0 +1,20 @@
+
+operator setMuscleCoreVertexCount(
+  io Xfo segmentXfos[],
+  io Integer indices[],
+  io Size newCount
+  ){
+  indices.resize(segmentXfos.size());
+  newCount = segmentXfos.size();
+}
+
+
+operator fitMuscleCoreToMuscleXfos(
+  io Xfo segmentXfos[],
+  io Integer positions[]
+  ){
+  for( Integer i=0; i<segmentXfos.size(); i++){
+    positions[i] = segmentXfos[i].tr;
+  }
+}
+

@@ -11,7 +11,7 @@ operator setSphereVertexCount(
   var Integer slices = (detail >= 0) ? (detail * 2 + 3) : 3;
   var Integer loops = (detail >= 0) ? (detail + 1) : 1;
 
-  newCount = (1 + slices) * (2 + loops);
+  newCount = 2 * slices * (2 + loops);
 }
 
 operator generateSphere(
@@ -26,27 +26,22 @@ operator generateSphere(
   var Integer slices = (detail >= 0) ? (detail * 2 + 3) : 3;
   var Integer loops = (detail >= 0) ? (detail + 1) : 1;
 
-  var Scalar Pi = 3.141592653589793238462643;
+  var Scalar Pi = 3.141592653589793238462643383279;
 
-  var Integer numTriangles, numVertices, nbGenSlices;
+  var Integer numTriangles, numVertices, nbSlices, nbLoops;
 
-  numTriangles = 2 * (slices + 1) * (loops + 1);
+  nbLoops = loops + 1;
+  nbSlices = slices + 1;
+  
+  numTriangles = 2 * slices * (loops + 1);
   numVertices = (1 + slices) * (2 + loops);
-  nbGenSlices = slices + 1;
-
+  
   indices.resize(numTriangles * 3);
 
   var Integer voff = 0;
-  for (var Integer i = 0; i < nbGenSlices; i++) {
-    positions[i] = Vec3(0.0, radius, 0.0);
-    normals[i] = Vec3(0.0, 1.0, 0.0);
-    uvs[i] = Vec2(1.0 - Scalar(i) / Scalar(slices), 0.0);
-  }
-  voff = slices;
-
-  for (var Integer i = 0; i < loops; i++) {
-    var Scalar theta = ((i + 1) / Scalar(loops + 1)) * Pi;
-    for (var Integer j = 0; j < nbGenSlices; j++) {
+  for (var Integer i = 0; i <= nbLoops; i++) {
+    var Scalar theta = (i / Scalar(nbLoops)) * Pi;
+    for (var Integer j = 0; j < nbSlices; j++) {
       var Scalar phi = (j / Scalar(slices)) * 2.0 * Pi;
 
       normals[voff] = Vec3(
@@ -60,35 +55,29 @@ operator generateSphere(
       voff++;
     }
   }
-
-  for (var Integer i = 0; i < nbGenSlices; i++) {
-    positions[voff + i] = Vec3(0.0, - radius, 0.0);
-    normals[voff + i] = Vec3(0.0, - 1.0, 0.0);
-    uvs[voff + i] = Vec2(1.0 - Scalar(i) / Scalar(slices), 1.0);
-  }
-
+  
+  var Integer fid = 0;
   var Integer tid = 0;
-  var Integer ioff = 0;
-
-  var Integer nbLoops = loops;
-  nbLoops += 2;
-
+  
   // Body of the sphere
-  for (var Integer i = 1; i < nbLoops; i++) {
-    for (var Integer j = 0; j < nbGenSlices; j++) {
+  for (var Integer i = 0; i < nbLoops; i++) {
+    for (var Integer j = 0; j < slices; j++) {
+      
       var Integer v0, v1, v2, v3;
-      v0 = ioff + nbGenSlices * (i - 1) + j;
-      v1 = ioff + nbGenSlices * (i - 1) + ((j + 1) % nbGenSlices);
-      v2 = ioff + nbGenSlices * i + ((j + 1) % nbGenSlices);
-      v3 = ioff + nbGenSlices * i + j;
-
+      v0 = (nbSlices * i) + j;
+      v1 = (nbSlices * i) + ((j + 1) % nbSlices);
+      v2 = (nbSlices * (i+1)) + ((j + 1) % nbSlices);
+      v3 = (nbSlices * (i+1)) + j;
+      
       indices[tid++] = v0;
       indices[tid++] = v1;
       indices[tid++] = v3;
-
+      fid++;
+      
       indices[tid++] = v1;
       indices[tid++] = v2;
       indices[tid++] = v3;
+      fid++;
     }
   }
 }

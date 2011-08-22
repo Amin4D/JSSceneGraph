@@ -92,12 +92,6 @@ $(document).ready(function() {
       boneradius: 0.3
     });
 
-  var flatMaterial = scene.constructNode('FlatMaterial', { color: FABRIC.RT.rgb(1.0, 1.0, 1.0, 1.0) });
-  var instanceNode = scene.constructNode('Instance', {
-      geometryNode: geometryNode,
-      materialNode: flatMaterial
-    });
-
   if (!haveCameraManipulator)
   {
     scene.constructNode('CameraManipulator', { targetNode: camera });

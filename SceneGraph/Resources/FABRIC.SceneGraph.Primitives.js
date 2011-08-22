@@ -674,7 +674,7 @@ FABRIC.SceneGraph.registerNodeType('Teapot', {
         size: 5.0,
         detail: 5
       });
-
+    options.uvSets = 1;
     var teapotNode = scene.constructNode('Triangles', options);
     teapotNode.pub.addUniformValue('size', 'Scalar', options.size);
     teapotNode.pub.addUniformValue('detail', 'Integer', options.detail);
@@ -686,6 +686,15 @@ FABRIC.SceneGraph.registerNodeType('Teapot', {
 
     teapotNode.setGeneratorOps([
       scene.constructOperator({
+        operatorName: 'setTeapotVertexCount',
+        srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/generateTeapot.kl',
+        entryFunctionName: 'setTeapotVertexCount',
+        parameterLayout: [
+          'uniforms.detail',
+          'self.newCount'
+        ]
+      }),
+      scene.constructOperator({
         operatorName: 'generateTeapot',
         srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/generateTeapot.kl',
         entryFunctionName: 'generateTeapot',
@@ -695,7 +704,8 @@ FABRIC.SceneGraph.registerNodeType('Teapot', {
 
           'uniforms.indices',
           'self.positions<>',
-          'self.normals<>'
+          'self.normals<>',
+          'self.uvs0<>'
         ]
       })
     ]);

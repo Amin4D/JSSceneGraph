@@ -8,6 +8,9 @@ operator loadObj(
   io FabricResource resource,
   io Data objParseHandle
 ) {
+  if(resource.dataSize==0){
+    return;
+  }
   report "OBJ decode " + url;
   FabricOBJDecode(resource.data, resource.dataSize, objParseHandle);
 
@@ -27,7 +30,7 @@ operator setObjVertexCount(
   io Size newCount
 ) {
   FabricOBJGetNbPoints(objParseHandle, newCount);
-  report "OBJ setObjVertexCount: " + newCount;
+//  report "OBJ setObjVertexCount: " + newCount;
 }
 
 operator setObjGeom(
@@ -37,7 +40,7 @@ operator setObjGeom(
   io Vec3 normals<>,
   io Vec2 uvs<>
 ) {
-  report "OBJ setObjGeom";
+//  report "OBJ setObjGeom";
   FabricOBJGetTriangleIndices( objParseHandle, indices );
   FabricOBJGetPointsSliced( objParseHandle, positions );
   FabricOBJGetNormalsSliced( objParseHandle, normals );
@@ -48,5 +51,5 @@ operator setObjGeom(
   {
     FabricOBJGetTextureCoordsSliced( objParseHandle, uvs );
   }
-  report "OBJ setObjGeom: Done";
+//  report "OBJ setObjGeom: Done";
 }

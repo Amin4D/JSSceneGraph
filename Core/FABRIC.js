@@ -49,6 +49,12 @@ FABRIC = (function() {
     
     var context = wrapFabricClient(embedTag, function(s) { console.log(s); } );
     
+    if(context.build.isExpired()){
+      alert("Fabric(Alpha) plugin has expired. Please install the lastest version");
+      createDownloadPrompt();
+      throw("Fabric(Alpha) plugin has expired. Please install the lastest version");
+    }
+    
     FABRIC.displayDebugger = function(ctx) {
       if(!ctx) ctx = context;
       var debuggerWindow = window.open(

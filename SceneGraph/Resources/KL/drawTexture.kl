@@ -12,7 +12,7 @@ function drawTexture(
   Boolean flipY
   
 ) {
-  // report(">>>renderTextureToView");
+  //report("drawTexture: textureUnit=" + textureUnit);
 
   if (!program) {
     OGLShaderSource pixelShader;
@@ -55,10 +55,10 @@ function drawTexture(
   name = 'u_rgbaImage';
   var Integer smpLocation = glGetUniformLocation(program, name);
 
-  glPushAttrib(GL_TEXTURE_BIT);
-  glDisable(GL_DEPTH_TEST);
-  glDisable(GL_CULL_FACE);
-
+  glActiveTexture(GL_TEXTURE0 + textureUnit);
+  
+  glPushAttrib(GL_TEXTURE_BIT | GL_ENABLE_BIT | GL_DEPTH_BUFFER_BIT);
+  
   glEnable(GL_TEXTURE_2D);
   glDisable(GL_DEPTH_TEST);
   glDisable(GL_CULL_FACE);
@@ -83,23 +83,18 @@ function drawTexture(
     t[3] = Vec2(0.0, 0.0);
   }
   
-  var Integer idx[6];
-  idx[0] = 0; idx[1] = 2; idx[2] = 1;
-  idx[3] = 0; idx[4] = 3; idx[5] = 2;
+  var Integer idx[4];
+  idx[0] = 0; idx[1] = 1; idx[2] = 2; idx[3] = 3;
 
   var Data NULL;
 
-  var Size bufferID0;
-  var Size bufferID1;
-  var Size bufferID2;
   var Size bufferIDArray[];
-  bufferIDArray.resize(1);
-  glGenBuffers(1, bufferIDArray);
-  bufferID0 = bufferIDArray[0];
-  glGenBuffers(1, bufferIDArray);
-  bufferID1 = bufferIDArray[0];
-  glGenBuffers(1, bufferIDArray);
-  bufferID2 = bufferIDArray[0];
+  bufferIDArray.resize(3);
+  glGenBuffers(3, bufferIDArray);
+
+  var Size bufferID0 = bufferIDArray[0];
+  var Size bufferID1 = bufferIDArray[1];
+  var Size bufferID2 = bufferIDArray[2];
   
   glBindBuffer(GL_ARRAY_BUFFER, bufferID0);
   glBufferData(GL_ARRAY_BUFFER, p.dataSize(), p.data(), GL_STATIC_DRAW);
@@ -115,11 +110,14 @@ function drawTexture(
   glBufferData(GL_ARRAY_BUFFER, idx.dataSize(), idx.data(), GL_STATIC_DRAW);
   glBindBuffer(GL_ARRAY_BUFFER, 0);
   
+  glUniform1i( smpLocation, textureUnit );
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, bufferID2);
-  glDrawElements(GL_TRIANGLES, idx.size(), GL_UNSIGNED_INT, NULL);
+  glDrawElements(GL_QUADS, idx.size(), GL_UNSIGNED_INT, NULL);
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
   glPopAttrib();
+
+  glDeleteBuffers(3, bufferIDArray);
 //  report("<<<drawTexture");
 }
 

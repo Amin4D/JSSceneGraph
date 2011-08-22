@@ -154,15 +154,22 @@ $(document).ready(function() {
   if(url){
     $('#install').button({ disabled: false })
     .click(function() {
+      $( "#alphaWarningDialogBox" ).dialog( "open" );
+      
       window.location = url;
     });
   }
   
-  $("#compliationErrorDialog").dialog({
+  $("#alphaWarningDialogBox").dialog({
       autoOpen: false,
-      width: window.innerWidth * 0.75,
-      height: window.innerHeight * 0.85,
-      modal: true
+      width: 500,
+      height: 250,
+      modal: true,
+      buttons: {
+       Ok: function() {
+         $( this ).dialog( "close" );
+       }
+     }
     });
   
 });
@@ -219,13 +226,17 @@ In no event shall Fabric Technologies, Inc. be liable for any damages (including
         </div><!--code-->
         
         <div id="bottomToolbar">
-                 <button id="install" style="margin-top:10px;">Agree and Install</button>
+                 <button id="install" style="margin-top:10px;">Accept the END-USER LICENSE AGREEMENT and Install</button>
         </div><!--bottomToolbar-->
       </div> <!--editor-->
     </div><!--wrapper-->
 
-    <div id="compliationErrorDialog" title="Compilation Error">
-      <pre id="compliationErrors" class="content"></pre>
+    <div id="alphaWarningDialogBox" title="Alpha Warning">
+      <div id="compliationErrors" class="content">
+        This is an Alpha release of Fabric Engine, and will expire after 1 month. At that time you will be required to reinstall the plugin.
+        We are working continuously to improve the developer experience and the plugin plugin performance. To be notified of updates, please register
+        <a href="http://fabric-engine.com/2011/07/looking-for-early-testers">here<p>
+      </div>
     </div>
 
   </body>

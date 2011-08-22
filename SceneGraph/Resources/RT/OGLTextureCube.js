@@ -33,10 +33,9 @@ FABRIC.appendOnCreateContextCallback(function(context) {
       glInternalFormat: 'Size',
       glFormat: 'Size',
       glType: 'Size',
-      
       size: 'Size',
       bufferID: 'Size',
-      textureData: 'Data[]',
+      textureData: 'RGBA[][]',
       textureDataSize: 'Size[]'
     },
     constructor: FABRIC.RT.OGLTextureCube,

@@ -586,7 +586,7 @@ FABRIC.SceneGraph.registerNodeType('Material', {
         redrawEventHandler.appendChildEventHandler(textureStub);
         
         textureStub.preDescendBindings.append(scene.constructOperator({
-          operatorName: 'loadIntegerUniform',
+          operatorName: 'load' + textureName + 'TextureUnit',
           srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadUniforms.kl',
           preProcessorDefinitions: {
             ATTRIBUTE_NAME: capitalizeFirstLetter(textureName),
@@ -622,6 +622,16 @@ FABRIC.SceneGraph.registerNodeType('Material', {
         addTextureInterface(i, options.textures[i], textureUnit);
         textureUnit++;
       }
+      
+      redrawEventHandler.addMember('numTextures', 'Size', textureUnit);
+      redrawEventHandler.postDescendBindings.append(scene.constructOperator({
+        operatorName: 'unbindTextures',
+        srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadTexture.kl',
+        entryFunctionName: 'unbindTextures',
+        parameterLayout: [
+          'self.numTextures'
+        ]
+      }));
     }
     
     if (options.disableZBuffer) {
@@ -1200,6 +1210,7 @@ FABRIC.SceneGraph.defineEffectFromFile('HairMaterial', 'FABRIC_ROOT/SceneGraph/R
 
 FABRIC.SceneGraph.defineEffectFromFile('PhongReflectMaterial', 'FABRIC_ROOT/SceneGraph/Resources/Shaders/PhongReflectShader.xml');
 FABRIC.SceneGraph.defineEffectFromFile('GlassMaterial', 'FABRIC_ROOT/SceneGraph/Resources/Shaders/GlassShader.xml');
+FABRIC.SceneGraph.defineEffectFromFile('WireframeMaterial', 'FABRIC_ROOT/SceneGraph/Resources/Shaders/WireframeShader.xml');
 
 
 FABRIC.SceneGraph.registerNodeType('BloomPostProcessEffect', {

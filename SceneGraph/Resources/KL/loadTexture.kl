@@ -82,7 +82,7 @@ operator loadAndBindTextureLDR(
   io OGLTexture2D oglTexture2D,
   io Integer textureUnit
 ) {
-//  report("loadAndBindTextureLDR -> textureUnit:" + textureUnit + " textureUnit:" + textureUnit );
+//  report("loadAndBindTextureLDR -> textureUnit:" + textureUnit);
   if(resource.dataSize == 0)
     return;
   if(oglTexture2D.bufferID == 0){
@@ -108,6 +108,14 @@ operator bindTextureHDR(
 }
 
 
+operator unbindTextures(
+  io Size numTextures
+){
+  for(Integer i=0; i<numTextures; i++){
+    glActiveTexture(GL_TEXTURE0 + i);
+    glBindTexture(GL_TEXTURE_2D, 0);
+  }
+}
 
 operator createSpriteTexture(
   io Integer res,

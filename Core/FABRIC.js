@@ -8,32 +8,27 @@ FABRIC = (function() {
   // we keep an array of context ids,
   // so we can open the debugger with one
   var contextIDs = [];
-  var bindContextToEmbedTag = function(embedTag) {
-    var result = wrapFabricClient(embedTag, function(s) { console.log(s); } /*, function(s){console.debug(s);}*/);
-
-    /*
-    {
-      contextID: embedTag.contextID,
-      jsonExec: function(jsonEncodedCommands) {
-        return embedTag.jsonExec(jsonEncodedCommands);
-      },
-      setJSONNotifyCallback: function(jsonNotifyCallback) {
-        embedTag.setJSONNotifyCallback(jsonNotifyCallback);
-      },
-      RegisteredTypesManager: embedTag.RegisteredTypesManager,
-      DependencyGraph: embedTag.DependencyGraph,
-      DG: embedTag.DependencyGraph,
-      FrontEnds: embedTag.FrontEnds,
-      IO: embedTag.IO,
-      ThirdParty: embedTag.ThirdParty,
-                        Plugins: embedTag.Plugins,
-    };
-    */
-
-    return result;
-  };
+  
+  var createDownloadPrompt = function( div ){
+    var iframeTag = document.createElement('iframe');
+    iframeTag.setAttributeNS(null, 'src', 'http://localhost/~Phil/Fabric/Core/pluginInstall.html');
+    iframeTag.setAttributeNS(null, 'style', 'position:absolute; left:10px; right:10px; top:10px; bottom:10px; z-index:10');
+    iframeTag.setAttributeNS(null, 'width', '98%');
+    iframeTag.setAttributeNS(null, 'height', '98%');
+    document.body.appendChild(iframeTag);
+  }
 
   var createContext = function(options) {
+    
+    // Check to see if the plugin is loaded.
+    if(!navigator.mimeTypes["application/fabric"]){
+      createDownloadPrompt();
+      throw("Fabric not installed");
+    }else if(!navigator.mimeTypes["application/fabric"].enabledPlugin){
+      alert("Fabric plugin not enabled");
+      throw("Fabric plugin not enabled");
+    }
+    
     if (!options)
       options = {};
 
@@ -51,8 +46,8 @@ FABRIC = (function() {
     // if you do so then Chrome disables the plugin.
     //embedTag.style.display = 'none';
     document.body.appendChild(embedTag);
-
-    var context = bindContextToEmbedTag(embedTag);
+    
+    var context = wrapFabricClient(embedTag, function(s) { console.log(s); } );
     
     FABRIC.displayDebugger = function(ctx) {
       if(!ctx) ctx = context;
@@ -117,6 +112,9 @@ FABRIC = (function() {
         getContextID: function() {
           return context.getContextID();
         },
+        getLicenses: function() {
+          return context.getLicenses();
+        },
         domElement: embedTag,
         windowNode: context.VP.viewPort.getWindowNode(),
         redrawEvent: context.VP.viewPort.getRedrawEvent(),
@@ -138,7 +136,7 @@ FABRIC = (function() {
       });
       return result;
     };
-
+    
     return context;
   };
 

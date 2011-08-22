@@ -11,7 +11,7 @@ operator genArrayVBO(
   io DATA_TYPE bufferData[],
   io OGLBuffer buffer
 ) {
-//  report("genVBO  " + buffer.name + ":" + buffer.bufferID +" bufferDataCount:" + buffer.bufferDataCount + " location:" + buffer.location  );
+//  report("genVBO  " + buffer.name + ":" + buffer.bufferID +" bufferDataCount:" + buffer.elementCount );
   buffer.genBuffer(bufferData.data(), bufferData.dataSize(), bufferData.size());
 }
 
@@ -19,7 +19,7 @@ operator genVBO(
   io DATA_TYPE bufferData<>,
   io OGLBuffer buffer
 ) {
-//  report("genVBO  " + buffer.name + ":" + buffer.bufferID +" bufferDataCount:" + buffer.bufferDataCount + " location:" + buffer.location  );
+//  report("genVBO  " + buffer.name + ":" + buffer.bufferID +" bufferDataCount:" + buffer.elementCount );
   buffer.genBuffer(bufferData.data(), bufferData.dataSize(), bufferData.size());
 }
 
@@ -29,7 +29,7 @@ operator genAndBindVBO(
   io OGLBuffer buffer
 ) {
   Integer location = shaderProgram.getAttributeLocation(buffer.attributeID);
-//  report("genAndBindVBO  " + buffer.name + ":" + buffer.bufferID +" bufferDataCount:" + buffer.bufferDataCount + " location:" + buffer.location  );
+//  report("genAndBindVBO  " + buffer.name + ":" + buffer.bufferID +" bufferDataCount:" + buffer.elementCount + " location:" + location  );
   if(location!=-1){
     buffer.genBuffer(bufferData.data(), bufferData.dataSize(), bufferData.size());
     buffer.bindBuffer(location);
@@ -40,8 +40,8 @@ operator bindVBO(
   io OGLShaderProgram shaderProgram,
   io OGLBuffer buffer
 ) {
-//  report("bindVBO  " + buffer.name + ":" + buffer.bufferID );
   Integer location = shaderProgram.getAttributeLocation(buffer.attributeID);
+//  report("bindVBO  " + buffer.name + ":" + buffer.bufferID + " location:" + location);
   if(location!=-1){
     buffer.bindBuffer(location);
     return;

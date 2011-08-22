@@ -27,7 +27,6 @@ operator generateSphere(
   var Integer loops = (detail >= 0) ? (detail + 1) : 1;
 
   var Scalar Pi = 3.141592653589793238462643383279;
-
   var Integer numTriangles, numVertices, nbSlices, nbLoops;
 
   nbLoops = loops + 1;

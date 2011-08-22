@@ -11,7 +11,7 @@ FABRIC = (function() {
   
   var createDownloadPrompt = function( div ){
     var iframeTag = document.createElement('iframe');
-    iframeTag.setAttributeNS(null, 'src', 'http://localhost/~Phil/Fabric/Core/pluginInstall.html');
+    iframeTag.setAttributeNS(null, 'src', 'http://demos.fabric-engine.com/Fabric/Core/pluginInstall.html');
     iframeTag.setAttributeNS(null, 'style', 'position:absolute; left:10px; right:10px; top:10px; bottom:10px; z-index:10');
     iframeTag.setAttributeNS(null, 'width', '98%');
     iframeTag.setAttributeNS(null, 'height', '98%');

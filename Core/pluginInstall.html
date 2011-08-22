@@ -74,11 +74,10 @@ $(document).ready(function() {
         else if (dataProp)
           return data[i].identity;
       }
-      return "";
     },
     searchVersion: function (dataString) {
       var index = dataString.indexOf(this.versionSearchString);
-      if (index == -1) return -1;
+      if (index == -1) return;
       return parseFloat(dataString.substring(index+this.versionSearchString.length+1));
     },
     dataBrowser: [
@@ -87,10 +86,64 @@ $(document).ready(function() {
         subString: "Chrome",
         identity: "Chrome"
       },
+      { 	string: navigator.userAgent,
+        subString: "OmniWeb",
+        versionSearch: "OmniWeb/",
+        identity: "OmniWeb"
+      },
+      {
+        string: navigator.vendor,
+        subString: "Apple",
+        identity: "Safari",
+        versionSearch: "Version"
+      },
+      {
+        prop: window.opera,
+        identity: "Opera",
+        versionSearch: "Version"
+      },
+      {
+        string: navigator.vendor,
+        subString: "iCab",
+        identity: "iCab"
+      },
+      {
+        string: navigator.vendor,
+        subString: "KDE",
+        identity: "Konqueror"
+      },
       {
         string: navigator.userAgent,
         subString: "Firefox",
         identity: "Firefox"
+      },
+      {
+        string: navigator.vendor,
+        subString: "Camino",
+        identity: "Camino"
+      },
+      {		// for newer Netscapes (6+)
+        string: navigator.userAgent,
+        subString: "Netscape",
+        identity: "Netscape"
+      },
+      {
+        string: navigator.userAgent,
+        subString: "MSIE",
+        identity: "Explorer",
+        versionSearch: "MSIE"
+      },
+      {
+        string: navigator.userAgent,
+        subString: "Gecko",
+        identity: "Mozilla",
+        versionSearch: "rv"
+      },
+      { 		// for older Netscapes (4-)
+        string: navigator.userAgent,
+        subString: "Mozilla",
+        identity: "Netscape",
+        versionSearch: "Mozilla"
       }
     ],
     dataOS : [
@@ -105,24 +158,55 @@ $(document).ready(function() {
         identity: "Mac"
       },
       {
+           string: navigator.userAgent,
+           subString: "iPhone",
+           identity: "iPhone/iPod"
+      },
+      {
+        string: navigator.platform,
+        subString: "Linux",
+        identity: "Linux"
+      }
+    ],
+    dataCPUArch : [
+      {
+        string: navigator.appVersion,
+        subString: "x86_64",
+        identity: "x86_64"
+      },
+      {
+        string: navigator.appVersion,
+        subString: "Mac",
+        identity: "Mac"
+      },
+      {
+           string: navigator.appVersion,
+           subString: "iPhone",
+           identity: "iPhone/iPod"
+      },
+      {
         string: navigator.platform,
         subString: "Linux",
         identity: "Linux"
       }
     ]
-  
   };
   BrowserDetect.init();
 
   
   var createDownloadURL = function( div ){
+   
     var os, arch, ext;
     switch(BrowserDetect.OS){
       case "Mac":
         os = "Darwin";
-        if(navigator.platform == "MacIntel")
-             arch = "i386";
-        else arch = "x86_64";
+        switch(BrowserDetect.browser){
+          case "Chrome": arch = "i386"; break;
+          case "Firefox": arch = "x86_64"; break;
+          default:
+            alert("Unsupported Browser. Fabric supports only Chrome and Firefox.");
+            return false;
+        }
         break;
       case "Windows":
         os = "Windows";
@@ -130,10 +214,9 @@ $(document).ready(function() {
         break;
       case "Linux":
         os = "Linux";
-        throw("Helge: Fix me...");
-        if(navigator.platform == "x86")
-             arch = "x86";
-        else arch = "x86_64";
+        if(navigator.appVersion.indexOf("x86_64") != -1)
+             arch = "x86_64";
+        else arch = "i686";
         break;
       default:
         alert("Unsupported Operating system. Fabric supports only Windows, Linux and OsX.");

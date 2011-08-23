@@ -1,4 +1,6 @@
 
+#include '../../SceneGraph/Resources/KL/evaluateKeyframeAnimationTrack.kl'
+
 operator setMuscleCoreVertexCount(
   io Xfo segmentXfos[],
   io Integer indices[],
@@ -18,3 +20,39 @@ operator fitMuscleCoreToMuscleXfos(
   }
 }
 
+operator presimulateMuscle(
+  io Scalar restLength,
+  io Scalar contractionFactor,
+  io Xfo segmentXfos[],
+  io BezierKeyframe contractionCurve[]
+){
+  Scalar scale = restLength / segmentXfos[0].tr.dist(segmentXfos[segmentXfos.length-1].tr);
+  Integer keyIndex = -1;
+  contractionFactor = evaluateKeyframeAnimationTrack(contractionCurve, scale, keyIndex);
+}
+
+
+operator simulateMuscle(
+  io Xfo segmentLengths[],
+  io Scalar contractionFactor,
+  io Xfo segmentXfos[],
+  io Vec3 segmentPositionsPrevFrame[]
+){
+  for( Integer i=0; i<segmentXfos.size(); i++){
+    positions[i] = segmentXfos[i].tr;
+  }
+  
+  if(segmentPositionsPrevFrame.size() != segmentXfos.size()){
+    segmentPositionsPrevFrame.resize(segmentXfos.size());
+  }
+  
+  
+  for( Integer i=0; i<segmentXfos.size(); i++){
+    segmentXfos[i].tr = segmentXfos[i].tr + (segmentXfos[i].tr - segmentPositionsPrevFrame[i]);
+  }
+  
+  for( Integer i=0; i<segmentXfos.size(); i++){
+    segmentPositionsPrevFrame[i] = segmentXfos[i].tr;
+  }
+  
+}

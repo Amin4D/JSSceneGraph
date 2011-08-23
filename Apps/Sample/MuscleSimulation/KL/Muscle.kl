@@ -1,7 +1,7 @@
 
 #include '../../SceneGraph/Resources/KL/evaluateKeyframeAnimationTrack.kl'
 
-operator setMuscleCoreVertexCount(
+operator setMuscleCoreDisplayVertexCount(
   io Xfo segmentXfos[],
   io Integer indices[],
   io Size newCount
@@ -11,7 +11,7 @@ operator setMuscleCoreVertexCount(
 }
 
 
-operator fitMuscleCoreToMuscleXfos(
+operator fitMuscleCoreDisplayToMuscleXfos(
   io Xfo segmentXfos[],
   io Integer positions[]
   ){
@@ -31,28 +31,166 @@ operator presimulateMuscle(
   contractionFactor = evaluateKeyframeAnimationTrack(contractionCurve, scale, keyIndex);
 }
 
+operator bindMuscleToSkeleton(
+  io Xfo segmentXfos[],
+  io Vec3 segmentPositionsPrevUpdate[],
+  io Vec3 segmentPositionsPrevUpdate_Temp[],
+){
+
+
+}
 
 operator simulateMuscle(
+  io Xfo initialXfos[], /* inital Transforsm  */
+  io Xfo envelopedXfos[], /* Xfos deformed by the skeleton  */
+  io Xfo simulatedXfos[], /* Xfos simulated and used to drive the skin deformation */
   io Xfo segmentLengths[],
-  io Scalar contractionFactor,
-  io Xfo segmentXfos[],
-  io Vec3 segmentPositionsPrevFrame[]
+  io Scalar segmentCompressionFactors[],
+  io Vec2 pointEnvelopeIds[],
+  io Vec2 pointEnvelopWeights[],
+  io Float flexibilityWeights[], /* weights determining how much the muscle is simulated. */
+  
+  io Vec3 pointPositionsPrevUpdate[],
+  io Vec3 pointPositionsPrevUpdate_Temp[],
+  io Integer numRelaxationIterations,
+  
+  io BezierKeyframe contractionCurve[],
+  
+  io Vec3 gravity,
+  io Scalar deltaT,
+  io Mat4 skeletonMatrices[],
 ){
   for( Integer i=0; i<segmentXfos.size(); i++){
     positions[i] = segmentXfos[i].tr;
   }
   
-  if(segmentPositionsPrevFrame.size() != segmentXfos.size()){
-    segmentPositionsPrevFrame.resize(segmentXfos.size());
-  }
-  
-  
-  for( Integer i=0; i<segmentXfos.size(); i++){
-    segmentXfos[i].tr = segmentXfos[i].tr + (segmentXfos[i].tr - segmentPositionsPrevFrame[i]);
+  if(segmentPositionsPrevUpdate.size() != segmentXfos.size()){
+    segmentPositionsPrevUpdate.resize(simulatedXfos.size());
+    segmentPositionsPrevUpdate_Temp.resize(simulatedXfos.size());
   }
   
   for( Integer i=0; i<segmentXfos.size(); i++){
-    segmentPositionsPrevFrame[i] = segmentXfos[i].tr;
+    segmentPositionsPrevUpdate_Temp[i] = segmentXfos[i].tr;
   }
   
+  // Envelope the xfos to the skeleton using basic enveloping math.
+  for( Integer i=0; i<segmentXfos.size(); i++){
+    for (var Integer i = 0; i < 2; i++) {
+      envelopedXfos[i] = Xfo();
+      if (pointEnvelopeIds[i] > 0.0 && pointEnvelopWeights[i] > 0.0) {
+        envelopedXfos[i].tr += (initialXfos[i].tr * skeletonMatrices[pointEnvelopeIds[i]]) * pointEnvelopWeights[i];
+        envelopedXfos[i].ori += (initialXfos[i].ori * skeletonMatrices[pointEnvelopeIds[i]]) * pointEnvelopWeights[i];
+      }
+    }
+    envelopedXfos[i].ori.normalize();
+  }
+  
+  // Measure the distance from the 2 anchor points of the muscle.
+  // Use this to look up the curve and calculate the current contraction of the muscle
+  Scalar contractionFactor = segmentXfos[0].tr.dist(segmentXfos[segmentXfos.length-1].tr) / initialXfos[0].tr.dist(initialXfos[initialXfos.length-1].tr);
+  Integer keyIndex = -1;
+  contractionFactor = evaluateKeyframeAnimationTrack(contractionCurve, scale, keyIndex);
+  
+  // Increment the muscle system using basic Verlet simulation.
+  for( Integer i=0; i<segmentXfos.size(); i++){
+    simulatedXfos[i].tr += (gravity / (deltaT * deltaT)) + (segmentXfos[i].tr - segmentPositionsPrevUpdate[i]);
+    simulatedXfos[i].tr = envelopedXfos[i].tr.lerp(simulatedXfos[i].tr, flexibilityWeights[i]);
+  }
+  
+  // Now relax the muscle iteratively maintaining the original segment lengths.
+  for( Integer i=0; i<numRelaxationIterations; i++){
+    for( Integer i=0; i<simulatedXfos.size()-1; i++){
+      Vec3 delta(0.0, 0.0, 0.0);
+      if(i>0){
+        Vec3 segment = (simulatedXfos[i].tr - simulatedXfos[i-1].tr);
+        Scalar segmentLength = segment.length();
+        delta += (segment * (segmentLength - (segmentLengths[i] * contractionFactor)) / segmentLength);
+      }
+      if(i<simulatedXfos.size()-1){
+        Vec3 segment = (simulatedXfos[i+1].tr - simulatedXfos[i].tr);
+        Scalar segmentLength = segment.length();
+        delta += (segment * (segmentLength - (segmentLengths[i] * contractionFactor)) / segmentLength);
+      }
+      simulatedXfos[i].tr += delta;
+    }
+  }
+  
+  // Align the quaternions to the muscle segments
+  for( Integer i=0; i<segmentXfos.size(); i++){
+    simulatedXfos[i].ori = envelopedXfos[i].ori * makeQuatFrom2Vectors( envelopedXfos[i].ori.rotateVector(Vec3(1.0, 0.0, 0.0)), (segmentXfos[i].tr - segmentPositionsPrevUpdate[i]).normalize());
+  }
+  
+  // Now measure how much each segment has compressed/stretched
+  // this is used to control the bulging/volume preservation of the muscle
+  for( Integer i=1; i<simulatedXfos.size()-1; i++){
+    Vec3 segment = (simulatedXfos[i].tr - simulatedXfos[i-1].tr);
+    Scalar segmentLength = segment.length();
+    segmentCompressionFactors[i] = segmentLength / segmentLengths[i];
+  }
+  
+  
+  for( Integer i=0; i<simulatedXfos.size(); i++){
+    segmentPositionsPrevUpdate[i] = segmentPositionsPrevUpdate_Temp[i];
+  }
+}
+
+
+function Scalar lookupDisplacementMap(
+  Scalar displacementMap[],
+  Integer mapsize,
+  Scalar u,
+  Scalar v
+){
+  displacementMap
+}
+
+
+operator displayMuscleVolume(
+  io Xfo simulatedXfos[], /* Xfos simulated and used to drive the skin deformation */
+  io Scalar displacementMap[],
+  Integer mapsize,
+  
+  io Integer indices[],
+  io Vec3 positions[],
+  io Vec3 normals[],
+){
+  //  report( "Generate cylinder. Radius: " + radius + " Height: " + height + " Caps: " + caps + " Detail: " + detail );
+  Scalar PI = 3.141592653589793238462643;
+  Integer numVertices = mapsize * 2;
+  Integer nbTri = mapsize * 2;
+
+  positions.resize( numVertices );
+  normals.resize( numVertices );
+  indices.resize(nbTri * 3);
+
+  for( Integer j=0; j<mapsize; j++){
+    for (var Integer i = 0; i < mapsize; i++) {
+      Scalar u, v, theta;
+      u = (j / Scalar(mapsize));
+      v = (i / Scalar(mapsize)) * 2.0 * PI;
+      theta = u * 2.0 * PI;
+      
+      Xfo xfo;
+      xfo.tr = evaluatePeicwiseBezierCurve();
+      xfo.ori = simulatedXfos[j].ori.slerp()
+  
+      var Vec3 nrm = xfo.rotateVector( Vec(cos(theta), 0.0, sin(theta)));
+  
+      normals[i * 2 + 0] = nrm;
+      positions[i * 2 + 0] = xfo.tr + (nrm * lookupDisplacementMap(
+          displacementMap,
+          mapsize,
+          Vec2()
+        ));
+  
+      var Integer j = (i + 1) % nbSides;
+      indices[i * 6 + 0] = i * 2 + 0;
+      indices[i * 6 + 1] = i * 2 + 1;
+      indices[i * 6 + 2] = j * 2 + 0;
+  
+      indices[i * 6 + 3] = i * 2 + 1;
+      indices[i * 6 + 4] = j * 2 + 1;
+      indices[i * 6 + 5] = j * 2 + 0;
+    }
+  }
 }

@@ -1,11 +1,26 @@
     
 // These Node definitions are inlined for now, but will
 // be moved to a separate file once they are stabilized. 
+FABRIC.SceneGraph.registerNodeType('MuscleSystem', {
+  factoryFn: function(options, scene) {
+    options = scene.assignDefaults(options, {
+      });
+    var muscle = scene.constructNode('SceneGraphNode', options ),
+      dgnode = muscle.constructDGNode('DGNode'),
+      i;
+      
+    dgnode.addMember('gravity', 'Vec3', FABRIC.RT.vec2(0, -9.0, 0));
+    
+  }});
+     
 FABRIC.SceneGraph.registerNodeType('Muscle', {
   factoryFn: function(options, scene) {
     options = scene.assignDefaults(options, {
       numSegments: 5,
-      length: 10
+      displacementMapResolution: 32,
+      length: 10,
+      muscleSystem: undefined,
+      skeleton: undefined
       });
     
     var muscle = scene.constructNode('SceneGraphNode', options ),
@@ -13,20 +28,42 @@ FABRIC.SceneGraph.registerNodeType('Muscle', {
       i;
     
     var segmentXfos = [],
-      segmentEnvelopeIds = [],
-      segmentEnvelopWeights = [];
+      segmentLengths = [],
+      pointEnvelopeIds = [],
+      pointEnvelopWeights = [],
+      segmentCompressionFactors = [],
+      flexibilityWeights = [],
+      pointPositionsPrevUpdate = [];
       
     for(i = 0; i < options.numSegments; i++){
       segmentXfos.push(FABRIC.RT.xfo( {
         tr: FABRIC.RT.vec3( ((i/options.numSegments) - 0.5) * options.length, 0,0)
       }));
-      segmentEnvelopeIds.push(FABRIC.RT.vec4(-1,-1,-1,-1));
-      segmentEnvelopWeights.push(FABRIC.RT.vec4());
+      pointEnvelopeIds.push(FABRIC.RT.vec2(-1,-1));
+      pointEnvelopWeights.push(FABRIC.RT.vec2());
+      flexibilityWeights.push(0.0);
+      pointPositionsPrevUpdate.push(segmentXfos[i].tr);
+      if(i>0){
+        segmentLengths.push(segmentXfos[i].tr.dist(segmentXfos[i-1]));
+        segmentCompressionFactors.push(1.0);
+      }
     }
     
-    dgnode.addMember('segmentXfos', 'Xfo[]', segmentXfos);
-    dgnode.addMember('segmentEnvelopeIds', 'Vec4[]', segmentEnvelopeIds);
-    dgnode.addMember('segmentEnvelopWeights', 'Vec4[]', segmentEnvelopWeights);
+    dgnode.addMember('initialXfos', 'Xfo[]', segmentXfos); /* Xfos deformed by the skeleton */
+    dgnode.addMember('envelopedXfos', 'Xfo[]', segmentXfos); /* Xfos deformed by the skeleton */
+    dgnode.addMember('simulatedXfos', 'Xfo[]', segmentXfos); /* Xfos simulated and used to drive the skin deformation */
+    
+    dgnode.addMember('segmentLengths', 'Scalar[]', segmentLengths);
+    dgnode.addMember('segmentCompressionFactors', 'Scalar[]', segmentCompressionFactors);
+    
+    dgnode.addMember('pointEnvelopeIds', 'Vec2[]', pointEnvelopeIds);
+    dgnode.addMember('pointEnvelopWeights', 'Vec2[]', pointEnvelopWeights);
+    dgnode.addMember('flexibilityWeights', 'Scalar[]', flexibilityWeights);
+    
+    dgnode.addMember('pointPositionsPrevUpdate', 'Vec3[]', pointPositionsPrevUpdate);
+    dgnode.addMember('pointPositionsPrevUpdate_Temp', 'Vec3[]', pointPositionsPrevUpdate);
+    dgnode.addMember('numRelaxationIterations', 'Integer', 5);
+    dgnode.addMember('displacementMap', 'Scalar[]', 5);
     
     var key = FABRIC.Animation.bezierKeyframe;
     contractionCurve = [];
@@ -34,6 +71,39 @@ FABRIC.SceneGraph.registerNodeType('Muscle', {
     contractionCurve.push( key(1.0, 1.0, FABRIC.RT.vec2(-0.1, 0), FABRIC.RT.vec2(0.1, 0)));
     contractionCurve.push( key(2.0, 2.0, FABRIC.RT.vec2(-0.1, 0), FABRIC.RT.vec2(0.1, 0)));
     dgnode.addMember('contractionCurve', 'BezierKeyframe[]', contractionCurve);
+    
+    
+    dgnode.addBinding( options.muscleSystem, "musclesystem");
+    dgnode.addBinding( options.skeleton, "skeleton");
+    dgnode.addBinding( scene.getGlobalsNode(), "globals");
+    
+    
+    dgnode.bindings.append(scene.constructOperator({
+        operatorName: 'simulateMuscle',
+        srcFile: './KL/muscle.kl',
+        entryFunctionName: 'simulateMuscle',
+        parameterLayout: [
+          "self.initialXfos",
+          "self.envelopedXfos",
+          "self.simulatedXfos",
+          "self.segmentLengths",
+          "self.segmentCompressionFactors",
+          "self.pointEnvelopeIds",
+          "self.pointEnvelopWeights",
+          "self.flexibilityWeights",
+  
+          "self.pointPositionsPrevUpdate",
+          "self.pointPositionsPrevUpdate_Temp",
+          "self.numRelaxationIterations",
+  
+          "self.contractionCurve",
+  
+          "musclesystem.gravity",
+          "globals.deltaT",
+          "skeleton.skeletonMatrices",
+        ]
+      }));
+    
     
     muscle.getLength = function(){
       var segmentXfos = dgnode.getData('segmentXfos');

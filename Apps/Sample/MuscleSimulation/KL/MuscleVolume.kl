@@ -1,0 +1,102 @@
+
+
+
+operator calculateDisplacementMap(
+  io Xfo simulatedXfos[], /* Xfos simulated and used to drive the skin deformation */
+  io Scalar deltaMap[],
+  io Scalar displacementMap[],
+  io Integer mapsize,
+  
+  io BezierKeyframe quadrantCurve0[],
+  io BezierKeyframe quadrantCurve1[],
+  io BezierKeyframe quadrantCurve2[],
+  io BezierKeyframe quadrantCurve3[]
+){
+  // Calculate the displacement of the points based on the
+  // core curve, and the 4 quadrant curves + offsetMap
+  for( Integer j=0; j<mapsize; j++){
+    for (var Integer i = 0; i < mapsize; i++) {
+      
+    }
+  }
+}
+
+operator constrainMuscleInsideMesh(
+  io Xfo simulatedXfos[], /* Xfos simulated and used to drive the skin deformation */
+  io Scalar displacementMap[],
+  io Integer mapsize,
+  
+  io Integer collisionMeshIndices[],
+  io Vec3 collisionMeshPositions[],
+  io Vec3 collisionMeshNormals[],
+){
+  // Calculate the initial position of the points based on the
+  // core curve, and the displacement map. 
+  for( Integer j=0; j<mapsize; j++){
+    for (var Integer i = 0; i < mapsize; i++) {
+      
+      
+    }
+  }
+}
+
+
+function Scalar lookupDisplacementMap(
+  Scalar displacementMap[],
+  Integer mapsize,
+  Scalar u,
+  Scalar v
+){
+  displacementMap
+}
+
+
+operator displayMuscleVolume(
+  io Xfo simulatedXfos[], /* Xfos simulated and used to drive the skin deformation */
+  io Scalar displacementMap[],
+  io Integer mapsize,
+  
+  io Integer indices[],
+  io Vec3 positions[],
+  io Vec3 normals[],
+){
+  //  report( "Generate cylinder. Radius: " + radius + " Height: " + height + " Caps: " + caps + " Detail: " + detail );
+  Scalar PI = 3.141592653589793238462643;
+  Integer numVertices = mapsize * 2;
+  Integer nbTri = mapsize * 2;
+
+  positions.resize( numVertices );
+  normals.resize( numVertices );
+  indices.resize(nbTri * 3);
+
+  for( Integer j=0; j<mapsize; j++){
+    for (var Integer i = 0; i < mapsize; i++) {
+      Scalar u, v, theta;
+      u = (j / Scalar(mapsize));
+      v = (i / Scalar(mapsize)) * 2.0 * PI;
+      theta = u * 2.0 * PI;
+      
+      Xfo xfo;
+      xfo.tr = evaluatePeicwiseBezierCurve();
+      xfo.ori = simulatedXfos[j].ori.slerp()
+  
+      var Vec3 nrm = xfo.rotateVector( Vec(cos(theta), 0.0, sin(theta)));
+  
+      normals[i * 2 + 0] = nrm;
+      positions[i * 2 + 0] = xfo.tr + (nrm * lookupDisplacementMap(
+          displacementMap,
+          mapsize,
+          Vec2()
+        ));
+  
+      var Integer j = (i + 1) % nbSides;
+      indices[i * 6 + 0] = i * 2 + 0;
+      indices[i * 6 + 1] = i * 2 + 1;
+      indices[i * 6 + 2] = j * 2 + 0;
+  
+      indices[i * 6 + 3] = i * 2 + 1;
+      indices[i * 6 + 4] = j * 2 + 1;
+      indices[i * 6 + 5] = j * 2 + 0;
+    }
+  }
+}

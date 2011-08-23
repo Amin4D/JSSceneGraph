@@ -13,10 +13,13 @@ operator setMuscleCoreDisplayVertexCount(
 
 operator fitMuscleCoreDisplayToMuscleXfos(
   io Xfo segmentXfos[],
-  io Integer positions[]
+  io Scalar weights[],
+  io Integer positions[],
+  io Color vertexColors[]
   ){
   for( Integer i=0; i<segmentXfos.size(); i++){
     positions[i] = segmentXfos[i].tr;
+    vertexColors[i].r = weights[i];
   }
 }
 
@@ -46,7 +49,7 @@ operator simulateMuscle(
   io Xfo simulatedXfos[], /* Xfos simulated and used to drive the skin deformation */
   io Xfo segmentLengths[],
   io Scalar segmentCompressionFactors[],
-  io Vec2 pointEnvelopeIds[],
+  io Vec2 pointEnvelopeIds,
   io Vec2 pointEnvelopWeights[],
   io Float flexibilityWeights[], /* weights determining how much the muscle is simulated. */
   
@@ -77,7 +80,7 @@ operator simulateMuscle(
   for( Integer i=0; i<segmentXfos.size(); i++){
     for (var Integer i = 0; i < 2; i++) {
       envelopedXfos[i] = Xfo();
-      if (pointEnvelopeIds[i] > 0.0 && pointEnvelopWeights[i] > 0.0) {
+      if (pointEnvelopWeights[i] > 0.0) {
         envelopedXfos[i].tr += (initialXfos[i].tr * skeletonMatrices[pointEnvelopeIds[i]]) * pointEnvelopWeights[i];
         envelopedXfos[i].ori += (initialXfos[i].ori * skeletonMatrices[pointEnvelopeIds[i]]) * pointEnvelopWeights[i];
       }
@@ -135,62 +138,3 @@ operator simulateMuscle(
 }
 
 
-function Scalar lookupDisplacementMap(
-  Scalar displacementMap[],
-  Integer mapsize,
-  Scalar u,
-  Scalar v
-){
-  displacementMap
-}
-
-
-operator displayMuscleVolume(
-  io Xfo simulatedXfos[], /* Xfos simulated and used to drive the skin deformation */
-  io Scalar displacementMap[],
-  Integer mapsize,
-  
-  io Integer indices[],
-  io Vec3 positions[],
-  io Vec3 normals[],
-){
-  //  report( "Generate cylinder. Radius: " + radius + " Height: " + height + " Caps: " + caps + " Detail: " + detail );
-  Scalar PI = 3.141592653589793238462643;
-  Integer numVertices = mapsize * 2;
-  Integer nbTri = mapsize * 2;
-
-  positions.resize( numVertices );
-  normals.resize( numVertices );
-  indices.resize(nbTri * 3);
-
-  for( Integer j=0; j<mapsize; j++){
-    for (var Integer i = 0; i < mapsize; i++) {
-      Scalar u, v, theta;
-      u = (j / Scalar(mapsize));
-      v = (i / Scalar(mapsize)) * 2.0 * PI;
-      theta = u * 2.0 * PI;
-      
-      Xfo xfo;
-      xfo.tr = evaluatePeicwiseBezierCurve();
-      xfo.ori = simulatedXfos[j].ori.slerp()
-  
-      var Vec3 nrm = xfo.rotateVector( Vec(cos(theta), 0.0, sin(theta)));
-  
-      normals[i * 2 + 0] = nrm;
-      positions[i * 2 + 0] = xfo.tr + (nrm * lookupDisplacementMap(
-          displacementMap,
-          mapsize,
-          Vec2()
-        ));
-  
-      var Integer j = (i + 1) % nbSides;
-      indices[i * 6 + 0] = i * 2 + 0;
-      indices[i * 6 + 1] = i * 2 + 1;
-      indices[i * 6 + 2] = j * 2 + 0;
-  
-      indices[i * 6 + 3] = i * 2 + 1;
-      indices[i * 6 + 4] = j * 2 + 1;
-      indices[i * 6 + 5] = j * 2 + 0;
-    }
-  }
-}

@@ -4,13 +4,22 @@
 FABRIC.SceneGraph.registerNodeType('MuscleSystem', {
   factoryFn: function(options, scene) {
     options = scene.assignDefaults(options, {
+      volumeConstraintMesh: undefined
       });
-    var muscle = scene.constructNode('SceneGraphNode', options ),
+    var muscleSystem = scene.constructNode('SceneGraphNode', options ),
       dgnode = muscle.constructDGNode('DGNode'),
       i;
       
     dgnode.addMember('gravity', 'Vec3', FABRIC.RT.vec2(0, -9.0, 0));
     
+    muscleSystem.setVolumeConstraintMesh = function(mesh){
+      
+      dgnode.addBinding( mesh, "constraintMesh");
+      dgnode.addMember('volumeConstraintMesh', 'TriangleMesh');
+      
+    }
+    
+    return muscleSystem;
   }});
      
 FABRIC.SceneGraph.registerNodeType('Muscle', {
@@ -56,22 +65,40 @@ FABRIC.SceneGraph.registerNodeType('Muscle', {
     dgnode.addMember('segmentLengths', 'Scalar[]', segmentLengths);
     dgnode.addMember('segmentCompressionFactors', 'Scalar[]', segmentCompressionFactors);
     
-    dgnode.addMember('pointEnvelopeIds', 'Vec2[]', pointEnvelopeIds);
+    dgnode.addMember('pointEnvelopeIds', 'Vec2', pointEnvelopeIds);
     dgnode.addMember('pointEnvelopWeights', 'Vec2[]', pointEnvelopWeights);
     dgnode.addMember('flexibilityWeights', 'Scalar[]', flexibilityWeights);
     
     dgnode.addMember('pointPositionsPrevUpdate', 'Vec3[]', pointPositionsPrevUpdate);
     dgnode.addMember('pointPositionsPrevUpdate_Temp', 'Vec3[]', pointPositionsPrevUpdate);
     dgnode.addMember('numRelaxationIterations', 'Integer', 5);
-    dgnode.addMember('displacementMap', 'Scalar[]', 5);
+    
+    var displacementMap = [];
+    for(i = 0; i < options.displacementMapResolution; i++){
+      for(j = 0; j < options.displacementMapResolution; j++){
+        displacementMap.push(0.0);
+      }
+    }
+    
+    dgnode.addMember('deltaMap', 'Scalar[]', displacementMap);
+    dgnode.addMember('displacementMap', 'Scalar[]', displacementMap);
     
     var key = FABRIC.Animation.bezierKeyframe;
-    contractionCurve = [];
+    var contractionCurve = [];
     contractionCurve.push( key(0.8, 0, null, FABRIC.RT.vec2(0.1, 0)) );
     contractionCurve.push( key(1.0, 1.0, FABRIC.RT.vec2(-0.1, 0), FABRIC.RT.vec2(0.1, 0)));
-    contractionCurve.push( key(2.0, 2.0, FABRIC.RT.vec2(-0.1, 0), FABRIC.RT.vec2(0.1, 0)));
+    contractionCurve.push( key(2.0, 2.0, FABRIC.RT.vec2(-0.1, 0), null));
     dgnode.addMember('contractionCurve', 'BezierKeyframe[]', contractionCurve);
     
+    
+    var quadrantCurve = [];
+    quadrantCurve.push( key(0.0, 0, null, FABRIC.RT.vec2(0.1, 0)) );
+    quadrantCurve.push( key(1.0, 1.0, FABRIC.RT.vec2(-0.33, 0), FABRIC.RT.vec2(0.33, 0)));
+    quadrantCurve.push( key(2.0, 0.0, FABRIC.RT.vec2(-0.33, 0), null));
+    dgnode.addMember('quadrantCurve0', 'BezierKeyframe[]', quadrantCurve);
+    dgnode.addMember('quadrantCurve1', 'BezierKeyframe[]', quadrantCurve);
+    dgnode.addMember('quadrantCurve2', 'BezierKeyframe[]', quadrantCurve);
+    dgnode.addMember('quadrantCurve3', 'BezierKeyframe[]', quadrantCurve);
     
     dgnode.addBinding( options.muscleSystem, "musclesystem");
     dgnode.addBinding( options.skeleton, "skeleton");

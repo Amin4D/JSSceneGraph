@@ -1078,6 +1078,9 @@ FABRIC.SceneGraph.defineEffectFromFile = function(effectName, effectfile) {
         case 'programParams':
           collectProgramParams(childNode);
           break;
+        case 'drawParams':
+          collectDrawParams(childNode);
+          break;
         case 'openglstateparams':
           collectOGLStateParams(childNode);
           break;

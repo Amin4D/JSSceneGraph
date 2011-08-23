@@ -370,12 +370,12 @@ var constructCurveEditor = function(domRootID, keyframeTrackNode, options){
     }
     
     rootDomNode.addEventListener('mouseover', function(){
-      document.addEventListener('mousewheel', mouseWheelZoomFn, false);
-    }, true);
+      document.addEventListener('mousewheel', mouseWheelZoomFn);
+    });
     
     rootDomNode.addEventListener('mouseout', function(){
-      document.removeEventListener('mousewheel', mouseWheelZoomFn, false);
-    }, true);
+      document.removeEventListener('mousewheel', mouseWheelZoomFn);
+    });
   }
   return {
     resize: function(){

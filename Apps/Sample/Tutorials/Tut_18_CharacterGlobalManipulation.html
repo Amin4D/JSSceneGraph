@@ -100,27 +100,25 @@ $(document).ready(function() {
   }
   skeleton.setBones(bones);
 
-  var debug = scene.constructNode('CharacterSkeletonDebug', {
-    characterRigNode: assets.tuscanyCharacterRig,
-    boneradius: 1.0
-  });
-  var debugInstance = debug.getInstanceNode();
-  debugInstance.setDrawToggle(false);
-
   // create a light node  
   var light = scene.constructNode('PointLight', {
     position: FABRIC.RT.vec3(-20,100,100)
   });
 
-  // create a material node
   var material = scene.constructNode('PhongBumpReflectSkinningMaterial', {
-      diffuseTextureNode: scene.constructNode('Image', { url: 'Resources/tuscany_n.png' }),
+      diffuseTextureNode: scene.constructNode('Image', { url: 'Resources/tuscany_d.png' }),
       specularTextureNode: scene.constructNode('Image', { url: 'Resources/tuscany_s.png' }),
-      normalTextureNode: scene.constructNode('Image', { url: 'Resources/tuscany_d.png' }),
+      normalTextureNode: scene.constructNode('Image', { url: 'Resources/tuscany_n.png' }),
       lightNode: light,
       numBones: skeleton.getNumBones()
     });
   assets.tuscanyInstance.setMaterialNode(material);
+
+  var debug = scene.constructNode('CharacterSkeletonDebug', {
+    characterRigNode: assets.tuscanyCharacterRig,
+    boneradius: 1.0
+  });
+  var debugInstance = debug.getInstanceNode();
 
   // construct the manipulators
   for(var i=0;i<bones.length;i++) {
@@ -128,16 +126,14 @@ $(document).ready(function() {
       parentNode: assets.tuscanyCharacterRig,
       parentMember: 'pose',
       parentMemberIndex: i,
-      radius: 1.5,
-      disableZBuffer: true
+      radius: 1.5 
     });
   }
 
   $('#toggleVisibility').button()
     .click(function() {
-      var toggle = !assets.tuscanyInstance.getDrawToggle();
-      assets.tuscanyInstance.setDrawToggle(toggle);
-      debugInstance.setDrawToggle(!toggle);
+      var toggle = !debugInstance.getDrawToggle();
+      debugInstance.setDrawToggle(toggle);
       viewport.redraw();
     });
 

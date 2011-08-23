@@ -114,9 +114,9 @@ $(document).ready(function() {
 
   // create a material node
   var material = scene.constructNode('PhongBumpReflectMaterial', {
-      diffuseTextureNode: scene.constructNode('Image', { url: 'Resources/tuscany_n.png' }),
+      diffuseTextureNode: scene.constructNode('Image', { url: 'Resources/tuscany_d.png' }),
       specularTextureNode: scene.constructNode('Image', { url: 'Resources/tuscany_s.png' }),
-      normalTextureNode: scene.constructNode('Image', { url: 'Resources/tuscany_d.png' }),
+      normalTextureNode: scene.constructNode('Image', { url: 'Resources/tuscany_n.png' }),
       lightNode: light,
       numBones: skeleton.getNumBones()
     });

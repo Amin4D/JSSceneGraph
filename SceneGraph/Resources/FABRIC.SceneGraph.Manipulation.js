@@ -389,13 +389,13 @@ FABRIC.SceneGraph.registerNodeType('Manipulator', {
         color: FABRIC.RT.rgb(0, 0.8, 0, 1),
         highlightcolor: FABRIC.RT.rgb(0.8, 0.8, 0.8, 1),
         localXfo: new FABRIC.RT.Xfo(),
-        disableZBuffer: false
+        drawOverLayed: true
       });
 
     var compensation = true,
        color = options.color,
        highlightColor = options.highlightcolor,
-       material = scene.pub.constructNode('FlatMaterial', { color: options.color, disableZBuffer: options.disableZBuffer });
+       material = scene.pub.constructNode('FlatMaterial', { color: options.color, disableZBuffer: options.drawOverLayed });
 
     var parentNode = options.parentNode;
     if (parentNode && parentNode.isTypeOf('Instance')) {
@@ -857,9 +857,9 @@ FABRIC.SceneGraph.registerNodeType('ScreenTranslationManipulator', {
   factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
         radius: 0.5,
-        name: 'ScreenTranslationManipulator'
+        name: 'ScreenTranslationManipulator',
+        drawOverLayed: true
       });
-    options.disableZBuffer = true;
 
     if (!options.geometryNode) {
       options.geometryNode = scene.pub.constructNode('Sphere', {radius: options.radius, detail: 8.0});

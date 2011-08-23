@@ -207,10 +207,10 @@ $(document).ready(function() {
       case "Mac":
         os = "Darwin";
         switch(BrowserDetect.browser){
-          case "Chrome": arch = "i386"; break;
-          case "Firefox": arch = "x86_64"; break;
+          case "Chrome": arch = "i386"; break;/*
+          case "Firefox": arch = "x86_64"; break;*/
           default:
-            alert("Unsupported Browser. Fabric supports only Chrome and Firefox.");
+            alert("Unsupported Browser. Fabric Alpha supports only Chrome. Other browsers will be supported shortly");
             return false;
         }
         break;

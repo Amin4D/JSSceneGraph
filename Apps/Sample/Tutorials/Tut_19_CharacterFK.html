@@ -106,7 +106,6 @@ $(document).ready(function() {
     boneradius: 1.0
   });
   var debugInstance = debug.getInstanceNode();
-  debugInstance.setDrawToggle(false);
 
   // create a light node  
   var light = scene.constructNode('PointLight', {
@@ -115,9 +114,9 @@ $(document).ready(function() {
 
   // create a material node
   var material = scene.constructNode('PhongBumpReflectSkinningMaterial', {
-      diffuseTextureNode: scene.constructNode('Image', { url: 'Resources/tuscany_n.png' }),
+      diffuseTextureNode: scene.constructNode('Image', { url: 'Resources/tuscany_d.png' }),
       specularTextureNode: scene.constructNode('Image', { url: 'Resources/tuscany_s.png' }),
-      normalTextureNode: scene.constructNode('Image', { url: 'Resources/tuscany_d.png' }),
+      normalTextureNode: scene.constructNode('Image', { url: 'Resources/tuscany_n.png' }),
       lightNode: light,
       numBones: skeleton.getNumBones()
     });
@@ -157,9 +156,8 @@ $(document).ready(function() {
 
   $('#toggleVisibility').button()
     .click(function() {
-      var toggle = !assets.tuscanyInstance.getDrawToggle();
-      assets.tuscanyInstance.setDrawToggle(toggle);
-      debugInstance.setDrawToggle(!toggle);
+      var toggle = !debugInstance.getDrawToggle();
+      debugInstance.setDrawToggle(toggle);
       viewport.redraw();
     });
 

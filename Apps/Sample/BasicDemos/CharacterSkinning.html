@@ -74,6 +74,16 @@ $(document).ready(function() {
       nearDistance: 0.1,
       farDistance: 200
     });
+  
+    // create the scene grid
+  scene.constructNode('Instance', {
+          geometryNode: scene.constructNode('Grid', {
+              size_x: 40.0,
+              size_z: 40.0,
+              sections_x: 20,
+              sections_z: 20 }),
+          materialNode: scene.constructNode('FlatMaterial')
+      });
 
   var assetNodes = scene.importAssetFile('Models/envelope.dae', { nodesToIgnore: {image: true} });
 

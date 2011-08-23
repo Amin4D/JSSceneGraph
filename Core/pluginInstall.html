@@ -29,14 +29,17 @@
         right:10px;
         top:10px;
         bottom:50px;
+        padding:5px 7px 5px 5px; 
       }
       #eula{
-        position:absolute;
-        left:10px;
-        right:10px;
-        top:10px;
-        bottom:10px;
-        resize: none;
+        display:block;
+        width:99%;
+        height:93%;
+        padding:0.5%;
+        margin:0;
+        border:1px solid #f0f040;
+        background-color:#fffff0;
+        overflow:auto;
       }
       
       #install{
@@ -44,6 +47,7 @@
         right:10px;
         bottom:10px;
       }
+      
 
     </style>
   </head>
@@ -53,6 +57,8 @@
 $(document).ready(function() {
   
   $('#install').button({ disabled: true });
+  
+  $('#eula').attr("disabled", "disabled");
   
   var BrowserDetect = {
     init: function () {
@@ -204,7 +210,7 @@ $(document).ready(function() {
           case "Chrome": arch = "i386"; break;
           case "Firefox": arch = "x86_64"; break;
           default:
-            alert("Unsupported Browser. Fabric supports only Chrome and Firefox.");
+            alert("Unsupported Browser. Fabric Alpha supports only Chrome and Firefox. Other browsers will be supported shortly");
             return false;
         }
         break;
@@ -267,7 +273,8 @@ $(document).ready(function() {
       <div id="editor">
         
         <div id="eulaContainer">
-        <textarea id="eula" name="eula">END-USER LICENSE AGREEMENT FOR Fabric Engine
+        <textarea id="eula" name="eula" rows="100" cols="150">
+END-USER LICENSE AGREEMENT FOR Fabric Engine
 
 IMPORTANT PLEASE READ THE TERMS AND CONDITIONS OF THIS LICENSE AGREEMENT CAREFULLY BEFORE CONTINUING WITH THIS PROGRAM INSTALL: Fabric Technologies, Inc.'s End-User License Agreement ("EULA") is a legal agreement between you (either an individual or a single entity) and Fabric Technologies, Inc. for the Fabric Technologies, Inc. software product(s) identified above which may include associated software components, media, printed materials, and "online" or electronic documentation ("SOFTWARE PRODUCT"). By installing, copying, or otherwise using the SOFTWARE PRODUCT, you agree to be bound by the terms of this EULA. This license agreement represents the entire agreement concerning the program between you and Fabric Technologies, Inc., (referred to as "licenser"), and it supersedes any prior proposal, representation, or understanding between the parties. If you do not agree to the terms of this EULA, do not install or use the SOFTWARE PRODUCT.
 

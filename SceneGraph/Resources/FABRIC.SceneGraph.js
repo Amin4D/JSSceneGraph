@@ -1292,9 +1292,9 @@ FABRIC.SceneGraph.registerNodeType('Viewport', {
       };
 
       // In cases wehre mouse events cost a lot, we can restrict firing to mouse down and moue up.
-      windowElement.addEventListener('mousemove', mouseMoveFn);
-      windowElement.addEventListener('mousedown', mouseDownFn);
-      windowElement.addEventListener('mouseup', mouseUpFn);
+      windowElement.addEventListener('mousemove', mouseMoveFn, false);
+      windowElement.addEventListener('mousedown', mouseDownFn, false);
+      windowElement.addEventListener('mouseup', mouseUpFn, false);
 
       // Mouse Wheel event trapping.
       // Mouse wheel events are sent to the document, not the element,
@@ -1304,14 +1304,14 @@ FABRIC.SceneGraph.registerNodeType('Viewport', {
         var mousewheelFn = function(evt) {
           fireEvent('mousewheel', evt);
         }
-        document.addEventListener('mousewheel', mousewheelFn);
+        document.addEventListener('mousewheel', mousewheelFn, false);
         var deactivateMousewheelFn = function(evt) {
-          windowElement.removeEventListener('mouseout', deactivateMousewheelFn);
-          document.removeEventListener('mousewheel', mousewheelFn);
+          windowElement.removeEventListener('mouseout', deactivateMousewheelFn, false);
+          document.removeEventListener('mousewheel', mousewheelFn, false);
         }
-        windowElement.addEventListener('mouseout', deactivateMousewheelFn);
+        windowElement.addEventListener('mouseout', deactivateMousewheelFn, false);
       }
-      windowElement.addEventListener('mouseover', activateMousewheelFn);
+      windowElement.addEventListener('mouseover', activateMousewheelFn, false);
 
       scene.addEventHandlingFunctions(viewportNode);
     }

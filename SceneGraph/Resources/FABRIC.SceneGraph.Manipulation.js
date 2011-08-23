@@ -76,20 +76,20 @@ FABRIC.SceneGraph.registerNodeType('CameraManipulator', {
       }
       if (evt.button === 0) {
         getCameraValues(evt);
-        document.addEventListener('mousemove', dragOrbitFn);
-        document.addEventListener('mouseup', releaseOrbitFn);
+        document.addEventListener('mousemove', dragOrbitFn, false);
+        document.addEventListener('mouseup', releaseOrbitFn, false);
         evt.stopPropagation();
       }
       else if (evt.button === 1) {
         getCameraValues(evt);
-        document.addEventListener('mousemove', dragPanFn);
-        document.addEventListener('mouseup', releasePanFn);
+        document.addEventListener('mousemove', dragPanFn, false);
+        document.addEventListener('mouseup', releasePanFn, false);
         evt.stopPropagation();
       }
       else if (evt.button === 2) {
         getCameraValues(evt);
-        document.addEventListener('mousemove', dragZoomFn);
-        document.addEventListener('mouseup', releaseZoomFn);
+        document.addEventListener('mousemove', dragZoomFn, false);
+        document.addEventListener('mouseup', releaseZoomFn, false);
         evt.stopPropagation();
       }
     }
@@ -119,8 +119,8 @@ FABRIC.SceneGraph.registerNodeType('CameraManipulator', {
 
     var releaseOrbitFn = function(evt) {
       viewportNode.redraw();
-      document.removeEventListener('mousemove', dragOrbitFn);
-      document.removeEventListener('mouseup', releaseOrbitFn);
+      document.removeEventListener('mousemove', dragOrbitFn, false);
+      document.removeEventListener('mouseup', releaseOrbitFn, false);
       evt.stopPropagation();
     }
     var dragPanFn = function(evt) {
@@ -143,8 +143,8 @@ FABRIC.SceneGraph.registerNodeType('CameraManipulator', {
     }
     var releasePanFn = function(evt) {
       viewportNode.redraw();
-      document.removeEventListener('mousemove', dragPanFn);
-      document.removeEventListener('mouseup', releasePanFn);
+      document.removeEventListener('mousemove', dragPanFn, false);
+      document.removeEventListener('mouseup', releasePanFn, false);
       evt.stopPropagation();
     }
 
@@ -161,8 +161,8 @@ FABRIC.SceneGraph.registerNodeType('CameraManipulator', {
     }
     var releaseZoomFn = function(evt) {
       viewportNode.redraw();
-      document.removeEventListener('mousemove', dragZoomFn);
-      document.removeEventListener('mouseup', releaseZoomFn);
+      document.removeEventListener('mousemove', dragZoomFn, false);
+      document.removeEventListener('mouseup', releaseZoomFn, false);
       evt.stopPropagation();
     }
 
@@ -302,8 +302,8 @@ FABRIC.SceneGraph.registerNodeType('PaintManipulator', {
         cameraMatrix = viewportNode.getCameraNode().getCameraMat44();
         projectionMatrix = viewportNode.getCameraNode().getProjectionMat44();
 
-        document.addEventListener('mousemove', paintFn);
-        document.addEventListener('mouseup', releasePaintFn);
+        document.addEventListener('mousemove', paintFn, false);
+        document.addEventListener('mouseup', releasePaintFn, false);
 
         paintManipulatorNode.pub.fireEvent('onbeginpaint', evt);
         paintFn(evt);
@@ -312,8 +312,8 @@ FABRIC.SceneGraph.registerNodeType('PaintManipulator', {
     scene.pub.addEventListener('mousedown', mouseDownFn);
 
     var releasePaintFn = function(evt) {
-      document.removeEventListener('mousemove', paintFn);
-      document.removeEventListener('mouseup', releasePaintFn);
+      document.removeEventListener('mousemove', paintFn, false);
+      document.removeEventListener('mouseup', releasePaintFn, false);
     }
 
     paintManipulatorNode.pub.addPaintableNode = function(node) {
@@ -625,8 +625,8 @@ FABRIC.SceneGraph.registerNodeType('Manipulator', {
     }
     var releaseFn = function(evt) {
       manipulatorNode.pub.fireEvent('dragend', evt);
-      document.removeEventListener('mousemove', dragFn);
-      document.removeEventListener('mouseup', releaseFn);
+      document.removeEventListener('mousemove', dragFn, false);
+      document.removeEventListener('mouseup', releaseFn, false);
       evt.stopPropagation();
       viewportNode.redraw();
     }
@@ -634,8 +634,8 @@ FABRIC.SceneGraph.registerNodeType('Manipulator', {
         viewportNode = evt.viewportNode;
         evt.mouseDownScreenPos = mouseDownScreenPos = FABRIC.RT.vec2(evt.screenX, evt.screenY);
         manipulatorNode.pub.fireEvent('dragstart', evt);
-        document.addEventListener('mousemove', dragFn);
-        document.addEventListener('mouseup', releaseFn);
+        document.addEventListener('mousemove', dragFn, false);
+        document.addEventListener('mouseup', releaseFn, false);
         evt.stopPropagation();
         viewportNode.redraw();
       });

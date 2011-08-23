@@ -55,8 +55,7 @@ function drawTexture(
   name = 'u_rgbaImage';
   var Integer smpLocation = glGetUniformLocation(program, name);
 
-  glActiveTexture(GL_TEXTURE0 + textureUnit);
-  
+  glUniform1i( smpLocation, textureUnit );
   glPushAttrib(GL_TEXTURE_BIT | GL_ENABLE_BIT | GL_DEPTH_BUFFER_BIT);
   
   glEnable(GL_TEXTURE_2D);

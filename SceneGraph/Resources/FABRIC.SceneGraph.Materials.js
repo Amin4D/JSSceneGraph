@@ -459,6 +459,12 @@ FABRIC.SceneGraph.registerNodeType('Material', {
         shader = options.shaderNode;
       }
       else{
+        if(options.disableZBuffer){
+          options.disableOptions = (options.disableOptions ? options.disableOptions : []);
+          options.disableOptions.push(FABRIC.SceneGraph.OpenGLConstants.GL_DEPTH_TEST);
+          options.shaderNameDecoration = (options.shaderNameDecoration ? options.shaderNameDecoration : "") + "Overlay";
+        }
+      
         var shaderName = materialType + 'Shader' + (options.shaderNameDecoration !== undefined ?
                                                 options.shaderNameDecoration : '');
   
@@ -634,21 +640,6 @@ FABRIC.SceneGraph.registerNodeType('Material', {
       }));
     }
     
-    if (options.disableZBuffer) {
-      redrawEventHandler.preDescendBindings.append(scene.constructOperator({
-          operatorName: 'disableZBuffer',
-          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/drawAttributes.kl',
-          entryFunctionName: 'disableZBuffer',
-          parameterLayout: []
-        }));
-      redrawEventHandler.postDescendBindings.append(scene.constructOperator({
-          operatorName: 'popAttribs',
-          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/drawAttributes.kl',
-          entryFunctionName: 'popAttribs',
-          parameterLayout: []
-        }));
-    }
-
     return materialNode;
   }});
 

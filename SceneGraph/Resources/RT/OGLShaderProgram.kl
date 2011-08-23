@@ -234,7 +234,7 @@ function OGLShaderProgram.loadShader() {
     glPushAttrib(GL_ENABLE_BIT);
     for(Integer i=0; i<self.enableOptions.size(); i++){
       glEnable(self.enableOptions[i]);
-      if(self.enableOptions[i]==GL_BLEND){
+      if(self.enableOptions[i]==GL_BLEND && self.blendModeSfactor!=0 && self.blendModeDfactor!=0){
         glBlendFunc(self.blendModeSfactor, self.blendModeDfactor);
       }
     }

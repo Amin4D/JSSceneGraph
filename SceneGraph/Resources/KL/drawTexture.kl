@@ -60,7 +60,7 @@ function drawTexture(
   
   glEnable(GL_TEXTURE_2D);
   glDisable(GL_DEPTH_TEST);
-  glDisable(GL_CULL_FACE);
+  glDisable(GL_CULL_FACE); 
 
   // Draw a quad in the upper left with debugging info
   var Vec3 p[4];
@@ -88,12 +88,14 @@ function drawTexture(
   var Data NULL;
 
   var Size bufferIDArray[];
-  bufferIDArray.resize(3);
-  glGenBuffers(3, bufferIDArray);
+  bufferIDArray.resize(1);
 
+  glGenBuffers(1, bufferIDArray);
   var Size bufferID0 = bufferIDArray[0];
-  var Size bufferID1 = bufferIDArray[1];
-  var Size bufferID2 = bufferIDArray[2];
+  glGenBuffers(1, bufferIDArray);
+  var Size bufferID1 = bufferIDArray[0];
+  glGenBuffers(1, bufferIDArray);
+  var Size bufferID2 = bufferIDArray[0];
   
   glBindBuffer(GL_ARRAY_BUFFER, bufferID0);
   glBufferData(GL_ARRAY_BUFFER, p.dataSize(), p.data(), GL_STATIC_DRAW);
@@ -116,7 +118,11 @@ function drawTexture(
 
   glPopAttrib();
 
-  glDeleteBuffers(3, bufferIDArray);
+  bufferIDArray[0] = bufferID0; glDeleteBuffers(1, bufferIDArray);
+  bufferIDArray[0] = bufferID1; glDeleteBuffers(1, bufferIDArray);
+  bufferIDArray[0] = bufferID2; glDeleteBuffers(1, bufferIDArray);
+  
+  glBindTexture( GL_TEXTURE_2D, 0 );
 //  report("<<<drawTexture");
 }
 

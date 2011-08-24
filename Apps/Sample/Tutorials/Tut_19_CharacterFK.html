@@ -101,12 +101,6 @@ $(document).ready(function() {
   }
   skeleton.setBones(bones);
 
-  var debug = scene.constructNode('CharacterSkeletonDebug', {
-    characterRigNode: rig,
-    boneradius: 1.0
-  });
-  var debugInstance = debug.getInstanceNode();
-
   // create a light node  
   var light = scene.constructNode('PointLight', {
     position: FABRIC.RT.vec3(-20,100,100)
@@ -124,6 +118,12 @@ $(document).ready(function() {
   // draw a phong version of the couch
   assets.tuscanyInstance.setMaterialNode(material);
   
+  var debug = scene.constructNode('CharacterSkeletonDebug', {
+    characterRigNode: rig,
+    boneradius: 1.0
+  });
+  var debugInstance = debug.getInstanceNode();
+
   // assign a FK solver
   var fksolver = rig.addSolver('solveFKHierarchy', 'FKHierarchySolver');
   
@@ -138,7 +138,7 @@ $(document).ready(function() {
         parentMember: fksolver.getLocalXfoMemberName(),
         parentMemberIndex: i,
         radius: 1.5,
-        disableZBuffer: true
+        drawOverLayed: true
       });
     } else {
       scene.constructNode('3AxisRotationManipulator', {
@@ -149,7 +149,7 @@ $(document).ready(function() {
         targetMember: fksolver.getLocalXfoMemberName(),
         targetMemberIndex: i,
         radius: 1.5,
-        disableZBuffer: true
+        drawOverLayed: true
       });
     }
   }

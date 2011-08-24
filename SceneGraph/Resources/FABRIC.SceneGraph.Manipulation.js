@@ -394,7 +394,7 @@ FABRIC.SceneGraph.registerNodeType('Manipulator', {
     var compensation = true,
        color = options.color,
        highlightColor = options.highlightcolor,
-       material = scene.pub.constructNode('FlatMaterial', { color: options.color, disableZBuffer: options.drawOverLayed });
+       material = scene.pub.constructNode('FlatMaterial', { color: options.color, drawOverlayed: options.drawOverLayed });
 
     var parentNode = options.parentNode;
     if (parentNode && parentNode.isTypeOf('Instance')) {

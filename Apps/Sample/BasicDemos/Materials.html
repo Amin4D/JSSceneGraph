@@ -75,10 +75,9 @@ $(document).ready(function() {
           globalXfo: FABRIC.RT.xfo({ tr: FABRIC.RT.vec3(-30, 0, 0) })
         }),
       geometryNode: sphere,
-      materialNode: normalMaterial
+      materialNode: flatMaterial
     });
   
-  inst.setMaterialNode(flatMaterial );
   inst.setMaterialNode( scene.constructNode('WireframeMaterial', {
       color: FABRIC.RT.rgb(0.8, 0.6, 0.6, 1)
     }) );

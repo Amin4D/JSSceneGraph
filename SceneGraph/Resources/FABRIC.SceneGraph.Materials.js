@@ -459,9 +459,13 @@ FABRIC.SceneGraph.registerNodeType('Material', {
         shader = options.shaderNode;
       }
       else{
-        if(options.disableZBuffer){
+        if(options.drawOverlayed){
           options.disableOptions = (options.disableOptions ? options.disableOptions : []);
-          options.disableOptions.push(FABRIC.SceneGraph.OpenGLConstants.GL_DEPTH_TEST);
+          if(options.disableOptions.indexOf(FABRIC.SceneGraph.OpenGLConstants.GL_DEPTH_TEST) == -1){
+            options.disableOptions.push(FABRIC.SceneGraph.OpenGLConstants.GL_DEPTH_TEST);
+          }
+          // TODO: add an 'overlay' subtree to the render graph. This tree should render after transparency
+          options.parentEventHandler = scene.getSceneRedrawTransparentObjectsEventHandler();
           options.shaderNameDecoration = (options.shaderNameDecoration ? options.shaderNameDecoration : "") + "Overlay";
         }
       

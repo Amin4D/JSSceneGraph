@@ -132,7 +132,7 @@ $(document).ready(function() {
 
         var diagnostics = operator.getDiagnostics();
         if (diagnostics.length > 0) {
-          var message = descDiags(operator.getFullSourceCode(), diagnostics);
+          var message = descDiags(operator.getSourceCode(), diagnostics);
           alert(message);
        //   compliationErrors.setValue(message);
        //   $( "#compliationErrorDialog" ).dialog( "open" );

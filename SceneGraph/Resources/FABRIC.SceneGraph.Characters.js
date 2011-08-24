@@ -309,7 +309,7 @@ FABRIC.SceneGraph.registerNodeType('CharacterSkeletonDebug', {
         geometryNode: characterSkeletonDebug.pub,
         materialNode: scene.constructNode('FlatMaterial', {
           color: options.color,
-          disableZBuffer: options.drawOverlayed
+          drawOverlayed: options.drawOverlayed
         }).pub
       });
     characterSkeletonDebug.pub.getInstanceNode = function() {

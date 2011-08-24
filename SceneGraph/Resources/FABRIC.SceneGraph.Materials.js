@@ -459,6 +459,16 @@ FABRIC.SceneGraph.registerNodeType('Material', {
         shader = options.shaderNode;
       }
       else{
+        if(options.drawOverlayed){
+          options.disableOptions = (options.disableOptions ? options.disableOptions : []);
+          if(options.disableOptions.indexOf(FABRIC.SceneGraph.OpenGLConstants.GL_DEPTH_TEST) == -1){
+            options.disableOptions.push(FABRIC.SceneGraph.OpenGLConstants.GL_DEPTH_TEST);
+          }
+          // TODO: add an 'overlay' subtree to the render graph. This tree should render after transparency
+          options.parentEventHandler = scene.getSceneRedrawTransparentObjectsEventHandler();
+          options.shaderNameDecoration = (options.shaderNameDecoration ? options.shaderNameDecoration : "") + "Overlay";
+        }
+      
         var shaderName = materialType + 'Shader' + (options.shaderNameDecoration !== undefined ?
                                                 options.shaderNameDecoration : '');
   
@@ -634,21 +644,6 @@ FABRIC.SceneGraph.registerNodeType('Material', {
       }));
     }
     
-    if (options.disableZBuffer) {
-      redrawEventHandler.preDescendBindings.append(scene.constructOperator({
-          operatorName: 'disableZBuffer',
-          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/drawAttributes.kl',
-          entryFunctionName: 'disableZBuffer',
-          parameterLayout: []
-        }));
-      redrawEventHandler.postDescendBindings.append(scene.constructOperator({
-          operatorName: 'popAttribs',
-          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/drawAttributes.kl',
-          entryFunctionName: 'popAttribs',
-          parameterLayout: []
-        }));
-    }
-
     return materialNode;
   }});
 
@@ -1086,6 +1081,9 @@ FABRIC.SceneGraph.defineEffectFromFile = function(effectName, effectfile) {
           break;
         case 'programParams':
           collectProgramParams(childNode);
+          break;
+        case 'drawParams':
+          collectDrawParams(childNode);
           break;
         case 'openglstateparams':
           collectOGLStateParams(childNode);

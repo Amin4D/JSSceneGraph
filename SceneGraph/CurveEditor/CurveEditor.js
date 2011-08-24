@@ -371,11 +371,11 @@ var constructCurveEditor = function(domRootID, keyframeTrackNode, options){
     
     rootDomNode.addEventListener('mouseover', function(){
       document.addEventListener('mousewheel', mouseWheelZoomFn, false);
-    }, true);
+    });
     
     rootDomNode.addEventListener('mouseout', function(){
       document.removeEventListener('mousewheel', mouseWheelZoomFn, false);
-    }, true);
+    });
   }
   return {
     resize: function(){

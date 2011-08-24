@@ -4,7 +4,7 @@
 //
 
 operator disableZBuffer() {
-  glPushAttrib(GL_ENABLE_BIT);
+  glPushAttrib(GL_DEPTH_BUFFER_BIT);
   glDisable(GL_DEPTH_TEST);
 }
 

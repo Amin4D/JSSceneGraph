@@ -289,7 +289,7 @@ FABRIC.createSVGRootElem = function(domRootID) {
     translate: function() {
       if (arguments.length === 0) {
         var str = this.attr('transform');
-        if (str) {
+        if (str && str.split(',').length==2) {
           return (FABRIC.vec2(parseFloat(str.split('(')[1].split(',')[0]),
             parseFloat(str.split(')')[0].split(',')[1])));
         }else {

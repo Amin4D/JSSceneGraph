@@ -2,15 +2,15 @@ operator initHair(
   in Size index,
   io Vec3 trianglePositions[],
   io Vec3 triangleNormals[],
-  io Mat33 localBoneIds[],
-  io Mat33 localBoneWeights[],
+  io Vec4 localBoneIds[],
+  io Vec4 localBoneWeights[],
   io Integer triangleIndices[],
   io Color rootColorLimits[2],
   io Color tipColorLimits[2],
   io Vec3 position,
   io Vec3 normal,
-  io Mat33 boneIds,
-  io Mat33 boneWeights,
+  io Vec4 boneIds,
+  io Vec4 boneWeights,
   io Color vertexColor,
   io Vec2 stiffnessLimits,
   io Scalar stiffness,
@@ -74,8 +74,8 @@ operator simulateHair(
   in Size index,
   io Vec3 localposition[],
   io Vec3 localnormal[],
-  io Mat33 boneIds[],
-  io Mat33 boneWeights[],
+  io Vec4 boneIds[],
+  io Vec4 boneWeights[],
   io Scalar stiffness[],
   io Scalar gravity[],
   io Scalar segmentlength[],
@@ -94,44 +94,30 @@ operator simulateHair(
   
   if(elementIndex == 0 || time == 0.0)
   {
-    Scalar weight = boneWeights[index].row0.x;
-    Size bone = Size(boneIds[index].row0.x);
+    Scalar weight = boneWeights[index].x;
+    Size bone = Size(boneIds[index].x);
     
     position = pose[bone].transform(localposition[index]) * weight;
     normal = pose[bone].ori.transform(localnormal[index]) * weight;
 
-    weight = boneWeights[rootIndex].row0.y;
+    weight = boneWeights[rootIndex].y;
     if(weight > 0.00001)
     {
-      bone = Size(boneIds[rootIndex].row0.y);
+      bone = Size(boneIds[rootIndex].y);
       position += pose[bone].transform(localposition[index]) * weight;
       normal += pose[bone].ori.transform(localnormal[index]) * weight;
-      weight = boneWeights[rootIndex].row0.z;
+      weight = boneWeights[rootIndex].z;
       if(weight > 0.00001)
       {
-        bone = Size(boneIds[rootIndex].row0.z);
+        bone = Size(boneIds[rootIndex].z);
         position += pose[bone].transform(localposition[index]) * weight;
         normal += pose[bone].ori.transform(localnormal[index]) * weight;
-        weight = boneWeights[rootIndex].row1.x;
+        weight = boneWeights[rootIndex].t;
         if(weight > 0.00001)
         {
-          bone = Size(boneIds[rootIndex].row1.x);
+          bone = Size(boneIds[rootIndex].t);
           position += pose[bone].transform(localposition[index]) * weight;
           normal += pose[bone].ori.transform(localnormal[index]) * weight;
-          weight = boneWeights[rootIndex].row1.y;
-          if(weight > 0.00001)
-          {
-            bone = Size(boneIds[rootIndex].row1.y);
-            position += pose[bone].transform(localposition[index]) * weight;
-            normal += pose[bone].ori.transform(localnormal[index]) * weight;
-            weight = boneWeights[rootIndex].row1.z;
-            if(weight > 0.00001)
-            {
-              bone = Size(boneIds[rootIndex].row1.z);
-              position += pose[bone].transform(localposition[index]) * weight;
-              normal += pose[bone].ori.transform(localnormal[index]) * weight;
-            }
-          }
         }
       }
     }

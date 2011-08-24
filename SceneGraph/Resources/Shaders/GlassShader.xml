@@ -40,10 +40,8 @@
   
   <openglstateparams>
     <enableOptions>
-      <option>GL_DEPTH_TEST</option>
       <option>GL_BLEND</option>
     </enableOptions>
-    <cullFace>GL_BACK</cullFace>
     <blendModeSfactor>GL_SRC_ALPHA</blendModeSfactor>
     <blendModeDfactor>GL_ONE_MINUS_SRC_ALPHA</blendModeDfactor>
   </openglstateparams>
@@ -129,7 +127,7 @@
         float reflect_factor = mix(dot( Vn, Rn ), 1.0, 0.8);
         // Perform a cube map look up.
         vec4 cube_color = textureCube(u_samplerCube, Rn);
-        cube_color.a = 0.0;
+        cube_color.a = 1.0;
         vec4 base_color = u_materialDiffuseColor;
         float lightFactor = 1.0;
         gl_FragColor = mix(base_color, cube_color, reflect_factor);

@@ -1018,7 +1018,7 @@ FABRIC.SceneGraph.defineEffectFromFile = function(effectName, effectfile) {
             effectParameters.blendModeSfactor = FABRIC.SceneGraph.OpenGLConstants[paramNode.firstChild.data];
             break;
           case 'blendModeDfactor':
-            effectParameters.blendModeSfactor = FABRIC.SceneGraph.OpenGLConstants[paramNode.firstChild.data];
+            effectParameters.blendModeDfactor = FABRIC.SceneGraph.OpenGLConstants[paramNode.firstChild.data];
             break;
         }
       }

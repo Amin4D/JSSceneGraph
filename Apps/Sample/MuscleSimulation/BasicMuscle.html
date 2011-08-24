@@ -27,6 +27,10 @@
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/RGBA.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Color.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Euler.js" charset="utf-8"></script>
+    
+    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Bone.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/BezierKeyframe.js" charset="utf-8"></script>
+    
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/OGLShaderProgram.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/OGLTexture2D.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/OGLBuffer.js" charset="utf-8"></script>
@@ -38,7 +42,8 @@
     <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Materials.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Manipulation.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Kinematics.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/Parsers/parseCollada.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Characters.js" charset="utf-8"></script>
+    <script type="text/javascript" src="./JS/Muscle.js" charset="utf-8"></script>
     
     <script type="text/javascript">
     
@@ -60,6 +65,45 @@ $(document).ready(function() {
   scene.constructNode("CameraManipulator", { targetNode:camera } );
 
   viewport.setCameraNode(camera);
+  scene.constructNode("CameraManipulator", { targetNode:camera } );
+  
+  // create the scene grid
+  scene.constructNode('Instance', {
+      geometryNode: scene.constructNode('Grid', {
+        size_x: 40.0,
+        size_z: 40.0,
+        sections_x: 20,
+        sections_z: 20 }),
+      materialNode: scene.constructNode('FlatMaterial', { color: FABRIC.RT.rgb(0.4, 0.4, 0.4) })
+    });
+  
+  // first create a skeleton
+  var skeletonNode = scene.constructNode('CharacterSkeleton');
+
+  skeletonNode.addBone({name: 'anchorLeft', referencePose: FABRIC.RT.xfo({
+      tr: FABRIC.RT.vec3(-5, 5, 0)
+    }) });
+  
+  skeletonNode.addBone({name: 'anchorRight', referencePose: FABRIC.RT.xfo({
+      tr: FABRIC.RT.vec3(5, 5, 0)
+    }) });
+
+  // create the rig
+  var rigNode = scene.constructNode('CharacterRig', {
+      skeletonNode: skeletonNode
+    });
+  scene.constructNode('CharacterSkeletonDebug', {
+      characterRigNode: rigNode,
+      color: FABRIC.RT.rgba(1.0, 1.0, 1.0, 1.0),
+      boneradius: 0.25
+    });
+  
+
+  var muscleSystem = scene.constructNode('MuscleSystem', {
+      characterRig: rigNode
+    });
+
+  var muscle = muscleSystem.addMuscle( { } );
 
 
   $('#loadingDialog').dialog({

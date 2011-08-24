@@ -162,7 +162,7 @@ FABRIC.SceneGraph.registerNodeType('CharacterSkeleton', {
 
       // compute global from local or vice versa
       if (boneOptions.referencePose && !boneOptions.referenceLocalPose) {
-        if (boneOptions.parent == -1) {
+        if (!boneOptions.parent || boneOptions.parent == -1) {
           boneOptions.referenceLocalPose = boneOptions.referencePose;
         }
         else {
@@ -401,6 +401,7 @@ FABRIC.SceneGraph.registerNodeType('CharacterConstants', {
 FABRIC.SceneGraph.registerNodeType('CharacterRig', {
   factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
+        skeletonNode: undefined
       });
 
     if (!options.skeletonNode) {

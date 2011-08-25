@@ -1,6 +1,6 @@
 
 
-FABRIC.SceneGraph.defineEffectFromFile('MuscleCoreLineShaderBase', './Shaders/MuscleCoreLineShader.xml');
+FABRIC.SceneGraph.defineEffectFromFile('MuscleCoreLineShader', './Shaders/MuscleCoreLineShader.xml');
 
 
 // These Node definitions are inlined for now, but will
@@ -19,8 +19,8 @@ FABRIC.SceneGraph.registerNodeType('MuscleSystem', {
       i;
       
     dgnode.addMember('gravity', 'Vec3', options.gravity);
-    dgnode.addMember('numRelaxationIterations', 'Integer', options.numRelaxationIterations);
-    dgnode.addMember('displacementMapResolution', 'Integer', options.displacementMapResolution);
+    dgnode.addMember('numRelaxationIterations', 'Size', options.numRelaxationIterations);
+    dgnode.addMember('displacementMapResolution', 'Size', options.displacementMapResolution);
     
     muscleSystem.setVolumeConstraintMesh = function(mesh){
       
@@ -34,6 +34,7 @@ FABRIC.SceneGraph.registerNodeType('MuscleSystem', {
       muscles.addMuscle( muscleOptions );
     }
     
+    /*
     var coreDisplayLinesNode = scene.constructNode('Lines');
     coreDisplayLinesNode.getAttributesDGNode().addDependency(dgnode, 'musclesystem');
     coreDisplayLinesNode.setGeneratorOps([
@@ -55,39 +56,39 @@ FABRIC.SceneGraph.registerNodeType('MuscleSystem', {
         ]
       })
     ]);
-    
     var muscleCoreCurveCVsID = FABRIC.SceneGraph.getShaderParamID('muscleCoreCurveCVs');
     var redrawEventHandler = coreDisplayLinesNode.getRedrawEventHandler();
-    redrawEventHandler.addScope('muscles', muscles.getDGNode());
+    redrawEventHandler.addScope('muscles', muscles.getSimulationDGNode());
     redrawEventHandler.preDescendBindings.append(scene.constructOperator({
         operatorName: 'loadMuscleCoreCurveCVs',
         srcCode: '\n\
 operator loadUniform(\n\
   io OGLShaderProgram shaderProgram,\n\
-  io Vec4 value[]\n\
+  io Mat44 values[]\n\
 ) {\n\
   Integer location = shaderProgram.getUniformLocation('+muscleCoreCurveCVsID+');\n\
-//  report("loadUniform:" + location);\n\
   if(location!=-1){\n\
-    shaderProgram.loadVec4UniformArray(location, value);\n\
+    shaderProgram.loadMat44UniformArray(location, values);\n\
   }\n\
 }\n\
         ',
         entryFunctionName: 'loadUniform',
         parameterLayout: [
           'shader.shaderProgram',
-          'geometry.muscleCoreCurveCVs'
+          'muscles.cvPositions[]'
         ]
       }));
+    
     scene.constructNode('Instance', {
       geometryNode: coreDisplayLinesNode.pub,
       materialNode: scene.constructNode('MuscleCoreLineShader', {
         prototypeMaterialType:'PointMaterial',
         color: FABRIC.RT.rgb(1.0, 0.0, 0.0),
-        pointSize: 6
+        pointSize: 6,
+        numMuscles: 1
       }).pub
     });
-
+    */
     
     return muscleSystem;
   }});
@@ -96,7 +97,7 @@ operator loadUniform(\n\
 FABRIC.SceneGraph.registerNodeType('Muscle', {
   factoryFn: function(options, scene) {
     options = scene.assignDefaults(options, {
-      numSegments: 5,
+      numSegments: 4,
       length: 10,
       muscleSystem: undefined,
       characterRig: undefined,
@@ -187,6 +188,11 @@ FABRIC.SceneGraph.registerNodeType('Muscle', {
     simulationdgnode.addMember('simulatedXfos', 'Xfo[]', pointXfos); /* Xfos simulated and used to drive the skin deformation */
     simulationdgnode.addMember('segmentCompressionFactors', 'Scalar[]', segmentCompressionFactors);
     
+    // Note, to be able to upload data to the GPU, the data must be uploaded in one call,
+    // and therefore must be laid out in contigous memory.
+    simulationdgnode.addMember('cvPositions', 'Mat44');
+    simulationdgnode.addMember('cvFrames', 'Mat44');
+    
     simulationdgnode.addMember('pointPositionsPrevUpdate', 'Vec3[]', pointPositions);
     simulationdgnode.addMember('pointPositionsPrevUpdate_Temp', 'Vec3[]', pointPositions);
     
@@ -212,6 +218,8 @@ FABRIC.SceneGraph.registerNodeType('Muscle', {
           "self.envelopedXfos",
           "self.simulatedXfos",
           "self.segmentCompressionFactors",
+          "self.cvPositions",
+          "self.cvFrames",
   
           "self.pointPositionsPrevUpdate",
           "self.pointPositionsPrevUpdate_Temp",
@@ -220,7 +228,7 @@ FABRIC.SceneGraph.registerNodeType('Muscle', {
           "musclesystem.gravity",
           
           "globals.timestep",
-          "characterRig.skinningXfos",
+          "characterRig.skinningXfos"
         ],
         async: false
       }));
@@ -283,109 +291,6 @@ FABRIC.SceneGraph.registerNodeType('Muscle', {
           }).pub
         });
       }
-      
-      
-      /*
-      
-      if(!coreDisplayLinesNode){
-        coreDisplayLinesNode = scene.constructNode('Lines');
-        
-        coreDisplayLinesNode.pub.addUniformValue('indices', 'Integer[]');
-        coreDisplayLinesNode.pub.addVertexAttributeValue('positionsArray', 'Vec3[]', { genVBO:true } );
-        coreDisplayLinesNode.pub.addVertexAttributeValue('vertexColorsArray', 'Color[]', { genVBO:true } );
-        coreDisplayLinesNode.getAttributesDGNode().addDependency(initializationdgnode, 'muscles')
-        coreDisplayLinesNode.setGeneratorOps([
-          scene.constructOperator({
-            operatorName: 'setMuscleCoreVertexCount',
-            srcFile: './KL/muscleRendering.kl',
-            entryFunctionName: 'setMuscleCoreVertexCount',
-            parameterLayout: [
-              'muscles.pointXfos[]',
-              'self.indices',
-              'self.newCount'
-            ]
-          }),
-          scene.constructOperator({
-            operatorName: 'fitMuscleCoreToMuscleXfos',
-            srcFile: './KL/muscleRendering.kl',
-            entryFunctionName: 'fitMuscleCoreToMuscleXfos',
-            parameterLayout: [
-              'muscles.pointXfos',
-              'self.positions[]'
-            ]
-          })
-        ]);
-        var geometryGetRedrawEventHandler = coreDisplayLinesNode.pub.getRedrawEventHandler;
-        var redrawEventHandler;
-        coreDisplayLinesNode.pub.getRedrawEventHandler = function() {
-        
-          var redrawEventHandler = geometryNode.constructEventHandlerNode('Redraw');
-          redrawEventHandler.addScope('uniforms', geometryNode.getUniformsDGNode());
-          redrawEventHandler.addScope('attributes', geometryNode.getAttributesDGNode());
-          
-          var registeredTypes = scene.getContext().RegisteredTypesManager.getRegisteredTypes();
-          
-          var indicesBuffer = new FABRIC.RT.OGLBuffer(memberName, attributeID, registeredTypes.Integer);
-          redrawEventHandler.addMember('indicesBuffer', 'OGLBuffer', indicesBuffer);
-  
-          redrawEventHandler.preDescendBindings.append(scene.constructOperator({
-            operatorName: 'genVBO',
-            srcFile: './KL/muscleRendering.kl',
-            preProcessorDefinitions: {
-              DATA_TYPE: 'Integer'
-            },
-            entryFunctionName: 'genVBO',
-            parameterLayout: [
-              'uniforms.indices',
-              'self.indicesBuffer'
-            ]
-          }));
-        
-        
-          var attributeID = FABRIC.SceneGraph.getShaderParamID('positionsArray');
-          var memberType = registeredTypes.Vec3_Array;
-          var typeDesc = registeredTypes[memberType];
-          var bufferMemberName = memberName + 'Buffer';
-        
-          var buffer = new FABRIC.RT.OGLBuffer(memberName, attributeID, typeDesc);
-          redrawEventHandler.addMember(bufferMemberName, 'OGLBuffer', buffer);
-          redrawEventHandler.preDescendBindings.append(scene.constructOperator({
-            operatorName: 'load' + capitalizeFirstLetter(memberType) +'VBO',
-            srcFile: './KL/muscleRendering.kl',
-            preProcessorDefinitions: {
-              DATA_TYPE: memberType
-            },
-            entryFunctionName: 'genAndBindVBO',
-            parameterLayout: [
-              'shader.shaderProgram',
-              attributeNodeBinding + '.' + memberName + '[]',
-              'self.' + bufferMemberName
-            ]
-          }));
-          
-          attributeID = FABRIC.SceneGraph.getShaderParamID(memberName);
-          memberType = vertexMembers[memberName].type;
-          typeDesc = registeredTypes[memberType];
-          bufferMemberName = memberName + 'Buffer';
-          buffer = new FABRIC.RT.OGLBuffer(memberName, attributeID, typeDesc);
-          
-          redrawEventHandler.addMember(bufferMemberName, 'OGLBuffer', buffer);
-          redrawEventHandler.preDescendBindings.append(scene.constructOperator({
-            operatorName: 'load' + capitalizeFirstLetter(memberType) +'VBO',
-            srcFile: './KL/muscleRendering.kl',
-            preProcessorDefinitions: {
-              DATA_TYPE: memberType
-            },
-            entryFunctionName: 'genAndBindVBO',
-            parameterLayout: [
-              'shader.shaderProgram',
-              attributeNodeBinding + '.' + memberName + '[]',
-              'self.' + bufferMemberName
-            ]
-          }));
-        }
-      }
-      */
     }
     
     muscle.addMuscle = function(options){

@@ -30,7 +30,8 @@ FABRIC.RT.OGLBuffer = function(name, id, dataType, dynamic) {
     //  into 2 vec4s instead of one mat33.
     this.numBufferElementComponents = 3;
   }
-  this.bufferType = FABRIC.SceneGraph.OpenGLConstants ? FABRIC.SceneGraph.OpenGLConstants.GL_STATIC_DRAW : 0;
+  this.bufferType = FABRIC.SceneGraph.OpenGLConstants ? FABRIC.SceneGraph.OpenGLConstants.GL_ARRAY_BUFFER : 0;
+  this.bufferUsage = FABRIC.SceneGraph.OpenGLConstants ? FABRIC.SceneGraph.OpenGLConstants.GL_STATIC_DRAW : 0;
   this.bufferElementComponentType = FABRIC.SceneGraph.OpenGLConstants ? FABRIC.SceneGraph.OpenGLConstants.GL_FLOAT : 0;
 };
 
@@ -47,6 +48,7 @@ FABRIC.appendOnCreateContextCallback(function(context) {
       elementDataSize: 'Integer',
       numBufferElementComponents: 'Integer',
       bufferType: 'Integer',
+      bufferUsage: 'Integer',
       bufferElementComponentType: 'Integer'
     },
     constructor: FABRIC.RT.OGLBuffer,

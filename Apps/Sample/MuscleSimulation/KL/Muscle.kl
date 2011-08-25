@@ -17,15 +17,19 @@ operator simulateMuscle(
   io Xfo simulatedXfos[], /* Xfos simulated and used to drive the skin deformation */
   io Scalar segmentCompressionFactors[],
   
+  
+  io Mat44 cvPositions,
+  io Mat44 cvFrames,
+  
   io Vec3 pointPositionsPrevUpdate[],
   io Vec3 pointPositionsPrevUpdate_Temp[],
-  io Integer numRelaxationIterations,
+  io Size numRelaxationIterations,
   
   io Vec3 gravity,
   io Scalar timeStep,
   io Xfo skeletonXfos[]
 ){
-//  report("simulateMuscle>>>");
+  report("simulateMuscle>>>");
   Integer i, j;
   Xfo baseXfo, xfo;
   
@@ -142,7 +146,17 @@ operator simulateMuscle(
     segmentCompressionFactors[i] = (simulatedXfos[i+1].tr - simulatedXfos[i].tr).length() / segmentLengths[i];
   }
   
-//  report("simulateMuscle<<<");
+  cvPositions.row0.set(simulatedXfos[0].tr.x, simulatedXfos[0].tr.y, simulatedXfos[0].tr.z, 0.0);
+  cvPositions.row0.set(simulatedXfos[1].tr.x, simulatedXfos[1].tr.y, simulatedXfos[1].tr.z, 0.0);
+  cvPositions.row0.set(simulatedXfos[2].tr.x, simulatedXfos[2].tr.y, simulatedXfos[2].tr.z, 0.0);
+  cvPositions.row0.set(simulatedXfos[3].tr.x, simulatedXfos[3].tr.y, simulatedXfos[3].tr.z, 0.0);
+  
+  cvFrames.row0.set(simulatedXfos[0].ori.v.x, simulatedXfos[0].ori.v.y, simulatedXfos[0].ori.v.z, simulatedXfos[0].ori.w);
+  cvFrames.row0.set(simulatedXfos[1].ori.v.x, simulatedXfos[1].ori.v.y, simulatedXfos[1].ori.v.z, simulatedXfos[1].ori.w);
+  cvFrames.row0.set(simulatedXfos[2].ori.v.x, simulatedXfos[2].ori.v.y, simulatedXfos[2].ori.v.z, simulatedXfos[2].ori.w);
+  cvFrames.row0.set(simulatedXfos[3].ori.v.x, simulatedXfos[3].ori.v.y, simulatedXfos[3].ori.v.z, simulatedXfos[3].ori.w);
+  
+  report("simulateMuscle<<<");
 }
 
 

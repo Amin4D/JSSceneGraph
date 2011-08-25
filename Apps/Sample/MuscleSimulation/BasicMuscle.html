@@ -134,12 +134,13 @@ $(document).ready(function() {
       characterRig: rigNode,
       gravity: FABRIC.RT.vec3(0, -9.0, 0)
     });
-
+/*
   var muscle = muscleSystem.addMuscle( {
     xfo: FABRIC.RT.xfo( {
         tr: FABRIC.RT.vec3( 0, 5, 0)
       })
     });
+*/
 
   $('#loadingDialog').dialog({
     modal: true
@@ -183,7 +184,7 @@ $(document).ready(function() {
           scene.animation.step();
         });
         
-      viewport.redraw();
+     // viewport.redraw();
       return true;
     }
   });

@@ -5,19 +5,17 @@ void skinPositions(){
 
   vec4 transformedPosition = vec4(0.0,0.0,0.0,0.0);
   
-  mat3 curIndex = a_index;
-  mat3 curWeight = a_weight;
+  vec4 curIndex = a_index;
+  vec4 curWeight = a_weight;
   
-  for (int y = 0; y < 3; y++){
-    for( int x = 0; x < 3; x++ ){
-      float weight = curWeight[x][y];
-      if(weight > 0.0){
-        int idx = int(curIndex[x][y]);
+  for (int i = 0; i < 4; i++){
+    float weight = curWeight[i];
+    if(weight > 0.0){
+      int idx = int(curIndex[i]);
         
-        // transform the offset by bone i
-        mat4 m44 = u_boneMatrices[idx];
-        transformedPosition += m44 * a_position * weight;
-      }
+      // transform the offset by bone i
+      mat4 m44 = u_boneMatrices[idx];
+      transformedPosition += m44 * a_position * weight;
     }
   }
   
@@ -32,26 +30,24 @@ void skinPositionsAndNormals(){
   vec4 transformedPosition = vec4(0.0,0.0,0.0,0.0);
   vec4 transformedNormal = vec4(0.0,0.0,0.0,0.0);
   
-  mat3 curIndex = a_index;
-  mat3 curWeight = a_weight;
+  vec4 curIndex = a_index;
+  vec4 curWeight = a_weight;
   
-  for (int y = 0; y < 3; y++){
-    for( int x = 0; x < 3; x++ ){
-      float weight = curWeight[x][y];
-      if(weight > 0.0){
-        int idx = int(curIndex[x][y]);
+  for (int i = 0; i < 4; i++){
+    float weight = curWeight[i];
+    if(weight > 0.0){
+      int idx = int(curIndex[i]);
         
-        // transform the offset by bone i
-        mat4 m44 = u_boneMatrices[idx];
-        transformedPosition += m44 * a_position * weight;
-        
-        // transform normal by bone i
-        mat3 m33 = mat3( m44[0].xyz, m44[1].xyz, m44[2].xyz );
-        transformedNormal.xyz += m33 * a_normal.xyz * weight;
-      }
+      // transform the offset by bone i
+      mat4 m44 = u_boneMatrices[idx];
+      transformedPosition += m44 * a_position * weight;
+
+      // transform normal by bone i
+      mat3 m33 = mat3( m44[0].xyz, m44[1].xyz, m44[2].xyz );
+      transformedNormal.xyz += m33 * a_normal.xyz * weight;
     }
   }
-        
+
   vec4 modelCameraPosition = u_modelViewMatrix * transformedPosition;
   lightDir = vec3(u_lightPosition.xyz - modelCameraPosition.xyz);
   viewDir = vec3(-modelCameraPosition.xyz);
@@ -70,27 +66,25 @@ void skinPositionsNormalsAndTangents()
   vec3 transformedNormal = vec3(0.0,0.0,0.0);
   vec3 transformedTangent = vec3(0.0,0.0,0.0);
   
-  mat3 curIndex = a_index;
-  mat3 curWeight = a_weight;
+  vec4 curIndex = a_index;
+  vec4 curWeight = a_weight;
   
-  for (int y = 0; y < 3; y++){
-    for( int x = 0; x < 3; x++ ){
-      float weight = curWeight[x][y];
-      if(weight > 0.0){
-        int idx = int(curIndex[x][y]);
+  for (int i = 0; i < 4; i++){
+    float weight = curWeight[i];
+    if(weight > 0.0){
+      int idx = int(curIndex[i]);
         
-        // transform the offset by bone i
-        mat4 m44 = u_boneMatrices[idx];
-        transformedPosition += m44 * a_position * weight;
-        
-        // transform normal by bone i
-        mat3 m33 = mat3( m44[0].xyz, m44[1].xyz, m44[2].xyz );
-        transformedNormal += m33 * a_normal.xyz * weight;
-        transformedTangent += m33 * a_tangent.xyz * weight;
-      }
+      // transform the offset by bone i
+      mat4 m44 = u_boneMatrices[idx];
+      transformedPosition += m44 * a_position * weight;
+
+      // transform normal by bone i
+      mat3 m33 = mat3( m44[0].xyz, m44[1].xyz, m44[2].xyz );
+      transformedNormal.xyz += m33 * a_normal.xyz * weight;
+      transformedTangent += m33 * a_tangent.xyz * weight;
     }
   }
-        
+
   vec4 modelCameraPosition = u_modelViewMatrix * transformedPosition;
   lightDir = vec3( u_lightPosition.xyz - modelCameraPosition.xyz );
   viewDir = vec3(-modelCameraPosition.xyz );

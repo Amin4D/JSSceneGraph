@@ -98,6 +98,10 @@ function Quat.setUnit() {
   self = self.unit();
 }
 
+function Quat.normalize() {
+  self = self.unit();
+}
+
 function Quat Quat.conjugate() {
   return Quat(self.w, self.v.neg());
 }

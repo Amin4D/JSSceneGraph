@@ -90,7 +90,8 @@ $(document).ready(function() {
 
   // create the rig
   var rigNode = scene.constructNode('CharacterRig', {
-      skeletonNode: skeletonNode
+      skeletonNode: skeletonNode,
+      computeInverseXfos: true
     });
   scene.constructNode('CharacterSkeletonDebug', {
       characterRigNode: rigNode,

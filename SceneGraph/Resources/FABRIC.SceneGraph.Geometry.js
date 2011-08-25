@@ -399,7 +399,10 @@ FABRIC.SceneGraph.registerNodeType('Geometry', {
       return bufferInterface.pub;
     };
     
-    
+    // Generate a VBO from the dependency graph.
+    // this is usefull when using OpenCL. openGL buffers
+    // can be created and used in both the computation
+    // and rendering. 
     geometryNode.genDGVBO = function(memberName){
       var vertexMembers = attributesdgnode.getMembers();
       var uniformMembers = uniformsdgnode.getMembers();

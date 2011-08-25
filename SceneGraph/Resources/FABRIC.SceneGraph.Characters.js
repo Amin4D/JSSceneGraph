@@ -401,7 +401,8 @@ FABRIC.SceneGraph.registerNodeType('CharacterConstants', {
 FABRIC.SceneGraph.registerNodeType('CharacterRig', {
   factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
-        skeletonNode: undefined
+        skeletonNode: undefined,
+        computeInverseXfos: false
       });
 
     if (!options.skeletonNode) {
@@ -511,19 +512,21 @@ FABRIC.SceneGraph.registerNodeType('CharacterRig', {
         }));
       
       // offer to create an operator which computes the inverse as a xfo[]
-      characterRigNode.pub.computeInverseXfos = function()
-      {
-        dgnode.addMember('boneXfos', 'Xfo[]');
+      characterRigNode.pub.computeInverseXfos = function(){
+        dgnode.addMember('skinningXfos', 'Xfo[]');
         
         dgnode.bindings.append(scene.constructOperator({
             operatorName: 'calcSkinningXfos',
             srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/characterRig.kl',
             entryFunctionName: 'calcSkinningXfos',
-            parameterLayout: ['self.pose', 'skeleton.bones', 'self.boneXfos']
+            parameterLayout: ['self.pose', 'skeleton.bones', 'self.skinningXfos']
           }));
         
         // remove the function once more
         characterRigNode.pub.computeInverseXfos  = function(){};
+      }
+      if(options.computeInverseXfos){
+        characterRigNode.pub.computeInverseXfos();
       }
     }
     setSkeletonNode(options.skeletonNode);

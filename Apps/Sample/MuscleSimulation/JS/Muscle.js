@@ -67,6 +67,7 @@ FABRIC.SceneGraph.registerNodeType('Muscle', {
       pointEnvelopWeights = [],
       segmentCompressionFactors = [],
       flexibilityWeights = [],
+      contractionWeights = [],
       simulationWeights= [],
       pointPositions = [];
       
@@ -83,9 +84,9 @@ FABRIC.SceneGraph.registerNodeType('Muscle', {
       if(i>0){
         segmentLengths.push(pointXfos[i].tr.dist(pointXfos[i-1].tr));
         segmentCompressionFactors.push(1.0);
+        contractionWeights.push((flexibilityWeights[i]+flexibilityWeights[i-1]) * 0.5 );
       }
     }
-    console.log(flexibilityWeights);
     
     initializationdgnode.addMember('initialXfos', 'Xfo[]', pointXfos); / * Xfos deformed by the skeleton * /
     initializationdgnode.addMember('baseXfo', 'Xfo', options.xfo); / * Xfos deformed by the skeleton * /
@@ -112,6 +113,7 @@ FABRIC.SceneGraph.registerNodeType('Muscle', {
     contractionCurve.push( key(1.0, 1.0, FABRIC.RT.vec2(-0.1, 0), FABRIC.RT.vec2(0.1, 0)));
     contractionCurve.push( key(2.0, 1.0, FABRIC.RT.vec2(-0.1, 0), null));
     initializationdgnode.addMember('contractionCurve', 'BezierKeyframe[]', contractionCurve);
+    initializationdgnode.addMember('contractionWeights', 'Scalar[]', contractionWeights);
     
     
     var quadrantCurve = [];
@@ -149,6 +151,7 @@ FABRIC.SceneGraph.registerNodeType('Muscle', {
           "initializationdgnode.pointEnvelopWeights",
           "initializationdgnode.flexibilityWeights",
           "initializationdgnode.contractionCurve",
+          "initializationdgnode.contractionWeights",
           
           "self.initialized",
           "self.envelopedXfos",

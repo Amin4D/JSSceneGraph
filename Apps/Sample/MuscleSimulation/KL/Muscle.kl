@@ -10,6 +10,7 @@ operator simulateMuscle(
   io Vec2 pointEnvelopWeights[],
   io Scalar flexibilityWeights[], /* weights determining how much the muscle is simulated. */
   io BezierKeyframe contractionCurve[],
+  io Scalar contractionWeights[], /* weights determining how much the segments will contract. */
   
   io Boolean initialized,
   io Xfo envelopedXfos[], /* Xfos deformed by the skeleton  */
@@ -87,7 +88,8 @@ operator simulateMuscle(
     for(i=0; i<simulatedXfos.size(); i++){
       // When under contraction, we remove gravity.
       // Its a bit of a hack to exagerate the strength of the contraction
-      simulatedXfos[i].tr += ((gravity / (timeStep * timeStep)) * contractionFactor) + (simulatedXfos[i].tr - pointPositionsPrevUpdate[i]);
+      simulatedXfos[i].tr += ((gravity / (timeStep * timeStep)) * contractionFactor) +
+                              (simulatedXfos[i].tr - pointPositionsPrevUpdate[i]);
       simulatedXfos[i].tr = envelopedXfos[i].tr.lerp(simulatedXfos[i].tr, flexibilityWeights[i]);
     }
   }
@@ -95,19 +97,22 @@ operator simulateMuscle(
   // Now relax the muscle iteratively maintaining the original segment lengths.
   Vec3 deltas[];
   Vec3 delta;
+  Scalar segmentContraction;
   deltas.resize(simulatedXfos.size());
   for(j=0; j<numRelaxationIterations; j++){
     for( i=0; i<simulatedXfos.size(); i++){
       delta.setNull();
       if(i>0){
+        segmentContraction = 1.0 + ((contractionFactor - 1.0) * contractionWeights[i-1]);
         Vec3 segmentPrev = (simulatedXfos[i-1].tr - simulatedXfos[i].tr);
         Scalar segmentLength = segmentPrev.length();
-        delta += segmentPrev * ((segmentLength - (segmentLengths[i-1] * contractionFactor)) / segmentLength);
+        delta += segmentPrev * ((segmentLength - (segmentLengths[i-1] * segmentContraction)) / segmentLength);
       }
       if(i<simulatedXfos.size()-1){
+        segmentContraction = 1.0 + ((contractionFactor - 1.0) * contractionWeights[i]);
         Vec3 segmentNext = (simulatedXfos[i+1].tr - simulatedXfos[i].tr);
         Scalar segmentLength = segmentNext.length();
-        delta += segmentNext * ((segmentLength - (segmentLengths[i] * contractionFactor)) / segmentLength);
+        delta += segmentNext * ((segmentLength - (segmentLengths[i] * segmentContraction)) / segmentLength);
       }
       deltas[i] = delta;
     }
@@ -133,8 +138,8 @@ operator simulateMuscle(
   
   // Now measure how much each segment has compressed/stretched
   // this is used to control the bulging/volume preservation of the muscle
-  for(i=1; i<simulatedXfos.size()-1; i++){
-    segmentCompressionFactors[i] = (simulatedXfos[i].tr - simulatedXfos[i-1].tr).length() / segmentLengths[i];
+  for(i=0; i<simulatedXfos.size()-1; i++){
+    segmentCompressionFactors[i] = (simulatedXfos[i+1].tr - simulatedXfos[i].tr).length() / segmentLengths[i];
   }
   
 //  report("simulateMuscle<<<");

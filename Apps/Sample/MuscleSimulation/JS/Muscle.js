@@ -1,4 +1,8 @@
-    
+
+
+FABRIC.SceneGraph.defineEffectFromFile('MuscleCoreLineShaderBase', './Shaders/MuscleCoreLineShader.xml');
+
+
 // These Node definitions are inlined for now, but will
 // be moved to a separate file once they are stabilized. 
 FABRIC.SceneGraph.registerNodeType('MuscleSystem', {
@@ -7,7 +11,8 @@ FABRIC.SceneGraph.registerNodeType('MuscleSystem', {
       characterRig: undefined,
       volumeConstraintMesh: undefined,
       gravity: FABRIC.RT.vec3(0, -9.0, 0),
-      numRelaxationIterations: 6
+      numRelaxationIterations: 6,
+      displacementMapResolution: 32
       });
     var muscleSystem = scene.constructNode('SceneGraphNode', options ),
       dgnode = muscleSystem.constructDGNode('DGNode'),
@@ -15,6 +20,7 @@ FABRIC.SceneGraph.registerNodeType('MuscleSystem', {
       
     dgnode.addMember('gravity', 'Vec3', options.gravity);
     dgnode.addMember('numRelaxationIterations', 'Integer', options.numRelaxationIterations);
+    dgnode.addMember('displacementMapResolution', 'Integer', options.displacementMapResolution);
     
     muscleSystem.setVolumeConstraintMesh = function(mesh){
       
@@ -23,30 +29,80 @@ FABRIC.SceneGraph.registerNodeType('MuscleSystem', {
       
     }
     
-    var muscles = [];
-    muscleSystem.pub.addMuscle = function( muscleoptions ){
-      if(!muscleoptions) muscleoptions = {};
-      muscleoptions.muscleSystem = muscleSystem.pub;
-      muscleoptions.characterRig = options.characterRig
-      var muscle = scene.constructNode('Muscle',  muscleoptions);
-      muscles.push(muscle);
-      return muscle;
+    var muscles = scene.constructNode('Muscle', { muscleSystem: muscleSystem, characterRig: options.characterRig } );
+    muscleSystem.addMuscle = function( muscleOptions ){
+      muscles.addMuscle( muscleOptions );
     }
+    
+    var coreDisplayLinesNode = scene.constructNode('Lines');
+    coreDisplayLinesNode.getAttributesDGNode().addDependency(dgnode, 'musclesystem');
+    coreDisplayLinesNode.setGeneratorOps([
+      scene.constructOperator({
+        operatorName: 'setMuscleCoreLinesDisplayVertexCount',
+        srcFile: './KL/muscleRendering.kl',
+        entryFunctionName: 'setMuscleCoreLinesDisplayVertexCount',
+        parameterLayout: [
+          'musclesystem.displacementMapResolution',
+          'self.newCount'
+        ]
+      }),
+      scene.constructOperator({
+        operatorName: 'generateMuscleCoreLine',
+        srcFile: './KL/muscleRendering.kl',
+        entryFunctionName: 'generateMuscleCoreLine',
+        parameterLayout: [
+          'self.positions[]'
+        ]
+      })
+    ]);
+    
+    var muscleCoreCurveCVsID = FABRIC.SceneGraph.getShaderParamID('muscleCoreCurveCVs');
+    var redrawEventHandler = coreDisplayLinesNode.getRedrawEventHandler();
+    redrawEventHandler.addScope('muscles', muscles.getDGNode());
+    redrawEventHandler.preDescendBindings.append(scene.constructOperator({
+        operatorName: 'loadMuscleCoreCurveCVs',
+        srcCode: '\n\
+operator loadUniform(\n\
+  io OGLShaderProgram shaderProgram,\n\
+  io Vec4 value[]\n\
+) {\n\
+  Integer location = shaderProgram.getUniformLocation('+muscleCoreCurveCVsID+');\n\
+//  report("loadUniform:" + location);\n\
+  if(location!=-1){\n\
+    shaderProgram.loadVec4UniformArray(location, value);\n\
+  }\n\
+}\n\
+        ',
+        entryFunctionName: 'loadUniform',
+        parameterLayout: [
+          'shader.shaderProgram',
+          'geometry.muscleCoreCurveCVs'
+        ]
+      }));
+    scene.constructNode('Instance', {
+      geometryNode: coreDisplayLinesNode.pub,
+      materialNode: scene.constructNode('MuscleCoreLineShader', {
+        prototypeMaterialType:'PointMaterial',
+        color: FABRIC.RT.rgb(1.0, 0.0, 0.0),
+        pointSize: 6
+      }).pub
+    });
+
     
     return muscleSystem;
   }});
      
+     
 FABRIC.SceneGraph.registerNodeType('Muscle', {
   factoryFn: function(options, scene) {
     options = scene.assignDefaults(options, {
-      numSegments: 9,
-      displacementMapResolution: 32,
+      numSegments: 5,
       length: 10,
       muscleSystem: undefined,
       characterRig: undefined,
       displayCore: true,
       xfo: FABRIC.RT.xfo(),
-      pointEnvelopeIds: FABRIC.RT.vec2(0,1),
+      pointEnvelopeIds: FABRIC.RT.vec2(0,1)
       });
     
     var muscle = scene.constructNode('SceneGraphNode', options ),
@@ -60,7 +116,6 @@ FABRIC.SceneGraph.registerNodeType('Muscle', {
     var characterRig = scene.getPrivateInterface(options.characterRig);
     simulationdgnode.addDependency( characterRig.getDGNode(), "characterRig");
     simulationdgnode.addDependency( scene.getGlobalsNode(), "globals");
-    
     
     var pointXfos = [],
       segmentLengths = [],
@@ -227,12 +282,13 @@ FABRIC.SceneGraph.registerNodeType('Muscle', {
             pointSize: 6
           }).pub
         });
-        
       }
       
+      
       /*
+      
       if(!coreDisplayLinesNode){
-        coreDisplayLinesNode = scene.constructNode('Geometry');
+        coreDisplayLinesNode = scene.constructNode('Lines');
         
         coreDisplayLinesNode.pub.addUniformValue('indices', 'Integer[]');
         coreDisplayLinesNode.pub.addVertexAttributeValue('positionsArray', 'Vec3[]', { genVBO:true } );
@@ -330,6 +386,10 @@ FABRIC.SceneGraph.registerNodeType('Muscle', {
         }
       }
       */
+    }
+    
+    muscle.addMuscle = function(options){
+      initializationdgnode.setCount( initializationdgnode.getCount() + 1);
     }
     if(options.displayCore){
       muscle.displayCore();

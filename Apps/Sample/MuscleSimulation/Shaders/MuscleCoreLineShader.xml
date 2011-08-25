@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<shader>
+  <name>MuscleCoreLineShader</name>
+  
+  <uniforms>
+    <uniform name="u_materialColor" constant="diffuseColor" type="Color" defaultValue="FABRIC.RT.rgba(0.8,0,0,1)"/>
+    
+    <uniform name="u_modelViewProjectionMatrix" constant="modelViewProjectionMatrix" type="Mat44" owner="instance"/>
+    <uniform name="u_modelViewMatrix" constant="modelViewMatrix" type="Mat44" owner="instance"/>
+    
+    <uniform name="u_corePositions" constant="corePositions" type="Vec4[]" owner="material" />
+  </uniforms>
+  
+  <attributes>
+    <attribute name="a_position" binding="positions"/>
+  </attributes>
+  
+  
+  <preprocessordirectives>
+    <preprocessordirective name="NUM_CONTROLPOINTS" binding="numControlPoints"/>
+  </preprocessordirectives>
+  
+  <vertexshader>
+    <source>
+      <![CDATA[
+      uniform mat4 u_modelViewProjectionMatrix;
+      uniform mat4 u_modelViewMatrix;
+      uniform vec4 u_corePositions[NUM_CONTROLPOINTS];
+      attribute vec4 a_position;
+      
+      vec4 EvalBSpline( vec4 p1, vec4 p2, vec4 p3, vec4 p4, t )
+      {
+        vec4 a0, a1, a2, a3;
+      
+        a0 = ( -p1 + (p2 * 3.0) - (p3 * 3.0) + p4)/6.0;
+        a1 = ((p1 * 3.0) - (p2 * 6.0) + (p3 * 3.0))/6.0;
+        a2 = ((p1 * -3.0) + (p3 * 3.0))/6.0;
+        a3 = ( p1 + (p2 * 4.0) + p3 )/6.0;
+      
+        return a3 + ((a2 + ((a1 + (a0 * t)) * t)) * t);
+      }
+      
+      vec4 EvalPiecewiseBSpline( in vec4 controlPoints[NUM_CONTROLPOINTS], in int numControlPoints, in float u )
+      {
+        vec4 p;
+        int i;
+        u *= (float)(numControlPoints - 1);
+        if( u < (float)(numControlPoints - 1) )
+        {
+          i = (int)floor( u );
+          u = u - (float)i;
+        }
+        else
+        {
+          i = numControlPoints - 2;
+          u = 1.0;
+        }
+      
+        if( i == 0 )
+        {
+          p = controlPoints[ i ] + (controlPoints[ i ] - controlPoints[ i + 1 ]);
+          return EvalBSpline( p, controlPoints[ i ], controlPoints[ i + 1 ], controlPoints[ i + 2 ], u );
+        }
+        else if( i == ( numControlPoints - 2 ) )
+        {
+          p = controlPoints[ i ] + (controlPoints[ i + 1 ] - controlPoints[ i ]);
+          return EvalBSpline( controlPoints[ i - 1 ], controlPoints[ i ], controlPoints[ i + 1 ], p, u );
+        }
+        else
+        {
+          return EvalBSpline( controlPoints[ i - 1 ], controlPoints[ i ], controlPoints[ i + 1 ], controlPoints[ i + 2 ], u );
+        }
+        return i;
+      };
+      
+      void main(){
+        vec4 pos = EvalPiecewiseBSpline( u_corePositions, NUM_CONTROLPOINTS, a_position.x );
+        gl_Position = u_modelViewProjectionMatrix * pos;
+      }
+      ]]>
+    </source>
+  </vertexshader>
+  
+  <fragmentshader>
+    <source>
+      <![CDATA[
+      uniform vec4 u_materialColor;
+      
+      void main(){
+        gl_FragColor = u_materialColor;
+      }
+
+      ]]>
+    </source>
+  </fragmentshader>
+</shader>

@@ -22,6 +22,22 @@ operator fitMuscleCoreDisplayToMuscleXfos(
   }
 }
 
+operator setMuscleCoreLinesDisplayVertexCount(
+  io Size count,
+  io Size newCount
+  ){
+  newCount = count;
+}
+
+operator generateMuscleCoreLine(
+  io Vec3 positions[]
+  ){
+  for( Integer i=0; i<positions.size(); i++){
+    positions[i].x = Scalar(i)/Scalar(positions.size()-1);
+  }
+}
+
+
 /*
 operator genIndicesVBO(
   io Vec3 bufferData[][],

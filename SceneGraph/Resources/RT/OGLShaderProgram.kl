@@ -34,7 +34,7 @@ function Integer OGLShaderProgram.createAndCompileShader(OGLShaderSource shaders
   infoLen.resize(1);
   glGetShaderiv(shaderID, GL_INFO_LOG_LENGTH, infoLen);
 
-  if (infoLen[0] > 1) {
+  if (infoLen[0] > 0) {
     if (compiled[0] > 0) {
       report(self.name + ' : Shader compilation succeeded with warnings:');
     }

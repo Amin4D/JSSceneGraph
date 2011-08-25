@@ -30,61 +30,41 @@ operator reduceBoneBinding(
   io Integer boneCountArray[],
   io Integer boneIndicesArray[],
   io Scalar boneWeightsArray[],
-  io Mat33 boneIndices[],
-  io Mat33 boneWeights[]
+  io Vec4 boneIndices[],
+  io Vec4 boneWeights[]
 ) {
   boneIndices.resize(boneCountArray.size());
   boneWeights.resize(boneCountArray.size());
   var Integer offset = 0;
   for (var Integer i = 0; i < boneCountArray.size(); i++) {
-    boneWeights[i] = Mat33(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+    boneWeights[i] = Vec4(0.0, 0.0, 0.0, 0.0);
 
     if (boneCountArray[i] > 0) {
       bubbleSortWeights(boneWeightsArray, boneIndicesArray, offset, offset + boneCountArray[i]);
 
       var Scalar sum = 0.0;
       var Integer count = boneCountArray[i];
-      if (count > 9) {
-        count = 9;
+      if (count > 4) {
+        count =4;
       }
       for (var Integer j = 0; j < count; j++) {
         sum += boneWeightsArray[offset + j];
       }
 
-      boneIndices[i].row0.x = boneIndicesArray[offset];
-      boneWeights[i].row0.x = boneWeightsArray[offset] / sum;
+      boneIndices[i].x = boneIndicesArray[offset];
+      boneWeights[i].x = boneWeightsArray[offset] / sum;
 
       if (count > 1) {
-        boneIndices[i].row0.y = boneIndicesArray[offset + 1];
-        boneWeights[i].row0.y = boneWeightsArray[offset + 1] / sum;
+        boneIndices[i].y = boneIndicesArray[offset + 1];
+        boneWeights[i].y = boneWeightsArray[offset + 1] / sum;
       }
       if (count > 2) {
-        boneIndices[i].row0.z = boneIndicesArray[offset + 2];
-        boneWeights[i].row0.z = boneWeightsArray[offset + 2] / sum;
+        boneIndices[i].z = boneIndicesArray[offset + 2];
+        boneWeights[i].z = boneWeightsArray[offset + 2] / sum;
       }
       if (count > 3) {
-        boneIndices[i].row1.x = boneIndicesArray[offset + 3];
-        boneWeights[i].row1.x = boneWeightsArray[offset + 3] / sum;
-      }
-      if (count > 4) {
-        boneIndices[i].row1.y = boneIndicesArray[offset + 4];
-        boneWeights[i].row1.y = boneWeightsArray[offset + 4] / sum;
-      }
-      if (count > 5) {
-        boneIndices[i].row1.z = boneIndicesArray[offset + 5];
-        boneWeights[i].row1.z = boneWeightsArray[offset + 5] / sum;
-      }
-      if (count > 6) {
-        boneIndices[i].row2.x = boneIndicesArray[offset + 6];
-        boneWeights[i].row2.x = boneWeightsArray[offset + 6] / sum;
-      }
-      if (count > 7) {
-        boneIndices[i].row2.y = boneIndicesArray[offset + 7];
-        boneWeights[i].row2.y = boneWeightsArray[offset + 7] / sum;
-      }
-      if (count > 8) {
-        boneIndices[i].row2.z = boneIndicesArray[offset + 8];
-        boneWeights[i].row2.z = boneWeightsArray[offset + 8] / sum;
+        boneIndices[i].t = boneIndicesArray[offset + 3];
+        boneWeights[i].t = boneWeightsArray[offset + 3] / sum;
       }
 
       offset += boneCountArray[i];

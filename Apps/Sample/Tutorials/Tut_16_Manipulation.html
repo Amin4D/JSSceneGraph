@@ -108,7 +108,8 @@ $(document).ready(function() {
   // create a manipulator for the cone
   scene.constructNode('3AxisTranslationManipulator', {
     parentNode: instance,
-    size: 10
+    size: 10,
+    drawOverLayed: true
   });
 
   $('#loadingDialog').dialog({

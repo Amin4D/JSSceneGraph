@@ -6,13 +6,15 @@ FABRIC.SceneGraph.registerNodeType('MuscleSystem', {
     options = scene.assignDefaults(options, {
       characterRig: undefined,
       volumeConstraintMesh: undefined,
-      gravity: FABRIC.RT.vec3(0, -9.0, 0)
+      gravity: FABRIC.RT.vec3(0, -9.0, 0),
+      numRelaxationIterations: 6
       });
     var muscleSystem = scene.constructNode('SceneGraphNode', options ),
       dgnode = muscleSystem.constructDGNode('DGNode'),
       i;
       
     dgnode.addMember('gravity', 'Vec3', options.gravity);
+    dgnode.addMember('numRelaxationIterations', 'Integer', options.numRelaxationIterations);
     
     muscleSystem.setVolumeConstraintMesh = function(mesh){
       
@@ -37,7 +39,7 @@ FABRIC.SceneGraph.registerNodeType('MuscleSystem', {
 FABRIC.SceneGraph.registerNodeType('Muscle', {
   factoryFn: function(options, scene) {
     options = scene.assignDefaults(options, {
-      numSegments: 5,
+      numSegments: 9,
       displacementMapResolution: 32,
       length: 10,
       muscleSystem: undefined,
@@ -65,21 +67,25 @@ FABRIC.SceneGraph.registerNodeType('Muscle', {
       pointEnvelopWeights = [],
       segmentCompressionFactors = [],
       flexibilityWeights = [],
+      simulationWeights= [],
       pointPositions = [];
       
     for(i = 0; i < options.numSegments; i++){
       pointXfos.push(FABRIC.RT.xfo( {
         tr: FABRIC.RT.vec3( ((i/(options.numSegments-1)) - 0.5) * options.length, 0,0)
       }));
+      var envelopWeight = (Math.cos((i/(options.numSegments-1)) * Math.PI) + 1) * 0.5;
+      pointEnvelopWeights.push(FABRIC.RT.vec2(envelopWeight, 1.0 - envelopWeight));
       
-      pointEnvelopWeights.push(FABRIC.RT.vec2(i/(options.numSegments-1), 1.0 - (i/(options.numSegments-1))));
-      flexibilityWeights.push(0.0);
+      var flexibilityWeight = (Math.cos((i/(options.numSegments-1) * 2.0 * Math.PI)) * 0.45) + 0.55;
+      flexibilityWeights.push(1.0 - (flexibilityWeight * flexibilityWeight * flexibilityWeight));
       pointPositions.push(pointXfos[i].tr);
       if(i>0){
-        segmentLengths.push(pointXfos[i].tr.dist(pointXfos[i-1]));
+        segmentLengths.push(pointXfos[i].tr.dist(pointXfos[i-1].tr));
         segmentCompressionFactors.push(1.0);
       }
     }
+    console.log(flexibilityWeights);
     
     initializationdgnode.addMember('initialXfos', 'Xfo[]', pointXfos); / * Xfos deformed by the skeleton * /
     initializationdgnode.addMember('baseXfo', 'Xfo', options.xfo); / * Xfos deformed by the skeleton * /
@@ -88,6 +94,7 @@ FABRIC.SceneGraph.registerNodeType('Muscle', {
     initializationdgnode.addMember('pointEnvelopeIds', 'Vec2', options.pointEnvelopeIds);
     initializationdgnode.addMember('pointEnvelopWeights', 'Vec2[]', pointEnvelopWeights);
     initializationdgnode.addMember('flexibilityWeights', 'Scalar[]', flexibilityWeights);
+    initializationdgnode.addMember('simulationWeights', 'Scalar[]', simulationWeights);
         
     var displacementMap = [];
     for(i = 0; i < options.displacementMapResolution; i++){
@@ -103,7 +110,7 @@ FABRIC.SceneGraph.registerNodeType('Muscle', {
     var contractionCurve = [];
     contractionCurve.push( key(0.8, 0, null, FABRIC.RT.vec2(0.1, 0)) );
     contractionCurve.push( key(1.0, 1.0, FABRIC.RT.vec2(-0.1, 0), FABRIC.RT.vec2(0.1, 0)));
-    contractionCurve.push( key(2.0, 2.0, FABRIC.RT.vec2(-0.1, 0), null));
+    contractionCurve.push( key(2.0, 1.0, FABRIC.RT.vec2(-0.1, 0), null));
     initializationdgnode.addMember('contractionCurve', 'BezierKeyframe[]', contractionCurve);
     
     
@@ -125,7 +132,6 @@ FABRIC.SceneGraph.registerNodeType('Muscle', {
     
     simulationdgnode.addMember('pointPositionsPrevUpdate', 'Vec3[]', pointPositions);
     simulationdgnode.addMember('pointPositionsPrevUpdate_Temp', 'Vec3[]', pointPositions);
-    simulationdgnode.addMember('numRelaxationIterations', 'Integer', 5);
     
     simulationdgnode.bindings.append(scene.constructOperator({
         operatorName: 'simulateMuscle',
@@ -151,9 +157,10 @@ FABRIC.SceneGraph.registerNodeType('Muscle', {
   
           "self.pointPositionsPrevUpdate",
           "self.pointPositionsPrevUpdate_Temp",
-          "self.numRelaxationIterations",
-  
+          
+          "musclesystem.numRelaxationIterations",
           "musclesystem.gravity",
+          
           "globals.timestep",
           "characterRig.skinningXfos",
         ],
@@ -179,7 +186,11 @@ FABRIC.SceneGraph.registerNodeType('Muscle', {
     muscle.displayCore = function(){
       if(!coreDisplayPointsNode){
         coreDisplayPointsNode = scene.constructNode('Points', { dynamicMembers: ['positions'] });
-        coreDisplayPointsNode.pub.addVertexAttributeValue('vertexColors', 'Color', { genVBO:true, dynamic:true } );
+        coreDisplayPointsNode.pub.addVertexAttributeValue('vertexColors', 'Color', {
+          defaultValue: FABRIC.RT.rgb(1.0, 1.0, 0.0),
+          genVBO:true,
+          dynamic:true
+        } );
         coreDisplayPointsNode.getAttributesDGNode().addDependency(initializationdgnode, 'initializationdgnode');
         coreDisplayPointsNode.getAttributesDGNode().addDependency(simulationdgnode, 'simulationdgnode');
         coreDisplayPointsNode.setGeneratorOps([
@@ -188,7 +199,7 @@ FABRIC.SceneGraph.registerNodeType('Muscle', {
             srcFile: './KL/muscleRendering.kl',
             entryFunctionName: 'setMuscleCoreDisplayVertexCount',
             parameterLayout: [
-              'simulationdgnode.envelopedXfos',
+              'simulationdgnode.simulatedXfos',
               'self.newCount'
             ]
           }),
@@ -199,7 +210,7 @@ FABRIC.SceneGraph.registerNodeType('Muscle', {
             parameterLayout: [
               'self.positions[]',
               'self.vertexColors[]',
-              'simulationdgnode.envelopedXfos',
+              'simulationdgnode.simulatedXfos',
               'initializationdgnode.flexibilityWeights',
             ]
           })
@@ -207,9 +218,10 @@ FABRIC.SceneGraph.registerNodeType('Muscle', {
         
         scene.constructNode('Instance', {
           geometryNode: coreDisplayPointsNode.pub,
-          materialNode: scene.constructNode('FlatMaterial', {
+          materialNode: scene.constructNode('VertexColorMaterial', {
             prototypeMaterialType:'PointMaterial',
-            color: FABRIC.RT.rgb(1.0, 0.0, 0.0)
+            color: FABRIC.RT.rgb(1.0, 0.0, 0.0),
+            pointSize: 6
           }).pub
         });
         

@@ -48,20 +48,20 @@
     <script type="text/javascript">
     
 $(document).ready(function() {
-  
-    $('#play').button({
-      text: true,
-      icons: {
-        primary: 'ui-icon-play'
-      }
-    });
 
-    $('#step').button({
-      text: true,
-      icons: {
-        primary: 'ui-icon-step'
-      }
-    });
+  $('#play').button({
+    text: true,
+    icons: {
+      primary: 'ui-icon-play'
+    }
+  });
+
+  $('#step').button({
+    text: true,
+    icons: {
+      primary: 'ui-icon-step'
+    }
+  });
 
   var numAgents, gridSize, cameraPos;
   var sceneSize = 'huge';
@@ -273,13 +273,13 @@ $(document).ready(function() {
             </div><!--content-->
           </div><!--box-->
 
-                <div class="box">
-                  <h2>CONTROLS</h2>
-                  <div class="content">
-                    <button id="play" style="margin-top:10px;">Play</button>
-                    <button id="step" style="margin-top:10px;">Step</button>
-                  </div><!--content-->
-                </div><!--box-->
+          <div class="box">
+            <h2>CONTROLS</h2>
+            <div class="content">
+              <button id="play" style="margin-top:10px;">Play</button>
+              <button id="step" style="margin-top:10px;">Step</button>
+            </div><!--content-->
+          </div><!--box-->
         
           <div class="box">
             <h2 id="agents">CPU FLOCKING</h2>

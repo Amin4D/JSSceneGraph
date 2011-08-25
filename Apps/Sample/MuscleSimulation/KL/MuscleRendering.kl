@@ -18,6 +18,7 @@ operator fitMuscleCoreDisplayToMuscleXfos(
   for( Integer i=0; i<xfos.size(); i++){
     positions[i] = xfos[i].tr;
     vertexColors[i].r = weights[i];
+    vertexColors[i].g = 1.0;
   }
 }
 

@@ -2,27 +2,26 @@
 
 operator setMuscleCoreDisplayVertexCount(
   io Xfo segmentXfos[],
-  io Size muscleCount,
   io Size newCount
   ){
-  newCount = muscleCount;//segmentXfos.size();
+  newCount = segmentXfos.size();
 }
 
 
 operator fitMuscleCoreDisplayToMuscleXfos(
-  io Xfo segmentXfos[],
   io Vec3 positions[],
   io Color vertexColors[],
+  io Xfo xfos[],
   io Scalar weights[]
   ){
-  positions.resize(segmentXfos.size());
-  for( Integer i=0; i<segmentXfos.size(); i++){
-    positions[i] = segmentXfos[i].tr;
+  positions.resize(xfos.size());
+  for( Integer i=0; i<xfos.size(); i++){
+    positions[i] = xfos[i].tr;
     vertexColors[i].r = weights[i];
   }
 }
 
-
+/*
 operator genIndicesVBO(
   io Vec3 bufferData[][],
   io OGLBuffer buffer,
@@ -64,3 +63,4 @@ operator genAndBindPositionsVBO(
     buffer.bindBuffer(location);
   }
 }
+*/

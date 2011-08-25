@@ -42,7 +42,9 @@ FABRIC.SceneGraph.registerNodeType('Muscle', {
       length: 10,
       muscleSystem: undefined,
       characterRig: undefined,
-      displayCore: true
+      displayCore: true,
+      xfo: FABRIC.RT.xfo(),
+      pointEnvelopeIds: FABRIC.RT.vec2(0,1),
       });
     
     var muscle = scene.constructNode('SceneGraphNode', options ),
@@ -58,32 +60,32 @@ FABRIC.SceneGraph.registerNodeType('Muscle', {
     simulationdgnode.addDependency( scene.getGlobalsNode(), "globals");
     
     
-    var segmentXfos = [],
+    var pointXfos = [],
       segmentLengths = [],
-      pointEnvelopeIds = FABRIC.RT.vec2(-1,-1),
       pointEnvelopWeights = [],
       segmentCompressionFactors = [],
       flexibilityWeights = [],
       pointPositions = [];
       
     for(i = 0; i < options.numSegments; i++){
-      segmentXfos.push(FABRIC.RT.xfo( {
-        tr: FABRIC.RT.vec3( ((i/options.numSegments) - 0.5) * options.length, 0,0)
+      pointXfos.push(FABRIC.RT.xfo( {
+        tr: FABRIC.RT.vec3( ((i/(options.numSegments-1)) - 0.5) * options.length, 0,0)
       }));
       
-      pointEnvelopWeights.push(FABRIC.RT.vec2(i/options.numSegments, 1.0 - (i/options.numSegments)));
+      pointEnvelopWeights.push(FABRIC.RT.vec2(i/(options.numSegments-1), 1.0 - (i/(options.numSegments-1))));
       flexibilityWeights.push(0.0);
-      pointPositions.push(segmentXfos[i].tr);
+      pointPositions.push(pointXfos[i].tr);
       if(i>0){
-        segmentLengths.push(segmentXfos[i].tr.dist(segmentXfos[i-1]));
+        segmentLengths.push(pointXfos[i].tr.dist(pointXfos[i-1]));
         segmentCompressionFactors.push(1.0);
       }
     }
     
-    initializationdgnode.addMember('initialXfos', 'Xfo[]', segmentXfos); / * Xfos deformed by the skeleton * /
+    initializationdgnode.addMember('initialXfos', 'Xfo[]', pointXfos); / * Xfos deformed by the skeleton * /
+    initializationdgnode.addMember('baseXfo', 'Xfo', options.xfo); / * Xfos deformed by the skeleton * /
     initializationdgnode.addMember('segmentLengths', 'Scalar[]', segmentLengths);
       
-    initializationdgnode.addMember('pointEnvelopeIds', 'Vec2', pointEnvelopeIds);
+    initializationdgnode.addMember('pointEnvelopeIds', 'Vec2', options.pointEnvelopeIds);
     initializationdgnode.addMember('pointEnvelopWeights', 'Vec2[]', pointEnvelopWeights);
     initializationdgnode.addMember('flexibilityWeights', 'Scalar[]', flexibilityWeights);
         
@@ -117,8 +119,8 @@ FABRIC.SceneGraph.registerNodeType('Muscle', {
     /////////////////////////////////////////////////////////////////////
     // Configure the node that will be used to calculate the simulation.
     simulationdgnode.addMember('initialized', 'Boolean', false);
-    simulationdgnode.addMember('envelopedXfos', 'Xfo[]', segmentXfos); /* Xfos deformed by the skeleton */
-    simulationdgnode.addMember('simulatedXfos', 'Xfo[]', segmentXfos); /* Xfos simulated and used to drive the skin deformation */
+    simulationdgnode.addMember('envelopedXfos', 'Xfo[]', pointXfos); /* Xfos deformed by the skeleton */
+    simulationdgnode.addMember('simulatedXfos', 'Xfo[]', pointXfos); /* Xfos simulated and used to drive the skin deformation */
     simulationdgnode.addMember('segmentCompressionFactors', 'Scalar[]', segmentCompressionFactors);
     
     simulationdgnode.addMember('pointPositionsPrevUpdate', 'Vec3[]', pointPositions);
@@ -135,6 +137,7 @@ FABRIC.SceneGraph.registerNodeType('Muscle', {
         },
         parameterLayout: [
           "initializationdgnode.initialXfos",
+          "initializationdgnode.baseXfo",
           "initializationdgnode.segmentLengths",
           "initializationdgnode.pointEnvelopeIds",
           "initializationdgnode.pointEnvelopWeights",
@@ -158,24 +161,62 @@ FABRIC.SceneGraph.registerNodeType('Muscle', {
       }));
     
     muscle.getLength = function(){
-      var segmentXfos = initializationdgnode.getData('initialXfos');
-      return segmentXfos[0].tr.dist(segmentXfos[segmentXfos.length-1].tr);
+      var pointXfos = initializationdgnode.getData('initialXfos');
+      return pointXfos[0].tr.dist(pointXfos[pointXfos.length-1].tr);
     }
     muscle.setLength = function(length){
-      var segmentXfos = initializationdgnode.getData('initialXfos');
+      var pointXfos = initializationdgnode.getData('initialXfos');
       // Scale all the Xfos away from the center of the muscle.
-      var scale = length / segmentXfos[0].tr.dist(segmentXfos[segmentXfos.length-1].tr);
-      var center = segmentXfos[0].tr.lerp(segmentXfos[segmentXfos.length-1].tr, 0.5);
+      var scale = length / pointXfos[0].tr.dist(pointXfos[pointXfos.length-1].tr);
+      var center = pointXfos[0].tr.lerp(pointXfos[pointXfos.length-1].tr, 0.5);
       for(i = 0; i < options.numSegments; i++){
-        segmentXfos[i].tr = segmentXfos[i].tr.subtract(center).scale(scale).add(center);
+        pointXfos[i].tr = pointXfos[i].tr.subtract(center).scale(scale).add(center);
       }
-      initializationdgnode.setData('initialXfos', 0, segmentXfos);
+      initializationdgnode.setData('initialXfos', 0, pointXfos);
     }
     
-    var coreDisplayLinesNode;
+    var coreDisplayLinesNode, coreDisplayPointsNode;
     muscle.displayCore = function(){
-      if(!coreDisplayLinesNode){
+      if(!coreDisplayPointsNode){
+        coreDisplayPointsNode = scene.constructNode('Points', { dynamicMembers: ['positions'] });
+        coreDisplayPointsNode.pub.addVertexAttributeValue('vertexColors', 'Color', { genVBO:true, dynamic:true } );
+        coreDisplayPointsNode.getAttributesDGNode().addDependency(initializationdgnode, 'initializationdgnode');
+        coreDisplayPointsNode.getAttributesDGNode().addDependency(simulationdgnode, 'simulationdgnode');
+        coreDisplayPointsNode.setGeneratorOps([
+          scene.constructOperator({
+            operatorName: 'setMuscleCoreDisplayVertexCount',
+            srcFile: './KL/muscleRendering.kl',
+            entryFunctionName: 'setMuscleCoreDisplayVertexCount',
+            parameterLayout: [
+              'simulationdgnode.envelopedXfos',
+              'self.newCount'
+            ]
+          }),
+          scene.constructOperator({
+            operatorName: 'fitMuscleCoreDisplayToMuscleXfos',
+            srcFile: './KL/muscleRendering.kl',
+            entryFunctionName: 'fitMuscleCoreDisplayToMuscleXfos',
+            parameterLayout: [
+              'self.positions[]',
+              'self.vertexColors[]',
+              'simulationdgnode.envelopedXfos',
+              'initializationdgnode.flexibilityWeights',
+            ]
+          })
+        ]);
+        
+        scene.constructNode('Instance', {
+          geometryNode: coreDisplayPointsNode.pub,
+          materialNode: scene.constructNode('FlatMaterial', {
+            prototypeMaterialType:'PointMaterial',
+            color: FABRIC.RT.rgb(1.0, 0.0, 0.0)
+          }).pub
+        });
+        
+      }
       
+      /*
+      if(!coreDisplayLinesNode){
         coreDisplayLinesNode = scene.constructNode('Geometry');
         
         coreDisplayLinesNode.pub.addUniformValue('indices', 'Integer[]');
@@ -188,7 +229,7 @@ FABRIC.SceneGraph.registerNodeType('Muscle', {
             srcFile: './KL/muscleRendering.kl',
             entryFunctionName: 'setMuscleCoreVertexCount',
             parameterLayout: [
-              'muscles.segmentXfos[]',
+              'muscles.pointXfos[]',
               'self.indices',
               'self.newCount'
             ]
@@ -198,7 +239,7 @@ FABRIC.SceneGraph.registerNodeType('Muscle', {
             srcFile: './KL/muscleRendering.kl',
             entryFunctionName: 'fitMuscleCoreToMuscleXfos',
             parameterLayout: [
-              'muscles.segmentXfos',
+              'muscles.pointXfos',
               'self.positions[]'
             ]
           })
@@ -273,6 +314,7 @@ FABRIC.SceneGraph.registerNodeType('Muscle', {
           }));
         }
       }
+      */
     }
     if(options.displayCore){
       muscle.displayCore();

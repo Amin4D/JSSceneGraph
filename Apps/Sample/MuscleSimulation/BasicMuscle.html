@@ -27,6 +27,7 @@
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/RGBA.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Color.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Euler.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Ray.js" charset="utf-8"></script>
     
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Bone.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/RT/BezierKeyframe.js" charset="utf-8"></script>
@@ -43,6 +44,7 @@
     <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Manipulation.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Kinematics.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Characters.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.CharacterSolvers.js" charset="utf-8"></script>
     <script type="text/javascript" src="./JS/Muscle.js" charset="utf-8"></script>
     
     <script type="text/javascript">
@@ -52,7 +54,8 @@ $(document).ready(function() {
   var scene = FABRIC.SceneGraph.createScene();
   var viewport = scene.constructNode('Viewport', {
     windowElement: document.getElementById('FabricContainer'),
-    backgroundColor: FABRIC.RT.rgb(0.0, 0.05, 0.15)
+    backgroundColor: FABRIC.RT.rgb(0.0, 0.05, 0.15),
+    enableRaycasting: true
   });
 
   // Create a camera to draw the scene from
@@ -81,11 +84,11 @@ $(document).ready(function() {
   var skeletonNode = scene.constructNode('CharacterSkeleton');
 
   skeletonNode.addBone({name: 'anchorLeft', referencePose: FABRIC.RT.xfo({
-      tr: FABRIC.RT.vec3(-5, 5, 0)
+      tr: FABRIC.RT.vec3(5, 5, 0)
     }) });
   
   skeletonNode.addBone({name: 'anchorRight', referencePose: FABRIC.RT.xfo({
-      tr: FABRIC.RT.vec3(5, 5, 0)
+      tr: FABRIC.RT.vec3(-5, 5, 0)
     }) });
 
   // create the rig
@@ -93,19 +96,35 @@ $(document).ready(function() {
       skeletonNode: skeletonNode,
       computeInverseXfos: true
     });
+      
+  rigNode.addSolver('AnchorLeftSolver', 'RootBoneSolver', {
+    bones: {
+      bone: 'anchorLeft'
+    },
+    manipulatorSize: 2
+    });
+  rigNode.addSolver('AnchorRightSolver', 'RootBoneSolver', {
+    bones: {
+      bone: 'anchorRight'
+    },
+    manipulatorSize: 2
+    });
+
   scene.constructNode('CharacterSkeletonDebug', {
       characterRigNode: rigNode,
       color: FABRIC.RT.rgba(1.0, 1.0, 1.0, 1.0),
       boneradius: 0.25
     });
-  
 
   var muscleSystem = scene.constructNode('MuscleSystem', {
       characterRig: rigNode
     });
 
-  var muscle = muscleSystem.addMuscle( { } );
-
+  var muscle = muscleSystem.addMuscle( {
+    xfo: FABRIC.RT.xfo( {
+        tr: FABRIC.RT.vec3( 0, 5, 0)
+      })
+    } );
 
   $('#loadingDialog').dialog({
     modal: true

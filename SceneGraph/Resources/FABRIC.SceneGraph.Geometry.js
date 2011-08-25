@@ -61,13 +61,13 @@ FABRIC.SceneGraph.registerNodeType('Geometry', {
         geometryNode.addMemberInterface(uniformsdgnode, name, true);
       }
     };
-    geometryNode.pub.addVertexAttributeValue = function(name, type, options) {
+    geometryNode.pub.addVertexAttributeValue = function(name, type, attributeoptions) {
       attributesdgnode.addMember(name, type, options ? options.defaultValue : undefined);
-      if(options){
-        if (options.dynamic === true) {
+      if(attributeoptions){
+        if (attributeoptions.dynamic === true) {
           options.dynamicMembers.push(name);
         }
-        if(options.genVBO){
+        if(attributeoptions.genVBO){
           shaderAttributes.push(name);
         }
       }

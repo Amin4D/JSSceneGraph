@@ -2,7 +2,77 @@
 
 #include '../../../SceneGraph/Resources/KL/evaluateKeyframeAnimationTrack.kl'
 
+function calcPolarElipse(
+  in Scalar theta,
+  in Scalar semiMajor,
+  in Scalar semiMinor
+){
+  Scalar bcostheta = semiMinor*cos(theta);
+  Scalar asintheta = semiMajor*sin(theta);
+  return (semiMajior*semiMinor)/sqrt((bcostheta*bcostheta)+(asintheta*asintheta));
+}
 
+/*
+function Vec3 evalPiecewiseBSpline( 
+  in Xfo xfos[],
+  io Scalar u,
+  io Integer i
+){
+  Vec3 p;
+  u *= Scalar(xfos.size() - 1);
+  if( u < Scalar(xfos.size() - 1) ){
+    i = Integer(floor( u ));
+    u = u - Scalar(i);
+  }
+  else{
+    i = xfos.size() - 2;
+    u = 1.0;
+  }
+
+  if( i == 0 ){
+    p = controlPoints[ i ].tr + ( xfos[ i ].tr - xfos[ i + 1 ].tr );
+    return EvalBSpline( p, xfos[ i ].tr, xfos[ i + 1 ].tr, xfos[ i + 2 ].tr, u );
+  }
+  else if( i == ( numControlPoints - 2 ) ){
+    p = controlPoints[ i + 1 ].tr + ( xfos[ i + 1 ].tr - xfos[ i ].tr );
+    return EvalBSpline( xfos[ i - 1 ].tr, xfos[ i ].tr, xfos[ i + 1 ].tr, p, u );
+  }
+  else{
+    return EvalBSpline( xfos[ i - 1 ].tr, xfos[ i ].tr, xfos[ i + 1 ].tr, xfos[ i + 2 ].tr, u );
+  }
+}
+
+
+// This function gets used to generate the initial rays that are fired at the muscle meshes.
+function Ray muscleUVtoRay(
+  in Scalar u,
+  in Scalar v,
+  in Xfo xfos[] )
+{
+  Mat44 mat;
+  Quat sampleframe;
+  Integer i;
+  Scalar angle, curvePieceU;
+  Ray outRay;
+
+  Scalar PI = 3.141592653589793238462643383279;
+  
+  angle = v * PI * 2.0;	
+  outRay.direction.set( 0.0, -cos( angle ), -sin( angle ) );
+
+  outRay.start = evalPiecewiseBSpline( xfos, u, i );
+  curvePieceU = ( u * Scalar( xfos.size() - 1 ) ) - Scalar(curvePiece);
+
+  // Due to the face that nlerp exibits a slight ease in and ease out on the rotations
+  // I think it is a better slution to interpollating segments. 
+  // The one exception would be several segments in arow that were evenly twisted. 
+  sampleframe =  xfos[ i ].ori.lerp( xfos[ i + 1 ].ori, u );
+
+  outRay.direction = sampleframe.rotateVector( outRay.direction );
+  return outRay;
+}
+
+*/
 
 operator generateDisplacementMap(
   io Size displacementMapResolution,
@@ -16,26 +86,52 @@ operator generateDisplacementMap(
   
   /*
   io Xfo initialXfos[],
-  io Xfo baseMuscleXfo
+  io Xfo baseMuscleXfo,
+  
+  io TriangleMesh boundingMesh
   */
 ) {
   if (regenerate) {
     displacementMap.resize(displacementMapResolution * displacementMapResolution);
     
     Scalar u, v;
-    Scalar val0, val1;
+    Scalar val0, val1, val2, val3, val;
+    Integer keyIndex;
 
     var Size idx = 0;
     for (var Integer y = 0; y < displacementMapResolution; y++) {
       u = Scalar(y) / Scalar(displacementMapResolution);
+      
+      keyIndex = 0;
+      val0 = evaluateKeyframeAnimationTrack(quadrantCurve0, u, keyIndex);
+      keyIndex = 0;
+      val1 = evaluateKeyframeAnimationTrack(quadrantCurve1, u, keyIndex);
+      keyIndex = 0;
+      val2 = evaluateKeyframeAnimationTrack(quadrantCurve2, u, keyIndex);
+      keyIndex = 0;
+      val3 = evaluateKeyframeAnimationTrack(quadrantCurve3, u, keyIndex);
+      
+        
       for (var Integer x = 0; x < displacementMapResolution; x++) {
         v = Scalar(x) / Scalar(displacementMapResolution);
-      
-        Integer keyIndex = 0;
-        val0 = evaluateKeyframeAnimationTrack(quadrantCurve0, u, keyIndex);
-        val1 = evaluateKeyframeAnimationTrack(quadrantCurve0, u, keyIndex);
-  
-        displacementMap[idx] = val0 + ((val1 - val0)*v);
+        Integer quadrant = Integer(floor(u * 4.0));
+        switch(quadrant){
+          case 0: val = calcPolarElipse( v, val0, val1 ); break;
+          case 1: val = calcPolarElipse( v, val1, val2 ); break;
+          case 2: val = calcPolarElipse( v, val2, val3 ); break;
+          case 3: val = calcPolarElipse( v, val3, val0 ); break;
+        }
+        displacementMap[idx] = val;
+        /*
+        if(false){
+          Ray ray = muscleUVtoRay( u, v, initialXfos );
+          // Fire the ray into the mesh, and get the distance to the mesh surface
+          RayIntersection intersection;
+          if( boundingMesh.intersectRay( ray, intersection ) ){
+            displacementMap[idx] = intersection.distance;
+          }
+        }
+        */
         idx++;
       }
     }
@@ -83,3 +179,345 @@ operator generateSystemDisplacementMap(
     glBindTexture(GL_TEXTURE_2D, bufferID);
   }
 }
+
+
+
+/*******************************************************************************
+* FindQuadraticRoots
+*
+*      return(2): 2 real roots
+*      return(1): 1 real, Scalar root
+*      return(0): 2 complex roots
+*
+*  The imaginary component may be NULL if not desired.
+*******************************************************************************/
+
+function Scalar a(in Scalar coeff[3]){ return coeff[2]; }    /* Quadratic coefficient */
+function Scalar b(in Scalar coeff[3]){ return coeff[1]; }    /* Linear coefficient */
+function Scalar c(in Scalar coeff[3]){ return coeff[0]; }    /* Constant coefficient */
+
+function Integer findQuadraticRoots(
+  Scalar coeff[3],
+  io Scalar re[2]
+){
+  if( abs( a ) < 0.000001 ){
+    // If the quadratic coefficient(a) is 0.0 then this equation becomes linear
+    re[0] = -c/b;
+    return 1;
+  }
+
+  Scalar d = b * b - 4.0 * a * c;
+  
+  /* Two real, distinct roots */
+  if (d > 0.0) {
+    Scalar q;
+    d = sqrt(d);
+    q = (-b + ((b < 0) ? -d : d)) * 0.5;
+    re[0] = q / a;
+    re[1] = c / q;
+    return (2);
+  }
+  
+  /* One real Scalar root */
+  else if (d == 0.0) {
+    re[0] = re[1] = -b / (2.0 * a);
+    return (1);
+  }
+  
+  /* Two complex conjugate roots */
+  else {                                      /* d < 0 */
+    re[0] = re[1] = -b / (2.0 * a);
+ //   if (im != NULL) {
+ //       im[0] = d / (2 * a);
+ //       im[1] = -im[0];
+ //   }
+    return (0);
+  }
+}
+
+
+
+// http://www.worldserver.com/turk/opensource/FindCubicRoots.c.txt
+
+/* Copyright (C) 1997-2001 Ken Turkowski. <turk@computer.org>
+*
+* All rights reserved.
+*
+* Warranty Information
+*  Even though I have reviewed this software, I make no warranty
+*  or representation, either express or implied, with respect to this
+*  software, its quality, accuracy, merchantability, or fitness for a
+*  particular purpose.  As a result, this software is provided "as is,"
+*  and you, its user, are assuming the entire risk as to its quality
+*  and accuracy.
+*
+* This code may be used and freely distributed as long as it includes
+* this copyright notice and the above warranty information.
+*/
+
+/*******************************************************************************
+* FindCubicRoots
+*
+*  Solve:
+*      coeff[3] * x^3 + coeff[2] * x^2 + coeff[1] * x + coeff[0] = 0
+*
+*  returns:
+*      3 - 3 real roots
+*      1 - 1 real root (2 complex conjugate)
+*******************************************************************************/
+
+function Integer findCubicRoots(
+  in Scalar coeff[4],
+  io Scalar x[3]
+){
+  if( abs( coeff[3] ) < 0.000001 ){
+    // If the cubic coefficient(A) is 0.0 then this equation becomes a quadratic
+    Scalar quadraticoeff[3];
+    quadraticoeff[0] = coeff[0];
+    quadraticoeff[1] = coeff[1];
+    quadraticoeff[2] = coeff[2];
+    Scalar quadratiroots[2];
+    Integer result = findQuadraticRoots( quadraticoeff, quadratiroots );
+    x[0] = quadratiroots[0];
+    x[1] = quadratiroots[1];
+    return result;
+  }
+
+  Scalar PI = 3.14159265358979323846;
+  Scalar a1 = coeff[2] / coeff[3];
+  Scalar a2 = coeff[1] / coeff[3];
+  Scalar a3 = coeff[0] / coeff[3];
+  
+  Scalar Q = (a1 * a1 - 3.0 * a2) / 9.0;
+  Scalar R = (2.0 * a1 * a1 * a1 - 9.0 * a1 * a2 + 27.0 * a3) / 54.0;
+  Scalar Qcubed = Q * Q * Q;
+  Scalar d = Qcubed - R * R;
+  
+  /* Three real roots */
+  if (d >= 0) {
+    Scalar theta = acos( R / sqrt( Qcubed ));
+    Scalar sqrtQ = sqrt( Q );
+    x[0] =  -2 * sqrtQ * cos( theta               / 3.0) - a1 / 3.0;
+    x[1] =  -2 * sqrtQ * cos((theta + 2.0 * PI) / 3.0) - a1 / 3.0;
+    x[2] =  -2 * sqrtQ * cos((theta + 4.0 * PI) / 3.0) - a1 / 3.0;
+    return (3);
+  }
+
+  /* One real root */
+  else {
+    Scalar e = pow( sqrt( -d ) + abs( R ), 1.0 / 3.0);
+    if (R > 0.0){
+      e = -e;
+    }
+    x[0] = Scalar( (e + Q / e) - a1 / 3.0 );
+    return 1;
+  }
+}
+
+
+///////////////////////////////////////////////////////////////////////////////////////
+// Coplanarity test for 4 moving points. 
+// These moving points could either be a point and a triangle, or 2 edges. 
+// The returned fraction tells us if they will be coplanar within the next time step
+// http://wscg.zcu.cz/wscg2007/Papers_2007/journal/D11-full.pdf
+//
+// a3 = v21 · v31 × v41
+// a2 = x21 · v31 × v41 ? v41 · x31 × v21 ? v21 · x41 × v31
+// a1 = v41 · x21 × x31 ? x21 · x41 × v31 ? x41 · x31 × v21
+// a0 = x41 · x21 × x31 (2)
+//
+// P(t) = a3·t^3 + a2·t^2 + a1·t + a0
+
+/*
+
+
+function Boolean testCoplanarity(
+  in Vec3 x1,
+  in Vec3 x2,
+  in Vec3 x3,
+  in Vec3 x4,
+  in Vec3 v1,
+  in Vec3 v2,
+  in Vec3 v3,
+  in Vec3 v4,
+  io Scalar outFraction
+){
+  Vec3 x21, x31, x41, v21, v31, v41;
+  
+  // due to raounding error, sometimtes wee need tobe a bit forgiving on the root finder. 
+  Scalar fuzzyness = 0.0001;
+
+  x21 =  x2 - x1;
+  x31 =  x3 - x1;
+  x41 =  x4 - x1;
+
+  v21 =  v2 - v1;
+  v31 =  v3 - v1;
+  v41 =  v4 - v1;
+
+  //	(x21+ t · v21 )×(x31+t · v31) · (x41+t · v41) = 0
+  Scalar coeff[4];
+  Vec3 v31Xv41, x31Xv21, x41Xv31, x21Xx31;
+
+  v31Xv41 = v31.cross(v41);
+  x31Xv21 = x31.cross(v21);
+  x41Xv31 = x41.cross(v31);
+  x21Xx31 = x21.cross(x31);
+
+  coeff[3] = v21.dot( v31Xv41 );
+  coeff[2] = x21.dot( v31Xv41 ) - v41.dot( x31Xv21 ) - v21.dot( x41Xv31 );
+  coeff[1] = v41.dot( x21Xx31 ) - x21.dot( x41Xv31 ) - x41.dot( x31Xv21 );
+  coeff[0] = x41.dot( x21Xx31 );	
+  
+  // The points will become coplanar in the next timestep if we find at least one
+  // real root and it is between 0 and 1.
+  Scalar roots[3];
+  Integer numRoots = findCubicRoots( coeff, roots );
+  if( numRoots > 0 ){
+    if( roots[0] > (0.0 - fuzzyness) && roots[0] < (1.0 + fuzzyness) ){
+      outFraction = clamp(roots[0], 0.0, 1.0 );
+      return true;
+    }
+    if( numRoots > 1 && roots[1] >= (0.0 - fuzzyness) && roots[1] < (1.0 + fuzzyness) ){
+      outFraction = clamp(roots[1], 0.0, 1.0 ); //(Scalar)roots[1];
+      return true; 
+    }
+    if( numRoots > 2 && roots[2] >= (0.0 - fuzzyness) && roots[2] < (1.0 + fuzzyness) ){
+      outFraction = clamp(roots[2], 0.0, 1.0 ); ;//(Scalar)roots[2];
+      return true;
+    }
+  }
+  return false;
+}
+
+
+function Integer positionToMuscleUV(
+  in Vec3 pos,
+  in Xfo xfos[],
+  io Vec2 outUV,
+  io Vec3 outCorePos,
+  io Vec3 outCoreDir
+){
+  Vec3 p1, p2, p3, p4, p5, p6, v1, v2, v3;
+  Vec3 yaxis, zaxis, yaxisStart, zaxisStart, yaxisEnd, zaxisEnd;
+
+  Scalar PI = 3.14159265358979323846;
+  Scalar TWO_PI = PI * 2.0;
+  
+  // Loop through the line segments and do a sweep test using
+  // manufactured traingle. The collision fraction is our segment u.
+  // The curvePoints should be the evaluates points on the curve.
+
+  // TODO: Determine if we ever need to store the 'CurvePoints'.
+  // the only time they are actually used is in this function to make the initial 
+  // sweep just a little bit more accurate. Durring Muscle to Muscle collisions we also use them
+  // but maybe we could just evaluate them on demand. Less data == simpler
+
+  Scalar dist;
+  Scalar shortestdist = 99999.9;
+
+  for(  i = 0; i < ( numControlPoints - 1 ); i++ )
+  {
+    yaxisStart = controlFrames[ i ].getYaxis( );
+    zaxisStart = controlFrames[ i ].getZaxis( );
+
+    yaxisEnd = controlFrames[ i + 1 ].getYaxis( );
+    zaxisEnd = controlFrames[ i + 1 ].getZaxis( );
+
+    p1 = controlPoints[ i ];
+    p2.setAdd( controlPoints[ i ], yaxisStart );
+    p3.setAdd( controlPoints[ i ], zaxisStart );	
+
+    p4 = controlPoints[ i + 1 ];
+    p5.setAdd( controlPoints[ i + 1 ], yaxisEnd );
+    p6.setAdd( controlPoints[ i + 1 ], zaxisEnd );
+
+    v1 = p4 - p1;
+    v2 = p5 - p2;
+    v3 = p6 - p3;
+
+    Scalar outFraction;
+    if( testCoplanarity( pos, p1, p2, p3, Vec3(0,0,0), v1, v2, v3, outFraction ) )
+    {
+      ///////////////////////////////////////////
+      // To calculate the v value, we need to reference the linear segments only
+      outCorePos.setLerp( p1, p4, outFraction );
+      outCoreDir =  pos - outCorePos;
+
+      dist = outCoreDir.length();
+      if( dist > shortestdist )
+      {
+        // Go through all the segments, and find the closest one
+        continue;
+      }
+
+      outCoreDir /= dist;
+      shortestdist = dist;
+
+      // Pull out the -Y vector. This is the vector that goes straight down on the muscle
+      yaxis = yaxisStart.lerp( yaxisEnd, outFraction );
+      yaxis = -yaxis;
+      yaxis.normalize();
+
+      zaxis = zaxisStart.lerp( zaxisEnd, outFraction );
+
+      Scalar angle = outCoreDir.getAngleBetween( yaxis );
+      if( outCoreDir.dot( zaxis ) > 0.0 ){
+        angle = TWO_PI - angle;
+      }
+      angle /= TWO_PI;
+      
+      outUV.x = ( Scalar(i) + outFraction ) / Scalar( numControlPoints - 1 );
+      outUV.y = angle;
+    }
+  }
+
+  return (shortestdist < 99999.9);
+}
+
+
+function Boolean positionToMuscleUVW(
+  in Vec3 pos,
+  in Xfo xfos[],
+  io Vec3 outUVW,
+){
+  Vec3 corePos, coreDir;
+  Vec2 outUV;
+
+  if( positionToMuscleUV( pos, xfos, outUV, corePos, coreDir ) ){
+    // Now evaluate the spline to get the actual position of the muscle core
+    Integer i;
+    corePos = evalPiecewiseBSpline( xfos, outUVW[0], i );
+    outUVW.x = outUV.x;
+    outUVW.y = outUV.y;
+    outUVW.z = ( corePos - pos ).length();
+    return true;
+  }
+  else
+  {
+    coreDir = pos - xfos[ 0 ];
+    if( coreDir.dot( xfos[ 0 ].ori.getXaxis() ) < 0.0 ){
+      Quat endFrame = xfos[ 0 ];
+
+      outUVW.x = coreDir.dot( endFrame.getXaxis() );
+      outUVW.y = coreDir.dot( endFrame.getYaxis() );
+      outUVW.z = coreDir.dot( endFrame.getZaxis() );
+
+      return true;
+    }
+
+    coreDir = pos - xfos[ xfos.size()-1 ].tr;
+    if( coreDir.dot( xfos[ xfos.size()-1 ].getXaxis( ) ) > 0.0 ){			
+      Quat endFrame = xfos[ xfos.size()-1 ];
+
+      outUVW.x = 1.0 + ( coreDir.dot( endFrame.getXaxis( ) )  );
+      outUVW.y = coreDir.dot( endFrame.getYaxis() );
+      outUVW.z = coreDir.dot( endFrame.getZaxis() );
+      return true;
+    }
+  }
+
+  return false;
+}
+
+*/

@@ -247,7 +247,7 @@ FABRIC.SceneGraph.registerNodeType('Muscle', {
     initializationdgnode.addMember('quadrantCurve2', 'BezierKeyframe[]', quadrantCurve);
     initializationdgnode.addMember('quadrantCurve3', 'BezierKeyframe[]', quadrantCurve);
     initializationdgnode.addMember('regenerateDisplacementMap', 'Boolean', true);
-    
+    /*
     initializationdgnode.bindings.append(scene.constructOperator({
         operatorName: 'generateDisplacementMap',
         srcFile: './KL/muscleVolume.kl',
@@ -273,11 +273,10 @@ FABRIC.SceneGraph.registerNodeType('Muscle', {
           "characterMeshAttributes.positions[]",
           "characterMeshAttributes.normals[]",
           "characterMeshUniforms.indices[]",
-          */
-        ],
-        async: false
+          * /
+        ]
       }));
-    
+    */
     ////////////////////////////////////////////////////////////////////////////
     // Configure the node that will be used to calculate the simulation.
     simulationdgnode.addMember('initialized', 'Boolean', false);
@@ -326,8 +325,7 @@ FABRIC.SceneGraph.registerNodeType('Muscle', {
           
           "globals.timestep",
           "characterRig.skinningXfos"
-        ],
-        async: false
+        ]
       }));
     
     muscle.getLength = function(){

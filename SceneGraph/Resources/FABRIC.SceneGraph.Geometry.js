@@ -824,6 +824,7 @@ FABRIC.SceneGraph.registerNodeType('Instance', {
       if (transformNode) {
         bindToSceneGraph();
       }
+      return instanceNode.pub;
     };
     instanceNode.pub.getTransformNode = function() {
       return transformNode.pub;
@@ -843,6 +844,7 @@ FABRIC.SceneGraph.registerNodeType('Instance', {
       if (geometryNode) {
         bindToSceneGraph();
       }
+      return instanceNode.pub;
     };
     instanceNode.pub.getTransformNodeMember = function() {
       return transformNodeMember;
@@ -861,6 +863,7 @@ FABRIC.SceneGraph.registerNodeType('Instance', {
       geometryNode.checkVBORequirements(node.getVBORequirements());
       node.getRedrawEventHandler().appendChildEventHandler(redrawEventHandler);
       materialNodes.push(node);
+      return instanceNode.pub;
     };
     instanceNode.pub.removeMaterialNode = function(node) {
       node = scene.getPrivateInterface(node);
@@ -870,6 +873,7 @@ FABRIC.SceneGraph.registerNodeType('Instance', {
       }
       materialNodes[index].getRedrawEventHandler().removeChildEventHandler(redrawEventHandler);
       materialNodes.splice(index, 1);
+      return instanceNode.pub;
     };
 
     // custom getter and setter for castShadows

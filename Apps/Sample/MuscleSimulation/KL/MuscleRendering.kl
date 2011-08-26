@@ -30,10 +30,16 @@ operator setMuscleCoreLinesDisplayVertexCount(
 }
 
 operator generateMuscleCoreLine(
-  io Vec3 positions[]
+  io Vec3 positions[],
+  io Integer indices[]
   ){
+  indices.resize((positions.size() *2)-2);
   for( Integer i=0; i<positions.size(); i++){
     positions[i].x = Scalar(i)/Scalar(positions.size()-1);
+    if(i<(positions.size()-1)){
+      indices[(i * 2)] = i;
+      indices[(i * 2)+1] = i+1;
+    }
   }
 }
 

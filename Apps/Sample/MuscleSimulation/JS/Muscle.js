@@ -51,21 +51,23 @@ FABRIC.SceneGraph.registerNodeType('MuscleSystem', {
         srcFile: './KL/muscleRendering.kl',
         entryFunctionName: 'generateMuscleCoreLine',
         parameterLayout: [
-          'self.positions[]'
+          'self.positions[]',
+          'uniforms.indices'
         ]
       })
     ]);
-    var muscleCoreCurveCVsID = FABRIC.SceneGraph.getShaderParamID('muscleCoreCurveCVs');
+    var corePositionsID = FABRIC.SceneGraph.getShaderParamID('corePositions');
     var redrawEventHandler = coreDisplayLinesNode.getRedrawEventHandler();
     redrawEventHandler.addScope('muscles', muscles.getSimulationDGNode());
     redrawEventHandler.preDescendBindings.append(scene.constructOperator({
-        operatorName: 'loadMuscleCoreCurveCVs',
+        operatorName: 'loadMuscleCorePositions',
         srcCode: '\n\
 operator loadUniform(\n\
   io OGLShaderProgram shaderProgram,\n\
   io Mat44 values[]\n\
 ) {\n\
-  Integer location = shaderProgram.getUniformLocation('+muscleCoreCurveCVsID+');\n\
+  Integer location = shaderProgram.getUniformLocation('+corePositionsID+');\n\
+ // report("corePositions:"+location + " = "+values);\n\
   if(location!=-1){\n\
     shaderProgram.loadMat44UniformArray(location, values);\n\
   }\n\
@@ -78,17 +80,16 @@ operator loadUniform(\n\
         ]
       }));
     
-    /*
+    
     scene.constructNode('Instance', {
       geometryNode: coreDisplayLinesNode.pub,
       materialNode: scene.constructNode('MuscleCoreLineShader', {
-        prototypeMaterialType:'FlatMaterial',
         color: FABRIC.RT.rgb(1.0, 0.0, 0.0),
         pointSize: 6,
         numMuscles: 1
       }).pub
     });
-    */
+    
     
     return muscleSystem;
   }});
@@ -292,13 +293,13 @@ FABRIC.SceneGraph.registerNodeType('Muscle', {
         });
       }
     }
-    
     muscle.addMuscle = function(options){
       initializationdgnode.setCount( initializationdgnode.getCount() + 1);
     }
     if(options.displayCore){
       muscle.displayCore();
     }
+    
     return muscle;
   }});
 

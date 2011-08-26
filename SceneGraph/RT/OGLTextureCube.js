@@ -39,7 +39,7 @@ FABRIC.appendOnCreateContextCallback(function(context) {
       textureDataSize: 'Size[]'
     },
     constructor: FABRIC.RT.OGLTextureCube,
-    kBindings: FABRIC.loadResourceURL('FABRIC_ROOT/SceneGraph/Resources/RT/OGLTextureCube.kl')
+    kBindings: FABRIC.loadResourceURL('FABRIC_ROOT/SceneGraph/RT/OGLTextureCube.kl')
   });
 });
 

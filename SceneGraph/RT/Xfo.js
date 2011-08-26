@@ -231,6 +231,6 @@ FABRIC.appendOnCreateContextCallback(function(context) {
       ori: 'Quat', tr: 'Vec3', sc: 'Vec3'
     },
     constructor: FABRIC.RT.Xfo,
-    kBindings: FABRIC.loadResourceURL('FABRIC_ROOT/SceneGraph/Resources/RT/Xfo.kl')
+    kBindings: FABRIC.loadResourceURL('FABRIC_ROOT/SceneGraph/RT/Xfo.kl')
   });
 });

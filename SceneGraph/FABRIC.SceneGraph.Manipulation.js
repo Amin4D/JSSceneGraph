@@ -335,7 +335,7 @@ FABRIC.SceneGraph.registerNodeType('PaintManipulator', {
       // The selector will return the node bound with the given binding name.
       paintInstanceEventHandler.setSelector('instance', scene.constructOperator({
           operatorName: 'collectPointsInsideBrush',
-          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/collectPointsInsideVolume.kl',
+          srcFile: 'FABRIC_ROOT/SceneGraph/KL/collectPointsInsideVolume.kl',
           entryFunctionName: 'collectPointsInsideBrush',
           parameterLayout: [
 
@@ -495,7 +495,7 @@ FABRIC.SceneGraph.registerNodeType('Manipulator', {
 
     transformDGNode.bindings.append(scene.constructOperator({
       operatorName: 'evaluateGizmo',
-      srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/evaluateGizmo.kl',
+      srcFile: 'FABRIC_ROOT/SceneGraph/KL/evaluateGizmo.kl',
       entryFunctionName: 'evaluateGizmo',
       parameterLayout: paramLayout
     }));

@@ -360,6 +360,6 @@ FABRIC.appendOnCreateContextCallback(function(context) {
       r: 'Scalar', g: 'Scalar', b: 'Scalar', a: 'Scalar'
     },
     constructor: FABRIC.RT.Color,
-    kBindings: FABRIC.loadResourceURL('FABRIC_ROOT/SceneGraph/Resources/RT/Color.kl')
+    kBindings: FABRIC.loadResourceURL('FABRIC_ROOT/SceneGraph/RT/Color.kl')
   });
 });

@@ -117,6 +117,6 @@ FABRIC.appendOnCreateContextCallback(function(context) {
       row1: 'Vec2'
     },
     constructor: FABRIC.RT.Mat22,
-    kBindings: FABRIC.loadResourceURL('FABRIC_ROOT/SceneGraph/Resources/RT/Mat22.kl')
+    kBindings: FABRIC.loadResourceURL('FABRIC_ROOT/SceneGraph/RT/Mat22.kl')
   });
 });

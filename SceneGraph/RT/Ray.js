@@ -156,7 +156,7 @@ FABRIC.appendOnCreateContextCallback(function(context) {
       start: 'Vec3', direction: 'Vec3'
     },
     constructor: FABRIC.RT.Ray,
-    kBindings: FABRIC.loadResourceURL('FABRIC_ROOT/SceneGraph/Resources/RT/Ray.kl')
+    kBindings: FABRIC.loadResourceURL('FABRIC_ROOT/SceneGraph/RT/Ray.kl')
   });
 });
 

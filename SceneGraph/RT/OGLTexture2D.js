@@ -37,7 +37,7 @@ FABRIC.appendOnCreateContextCallback(function(context) {
      glInternalFormat: 'Size', glFormat: 'Size', glType: 'Size', bufferID: 'Size', nbPixels: 'Size'
     },
     constructor: FABRIC.RT.OGLTexture2D,
-    kBindings: FABRIC.loadResourceURL('FABRIC_ROOT/SceneGraph/Resources/RT/OGLTexture2D.kl')
+    kBindings: FABRIC.loadResourceURL('FABRIC_ROOT/SceneGraph/RT/OGLTexture2D.kl')
   });
 });
 

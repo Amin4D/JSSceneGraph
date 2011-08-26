@@ -178,7 +178,7 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('FKHierarchySolver',
       var opBindings = scene.getPrivateInterface(rigNode).getDGNode().bindings;
       opBindings.insert(scene.constructOperator({
           operatorName: 'solveFKHierarchy',
-          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/solveFKHierarchy.kl',
+          srcFile: 'FABRIC_ROOT/SceneGraph/KL/solveFKHierarchy.kl',
           entryFunctionName: 'solveFKHierarchy',
           parameterLayout: solver.setParameterBinding([
             'self.pose',
@@ -231,7 +231,7 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('ReferencePoseSolver',
       var opBindings = scene.getPrivateInterface(rigNode).getDGNode().bindings;
       opBindings.insert(scene.constructOperator({
           operatorName: 'solveReferencePose',
-          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/solveReferencePose.kl',
+          srcFile: 'FABRIC_ROOT/SceneGraph/KL/solveReferencePose.kl',
           entryFunctionName: 'solveReferencePose',
           parameterLayout: solver.setParameterBinding([
             'self.pose',
@@ -307,7 +307,7 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('FKChainSolver',
       var opBindings = rigNode.getDGNode().bindings;
       opBindings.insert(scene.constructOperator({
           operatorName: 'solveChain',
-          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/solveFKHierarchy.kl',
+          srcFile: 'FABRIC_ROOT/SceneGraph/KL/solveFKHierarchy.kl',
           entryFunctionName: 'solveChain',
           parameterLayout: solver.setParameterBinding([
             'self.pose',
@@ -398,7 +398,7 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('RootBoneSolver',
       var opBindings = rigNode.getDGNode().bindings;
       opBindings.insert(scene.constructOperator({
           operatorName: 'solveFKBone',
-          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/solveFKHierarchy.kl',
+          srcFile: 'FABRIC_ROOT/SceneGraph/KL/solveFKHierarchy.kl',
           entryFunctionName: 'solveFKBone',
           parameterLayout: solver.setParameterBinding([
             'self.pose',
@@ -520,7 +520,7 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('IK2BoneSolver',
       var opBindings = rigNode.getDGNode().bindings;
       opBindings.insert(scene.constructOperator({
           operatorName: 'solveIK2Bone',
-          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/solveIK2Bone.kl',
+          srcFile: 'FABRIC_ROOT/SceneGraph/KL/solveIK2Bone.kl',
           entryFunctionName: 'solveIK2Bone',
           parameterLayout: solver.setParameterBinding([
             'self.pose',
@@ -626,7 +626,7 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('SpineSolver',
       var opBindings = rigNode.getDGNode().bindings;
       opBindings.insert(scene.constructOperator({
           operatorName: 'solveSpine',
-          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/solveSpine.kl',
+          srcFile: 'FABRIC_ROOT/SceneGraph/KL/solveSpine.kl',
           entryFunctionName: 'solveSpine',
           parameterLayout: solver.setParameterBinding([
             'self.pose',
@@ -780,7 +780,7 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('TwistBoneSolver',
       var opBindings = rigNode.getDGNode().bindings;
       opBindings.insert(scene.constructOperator({
           operatorName: 'solveTwistBones',
-          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/solveTwistBones.kl',
+          srcFile: 'FABRIC_ROOT/SceneGraph/KL/solveTwistBones.kl',
           entryFunctionName: 'solveTwistBones',
           parameterLayout: [
             'self.pose',
@@ -851,7 +851,7 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('BlendBoneSolver',
       var opBindings = rigNode.getDGNode().bindings;
       opBindings.insert(scene.constructOperator({
           operatorName: 'solveBlendBones',
-          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/solveTwistBones.kl',
+          srcFile: 'FABRIC_ROOT/SceneGraph/KL/solveTwistBones.kl',
           entryFunctionName: 'solveBlendBones',
           parameterLayout: [
             'self.pose',
@@ -923,7 +923,7 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('FishingRodSolver',
       var opBindings = rigNode.getDGNode().bindings;
       opBindings.insert(scene.constructOperator({
           operatorName: 'solveFishingRod',
-          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/solveFishingRod.kl',
+          srcFile: 'FABRIC_ROOT/SceneGraph/KL/solveFishingRod.kl',
           entryFunctionName: 'fishingRodOp',
           parameterLayout: solver.setParameterBinding([
             'self.pose',
@@ -999,7 +999,7 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('NCFIKSolver',
       var opBindings = rigNode.getDGNode().bindings;
       opBindings.insert(scene.constructOperator({
           operatorName: 'solveNCFIK',
-          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/solveNCFIK.kl',
+          srcFile: 'FABRIC_ROOT/SceneGraph/KL/solveNCFIK.kl',
           entryFunctionName: 'solveNCFIK',
           parameterLayout: solver.setParameterBinding([
             'self.pose',
@@ -1091,7 +1091,7 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('ArmSolver',
       var opBindings = rigNode.getDGNode().bindings;
       opBindings.insert(scene.constructOperator({
           operatorName: 'solveArmRig',
-          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/solveLimbIK.kl',
+          srcFile: 'FABRIC_ROOT/SceneGraph/KL/solveLimbIK.kl',
           entryFunctionName: 'solveArmRig',
           parameterLayout: solver.setParameterBinding([
             'self.pose',
@@ -1220,7 +1220,7 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('LegSolver',
       var opBindings = rigNode.getDGNode().bindings;
       opBindings.insert(scene.constructOperator({
           operatorName: 'solveLegRig',
-          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/solveLimbIK.kl',
+          srcFile: 'FABRIC_ROOT/SceneGraph/KL/solveLimbIK.kl',
           entryFunctionName: 'solveLegRig',
           parameterLayout: solver.setParameterBinding([
             'self.pose',

@@ -35,7 +35,7 @@ FABRIC.SceneGraph.registerNodeType('Transform', {
       dgnode.addMember('localXfo', 'Xfo', options.localXfo);
       dgnode.bindings.append(scene.constructOperator( {
           operatorName: 'calcGlobalXfo',
-          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/calcGlobalXfo.kl',
+          srcFile: 'FABRIC_ROOT/SceneGraph/KL/calcGlobalXfo.kl',
           parameterLayout: [
             'self.localXfo',
             'parent.globalXfo',
@@ -139,7 +139,7 @@ FABRIC.SceneGraph.registerNodeType('AimTransform', {
 
     dgnode.bindings.append(scene.constructOperator({
       operatorName: 'aimTransform',
-      srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/aimTransform.kl',
+      srcFile: 'FABRIC_ROOT/SceneGraph/KL/aimTransform.kl',
       entryFunctionName: 'aimTransform',
       parameterLayout: [
         'self.globalXfo',

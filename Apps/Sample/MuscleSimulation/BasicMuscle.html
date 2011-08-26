@@ -83,7 +83,8 @@ $(document).ready(function() {
 
   viewport.setCameraNode(camera);
   scene.constructNode("CameraManipulator", { targetNode:camera } );
-  /*
+  
+  
   // create the scene grid
   scene.constructNode('Instance', {
       geometryNode: scene.constructNode('Grid', {
@@ -93,7 +94,7 @@ $(document).ready(function() {
         sections_z: 20 }),
       materialNode: scene.constructNode('FlatMaterial', { color: FABRIC.RT.rgb(0.4, 0.4, 0.4) })
     });
-  */
+  
   // first create a skeleton
   var skeletonNode = scene.constructNode('CharacterSkeleton');
 

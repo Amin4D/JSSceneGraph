@@ -213,7 +213,7 @@ FABRIC.RT.Quat.prototype = {
     return new FABRIC.RT.Quat(this.w * gq.w - this.v.dot(gq.v),
       gq.v.scale(this.w)
       .addInPlace(this.v.scale(gq.w))
-    .addInPlace(this.v.cross(gq.v)));
+      .addInPlace(this.v.cross(gq.v)));
   },
   preMultiplyInPlace: function(gq) {
     var tmp = this.preMultiply(gq);

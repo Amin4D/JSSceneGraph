@@ -79,6 +79,7 @@ operator loadUniform(\n\
         ]
       })
     
+    var light = scene.constructNode('PointLight', { position: FABRIC.RT.vec3(420.0, 1000.0, 600.0) });
     //////////////////////////////////////////////////////////
     // Lines Display
     var coreDisplayLinesNode = scene.constructNode('LineStrip');
@@ -112,7 +113,7 @@ operator loadUniform(\n\
     var linesInst = scene.constructNode('Instance', {
       geometryNode: coreDisplayLinesNode.pub,
       materialNode: scene.constructNode('MuscleCoreLineShader', {
-        color: FABRIC.RT.rgb(1.0, 0.0, 0.0),
+        diffuseColor: FABRIC.RT.rgb(0.2, 0.0, 0.0),
         pointSize: 6,
         numMuscles: 1
       }).pub
@@ -153,7 +154,8 @@ operator rotateMuscleVolume(\n\
     var volumeInst = scene.constructNode('Instance', {
       geometryNode: coreDisplayVolumeNode.pub,
       materialNode: scene.constructNode('MuscleVolumeShader', {
-        color: FABRIC.RT.rgb(1.0, 0.0, 0.0),
+        diffuseColor: FABRIC.RT.rgba(0.8, 0.0, 0.0, 0.5),
+        lightNode: light.pub,
         numMuscles: 1
       }).pub
     });

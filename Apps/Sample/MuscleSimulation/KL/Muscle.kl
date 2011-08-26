@@ -55,14 +55,14 @@ operator simulateMuscle(
     baseXfo = baseMuscleXfo * initialXfos[i];
     envelopedXfos[i].identity();
     if (pointEnvelopWeights[i].x > 0.0) {
-        xfo = baseXfo * skeletonXfos[Integer(pointEnvelopeIds.x)];
-        envelopedXfos[i].tr += xfo.tr * pointEnvelopWeights[i].x;
-        envelopedXfos[i].ori += xfo.ori * pointEnvelopWeights[i].x;
+      xfo = baseXfo * skeletonXfos[Integer(pointEnvelopeIds.x)];
+      envelopedXfos[i].tr += xfo.tr * pointEnvelopWeights[i].x;
+      envelopedXfos[i].ori += xfo.ori * pointEnvelopWeights[i].x;
     }
     if (pointEnvelopWeights[i].y > 0.0) {
-        xfo = baseXfo * skeletonXfos[Integer(pointEnvelopeIds.y)];
-        envelopedXfos[i].tr += xfo.tr * pointEnvelopWeights[i].y;
-        envelopedXfos[i].ori += xfo.ori * pointEnvelopWeights[i].y;
+      xfo = baseXfo * skeletonXfos[Integer(pointEnvelopeIds.y)];
+      envelopedXfos[i].tr += xfo.tr * pointEnvelopWeights[i].y;
+      envelopedXfos[i].ori += xfo.ori * pointEnvelopWeights[i].y;
     }
     envelopedXfos[i].ori.normalize();
   }
@@ -95,6 +95,7 @@ operator simulateMuscle(
       simulatedXfos[i].tr += ((gravity / (timeStep * timeStep)) * contractionFactor) +
                               (simulatedXfos[i].tr - pointPositionsPrevUpdate[i]);
       simulatedXfos[i].tr = envelopedXfos[i].tr.lerp(simulatedXfos[i].tr, flexibilityWeights[i]);
+      simulatedXfos[i].ori = envelopedXfos[i].ori.lerp(simulatedXfos[i].ori, flexibilityWeights[i]);
     }
   }
   

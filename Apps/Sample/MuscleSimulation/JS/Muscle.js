@@ -181,6 +181,7 @@ FABRIC.SceneGraph.registerNodeType('Muscle', {
       simulationdgnode = muscle.constructDGNode('SimulationDGNode'),
       i;
       
+    initializationdgnode.addDependency( scene.getPrivateInterface(options.muscleSystem).getDGNode(), "musclesystem");
     simulationdgnode.addDependency( scene.getPrivateInterface(options.muscleSystem).getDGNode(), "musclesystem");
     simulationdgnode.addDependency( initializationdgnode, "initializationdgnode");
     
@@ -223,15 +224,6 @@ FABRIC.SceneGraph.registerNodeType('Muscle', {
     initializationdgnode.addMember('flexibilityWeights', 'Scalar[]', flexibilityWeights);
     initializationdgnode.addMember('simulationWeights', 'Scalar[]', simulationWeights);
         
-    var displacementMap = [];
-    for(i = 0; i < options.displacementMapResolution; i++){
-      for(j = 0; j < options.displacementMapResolution; j++){
-        displacementMap.push(0.0);
-      }
-    }
-    initializationdgnode.addMember('deltaMap', 'Scalar[]', displacementMap);
-    initializationdgnode.addMember('displacementMap', 'Scalar[]', displacementMap);
-    
     
     var key = FABRIC.Animation.bezierKeyframe;
     var contractionCurve = [];
@@ -241,6 +233,10 @@ FABRIC.SceneGraph.registerNodeType('Muscle', {
     initializationdgnode.addMember('contractionCurve', 'BezierKeyframe[]', contractionCurve);
     initializationdgnode.addMember('contractionWeights', 'Scalar[]', contractionWeights);
     
+    ////////////////////////////////////////////////////////////////////////////
+    // Displacement Map
+    initializationdgnode.addMember('deltaMap', 'Scalar[]');
+    initializationdgnode.addMember('displacementMap', 'Scalar[]');
     
     var quadrantCurve = [];
     quadrantCurve.push( key(0.0, 0, null, FABRIC.RT.vec2(0.1, 0)) );
@@ -250,8 +246,39 @@ FABRIC.SceneGraph.registerNodeType('Muscle', {
     initializationdgnode.addMember('quadrantCurve1', 'BezierKeyframe[]', quadrantCurve);
     initializationdgnode.addMember('quadrantCurve2', 'BezierKeyframe[]', quadrantCurve);
     initializationdgnode.addMember('quadrantCurve3', 'BezierKeyframe[]', quadrantCurve);
+    initializationdgnode.addMember('regenerateDisplacementMap', 'Boolean', true);
     
-    /////////////////////////////////////////////////////////////////////
+    initializationdgnode.bindings.append(scene.constructOperator({
+        operatorName: 'generateDisplacementMap',
+        srcFile: './KL/muscleVolume.kl',
+        entryFunctionName: 'generateDisplacementMap',
+        preProcessorDefinitions: {
+          KEYFRAMETYPE:  'BezierKeyframe',
+          KEYFRAME_EVALUATEDTYPE: 'Scalar'
+        },
+        parameterLayout: [
+          "musclesystem.displacementMapResolution",
+          
+          "self.quadrantCurve0",
+          "self.quadrantCurve1",
+          "self.quadrantCurve2",
+          "self.quadrantCurve3",
+          "self.displacementMap",
+          "self.regenerateDisplacementMap"
+
+          /*
+          "self.initialXfos",
+          "self.baseXfo",
+          
+          "characterMeshAttributes.positions[]",
+          "characterMeshAttributes.normals[]",
+          "characterMeshUniforms.indices[]",
+          */
+        ],
+        async: false
+      }));
+    
+    ////////////////////////////////////////////////////////////////////////////
     // Configure the node that will be used to calculate the simulation.
     simulationdgnode.addMember('initialized', 'Boolean', false);
     simulationdgnode.addMember('envelopedXfos', 'Xfo[]', pointXfos); /* Xfos deformed by the skeleton */

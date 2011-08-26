@@ -1,0 +1,85 @@
+
+
+#include '../../../SceneGraph/Resources/KL/evaluateKeyframeAnimationTrack.kl'
+
+
+
+operator generateDisplacementMap(
+  io Size displacementMapResolution,
+  
+  io BezierKeyframe quadrantCurve0[],
+  io BezierKeyframe quadrantCurve1[],
+  io BezierKeyframe quadrantCurve2[],
+  io BezierKeyframe quadrantCurve3[],
+  io Scalar displacementMap[],
+  io Boolean regenerate
+  
+  /*
+  io Xfo initialXfos[],
+  io Xfo baseMuscleXfo
+  */
+) {
+  if (regenerate) {
+    displacementMap.resize(displacementMapResolution * displacementMapResolution);
+    
+    Scalar u, v;
+    Scalar val0, val1;
+
+    var Size idx = 0;
+    for (var Integer y = 0; y < displacementMapResolution; y++) {
+      u = Scalar(y) / Scalar(displacementMapResolution);
+      for (var Integer x = 0; x < displacementMapResolution; x++) {
+        v = Scalar(x) / Scalar(displacementMapResolution);
+      
+        Integer keyIndex = 0;
+        val0 = evaluateKeyframeAnimationTrack(quadrantCurve0, u, keyIndex);
+        val1 = evaluateKeyframeAnimationTrack(quadrantCurve0, u, keyIndex);
+  
+        displacementMap[idx] = val0 + ((val1 - val0)*v);
+        idx++;
+      }
+    }
+  }
+}
+
+
+operator generateSystemDisplacementMap(
+  io Size displacementMapResolution,
+  io Scalar systemDisplacementMap[],
+  io Scalar displacementMaps[][],
+  io Size bufferID,
+  io Integer textureUnit
+) {
+  if (!bufferID) {
+    Scalar texData[];
+    texData.resize(displacementMapResolution * displacementMaps.size());
+
+    // Here we merge the displacement maps from all the different muscles into
+    // one big map that we can pass to the shader for rendering. Similar to a
+    // texture atlas. 
+    var Size idx = 0;
+    for (var Integer i = 0; i < displacementMaps.size(); i++) {
+      for (var Integer x = 0; x < displacementMapResolution; x++) {
+        for (var Integer y = 0; y < displacementMapResolution; y++) {
+          texData[idx] = displacementMaps[i][idx];
+          idx++;
+        }
+      }
+    }
+    
+    Integer size_x = displacementMapResolution * displacementMaps.size();
+    Integer size_y = displacementMapResolution;
+    
+
+    var Size buffers[];
+    buffers.push(Size(bufferID));
+    glGenTextures(1, buffers);
+    glActiveTexture(GL_TEXTURE0 + textureUnit);
+    glBindTexture(GL_TEXTURE_2D, bufferID);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16, size_x, size_y, 0, GL_RGBA, GL_UNSIGNED_BYTE, texData.data());
+  }
+  else {
+    glActiveTexture(GL_TEXTURE0 + textureUnit);
+    glBindTexture(GL_TEXTURE_2D, bufferID);
+  }
+}

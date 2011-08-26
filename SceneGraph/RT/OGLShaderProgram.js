@@ -108,7 +108,7 @@ FABRIC.appendOnCreateContextCallback(function(context) {
       debug: 'Boolean'
     },
     constructor: FABRIC.RT.OGLShaderProgram,
-    kBindings: FABRIC.loadResourceURL('FABRIC_ROOT/SceneGraph/Resources/RT/OGLShaderProgram.kl')
+    kBindings: FABRIC.loadResourceURL('FABRIC_ROOT/SceneGraph/RT/OGLShaderProgram.kl')
   });
 });
 

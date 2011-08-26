@@ -935,7 +935,7 @@ FABRIC.SceneGraph.registerNodeType('Viewport', {
 
     redrawEventHandler.preDescendBindings.append(scene.constructOperator({
           operatorName: 'viewPortBeginRender',
-          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/viewPortBeginRender.kl',
+          srcFile: 'FABRIC_ROOT/SceneGraph/KL/viewPortBeginRender.kl',
           entryFunctionName: 'viewPortBeginRender',
           parameterLayout: [
             'window.width',
@@ -986,7 +986,7 @@ FABRIC.SceneGraph.registerNodeType('Viewport', {
       // The scopes should be the window, viewport, camera and projection.
       viewPortRayCastDgNode.bindings.append(scene.constructOperator({
         operatorName: 'ViewportRaycast',
-        srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/viewPortUpdateRayCast.kl',
+        srcFile: 'FABRIC_ROOT/SceneGraph/KL/viewPortUpdateRayCast.kl',
         entryFunctionName: 'viewPortUpdateRayCast',
         parameterLayout: [
           'camera.cameraMat44',
@@ -1054,7 +1054,7 @@ FABRIC.SceneGraph.registerNodeType('Viewport', {
         textureStub.postDescendBindings.append(
           scene.constructOperator({
               operatorName: 'drawTextureFullScreen',
-              srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/drawTexture.kl',
+              srcFile: 'FABRIC_ROOT/SceneGraph/KL/drawTexture.kl',
               entryFunctionName: 'drawTextureFullScreen',
               parameterLayout: [
                 'self.textureUnit',
@@ -1416,7 +1416,7 @@ FABRIC.SceneGraph.registerNodeType('Camera', {
 
     redrawEventHandler.preDescendBindings.append(scene.constructOperator({
       operatorName: 'UpdateCameraProjection',
-      srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/updateCameraProjection.kl',
+      srcFile: 'FABRIC_ROOT/SceneGraph/KL/updateCameraProjection.kl',
       entryFunctionName: 'updateCameraProjection',
       parameterLayout: [
         'camera.projectionMat44',

@@ -56,6 +56,6 @@ FABRIC.appendOnCreateContextCallback(function(context) {
       time: 'Scalar', value: 'Scalar', intangent: 'Vec2', outtangent: 'Vec2'
     },
     constructor: FABRIC.Animation.BezierKeyframe,
-    kBindings: FABRIC.loadResourceURL('FABRIC_ROOT/SceneGraph/Resources/RT/BezierKeyframe.kl')
+    kBindings: FABRIC.loadResourceURL('FABRIC_ROOT/SceneGraph/RT/BezierKeyframe.kl')
   });
 });

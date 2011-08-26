@@ -40,7 +40,7 @@ FABRIC.SceneGraph.registerNodeType('Geometry', {
       bboxdgnode.addDependency(attributesdgnode, 'attributes');
       bboxdgnode.bindings.append(scene.constructOperator({
         operatorName: 'calcBoundingBox',
-        srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/calcBoundingBox.kl',
+        srcFile: 'FABRIC_ROOT/SceneGraph/KL/calcBoundingBox.kl',
         entryFunctionName: 'calcBoundingBox',
         parameterLayout: [
           'attributes.positions[]',
@@ -216,7 +216,7 @@ FABRIC.SceneGraph.registerNodeType('Geometry', {
 
         redrawEventHandler.preDescendBindings.append(scene.constructOperator({
           operatorName: 'genVBO',
-          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadVBO.kl',
+          srcFile: 'FABRIC_ROOT/SceneGraph/KL/loadVBO.kl',
           preProcessorDefinitions: {
             DATA_TYPE: 'Integer'
           },
@@ -243,7 +243,7 @@ FABRIC.SceneGraph.registerNodeType('Geometry', {
           // then here we just need to bind the exsisting bufferID.
           redrawEventHandler.preDescendBindings.append(scene.constructOperator({
             operatorName: 'bind'+memberType+'VBO',
-            srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadVBO.kl',
+            srcFile: 'FABRIC_ROOT/SceneGraph/KL/loadVBO.kl',
             preProcessorDefinitions: {
               DATA_TYPE: memberType
             },
@@ -273,7 +273,7 @@ FABRIC.SceneGraph.registerNodeType('Geometry', {
         redrawEventHandler.addMember(bufferMemberName, 'OGLBuffer', buffer);
         redrawEventHandler.preDescendBindings.append(scene.constructOperator({
           operatorName: 'load' + capitalizeFirstLetter(memberType) +'VBO',
-          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadVBO.kl',
+          srcFile: 'FABRIC_ROOT/SceneGraph/KL/loadVBO.kl',
           preProcessorDefinitions: {
             DATA_TYPE: memberType
           },
@@ -424,7 +424,7 @@ FABRIC.SceneGraph.registerNodeType('Geometry', {
       attributesdgnode.bindings.append(scene.constructOperator({
             operatorName: 'gen' + memberName + 'OpenGLBuffer',
             mainThreadOnly: true,
-            srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/genAndLoadVBO.kl',
+            srcFile: 'FABRIC_ROOT/SceneGraph/KL/genAndLoadVBO.kl',
             preProcessorDefinitions: {
               DATA_TYPE: memberType,
               ATTRIBUTE_NAME: memberName,
@@ -465,7 +465,7 @@ FABRIC.SceneGraph.registerNodeType('Points', {
     pointsNode.getDrawOperator = function() {
       return scene.constructOperator({
           operatorName: 'drawPoints',
-          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/drawPoints.kl',
+          srcFile: 'FABRIC_ROOT/SceneGraph/KL/drawPoints.kl',
           entryFunctionName: 'drawPoints',
           parameterLayout: [
             'self.positionsBuffer',
@@ -476,7 +476,7 @@ FABRIC.SceneGraph.registerNodeType('Points', {
     pointsNode.getRayintersectionOperator = function(transformNodeMember) {
       return scene.constructOperator({
           operatorName: 'rayIntersectPoints',
-          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/rayIntersectPoints.kl',
+          srcFile: 'FABRIC_ROOT/SceneGraph/KL/rayIntersectPoints.kl',
           entryFunctionName: 'rayIntersectPoints',
           parameterLayout: [
             'raycastData.ray',
@@ -508,7 +508,7 @@ FABRIC.SceneGraph.registerNodeType('Lines', {
     linesNode.getDrawOperator = function() {
       return scene.constructOperator({
           operatorName: 'drawLines',
-          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/drawLines.kl',
+          srcFile: 'FABRIC_ROOT/SceneGraph/KL/drawLines.kl',
           parameterLayout: [
             'self.indicesBuffer',
             'instance.drawToggle'
@@ -519,7 +519,7 @@ FABRIC.SceneGraph.registerNodeType('Lines', {
     linesNode.getRayintersectionOperator = function(transformNodeMember) {
       return scene.constructOperator({
           operatorName: 'rayIntersectLines',
-          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/rayIntersectLines.kl',
+          srcFile: 'FABRIC_ROOT/SceneGraph/KL/rayIntersectLines.kl',
           entryFunctionName: 'rayIntersectLines',
           parameterLayout: [
             'raycastData.ray',
@@ -602,7 +602,7 @@ FABRIC.SceneGraph.registerNodeType('Triangles', {
     trianglesNode.getDrawOperator = function() {
       return scene.constructOperator({
           operatorName: 'drawTriangles',
-          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/drawTriangles.kl',
+          srcFile: 'FABRIC_ROOT/SceneGraph/KL/drawTriangles.kl',
           parameterLayout: [
             'shader.shaderProgram',
             'self.indicesBuffer',
@@ -614,7 +614,7 @@ FABRIC.SceneGraph.registerNodeType('Triangles', {
     trianglesNode.getRayintersectionOperator = function(transformNodeMember) {
       return scene.constructOperator({
           operatorName: 'rayIntersectTriangles',
-          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/rayIntersectTriangles.kl',
+          srcFile: 'FABRIC_ROOT/SceneGraph/KL/rayIntersectTriangles.kl',
           entryFunctionName: 'rayIntersectTriangles',
           parameterLayout: [
             'raycastData.ray',
@@ -655,7 +655,7 @@ FABRIC.SceneGraph.registerNodeType('Triangles', {
         trianglesNode.pub.addVertexAttributeValue('tangents', 'Vec4', { genVBO:true } );
         trianglesNode.getAttributesDGNode().bindings.append(scene.constructOperator({
           operatorName: 'computeTriangleTangents',
-          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/generateTangents.kl',
+          srcFile: 'FABRIC_ROOT/SceneGraph/KL/generateTangents.kl',
           entryFunctionName: 'computeTriangleTangents',
           parameterLayout: [
             'uniforms.indices',
@@ -728,7 +728,7 @@ FABRIC.SceneGraph.registerNodeType('Instance', {
       if(!options.transformNodeIndex){
         redrawEventHandler.preDescendBindings.append(scene.constructOperator({
             operatorName: 'loadModelProjectionMatrices',
-            srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadModelProjectionMatrices.kl',
+            srcFile: 'FABRIC_ROOT/SceneGraph/KL/loadModelProjectionMatrices.kl',
             entryFunctionName: 'loadModelProjectionMatrices',
             preProcessorDefinitions: preProcessorDefinitions,
             parameterLayout: [
@@ -742,7 +742,7 @@ FABRIC.SceneGraph.registerNodeType('Instance', {
         redrawEventHandler.addMember('transformNodeIndex', 'Size', options.transformNodeIndex);
         redrawEventHandler.preDescendBindings.append(scene.constructOperator({
             operatorName: 'loadIndexedModelProjectionMatrices',
-            srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadModelProjectionMatrices.kl',
+            srcFile: 'FABRIC_ROOT/SceneGraph/KL/loadModelProjectionMatrices.kl',
             entryFunctionName: 'loadIndexedModelProjectionMatrices',
             preProcessorDefinitions: preProcessorDefinitions,
             parameterLayout: [
@@ -937,7 +937,7 @@ FABRIC.SceneGraph.registerNodeType('Instance', {
           'self.handle'
         ],
         entryFunctionName: 'loadObj',
-        srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadObj.kl'
+        srcFile: 'FABRIC_ROOT/SceneGraph/KL/loadObj.kl'
       }));
 
       trianglesNode.getAttributesDGNode().addDependency(resourceloaddgnode, 'resource');
@@ -946,7 +946,7 @@ FABRIC.SceneGraph.registerNodeType('Instance', {
       trianglesNode.setGeneratorOps([
         scene.constructOperator({
           operatorName: 'setObjVertexCount',
-          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadObj.kl',
+          srcFile: 'FABRIC_ROOT/SceneGraph/KL/loadObj.kl',
           entryFunctionName: 'setObjVertexCount',
           parameterLayout: [
             'resource.handle',
@@ -955,7 +955,7 @@ FABRIC.SceneGraph.registerNodeType('Instance', {
         }),
         scene.constructOperator({
           operatorName: 'setObjGeom',
-          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadObj.kl',
+          srcFile: 'FABRIC_ROOT/SceneGraph/KL/loadObj.kl',
           entryFunctionName: 'setObjGeom',
           parameterLayout: [
             'resource.handle',

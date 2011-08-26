@@ -26,7 +26,7 @@ FABRIC.SceneGraph.registerNodeType('CharacterMesh', {
     // 9 weights, and re-normalize.
     characterMeshNode.getAttributesDGNode().bindings.append(scene.constructOperator({
       operatorName: 'reduceBoneBindingOp',
-      srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/reduceBoneBinding.kl',
+      srcFile: 'FABRIC_ROOT/SceneGraph/KL/reduceBoneBinding.kl',
       entryFunctionName: 'reduceBoneBinding',
       parameterLayout: [
         'uniforms.boneCountArray',
@@ -40,7 +40,7 @@ FABRIC.SceneGraph.registerNodeType('CharacterMesh', {
     characterMeshNode.getDrawOperator = function() {
       return scene.constructOperator({
           operatorName: 'drawCharacterInstance',
-          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/drawCharacterInstance.kl',
+          srcFile: 'FABRIC_ROOT/SceneGraph/KL/drawCharacterInstance.kl',
           preProcessorDefinitions: {
             BONE_MATRICIES_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('boneMatrices'),
             MODELMATRIXINVERSE_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('modelMatrixInverse'),
@@ -201,7 +201,7 @@ FABRIC.SceneGraph.registerNodeType('CharacterSkeleton', {
       // reference pose is modified.
       dgnode.bindings.append(scene.constructOperator({
         operatorName: 'calcReferencePoseFromInverseBindPose',
-        srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/characterSkeleton.kl',
+        srcFile: 'FABRIC_ROOT/SceneGraph/KL/characterSkeleton.kl',
         entryFunctionName: 'calcReferencePoseFromInverseBindPose',
         parameterLayout: [
           'self.bones',
@@ -216,7 +216,7 @@ FABRIC.SceneGraph.registerNodeType('CharacterSkeleton', {
       // reference pose is modified.
       dgnode.bindings.append(scene.constructOperator({
         operatorName: 'calcReferenceLocalPose',
-        srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/characterSkeleton.kl',
+        srcFile: 'FABRIC_ROOT/SceneGraph/KL/characterSkeleton.kl',
         entryFunctionName: 'calcReferenceLocalPose',
         parameterLayout: [
           'self.bones'
@@ -229,7 +229,7 @@ FABRIC.SceneGraph.registerNodeType('CharacterSkeleton', {
       // reference pose is modified.
       dgnode.bindings.append(scene.constructOperator({
         operatorName: 'calcReferenceGlobalPose',
-        srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/characterSkeleton.kl',
+        srcFile: 'FABRIC_ROOT/SceneGraph/KL/characterSkeleton.kl',
         entryFunctionName: 'calcReferenceGlobalPose',
         parameterLayout: [
           'self.bones'
@@ -242,7 +242,7 @@ FABRIC.SceneGraph.registerNodeType('CharacterSkeleton', {
       // reference pose is modified.
       dgnode.bindings.append(scene.constructOperator({
         operatorName: 'calcInverseBindPose',
-        srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/characterSkeleton.kl',
+        srcFile: 'FABRIC_ROOT/SceneGraph/KL/characterSkeleton.kl',
         entryFunctionName: 'calcInverseBindPose',
         parameterLayout: [
           'self.bones',
@@ -282,7 +282,7 @@ FABRIC.SceneGraph.registerNodeType('CharacterSkeletonDebug', {
       // now append the operator to create the lines
       characterSkeletonDebug.getAttributesDGNode().bindings.append(scene.constructOperator({
           operatorName: 'generateSkeletonOp',
-          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/generateSkeleton.kl',
+          srcFile: 'FABRIC_ROOT/SceneGraph/KL/generateSkeleton.kl',
           entryFunctionName: 'generateSkeleton',
           parameterLayout: [
             'skeleton.bones',
@@ -365,7 +365,7 @@ FABRIC.SceneGraph.registerNodeType("NLerpCharacterVariables", {
     rigVariablesNode.getDGNode().bindings.append(scene.constructOperator(
       {
         operatorName:"lerpRigVariablesOp",
-        srcFile:"../../../SceneGraph/Resources/KL/lerpRigVariables.kl",
+        srcFile:"../../../SceneGraph/KL/lerpRigVariables.kl",
         entryFunctionName:"lerpRigVariables",
         parameterLayout:[
           "self.time",
@@ -506,7 +506,7 @@ FABRIC.SceneGraph.registerNodeType('CharacterRig', {
       // create the operators that converts the pose to matrices
       dgnode.bindings.append(scene.constructOperator({
           operatorName: 'calcSkinningMatrices',
-          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/characterRig.kl',
+          srcFile: 'FABRIC_ROOT/SceneGraph/KL/characterRig.kl',
           entryFunctionName: 'calcSkinningMatrices',
           parameterLayout: ['self.pose', 'skeleton.invmatrices', 'self.boneMatrices']
         }));
@@ -517,7 +517,7 @@ FABRIC.SceneGraph.registerNodeType('CharacterRig', {
         
         dgnode.bindings.append(scene.constructOperator({
             operatorName: 'calcSkinningXfos',
-            srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/characterRig.kl',
+            srcFile: 'FABRIC_ROOT/SceneGraph/KL/characterRig.kl',
             entryFunctionName: 'calcSkinningXfos',
             parameterLayout: ['self.pose', 'skeleton.bones', 'self.skinningXfos']
           }));
@@ -602,7 +602,7 @@ FABRIC.SceneGraph.registerNodeType('CharacterRigDebug', {
       operators.append(scene.constructOperator(
         {
           operatorName: 'clearDebugXfos',
-          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/characterDebug.kl',
+          srcFile: 'FABRIC_ROOT/SceneGraph/KL/characterDebug.kl',
           entryFunctionName: 'clearDebugXfos',
           parameterLayout: [
             'self.debugpose'
@@ -615,7 +615,7 @@ FABRIC.SceneGraph.registerNodeType('CharacterRigDebug', {
 
       characterRigDebugNode.getAttributesDGNode().bindings.append(scene.constructOperator({
           operatorName: 'generateDebugPoints',
-          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/characterDebug.kl',
+          srcFile: 'FABRIC_ROOT/SceneGraph/KL/characterDebug.kl',
           entryFunctionName: 'generateDebugPoints',
           parameterLayout: [
             'uniforms.debugpose',

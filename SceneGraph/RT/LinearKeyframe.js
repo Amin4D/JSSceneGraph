@@ -46,6 +46,6 @@ FABRIC.appendOnCreateContextCallback(function(context) {
       time: 'Scalar', value: 'Scalar'
     },
     constructor: FABRIC.Animation.LinearKeyframe,
-    kBindings: FABRIC.loadResourceURL('FABRIC_ROOT/SceneGraph/Resources/RT/LinearKeyframe.kl')
+    kBindings: FABRIC.loadResourceURL('FABRIC_ROOT/SceneGraph/RT/LinearKeyframe.kl')
   });
 });

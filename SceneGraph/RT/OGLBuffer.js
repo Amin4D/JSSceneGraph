@@ -52,7 +52,7 @@ FABRIC.appendOnCreateContextCallback(function(context) {
       bufferElementComponentType: 'Integer'
     },
     constructor: FABRIC.RT.OGLBuffer,
-    kBindings: FABRIC.loadResourceURL('FABRIC_ROOT/SceneGraph/Resources/RT/OGLBuffer.kl')
+    kBindings: FABRIC.loadResourceURL('FABRIC_ROOT/SceneGraph/RT/OGLBuffer.kl')
   });
 });
 

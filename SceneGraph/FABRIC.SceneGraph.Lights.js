@@ -56,7 +56,7 @@ FABRIC.SceneGraph.registerNodeType('Light', {
 
       redrawEventHandler.preDescendBindings.append(scene.constructOperator({
         operatorName: 'loadLight',
-        srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadLights.kl',
+        srcFile: 'FABRIC_ROOT/SceneGraph/KL/loadLights.kl',
         preProcessorDefinitions: {
           LIGHTTYPE_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('lightType'),
           LIGHTCOLOR_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('lightColor'),
@@ -228,7 +228,7 @@ FABRIC.SceneGraph.registerNodeType('DirectionalLight', {
 
       redrawEventHandler.preDescendBindings.append(scene.constructOperator({
         operatorName: 'loadDirectionalLight',
-        srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadLights.kl',
+        srcFile: 'FABRIC_ROOT/SceneGraph/KL/loadLights.kl',
         preProcessorDefinitions: {
           LIGHTTYPE_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('lightType'),
           LIGHTCOLOR_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('lightColor'),
@@ -346,7 +346,7 @@ FABRIC.SceneGraph.registerNodeType('SpotLight', {
       redrawEventHandler.preDescendBindings.append(
         scene.constructOperator({
           operatorName: 'loadSpotLight',
-          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadLights.kl',
+          srcFile: 'FABRIC_ROOT/SceneGraph/KL/loadLights.kl',
           preProcessorDefinitions: {
           LIGHTTYPE_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('lightType'),
           LIGHTCOLOR_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('lightColor'),
@@ -373,7 +373,7 @@ FABRIC.SceneGraph.registerNodeType('SpotLight', {
         redrawEventHandler.preDescendBindings.append(
           scene.constructOperator({
               operatorName: 'loadLightMatrixUniform',
-              srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/loadLights.kl',
+              srcFile: 'FABRIC_ROOT/SceneGraph/KL/loadLights.kl',
               preProcessorDefinitions: {
                 LIGHTTYPE_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('lightType'),
                 LIGHTCOLOR_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('lightColor'),
@@ -393,7 +393,7 @@ FABRIC.SceneGraph.registerNodeType('SpotLight', {
         redrawEventHandler.preDescendBindings.append(
           scene.constructOperator({
               operatorName: 'bindShadowMapBufferOp',
-              srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/shadowMaps.kl',
+              srcFile: 'FABRIC_ROOT/SceneGraph/KL/shadowMaps.kl',
               entryFunctionName: 'bindShadowMapBuffer',
               parameterLayout: [
                 'self.shadowMap',
@@ -417,7 +417,7 @@ FABRIC.SceneGraph.registerNodeType('SpotLight', {
       
       dgnode.bindings.append(scene.constructOperator({
           operatorName: 'calcLightProjectionMatricies',
-          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/shadowMaps.kl',
+          srcFile: 'FABRIC_ROOT/SceneGraph/KL/shadowMaps.kl',
           entryFunctionName: 'calcLightProjectionMatricies',
           parameterLayout: [
             'self.nearDistance',
@@ -435,7 +435,7 @@ FABRIC.SceneGraph.registerNodeType('SpotLight', {
      
       shadowRenderEventHandler.preDescendBindings.append(scene.constructOperator({
           operatorName: 'bindDepthRenderTarget',
-          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/renderTarget.kl',
+          srcFile: 'FABRIC_ROOT/SceneGraph/KL/renderTarget.kl',
           entryFunctionName: 'bindRenderTarget',
           parameterLayout: [
             'light.depthRenderTarget'
@@ -443,7 +443,7 @@ FABRIC.SceneGraph.registerNodeType('SpotLight', {
         }));
       shadowRenderEventHandler.postDescendBindings.append(scene.constructOperator({
           operatorName: 'unbindDepthRenderTarget',
-          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/renderTarget.kl',
+          srcFile: 'FABRIC_ROOT/SceneGraph/KL/renderTarget.kl',
           entryFunctionName: 'unbindRenderTarget',
           parameterLayout: [
             'light.depthRenderTarget'
@@ -459,7 +459,7 @@ FABRIC.SceneGraph.registerNodeType('SpotLight', {
         shadowDebugRenderEventHandler.preDescendBindings.append(
           scene.constructOperator({
               operatorName:"debugShadowMapBuffer",
-              srcFile:"FABRIC_ROOT/SceneGraph/Resources/KL/shadowMaps.kl",
+              srcFile:"FABRIC_ROOT/SceneGraph/KL/shadowMaps.kl",
               entryFunctionName:"debugShadowMapBuffer",
               parameterLayout:[
                 'light.depthRenderTarget',

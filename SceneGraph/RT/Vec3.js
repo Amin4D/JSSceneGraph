@@ -347,6 +347,6 @@ FABRIC.appendOnCreateContextCallback(function(context) {
       x: 'Scalar', y: 'Scalar', z: 'Scalar'
     },
     constructor: FABRIC.RT.Vec3,
-    kBindings: FABRIC.loadResourceURL('FABRIC_ROOT/SceneGraph/Resources/RT/Vec3.kl')
+    kBindings: FABRIC.loadResourceURL('FABRIC_ROOT/SceneGraph/RT/Vec3.kl')
   });
 });

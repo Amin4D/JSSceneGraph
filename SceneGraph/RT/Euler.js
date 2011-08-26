@@ -91,7 +91,7 @@ FABRIC.appendOnCreateContextCallback(function(context) {
       order: 'Integer'
     },
     constructor: FABRIC.RT.RotationOrder,
-    kBindings: FABRIC.loadResourceURL('FABRIC_ROOT/SceneGraph/Resources/RT/RotationOrder.kl')
+    kBindings: FABRIC.loadResourceURL('FABRIC_ROOT/SceneGraph/RT/RotationOrder.kl')
   });
 });
 
@@ -267,6 +267,6 @@ FABRIC.appendOnCreateContextCallback(function(context) {
       x: 'Scalar', y: 'Scalar', z: 'Scalar', ro: 'RotationOrder', dummy: 'Quat'
     },
     constructor: FABRIC.RT.Euler,
-    kBindings: FABRIC.loadResourceURL('FABRIC_ROOT/SceneGraph/Resources/RT/Euler.kl')
+    kBindings: FABRIC.loadResourceURL('FABRIC_ROOT/SceneGraph/RT/Euler.kl')
   });
 });

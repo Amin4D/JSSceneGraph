@@ -88,8 +88,8 @@ FABRIC.SceneGraph.registerNodeType('Hair', {
     pointNode.pub.addUniformValue('stiffnessLimits', 'Vec2', options.stiffness);
     pointNode.pub.addUniformValue('gravityLimits', 'Vec2', options.gravity);
     pointNode.pub.addUniformValue('lengthLimits', 'Vec2', options.length);
-    pointNode.pub.addVertexAttributeValue('boneIds', 'Mat33');
-    pointNode.pub.addVertexAttributeValue('boneWeights', 'Mat33');
+    pointNode.pub.addVertexAttributeValue('boneIds', 'Vec4');
+    pointNode.pub.addVertexAttributeValue('boneWeights', 'Vec4');
 
     var pointDGNode = pointNode.getAttributesDGNode();
     pointDGNode.addDependency(characterMeshNode.getAttributesDGNode(),'meshattributes');

@@ -51,8 +51,8 @@
 			attribute vec4 a_position;
 			attribute vec3 a_normal;
 			
-			attribute mat3 a_weight;
-			attribute mat3 a_index;
+			attribute vec4 a_weight;
+			attribute vec4 a_index;
 			
 			varying vec3 normal;
 			varying vec3 lightDir;

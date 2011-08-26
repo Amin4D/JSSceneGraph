@@ -18,8 +18,8 @@ FABRIC.SceneGraph.registerNodeType('CharacterMesh', {
     characterMeshNode.pub.addUniformValue('boneCountArray', 'Integer[]');
     characterMeshNode.pub.addUniformValue('boneIdsArray', 'Integer[]');
     characterMeshNode.pub.addUniformValue('boneWeightsArray', 'Scalar[]');
-    characterMeshNode.pub.addVertexAttributeValue('boneIds', 'Mat33', { genVBO:true } );
-    characterMeshNode.pub.addVertexAttributeValue('boneWeights', 'Mat33', { genVBO:true } );
+    characterMeshNode.pub.addVertexAttributeValue('boneIds', 'Vec4', { genVBO:true } );
+    characterMeshNode.pub.addVertexAttributeValue('boneWeights', 'Vec4', { genVBO: true });
 
     // The enveloping shader can only accept bone bindings in Mat33 values.
     // Here we take the list of bone weights, sort them, and pick the top

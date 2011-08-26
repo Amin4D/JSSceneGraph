@@ -80,8 +80,7 @@ operator loadUniform(\n\
         ]
       }));
     
-    
-    scene.constructNode('Instance', {
+    var linesInst = scene.constructNode('Instance', {
       geometryNode: coreDisplayLinesNode.pub,
       materialNode: scene.constructNode('MuscleCoreLineShader', {
         color: FABRIC.RT.rgb(1.0, 0.0, 0.0),
@@ -90,6 +89,39 @@ operator loadUniform(\n\
       }).pub
     });
     
+    var coreDisplayVolumeNode = scene.constructNode('Cylinder', {
+        radius: 4.0,
+        height: 16.0,
+        sides: options.displacementMapResolution,
+        loops: options.displacementMapResolution,
+        caps: true
+      });
+    
+    coreDisplayVolumeNode.getAttributesDGNode().bindings.append(
+      scene.constructOperator({
+        operatorName: 'rotateMuscleVolume',
+        srcCode: '\n\
+operator rotateMuscleVolume(\n\
+  io Vec3 position\n\
+) {\n\
+  Scalar PI = 3.141592653589793238462643383279;\n\
+  position = axisAndAngleToQuat(Vec3(1.0,0.0,0.0), PI).rotateVector(position);\n\
+}\n\
+        ',
+        entryFunctionName: 'rotateMuscleVolume',
+        parameterLayout: [
+          'muscles.positions'
+        ]
+      }));
+    
+    var volumeInst = scene.constructNode('Instance', {
+      geometryNode: coreDisplayVolumeNode.pub,
+      materialNode: scene.constructNode('MuscleVolumeShader', {
+        color: FABRIC.RT.rgb(1.0, 0.0, 0.0),
+        pointSize: 6,
+        numMuscles: 1
+      }).pub
+    });
     
     return muscleSystem;
   }});

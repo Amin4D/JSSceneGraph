@@ -39,4 +39,3 @@ operator generateMuscleCoreLine(
     indices[i] = i;
   }
 }
-

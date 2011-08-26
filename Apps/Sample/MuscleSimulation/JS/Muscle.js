@@ -1,6 +1,7 @@
 
 
 FABRIC.SceneGraph.defineEffectFromFile('MuscleCoreLineShader', './Shaders/MuscleCoreLineShader.xml');
+FABRIC.SceneGraph.defineEffectFromFile('MuscleVolumeShader', './Shaders/MuscleVolumeShader.xml');
 
 
 // These Node definitions are inlined for now, but will
@@ -34,6 +35,52 @@ FABRIC.SceneGraph.registerNodeType('MuscleSystem', {
       muscles.addMuscle( muscleOptions );
     }
     
+    var corePositionsID = FABRIC.SceneGraph.getShaderParamID('corePositions');
+    var loadCorePositionsOp = scene.constructOperator({
+        operatorName: 'loadMuscleCorePositions',
+        srcCode: '\n\
+operator loadUniform(\n\
+  io OGLShaderProgram shaderProgram,\n\
+  io Mat44 values[]\n\
+) {\n\
+  Integer location = shaderProgram.getUniformLocation('+corePositionsID+');\n\
+ // report("corePositions:"+location + " = "+values);\n\
+  if(location!=-1){\n\
+    shaderProgram.loadMat44UniformArray(location, values);\n\
+  }\n\
+}\n\
+        ',
+        entryFunctionName: 'loadUniform',
+        parameterLayout: [
+          'shader.shaderProgram',
+          'muscles.cvPositions[]'
+        ]
+      });
+    
+    var coreFramesID = FABRIC.SceneGraph.getShaderParamID('coreFrames');
+    var loadCoreFramesOp = scene.constructOperator({
+        operatorName: 'loadMuscleCoreFrames',
+        srcCode: '\n\
+operator loadUniform(\n\
+  io OGLShaderProgram shaderProgram,\n\
+  io Mat44 values[]\n\
+) {\n\
+  Integer location = shaderProgram.getUniformLocation('+coreFramesID+');\n\
+ // report("coreFrames:"+location + " = "+values);\n\
+  if(location!=-1){\n\
+    shaderProgram.loadMat44UniformArray(location, values);\n\
+  }\n\
+}\n\
+        ',
+        entryFunctionName: 'loadUniform',
+        parameterLayout: [
+          'shader.shaderProgram',
+          'muscles.cvFrames[]'
+        ]
+      })
+    
+    //////////////////////////////////////////////////////////
+    // Lines Display
     var coreDisplayLinesNode = scene.constructNode('LineStrip');
     coreDisplayLinesNode.getAttributesDGNode().addDependency(dgnode, 'musclesystem');
     coreDisplayLinesNode.setGeneratorOps([
@@ -56,29 +103,11 @@ FABRIC.SceneGraph.registerNodeType('MuscleSystem', {
         ]
       })
     ]);
-    var corePositionsID = FABRIC.SceneGraph.getShaderParamID('corePositions');
+    
     var redrawEventHandler = coreDisplayLinesNode.getRedrawEventHandler();
     redrawEventHandler.addScope('muscles', muscles.getSimulationDGNode());
-    redrawEventHandler.preDescendBindings.append(scene.constructOperator({
-        operatorName: 'loadMuscleCorePositions',
-        srcCode: '\n\
-operator loadUniform(\n\
-  io OGLShaderProgram shaderProgram,\n\
-  io Mat44 values[]\n\
-) {\n\
-  Integer location = shaderProgram.getUniformLocation('+corePositionsID+');\n\
- // report("corePositions:"+location + " = "+values);\n\
-  if(location!=-1){\n\
-    shaderProgram.loadMat44UniformArray(location, values);\n\
-  }\n\
-}\n\
-        ',
-        entryFunctionName: 'loadUniform',
-        parameterLayout: [
-          'shader.shaderProgram',
-          'muscles.cvPositions[]'
-        ]
-      }));
+    redrawEventHandler.preDescendBindings.append(loadCorePositionsOp);
+    redrawEventHandler.preDescendBindings.append(loadCoreFramesOp);
     
     var linesInst = scene.constructNode('Instance', {
       geometryNode: coreDisplayLinesNode.pub,
@@ -89,9 +118,11 @@ operator loadUniform(\n\
       }).pub
     });
     
+    //////////////////////////////////////////////////////////
+    // Lines Display
     var coreDisplayVolumeNode = scene.constructNode('Cylinder', {
-        radius: 4.0,
-        height: 16.0,
+        radius: 0.5,
+        height: 1.0,
         sides: options.displacementMapResolution,
         loops: options.displacementMapResolution,
         caps: true
@@ -105,20 +136,24 @@ operator rotateMuscleVolume(\n\
   io Vec3 position\n\
 ) {\n\
   Scalar PI = 3.141592653589793238462643383279;\n\
-  position = axisAndAngleToQuat(Vec3(1.0,0.0,0.0), PI).rotateVector(position);\n\
+  position = axisAndAngleToQuat(Vec3(0.0,0.0,1.0), PI*-0.5).rotateVector(position);\n\
 }\n\
         ',
         entryFunctionName: 'rotateMuscleVolume',
         parameterLayout: [
-          'muscles.positions'
+          'self.positions'
         ]
       }));
+    
+    var redrawEventHandler = coreDisplayVolumeNode.getRedrawEventHandler();
+    redrawEventHandler.addScope('muscles', muscles.getSimulationDGNode());
+    redrawEventHandler.preDescendBindings.append(loadCorePositionsOp);
+    redrawEventHandler.preDescendBindings.append(loadCoreFramesOp);
     
     var volumeInst = scene.constructNode('Instance', {
       geometryNode: coreDisplayVolumeNode.pub,
       materialNode: scene.constructNode('MuscleVolumeShader', {
         color: FABRIC.RT.rgb(1.0, 0.0, 0.0),
-        pointSize: 6,
         numMuscles: 1
       }).pub
     });

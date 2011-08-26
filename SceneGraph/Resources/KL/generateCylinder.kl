@@ -51,7 +51,7 @@ operator generateCylinder(
 
   Integer voff = 0;
   for (Integer i = 0; i <= nbLoops; i++) {
-    Scalar y = ((i / Scalar(nbLoops)) - 0.5) * height;
+    Scalar y = (i / Scalar(nbLoops)) * height;
     for (Integer j = 0; j < nbSides; j++) {
       Scalar phi = (j / Scalar(sides)) * 2.0 * PI;
 
@@ -96,7 +96,7 @@ operator generateCylinder(
   if (caps) {
     // Top cap
     Vec3 nrm(0.0, 1.0, 0.0);
-    Scalar y = 0.5 * height;
+    Scalar y = height;
         
     for (Integer j = 0; j < nbSides; j++) {
       Scalar phi = (j / Scalar(sides)) * 2.0 * PI;
@@ -141,7 +141,7 @@ operator generateCylinder(
     
     // Bottom cap
     nrm.set(0.0, -1.0, 0.0);
-    y = -0.5 * height;
+    y = 0.0;
         
     for (Integer j = 0; j < nbSides; j++) {
       Scalar phi = (j / Scalar(sides)) * 2.0 * PI;

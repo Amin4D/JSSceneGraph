@@ -142,6 +142,12 @@
         corePositions[2] = u_corePositions[instanceID][2].xyz;
         corePositions[3] = u_corePositions[instanceID][3].xyz;
         
+        float coreInflationValues[4];
+        coreInflationValues[0] = u_corePositions[instanceID][0].w;
+        coreInflationValues[1] = u_corePositions[instanceID][1].w;
+        coreInflationValues[2] = u_corePositions[instanceID][2].w;
+        coreInflationValues[3] = u_corePositions[instanceID][3].w;
+        
         vec4 coreFrames[4];
         coreFrames[0] = u_coreFrames[instanceID][0];
         coreFrames[1] = u_coreFrames[instanceID][1];
@@ -152,9 +158,10 @@
         float t;
         vec3 corepos = EvalPiecewiseBSpline( corePositions, 4, a_position.x, i, t );
         
-        vec3 frameoffsetvec = a_position.xyz;
-        frameoffsetvec.x = 0.0;
+        float inflation = mix(coreInflationValues[i], coreInflationValues[i+1], t );
         
+        vec3 frameoffsetvec = vectorScale(a_position.xyz, inflation);
+        frameoffsetvec.x = 0.0;
         vec4 frame = normalize( mix(coreFrames[i], coreFrames[i+1], t ));
         vec3 pos = corepos + rotateVector2( frame, frameoffsetvec );
         

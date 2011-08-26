@@ -143,14 +143,26 @@ operator simulateMuscle(
   
   // Now measure how much each segment has compressed/stretched
   // this is used to control the bulging/volume preservation of the muscle
-  for(i=0; i<simulatedXfos.size()-1; i++){
-    segmentCompressionFactors[i] = (simulatedXfos[i+1].tr - simulatedXfos[i].tr).length() / segmentLengths[i];
+  for(i=0; i<simulatedXfos.size(); i++){
+    Scalar compression = 0.0;
+    if(i>0){
+      compression += (simulatedXfos[i].tr.dist(simulatedXfos[i-1].tr) / segmentLengths[i-1]);
+    }else{
+      compression += 1.0;
+    }
+    if(i<simulatedXfos.size()-1){
+      compression += (simulatedXfos[i].tr.dist(simulatedXfos[i+1].tr) / segmentLengths[i]);
+    }else{
+      compression += 1.0;
+    }
+    // TODO: Impliment volume preserving formula
+    segmentCompressionFactors[i] = 1.0/(compression / 2.0);
   }
   
-  cvPositions.row0.set(simulatedXfos[0].tr.x, simulatedXfos[0].tr.y, simulatedXfos[0].tr.z, 0.0);
-  cvPositions.row1.set(simulatedXfos[1].tr.x, simulatedXfos[1].tr.y, simulatedXfos[1].tr.z, 0.0);
-  cvPositions.row2.set(simulatedXfos[2].tr.x, simulatedXfos[2].tr.y, simulatedXfos[2].tr.z, 0.0);
-  cvPositions.row3.set(simulatedXfos[3].tr.x, simulatedXfos[3].tr.y, simulatedXfos[3].tr.z, 0.0);
+  cvPositions.row0.set(simulatedXfos[0].tr.x, simulatedXfos[0].tr.y, simulatedXfos[0].tr.z, segmentCompressionFactors[0]);
+  cvPositions.row1.set(simulatedXfos[1].tr.x, simulatedXfos[1].tr.y, simulatedXfos[1].tr.z, segmentCompressionFactors[1]);
+  cvPositions.row2.set(simulatedXfos[2].tr.x, simulatedXfos[2].tr.y, simulatedXfos[2].tr.z, segmentCompressionFactors[2]);
+  cvPositions.row3.set(simulatedXfos[3].tr.x, simulatedXfos[3].tr.y, simulatedXfos[3].tr.z, segmentCompressionFactors[3]);
   
   cvFrames.row0.set(simulatedXfos[0].ori.v.x, simulatedXfos[0].ori.v.y, simulatedXfos[0].ori.v.z, simulatedXfos[0].ori.w);
   cvFrames.row1.set(simulatedXfos[1].ori.v.x, simulatedXfos[1].ori.v.y, simulatedXfos[1].ori.v.z, simulatedXfos[1].ori.w);

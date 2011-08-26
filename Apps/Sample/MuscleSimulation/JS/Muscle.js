@@ -208,9 +208,9 @@ FABRIC.SceneGraph.registerNodeType('Muscle', {
       var flexibilityWeight = (Math.cos((i/(options.numSegments-1) * 2.0 * Math.PI)) * 0.45) + 0.55;
       flexibilityWeights.push(1.0 - (flexibilityWeight * flexibilityWeight * flexibilityWeight));
       pointPositions.push(pointXfos[i].tr);
+      segmentCompressionFactors.push(1.0);
       if(i>0){
         segmentLengths.push(pointXfos[i].tr.dist(pointXfos[i-1].tr));
-        segmentCompressionFactors.push(1.0);
         contractionWeights.push((flexibilityWeights[i]+flexibilityWeights[i-1]) * 0.5 );
       }
     }

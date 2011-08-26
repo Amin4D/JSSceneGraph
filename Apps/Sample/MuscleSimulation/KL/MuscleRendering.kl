@@ -33,57 +33,10 @@ operator generateMuscleCoreLine(
   io Vec3 positions[],
   io Integer indices[]
   ){
-  indices.resize((positions.size() *2)-2);
+  indices.resize(positions.size());
   for( Integer i=0; i<positions.size(); i++){
     positions[i].x = Scalar(i)/Scalar(positions.size()-1);
-    if(i<(positions.size()-1)){
-      indices[(i * 2)] = i;
-      indices[(i * 2)+1] = i+1;
-    }
+    indices[i] = i;
   }
 }
 
-
-/*
-operator genIndicesVBO(
-  io Vec3 bufferData[][],
-  io OGLBuffer buffer,
-  Integer indicesCount
-) {
-//  report("genVBO  " + buffer.name + ":" + buffer.bufferID +" bufferDataCount:" + buffer.bufferDataCount + " location:" + buffer.location  );
-  // We need to generate the indices table here, because we accumulate the
-  // indices from each of the muscles.
-  // If the number of muslces cahnge, or if the number of segments in a muscle
-  // changes, then we must regnerate the indices list. 
-  if(indices.size() == 0){
-    Integer indices[];
-    Integer cnt = 0;
-    for(Integer i=0; i<bufferData.size(); i++){
-      indices.resize(cnt + ((bufferData[i].size()*2)-2));
-      for(Integer j=0; j<(bufferData[i].size()-1); j++){
-        indices[cnt+(j*2)] = cnt+(j*2);
-        indices[cnt+(j*2)+1] = cnt+(j*2)+1;
-      }
-      cnt += bufferData[i].size()+1;
-    }
-  }
-  buffer.genBuffer(indices.data(), indices.dataSize(), indicesCount);
-}
-
-operator genAndBindPositionsVBO(
-  io OGLShaderProgram shaderProgram,
-  io Vec3 bufferData[][],
-  io OGLBuffer buffer
-) {
-  Integer location = shaderProgram.getAttributeLocation(buffer.attributeID);
-//  report("genAndBindVBO  " + buffer.name + ":" + buffer.bufferID +" bufferDataCount:" + buffer.bufferDataCount + " location:" + buffer.location  );
-  if(location!=-1){
-    Integer elementCount = 0;
-    for(Integer i=0; i<bufferData.size(); i++){
-      elementCount += bufferData[i].size();
-    }
-    buffer.genBuffer(bufferData.data(), bufferData.dataSize(), elementCount);
-    buffer.bindBuffer(location);
-  }
-}
-*/

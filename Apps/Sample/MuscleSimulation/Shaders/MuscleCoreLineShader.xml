@@ -39,8 +39,7 @@
       vec3 EvalPiecewiseBSpline( vec3 controlPoints[4], int numControlPoints, float u ){
         vec3 p;
         int i;
-        float temp = float(numControlPoints - 1);
-        float t = u * temp;
+        float t = u * float(numControlPoints - 1);
         if( t < float(numControlPoints - 1) ){
           i = int(floor( t ));
           t = t - float(i);
@@ -49,19 +48,17 @@
           i = numControlPoints - 2;
           t = 1.0;
         }
-      
         if( i == 0 ){
           p = controlPoints[ i ] + (controlPoints[ i ] - controlPoints[ i + 1 ]);
           return EvalBSpline( p, controlPoints[ i ], controlPoints[ i + 1 ], controlPoints[ i + 2 ], t );
         }
         else if( i == ( numControlPoints - 2 ) ){
-          p = controlPoints[ i ] + (controlPoints[ i + 1 ] - controlPoints[ i ]);
+          p = controlPoints[ i + 1 ] + (controlPoints[ i + 1 ] - controlPoints[ i ]);
           return EvalBSpline( controlPoints[ i - 1 ], controlPoints[ i ], controlPoints[ i + 1 ], p, t );
         }
         else{
           return EvalBSpline( controlPoints[ i - 1 ], controlPoints[ i ], controlPoints[ i + 1 ], controlPoints[ i + 2 ], t );
         }
-        return controlPoints[0];
       }
       
       void main(){
@@ -72,6 +69,7 @@
         controlPoints[2] = u_corePositions[0][2].xyz;
         controlPoints[3] = u_corePositions[0][3].xyz;
         vec3 pos = EvalPiecewiseBSpline( controlPoints, 4, a_position.x );
+        
         gl_Position = u_modelViewProjectionMatrix * vec4( pos.x, pos.y, pos.z, 1.0);
         
       }

@@ -538,6 +538,50 @@ FABRIC.SceneGraph.registerNodeType('Lines', {
   }});
 
 
+FABRIC.SceneGraph.registerNodeType('LineStrip', {
+  briefDesc: 'The Lines node defines a renderable lines geometry type.',
+  detailedDesc: 'The Lines node defines a renderable lines geometry type. The Lines node applies a custom draw operator and rayIntersection operator.',
+  parentNodeDesc: 'Geometry',
+  optionsDesc: {
+  },
+  factoryFn: function(options, scene) {
+
+    var linesNode = scene.constructNode('Geometry', options);
+
+    // implement the geometry relevant interfaces
+    linesNode.getDrawOperator = function() {
+      return scene.constructOperator({
+          operatorName: 'drawLineStrip',
+          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/drawLines.kl',
+          parameterLayout: [
+            'self.indicesBuffer',
+            'instance.drawToggle'
+          ],
+          entryFunctionName: 'drawLineStrip'
+        });
+    };
+    linesNode.getRayintersectionOperator = function(transformNodeMember) {
+      return scene.constructOperator({
+          operatorName: 'rayIntersectLineStrip',
+          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/rayIntersectLines.kl',
+          entryFunctionName: 'rayIntersectLineStrip',
+          parameterLayout: [
+            'raycastData.ray',
+            'raycastData.threshold',
+            'transform.' + transformNodeMember,
+            'geometry_attributes.positions[]',
+            'geometry_uniforms.indices',
+            'boundingbox.min',
+            'boundingbox.max'
+          ]
+        });
+    };
+
+    linesNode.pub.addUniformValue('indices', 'Integer[]');
+    return linesNode;
+  }});
+
+
 
 
 FABRIC.SceneGraph.registerNodeType('Triangles', {

@@ -15,3 +15,16 @@ operator drawLines(
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
   }
 }
+
+
+operator drawLineStrip(
+  io OGLBuffer indicesBuffer,
+  io Boolean drawToggle
+) {
+  if (drawToggle) {
+    var Data NULL;
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indicesBuffer.bufferID);
+    glDrawElements(GL_LINE_STRIP, indicesBuffer.elementCount, GL_UNSIGNED_INT, NULL);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+  }
+}

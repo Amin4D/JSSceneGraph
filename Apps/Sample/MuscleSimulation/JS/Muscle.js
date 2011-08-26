@@ -34,7 +34,7 @@ FABRIC.SceneGraph.registerNodeType('MuscleSystem', {
       muscles.addMuscle( muscleOptions );
     }
     
-    var coreDisplayLinesNode = scene.constructNode('Lines');
+    var coreDisplayLinesNode = scene.constructNode('LineStrip');
     coreDisplayLinesNode.getAttributesDGNode().addDependency(dgnode, 'musclesystem');
     coreDisplayLinesNode.setGeneratorOps([
       scene.constructOperator({

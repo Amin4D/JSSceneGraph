@@ -267,7 +267,7 @@ FABRIC.SceneGraph.registerNodeType('Geometry', {
           }
         }
         if(dynamicBuffer){
-          buffer.bufferType = FABRIC.SceneGraph.OpenGLConstants.GL_DYNAMIC_DRAW;
+          buffer.bufferUsage = FABRIC.SceneGraph.OpenGLConstants.GL_DYNAMIC_DRAW;
         }
         
         redrawEventHandler.addMember(bufferMemberName, 'OGLBuffer', buffer);

@@ -10,7 +10,7 @@ function OGLBuffer.genBuffer(
   Size bufferSize,
   Size bufferDataElementCount
 ) {
-  if (self.bufferID <= 0 || bufferDataElementCount != self.elementCount || self.bufferType == GL_DYNAMIC_DRAW || self.reload) {
+  if (self.bufferID <= 0 || bufferDataElementCount != self.elementCount || self.bufferUsage == GL_DYNAMIC_DRAW || self.reload) {
     if (self.bufferID != 0 && (bufferDataElementCount != self.elementCount || self.reload)) {
       var Size bufferIDs[];
       bufferIDs.push(Size(self.bufferID));

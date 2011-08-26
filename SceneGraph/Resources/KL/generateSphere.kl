@@ -36,12 +36,12 @@ operator generateSphere(
   
   indices.resize(numTriangles * 3);
 
-  Scalar Pi = 3.141592653589793238462643383279;
+  Scalar PI = 3.141592653589793238462643383279;
   Integer voff = 0;
   for (var Integer i = 0; i <= nbLoops; i++) {
-    var Scalar theta = (i / Scalar(nbLoops)) * Pi;
+    var Scalar theta = (i / Scalar(nbLoops)) * PI;
     for (var Integer j = 0; j < nbSides; j++) {
-      var Scalar phi = (j / Scalar(sides)) * 2.0 * Pi;
+      var Scalar phi = (j / Scalar(sides)) * 2.0 * PI;
 
       normals[voff] = Vec3(
         sin(theta) * cos(phi),

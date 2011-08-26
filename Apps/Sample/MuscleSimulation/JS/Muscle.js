@@ -34,7 +34,6 @@ FABRIC.SceneGraph.registerNodeType('MuscleSystem', {
       muscles.addMuscle( muscleOptions );
     }
     
-    /*
     var coreDisplayLinesNode = scene.constructNode('Lines');
     coreDisplayLinesNode.getAttributesDGNode().addDependency(dgnode, 'musclesystem');
     coreDisplayLinesNode.setGeneratorOps([
@@ -79,10 +78,11 @@ operator loadUniform(\n\
         ]
       }));
     
+    /*
     scene.constructNode('Instance', {
       geometryNode: coreDisplayLinesNode.pub,
       materialNode: scene.constructNode('MuscleCoreLineShader', {
-        prototypeMaterialType:'PointMaterial',
+        prototypeMaterialType:'FlatMaterial',
         color: FABRIC.RT.rgb(1.0, 0.0, 0.0),
         pointSize: 6,
         numMuscles: 1

@@ -378,6 +378,7 @@ FABRIC.SceneGraph.registerNodeType('PaintManipulator', {
 
 
 FABRIC.SceneGraph.registerNodeType('Manipulator', {
+  manipulating: false,
   factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
         targetNode: undefined,
@@ -392,9 +393,10 @@ FABRIC.SceneGraph.registerNodeType('Manipulator', {
       });
 
     var compensation = true,
-       color = options.color,
-       highlightColor = options.highlightcolor,
-       material = scene.pub.constructNode('FlatMaterial', { color: options.color, drawOverlayed: options.drawOverLayed });
+      manipulating = false,
+      color = options.color,
+      highlightColor = options.highlightcolor,
+      material = scene.pub.constructNode('FlatMaterial', { color: options.color, drawOverlayed: options.drawOverLayed });
 
     var parentNode = options.parentNode;
     if (parentNode && parentNode.isTypeOf('Instance')) {
@@ -604,14 +606,25 @@ FABRIC.SceneGraph.registerNodeType('Manipulator', {
         setTargetOri(getParentXfo().ori.invert().postMultiply(ori));
       }
     };
-
+    
+    var manipulatorGlobals = this;
+    var highlightNode = function(){
+      material.setColor(highlightColor);
+    }
+    var unhighlightNode = function(){
+      material.setColor(color);
+    }
     manipulatorNode.pub.addEventListener('mouseover_geom', function(evt) {
-        material.setColor(highlightColor);
-        evt.viewportNode.redraw();
+        if(!manipulatorGlobals.manipulating){
+          highlightNode();
+          evt.viewportNode.redraw();
+        }
       });
     manipulatorNode.pub.addEventListener('mouseout_geom', function(evt) {
-        material.setColor(color);
-        evt.viewportNode.redraw();
+        if(!manipulating){
+          unhighlightNode();
+          evt.viewportNode.redraw();
+        }
       });
 
     var mouseDownScreenPos, mouseDrag, viewportNode;
@@ -624,6 +637,9 @@ FABRIC.SceneGraph.registerNodeType('Manipulator', {
       viewportNode.redraw(true);
     }
     var releaseFn = function(evt) {
+      manipulating = false;
+      manipulatorGlobals.manipulating = false;
+      unhighlightNode();
       manipulatorNode.pub.fireEvent('dragend', evt);
       document.removeEventListener('mousemove', dragFn, false);
       document.removeEventListener('mouseup', releaseFn, false);
@@ -631,6 +647,9 @@ FABRIC.SceneGraph.registerNodeType('Manipulator', {
       viewportNode.redraw();
     }
     manipulatorNode.pub.addEventListener('mousedown_geom', function(evt) {
+        manipulating = true;
+        manipulatorGlobals.manipulating = true;
+        highlightNode();
         viewportNode = evt.viewportNode;
         evt.mouseDownScreenPos = mouseDownScreenPos = FABRIC.RT.vec2(evt.screenX, evt.screenY);
         manipulatorNode.pub.fireEvent('dragstart', evt);
@@ -640,6 +659,10 @@ FABRIC.SceneGraph.registerNodeType('Manipulator', {
         viewportNode.redraw();
       });
     
+    // Thia function is used to find the closest local axis to
+    // the given vec. The local axis can then be used in manipulation.
+    // Manipulators can then determine the best local axis based on the
+    // camera facing direction. 
     manipulatorNode.findClosestLocalAxis = function(vec) {
       var manipulationSpaceOri = this.getManipulationSpaceXfo().ori,
         localX = manipulationSpaceOri.rotateVector(FABRIC.RT.vec3(1, 0, 0)),

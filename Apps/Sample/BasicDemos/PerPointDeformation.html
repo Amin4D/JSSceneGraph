@@ -45,12 +45,12 @@
 FABRIC.SceneGraph.registerNodeType('TwistedMesh', {
 factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
-        twist: 0.02
+        twist: 3.0
       });
 
     var twistedMesh = scene.constructNode('GeometryDataCopy', options );
-    twistedMesh.pub.addVertexAttributeValue('positions', 'Vec3', { genVBO:true } );
-    twistedMesh.pub.addVertexAttributeValue('normals', 'Vec3', { genVBO:true } );
+    twistedMesh.pub.addVertexAttributeValue('positions', 'Vec3', { genVBO:true, dynamic:true } );
+    twistedMesh.pub.addVertexAttributeValue('normals', 'Vec3', { genVBO:true, dynamic:true } );
     twistedMesh.pub.addUniformValue('twist', 'Scalar', options.twist, true);
     twistedMesh.getAttributesDGNode().bindings.append(scene.constructOperator({
       operatorName: 'twistOp',
@@ -75,9 +75,9 @@ factoryFn: function(options, scene) {
 $(document).ready(function() {
   
   var $twistAmount = $('#twistAmount').slider({
-      min: -0.5,
-      max: 0.5,
-      step: 0.001
+      min: -3,
+      max: 3,
+      step: 0.1
     });
 
   $('#importModel').button().change(function(e) {

@@ -25,8 +25,7 @@ FABRIC.SceneGraph.registerNodeType('Geometry', {
       uniformsdgnode = geometryNode.constructDGNode('UniformsDGNode'),
       attributesdgnode = geometryNode.constructDGNode('AttributesDGNode'),
       bboxdgnode,
-      redrawEventHandler,/*
-      deformationbufferinterfaces = [],*/
+      redrawEventHandler,
       shaderUniforms = [],
       shaderAttributes = [];
 
@@ -169,11 +168,6 @@ FABRIC.SceneGraph.registerNodeType('Geometry', {
       redrawEventHandler = geometryNode.constructEventHandlerNode('Redraw');
       redrawEventHandler.addScope('uniforms', uniformsdgnode);
       redrawEventHandler.addScope('attributes', attributesdgnode);
-      /*
-      for (i = 0; i < deformationbufferinterfaces.length; i++) {
-        redrawEventHandler.addScope('attributes' + (i + 1), deformationbufferinterfaces[i].getAttributesDGNode());
-      }
-      */
       var capitalizeFirstLetter = function(str) {
         return str[0].toUpperCase() + str.substr(1);
       };
@@ -183,7 +177,7 @@ FABRIC.SceneGraph.registerNodeType('Geometry', {
         var indicesBuffer = new FABRIC.RT.OGLBuffer(memberName, attributeID, registeredTypes.Integer);
         redrawEventHandler.addMember('indicesBuffer', 'OGLBuffer', indicesBuffer);
 
-        redrawEventHandler.postDescendBindings.append(scene.constructOperator({
+        redrawEventHandler.preDescendBindings.append(scene.constructOperator({
           operatorName: 'genVBO',
           srcFile: 'FABRIC_ROOT/SceneGraph/KL/loadVBO.kl',
           preProcessorDefinitions: {
@@ -210,7 +204,7 @@ FABRIC.SceneGraph.registerNodeType('Geometry', {
         if(uniformMembers[bufferMemberName]){
           // If this buffer has already been generated in the Dependency Graph,
           // then here we just need to bind the exsisting bufferID.
-          redrawEventHandler.postDescendBindings.append(scene.constructOperator({
+          redrawEventHandler.preDescendBindings.append(scene.constructOperator({
             operatorName: 'bind'+memberType+'VBO',
             srcFile: 'FABRIC_ROOT/SceneGraph/KL/loadVBO.kl',
             preProcessorDefinitions: {
@@ -226,23 +220,12 @@ FABRIC.SceneGraph.registerNodeType('Geometry', {
         }
         
         var buffer = new FABRIC.RT.OGLBuffer(memberName, attributeID, typeDesc);
-        var dynamicBuffer = options.dynamicMembers.indexOf(memberName) != -1;
-        /*
-        var attributeNodeBinding = 'attributes';
-        for (i = 0; i < deformationbufferinterfaces.length; i++) {
-          if (deformationbufferinterfaces[i].getAttributesDGNode().getMembers()[memberName]) {
-            attributeNodeBinding = 'attributes' + (i + 1);
-            dynamicBuffer = true;
-            break;
-          }
-        }
-        */
-        if(dynamicBuffer){
+        if(options.dynamicMembers.indexOf(memberName) != -1){
           buffer.bufferUsage = FABRIC.SceneGraph.OpenGLConstants.GL_DYNAMIC_DRAW;
         }
         
         redrawEventHandler.addMember(bufferMemberName, 'OGLBuffer', buffer);
-        redrawEventHandler.postDescendBindings.append(scene.constructOperator({
+        redrawEventHandler.preDescendBindings.append(scene.constructOperator({
           operatorName: 'load' + capitalizeFirstLetter(memberType) +'VBO',
           srcFile: 'FABRIC_ROOT/SceneGraph/KL/loadVBO.kl',
           preProcessorDefinitions: {
@@ -273,110 +256,7 @@ FABRIC.SceneGraph.registerNodeType('Geometry', {
     geometryNode.getRayintersectionOperator = function() {
       throw ('Geometry must define this');
     };
-    /*
-    // This method creates a new dgnode that enables multi-threaded
-    // execution on a copy of the data from the parent buffer.
-    // This is a very simple example on how to create an operator stack
-    // similar to those found in traditional DCC applications. Each
-    // buffer creates a cache of results, meaning that it is possible
-    // to separate out operators for geometry generation and animation.
-    // Note: This whole 'DeformationBuffer' system is up for review, and
-    // may be changes prior to Beta.
-    geometryNode.addDeformationBuffer = function(deformableAttributes) {
-      var parentuniformsdgnode, parentattributesdgnode,
-        bufferuniformsdgnode = geometryNode.constructDGNode('UniformsBuffer' + (deformationbufferinterfaces.length + 1)),
-        bufferattributesdgnode = geometryNode.constructDGNode('AttributesBuffer' + (deformationbufferinterfaces.length + 1)),
-        bufferInterface;
-
-      if (deformationbufferinterfaces.length == 0) {
-        parentuniformsdgnode = uniformsdgnode;
-        parentattributesdgnode = attributesdgnode;
-      }
-      else {
-        parentuniformsdgnode = deformationbufferinterfaces[deformationbufferinterfaces.length - 1].getUniformsDGNode();
-        parentattributesdgnode = deformationbufferinterfaces[deformationbufferinterfaces.length - 1].getAttributesDGNode();
-      }
-      
-      bufferuniformsdgnode.addDependency(uniformsdgnode, 'uniforms');
-      bufferattributesdgnode.addDependency(uniformsdgnode, 'uniforms');
-      bufferattributesdgnode.addDependency(attributesdgnode, 'attributes');
-      bufferattributesdgnode.addDependency(bufferuniformsdgnode, 'bufferuniforms');
-      bufferuniformsdgnode.addDependency(parentuniformsdgnode, 'parentuniforms');
-      bufferattributesdgnode.addDependency(parentattributesdgnode, 'parentattributes');
-
-      bufferattributesdgnode.bindings.append(scene.constructOperator({
-        operatorName: 'matchCount',
-        srcCode: 'operator matchCount(Size parentCount, io Size selfCount) {\n' +
-            '  selfCount = parentCount;\n' +
-            '}',
-        entryFunctionName: 'matchCount',
-        parameterLayout: [
-          'parentattributes.count',
-          'self.newCount'
-        ]
-      }));
-
-      bufferInterface = {
-        getUniformsDGNode: function() {
-          return bufferuniformsdgnode;
-        },
-        getAttributesDGNode: function() {
-          return bufferattributesdgnode;
-        },
-        propagateAttributeMember: function(attributeName) {
-          var attributeType = parentattributesdgnode.getMembers()[attributeName].type;
-          bufferattributesdgnode.addMember(attributeName, attributeType);
-          bufferattributesdgnode.bindings.append(scene.constructOperator({
-            operatorName: 'copyAttribute',
-            srcCode: 'operator copyAttribute(io ' + attributeType + ' elements[], ' +
-                'io ' + attributeType + ' value, in Size index) {\n' +
-                '  value = elements[ index ];\n' +
-                '}',
-            entryFunctionName: 'copyAttribute',
-            parameterLayout: [
-              'parentattributes.' + attributeName + '[]',
-              'self.' + attributeName,
-              'self.index'
-            ]
-          }));
-          if (bboxdgnode && attributeName == 'positions') {
-            bboxdgnode.addDependency(bufferattributesdgnode, 'attributes');
-          }
-        },
-        pub: {
-          addDependency: function( dgnode, dependencyName){
-            bufferattributesdgnode.addDependency(dgnode, dependencyName);
-          },
-          addUniformValue: function(name, type, value, addGetterSetterInterface) {
-            bufferuniformsdgnode.addMember(name, type, value);
-            if (addGetterSetterInterface) {
-              geometryNode.addMemberInterface(bufferuniformsdgnode, name, true);
-            }
-          },
-          addVertexAttributeValue: function(name, type, defaultValue, dynamic) {
-            bufferattributesdgnode.addMember(name, type, defaultValue);
-            if (dynamic === true) {
-              options.dynamicMembers.push(name);
-            }
-          },
-          assignOperator: function(operatorDef) {
-            bufferattributesdgnode.bindings.append(scene.constructOperator(operatorDef));
-          }
-        }
-      };
-      if(deformableAttributes){
-        for (i = 0; i < deformableAttributes.length; i++) {
-          bufferInterface.propagateAttributeMember(deformableAttributes[i]);
-        }
-      }
-      deformationbufferinterfaces.push(bufferInterface);
-      return bufferInterface;
-    };
     
-    geometryNode.pub.addDeformationBuffer = function(deformableAttributes) {
-      return geometryNode.addDeformationBuffer(deformableAttributes).pub;
-    }
-    */
     /*
     // Generate a VBO from the dependency graph.
     // this is usefull when using OpenCL. openGL buffers
@@ -459,7 +339,6 @@ FABRIC.SceneGraph.registerNodeType('GeometryDataCopy', {
         operatorName: 'matchCount',
         srcCode: 'operator matchCount(Size parentCount, io Size selfCount) {\n' +
             '  selfCount = parentCount;\n' +
-            '  report("matchCount:"+selfCount);' +
             '}',
         entryFunctionName: 'matchCount',
         parameterLayout: [
@@ -499,6 +378,7 @@ FABRIC.SceneGraph.registerNodeType('Points', {
           srcFile: 'FABRIC_ROOT/SceneGraph/KL/drawPoints.kl',
           entryFunctionName: 'drawPoints',
           parameterLayout: [
+            'shader.shaderProgram',
             'self.positionsBuffer',
             'instance.drawToggle'
           ]
@@ -542,6 +422,7 @@ FABRIC.SceneGraph.registerNodeType('Lines', {
           operatorName: 'drawLines',
           srcFile: 'FABRIC_ROOT/SceneGraph/KL/drawLines.kl',
           parameterLayout: [
+            'shader.shaderProgram',
             'self.indicesBuffer',
             'instance.drawToggle'
           ],
@@ -587,6 +468,7 @@ FABRIC.SceneGraph.registerNodeType('LineStrip', {
           operatorName: 'drawLineStrip',
           srcFile: 'FABRIC_ROOT/SceneGraph/KL/drawLines.kl',
           parameterLayout: [
+            'shader.shaderProgram',
             'self.indicesBuffer',
             'instance.drawToggle'
           ],

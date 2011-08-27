@@ -20,12 +20,7 @@ operator genAndBindVBO(
   io DATA_TYPE bufferData[],
   io OGLBuffer buffer
 ) {
-  Integer location = shaderProgram.getAttributeLocation(buffer.attributeID);
-//  report("genAndBindVBO  " + buffer.name + ":" + buffer.bufferID +" elementCount:" + buffer.elementCount );
-  if(location!=-1){
-    buffer.genBuffer(bufferData.data(), bufferData.dataSize(), bufferData.size());
-    buffer.bindBuffer(location);
-  }
+  shaderProgram.genAndBindBuffer(bufferData.data(), bufferData.dataSize(), bufferData.size(), buffer);
 }
 
 operator bindVBO(

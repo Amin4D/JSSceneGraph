@@ -10,6 +10,8 @@ operator drawTriangles(
 ) {
   //  report("drawTriangles:"+indicesBufferID+":"+indicesCount);
   if (drawToggle) {
+    shaderProgram.validateShaderBindings();
+    
     var Data NULL;
     // By default triangles are drawn using GL_TRIANGLES
     Integer drawMode = GL_TRIANGLES;

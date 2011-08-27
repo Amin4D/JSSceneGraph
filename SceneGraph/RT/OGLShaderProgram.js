@@ -85,6 +85,8 @@ FABRIC.RT.OGLShaderProgram = function(name) {
   this.drawMode = -1;
   this.patchVertices = -1;
   this.numInstances = -1;
+  
+  this.loadedAttributes = [];
   this.debug = false;
 };
 
@@ -105,6 +107,7 @@ FABRIC.appendOnCreateContextCallback(function(context) {
       drawMode: 'Integer',
       patchVertices: 'Integer',
       numInstances: 'Integer',
+      loadedAttributes: 'Integer[]',
       debug: 'Boolean'
     },
     constructor: FABRIC.RT.OGLShaderProgram,

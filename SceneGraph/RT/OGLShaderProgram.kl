@@ -252,6 +252,7 @@ function OGLShaderProgram.unloadShader() {
   if(self.disableOptions.size() > 0 || self.enableOptions.size() > 0){
     glPopAttrib();
   }
+  self.loadedAttributes.resize(0);
 }
 
 //////////////////////////////////////////////////////////
@@ -524,4 +525,49 @@ function Integer OGLShaderProgram.getAttributeLocation(
   return -1;
 }
 
+function Boolean OGLShaderProgram.isAttributeLoaded(
+  Integer attributeId
+) {
+  for (Integer i = 0; i < self.loadedAttributes.size(); i++) {
+    if (self.loadedAttributes[i] == attributeId) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function OGLShaderProgram.genAndBindBuffer(
+  in Data bufferData,
+  in Size bufferDataElementSize,
+  in Size bufferDataSize,
+  io OGLBuffer buffer
+) {
+  if(self.isAttributeLoaded(buffer.attributeID)){
+    // Multiple event hanlders can load buffers for the same drawn gometry
+    // Once a buffer has been loaded, we don't load any further buffers for that
+    // shader invocation.
+    return;
+  }
+  Integer location = self.getAttributeLocation(buffer.attributeID);
+  if(self.debug){
+    report("genAndBindBuffer  " + buffer.name + ":" + buffer.bufferID + " elementCount:" + buffer.elementCount );
+  }
+  if(location!=-1){
+    buffer.genBuffer(bufferData, bufferDataElementSize, bufferDataSize);
+    buffer.bindBuffer(location);
+    self.loadedAttributes.push(buffer.attributeID);
+  }
+}
+
+function OGLShaderProgram.validateShaderBindings() {
+//  Boolean valid = true;
+  for (Integer i = 0; i < self.attributeValues.size(); i++) {
+    if (!self.isAttributeLoaded(self.attributeValues[i].id)) {
+      report("Attribute not loaded prior to shader invocation:"+self.attributeValues[i].name);
+    //  valid = false;
+    }
+  }
+  self.loadedAttributes.resize(0);
+//  return valid;
+}
 

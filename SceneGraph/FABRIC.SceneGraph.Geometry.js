@@ -18,16 +18,15 @@ FABRIC.SceneGraph.registerNodeType('Geometry', {
     scene.assignDefaults(options, {
         dynamicMembers: [],
         genOpenGLBuffers:[],
-        createBoundingBoxNode: true,
-        positionsVec4: false
+        createBoundingBoxNode: true
       });
-
+  
     var geometryNode = geometryNode = scene.constructNode('SceneGraphNode', options),
       uniformsdgnode = geometryNode.constructDGNode('UniformsDGNode'),
       attributesdgnode = geometryNode.constructDGNode('AttributesDGNode'),
       bboxdgnode,
-      redrawEventHandler,
-      deformationbufferinterfaces = [],
+      redrawEventHandler,/*
+      deformationbufferinterfaces = [],*/
       shaderUniforms = [],
       shaderAttributes = [];
 
@@ -53,10 +52,6 @@ FABRIC.SceneGraph.registerNodeType('Geometry', {
     // extend public interface
     geometryNode.pub.addUniformValue = function(name, type, value, addGetterSetterInterface) {
       uniformsdgnode.addMember(name, type, value);
-
-      // Note: I have added this here simply to get the perpoint deformation demo going.
-      // We could generate methods like this on the 'SceneGraphNode'. This would simplify
-      // loads of code as we could add getters and setters as we add members.
       if (addGetterSetterInterface) {
         geometryNode.addMemberInterface(uniformsdgnode, name, true);
       }
@@ -89,6 +84,8 @@ FABRIC.SceneGraph.registerNodeType('Geometry', {
     geometryNode.pub.setVertexCount = function(count) {
       attributesdgnode.setCount(count);
     };
+    // This method is used by the parsers such as the collada parser to load
+    // parsed data into a constructed geometry.
     geometryNode.pub.loadGeometryData = function(data, datatype, sliceindex) {
       var i,
         uniformMembers = uniformsdgnode.getMembers(),
@@ -100,7 +97,6 @@ FABRIC.SceneGraph.registerNodeType('Geometry', {
           uniformsdgnode.setData(i, 0, data[i]);
         }
       }
-
       for (i in attributeMembers) {
         if (data[i]) {
           attributeData[i] = data[i];
@@ -119,34 +115,6 @@ FABRIC.SceneGraph.registerNodeType('Geometry', {
         min: bboxdgnode.getData('min'),
         max: bboxdgnode.getData('max')
       }
-    };
-    geometryNode.pub.loadResourceFiles = function(filepath) {
-
-      var fileArray = filepath.split('.');
-      fileArray.pop();
-      filepath = fileArray.join();
-
-      var uniformsDatablob = scene.loadResourceURL(filepath + '_uniforms' + '.base64');
-      var attributesDatablob = scene.loadResourceURL(filepath + '_attributes' + '.base64');
-      if (uniformsDatablob) {
-        uniformsdgnode.setBinary(uniformsDatablob);
-      }else {
-        throw ('File not found:' + filepath);
-      }
-      if (attributesDatablob) {
-        attributesdgnode.setBinary(attributesDatablob);
-      }else {
-        throw ('File not found:' + filepath);
-      }
-    };
-    geometryNode.pub.writeResourceFiles = function(filepath) {
-
-      var fileArray = filepath.split('.');
-      fileArray.pop();
-      filepath = fileArray.join();
-
-      scene.writeResourceFile(filepath + '_uniforms' + '.base64', uniformsdgnode.getBinary());
-      scene.writeResourceFile(filepath + '_attributes' + '.base64', attributesdgnode.getBinary());
     };
 
     // extend private interface
@@ -191,7 +159,7 @@ FABRIC.SceneGraph.registerNodeType('Geometry', {
       }
       return true;
     };
-    geometryNode.getRedrawEventHandler = function() {
+    geometryNode.getRedrawEventHandler = function(redrawEventHandlerOptions) {
       var vertexMembers = attributesdgnode.getMembers(),
         uniformMembers = uniformsdgnode.getMembers(),
         registeredTypes = scene.getContext().RegisteredTypesManager.getRegisteredTypes(),
@@ -201,10 +169,11 @@ FABRIC.SceneGraph.registerNodeType('Geometry', {
       redrawEventHandler = geometryNode.constructEventHandlerNode('Redraw');
       redrawEventHandler.addScope('uniforms', uniformsdgnode);
       redrawEventHandler.addScope('attributes', attributesdgnode);
+      /*
       for (i = 0; i < deformationbufferinterfaces.length; i++) {
         redrawEventHandler.addScope('attributes' + (i + 1), deformationbufferinterfaces[i].getAttributesDGNode());
       }
-      
+      */
       var capitalizeFirstLetter = function(str) {
         return str[0].toUpperCase() + str.substr(1);
       };
@@ -214,7 +183,7 @@ FABRIC.SceneGraph.registerNodeType('Geometry', {
         var indicesBuffer = new FABRIC.RT.OGLBuffer(memberName, attributeID, registeredTypes.Integer);
         redrawEventHandler.addMember('indicesBuffer', 'OGLBuffer', indicesBuffer);
 
-        redrawEventHandler.preDescendBindings.append(scene.constructOperator({
+        redrawEventHandler.postDescendBindings.append(scene.constructOperator({
           operatorName: 'genVBO',
           srcFile: 'FABRIC_ROOT/SceneGraph/KL/loadVBO.kl',
           preProcessorDefinitions: {
@@ -241,7 +210,7 @@ FABRIC.SceneGraph.registerNodeType('Geometry', {
         if(uniformMembers[bufferMemberName]){
           // If this buffer has already been generated in the Dependency Graph,
           // then here we just need to bind the exsisting bufferID.
-          redrawEventHandler.preDescendBindings.append(scene.constructOperator({
+          redrawEventHandler.postDescendBindings.append(scene.constructOperator({
             operatorName: 'bind'+memberType+'VBO',
             srcFile: 'FABRIC_ROOT/SceneGraph/KL/loadVBO.kl',
             preProcessorDefinitions: {
@@ -258,6 +227,7 @@ FABRIC.SceneGraph.registerNodeType('Geometry', {
         
         var buffer = new FABRIC.RT.OGLBuffer(memberName, attributeID, typeDesc);
         var dynamicBuffer = options.dynamicMembers.indexOf(memberName) != -1;
+        /*
         var attributeNodeBinding = 'attributes';
         for (i = 0; i < deformationbufferinterfaces.length; i++) {
           if (deformationbufferinterfaces[i].getAttributesDGNode().getMembers()[memberName]) {
@@ -266,12 +236,13 @@ FABRIC.SceneGraph.registerNodeType('Geometry', {
             break;
           }
         }
+        */
         if(dynamicBuffer){
           buffer.bufferUsage = FABRIC.SceneGraph.OpenGLConstants.GL_DYNAMIC_DRAW;
         }
         
         redrawEventHandler.addMember(bufferMemberName, 'OGLBuffer', buffer);
-        redrawEventHandler.preDescendBindings.append(scene.constructOperator({
+        redrawEventHandler.postDescendBindings.append(scene.constructOperator({
           operatorName: 'load' + capitalizeFirstLetter(memberType) +'VBO',
           srcFile: 'FABRIC_ROOT/SceneGraph/KL/loadVBO.kl',
           preProcessorDefinitions: {
@@ -280,13 +251,15 @@ FABRIC.SceneGraph.registerNodeType('Geometry', {
           entryFunctionName: 'genAndBindVBO',
           parameterLayout: [
             'shader.shaderProgram',
-            attributeNodeBinding + '.' + memberName + '[]',
+            'attributes.' + memberName + '[]',
             'self.' + bufferMemberName
           ]
         }));
       }
       
-      redrawEventHandler.postDescendBindings.append(this.getDrawOperator());
+      if( !redrawEventHandlerOptions || redrawEventHandlerOptions.createDrawOperator != false ){
+        redrawEventHandler.postDescendBindings.append(geometryNode.getDrawOperator());
+      }
       return redrawEventHandler;
     };
     geometryNode.pub.reloadVBO = function(memberName) {
@@ -300,6 +273,7 @@ FABRIC.SceneGraph.registerNodeType('Geometry', {
     geometryNode.getRayintersectionOperator = function() {
       throw ('Geometry must define this');
     };
+    /*
     // This method creates a new dgnode that enables multi-threaded
     // execution on a copy of the data from the parent buffer.
     // This is a very simple example on how to create an operator stack
@@ -308,7 +282,7 @@ FABRIC.SceneGraph.registerNodeType('Geometry', {
     // to separate out operators for geometry generation and animation.
     // Note: This whole 'DeformationBuffer' system is up for review, and
     // may be changes prior to Beta.
-    geometryNode.pub.addDeformationBuffer = function(deformableAttributes) {
+    geometryNode.addDeformationBuffer = function(deformableAttributes) {
       var parentuniformsdgnode, parentattributesdgnode,
         bufferuniformsdgnode = geometryNode.constructDGNode('UniformsBuffer' + (deformationbufferinterfaces.length + 1)),
         bufferattributesdgnode = geometryNode.constructDGNode('AttributesBuffer' + (deformationbufferinterfaces.length + 1)),
@@ -396,9 +370,14 @@ FABRIC.SceneGraph.registerNodeType('Geometry', {
         }
       }
       deformationbufferinterfaces.push(bufferInterface);
-      return bufferInterface.pub;
+      return bufferInterface;
     };
     
+    geometryNode.pub.addDeformationBuffer = function(deformableAttributes) {
+      return geometryNode.addDeformationBuffer(deformableAttributes).pub;
+    }
+    */
+    /*
     // Generate a VBO from the dependency graph.
     // this is usefull when using OpenCL. openGL buffers
     // can be created and used in both the computation
@@ -441,15 +420,67 @@ FABRIC.SceneGraph.registerNodeType('Geometry', {
           }));
       return bufferMemberName;
     }
-
-    if(options.positionsVec4 == true ){
-      geometryNode.pub.addVertexAttributeValue('positions', 'Vec4', { genVBO:true } );
-    }else{
-      geometryNode.pub.addVertexAttributeValue('positions', 'Vec3', { genVBO:true } );
-    }
+    */
     
     return geometryNode;
   }});
+
+
+FABRIC.SceneGraph.registerNodeType('GeometryDataCopy', {
+  briefDesc: 'The GeometryDataCopy node is created using an existing Geometry node, and is used to build deformation stacks.',
+  detailedDesc: 'When a node is evaluated, all the operators are evaluated. By splitting geometry into multiple data copies,' +
+                ' only operators on nodes that are dirty will be evaluated. This makes it easy to build chains of nodes which,'+
+                ' provide the same behavior as the operator stacks you would find in a traditional DCC application like 3dsmax/Maya/Softimage.',
+  parentNodeDesc: 'Geometry',
+  optionsDesc: {
+    geometryNode: 'The original data copy to use as the bases of this geometries data. '
+  },
+  factoryFn: function(options, scene) {
+    scene.assignDefaults(options, {
+        baseGeometryNode: undefined
+      });
+    
+    if(!options.baseGeometryNode){
+      throw 'A baseGeometryNode must be specified'
+    }
+    if (!options.baseGeometryNode.isTypeOf('Geometry')) {
+      throw ('Incorrect type assignment. Must assign a Geometry');
+    }
+    var baseGeometryNode = scene.getPrivateInterface(options.baseGeometryNode);
+    var geometryDataCopyNode = scene.constructNode('Geometry', options);
+    
+    geometryDataCopyNode.getUniformsDGNode().addDependency(baseGeometryNode.getUniformsDGNode(), 'parentuniforms');
+    geometryDataCopyNode.getUniformsDGNode().addDependency(baseGeometryNode.getBoundingBoxDGNode(), 'parentboundingbox');
+    geometryDataCopyNode.getAttributesDGNode().addDependency(baseGeometryNode.getAttributesDGNode(), 'parentattributes');
+    geometryDataCopyNode.getAttributesDGNode().addDependency(baseGeometryNode.getBoundingBoxDGNode(), 'parentboundingbox');
+
+    geometryDataCopyNode.getAttributesDGNode().bindings.append(
+      scene.constructOperator({
+        operatorName: 'matchCount',
+        srcCode: 'operator matchCount(Size parentCount, io Size selfCount) {\n' +
+            '  selfCount = parentCount;\n' +
+            '  report("matchCount:"+selfCount);' +
+            '}',
+        entryFunctionName: 'matchCount',
+        parameterLayout: [
+          'parentattributes.count',
+          'self.newCount'
+        ]
+      }));
+    
+    var geometryGetRedrawEventHandler = geometryDataCopyNode.getRedrawEventHandler;
+    geometryDataCopyNode.getRedrawEventHandler = function() {
+      // the render traversal passed through this node, loads the VBOs, and them continues
+      // to the baseGeometry.
+      var redrawEventHandler = geometryGetRedrawEventHandler( { createDrawOperator: false } );
+      var baseGeometryNodeRedrawEventHandler = baseGeometryNode.getRedrawEventHandler();
+      
+      redrawEventHandler.appendChildEventHandler(baseGeometryNodeRedrawEventHandler);
+      return redrawEventHandler;
+    }
+    return geometryDataCopyNode;
+  }});
+
 
 FABRIC.SceneGraph.registerNodeType('Points', {
   briefDesc: 'The Points node defines a renderable points geometry type.',
@@ -488,7 +519,8 @@ FABRIC.SceneGraph.registerNodeType('Points', {
           ]
         });
     };
-
+    
+    pointsNode.pub.addVertexAttributeValue('positions', 'Vec3', { genVBO:true } );
     return pointsNode;
   }});
 
@@ -533,6 +565,7 @@ FABRIC.SceneGraph.registerNodeType('Lines', {
         });
     };
 
+    linesNode.pub.addVertexAttributeValue('positions', 'Vec3', { genVBO:true } );
     linesNode.pub.addUniformValue('indices', 'Integer[]');
     return linesNode;
   }});
@@ -552,7 +585,7 @@ FABRIC.SceneGraph.registerNodeType('LineStrip', {
     linesNode.getDrawOperator = function() {
       return scene.constructOperator({
           operatorName: 'drawLineStrip',
-          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/drawLines.kl',
+          srcFile: 'FABRIC_ROOT/SceneGraph/KL/drawLines.kl',
           parameterLayout: [
             'self.indicesBuffer',
             'instance.drawToggle'
@@ -577,6 +610,7 @@ FABRIC.SceneGraph.registerNodeType('LineStrip', {
         });
     };
 
+    linesNode.pub.addVertexAttributeValue('positions', 'Vec3', { genVBO:true } );
     linesNode.pub.addUniformValue('indices', 'Integer[]');
     return linesNode;
   }});
@@ -638,10 +672,10 @@ FABRIC.SceneGraph.registerNodeType('Triangles', {
     };
 
     trianglesNode.pub.addUniformValue('indices', 'Integer[]');
+    trianglesNode.pub.addVertexAttributeValue('positions', 'Vec3', { genVBO:true } );
     trianglesNode.pub.addVertexAttributeValue('normals', 'Vec3', { genVBO:true } );
 
     var nbUVs = 0;
-
     if (typeof options.uvSets === 'number') {
       var nbUVs = parseInt(options.uvSets);
       for (var i = 0; i < nbUVs; i++) {

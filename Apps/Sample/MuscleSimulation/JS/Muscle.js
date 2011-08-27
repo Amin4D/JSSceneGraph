@@ -120,7 +120,7 @@ operator loadUniform(\n\
     });
     
     //////////////////////////////////////////////////////////
-    // Lines Display
+    // Volume Display
     var coreDisplayVolumeNode = scene.constructNode('Cylinder', {
         radius: 0.5,
         height: 1.0,
@@ -386,6 +386,51 @@ FABRIC.SceneGraph.registerNodeType('Muscle', {
           }).pub
         });
       }
+    }
+    muscle.displayVolume = function(){
+    
+      var coreDisplayVolumeNode = scene.constructNode('Cylinder', {
+          radius: 0.5,
+          height: 1.0,
+          sides: options.displacementMapResolution,
+          loops: options.displacementMapResolution,
+          caps: true
+        });
+      
+      coreDisplayVolumeNode.getAttributesDGNode().bindings.append(
+        scene.constructOperator({
+          operatorName: 'rotateMuscleVolume',
+          srcCode: '\n\
+  operator rotateMuscleVolume(\n\
+    io Vec3 position\n\
+  ) {\n\
+    Scalar PI = 3.141592653589793238462643383279;\n\
+    position = axisAndAngleToQuat(Vec3(0.0,0.0,1.0), PI*-0.5).rotateVector(position);\n\
+  }\n\
+          ',
+          entryFunctionName: 'rotateMuscleVolume',
+          parameterLayout: [
+            'self.positions'
+          ]
+        }));
+      
+      var deformationBuffer = coreDisplayVolumeNode.addDeformationBuffer([ 'positions' ] );
+      deformationBuffer.getAttributesDGNode().bindings.append(scene.constructOperator({
+        operatorName: 'deformMuscleVolume',
+        srcFile: './KL/muscleVolume.kl',
+        entryFunctionName: 'deformMuscleVolume',
+        parameterLayout: [
+        ]
+      }));
+      
+      var volumeInst = scene.constructNode('Instance', {
+        geometryNode: deformationBuffer.pub,
+        materialNode: scene.constructNode('MuscleVolumeShader', {
+          diffuseColor: FABRIC.RT.rgba(0.8, 0.0, 0.0, 0.5),
+          lightNode: light.pub,
+          numMuscles: 1
+        }).pub
+      });
     }
     muscle.addMuscle = function(options){
       initializationdgnode.setCount( initializationdgnode.getCount() + 1);

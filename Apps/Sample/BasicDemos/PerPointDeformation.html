@@ -41,6 +41,37 @@
     
     <script type="text/javascript">
     
+    
+FABRIC.SceneGraph.registerNodeType('TwistedMesh', {
+factoryFn: function(options, scene) {
+    scene.assignDefaults(options, {
+        twist: 0.02
+      });
+
+    var twistedMesh = scene.constructNode('GeometryDataCopy', options );
+    twistedMesh.pub.addVertexAttributeValue('positions', 'Vec3', { genVBO:true } );
+    twistedMesh.pub.addVertexAttributeValue('normals', 'Vec3', { genVBO:true } );
+    twistedMesh.pub.addUniformValue('twist', 'Scalar', options.twist, true);
+    twistedMesh.getAttributesDGNode().bindings.append(scene.constructOperator({
+      operatorName: 'twistOp',
+      srcFile: 'KL/twistOp.kl',
+      entryFunctionName: 'twistOp',
+      parameterLayout: [
+        'parentattributes.positions[]',
+        'parentattributes.normals[]',
+        'parentboundingbox.min',
+        'parentboundingbox.max',
+        'uniforms.twist',
+        'self.positions',
+        'self.normals',
+        'self.index'
+      ]
+    }));
+
+    return twistedMesh;
+  }});
+
+
 $(document).ready(function() {
   
   var $twistAmount = $('#twistAmount').slider({
@@ -83,33 +114,25 @@ $(document).ready(function() {
 
   viewport.setCameraNode(camera);
 
-  triangles = scene.importAssetFile('Models/cow.obj')['cow'];
-
-  deformationBuffer = triangles.addDeformationBuffer(['positions', 'normals']);
-  deformationBuffer.addUniformValue('twist', 'Scalar', 0.02, true);
-  deformationBuffer.assignOperator({
-    operatorName: 'twistOp',
-    srcFile: 'KL/twistOp.kl',
-    entryFunctionName: 'twistOp',
-    parameterLayout: [
-      'self.positions',
-      'self.normals',
-      'bufferuniforms.twist'
-    ]
-  });
+  var triangles = scene.importAssetFile('Models/cow.obj')['cow'];
+  
+  var twistedMesh = scene.constructNode('TwistedMesh', { baseGeometryNode: triangles });
 
   var material = scene.constructNode('PhongMaterial', {
       diffuseColor: FABRIC.RT.rgb(0.8, 0, 0, 1),
       lightNode: light
     });
 
-  instanceNode = scene.constructNode('Instance', { geometryNode: triangles, materialNode: material });
+  instanceNode = scene.constructNode('Instance', {
+    geometryNode: twistedMesh,
+    materialNode: material
+  });
 
 
-  $twistAmount.slider('value', triangles.getTwist());
+  $twistAmount.slider('value', twistedMesh.getTwist());
   $twistAmount.bind('slide',
     function(event, ui) {
-      triangles.setTwist(ui.value);
+      twistedMesh.setTwist(ui.value);
       viewport.redraw();
       return true;
     });

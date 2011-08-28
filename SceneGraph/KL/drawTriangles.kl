@@ -8,7 +8,9 @@ operator drawTriangles(
   io OGLBuffer indicesBuffer,
   io Boolean drawToggle
 ) {
-  //  report("drawTriangles:"+indicesBufferID+":"+indicesCount);
+  if(shaderProgram.debug){
+    report("drawTriangles:"+shaderProgram.name);
+  }
   if (drawToggle) {
     shaderProgram.validateShaderBindings();
     
@@ -33,5 +35,9 @@ operator drawTriangles(
       glDrawElements(drawMode, indicesBuffer.elementCount, GL_UNSIGNED_INT, NULL);
     }
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+  }
+  
+  if(shaderProgram.debug){
+    report("----------------------------");
   }
 }

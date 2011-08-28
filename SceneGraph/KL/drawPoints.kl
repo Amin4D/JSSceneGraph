@@ -38,9 +38,14 @@ operator drawPoints(
   io OGLShaderProgram shaderProgram,
   io Boolean drawToggle
 ) {
-  //  report( "drawPoints:" + pointCount );
+  if(shaderProgram.debug){
+    report("drawPoints:"+shaderProgram.name);
+  }
   if (drawToggle) {
     shaderProgram.validateShaderBindings();
     glDrawArrays(GL_POINTS, 0, shaderProgram.attributesElementCount);
+  }
+  if(shaderProgram.debug){
+    report("----------------------------");
   }
 }

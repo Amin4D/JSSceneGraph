@@ -38,7 +38,7 @@ operator loadUniform(\n\
   io Mat44 values[]\n\
 ) {\n\
   Integer location = shaderProgram.getUniformLocation('+corePositionsID+');\n\
- // report("corePositions:"+location + " = "+values);\n\
+  report("Loading corePositions :"+location + " = "+values);\n\
   if(location!=-1){\n\
     shaderProgram.loadMat44UniformArray(location, values);\n\
   }\n\
@@ -60,7 +60,7 @@ operator loadUniform(\n\
   io Mat44 values[]\n\
 ) {\n\
   Integer location = shaderProgram.getUniformLocation('+coreFramesID+');\n\
- // report("coreFrames:"+location + " = "+values);\n\
+  report("Loading coreFrames :"+location + " = "+values);\n\
   if(location!=-1){\n\
     shaderProgram.loadMat44UniformArray(location, values);\n\
   }\n\
@@ -115,6 +115,7 @@ operator loadUniform(\n\
     
     //////////////////////////////////////////////////////////
     // Volume Display
+    /*
     var volumeDisplayNode = scene.constructNode('Cylinder', {
         radius: 0.5,
         height: 1.0,
@@ -139,7 +140,6 @@ operator rotateMuscleVolume(\n\
           'self.positions'
         ]
       }));
-    /*
     var redrawEventHandler = volumeDisplayNode.getRedrawEventHandler();
     redrawEventHandler.addScope('muscles', muscles.getSimulationDGNode());
     redrawEventHandler.preDescendBindings.append(loadCorePositionsOp);

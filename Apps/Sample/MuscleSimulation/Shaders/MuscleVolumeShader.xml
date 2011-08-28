@@ -74,7 +74,7 @@
         return a3 + ((a2 + ((a1 + (a0 * t)) * t)) * t);
       }
       
-      vec3 EvalPiecewiseBSpline( vec3 controlPoints[4], int numControlPoints, float u, out int i, out float t ){
+      vec3 evalPiecewiseBSpline( vec3 controlPoints[4], int numControlPoints, float u, out int i, out float t ){
         vec3 p;
         t = u * float(numControlPoints - 1);
         if( t < float(numControlPoints - 1) ){
@@ -156,7 +156,7 @@
         
         int i;
         float t;
-        vec3 corepos = EvalPiecewiseBSpline( corePositions, 4, a_position.x, i, t );
+        vec3 corepos = evalPiecewiseBSpline( corePositions, 4, a_position.x, i, t );
         
         float inflation = mix(coreInflationValues[i], coreInflationValues[i+1], t );
         

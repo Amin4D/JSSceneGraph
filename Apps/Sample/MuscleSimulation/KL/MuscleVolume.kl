@@ -12,36 +12,37 @@ function calcPolarElipse(
   return (semiMajior*semiMinor)/sqrt((bcostheta*bcostheta)+(asintheta*asintheta));
 }
 
-/*
 function Vec3 evalPiecewiseBSpline( 
   in Xfo xfos[],
-  io Scalar u,
+  in Scalar u,
+  io Scalar t,
   io Integer i
 ){
   Vec3 p;
-  u *= Scalar(xfos.size() - 1);
-  if( u < Scalar(xfos.size() - 1) ){
-    i = Integer(floor( u ));
-    u = u - Scalar(i);
+  t = u * Scalar(xfos.size() - 1);
+  if( t < Scalar(xfos.size() - 1) ){
+    i = Integer(floor( t ));
+    t = t - Scalar(i);
   }
   else{
     i = xfos.size() - 2;
-    u = 1.0;
+    t = 1.0;
   }
 
   if( i == 0 ){
     p = controlPoints[ i ].tr + ( xfos[ i ].tr - xfos[ i + 1 ].tr );
-    return EvalBSpline( p, xfos[ i ].tr, xfos[ i + 1 ].tr, xfos[ i + 2 ].tr, u );
+    return EvalBSpline( p, xfos[ i ].tr, xfos[ i + 1 ].tr, xfos[ i + 2 ].tr, t );
   }
   else if( i == ( numControlPoints - 2 ) ){
     p = controlPoints[ i + 1 ].tr + ( xfos[ i + 1 ].tr - xfos[ i ].tr );
-    return EvalBSpline( xfos[ i - 1 ].tr, xfos[ i ].tr, xfos[ i + 1 ].tr, p, u );
+    return EvalBSpline( xfos[ i - 1 ].tr, xfos[ i ].tr, xfos[ i + 1 ].tr, p, t );
   }
   else{
-    return EvalBSpline( xfos[ i - 1 ].tr, xfos[ i ].tr, xfos[ i + 1 ].tr, xfos[ i + 2 ].tr, u );
+    return EvalBSpline( xfos[ i - 1 ].tr, xfos[ i ].tr, xfos[ i + 1 ].tr, xfos[ i + 2 ].tr, t );
   }
 }
 
+/*
 
 // This function gets used to generate the initial rays that are fired at the muscle meshes.
 function Ray muscleUVtoRay(
@@ -180,6 +181,27 @@ operator generateSystemDisplacementMap(
   }
 }
 
+operator deformMuscleVolume(
+  io Xfo xfos[],
+  io Vec3 parentpositions[],
+  io Vec3 parentnormals[],
+  io Vec3 position,
+  io Vec3 normal,
+  in Size index
+){
+  io Scalar t;
+  io Integer i;
+  Vec3 corepos = evalPiecewiseBSpline( xfos, parentpositions[index].x, t, i );
+  
+//  Scalar inflation = mix(coreInflationValues[i], coreInflationValues[i+1], t );
+  
+  Vec3 frameoffsetvec = parentpositions[index];// * inflation;
+  frameoffsetvec.x = 0.0;
+  Quat frame = xfos[i].ori.nlerp( xfos[i+1].ori, t );
+  normal = frame.rotateVector( frameoffsetvec );
+  position = corepos + normal;
+  normal.normalize();
+}
 
 
 /*******************************************************************************

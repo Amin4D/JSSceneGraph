@@ -226,6 +226,9 @@ function OGLShaderProgram.createProgramFromShaders() {
 }
 
 function OGLShaderProgram.loadShader() {
+  if(self.debug){
+    report("loadShader  " + self.name );
+  }
   if (!self.programId) {
     self.createProgramFromShaders();
   }
@@ -246,6 +249,7 @@ function OGLShaderProgram.loadShader() {
       glCullFace(self.cullFace);
     }
   }
+  self.loadedAttributes.resize(0);
 }
 
 function OGLShaderProgram.unloadShader() {
@@ -550,7 +554,7 @@ function OGLShaderProgram.genAndBindBuffer(
   }
   Integer location = self.getAttributeLocation(buffer.attributeID);
   if(self.debug){
-    report("genAndBindBuffer  " + buffer.name + ":" + buffer.bufferID + " elementCount:" + buffer.elementCount );
+    report("genAndBindBuffer  " + buffer.name + ":" + buffer.bufferID + " elementCount:" + buffer.elementCount  + " location:" + location );
   }
   if(location!=-1){
     if(self.attributesElementCount != buffer.elementCount){

@@ -6,7 +6,7 @@
 
 
 operator calcCellIndex(
-  in Size index,
+  in Index index,
   io Vec3 position,
   io Vec3 cellcoords,
   io Integer cellindex,
@@ -27,7 +27,7 @@ operator populateHashTable(
   // Reset the hash table, and re-accumulate the ids.
   Size numCells = hashtable.x_count * hashtable.y_count * hashtable.z_count;
   hashtable.cells.resize(numCells);
-  for (var Size i = 0; i < numCells; ++ i)
+  for (var Index i = 0; i < numCells; ++ i)
     hashtable.cells[i].resize(0);
 
   for (var Integer i = 0; i < particleCellIndices.size; i++) {
@@ -65,7 +65,7 @@ function addCellParticlesToNeighborsArray(
 function getNeighboringIndices(
   io Integer neighbors[],
   io Scalar neighborDistances[],
-  in Size index,
+  in Index index,
   io Vec3 position,
   io Vec3 velocity,
   io Integer cellindex,

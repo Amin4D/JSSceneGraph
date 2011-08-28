@@ -38,7 +38,7 @@ operator loadUniform(\n\
   io Mat44 values[]\n\
 ) {\n\
   Integer location = shaderProgram.getUniformLocation('+corePositionsID+');\n\
-  report("Loading corePositions :"+location + " = "+values);\n\
+//  report("Loading corePositions :"+location + " = "+values);\n\
   if(location!=-1){\n\
     shaderProgram.loadMat44UniformArray(location, values);\n\
   }\n\
@@ -60,7 +60,7 @@ operator loadUniform(\n\
   io Mat44 values[]\n\
 ) {\n\
   Integer location = shaderProgram.getUniformLocation('+coreFramesID+');\n\
-  report("Loading coreFrames :"+location + " = "+values);\n\
+//  report("Loading coreFrames :"+location + " = "+values);\n\
   if(location!=-1){\n\
     shaderProgram.loadMat44UniformArray(location, values);\n\
   }\n\
@@ -173,7 +173,7 @@ FABRIC.SceneGraph.registerNodeType('Muscle', {
       length: 10,
       muscleSystem: undefined,
       characterRig: undefined,
-      displayVolume: true,
+      display: true,
       xfo: FABRIC.RT.xfo(),
       pointEnvelopeIds: FABRIC.RT.vec2(0,1)
       });
@@ -250,7 +250,7 @@ FABRIC.SceneGraph.registerNodeType('Muscle', {
     initializationdgnode.addMember('quadrantCurve2', 'BezierKeyframe[]', quadrantCurve);
     initializationdgnode.addMember('quadrantCurve3', 'BezierKeyframe[]', quadrantCurve);
     initializationdgnode.addMember('regenerateDisplacementMap', 'Boolean', true);
-    /*
+    
     initializationdgnode.bindings.append(scene.constructOperator({
         operatorName: 'generateDisplacementMap',
         srcFile: './KL/muscleVolume.kl',
@@ -276,10 +276,10 @@ FABRIC.SceneGraph.registerNodeType('Muscle', {
           "characterMeshAttributes.positions[]",
           "characterMeshAttributes.normals[]",
           "characterMeshUniforms.indices[]",
-          * /
+          */
         ]
       }));
-    */
+    
     ////////////////////////////////////////////////////////////////////////////
     // Configure the node that will be used to calculate the simulation.
     simulationdgnode.addMember('initialized', 'Boolean', false);
@@ -347,8 +347,8 @@ FABRIC.SceneGraph.registerNodeType('Muscle', {
     }
     
     var coreDisplayLinesNode, coreDisplayPointsNode;
-    /*
-    muscle.displayCore = function(){
+    
+    muscle.display = function(){
       if(!coreDisplayPointsNode){
         coreDisplayPointsNode = scene.constructNode('Points', { dynamicMembers: ['positions'] });
         coreDisplayPointsNode.pub.addVertexAttributeValue('vertexColors', 'Color', {
@@ -390,10 +390,8 @@ FABRIC.SceneGraph.registerNodeType('Muscle', {
           }).pub
         });
       }
-    }
-    */
-    muscle.displayVolume = function(){
       
+      /*
       var volumeDisplayNode = muscleSystem.getVolumeDisplayNode();
       
       var deformedVolume = scene.constructNode('GeometryDataCopy', options );
@@ -413,12 +411,12 @@ FABRIC.SceneGraph.registerNodeType('Muscle', {
           diffuseColor: FABRIC.RT.rgba(0.8, 0.0, 0.0, 0.5)
         }).pub
       });
+      */
     }
-    /*
-    if(options.displayVolume){
-      muscle.displayVolume();
+    
+    if(options.display){
+      muscle.display();
     }
-    */
 
     return muscle;
   }});

@@ -1,6 +1,6 @@
 
 
-#include '../../../SceneGraph/Resources/KL/evaluateKeyframeAnimationTrack.kl'
+#include '../../../SceneGraph/KL/evaluateKeyframeAnimationTrack.kl'
 
 function calcPolarElipse(
   in Scalar theta,
@@ -189,8 +189,8 @@ operator deformMuscleVolume(
   io Vec3 normal,
   in Size index
 ){
-  io Scalar t;
-  io Integer i;
+  Scalar t;
+  Integer i;
   Vec3 corepos = evalPiecewiseBSpline( xfos, parentpositions[index].x, t, i );
   
 //  Scalar inflation = mix(coreInflationValues[i], coreInflationValues[i+1], t );

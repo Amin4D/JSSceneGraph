@@ -4,7 +4,7 @@
 //
 
 
-#include 'FABRIC_ROOT/SceneGraph/Resources/KL/spatialHashTable.kl'
+#include 'FABRIC_ROOT/SceneGraph/KL/spatialHashTable.kl'
 
 operator simulateParticles(
   in Size index,

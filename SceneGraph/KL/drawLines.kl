@@ -13,15 +13,14 @@ operator drawLines(
     report("drawLines:"+shaderProgram.name);
   }
   if (drawToggle) {
-    shaderProgram.validateShaderBindings();
+    shaderProgram.preDraw();
+    
     var Data NULL;
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indicesBuffer.bufferID);
     glDrawElements(GL_LINES, indicesBuffer.elementCount, GL_UNSIGNED_INT, NULL);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
   }
-  if(shaderProgram.debug){
-    report("----------------------------");
-  }
+  shaderProgram.postDraw();
 }
 
 
@@ -34,13 +33,12 @@ operator drawLineStrip(
     report("drawLineStrip:"+shaderProgram.name);
   }
   if (drawToggle) {
-    shaderProgram.validateShaderBindings();
+    shaderProgram.preDraw();
+    
     var Data NULL;
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indicesBuffer.bufferID);
     glDrawElements(GL_LINE_STRIP, indicesBuffer.elementCount, GL_UNSIGNED_INT, NULL);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
   }
-  if(shaderProgram.debug){
-    report("----------------------------");
-  }
+  shaderProgram.postDraw();
 }

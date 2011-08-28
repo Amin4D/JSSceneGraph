@@ -304,7 +304,7 @@ FABRIC.SceneGraph.registerNodeType('Shader', {
   factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
         parentEventHandler: scene.getSceneRedrawOpaqueObjectsEventHandler(),
-        debug: true,
+        debug: false,
         unloadShader: true
       });
     var shaderNode = scene.constructNode('SceneGraphNode', options),

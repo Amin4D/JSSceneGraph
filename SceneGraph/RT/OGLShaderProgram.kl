@@ -580,7 +580,7 @@ function OGLShaderProgram.genAndBindBuffer(
   }
 }
 
-function OGLShaderProgram.validateShaderBindings() {
+function OGLShaderProgram.preDraw() {
 //  Boolean valid = true;
   for (Integer i = 0; i < self.attributeValues.size(); i++) {
     if (!self.isAttributeLoaded(self.attributeValues[i].id)) {
@@ -588,8 +588,15 @@ function OGLShaderProgram.validateShaderBindings() {
     //  valid = false;
     }
   }
+//  return valid;
+}
+
+function OGLShaderProgram.postDraw() {
   self.loadedAttributes.resize(0);
   self.attributesElementCount = 0;
-//  return valid;
+  
+  if(self.debug){
+    report("----------------------------");
+  }
 }
 

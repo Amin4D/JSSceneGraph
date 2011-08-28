@@ -42,10 +42,8 @@ operator drawPoints(
     report("drawPoints:"+shaderProgram.name);
   }
   if (drawToggle) {
-    shaderProgram.validateShaderBindings();
+    shaderProgram.preDraw();
     glDrawArrays(GL_POINTS, 0, shaderProgram.attributesElementCount);
   }
-  if(shaderProgram.debug){
-    report("----------------------------");
-  }
+  shaderProgram.postDraw();
 }

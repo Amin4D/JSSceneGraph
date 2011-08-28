@@ -12,7 +12,7 @@ operator drawTriangles(
     report("drawTriangles:"+shaderProgram.name);
   }
   if (drawToggle) {
-    shaderProgram.validateShaderBindings();
+    shaderProgram.preDraw();
     
     var Data NULL;
     // By default triangles are drawn using GL_TRIANGLES
@@ -37,7 +37,5 @@ operator drawTriangles(
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
   }
   
-  if(shaderProgram.debug){
-    report("----------------------------");
-  }
+  shaderProgram.postDraw();
 }

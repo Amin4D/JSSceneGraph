@@ -8,6 +8,9 @@ function Scalar calcPolarElipse(
   in Scalar semiMajor,
   in Scalar semiMinor
 ){
+  if(semiMajor==0.0 || semiMinor==0.0){
+    return 0.0;
+  }
   Scalar bcostheta = semiMinor*cos(theta);
   Scalar asintheta = semiMajor*sin(theta);
   return (semiMajor*semiMinor)/sqrt((bcostheta*bcostheta)+(asintheta*asintheta));
@@ -87,6 +90,17 @@ function Ray muscleUVtoRay(
 
 */
 
+
+function Color lookupDisplacementMap(
+  in Size displacementMapResolution,
+  in Color displacementMap[],
+  in Vec2 uv
+  ){
+  Integer uindex = Integer(uv.x * Scalar(displacementMapResolution-1));
+  Integer vindex = Integer(uv.y * Scalar(displacementMapResolution-1));
+  return displacementMap[(vindex * displacementMapResolution) + uindex];
+}
+
 operator generateDisplacementMap(
   io Size displacementMapResolution,
   
@@ -94,7 +108,7 @@ operator generateDisplacementMap(
   io BezierKeyframe quadrantCurve1[],
   io BezierKeyframe quadrantCurve2[],
   io BezierKeyframe quadrantCurve3[],
-  io Scalar displacementMap[],
+  io Color displacementMap[],
   io Boolean regenerate
   
   /*
@@ -106,14 +120,13 @@ operator generateDisplacementMap(
 ) {
   if (regenerate) {
     displacementMap.resize(displacementMapResolution * displacementMapResolution);
-    
     Scalar u, v;
     Scalar val0, val1, val2, val3, val;
     Integer keyIndex;
 
     var Size idx = 0;
     for (var Integer y = 0; y < displacementMapResolution; y++) {
-      u = Scalar(y) / Scalar(displacementMapResolution);
+      u = Scalar(y) / Scalar(displacementMapResolution-1);
       
       keyIndex = 0;
       val0 = evaluateKeyframeAnimationTrack(quadrantCurve0, u, keyIndex);
@@ -124,7 +137,6 @@ operator generateDisplacementMap(
       keyIndex = 0;
       val3 = evaluateKeyframeAnimationTrack(quadrantCurve3, u, keyIndex);
       
-        
       for (var Integer x = 0; x < displacementMapResolution; x++) {
         v = Scalar(x) / Scalar(displacementMapResolution);
         Integer quadrant = Integer(floor(u * 4.0));
@@ -134,7 +146,7 @@ operator generateDisplacementMap(
           case 2: val = calcPolarElipse( v, val2, val3 ); break;
           case 3: val = calcPolarElipse( v, val3, val0 ); break;
         }
-        displacementMap[idx] = val;
+        displacementMap[idx].r = val;
         /*
         if(false){
           Ray ray = muscleUVtoRay( u, v, initialXfos );
@@ -194,9 +206,13 @@ operator generateSystemDisplacementMap(
 }
 
 operator deformMuscleVolume(
+  io Size displacementMapResolution,
+  io Color displacementMap[],
   io Xfo xfos[],
+  io Scalar compressionFactor,
   io Vec3 parentpositions[],
   io Vec3 parentnormals[],
+  io Vec2 parentuvs[],
   io Vec3 position,
   io Vec3 normal,
   in Size index
@@ -205,9 +221,14 @@ operator deformMuscleVolume(
   Integer i;
   Vec3 corepos = evalPiecewiseBSpline( xfos, parentpositions[index].x, t, i );
   
+  Color volumePixel = lookupDisplacementMap(
+    displacementMapResolution,
+    displacementMap,
+    parentuvs[index]
+  );
 //  Scalar inflation = mix(coreInflationValues[i], coreInflationValues[i+1], t );
   
-  Vec3 frameoffsetvec = parentpositions[index];// * inflation;
+  Vec3 frameoffsetvec = parentpositions[index] * volumePixel.r * compressionFactor;
   frameoffsetvec.x = 0.0;
   Quat frame = xfos[i].ori.nlerp( xfos[i+1].ori, t );
   normal = frame.rotateVector( frameoffsetvec );

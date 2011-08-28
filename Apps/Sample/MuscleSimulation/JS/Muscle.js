@@ -55,13 +55,16 @@ operator rotateMuscleVolume(\n\
     }
     
     
-    var muscles = scene.constructNode('Muscle', { muscleSystem: muscleSystem, characterRig: options.characterRig } );
+    var muscles = scene.constructNode('Muscle', {
+        muscleSystem: muscleSystem,
+        characterRig: scene.getPrivateInterface(options.characterRig)
+      });
     
     muscleSystem.setVolumeConstraintMesh = function(mesh){
-      dgnode.addBinding( mesh, "constraintMesh");
+      dgnode.addBinding( mesh, 'constraintMesh');
       dgnode.addMember('volumeConstraintMesh', 'TriangleMesh');
     }
-    
+    /*
     var corePositionsID = FABRIC.SceneGraph.getShaderParamID('corePositions');
     var loadCorePositionsOp = scene.constructOperator({
         operatorName: 'loadMuscleCorePositions',
@@ -145,7 +148,7 @@ operator loadUniform(\n\
         numMuscles: 1
       }).pub
     });
-    
+    */
     muscleSystem.addMuscle = function( muscleOptions ){
       muscles.addMuscle( muscleOptions );
     }
@@ -157,7 +160,7 @@ operator loadUniform(\n\
 FABRIC.SceneGraph.registerNodeType('Muscle', {
   factoryFn: function(options, scene) {
     options = scene.assignDefaults(options, {
-      numSegments: 4,
+      numSegments: 7,
       length: 10,
       muscleSystem: undefined,
       characterRig: undefined,
@@ -172,13 +175,13 @@ FABRIC.SceneGraph.registerNodeType('Muscle', {
       simulationdgnode = muscle.constructDGNode('SimulationDGNode'),
       i;
       
-    initializationdgnode.addDependency( scene.getPrivateInterface(muscleSystem).getDGNode(), "musclesystem");
-    simulationdgnode.addDependency( scene.getPrivateInterface(muscleSystem).getDGNode(), "musclesystem");
-    simulationdgnode.addDependency( initializationdgnode, "initializationdgnode");
+    initializationdgnode.addDependency( muscleSystem.getDGNode(), 'musclesystem');
+    simulationdgnode.addDependency( muscleSystem.getDGNode(), 'musclesystem');
+    simulationdgnode.addDependency( initializationdgnode, 'initializationdgnode');
     
-    var characterRig = scene.getPrivateInterface(options.characterRig);
-    simulationdgnode.addDependency( characterRig.getDGNode(), "characterRig");
-    simulationdgnode.addDependency( scene.getGlobalsNode(), "globals");
+    var characterRig = options.characterRig;
+    simulationdgnode.addDependency( characterRig.getDGNode(), 'characterRig');
+    simulationdgnode.addDependency( scene.getGlobalsNode(), 'globals');
     
     var pointXfos = [],
       segmentLengths = [],
@@ -197,7 +200,7 @@ FABRIC.SceneGraph.registerNodeType('Muscle', {
       pointEnvelopWeights.push(FABRIC.RT.vec2(envelopWeight, 1.0 - envelopWeight));
       
       var flexibilityWeight = (Math.cos((i/(options.numSegments-1) * 2.0 * Math.PI)) * 0.45) + 0.55;
-      flexibilityWeights.push(1.0 - (flexibilityWeight * flexibilityWeight * flexibilityWeight));
+      flexibilityWeights.push(1.0 - Math.pow(flexibilityWeight, 4));
       pointPositions.push(pointXfos[i].tr);
       segmentCompressionFactors.push(1.0);
       if(i>0){
@@ -218,7 +221,7 @@ FABRIC.SceneGraph.registerNodeType('Muscle', {
     
     var key = FABRIC.Animation.bezierKeyframe;
     var contractionCurve = [];
-    contractionCurve.push( key(0.8, 0, null, FABRIC.RT.vec2(0.1, 0)) );
+    contractionCurve.push( key(0.6, 0, null, FABRIC.RT.vec2(0.1, 0)) );
     contractionCurve.push( key(1.0, 1.0, FABRIC.RT.vec2(-0.1, 0), FABRIC.RT.vec2(0.1, 0)));
     contractionCurve.push( key(2.0, 1.0, FABRIC.RT.vec2(-0.1, 0), null));
     initializationdgnode.addMember('contractionCurve', 'BezierKeyframe[]', contractionCurve);
@@ -226,18 +229,17 @@ FABRIC.SceneGraph.registerNodeType('Muscle', {
     
     ////////////////////////////////////////////////////////////////////////////
     // Displacement Map
-    initializationdgnode.addMember('deltaMap', 'Scalar[]');
-    initializationdgnode.addMember('displacementMap', 'Scalar[]');
     
     var quadrantCurve = [];
-    quadrantCurve.push( key(0.0, 0, null, FABRIC.RT.vec2(0.1, 0)) );
-    quadrantCurve.push( key(1.0, 1.0, FABRIC.RT.vec2(-0.33, 0), FABRIC.RT.vec2(0.33, 0)));
-    quadrantCurve.push( key(2.0, 0.0, FABRIC.RT.vec2(-0.33, 0), null));
+    quadrantCurve.push( key(0.0, 0.5, null, FABRIC.RT.vec2(0.2, 0)) );
+    quadrantCurve.push( key(0.5, 2.0, FABRIC.RT.vec2(-0.2, 0), FABRIC.RT.vec2(0.2, 0)));
+    quadrantCurve.push( key(1.0, 0.5, FABRIC.RT.vec2(-0.2, 0), null));
     initializationdgnode.addMember('quadrantCurve0', 'BezierKeyframe[]', quadrantCurve);
     initializationdgnode.addMember('quadrantCurve1', 'BezierKeyframe[]', quadrantCurve);
     initializationdgnode.addMember('quadrantCurve2', 'BezierKeyframe[]', quadrantCurve);
     initializationdgnode.addMember('quadrantCurve3', 'BezierKeyframe[]', quadrantCurve);
     initializationdgnode.addMember('regenerateDisplacementMap', 'Boolean', true);
+    initializationdgnode.addMember('displacementMap', 'Color[]');
     
     initializationdgnode.bindings.append(scene.constructOperator({
         operatorName: 'generateDisplacementMap',
@@ -248,22 +250,22 @@ FABRIC.SceneGraph.registerNodeType('Muscle', {
           KEYFRAME_EVALUATEDTYPE: 'Scalar'
         },
         parameterLayout: [
-          "musclesystem.displacementMapResolution",
+          'musclesystem.displacementMapResolution',
           
-          "self.quadrantCurve0",
-          "self.quadrantCurve1",
-          "self.quadrantCurve2",
-          "self.quadrantCurve3",
-          "self.displacementMap",
-          "self.regenerateDisplacementMap"
+          'self.quadrantCurve0',
+          'self.quadrantCurve1',
+          'self.quadrantCurve2',
+          'self.quadrantCurve3',
+          'self.displacementMap',
+          'self.regenerateDisplacementMap'
 
           /*
-          "self.initialXfos",
-          "self.baseXfo",
+          'self.initialXfos',
+          'self.baseXfo',
           
-          "characterMeshAttributes.positions[]",
-          "characterMeshAttributes.normals[]",
-          "characterMeshUniforms.indices[]",
+          'characterMeshAttributes.positions[]',
+          'characterMeshAttributes.normals[]',
+          'characterMeshUniforms.indices[]',
           */
         ]
       }));
@@ -273,6 +275,7 @@ FABRIC.SceneGraph.registerNodeType('Muscle', {
     simulationdgnode.addMember('initialized', 'Boolean', false);
     simulationdgnode.addMember('envelopedXfos', 'Xfo[]', pointXfos); /* Xfos deformed by the skeleton */
     simulationdgnode.addMember('simulatedXfos', 'Xfo[]', pointXfos); /* Xfos simulated and used to drive the skin deformation */
+    simulationdgnode.addMember('compressionFactor', 'Scalar', 1.0);
     simulationdgnode.addMember('segmentCompressionFactors', 'Scalar[]', segmentCompressionFactors);
     
     // Note, to be able to upload data to the GPU, the data must be uploaded in one call,
@@ -292,30 +295,31 @@ FABRIC.SceneGraph.registerNodeType('Muscle', {
           KEYFRAME_EVALUATEDTYPE: 'Scalar'
         },
         parameterLayout: [
-          "initializationdgnode.initialXfos",
-          "initializationdgnode.baseXfo",
-          "initializationdgnode.segmentLengths",
-          "initializationdgnode.pointEnvelopeIds",
-          "initializationdgnode.pointEnvelopWeights",
-          "initializationdgnode.flexibilityWeights",
-          "initializationdgnode.contractionCurve",
-          "initializationdgnode.contractionWeights",
+          'initializationdgnode.initialXfos',
+          'initializationdgnode.baseXfo',
+          'initializationdgnode.segmentLengths',
+          'initializationdgnode.pointEnvelopeIds',
+          'initializationdgnode.pointEnvelopWeights',
+          'initializationdgnode.flexibilityWeights',
+          'initializationdgnode.contractionCurve',
+          'initializationdgnode.contractionWeights',
           
-          "self.initialized",
-          "self.envelopedXfos",
-          "self.simulatedXfos",
-          "self.segmentCompressionFactors",
-          "self.cvPositions",
-          "self.cvFrames",
+          'self.initialized',
+          'self.envelopedXfos',
+          'self.simulatedXfos',
+          'self.compressionFactor',
+          'self.segmentCompressionFactors',
+          'self.cvPositions',
+          'self.cvFrames',
   
-          "self.pointPositionsPrevUpdate",
-          "self.pointPositionsPrevUpdate_Temp",
+          'self.pointPositionsPrevUpdate',
+          'self.pointPositionsPrevUpdate_Temp',
           
-          "musclesystem.numRelaxationIterations",
-          "musclesystem.gravity",
+          'musclesystem.numRelaxationIterations',
+          'musclesystem.gravity',
           
-          "globals.timestep",
-          "characterRig.skinningXfos"
+          'globals.timestep',
+          'characterRig.skinningXfos'
         ]
       }));
     
@@ -387,6 +391,7 @@ FABRIC.SceneGraph.registerNodeType('Muscle', {
       });
       deformedVolume.pub.addVertexAttributeValue('positions', 'Vec3', { genVBO:true, dynamic:true } );
       deformedVolume.pub.addVertexAttributeValue('normals', 'Vec3', { genVBO:true, dynamic:true } );
+      deformedVolume.getAttributesDGNode().addDependency(muscleSystem.getDGNode(), 'musclesystem');
       deformedVolume.getAttributesDGNode().addDependency(initializationdgnode, 'initializationdgnode');
       deformedVolume.getAttributesDGNode().addDependency(simulationdgnode, 'simulationdgnode');
       deformedVolume.getAttributesDGNode().bindings.append(scene.constructOperator({
@@ -398,9 +403,13 @@ FABRIC.SceneGraph.registerNodeType('Muscle', {
           KEYFRAME_EVALUATEDTYPE: 'Scalar'
         },
         parameterLayout: [
+          'musclesystem.displacementMapResolution',
+          'initializationdgnode.displacementMap',
           'simulationdgnode.simulatedXfos',
+          'simulationdgnode.compressionFactor',
           'parentattributes.positions[]',
           'parentattributes.normals[]',
+          'parentattributes.uvs0[]',
           'self.positions',
           'self.normals',
           'self.index'
@@ -408,7 +417,7 @@ FABRIC.SceneGraph.registerNodeType('Muscle', {
       }));
       
       scene.constructNode('Instance', {
-        geometryNode: deformedVolume.pub,
+        geometryNode: deformedVolume.pub, 
         materialNode: scene.constructNode('PhongMaterial', {
           diffuseColor: FABRIC.RT.rgba(0.8, 0.0, 0.0, 0.5),
           lightNode: scene.constructNode('PointLight', { position: FABRIC.RT.vec3(420.0, 1000.0, 600.0) }).pub

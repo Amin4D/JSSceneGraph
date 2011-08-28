@@ -1,8 +1,9 @@
-
 //
 // Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
 //
 
+use Xfo;
+use Bone;
 
 function Scalar sq(Scalar v) {
   return v * v;

@@ -1,9 +1,11 @@
-
 //
 // Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
 //
 
-
+use Mat44;
+use OGLBuffer;
+use OGLShaderProgram;
+use FabricOGL;
 
 operator drawCharacterInstance(
   io OGLShaderProgram shaderProgram,

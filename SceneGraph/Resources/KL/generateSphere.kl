@@ -1,8 +1,9 @@
-
 //
 // Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
 //
 
+use Vec2;
+use Vec3;
 
 operator setSphereVertexCount(
   io Integer detail,

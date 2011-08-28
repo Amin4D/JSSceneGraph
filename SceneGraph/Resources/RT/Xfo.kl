@@ -1,7 +1,8 @@
-
 //
 // Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
 //
+
+use Vec3, Quat, Mat44, RotationOrder, Euler;
 
 function Xfo * (in Xfo local, in Xfo global) {
   var Quat lcl_ori = local.ori.unit();

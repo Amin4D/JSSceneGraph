@@ -1,7 +1,9 @@
-
 //
 // Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
 //
+
+use Vec3;
+use Vec4;
 
 function Scalar rand(io Integer seed) {
   seed = 1664525 * seed + 1013904223;

@@ -1,9 +1,9 @@
-
 //
 // Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
 //
 
-
+use Xfo, Mat33, Mat44;
+use OGLShaderProgram;
 
 function loadModelProjectionMatricesFn(
   io OGLShaderProgram shaderProgram,

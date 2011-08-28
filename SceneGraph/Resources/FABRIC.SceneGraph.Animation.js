@@ -288,7 +288,7 @@ FABRIC.SceneGraph.registerNodeType('AnimationEvaluator', {
       var targetNodeMembers = targetnode.getDGNode().getMembers();
 
       var operatorName = 'bindAnimationTracksTo' + JSON.stringify(memberBindings).replace(/[^a-zA-Z 0-9]+/g, '');
-      var operatorHeaderSrc = '\noperator ' + operatorName + '(\n\tio ' + evaluatorDatatype + ' curvevalues[]';
+      var operatorHeaderSrc = '\nuse Vec3, Euler, Quat, RotationOrder; operator ' + operatorName + '(\n\tio ' + evaluatorDatatype + ' curvevalues[]';
       var operatorArraySrc = {};
       var operatorBodySrc = '';
       var parameterLayout = ['animationevaluator.value[]'];

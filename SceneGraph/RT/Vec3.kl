@@ -77,7 +77,7 @@ function Vec3. /= (Vec3 other) {
 }
 
 function Vec3 Vec3.neg() {
-  return Vec3(-self.x, - self.y, - self.z);
+  return Vec3(-self.x, -self.y, -self.z);
 }
 
 function Vec3 Vec3.inv() {

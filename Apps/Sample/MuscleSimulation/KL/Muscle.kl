@@ -95,7 +95,7 @@ operator simulateMuscle(
       simulatedXfos[i].tr += ((gravity / (timeStep * timeStep)) * contractionFactor) +
                               (simulatedXfos[i].tr - pointPositionsPrevUpdate[i]);
       simulatedXfos[i].tr = envelopedXfos[i].tr.lerp(simulatedXfos[i].tr, flexibilityWeights[i]);
-      simulatedXfos[i].ori = envelopedXfos[i].ori.lerp(simulatedXfos[i].ori, flexibilityWeights[i]);
+      simulatedXfos[i].ori = envelopedXfos[i].ori.nlerp(simulatedXfos[i].ori, flexibilityWeights[i]);
     }
   }
   
@@ -132,14 +132,19 @@ operator simulateMuscle(
   }
   /////////////////////////////////////////////////
   // Frame Alignement
-  /*
   // Align the quaternions to the muscle segments
   for(i=0; i<simulatedXfos.size(); i++){
-    Quat alignementQuat = makeQuatFrom2Vectors( envelopedXfos[i].ori.rotateVector(Vec3(1.0, 0.0, 0.0)),
-                                               (simulatedXfos[i].tr - pointPositionsPrevUpdate[i]).unit());
-    simulatedXfos[i].ori = envelopedXfos[i].ori * alignementQuat;
+    if(i==0){
+      simulatedXfos[i].ori = envelopedXfos[i].ori * makeQuatFrom2Vectors( envelopedXfos[i].ori.rotateVector(Vec3(1.0, 0.0, 0.0)),
+                                                 (simulatedXfos[i+1].tr - simulatedXfos[i].tr).unit());
+    }else if(i==(simulatedXfos.size()-1)){
+      simulatedXfos[i].ori = envelopedXfos[i].ori * makeQuatFrom2Vectors( envelopedXfos[i].ori.rotateVector(Vec3(1.0, 0.0, 0.0)),
+                                                 (simulatedXfos[i].tr - simulatedXfos[i-1].tr).unit());
+    }else{
+      simulatedXfos[i].ori = envelopedXfos[i].ori * makeQuatFrom2Vectors( envelopedXfos[i].ori.rotateVector(Vec3(1.0, 0.0, 0.0)),
+                                                 (simulatedXfos[i+1].tr - simulatedXfos[i-1].tr).unit());
+    }
   }
-  */
   
   // Now measure how much each segment has compressed/stretched
   // this is used to control the bulging/volume preservation of the muscle

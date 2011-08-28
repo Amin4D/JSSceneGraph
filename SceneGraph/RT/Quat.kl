@@ -278,11 +278,11 @@ function Quat(in Mat33 mat) {
 
 
 
-function Quat Quat.lerp(in Quat other, in Scalar t) {
+function Quat Quat.nlerp(in Quat other, in Scalar t) {
   Quat q;
   q.v = self.v.lerp(other.v, t);
   q.w = self.w + ((other.w - self.w) * t);
-  return q;
+  return q.unit();
 }
 
 

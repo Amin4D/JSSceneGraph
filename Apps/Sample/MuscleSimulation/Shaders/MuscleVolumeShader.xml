@@ -63,7 +63,7 @@
       varying vec3 lightDir;
       varying vec3 viewDir;
 
-      vec3 EvalBSpline( vec3 p1, vec3 p2, vec3 p3, vec3 p4, float t ){
+      vec3 evalBSpline( vec3 p1, vec3 p2, vec3 p3, vec3 p4, float t ){
         vec3 a0, a1, a2, a3;
       
         a0 = ( -p1 + (p2 * 3.0) - (p3 * 3.0) + p4)/6.0;

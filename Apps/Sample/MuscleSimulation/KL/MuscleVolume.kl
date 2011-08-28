@@ -2,14 +2,26 @@
 
 #include '../../../SceneGraph/KL/evaluateKeyframeAnimationTrack.kl'
 
-function calcPolarElipse(
+
+function Scalar calcPolarElipse(
   in Scalar theta,
   in Scalar semiMajor,
   in Scalar semiMinor
 ){
   Scalar bcostheta = semiMinor*cos(theta);
   Scalar asintheta = semiMajor*sin(theta);
-  return (semiMajior*semiMinor)/sqrt((bcostheta*bcostheta)+(asintheta*asintheta));
+  return (semiMajor*semiMinor)/sqrt((bcostheta*bcostheta)+(asintheta*asintheta));
+}
+
+function Vec3 evalBSpline( Vec3 p1, Vec3 p2, Vec3 p3, Vec3 p4, Scalar t ){
+  Vec3 a0, a1, a2, a3;
+
+  a0 = ( p1.neg() + (p2 * 3.0) - (p3 * 3.0) + p4)/6.0;
+  a1 = ((p1 * 3.0) - (p2 * 6.0) + (p3 * 3.0))/6.0;
+  a2 = ((p1 * -3.0) + (p3 * 3.0))/6.0;
+  a3 = ( p1 + (p2 * 4.0) + p3 )/6.0;
+
+  return a3 + ((a2 + ((a1 + (a0 * t)) * t)) * t);
 }
 
 function Vec3 evalPiecewiseBSpline( 
@@ -30,15 +42,15 @@ function Vec3 evalPiecewiseBSpline(
   }
 
   if( i == 0 ){
-    p = controlPoints[ i ].tr + ( xfos[ i ].tr - xfos[ i + 1 ].tr );
-    return EvalBSpline( p, xfos[ i ].tr, xfos[ i + 1 ].tr, xfos[ i + 2 ].tr, t );
+    p = xfos[ i ].tr + ( xfos[ i ].tr - xfos[ i + 1 ].tr );
+    return evalBSpline( p, xfos[ i ].tr, xfos[ i + 1 ].tr, xfos[ i + 2 ].tr, t );
   }
-  else if( i == ( numControlPoints - 2 ) ){
-    p = controlPoints[ i + 1 ].tr + ( xfos[ i + 1 ].tr - xfos[ i ].tr );
-    return EvalBSpline( xfos[ i - 1 ].tr, xfos[ i ].tr, xfos[ i + 1 ].tr, p, t );
+  else if( i == ( xfos.size() - 2 ) ){
+    p = xfos[ i + 1 ].tr + ( xfos[ i + 1 ].tr - xfos[ i ].tr );
+    return evalBSpline( xfos[ i - 1 ].tr, xfos[ i ].tr, xfos[ i + 1 ].tr, p, t );
   }
   else{
-    return EvalBSpline( xfos[ i - 1 ].tr, xfos[ i ].tr, xfos[ i + 1 ].tr, xfos[ i + 2 ].tr, t );
+    return evalBSpline( xfos[ i - 1 ].tr, xfos[ i ].tr, xfos[ i + 1 ].tr, xfos[ i + 2 ].tr, t );
   }
 }
 
@@ -200,23 +212,25 @@ operator deformMuscleVolume(
   Quat frame = xfos[i].ori.nlerp( xfos[i+1].ori, t );
   normal = frame.rotateVector( frameoffsetvec );
   position = corepos + normal;
-  normal.normalize();
+  normal.setUnit();
 }
 
 
-/*******************************************************************************
-* FindQuadraticRoots
-*
-*      return(2): 2 real roots
-*      return(1): 1 real, Scalar root
-*      return(0): 2 complex roots
-*
-*  The imaginary component may be NULL if not desired.
-*******************************************************************************/
+/*
 
-function Scalar a(in Scalar coeff[3]){ return coeff[2]; }    /* Quadratic coefficient */
-function Scalar b(in Scalar coeff[3]){ return coeff[1]; }    /* Linear coefficient */
-function Scalar c(in Scalar coeff[3]){ return coeff[0]; }    /* Constant coefficient */
+//******************************************************************************
+// FindQuadraticRoots
+//
+//      return(2): 2 real roots
+//      return(1): 1 real, Scalar root
+//      return(0): 2 complex roots
+//
+//  The imaginary component may be NULL if not desired.
+//******************************************************************************
+
+function Scalar a(in Scalar coeff[3]){ return coeff[2]; }    // Quadratic coefficient 
+function Scalar b(in Scalar coeff[3]){ return coeff[1]; }    // Linear coefficient 
+function Scalar c(in Scalar coeff[3]){ return coeff[0]; }    // Constant coefficient 
 
 function Integer findQuadraticRoots(
   Scalar coeff[3],
@@ -230,7 +244,7 @@ function Integer findQuadraticRoots(
 
   Scalar d = b * b - 4.0 * a * c;
   
-  /* Two real, distinct roots */
+  // Two real, distinct roots 
   if (d > 0.0) {
     Scalar q;
     d = sqrt(d);
@@ -240,14 +254,14 @@ function Integer findQuadraticRoots(
     return (2);
   }
   
-  /* One real Scalar root */
+  // One real Scalar root 
   else if (d == 0.0) {
     re[0] = re[1] = -b / (2.0 * a);
     return (1);
   }
   
-  /* Two complex conjugate roots */
-  else {                                      /* d < 0 */
+  // Two complex conjugate roots 
+  else {                                      // d < 0 
     re[0] = re[1] = -b / (2.0 * a);
  //   if (im != NULL) {
  //       im[0] = d / (2 * a);
@@ -261,32 +275,32 @@ function Integer findQuadraticRoots(
 
 // http://www.worldserver.com/turk/opensource/FindCubicRoots.c.txt
 
-/* Copyright (C) 1997-2001 Ken Turkowski. <turk@computer.org>
-*
-* All rights reserved.
-*
-* Warranty Information
-*  Even though I have reviewed this software, I make no warranty
-*  or representation, either express or implied, with respect to this
-*  software, its quality, accuracy, merchantability, or fitness for a
-*  particular purpose.  As a result, this software is provided "as is,"
-*  and you, its user, are assuming the entire risk as to its quality
-*  and accuracy.
-*
-* This code may be used and freely distributed as long as it includes
-* this copyright notice and the above warranty information.
-*/
+// Copyright (C) 1997-2001 Ken Turkowski. <turk@computer.org>
+//
+// All rights reserved.
+//
+// Warranty Information
+//  Even though I have reviewed this software, I make no warranty
+//  or representation, either express or implied, with respect to this
+//  software, its quality, accuracy, merchantability, or fitness for a
+//  particular purpose.  As a result, this software is provided "as is,"
+//  and you, its user, are assuming the entire risk as to its quality
+//  and accuracy.
+//
+// This code may be used and freely distributed as long as it includes
+// this copyright notice and the above warranty information.
+///
 
-/*******************************************************************************
-* FindCubicRoots
-*
-*  Solve:
-*      coeff[3] * x^3 + coeff[2] * x^2 + coeff[1] * x + coeff[0] = 0
-*
-*  returns:
-*      3 - 3 real roots
-*      1 - 1 real root (2 complex conjugate)
-*******************************************************************************/
+//******************************************************************************
+// FindCubicRoots
+//
+//  Solve:
+//      coeff[3] * x^3 + coeff[2] * x^2 + coeff[1] * x + coeff[0] = 0
+//
+//  returns:
+//      3 - 3 real roots
+//      1 - 1 real root (2 complex conjugate)
+//******************************************************************************
 
 function Integer findCubicRoots(
   in Scalar coeff[4],
@@ -315,7 +329,7 @@ function Integer findCubicRoots(
   Scalar Qcubed = Q * Q * Q;
   Scalar d = Qcubed - R * R;
   
-  /* Three real roots */
+  // Three real roots 
   if (d >= 0) {
     Scalar theta = acos( R / sqrt( Qcubed ));
     Scalar sqrtQ = sqrt( Q );
@@ -325,7 +339,7 @@ function Integer findCubicRoots(
     return (3);
   }
 
-  /* One real root */
+  // One real root 
   else {
     Scalar e = pow( sqrt( -d ) + abs( R ), 1.0 / 3.0);
     if (R > 0.0){
@@ -350,7 +364,6 @@ function Integer findCubicRoots(
 //
 // P(t) = a3·t^3 + a2·t^2 + a1·t + a0
 
-/*
 
 
 function Boolean testCoplanarity(

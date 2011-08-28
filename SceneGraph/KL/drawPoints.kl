@@ -36,12 +36,11 @@ operator setPointCount(
 
 operator drawPoints(
   io OGLShaderProgram shaderProgram,
-  io OGLBuffer positionsBuffer,
   io Boolean drawToggle
 ) {
   //  report( "drawPoints:" + pointCount );
   if (drawToggle) {
     shaderProgram.validateShaderBindings();
-    glDrawArrays(GL_POINTS, 0, positionsBuffer.elementCount);
+    glDrawArrays(GL_POINTS, 0, shaderProgram.attributesElementCount);
   }
 }

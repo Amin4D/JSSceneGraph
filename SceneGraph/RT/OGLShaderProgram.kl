@@ -553,6 +553,15 @@ function OGLShaderProgram.genAndBindBuffer(
     report("genAndBindBuffer  " + buffer.name + ":" + buffer.bufferID + " elementCount:" + buffer.elementCount );
   }
   if(location!=-1){
+    if(self.attributesElementCount != buffer.elementCount){
+      if(self.attributesElementCount == 0){
+        self.attributesElementCount = buffer.elementCount;
+      }else{
+        report("ERROR binding "+buffer.name+": All attributes for a given shader invocatois must contain identical element counts");
+        return;
+      }
+    }
+    
     buffer.genBuffer(bufferData, bufferDataElementSize, bufferDataSize);
     buffer.bindBuffer(location);
     self.loadedAttributes.push(buffer.attributeID);

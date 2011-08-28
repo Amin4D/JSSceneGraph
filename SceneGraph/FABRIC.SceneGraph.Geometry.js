@@ -139,25 +139,6 @@ FABRIC.SceneGraph.registerNodeType('Geometry', {
         }
       }
     };
-    geometryNode.checkVBORequirements = function(vboRequirements) {
-      var vertexMembers = attributesdgnode.getMembers(),
-        attributeName,
-        message;
-      for (attributeName in vboRequirements) {
-        if(shaderAttributes.indexOf(attributeName) == -1){
-          message = 'Geometry: ' + this.pub.getName() + ' does not meet shader requirements.\n';
-          message += 'Shader requires :' + JSON.stringify(vboRequirements) + '\n';
-          message += 'But geometry does not support attribute:' + JSON.stringify(attributeName) + '\n';
-
-          message += 'Geometry supports :\n';
-          for (var i=0; i<shaderAttributes.length; i++) {
-            message += '\t\t' + shaderAttributes[i] + ' : ' + vertexMembers[shaderAttributes[i]].type + '\n';
-          }
-          throw (message);
-        }
-      }
-      return true;
-    };
     geometryNode.getRedrawEventHandler = function(redrawEventHandlerOptions) {
       var vertexMembers = attributesdgnode.getMembers(),
         uniformMembers = uniformsdgnode.getMembers(),
@@ -327,12 +308,17 @@ FABRIC.SceneGraph.registerNodeType('GeometryDataCopy', {
       throw ('Incorrect type assignment. Must assign a Geometry');
     }
     var baseGeometryNode = scene.getPrivateInterface(options.baseGeometryNode);
+    options.createBoundingBoxNode = baseGeometryNode.getBoundingBoxDGNode != undefined;
     var geometryDataCopyNode = scene.constructNode('Geometry', options);
     
     geometryDataCopyNode.getUniformsDGNode().addDependency(baseGeometryNode.getUniformsDGNode(), 'parentuniforms');
-    geometryDataCopyNode.getUniformsDGNode().addDependency(baseGeometryNode.getBoundingBoxDGNode(), 'parentboundingbox');
+    geometryDataCopyNode.getUniformsDGNode().addDependency(baseGeometryNode.getAttributesDGNode(), 'parentattributes');
+    geometryDataCopyNode.getAttributesDGNode().addDependency(baseGeometryNode.getUniformsDGNode(), 'parentuniforms');
     geometryDataCopyNode.getAttributesDGNode().addDependency(baseGeometryNode.getAttributesDGNode(), 'parentattributes');
-    geometryDataCopyNode.getAttributesDGNode().addDependency(baseGeometryNode.getBoundingBoxDGNode(), 'parentboundingbox');
+    if(baseGeometryNode.getBoundingBoxDGNode){
+      geometryDataCopyNode.getUniformsDGNode().addDependency(baseGeometryNode.getBoundingBoxDGNode(), 'parentboundingbox');
+      geometryDataCopyNode.getAttributesDGNode().addDependency(baseGeometryNode.getBoundingBoxDGNode(), 'parentboundingbox');
+    }
 
     geometryDataCopyNode.getAttributesDGNode().bindings.append(
       scene.constructOperator({
@@ -357,6 +343,9 @@ FABRIC.SceneGraph.registerNodeType('GeometryDataCopy', {
       redrawEventHandler.appendChildEventHandler(baseGeometryNodeRedrawEventHandler);
       return redrawEventHandler;
     }
+    geometryDataCopyNode.pub.getBaseGeometry = function(){
+      return baseGeometryNode.pub;
+    }
     return geometryDataCopyNode;
   }});
 
@@ -379,7 +368,6 @@ FABRIC.SceneGraph.registerNodeType('Points', {
           entryFunctionName: 'drawPoints',
           parameterLayout: [
             'shader.shaderProgram',
-            'self.positionsBuffer',
             'instance.drawToggle'
           ]
         });
@@ -731,9 +719,6 @@ FABRIC.SceneGraph.registerNodeType('Instance', {
         throw ('Incorrect type assignment. Must assign a Geometry');
       }
       node = scene.getPrivateInterface(node);
-      for (var i = 0; i < materialNodes.length; i++) {
-        node.checkVBORequirements(materialNodes[i].getVBORequirements());
-      }
       geometryNode = node;
       
       redrawEventHandler.appendChildEventHandler(geometryNode.getRedrawEventHandler());
@@ -776,7 +761,6 @@ FABRIC.SceneGraph.registerNodeType('Instance', {
         throw (':Geometry node not assigned. Geometry must be assigned before setting materials.');
       }
       node = scene.getPrivateInterface(node);
-      geometryNode.checkVBORequirements(node.getVBORequirements());
       node.getRedrawEventHandler().appendChildEventHandler(redrawEventHandler);
       materialNodes.push(node);
       return instanceNode.pub;

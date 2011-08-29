@@ -107,7 +107,7 @@ FABRIC.SceneGraph.registerNodeType('Geometry', {
       }
     };
     geometryNode.pub.addVertexAttributeValue = function(name, type, attributeoptions) {
-      attributesdgnode.addMember(name, type, options ? options.defaultValue : undefined);
+      attributesdgnode.addMember(name, type, attributeoptions ? attributeoptions.defaultValue : undefined);
       if(attributeoptions){
         if(attributeoptions.genVBO && redrawEventHandler){
           var registeredTypes = scene.getContext().RegisteredTypesManager.getRegisteredTypes()

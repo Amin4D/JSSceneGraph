@@ -1,6 +1,9 @@
 
 #include '../../../SceneGraph/KL/evaluateKeyframeAnimationTrack.kl'
 
+use Xfo;
+use Vec3;
+use Mat44;
 
 operator simulateMuscle(
   io Xfo initialXfos[], /* inital Transforsm  */

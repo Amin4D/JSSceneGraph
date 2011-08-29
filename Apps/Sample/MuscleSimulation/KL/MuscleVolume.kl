@@ -2,6 +2,13 @@
 
 #include '../../../SceneGraph/KL/evaluateKeyframeAnimationTrack.kl'
 
+use BezierKeyframe;
+use Color;
+use Vec2;
+use Vec3;
+use Xfo;
+use FabricOGL;
+
 function Scalar clamp(in Scalar val, in Scalar minval, in Scalar maxval){
   return (val < minval ? minval : (val > maxval ? maxval : val));
 }

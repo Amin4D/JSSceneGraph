@@ -1,4 +1,7 @@
 
+use Color;
+use Vec3;
+use Xfo;
 
 operator setMuscleCoreDisplayVertexCount(
   io Xfo segmentXfos[],

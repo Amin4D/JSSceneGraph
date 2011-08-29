@@ -10,17 +10,12 @@ FABRIC.SceneGraph.registerNodeType('Geometry', {
                 'attributes to the GPU for rendering.',
   parentNodeDesc: 'SceneGraphNode',
   optionsDesc: {
-    dynamicMembers: 'An array of members that will be used to generate dynamci VBOs. Add vertex attributes that will change during scene evaluation',
-    genOpenGLBuffers: 'An array of members that will be used to generate VBOs in the dependency graph. Add vertex attributes that are used in OpenCL programs',
     createBoundingBoxNode: 'Flag instructing whether to construct a bounding box node. Bounding boxes are used in raycasting, so not always necessary'
   },
   factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
-        dynamicMembers: [],
-        genOpenGLBuffers:[],
         createBoundingBoxNode: true,
-        drawable: true,
-        drawOperator: undefined
+        drawable: true
       });
   
     var geometryNode = geometryNode = scene.constructNode('SceneGraphNode', options),
@@ -35,9 +30,6 @@ FABRIC.SceneGraph.registerNodeType('Geometry', {
       redrawEventHandler = geometryNode.constructEventHandlerNode('Redraw');
       redrawEventHandler.addScope('uniforms', uniformsdgnode);
       redrawEventHandler.addScope('attributes', attributesdgnode);
-      if(options.drawOperator != undefined ){
-        redrawEventHandler.postDescendBindings.append(options.drawOperator);
-      }
     }
 
     attributesdgnode.addDependency(uniformsdgnode, 'uniforms');
@@ -145,15 +137,17 @@ FABRIC.SceneGraph.registerNodeType('Geometry', {
         }
       }
     };
-    geometryNode.pub.reloadVBO = function(memberName) {
-      var buffer = redrawEventHandler.getData(memberName + 'Buffer');
+    // Trigger a reloading of the vbo. This is useull when modifiying geometry
+    // attributes that are not dynamic, but change from time to time.
+    geometryNode.pub.reloadVBO = function(name) {
+      var buffer = redrawEventHandler.getData(name + 'Buffer');
       buffer.reload = true;
-      redrawEventHandler.setData(memberName + 'Buffer', 0, buffer);
+      redrawEventHandler.setData(name + 'Buffer', 0, buffer);
     };
     geometryNode.pub.setAttributeDynamic = function(name) {
-      dynamicMember = options.dynamicMembers.indexOf(name) != -1;
-      if (!dynamicMember)
-        options.dynamicMembers.push(name);
+      var buffer = redrawEventHandler.getData(name + 'Buffer');
+      buffer.bufferUsage = FABRIC.SceneGraph.OpenGLConstants.GL_DYNAMIC_DRAW;
+      redrawEventHandler.setData(name + 'Buffer', 0, buffer);
     };
     geometryNode.pub.getUniformValue = function(name) {
       return uniformsdgnode.getData(name);
@@ -238,12 +232,15 @@ FABRIC.SceneGraph.registerNodeType('GeometryDataCopy', {
       geometryDataCopyNode.getAttributesDGNode().addDependency(baseGeometryNode.getBoundingBoxDGNode(), 'parentboundingbox');
     }
 
+    // The data copy must always have the same count on the attributes node,
+    // as the original geometry node.
     geometryDataCopyNode.getAttributesDGNode().bindings.append(
       scene.constructOperator({
         operatorName: 'matchCount',
-        srcCode: 'operator matchCount(Size parentCount, io Size selfCount) {\n' +
-            '  selfCount = parentCount;\n' +
-            '}',
+        srcCode: '\n'+
+        'operator matchCount(Size parentCount, io Size selfCount) {\n' +
+        '  selfCount = parentCount;\n' +
+        '}',
         entryFunctionName: 'matchCount',
         parameterLayout: [
           'parentattributes.count',
@@ -251,15 +248,9 @@ FABRIC.SceneGraph.registerNodeType('GeometryDataCopy', {
         ]
       }));
     
-    var geometryGetRedrawEventHandler = geometryDataCopyNode.getRedrawEventHandler;
-    geometryDataCopyNode.getRedrawEventHandler = function() {
-      // the render traversal passed through this node, loads the VBOs, and them continues
-      // to the baseGeometry.
-      var redrawEventHandler = geometryGetRedrawEventHandler();
-      var baseGeometryNodeRedrawEventHandler = baseGeometryNode.getRedrawEventHandler();
-      redrawEventHandler.appendChildEventHandler(baseGeometryNodeRedrawEventHandler);
-      return redrawEventHandler;
-    }
+    var redrawEventHandler = geometryDataCopyNode.getRedrawEventHandler();
+    redrawEventHandler.appendChildEventHandler(baseGeometryNode.getRedrawEventHandler());
+
     geometryDataCopyNode.pub.getBaseGeometry = function(){
       return baseGeometryNode.pub;
     }
@@ -275,7 +266,11 @@ FABRIC.SceneGraph.registerNodeType('Points', {
   },
   factoryFn: function(options, scene) {
 
-    options.drawOperator = scene.constructOperator({
+    var pointsNode = scene.constructNode('Geometry', options);
+
+    // implement the geometry relevant interfaces
+    if(pointsNode.getRedrawEventHandler){
+      pointsNode.getRedrawEventHandler().postDescendBindings.append( scene.constructOperator({
         operatorName: 'drawPoints',
         srcFile: 'FABRIC_ROOT/SceneGraph/KL/drawPoints.kl',
         entryFunctionName: 'drawPoints',
@@ -283,10 +278,8 @@ FABRIC.SceneGraph.registerNodeType('Points', {
           'shader.shaderProgram',
           'instance.drawToggle'
         ]
-      });
-    var pointsNode = scene.constructNode('Geometry', options);
-
-    // implement the geometry relevant interfaces
+      }));
+    }
 
     pointsNode.getRayIntersectionOperator = function(transformNodeMember) {
       return scene.constructOperator({
@@ -317,19 +310,21 @@ FABRIC.SceneGraph.registerNodeType('Lines', {
   optionsDesc: {
   },
   factoryFn: function(options, scene) {
-
-    options.drawOperator = scene.constructOperator({
+    
+    var linesNode = scene.constructNode('Geometry', options);
+    
+    if(linesNode.getRedrawEventHandler){
+      linesNode.getRedrawEventHandler().postDescendBindings.append( scene.constructOperator({
         operatorName: 'drawLines',
         srcFile: 'FABRIC_ROOT/SceneGraph/KL/drawLines.kl',
+        entryFunctionName: 'drawLines',
         parameterLayout: [
           'shader.shaderProgram',
           'self.indicesBuffer',
           'instance.drawToggle'
-        ],
-        entryFunctionName: 'drawLines'
-      });
-    
-    var linesNode = scene.constructNode('Geometry', options);
+        ]
+      }));
+    }
 
     linesNode.getRayIntersectionOperator = function(transformNodeMember) {
       return scene.constructOperator({
@@ -361,20 +356,22 @@ FABRIC.SceneGraph.registerNodeType('LineStrip', {
   optionsDesc: {
   },
   factoryFn: function(options, scene) {
+    
+    var linesNode = scene.constructNode('Geometry', options);
 
-    options.drawOperator = scene.constructOperator({
+    if(linesNode.getRedrawEventHandler){
+      linesNode.getRedrawEventHandler().postDescendBindings.append( scene.constructOperator({
         operatorName: 'drawLineStrip',
         srcFile: 'FABRIC_ROOT/SceneGraph/KL/drawLines.kl',
+        entryFunctionName: 'drawLineStrip',
         parameterLayout: [
           'shader.shaderProgram',
           'self.indicesBuffer',
           'instance.drawToggle'
-        ],
-        entryFunctionName: 'drawLineStrip'
-      });
+        ]
+      }));
+    }
     
-    var linesNode = scene.constructNode('Geometry', options);
-
     linesNode.getRayIntersectionOperator = function(transformNodeMember) {
       return scene.constructOperator({
           operatorName: 'rayIntersectLineStrip',
@@ -412,18 +409,20 @@ FABRIC.SceneGraph.registerNodeType('Triangles', {
         tangentsFromUV: undefined
       });
 
-    options.drawOperator = scene.constructOperator({
-          operatorName: 'drawTriangles',
-          srcFile: 'FABRIC_ROOT/SceneGraph/KL/drawTriangles.kl',
-          parameterLayout: [
-            'shader.shaderProgram',
-            'self.indicesBuffer',
-            'instance.drawToggle'
-          ],
-          entryFunctionName: 'drawTriangles'
-        });
-    
     var trianglesNode = scene.constructNode('Geometry', options);
+    
+    if(trianglesNode.getRedrawEventHandler){
+      trianglesNode.getRedrawEventHandler().postDescendBindings.append( scene.constructOperator({
+        operatorName: 'drawTriangles',
+        srcFile: 'FABRIC_ROOT/SceneGraph/KL/drawTriangles.kl',
+        entryFunctionName: 'drawTriangles',
+        parameterLayout: [
+          'shader.shaderProgram',
+          'self.indicesBuffer',
+          'instance.drawToggle'
+        ]
+      }));
+    }
     
     trianglesNode.getRayIntersectionOperator = function(transformNodeMember) {
       return scene.constructOperator({
@@ -497,7 +496,7 @@ FABRIC.SceneGraph.registerNodeType('Instance', {
     geometryNode: 'Optional. Specify a Geometry node to draw during rendering',
     enableRaycasting: 'Flag specify whether this Instance should support raycasting.',
     enableDrawing: 'Flag specify whether this Instance should support drawing.',
-    enableShadowCasting: 'Flag specify whether this Instance should support shadow casting.',
+    enableShadowCasting: 'Flag specify whether this Instance should support shadow casting.'
   },
   factoryFn: function(options, scene) {
     scene.assignDefaults(options, {

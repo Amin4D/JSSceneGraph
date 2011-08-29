@@ -49,24 +49,25 @@ FABRIC.SceneGraph.defineEffectFromFile('PhongInstancingShaderBase', './Shaders/P
     
 // These Node definitions are inlined for now, but will
 // be moved to a separate file once they are stabilized. 
-FABRIC.SceneGraph.registerNodeType('PhongInstancingShader', {
+FABRIC.SceneGraph.registerNodeType('PhongInstancingMaterial', {
   factoryFn: function(options, scene) {
     
     var phongInstancingShader = scene.constructNode('PhongInstancingShaderBase', options );
     var redrawEventHandler = phongInstancingShader.getRedrawEventHandler();
-    var instanceOffsetsID = FABRIC.SceneGraph.getShaderParamID('instanceOffsets');
+    var instanceTransformsID = FABRIC.SceneGraph.getShaderParamID('instanceTransforms');
     
     
-    redrawEventHandler.addMember('instanceOffsets', 'Mat44[]', options.instanceOffsets);
+    redrawEventHandler.addMember('instanceTransforms', 'Mat44[]', options.instanceTransforms);
     
     redrawEventHandler.preDescendBindings.append(scene.constructOperator({
-        operatorName: 'loadInstanceOffsets',
+        operatorName: 'loadInstanceTransforms',
         srcCode: '\n\
+use OGLShaderProgram;\n\
 operator loadUniform(\n\
   io OGLShaderProgram shaderProgram,\n\
   io Mat44 value[]\n\
 ) {\n\
-  Integer location = shaderProgram.getUniformLocation('+instanceOffsetsID+');\n\
+  Integer location = shaderProgram.getUniformLocation('+instanceTransformsID+');\n\
 //  report("loadUniform:" + location);\n\
   if(location!=-1){\n\
     shaderProgram.loadMat44UniformArray(location, value);\n\
@@ -76,7 +77,7 @@ operator loadUniform(\n\
         entryFunctionName: 'loadUniform',
         parameterLayout: [
           'shader.shaderProgram',
-          'self.instanceOffsets'
+          'self.instanceTransforms'
         ]
       }));
     
@@ -86,7 +87,7 @@ operator loadUniform(\n\
 operator setNumInstances(\n\
   io OGLShaderProgram shaderProgram,\n\
 ) {\n\
-  shaderProgram.numInstances = '+options.instanceOffsets.length+';\n\
+  shaderProgram.numInstances = '+options.instanceTransforms.length+';\n\
 }\n\
         ',
         entryFunctionName: 'setNumInstances',
@@ -124,10 +125,13 @@ $(document).ready(function() {
   
   var gridSize = 100;
   var numInstances = 60;
-  var instancePositions = [];
+  var instanceTransforms = [];
+  
+  //////////////////////////////////////
+  // add some cows
   for (i = 0; i < numInstances; i++) {
     var scl = Math.random() + 0.5;
-    instancePositions.push(FABRIC.RT.xfo( {
+    instanceTransforms.push(FABRIC.RT.xfo( {
       tr: FABRIC.RT.vec3(
         (Math.random() - 0.5) * gridSize * 0.95,
         -2.5/scl,
@@ -137,15 +141,40 @@ $(document).ready(function() {
     }).makeMat44()
     );
   }
-  var redMaterial = scene.constructNode('PhongInstancingShader', {
-          diffuseColor: FABRIC.RT.rgb(0.8, 0, 0, 1),
+  scene.constructNode('Instance', {
+    geometryNode: scene.importAssetFile('../BasicDemos/Models/cow.obj')['cow'],
+    materialNode: scene.constructNode('PhongInstancingMaterial', {
+          diffuseColor: FABRIC.RT.rgb255(139,69,19),
           lightNode: light,
           numInstances: numInstances,
-          instanceOffsets: instancePositions
-        });
-  
-  var assets = scene.importAssetFile('../BasicDemos/Models/cow.obj');
-  var instanceNode = scene.constructNode('Instance', { geometryNode: assets['cow'], materialNode: redMaterial });
+          instanceTransforms: instanceTransforms
+        })
+  });
+
+  //////////////////////////////////////
+  // Now add some bunnys
+  instanceTransforms = [];
+  for (i = 0; i < numInstances; i++) {
+    var scl = (Math.random() + 0.5) * 15;
+    instanceTransforms.push(FABRIC.RT.xfo( {
+      tr: FABRIC.RT.vec3(
+        (Math.random() - 0.5) * gridSize * 0.95,
+        -7,
+        (Math.random() - 0.5) * gridSize * 0.95),
+      ori:FABRIC.RT.Quat.makeFromAxisAndAngle( FABRIC.RT.vec3(0,1,0), (Math.random() - 0.5) * 360.0 ),
+      sc: FABRIC.RT.vec3(scl, scl, scl)
+    }).makeMat44()
+    );
+  }
+  scene.constructNode('Instance', {
+    geometryNode: scene.importAssetFile('../BasicDemos/Models/bunny.obj')['bunny'],
+    materialNode: scene.constructNode('PhongInstancingMaterial', {
+          diffuseColor: FABRIC.RT.rgb255(205,192,176),
+          lightNode: light,
+          numInstances: numInstances,
+          instanceTransforms: instanceTransforms
+        })
+  });
 
   $('#loadingDialog').dialog({
     modal: true

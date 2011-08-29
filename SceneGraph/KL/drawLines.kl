@@ -3,6 +3,7 @@
 //
 
 use FabricOGL;
+use OGLShaderProgram;
 
 operator drawLines(
   io OGLShaderProgram shaderProgram,

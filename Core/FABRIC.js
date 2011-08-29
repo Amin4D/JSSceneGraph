@@ -29,6 +29,7 @@ FABRIC = (function() {
       throw("Fabric plugin not enabled");
     }
     
+    
     if (!options)
       options = {};
 
@@ -48,6 +49,21 @@ FABRIC = (function() {
     document.body.appendChild(embedTag);
     
     var context = wrapFabricClient(embedTag, function(s) { console.log(s); } );
+    
+    ///////////////////////////////////////////////////////////
+    // Check the currently installed version.
+    // TODO: This code will be removed once we get to the end of beta.
+    var version = context.build.getPureVersion().split('.');
+    var requiredVersion = [1,0,10];
+    for(var i=0; i<3; i++){
+      if(parseInt(version[i]) != requiredVersion[i]){
+        alert("The version of Fabric that you have installed is out of date.\n" +
+              "Please install the updated plugin");
+        createDownloadPrompt();
+        throw("The version of Fabric that you have installed is out of date.\n" +
+              "Please install the updated plugin");
+      }
+    }
     
     if(context.build.isExpired()){
       alert("Fabric(Alpha) plugin has expired. Please install the lastest version");

@@ -3,6 +3,7 @@
 //
 
 use Vec3;
+use Vec2;
 
 operator setCylinderVertexCount(
   io Boolean caps,

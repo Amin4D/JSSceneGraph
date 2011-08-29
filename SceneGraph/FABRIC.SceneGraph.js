@@ -78,7 +78,7 @@ FABRIC.SceneGraph = {
         postDraw: true,
         constructAnimationInterface: true,
         fixedTimeStep: true,
-        timeStep: 20,
+        timeStep: 0.02, // 0.02 seconds per frame = 50 fps
         shadowMaterial:'ShadowMaterial'
       });
     
@@ -666,21 +666,21 @@ FABRIC.SceneGraph = {
       globalsNode = scene.constructDependencyGraphNode('Scene_globals');
 
       if (sceneOptions.constructAnimationInterface) {
-
-        globalsNode.addMember('ms', 'Scalar', 0);
-        globalsNode.addMember('ms_prevupdate', 'Scalar', 0);
+        // All time values are in seconds. 
+        globalsNode.addMember('time', 'Scalar', 0);
+        globalsNode.addMember('time_prevupdate', 'Scalar', 0);
         globalsNode.addMember('timestep', 'Scalar', 0);
         globalsNode.bindings.append(scene.constructOperator({
           operatorName: 'setTimestep',
           srcCode:
-            '\noperator setTimestep(io Scalar ms, io Scalar ms_prevupdate, io Scalar timestep){ \n' +
-            '  timestep = ms - ms_prevupdate;\n' +
-            '  ms_prevupdate = ms;\n' +
+            '\noperator setTimestep(io Scalar time, io Scalar time_prevupdate, io Scalar timestep){ \n' +
+            '  timestep = time - time_prevupdate;\n' +
+            '  ms_prevupdate = time;\n' +
             '}',
           entryFunctionName: 'setTimestep',
           parameterLayout: [
-            'self.ms',
-            'self.ms_prevupdate',
+            'self.time',
+            'self.time_prevupdate',
             'self.timestep'
           ]
         }));
@@ -715,7 +715,7 @@ FABRIC.SceneGraph = {
               t = timerange.x;
             }
             animationTime = t;
-            globalsNode.setData('ms', t);
+            globalsNode.setData('time', t);
             if(redraw !== false){
               scene.pub.redrawAllWindows();
             }

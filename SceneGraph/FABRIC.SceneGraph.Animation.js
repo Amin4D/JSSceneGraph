@@ -201,7 +201,7 @@ FABRIC.SceneGraph.registerNodeType('AnimationController', {
             '}',
           entryFunctionName: 'setControllerLocalTime',
           parameterLayout: [
-            'globals.ms',
+            'globals.time',
             'self.localtime'
           ]
         }));

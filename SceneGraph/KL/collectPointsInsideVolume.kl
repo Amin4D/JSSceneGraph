@@ -24,7 +24,7 @@ operator collectPointsInsideBrush(
   //  Integer points[];
   //  Scalar distances[];
 
-  //  select = true;
+  select = true;
   Mat44 modelMatrix = globalXfo;
   Mat44 modelViewProjectionMatrix = modelMatrix * cameraMatrix * projectionMatrix;
   Mat33 normalMatrix = modelViewProjectionMatrix.upperLeft().inverse().transpose();
@@ -45,7 +45,7 @@ operator collectPointsInsideBrush(
       collectedPoints.points.push(i);
     }
   }
-
+/*
   var Scalar Pi = 3.141592653589793238462643;
 
   for (var Integer i = 0; i < collectedPoints.points.size(); i++) {
@@ -53,4 +53,5 @@ operator collectPointsInsideBrush(
     Integer vertexId = collectedPoints.points[i];
     vertexColors[vertexId] = vertexColors[vertexId].lerp(brushColor, weight);
   }
+  */
 }

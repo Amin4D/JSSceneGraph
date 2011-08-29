@@ -24,10 +24,13 @@ operator loadObj(
 
 operator setObjVertexCount(
   io Data objParseHandle,
+  io Boolean reload,
   io Size newCount
 ) {
-  FabricOBJGetNbPoints(objParseHandle, newCount);
-  report "OBJ setObjVertexCount: " + newCount;
+  if(reload){
+    FabricOBJGetNbPoints(objParseHandle, newCount);
+    report "OBJ setObjVertexCount: " + newCount;
+  }
 }
 
 operator setObjGeom(
@@ -35,18 +38,24 @@ operator setObjGeom(
   io Integer indices[],
   io Vec3 positions[],
   io Vec3 normals[],
-  io Vec2 uvs[]
+  io Vec2 uvs[],
+  io Boolean reload
 ) {
 //  report "OBJ setObjGeom";
-  FabricOBJGetTriangleIndices( objParseHandle, indices );
-  FabricOBJGetPoints( objParseHandle, positions );
-  FabricOBJGetNormals( objParseHandle, normals );
-
-  Boolean hasTexture = false;
-  FabricOBJHasTextureCoords( objParseHandle, hasTexture );
-  if( hasTexture )
-  {
-    FabricOBJGetTextureCoords( objParseHandle, uvs );
+  if(reload){
+    FabricOBJGetTriangleIndices( objParseHandle, indices );
+    FabricOBJGetPoints( objParseHandle, positions );
+    FabricOBJGetNormals( objParseHandle, normals );
+  
+    Boolean hasTexture = false;
+    FabricOBJHasTextureCoords( objParseHandle, hasTexture );
+    if( hasTexture )
+    {
+      FabricOBJGetTextureCoords( objParseHandle, uvs );
+    }
+    if(positions.size()>1){
+      reload = false;
+    }
+    report "OBJ setObjGeom: Done";
   }
-  report "OBJ setObjGeom: Done";
 }

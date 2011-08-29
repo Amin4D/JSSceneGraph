@@ -287,7 +287,7 @@ FABRIC.SceneGraph.registerNodeType('PaintManipulator', {
       moveBrush(evt);
       var points = collectPoints();
 
-  //    evt.paintData = points[0].value;
+      evt.paintData = points[0].value;
       paintManipulatorNode.pub.fireEvent('onpaint', evt);
       viewportNode.redraw();
       evt.stopPropagation();

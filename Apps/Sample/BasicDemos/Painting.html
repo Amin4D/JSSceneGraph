@@ -114,16 +114,15 @@ $(document).ready(function() {
       });
   paintManipulator.addPaintableNode(instanceNode);
   var onBeginPaintFn = function(evt) {
-    brushSize = paintManipulator.brushSize;
+    brushSize = paintManipulator.getBrushSize();
   };
 
   var onPaintFn = function(evt) {
-  /*  if( evt.paintData.points.length == 0 ){
+    if( evt.paintData.points.length == 0 ){
       return;
     }
     var paintData = evt.paintData,
-      attributesDGNode = geometry.getAttributesDGNode(),
-      vertexData = attributesDGNode.getSlicesBulkData( paintData.points ),
+      vertexData = geometry.getBulkAttributeData( paintData.points ),
       weight,
       vertexId,
       modifiedData = [];
@@ -135,12 +134,12 @@ $(document).ready(function() {
     for( var i=0; i< paintData.points.length; i++ ){
       weight = (Math.cos( Math.PI * (paintData.distances[i] / brushSize) ) * 0.5 ) + 0.5;
       modifiedData[i] = {
-          sliceIndex: paintData.points[i],
-          data: { vertexColors:vertexData[i].vertexColors.interpTowards( brushColor, weight ) }
-        };
+        sliceIndex: paintData.points[i],
+        data: { vertexColors:vertexData[i].vertexColors.interpTowards( brushColor, weight ) }
+      };
     }
-    attributesDGNode.setSlicesBulkData( modifiedData );
-  */ geometry.reloadVBO('vertexColors');
+    geometry.setBulkAttributeData( modifiedData );
+    geometry.reloadVBO('vertexColors');
   //  viewport.redraw();
   };
 
@@ -167,7 +166,8 @@ $(document).ready(function() {
       flat: true,
       color: { r: brushColor.r * 255, g: brushColor.g * 255, b: brushColor.b * 255} ,
       onChange: function(hsb, hex, rgb) {
-        paintManipulator.setBrushColor(FABRIC.RT.rgb255(rgb.r, rgb.g, rgb.b));
+      //  paintManipulator.setBrushColor(FABRIC.RT.rgb255(rgb.r, rgb.g, rgb.b));
+        brushColor = FABRIC.RT.rgb255(rgb.r, rgb.g, rgb.b);
       }
     });
 

@@ -7,7 +7,7 @@
 
 operator drawCharacterInstance(
   io OGLShaderProgram shaderProgram,
-  io Mat44 boneMatrices[],
+  io Mat44 skinningMatrices[],
   io Mat44 cameraMatrix,
   io Mat44 projectionMatrix,
   io OGLBuffer indicesBuffer,
@@ -18,9 +18,9 @@ operator drawCharacterInstance(
 
 //  report("drawCharacterInstance");
   Data NULL;
-  Integer location = shaderProgram.getUniformLocation(BONE_MATRICIES_ATTRIBUTE_ID);
+  Integer location = shaderProgram.getUniformLocation(SKINNING_MATRICIES_ATTRIBUTE_ID);
   if(location!=-1){
-    shaderProgram.loadMat44UniformArray(location, boneMatrices);
+    shaderProgram.loadMat44UniformArray(location, skinningMatrices);
     
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indicesBuffer.bufferID);
     glDrawElements(GL_TRIANGLES, indicesBuffer.elementCount, GL_UNSIGNED_INT, NULL);

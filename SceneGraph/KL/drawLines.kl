@@ -5,13 +5,40 @@
 
 
 operator drawLines(
+  io OGLShaderProgram shaderProgram,
   io OGLBuffer indicesBuffer,
   io Boolean drawToggle
 ) {
+  if(shaderProgram.debug){
+    report("drawLines:"+shaderProgram.name);
+  }
   if (drawToggle) {
+    shaderProgram.preDraw();
+    
     var Data NULL;
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indicesBuffer.bufferID);
     glDrawElements(GL_LINES, indicesBuffer.elementCount, GL_UNSIGNED_INT, NULL);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
   }
+  shaderProgram.postDraw();
+}
+
+
+operator drawLineStrip(
+  io OGLShaderProgram shaderProgram,
+  io OGLBuffer indicesBuffer,
+  io Boolean drawToggle
+) {
+  if(shaderProgram.debug){
+    report("drawLineStrip:"+shaderProgram.name);
+  }
+  if (drawToggle) {
+    shaderProgram.preDraw();
+    
+    var Data NULL;
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indicesBuffer.bufferID);
+    glDrawElements(GL_LINE_STRIP, indicesBuffer.elementCount, GL_UNSIGNED_INT, NULL);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+  }
+  shaderProgram.postDraw();
 }

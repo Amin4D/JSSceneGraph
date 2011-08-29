@@ -4,7 +4,7 @@
 
 	<uniforms>
 		<uniform name="u_modelViewProjectionMatrix" constant="modelViewProjectionMatrix" type="Mat44" owner="instance"/>
-		<uniform name="u_boneMatrices" constant="boneMatrices" type="Mat44" owner="characterInstance"/>
+		<uniform name="u_skinningMatrices" constant="skinningMatrices" type="Mat44" owner="characterInstance"/>
 	</uniforms>
 
 	<attributes>
@@ -25,7 +25,7 @@
 			uniform mat4 u_modelViewProjectionMatrix;
 			
 			// This is an array of all the bones in a skeleton.
-			uniform mat4 u_boneMatrices[NUM_BONES];
+			uniform mat4 u_skinningMatrices[NUM_BONES];
 
 			attribute vec4 a_position;
 			

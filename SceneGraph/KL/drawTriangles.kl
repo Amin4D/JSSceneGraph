@@ -8,8 +8,12 @@ operator drawTriangles(
   io OGLBuffer indicesBuffer,
   io Boolean drawToggle
 ) {
-  //  report("drawTriangles:"+indicesBufferID+":"+indicesCount);
+  if(shaderProgram.debug){
+    report("drawTriangles:"+shaderProgram.name);
+  }
   if (drawToggle) {
+    shaderProgram.preDraw();
+    
     var Data NULL;
     // By default triangles are drawn using GL_TRIANGLES
     Integer drawMode = GL_TRIANGLES;
@@ -32,4 +36,6 @@ operator drawTriangles(
     }
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
   }
+  
+  shaderProgram.postDraw();
 }

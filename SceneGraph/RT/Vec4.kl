@@ -121,3 +121,8 @@ function Vec4 Vec4.min(in Vec4 other) {
   v.t = self.t < other.t ? self.t : other.t;
   return v;
 }
+
+
+function Vec4 Vec4.lerp(in Vec4 other, in Scalar t) {
+  return self + ((other - self) * t);
+}

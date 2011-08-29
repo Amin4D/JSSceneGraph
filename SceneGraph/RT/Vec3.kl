@@ -77,7 +77,7 @@ function Vec3. /= (Vec3 other) {
 }
 
 function Vec3 Vec3.neg() {
-  return Vec3(-self.x, - self.y, - self.z);
+  return Vec3(-self.x, -self.y, -self.z);
 }
 
 function Vec3 Vec3.inv() {
@@ -93,6 +93,10 @@ function Scalar Vec3.normSq() {
 }
 
 function Scalar Vec3.norm() {
+  return sqrt(self.normSq());
+}
+
+function Scalar Vec3.length() {
   return sqrt(self.normSq());
 }
 
@@ -116,7 +120,12 @@ function Vec3 Vec3.cross(in Vec3 other) {
   );
 }
 
+// TODO: Depricate the ambiguous function
 function Scalar Vec3.angle(in Vec3 other) {
+  return acos(self.dot(other));
+}
+
+function Scalar Vec3.angleTo(in Vec3 other) {
   return acos(self.dot(other));
 }
 

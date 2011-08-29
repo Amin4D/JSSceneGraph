@@ -584,18 +584,18 @@ FABRIC.createSVGRootElem = function(domRootID) {
                 self.cursor('default');
               }
 
-              self.svgRoot.elem.removeEventListener('mouseup', releaseFn, false);
-              self.svgRoot.elem.removeEventListener('mousemove', dragFn, false);
+              document.removeEventListener('mouseup', releaseFn, false);
+              document.removeEventListener('mousemove', dragFn, false);
               evt.preventDefault();
               evt.stopPropagation();
               evt.localPos = pos;
               fireOnDragEndCallbacks(evt);
             }
-            self.svgRoot.elem.addEventListener('mouseup', releaseFn, false);
+            document.addEventListener('mousemove', dragFn, false);
+            document.addEventListener('mouseup', releaseFn, false);
             evt.preventDefault();
             evt.stopPropagation();
           }
-          self.svgRoot.elem.addEventListener('mousemove', dragFn, false);
         }, false);
       return this;
     },
@@ -2044,8 +2044,8 @@ FABRIC.createSVGRootElem = function(domRootID) {
               var mouseUpFn = function(evt) {
                 connectorGroup.elem.removeEventListener('mousemove', mouseMoveFn, false);
               }
-              connectorGroup.elem.addEventListener('mousemove', mouseMoveFn, false);
-              connectorGroup.elem.addEventListener('mouseup', mouseUpFn, false);
+              document.addEventListener('mousemove', mouseMoveFn, false);
+              document.addEventListener('mouseup', mouseUpFn, false);
             }, false);
         }
 
@@ -2127,17 +2127,17 @@ FABRIC.createSVGRootElem = function(domRootID) {
               return;
             }
             connectorGroup.svgRoot.state = 'Normal';
-            svgRoot.elem.removeEventListener('mousemove', mouseMoveFn, false);
-            svgRoot.elem.removeEventListener('mouseover', mouseOverFn, false);
-            svgRoot.elem.removeEventListener('mouseout', mouseOutFn, false);
-            svgRoot.elem.removeEventListener('mouseup', mouseUpFn, false);
+            document.removeEventListener('mousemove', mouseMoveFn, false);
+            document.removeEventListener('mouseover', mouseOverFn, false);
+            document.removeEventListener('mouseout', mouseOutFn, false);
+            document.removeEventListener('mouseup', mouseUpFn, false);
           };
           if (options.connectable)
           {
-            svgRoot.elem.addEventListener('mousemove', mouseMoveFn, false);
-            svgRoot.elem.addEventListener('mouseover', mouseOverFn, false);
-            svgRoot.elem.addEventListener('mouseout', mouseOutFn, false);
-            svgRoot.elem.addEventListener('mouseup', mouseUpFn, false);
+            document.addEventListener('mousemove', mouseMoveFn, false);
+            document.addEventListener('mouseover', mouseOverFn, false);
+            document.addEventListener('mouseout', mouseOutFn, false);
+            document.addEventListener('mouseup', mouseUpFn, false);
           }
         }
         var bindTargetToMouseFn = function() {
@@ -2177,17 +2177,17 @@ FABRIC.createSVGRootElem = function(domRootID) {
               return;
             }
             connectorGroup.svgRoot.state = 'Normal';
-            svgRoot.elem.removeEventListener('mousemove', mouseMoveFn, false);
-            svgRoot.elem.removeEventListener('mouseover', mouseOverFn, false);
-            svgRoot.elem.removeEventListener('mouseout', mouseOutFn, false);
-            svgRoot.elem.removeEventListener('mouseup', mouseUpFn, false);
+            document.removeEventListener('mousemove', mouseMoveFn, false);
+            document.removeEventListener('mouseover', mouseOverFn, false);
+            document.removeEventListener('mouseout', mouseOutFn, false);
+            document.removeEventListener('mouseup', mouseUpFn, false);
           };
           if (options.connectable)
           {
-            svgRoot.elem.addEventListener('mousemove', mouseMoveFn, false);
-            svgRoot.elem.addEventListener('mouseover', mouseOverFn, false);
-            svgRoot.elem.addEventListener('mouseout', mouseOutFn, false);
-            svgRoot.elem.addEventListener('mouseup', mouseUpFn, false);
+            document.addEventListener('mousemove', mouseMoveFn, false);
+            document.addEventListener('mouseover', mouseOverFn, false);
+            document.addEventListener('mouseout', mouseOutFn, false);
+            document.addEventListener('mouseup', mouseUpFn, false);
           }
         }
 

@@ -8,10 +8,10 @@ operator setSphereVertexCount(
   io Integer detail,
   io Size newCount
 ) {
-  var Integer slices = (detail >= 0) ? (detail * 2 + 3) : 3;
-  var Integer loops = (detail >= 0) ? (detail + 1) : 1;
+  Integer sides = (detail >= 0) ? (detail * 2 + 3) : 3;
+  Integer loops = (detail >= 0) ? (detail + 1) : 1;
 
-  newCount = 2 * slices * (2 + loops);
+  newCount = 2 * sides * (2 + loops);
 }
 
 operator generateSphere(
@@ -23,26 +23,25 @@ operator generateSphere(
   io Vec3 normals[],
   io Vec2 uvs[]
 ) {
-  var Integer slices = (detail >= 0) ? (detail * 2 + 3) : 3;
-  var Integer loops = (detail >= 0) ? (detail + 1) : 1;
+  Integer sides = (detail >= 0) ? (detail * 2 + 3) : 3;
+  Integer loops = (detail >= 0) ? (detail + 1) : 1;
 
-  var Scalar Pi = 3.141592653589793238462643383279;
 
-  var Integer numTriangles, numVertices, nbSlices, nbLoops;
+  Integer numTriangles, nbSides, nbLoops;
 
   nbLoops = loops + 1;
-  nbSlices = slices + 1;
+  nbSides = sides + 1;
   
-  numTriangles = 2 * slices * (loops + 1);
-  numVertices = (1 + slices) * (2 + loops);
+  numTriangles = 2 * sides * (loops + 1);
   
   indices.resize(numTriangles * 3);
 
-  var Integer voff = 0;
+  Scalar PI = 3.141592653589793238462643383279;
+  Integer voff = 0;
   for (var Integer i = 0; i <= nbLoops; i++) {
-    var Scalar theta = (i / Scalar(nbLoops)) * Pi;
-    for (var Integer j = 0; j < nbSlices; j++) {
-      var Scalar phi = (j / Scalar(slices)) * 2.0 * Pi;
+    var Scalar theta = (i / Scalar(nbLoops)) * PI;
+    for (var Integer j = 0; j < nbSides; j++) {
+      var Scalar phi = (j / Scalar(sides)) * 2.0 * PI;
 
       normals[voff] = Vec3(
         sin(theta) * cos(phi),
@@ -51,23 +50,23 @@ operator generateSphere(
       );
 
       positions[voff] = normals[voff] * radius;
-      uvs[voff] = Vec2(1.0 - Scalar(j) / Scalar(slices), Scalar(i + 1) / Scalar(loops + 1));
+      uvs[voff] = Vec2(1.0 - Scalar(j) / Scalar(sides), Scalar(i + 1) / Scalar(loops + 1));
       voff++;
     }
   }
   
-  var Integer fid = 0;
-  var Integer tid = 0;
+  Integer fid = 0;
+  Integer tid = 0;
   
   // Body of the sphere
   for (var Integer i = 0; i < nbLoops; i++) {
-    for (var Integer j = 0; j < slices; j++) {
+    for (var Integer j = 0; j < sides; j++) {
       
       var Integer v0, v1, v2, v3;
-      v0 = (nbSlices * i) + j;
-      v1 = (nbSlices * i) + ((j + 1) % nbSlices);
-      v2 = (nbSlices * (i+1)) + ((j + 1) % nbSlices);
-      v3 = (nbSlices * (i+1)) + j;
+      v0 = (nbSides * i) + j;
+      v1 = (nbSides * i) + ((j + 1) % nbSides);
+      v2 = (nbSides * (i+1)) + ((j + 1) % nbSides);
+      v3 = (nbSides * (i+1)) + j;
       
       indices[tid++] = v0;
       indices[tid++] = v1;

@@ -265,11 +265,15 @@ FABRIC.SceneGraph.registerNodeType('Points', {
   optionsDesc: {
   },
   factoryFn: function(options, scene) {
-
+    
+    scene.assignDefaults(options, {
+        assignDrawOperator: true
+      });
+    
     var pointsNode = scene.constructNode('Geometry', options);
 
     // implement the geometry relevant interfaces
-    if(pointsNode.getRedrawEventHandler){
+    if(options.assignDrawOperator){
       pointsNode.getRedrawEventHandler().postDescendBindings.append( scene.constructOperator({
         operatorName: 'drawPoints',
         srcFile: 'FABRIC_ROOT/SceneGraph/KL/drawPoints.kl',
@@ -311,9 +315,13 @@ FABRIC.SceneGraph.registerNodeType('Lines', {
   },
   factoryFn: function(options, scene) {
     
+    scene.assignDefaults(options, {
+        assignDrawOperator: true
+      });
+    
     var linesNode = scene.constructNode('Geometry', options);
     
-    if(linesNode.getRedrawEventHandler){
+    if(options.assignDrawOperator){
       linesNode.getRedrawEventHandler().postDescendBindings.append( scene.constructOperator({
         operatorName: 'drawLines',
         srcFile: 'FABRIC_ROOT/SceneGraph/KL/drawLines.kl',
@@ -357,9 +365,13 @@ FABRIC.SceneGraph.registerNodeType('LineStrip', {
   },
   factoryFn: function(options, scene) {
     
+    scene.assignDefaults(options, {
+        assignDrawOperator: true
+      });
+    
     var linesNode = scene.constructNode('Geometry', options);
 
-    if(linesNode.getRedrawEventHandler){
+    if(options.assignDrawOperator){
       linesNode.getRedrawEventHandler().postDescendBindings.append( scene.constructOperator({
         operatorName: 'drawLineStrip',
         srcFile: 'FABRIC_ROOT/SceneGraph/KL/drawLines.kl',
@@ -406,12 +418,13 @@ FABRIC.SceneGraph.registerNodeType('Triangles', {
   factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
         uvSets: undefined,
-        tangentsFromUV: undefined
+        tangentsFromUV: undefined,
+        assignDrawOperator: true
       });
 
     var trianglesNode = scene.constructNode('Geometry', options);
     
-    if(trianglesNode.getRedrawEventHandler){
+    if(options.assignDrawOperator){
       trianglesNode.getRedrawEventHandler().postDescendBindings.append( scene.constructOperator({
         operatorName: 'drawTriangles',
         srcFile: 'FABRIC_ROOT/SceneGraph/KL/drawTriangles.kl',

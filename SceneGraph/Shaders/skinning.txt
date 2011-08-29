@@ -14,7 +14,7 @@ void skinPositions(){
       int idx = int(curIndex[i]);
         
       // transform the offset by bone i
-      mat4 m44 = u_boneMatrices[idx];
+      mat4 m44 = u_skinningMatrices[idx];
       transformedPosition += m44 * a_position * weight;
     }
   }
@@ -39,7 +39,7 @@ void skinPositionsAndNormals(){
       int idx = int(curIndex[i]);
         
       // transform the offset by bone i
-      mat4 m44 = u_boneMatrices[idx];
+      mat4 m44 = u_skinningMatrices[idx];
       transformedPosition += m44 * a_position * weight;
 
       // transform normal by bone i
@@ -75,7 +75,7 @@ void skinPositionsNormalsAndTangents()
       int idx = int(curIndex[i]);
         
       // transform the offset by bone i
-      mat4 m44 = u_boneMatrices[idx];
+      mat4 m44 = u_skinningMatrices[idx];
       transformedPosition += m44 * a_position * weight;
 
       // transform normal by bone i

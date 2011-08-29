@@ -1,8 +1,8 @@
 
-
+/*
 FABRIC.SceneGraph.defineEffectFromFile('MuscleCoreLineShader', './Shaders/MuscleCoreLineShader.xml');
 FABRIC.SceneGraph.defineEffectFromFile('MuscleVolumeShader', './Shaders/MuscleVolumeShader.xml');
-
+*/
 
 // These Node definitions are inlined for now, but will
 // be moved to a separate file once they are stabilized. 

@@ -169,13 +169,16 @@ FABRIC.SceneGraph.registerNodeType('AnimationController', {
   factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
         playbackRate: 1.0,
-        bindToGlobalTime: true
+        bindToGlobalTime: true,
+        outOfRange: 1 /* 0: linear, 1:loop, 3:clamp */
       });
 
     var animationControllerNode = scene.constructNode('SceneGraphNode', options);
     var dgnode = animationControllerNode.constructDGNode('DGNode');
     dgnode.addMember('playbackRate', 'Scalar', options.playbackRate);
     dgnode.addMember('localtime', 'Scalar');
+    dgnode.addMember('timerange', 'Vec2', FABRIC.RT.vec2(0, 100));
+    dgnode.addMember('outOfRange', 'Integer', options.outOfRange);
     
     // create a getter and setter for the local time
     animationControllerNode.addMemberInterface(dgnode, 'playbackRate', true);
@@ -191,35 +194,22 @@ FABRIC.SceneGraph.registerNodeType('AnimationController', {
     // is computed, or simulated based on scene events.
     if(options.bindToGlobalTime) {
       dgnode.addDependency(scene.getGlobalsNode(), 'globals');
-      dgnode.bindings.append(scene.constructOperator(
-        {
-          operatorName: 'setControllerLocalTime.kl',
-          srcCode:
-            '\noperator setControllerLocalTime(io Scalar globalTime, io Scalar localTime) \n' +
-            '{\n' +
-            '  localTime = globalTime;\n' +
-            '}',
-          entryFunctionName: 'setControllerLocalTime',
-          parameterLayout: [
-            'globals.time',
-            'self.localtime'
-          ]
-        }));
+      
       // This operator might simulate the platback local time by incrementing
       // it each frame by a rate specified by the playbackRate parameter.
-    /*  dgnode.bindings.append(scene.constructOperator(
-        {
+      dgnode.bindings.append(scene.constructOperator( {
           operatorName:'incrementControllerLocalTime',
           srcFile:'FABRIC_ROOT/SceneGraph/KL/incrementControllerLocalTime.kl',
           entryFunctionName:'incrementControllerLocalTime',
-          parameterLayout:[
+          parameterLayout: [
             'globals.time',
             'globals.timeStep',
             'self.playbackRate',
+            'self.timerange',
+            'self.outOfRange',
             'self.localtime'
           ]
         }));
-    */
     }
     return animationControllerNode;
   }});

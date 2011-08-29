@@ -41,39 +41,40 @@
     
     <script type="text/javascript">
     
-$(document).ready(function() {
-
-  FABRIC.SceneGraph.registerNodeType('SwirleyMovementTransform', {
-  factoryFn: function(options, scene) {
-      scene.assignDefaults(options, {
-          baseXfo: FABRIC.RT.xfo(),
-          objId: 0
-        });
-  
-      var swirleyMovementTransform = scene.constructNode('Transform', options);
-      var dgnode = swirleyMovementTransform.getDGNode();
-      dgnode.addMember('baseXfo', 'Xfo', options.baseXfo);
-      dgnode.addMember('id', 'Integer', options.objId);
-      dgnode.addDependency(scene.getGlobalsNode(), 'globals');
-      
-      var op = scene.constructOperator({
-        operatorName: 'swirleyMovementOp',
-        srcFile: 'KL/swirleyMovementOp.kl',
-        parameterLayout: [
-          'globals.ms',
-          'self.id',
-          'self.baseXfo',
-          'self.globalXfo'
-        ],
-        entryFunctionName: 'swirleyMovementOp'
+FABRIC.SceneGraph.registerNodeType('SwirleyMovementTransform', {
+factoryFn: function(options, scene) {
+    scene.assignDefaults(options, {
+        baseXfo: FABRIC.RT.xfo(),
+        objId: 0
       });
-      dgnode.bindings.append(op);
-      
-      swirleyMovementTransform.pub.getOperatorBinding = function(){
-        return op;
-      }
-      return swirleyMovementTransform;
-    }});
+
+    var swirleyMovementTransform = scene.constructNode('Transform', options);
+    var dgnode = swirleyMovementTransform.getDGNode();
+    dgnode.addMember('baseXfo', 'Xfo', options.baseXfo);
+    dgnode.addMember('id', 'Integer', options.objId);
+    dgnode.addDependency(scene.getGlobalsNode(), 'globals');
+    
+    var op = scene.constructOperator({
+      operatorName: 'swirleyMovementOp',
+      srcFile: 'KL/swirleyMovementOp.kl',
+      parameterLayout: [
+        'globals.ms',
+        'self.id',
+        'self.baseXfo',
+        'self.globalXfo'
+      ],
+      entryFunctionName: 'swirleyMovementOp'
+    });
+    dgnode.bindings.append(op);
+    
+    swirleyMovementTransform.pub.getOperatorBinding = function(){
+      return op;
+    }
+    return swirleyMovementTransform;
+  }});
+
+    
+$(document).ready(function() {
 
   var scene = FABRIC.SceneGraph.createScene();
   var viewport = scene.constructNode('Viewport', {

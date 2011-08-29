@@ -4,6 +4,16 @@
 
 use RotationOrder;
 
+function Quat() {
+  self.v = Vec3(0.0, 0.0, 0.0);
+  self.w = 1.0;
+}
+
+function Quat.identity() {
+  self.v = Vec3(0.0, 0.0, 0.0);
+  self.w = 1.0;
+}
+
 function Quat(in Scalar w, in Vec3 v) {
   self.v = v;
   self.w = w;
@@ -88,6 +98,10 @@ function Quat.setUnit() {
   self = self.unit();
 }
 
+function Quat.normalize() {
+  self = self.unit();
+}
+
 function Quat Quat.conjugate() {
   return Quat(self.w, self.v.neg());
 }
@@ -99,6 +113,13 @@ function Quat Quat.inv() {
 function Scalar Quat.dot(in Quat other) {
   return self.w * other.w + self.v.dot(other.v);
 }
+
+function Quat.makeClosest(in Quat other) {
+  if(self.dot(other) < 0.0){
+    self = Quat(-self.w, self.v.neg());;
+  }
+}
+
 
 // Note: a and b should be unit Quaternions
 function Quat slerp(in Quat a, in Quat b, in Scalar t) {
@@ -254,3 +275,14 @@ function Quat(in Mat33 mat) {
   }
   self.setUnit();
 }
+
+
+
+function Quat Quat.nlerp(in Quat other, in Scalar t) {
+  Quat q;
+  q.v = self.v.lerp(other.v, t);
+  q.w = self.w + ((other.w - self.w) * t);
+  return q.unit();
+}
+
+

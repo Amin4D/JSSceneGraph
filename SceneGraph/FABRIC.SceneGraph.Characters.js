@@ -9,6 +9,7 @@ FABRIC.SceneGraph.registerNodeType('CharacterMesh', {
     options.uvSets = 1;
     options.tangentsFromUV = 0;
     options.dynamic = true;
+    options.assignDrawOperator = false;
 
     var characterMeshNode = scene.constructNode('Triangles', options);
 
@@ -37,12 +38,11 @@ FABRIC.SceneGraph.registerNodeType('CharacterMesh', {
       ]
     }));
     
-    characterMeshNode.getDrawOperator = function() {
-      return scene.constructOperator({
+    characterMeshNode.getRedrawEventHandler().postDescendBindings.append( scene.constructOperator({
           operatorName: 'drawCharacterInstance',
           srcFile: 'FABRIC_ROOT/SceneGraph/KL/drawCharacterInstance.kl',
           preProcessorDefinitions: {
-            BONE_MATRICIES_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('boneMatrices'),
+            SKINNING_MATRICIES_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('skinningMatrices'),
             MODELMATRIXINVERSE_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('modelMatrixInverse'),
             MODELMATRIX_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('modelMatrix'),
             VIEWMATRIX_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('viewMatrix'),
@@ -56,14 +56,14 @@ FABRIC.SceneGraph.registerNodeType('CharacterMesh', {
           entryFunctionName: 'drawCharacterInstance',
           parameterLayout: [
             'shader.shaderProgram',
-            'rig.boneMatrices',
+            'rig.skinningMatrices',
             'camera.cameraMat44',
             'camera.projectionMat44',
             'self.indicesBuffer',
             'instance.drawToggle'
           ]
-        });
-    }
+        }));
+    
     return characterMeshNode;
   }});
 
@@ -162,7 +162,7 @@ FABRIC.SceneGraph.registerNodeType('CharacterSkeleton', {
 
       // compute global from local or vice versa
       if (boneOptions.referencePose && !boneOptions.referenceLocalPose) {
-        if (boneOptions.parent == -1) {
+        if (!boneOptions.parent || boneOptions.parent == -1) {
           boneOptions.referenceLocalPose = boneOptions.referencePose;
         }
         else {
@@ -401,6 +401,8 @@ FABRIC.SceneGraph.registerNodeType('CharacterConstants', {
 FABRIC.SceneGraph.registerNodeType('CharacterRig', {
   factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
+        skeletonNode: undefined,
+        computeInverseXfos: false
       });
 
     if (!options.skeletonNode) {
@@ -463,6 +465,11 @@ FABRIC.SceneGraph.registerNodeType('CharacterRig', {
     characterRigNode.pub.getSolvers = function() {
       return solvers;
     };
+    var numSolverOperators = 0;
+    characterRigNode.addSolverOperator = function(operator) {
+      rigNode.getDGNode().bindings.insert(operator, numSolverOperators+1);
+      numSolverOperators++;
+    }
     //////////////////////////////////////////
     characterRigNode.pub.addMember = function(name, type, value) {
       dgnode.addMember(name, type, value);
@@ -499,30 +506,32 @@ FABRIC.SceneGraph.registerNodeType('CharacterRig', {
       // This member will store the computed pose.
       var referencePose = skeletonNode.pub.getReferencePose();
       dgnode.addMember('pose', 'Xfo[]', referencePose);
-      dgnode.addMember('boneMatrices', 'Mat44[]');
+      dgnode.addMember('skinningMatrices', 'Mat44[]');
 
       // create the operators that converts the pose to matrices
       dgnode.bindings.append(scene.constructOperator({
           operatorName: 'calcSkinningMatrices',
           srcFile: 'FABRIC_ROOT/SceneGraph/KL/characterRig.kl',
           entryFunctionName: 'calcSkinningMatrices',
-          parameterLayout: ['self.pose', 'skeleton.invmatrices', 'self.boneMatrices']
+          parameterLayout: ['self.pose', 'skeleton.invmatrices', 'self.skinningMatrices']
         }));
       
       // offer to create an operator which computes the inverse as a xfo[]
-      characterRigNode.pub.computeInverseXfos = function()
-      {
-        dgnode.addMember('boneXfos', 'Xfo[]');
+      characterRigNode.pub.computeInverseXfos = function(){
+        dgnode.addMember('skinningXfos', 'Xfo[]');
         
         dgnode.bindings.append(scene.constructOperator({
             operatorName: 'calcSkinningXfos',
             srcFile: 'FABRIC_ROOT/SceneGraph/KL/characterRig.kl',
             entryFunctionName: 'calcSkinningXfos',
-            parameterLayout: ['self.pose', 'skeleton.bones', 'self.boneXfos']
+            parameterLayout: ['self.pose', 'skeleton.bones', 'self.skinningXfos']
           }));
         
         // remove the function once more
         characterRigNode.pub.computeInverseXfos  = function(){};
+      }
+      if(options.computeInverseXfos){
+        characterRigNode.pub.computeInverseXfos();
       }
     }
     setSkeletonNode(options.skeletonNode);

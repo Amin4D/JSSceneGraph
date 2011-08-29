@@ -777,7 +777,7 @@ FABRIC.SceneGraph = {
             scene.pub.redrawAllWindows();
           },
           step: function() {
-            advancePlayback();
+            advanceTime();
           }
         };
 

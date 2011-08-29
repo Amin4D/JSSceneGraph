@@ -65,7 +65,7 @@ function Integer OGLShaderProgram.createAndCompileShader(OGLShaderSource shaders
 }
 
 
-function OGLShaderProgram.validateShaderBindings() {
+function OGLShaderProgram.logShaderParameters() {
   var String name, typeName;
   var Integer i, j;
 
@@ -109,7 +109,7 @@ function OGLShaderProgram.validateShaderBindings() {
       }
     }
     if (!found) {
-      report('WARNING: ' + self.name + ': Uniform not bound:' + name);
+      report('WARNING: ' + self.name + ': Binding not specified for uniform:' + name);
     }
   }
   
@@ -136,7 +136,7 @@ function OGLShaderProgram.validateShaderBindings() {
       }
     }
     if (!found) {
-      report('WARNING: ' + self.name + ': Attribute not bound:' + name);
+      report('WARNING: ' + self.name + ': Binding not specified for attribute:' + name);
     }
   }
 }
@@ -219,7 +219,7 @@ function OGLShaderProgram.createProgramFromShaders() {
   }
   
   if (self.programId != 0) {
-    self.validateShaderBindings();
+    self.logShaderParameters();
   }
   
   if(self.debug){
@@ -228,6 +228,10 @@ function OGLShaderProgram.createProgramFromShaders() {
 }
 
 function OGLShaderProgram.loadShader() {
+  if(self.debug){
+    report("----------------------------");
+    report("loadShader " + self.name );
+  }
   if (!self.programId) {
     self.createProgramFromShaders();
   }
@@ -248,12 +252,14 @@ function OGLShaderProgram.loadShader() {
       glCullFace(self.cullFace);
     }
   }
+  self.loadedAttributes.resize(0);
 }
 
 function OGLShaderProgram.unloadShader() {
   if(self.disableOptions.size() > 0 || self.enableOptions.size() > 0){
     glPopAttrib();
   }
+  self.loadedAttributes.resize(0);
 }
 
 //////////////////////////////////////////////////////////
@@ -526,4 +532,73 @@ function Integer OGLShaderProgram.getAttributeLocation(
   return -1;
 }
 
+function Boolean OGLShaderProgram.isAttributeLoaded(
+  Integer attributeId
+) {
+  for (Integer i = 0; i < self.loadedAttributes.size(); i++) {
+    if (self.loadedAttributes[i] == attributeId) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function OGLShaderProgram.genAndBindBuffer(
+  in Data bufferData,
+  in Size bufferDataElementSize,
+  in Size bufferDataSize,
+  io OGLBuffer buffer
+) {
+
+  if(self.isAttributeLoaded(buffer.attributeID)){
+    if(self.debug){
+      report("AttributeLoaded :" + buffer.name );
+    }
+    // Multiple event handlers can load buffers for the same drawn gometry
+    // Once a buffer has been loaded, we don't load any further buffers for that
+    // shader invocation.
+    return;
+  }
+  
+  Integer location = self.getAttributeLocation(buffer.attributeID);
+  if(self.debug){
+    report("genAndBindBuffer " + buffer.name + ":" + buffer.bufferID + " elementCount:" + buffer.elementCount  + " attributeID:" + buffer.attributeID + " location:" + location );
+  }
+  if(location!=-1){
+  
+    if(self.attributesElementCount != bufferDataSize){
+      if(self.attributesElementCount == 0){
+        self.attributesElementCount = bufferDataSize;
+      }else{
+        report("ERROR binding "+buffer.name+": All attributes for a given shader invocation must contain identical element counts");
+        report( buffer.name+".bufferDataSize = "+bufferDataSize + " != " + self.attributesElementCount);
+        return;
+      }
+    }
+    
+    buffer.genBuffer(bufferData, bufferDataElementSize, bufferDataSize);
+    buffer.bindBuffer(location);
+    self.loadedAttributes.push(buffer.attributeID);
+  }
+}
+
+function OGLShaderProgram.preDraw() {
+//  Boolean valid = true;
+  for (Integer i = 0; i < self.attributeValues.size(); i++) {
+    if (!self.isAttributeLoaded(self.attributeValues[i].id)) {
+      report("Attribute not loaded prior to shader invocation:"+self.attributeValues[i].name);
+    //  valid = false;
+    }
+  }
+//  return valid;
+}
+
+function OGLShaderProgram.postDraw() {
+  self.loadedAttributes.resize(0);
+  self.attributesElementCount = 0;
+  
+  if(self.debug){
+    report("----------------------------");
+  }
+}
 

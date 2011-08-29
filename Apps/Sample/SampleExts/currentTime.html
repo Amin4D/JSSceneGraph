@@ -18,7 +18,7 @@ $(document).ready(function() {
   
   var op = FABRIC.DG.createOperator( "getCurrentTimeString" );
   op.setEntryFunctionName( "entry" );
-  op.setSourceCode( "operator entry( io String result ) { currentTimeString( result ); }" );
+  op.setSourceCode( "use TimeSample; operator entry( io String result ) { currentTimeString( result ); }" );
   
   var binding = FABRIC.DG.createBinding();
   binding.setOperator( op );

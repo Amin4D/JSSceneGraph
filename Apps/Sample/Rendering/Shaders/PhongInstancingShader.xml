@@ -93,7 +93,7 @@
       
       ]]>
       </source>
-      <include file="FABRIC_ROOT/SceneGraph/Resources/Shaders/lighting.txt"/>
+      <include file="FABRIC_ROOT/SceneGraph/Shaders/lighting.txt"/>
       <source>
       <![CDATA[
       

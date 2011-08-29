@@ -1,0 +1,146 @@
+//
+// Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
+//
+
+use Vec3;
+use HashTable;
+
+operator calcCellIndex(
+  in Index index,
+  io Vec3 position,
+  io Vec3 cellcoords,
+  io Integer cellindex,
+  io HashTable hashtable
+) {
+  // determine the cell that this particle belongs to.
+  var Vec3 num_sections(Scalar(hashtable.x_count), Scalar(hashtable.y_count), Scalar(hashtable.z_count));
+  var Vec3 gridDim = num_sections * hashtable.cellsize;
+  cellcoords = (((position + (gridDim * 0.5)) / gridDim) * num_sections);
+
+  cellindex = Integer(cellcoords.x) + ((Integer(cellcoords.z)) * hashtable.x_count) + ((Integer(cellcoords.y)) * hashtable.x_count * hashtable.z_count);
+}
+
+operator populateHashTable(
+  io HashTable hashtable,
+  io Integer particleCellIndices[]
+) {
+  // Reset the hash table, and re-accumulate the ids.
+  Size numCells = hashtable.x_count * hashtable.y_count * hashtable.z_count;
+  hashtable.cells.resize(numCells);
+  for (var Index i = 0; i < numCells; ++ i)
+    hashtable.cells[i].resize(0);
+
+  for (var Integer i = 0; i < particleCellIndices.size; i++) {
+
+    var Integer cellIndex = particleCellIndices[i];
+
+    hashtable.cells[cellIndex].push(i);
+  }
+}
+
+operator copyCurrentFrameDataToPrevFrameData(
+  io Vec3 position,
+  io Vec3 velocity,
+  io Vec3 previousframe_position,
+  io Vec3 previousframe_velocity
+) {
+  previousframe_position = position;
+  previousframe_velocity = velocity;
+}
+
+function addCellParticlesToNeighborsArray(
+  io Integer neighbors[],
+  in HashTable hashtable,
+  in Integer x_index,
+  in Integer y_index,
+  in Integer z_index
+) {
+  var Integer cell[] = hashtable.cells[x_index + (z_index * hashtable.x_count) + (y_index * hashtable.x_count * hashtable.z_count)];
+
+  for (var Integer i = 0; i < cell.size; i++) {
+    neighbors.push(cell[i]);
+  }
+}
+
+function getNeighboringIndices(
+  io Integer neighbors[],
+  io Scalar neighborDistances[],
+  in Index index,
+  io Vec3 position,
+  io Vec3 velocity,
+  io Integer cellindex,
+  io Vec3 cellcoords,
+
+  io Vec3 previousframe_positions[],
+  io Vec3 previousframe_velocities[],
+
+  io Scalar neighborInfluenceRange,
+  io HashTable hashtable
+) {
+  Integer bufferSize = neighbors.size();
+  ///////////////////////////////////////////////
+  // Broad Phase Interaction Detection
+  neighbors.resize(hashtable.cells[cellindex].size);
+  for (var Integer i = 0; i < hashtable.cells[cellindex].size; i++) {
+    neighbors[i] = hashtable.cells[cellindex][i];
+  }
+
+  var Integer i;
+
+  var Integer x_index = Integer(cellcoords.x);
+  var Integer y_index = Integer(cellcoords.y);
+  var Integer z_index = Integer(cellcoords.z);
+  var Vec3 flooredCellCoords(Scalar(x_index), Scalar(y_index), Scalar(z_index));
+  var Vec3 cellFraction = cellcoords - flooredCellCoords;
+
+  // A particle willneed to check as least 1 cell (if it is centered exactly in its cell),
+  // and at most 4(if it is tending towards one of the corners of its cell).
+  // Note: It may be more efficient to simple check all particles in all 8 cells surrounding the current one.
+  if (cellFraction.x < 0.5 && x_index > 0) {
+    addCellParticlesToNeighborsArray(neighbors, hashtable, x_index - 1, y_index, z_index);
+
+    // Now check diagonal cells
+    if (cellFraction.z < 0.5 && z_index > 0) {
+      addCellParticlesToNeighborsArray(neighbors, hashtable, x_index - 1, y_index, z_index - 1);
+    }
+    else if (cellFraction.z > 0.5 && z_index < (hashtable.z_count - 1)) {
+      addCellParticlesToNeighborsArray(neighbors, hashtable, x_index - 1, y_index, z_index + 1);
+    }
+  }
+  else if (cellFraction.x > 0.5 && x_index < (hashtable.x_count - 1)) {
+    addCellParticlesToNeighborsArray(neighbors, hashtable, x_index + 1, y_index, z_index);
+
+    // Now check diagonal cells
+    if (cellFraction.z < 0.5 && z_index > 0) {
+      addCellParticlesToNeighborsArray(neighbors, hashtable, x_index + 1, y_index, z_index - 1);
+    }
+    else if (cellFraction.z > 0.5 && z_index < (hashtable.x_count - 1)) {
+      addCellParticlesToNeighborsArray(neighbors, hashtable, x_index + 1, y_index, z_index + 1);
+    }
+  }
+  //  if( cellFraction.y < 0.5 && y_index > 0 ){
+  //    addCellParticlesToNeighborsArray( neighbors, hashtable, x_index, y_index-1, z_index );
+  //  }else if( cellFraction.y > 0.5 && y_index < hashtable.y_count ){
+  //    addCellParticlesToNeighborsArray( neighbors, hashtable, x_index, y_index+1, z_index );
+  //  }
+
+  if (cellFraction.z < 0.5 && z_index > 0) {
+    addCellParticlesToNeighborsArray(neighbors, hashtable, x_index, y_index, z_index - 1);
+  }else if (cellFraction.z > 0.5 && z_index < (hashtable.z_count - 1)) {
+    addCellParticlesToNeighborsArray(neighbors, hashtable, x_index, y_index, z_index + 1);
+  }
+
+  ///////////////////////////////////////////////
+  // Narrow Phase Interaction Detection
+  neighborDistances.resize(neighbors.size());
+
+  //  var Scalar neighborInfluenceRangeSq = neighborInfluenceRange * neighborInfluenceRange;
+  for (i = 0; i < neighbors.size; i++) {
+    //    var Scalar distSq = position.distSq( previousframe_positions[neighbors[i]] );
+    //    if( distSq < neighborInfluenceRangeSq ){
+    //      neighbors.push( neighbors[i] );
+    //      neighborDistances.push( sqrt( distSq ) );
+    //    }
+    neighborDistances[i] = position.dist(previousframe_positions[neighbors[i]]);
+  }
+}

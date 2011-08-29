@@ -1,0 +1,33 @@
+//
+// Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
+//
+
+use Vec3;
+
+operator setCircleVertexCount(
+  io Integer numSegments,
+  io Size newCount
+) {
+  newCount = numSegments;
+}
+
+operator generateCircle(
+  io Vec3 positions[],
+  io Integer indices[],
+  io Scalar radius,
+  io Scalar arcAngle,
+  io Integer numSegments
+) {
+  //  positions.resize( numSegments );
+  indices.resize(numSegments * 2);
+
+  // +z-plane
+  var Integer indexid = 0;
+  for (var Integer i = 0; i < numSegments; i++) {
+    var Scalar angle = (Scalar(i) / Scalar(numSegments)) * arcAngle;
+    positions[i] = Vec3(sin(angle) * radius, 0.0, cos(angle) * radius);
+
+    indices[indexid++] = i;
+    indices[indexid++] = (i + 1) % numSegments;
+  }
+}

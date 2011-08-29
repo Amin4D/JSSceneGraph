@@ -1,0 +1,83 @@
+//
+// Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
+//
+
+use Vec2;
+use Vec3;
+
+operator setSphereVertexCount(
+  io Integer detail,
+  io Size newCount
+) {
+  Integer sides = (detail >= 0) ? (detail * 2 + 3) : 3;
+  Integer loops = (detail >= 0) ? (detail + 1) : 1;
+
+  newCount = 2 * sides * (2 + loops);
+}
+
+operator generateSphere(
+  io Scalar radius,
+  io Integer detail,
+
+  io Integer indices[],
+  io Vec3 positions[],
+  io Vec3 normals[],
+  io Vec2 uvs[]
+) {
+  Integer sides = (detail >= 0) ? (detail * 2 + 3) : 3;
+  Integer loops = (detail >= 0) ? (detail + 1) : 1;
+
+
+  Integer numTriangles, nbSides, nbLoops;
+
+  nbLoops = loops + 1;
+  nbSides = sides + 1;
+  
+  numTriangles = 2 * sides * (loops + 1);
+  
+  indices.resize(numTriangles * 3);
+
+  Scalar PI = 3.141592653589793238462643383279;
+  Integer voff = 0;
+  for (var Integer i = 0; i <= nbLoops; i++) {
+    var Scalar theta = (i / Scalar(nbLoops)) * PI;
+    for (var Integer j = 0; j < nbSides; j++) {
+      var Scalar phi = (j / Scalar(sides)) * 2.0 * PI;
+
+      normals[voff] = Vec3(
+        sin(theta) * cos(phi),
+        cos(theta),
+        sin(theta) * sin(phi)
+      );
+
+      positions[voff] = normals[voff] * radius;
+      uvs[voff] = Vec2(1.0 - Scalar(j) / Scalar(sides), Scalar(i + 1) / Scalar(loops + 1));
+      voff++;
+    }
+  }
+  
+  Integer fid = 0;
+  Integer tid = 0;
+  
+  // Body of the sphere
+  for (var Integer i = 0; i < nbLoops; i++) {
+    for (var Integer j = 0; j < sides; j++) {
+      
+      var Integer v0, v1, v2, v3;
+      v0 = (nbSides * i) + j;
+      v1 = (nbSides * i) + ((j + 1) % nbSides);
+      v2 = (nbSides * (i+1)) + ((j + 1) % nbSides);
+      v3 = (nbSides * (i+1)) + j;
+      
+      indices[tid++] = v0;
+      indices[tid++] = v1;
+      indices[tid++] = v3;
+      fid++;
+      
+      indices[tid++] = v1;
+      indices[tid++] = v2;
+      indices[tid++] = v3;
+      fid++;
+    }
+  }
+}

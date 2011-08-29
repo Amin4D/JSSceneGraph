@@ -1,3 +1,10 @@
+use Vec2;
+use Vec3;
+use Vec4;
+use Color;
+use Xfo;
+use FabricMath;
+
 operator initHair(
   in Size index,
   io Vec3 trianglePositions[],

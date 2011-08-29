@@ -1,0 +1,55 @@
+//
+// Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
+//
+
+use FabricOBJ;
+use Vec2;
+use Vec3;
+
+operator loadObj(
+  io String url,
+  io FabricResource resource,
+  io Data objParseHandle
+) {
+  report "OBJ decode " + url;
+  FabricOBJDecode(resource.data, resource.dataSize, objParseHandle);
+
+  Boolean hadErrors;
+  FabricOBJHadErrors( objParseHandle, hadErrors );
+  if( hadErrors )
+  {
+    String errors[];
+    FabricOBJGetErrors( objParseHandle, errors );
+    for( Integer i = 0; i < errors.size; i++ )
+      report 'Error while parsing obj file ' + url + ': ' + errors[i];
+  }
+}
+
+operator setObjVertexCount(
+  io Data objParseHandle,
+  io Size newCount
+) {
+  FabricOBJGetNbPoints(objParseHandle, newCount);
+  report "OBJ setObjVertexCount: " + newCount;
+}
+
+operator setObjGeom(
+  io Data objParseHandle,
+  io Integer indices[],
+  io Vec3 positions[],
+  io Vec3 normals[],
+  io Vec2 uvs[]
+) {
+//  report "OBJ setObjGeom";
+  FabricOBJGetTriangleIndices( objParseHandle, indices );
+  FabricOBJGetPoints( objParseHandle, positions );
+  FabricOBJGetNormals( objParseHandle, normals );
+
+  Boolean hasTexture = false;
+  FabricOBJHasTextureCoords( objParseHandle, hasTexture );
+  if( hasTexture )
+  {
+    FabricOBJGetTextureCoords( objParseHandle, uvs );
+  }
+  report "OBJ setObjGeom: Done";
+}

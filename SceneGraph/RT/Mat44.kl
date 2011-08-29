@@ -1,0 +1,215 @@
+//
+// Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
+//
+
+use Vec4;
+
+function Mat44(
+  Scalar _00, Scalar _01, Scalar _02, Scalar _03,
+  Scalar _10, Scalar _11, Scalar _12, Scalar _13,
+  Scalar _20, Scalar _21, Scalar _22, Scalar _23,
+  Scalar _30, Scalar _31, Scalar _32, Scalar _33
+) {
+  self.row0 = Vec4(_00, _01, _02, _03);
+  self.row1 = Vec4(_10, _11, _12, _13);
+  self.row2 = Vec4(_20, _21, _22, _23);
+  self.row3 = Vec4(_30, _31, _32, _33);
+}
+
+function Mat44.set(
+  Scalar _00, Scalar _01, Scalar _02, Scalar _03,
+  Scalar _10, Scalar _11, Scalar _12, Scalar _13,
+  Scalar _20, Scalar _21, Scalar _22, Scalar _23,
+  Scalar _30, Scalar _31, Scalar _32, Scalar _33
+) {
+  self.row0 = Vec4(_00, _01, _02, _03);
+  self.row1 = Vec4(_10, _11, _12, _13);
+  self.row2 = Vec4(_20, _21, _22, _23);
+  self.row3 = Vec4(_30, _31, _32, _33);
+}
+
+function Mat44(in Mat33 m) {
+  self.row0.x = m.row0.x; self.row0.y = m.row0.y; self.row0.z = m.row0.z; self.row0.t = 0.0;
+  self.row1.x = m.row1.x; self.row1.y = m.row1.y; self.row1.z = m.row1.z; self.row1.t = 0.0;
+  self.row2.x = m.row2.x; self.row2.y = m.row2.y; self.row2.z = m.row2.z; self.row2.t = 0.0;
+  self.row3.x = 0.0; self.row3.y = 0.0; self.row3.z = 0.0; self.row3.t = 1.0;
+}
+
+function Mat44.setNull() {
+  var Vec4 null(0.0, 0.0, 0.0, 0.0);
+  self.row0 = self.row1 = self.row2 = self.row3 = null;
+}
+
+function Mat44.setDiagonal(in Scalar v) {
+  self.row0.x = self.row1.y = self.row2.z = self.row3.t = v;
+}
+
+function Mat44.setDiagonal(in Vec4 v) {
+  self.row0.x = v.x;
+  self.row1.y = v.y;
+  self.row2.z = v.z;
+  self.row3.t = v.t;
+}
+
+function Mat44.setRows(in Vec4 row0, in Vec4 row1, in Vec4 row2, in Vec4 row3) {
+  self.row0 = row0;
+  self.row1 = row1;
+  self.row2 = row2;
+  self.row3 = row3;
+}
+
+function Mat44.setColumns(in Vec4 col0, in Vec4 col1, in Vec4 col2, in Vec4 col3) {
+  self.row0.x = col0.x; self.row0.y = col1.x; self.row0.z = col2.x; self.row0.t = col3.x;
+  self.row1.x = col0.y; self.row1.y = col1.y; self.row1.z = col2.y; self.row1.t = col3.y;
+  self.row2.x = col0.z; self.row2.y = col1.z; self.row2.z = col2.z; self.row2.t = col3.z;
+  self.row3.x = col0.t; self.row3.y = col1.t; self.row3.z = col2.t; self.row3.t = col3.t;
+}
+
+function Vec4 * (Vec4 vec4, Mat44 mat44) {
+  return Vec4(
+    vec4.x * mat44.row0.x + vec4.y * mat44.row1.x + vec4.z * mat44.row2.x + vec4.t * mat44.row3.x,
+    vec4.x * mat44.row0.y + vec4.y * mat44.row1.y + vec4.z * mat44.row2.y + vec4.t * mat44.row3.y,
+    vec4.x * mat44.row0.z + vec4.y * mat44.row1.z + vec4.z * mat44.row2.z + vec4.t * mat44.row3.z,
+    vec4.x * mat44.row0.t + vec4.y * mat44.row1.t + vec4.z * mat44.row2.t + vec4.t * mat44.row3.t
+  );
+}
+
+function Vec4 * (Mat44 mat44, Vec4 vec4) {
+  return Vec4(
+    mat44.row0.x * vec4.x + mat44.row0.y * vec4.y + mat44.row0.z * vec4.z + mat44.row0.t * vec4.t,
+    mat44.row1.x * vec4.x + mat44.row1.y * vec4.y + mat44.row1.z * vec4.z + mat44.row1.t * vec4.t,
+    mat44.row2.x * vec4.x + mat44.row2.y * vec4.y + mat44.row2.z * vec4.z + mat44.row2.t * vec4.t,
+    mat44.row3.x * vec4.x + mat44.row3.y * vec4.y + mat44.row3.z * vec4.z + mat44.row3.t * vec4.t
+  );
+}
+
+function Vec3 * (Vec3 vec3, Mat44 mat44) {
+  var Vec4 temp = Vec4(vec3.x, vec3.y, vec3.z, 1.0) * mat44;
+  var Vec3 result;
+  result.x = temp.x / temp.t;
+  result.y = temp.y / temp.t;
+  result.z = temp.z / temp.t;
+  return result;
+}
+
+function Mat44 * (Mat44 left, Mat44 right) {
+  var Mat44 result;
+
+  result.row0.x = left.row0.x * right.row0.x + left.row0.y * right.row1.x + left.row0.z * right.row2.x + left.row0.t * right.row3.x;
+  result.row0.y = left.row0.x * right.row0.y + left.row0.y * right.row1.y + left.row0.z * right.row2.y + left.row0.t * right.row3.y;
+  result.row0.z = left.row0.x * right.row0.z + left.row0.y * right.row1.z + left.row0.z * right.row2.z + left.row0.t * right.row3.z;
+  result.row0.t = left.row0.x * right.row0.t + left.row0.y * right.row1.t + left.row0.z * right.row2.t + left.row0.t * right.row3.t;
+
+  result.row1.x = left.row1.x * right.row0.x + left.row1.y * right.row1.x + left.row1.z * right.row2.x + left.row1.t * right.row3.x;
+  result.row1.y = left.row1.x * right.row0.y + left.row1.y * right.row1.y + left.row1.z * right.row2.y + left.row1.t * right.row3.y;
+  result.row1.z = left.row1.x * right.row0.z + left.row1.y * right.row1.z + left.row1.z * right.row2.z + left.row1.t * right.row3.z;
+  result.row1.t = left.row1.x * right.row0.t + left.row1.y * right.row1.t + left.row1.z * right.row2.t + left.row1.t * right.row3.t;
+
+  result.row2.x = left.row2.x * right.row0.x + left.row2.y * right.row1.x + left.row2.z * right.row2.x + left.row2.t * right.row3.x;
+  result.row2.y = left.row2.x * right.row0.y + left.row2.y * right.row1.y + left.row2.z * right.row2.y + left.row2.t * right.row3.y;
+  result.row2.z = left.row2.x * right.row0.z + left.row2.y * right.row1.z + left.row2.z * right.row2.z + left.row2.t * right.row3.z;
+  result.row2.t = left.row2.x * right.row0.t + left.row2.y * right.row1.t + left.row2.z * right.row2.t + left.row2.t * right.row3.t;
+
+  result.row3.x = left.row3.x * right.row0.x + left.row3.y * right.row1.x + left.row3.z * right.row2.x + left.row3.t * right.row3.x;
+  result.row3.y = left.row3.x * right.row0.y + left.row3.y * right.row1.y + left.row3.z * right.row2.y + left.row3.t * right.row3.y;
+  result.row3.z = left.row3.x * right.row0.z + left.row3.y * right.row1.z + left.row3.z * right.row2.z + left.row3.t * right.row3.z;
+  result.row3.t = left.row3.x * right.row0.t + left.row3.y * right.row1.t + left.row3.z * right.row2.t + left.row3.t * right.row3.t;
+
+  return result;
+}
+
+function Scalar Mat44.det() {
+  var Scalar a0 = self.row0.x * self.row1.y - self.row0.y * self.row1.x;
+  var Scalar a1 = self.row0.x * self.row1.z - self.row0.z * self.row1.x;
+  var Scalar a2 = self.row0.x * self.row1.t - self.row0.t * self.row1.x;
+  var Scalar a3 = self.row0.y * self.row1.z - self.row0.z * self.row1.y;
+  var Scalar a4 = self.row0.y * self.row1.t - self.row0.t * self.row1.y;
+  var Scalar a5 = self.row0.z * self.row1.t - self.row0.t * self.row1.z;
+  var Scalar b0 = self.row2.x * self.row3.y - self.row2.y * self.row3.x;
+  var Scalar b1 = self.row2.x * self.row3.z - self.row2.z * self.row3.x;
+  var Scalar b2 = self.row2.x * self.row3.t - self.row2.t * self.row3.x;
+  var Scalar b3 = self.row2.y * self.row3.z - self.row2.z * self.row3.y;
+  var Scalar b4 = self.row2.y * self.row3.t - self.row2.t * self.row3.y;
+  var Scalar b5 = self.row2.z * self.row3.t - self.row2.t * self.row3.z;
+  return a0 * b5 - a1 * b4 + a2 * b3 + a3 * b2 - a4 * b1 + a5 * b0;
+}
+
+function Mat44 Mat44.inverse() {
+  // Compute the determinant of the matrix.
+  var Scalar det = self.det();
+
+  var Mat44 result;
+
+  if (abs(det) < 0.00001) {
+    result.setNull();
+    return result;
+  }
+
+  var Scalar a0 = self.row0.x * self.row1.y - self.row0.y * self.row1.x;
+  var Scalar a1 = self.row0.x * self.row1.z - self.row0.z * self.row1.x;
+  var Scalar a2 = self.row0.x * self.row1.t - self.row0.t * self.row1.x;
+  var Scalar a3 = self.row0.y * self.row1.z - self.row0.z * self.row1.y;
+  var Scalar a4 = self.row0.y * self.row1.t - self.row0.t * self.row1.y;
+  var Scalar a5 = self.row0.z * self.row1.t - self.row0.t * self.row1.z;
+  var Scalar b0 = self.row2.x * self.row3.y - self.row2.y * self.row3.x;
+  var Scalar b1 = self.row2.x * self.row3.z - self.row2.z * self.row3.x;
+  var Scalar b2 = self.row2.x * self.row3.t - self.row2.t * self.row3.x;
+  var Scalar b3 = self.row2.y * self.row3.z - self.row2.z * self.row3.y;
+  var Scalar b4 = self.row2.y * self.row3.t - self.row2.t * self.row3.y;
+  var Scalar b5 = self.row2.z * self.row3.t - self.row2.t * self.row3.z;
+
+  var Scalar di = 1.0 / det;
+  result.row0.x = ( + self.row1.y * b5 - self.row1.z * b4 + self.row1.t * b3) * di;
+  result.row1.x = (-self.row1.x * b5 + self.row1.z * b2 - self.row1.t * b1) * di;
+  result.row2.x = ( + self.row1.x * b4 - self.row1.y * b2 + self.row1.t * b0) * di;
+  result.row3.x = (-self.row1.x * b3 + self.row1.y * b1 - self.row1.z * b0) * di;
+  result.row0.y = (-self.row0.y * b5 + self.row0.z * b4 - self.row0.t * b3) * di;
+  result.row1.y = ( + self.row0.x * b5 - self.row0.z * b2 + self.row0.t * b1) * di;
+  result.row2.y = (-self.row0.x * b4 + self.row0.y * b2 - self.row0.t * b0) * di;
+  result.row3.y = ( + self.row0.x * b3 - self.row0.y * b1 + self.row0.z * b0) * di;
+  result.row0.z = ( + self.row3.y * a5 - self.row3.z * a4 + self.row3.t * a3) * di;
+  result.row1.z = (-self.row3.x * a5 + self.row3.z * a2 - self.row3.t * a1) * di;
+  result.row2.z = ( + self.row3.x * a4 - self.row3.y * a2 + self.row3.t * a0) * di;
+  result.row3.z = (-self.row3.x * a3 + self.row3.y * a1 - self.row3.z * a0) * di;
+  result.row0.t = (-self.row2.y * a5 + self.row2.z * a4 - self.row2.t * a3) * di;
+  result.row1.t = ( + self.row2.x * a5 - self.row2.z * a2 + self.row2.t * a1) * di;
+  result.row2.t = (-self.row2.x * a4 + self.row2.y * a2 - self.row2.t * a0) * di;
+  result.row3.t = ( + self.row2.x * a3 - self.row2.y * a1 + self.row2.z * a0) * di;
+
+  return result;
+}
+
+function Mat33 Mat44.upperLeft() {
+  var Mat33 result;
+
+  result.row0.x = self.row0.x;
+  result.row0.y = self.row0.y;
+  result.row0.z = self.row0.z;
+
+  result.row1.x = self.row1.x;
+  result.row1.y = self.row1.y;
+  result.row1.z = self.row1.z;
+
+  result.row2.x = self.row2.x;
+  result.row2.y = self.row2.y;
+  result.row2.z = self.row2.z;
+
+  return result;
+}
+
+function Mat44 Mat44.transpose() {
+  var Mat44 r;
+  r.row0.x = self.row0.x; r.row1.x = self.row0.y; r.row2.x = self.row0.z; r.row3.x = self.row0.t;
+  r.row0.y = self.row1.x; r.row1.y = self.row1.y; r.row2.y = self.row1.z; r.row3.y = self.row1.t;
+  r.row0.z = self.row2.x; r.row1.z = self.row2.y; r.row2.z = self.row2.z; r.row3.z = self.row2.t;
+  r.row0.t = self.row3.x; r.row1.t = self.row3.y; r.row2.t = self.row3.z; r.row3.t = self.row3.t;
+  return r;
+}
+
+function Vec3 Mat44.translation() {
+  var Vec3 result;
+  result.x = self.row3.x;
+  result.y = self.row3.y;
+  result.z = self.row3.z;
+  return result;
+}

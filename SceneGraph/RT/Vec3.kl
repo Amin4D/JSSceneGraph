@@ -1,0 +1,247 @@
+
+//
+// Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
+//
+
+
+function Vec3(Scalar x, Scalar y, Scalar z) {
+  self.x = x;
+  self.y = y;
+  self.z = z;
+}
+
+function Vec3.set(Scalar x, Scalar y, Scalar z) {
+  self.x = x;
+  self.y = y;
+  self.z = z;
+}
+
+function Vec3.setNull() {
+  self.x = self.y = self.z = 0.0;
+}
+
+function Vec3 + (Vec3 a, Vec3 b) {
+  return Vec3(a.x + b.x, a.y + b.y, a.z + b.z);
+}
+
+function Vec3. += (Vec3 other) {
+  self = self + other;
+}
+
+function Vec3 - (Vec3 a, Vec3 b) {
+  return Vec3(a.x - b.x, a.y - b.y, a.z - b.z);
+}
+
+function Vec3. -= (Vec3 other) {
+  self = self - other;
+}
+
+function Vec3 * (Scalar a, Vec3 b) {
+  return Vec3(a * b.x, a * b.y, a * b.z);
+}
+
+function Vec3 * (Vec3 a, Scalar b) {
+  return Vec3(a.x * b, a.y * b, a.z * b);
+}
+
+function Vec3 * (Vec3 a, Vec3 b) {
+  return Vec3(a.x * b.x, a.y * b.y, a.z * b.z);
+}
+
+function Vec3. *= (Scalar other) {
+  self = self * other;
+}
+
+function Vec3. *= (Vec3 other) {
+  self = self * other;
+}
+
+function Vec3 / (Vec3 a, Vec3 b) {
+  return Vec3(a.x / b.x, a.y / b.y, a.z / b.z);
+}
+
+function Vec3 / (Scalar a, Vec3 b) {
+  return Vec3(a / b.x, a / b.y, a / b.z);
+}
+
+function Vec3 / (Vec3 a, Scalar b) {
+  return Vec3(a.x / b, a.y / b, a.z / b);
+}
+
+function Vec3. /= (Scalar other) {
+  self = self / other;
+}
+
+function Vec3. /= (Vec3 other) {
+  self = self / other;
+}
+
+function Vec3 Vec3.neg() {
+  return Vec3(-self.x, -self.y, -self.z);
+}
+
+function Vec3 Vec3.inv() {
+  return Vec3(1.0 / self.x, 1.0 / self.y, 1.0 / self.z);
+}
+
+function Scalar Vec3.dot(Vec3 other) {
+  return self.x * other.x + self.y * other.y + self.z * other.z;
+}
+
+function Scalar Vec3.normSq() {
+  return self.dot(self);
+}
+
+function Scalar Vec3.norm() {
+  return sqrt(self.normSq());
+}
+
+function Scalar Vec3.length() {
+  return sqrt(self.normSq());
+}
+
+function Vec3 Vec3.unit() {
+  var Scalar n = self.norm();
+  if (n > 0.0) {
+    return self / n;
+  }
+  return self;
+}
+
+function Vec3.setUnit() {
+  self = self.unit();
+}
+
+function Vec3 Vec3.cross(in Vec3 other) {
+  return Vec3(
+    self.y * other.z - self.z * other.y,
+    self.z * other.x - self.x * other.z,
+    self.x * other.y - self.y * other.x
+  );
+}
+
+// TODO: Depricate the ambiguous function
+function Scalar Vec3.angle(in Vec3 other) {
+  return acos(self.dot(other));
+}
+
+function Scalar Vec3.angleTo(in Vec3 other) {
+  return acos(self.dot(other));
+}
+
+function Scalar Vec3.distSq(in Vec3 other) {
+  var Vec3 v;
+  v = self - other;
+  return v.normSq();
+}
+
+function Scalar Vec3.dist(in Vec3 other) {
+  return sqrt(self.distSq(other));
+}
+
+function Vec3 Vec3.max(in Vec3 other) {
+  var Vec3 v;
+  v.x = self.x > other.x ? self.x : other.x;
+  v.y = self.y > other.y ? self.y : other.y;
+  v.z = self.z > other.z ? self.z : other.z;
+  return v;
+}
+
+function Vec3 Vec3.min(in Vec3 other) {
+  var Vec3 v;
+  v.x = self.x < other.x ? self.x : other.x;
+  v.y = self.y < other.y ? self.y : other.y;
+  v.z = self.z < other.z ? self.z : other.z;
+  return v;
+}
+
+function Vec3 Vec3.lerp(in Vec3 other, in Scalar t) {
+  return self + ((other - self) * t);
+}
+
+function Scalar distFromPointToLine(in Vec3 P, in Vec3 lineP0, in Vec3 lineP1) {
+  var Vec3 v, w, Pb;
+  var Scalar c1, c2, b;
+  v = lineP1 - lineP0;
+  w = P - lineP0;
+
+  c1 = w.dot(v);
+  c2 = v.dot(v);
+  if(c2 == 0.0){
+    return P.dist(lineP0);
+  }
+  b = c1 / c2;
+
+  Pb = lineP0 + b * v;
+  return P.dist(Pb);
+}
+
+function Scalar distFromPointToSegment(in Vec3 P, in Vec3 segmentP0, in Vec3 segmentP1) {
+  var Vec3 v, w, Pb;
+  var Scalar c1, c2, b;
+  v = segmentP1 - segmentP0;
+  w = P - segmentP0;
+
+  c1 = w.dot(v);
+  if (c1 <= 0) {
+    return P.dist(segmentP0);
+  }
+  c2 = v.dot(v);
+  if (c2 <= c1) {
+    return P.dist(segmentP1);
+  }
+  b = c1 / c2;
+  Pb = segmentP0 + b * v;
+  return P.dist(Pb);
+}
+
+// dist3D_Line_to_Line():
+//    Input:  two 3D lines L1 and L2
+//    Return: the shortest distance between L1 and L2
+function Scalar distanceFromLineToLine(
+  in Vec3 l1_p0, in Vec3 l1_p1,
+  in Vec3 l2_p0, in Vec3 l2_p1,
+  io Scalar l1_t, io Scalar l2_t
+) {
+  Vec3 u, v, w, dP;
+  Scalar a, b, c, d, e, D;
+  u = l1_p1 - l1_p0;
+  v = l2_p1 - l2_p0;
+  w = l1_p0 - l2_p0;
+  a = u.dot(u); // always >= 0
+  b = u.dot(v);
+  c = v.dot(v); // always >= 0
+  d = u.dot(w);
+  e = v.dot(w);
+  if(a == 0.0 && c == 0.0){
+    return l1_p0.dist(l2_p0);
+  }
+  if(a == 0.0){
+    return distFromPointToLine(l1_p0, l2_p0, l2_p1);
+  }
+  if(c == 0.0){
+    return distFromPointToLine(l2_p0, l1_p0, l1_p1);
+  }
+  D = a * c - b * b; // always >= 0
+
+  // com_pute the line _parameters of the two closest points
+  if (D < 0.001) {
+    // the lines are almost parallel
+    l1_t = 0.0;
+    if (b > c) {
+      // use the largest denominator
+      l2_t = d / b;
+    }else {
+      l2_t = e / c;
+    }
+  }
+  else {
+    l1_t = (b * e - c * d) / D;
+    l2_t = (a * e - b * d) / D;
+  }
+  // get the difference of the two closest points
+  dP = w + (l1_t * u) - (l2_t * v);
+
+  return dP.norm(); // return the closest distance
+}
+

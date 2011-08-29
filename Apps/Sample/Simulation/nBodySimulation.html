@@ -16,30 +16,141 @@
 
       <script type="text/javascript" src="../../../Core/FABRIC.Wrappers.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../Core/FABRIC.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Math.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/RGBA.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Vec2.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Vec3.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Vec4.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Mat22.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Mat33.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Mat44.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Quat.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Xfo.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Color.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Euler.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/OGLShaderProgram.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/OGLTexture2D.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/OGLBuffer.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/Math.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/RGBA.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/Vec2.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/Vec3.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/Vec4.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/Mat22.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/Mat33.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/Mat44.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/Quat.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/Xfo.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/Color.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/Euler.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/OGLShaderProgram.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/OGLTexture2D.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/OGLBuffer.js" charset="utf-8"></script>
     
-    <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Geometry.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Lights.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Materials.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Manipulation.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Kinematics.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Geometry.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Lights.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Materials.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Manipulation.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Kinematics.js" charset="utf-8"></script>
     
     <script type="text/javascript">
+    
+    
+
+FABRIC.SceneGraph.registerNodeType('NBodySimulation', {
+  factoryFn: function(options, scene) {
+    scene.assignDefaults(options, {
+        nBodies: 1024
+      });
+    options.positionsVec4 = true;
+    options.velocitiesVec4 = true;
+    options.createBoundingBoxNode = false;
+    var nBodyGeometry = scene.constructNode('Geometry', options);
+    
+    nBodyGeometry.getDrawOperator = function() {
+      return scene.constructOperator({
+          operatorName: 'drawPoints',
+          srcFile: 'FABRIC_ROOT/SceneGraph/KL/drawPoints.kl',
+          entryFunctionName: 'drawPoints',
+          parameterLayout: [
+            'shader.shaderProgram',
+            'instance.drawToggle'
+          ]
+        });
+    };
+    nBodyGeometry.pub.addVertexAttributeValue('positions', 'Vec4', { genVBO:false } );
+    
+    // Add all the paramters, and add getters/setters at the same time.
+    nBodyGeometry.pub.addUniformValue('timeStep', 'Scalar', 0.1, true);
+    nBodyGeometry.pub.addUniformValue('clusterScale', 'Scalar', 1.54, true);
+    nBodyGeometry.pub.addUniformValue('velocityScale', 'Scalar', 8.0, true);
+    nBodyGeometry.pub.addUniformValue('softening', 'Scalar', 0.15, true);
+    nBodyGeometry.pub.addUniformValue('damping', 'Scalar', 0.9, true);
+    nBodyGeometry.pub.addUniformValue('systemType', 'Integer', 2, true);
+  
+    nBodyGeometry.pub.addVertexAttributeValue('velocities', 'Vec4');
+    nBodyGeometry.pub.addVertexAttributeValue('mass', 'Scalar');
+    nBodyGeometry.pub.addVertexAttributeValue('vertexColors', 'Color', { genVBO:true } );
+    nBodyGeometry.pub.addVertexAttributeValue('posPrev', 'Vec4');
+    nBodyGeometry.pub.addVertexAttributeValue('velPrev', 'Vec4');
+
+    var nBodyKernelGPUSrc = FABRIC.loadResourceURL('CL/nBodyKernel.cl');
+  
+    nBodyGeometry.pub.addUniformValue('clContextIni', 'cl_context');
+    nBodyGeometry.pub.addUniformValue('clContext', 'cl_context');
+    nBodyGeometry.pub.addUniformValue('clCommandQueue', 'cl_command_queue');
+    nBodyGeometry.pub.addUniformValue('clKernel', 'cl_kernel');
+    nBodyGeometry.pub.addUniformValue('kernelSrc', 'String', nBodyKernelGPUSrc);
+    nBodyGeometry.pub.addUniformValue('positionMem', 'cl_mem');
+    nBodyGeometry.pub.addUniformValue('velocityMem', 'cl_mem');
+    nBodyGeometry.pub.addUniformValue('positionPrevMem', 'cl_mem');
+    nBodyGeometry.pub.addUniformValue('velocityPrevMem', 'cl_mem');
+    nBodyGeometry.pub.addUniformValue('pointCount', 'Size');
+    
+    var nBodySimulateNodeGPU = nBodyGeometry.getAttributesDGNode();
+    nBodySimulateNodeGPU.bindings.append(
+      scene.constructOperator({
+          operatorName: 'nBodyInitOp',
+          entryFunctionName: 'nBodyInit',
+          srcFile: 'KL/nBodyOp.kl',
+          parameterLayout: [
+            'self.index',
+            'self.count',
+            'self.positions',
+            'self.velocities',
+            'self.mass',
+            'self.vertexColors',
+            'uniforms.systemType',
+            'uniforms.clusterScale',
+            'uniforms.velocityScale'
+          ]
+        }));
+    nBodyGeometry.pub.setVertexCount(options.nBodies);
+    
+    var nBodyGeometrySimulation = scene.constructNode('GeometryDataCopy', {
+      baseGeometryNode: nBodyGeometry.pub
+    });
+    nBodyGeometrySimulation.pub.addVertexAttributeValue('positions', 'Vec4', { genVBO:true, dynamic:true } );
+    nBodyGeometrySimulation.getAttributesDGNode().addDependency(scene.getGlobalsNode(), 'globals');
+    nBodyGeometrySimulation.getAttributesDGNode().bindings.append(scene.constructOperator({
+        operatorName: 'nBodySimulateGPUOp',
+        mainThreadOnly: true,
+        entryFunctionName: 'nBodySimulateGPU',
+        srcFile: 'KL/nBodyOpGPU.kl',
+        parameterLayout: [
+          'globals.ms',
+          'parentattributes.positions[]',
+          'parentattributes.velocities[]',
+          'parentattributes.mass[]',
+          'parentuniforms.clContext',
+          'parentuniforms.clCommandQueue',
+          'parentuniforms.clKernel',
+          'parentuniforms.kernelSrc',
+          'parentuniforms.positionMem',
+          'parentuniforms.velocityMem',
+          'parentuniforms.positionPrevMem',
+          'parentuniforms.velocityPrevMem',
+          'parentuniforms.pointCount',
+          'parentuniforms.timeStep',
+          'parentuniforms.softening',
+          'parentuniforms.damping',
+          'self.positions[]'
+        ]
+      }));
+    
+    nBodyGeometrySimulation.getRedrawEventHandler().setScopeName('nbodysimulation');
+    
+    
+    return nBodyGeometrySimulation;
+  }});
+    
+    
 $(document).ready(function() { $('#play').button({
     text: true,
     icons: {
@@ -73,95 +184,6 @@ $(document).ready(function() { $('#play').button({
   $('#pointSize').slider({ min: 0.0, max: 10.0, step: 0.1 });
   
   
-  
-  FABRIC.SceneGraph.registerNodeType('NBodySimulation', {
-    factoryFn: function(options, scene) {
-      scene.assignDefaults(options, {
-          nBodies: 1024
-        });
-      options.positionsVec4 = true;
-      options.velocitiesVec4 = true;
-      options.createBoundingBoxNode = false;
-      var nBodyGeometry = scene.constructNode('Points', options);
-      
-      // Add all the paramters, and add getters/setters at the same time.
-      nBodyGeometry.pub.addUniformValue('timeStep', 'Scalar', 0.1, true);
-      nBodyGeometry.pub.addUniformValue('clusterScale', 'Scalar', 1.54, true);
-      nBodyGeometry.pub.addUniformValue('velocityScale', 'Scalar', 8.0, true);
-      nBodyGeometry.pub.addUniformValue('softening', 'Scalar', 0.15, true);
-      nBodyGeometry.pub.addUniformValue('damping', 'Scalar', 0.9, true);
-      nBodyGeometry.pub.addUniformValue('systemType', 'Integer', 2, true);
-    
-      nBodyGeometry.pub.addVertexAttributeValue('velocities', 'Vec4');
-      nBodyGeometry.pub.addVertexAttributeValue('mass', 'Scalar');
-      nBodyGeometry.pub.addVertexAttributeValue('vertexColors', 'Color', { genVBO:true } );
-      nBodyGeometry.pub.addVertexAttributeValue('posPrev', 'Vec4');
-      nBodyGeometry.pub.addVertexAttributeValue('velPrev', 'Vec4');
-
-      var nBodyKernelGPUSrc = FABRIC.loadResourceURL('CL/nBodyKernel.cl');
-    
-      nBodyGeometry.pub.addUniformValue('clContextIni', 'cl_context');
-      nBodyGeometry.pub.addUniformValue('clContext', 'cl_context');
-      nBodyGeometry.pub.addUniformValue('clCommandQueue', 'cl_command_queue');
-      nBodyGeometry.pub.addUniformValue('clKernel', 'cl_kernel');
-      nBodyGeometry.pub.addUniformValue('kernelSrc', 'String', nBodyKernelGPUSrc);
-      nBodyGeometry.pub.addUniformValue('positionMem', 'cl_mem');
-      nBodyGeometry.pub.addUniformValue('velocityMem', 'cl_mem');
-      nBodyGeometry.pub.addUniformValue('positionPrevMem', 'cl_mem');
-      nBodyGeometry.pub.addUniformValue('velocityPrevMem', 'cl_mem');
-      nBodyGeometry.pub.addUniformValue('pointCount', 'Size');
-      
-      var nBodySimulateNodeGPU = nBodyGeometry.getAttributesDGNode();
-      nBodySimulateNodeGPU.bindings.append(
-        scene.constructOperator({
-            operatorName: 'nBodyInitOp',
-            entryFunctionName: 'nBodyInit',
-            srcFile: 'KL/nBodyOp.kl',
-            parameterLayout: [
-              'self.index',
-              'self.count',
-              'self.positions',
-              'self.velocities',
-              'self.mass',
-              'self.vertexColors',
-              'uniforms.systemType',
-              'uniforms.clusterScale',
-              'uniforms.velocityScale'
-            ]
-          }));
-      nBodyGeometry.pub.setVertexCount(options.nBodies);
-      
-      deformationBuffer = nBodyGeometry.pub.addDeformationBuffer(["positions"]);
-      deformationBuffer.addDependency(scene.getGlobalsNode(), 'globals');
-    
-      deformationBuffer.assignOperator({
-          operatorName: 'nBodySimulateGPUOp',
-          mainThreadOnly: true,
-          entryFunctionName: 'nBodySimulateGPU',
-          srcFile: 'KL/nBodyOpGPU.kl',
-          parameterLayout: [
-            'globals.ms',
-            'parentattributes.positions[]',
-            'parentattributes.velocities[]',
-            'parentattributes.mass[]',
-            'uniforms.clContext',
-            'uniforms.clCommandQueue',
-            'uniforms.clKernel',
-            'uniforms.kernelSrc',
-            'uniforms.positionMem',
-            'uniforms.velocityMem',
-            'uniforms.positionPrevMem',
-            'uniforms.velocityPrevMem',
-            'uniforms.pointCount',
-            'uniforms.timeStep',
-            'uniforms.softening',
-            'uniforms.damping',
-            'self.positions[]'
-          ]
-        });
-  
-      return nBodyGeometry;
-    }});
 
 
   // Create the scene.
@@ -245,50 +267,50 @@ $(document).ready(function() { $('#play').button({
     });
     
     
-  $('#nbodies').slider('value', nBodyGeometry.getVertexCount());
+  $('#nbodies').slider('value', nBodyGeometry.getBaseGeometry().getVertexCount());
   $('#nbodies').bind('slidechange',
     function(event, ui) {
       var count = ui.value;
       if (count < 1) count = 1;
-      nBodyGeometry.setVertexCount(count);
+      nBodyGeometry.getBaseGeometry().setVertexCount(count);
       document.getElementById('nbodiesDisp').childNodes[0].data = 'Num Bodies: ' + count;
       resetSimulation();
     });
 
-  $('#clsscale').slider('value', nBodyGeometry.getClusterScale());
+  $('#clsscale').slider('value', nBodyGeometry.getBaseGeometry().getClusterScale());
   $('#clsscale').bind('slidechange', function(event, ui) {
-      nBodyGeometry.setClusterScale(ui.value);
+      nBodyGeometry.getBaseGeometry().setClusterScale(ui.value);
       resetSimulation();
     });
 
-  $('#velscale').slider('value', nBodyGeometry.getVelocityScale());
+  $('#velscale').slider('value', nBodyGeometry.getBaseGeometry().getVelocityScale());
   $('#velscale').bind('slidechange', function(event, ui) {
-      nBodyGeometry.setVelocityScale(ui.value);
+      nBodyGeometry.getBaseGeometry().setVelocityScale(ui.value);
       resetSimulation();
     });
 
-  $('#timestep').slider('value', nBodyGeometry.getTimeStep());
+  $('#timestep').slider('value', nBodyGeometry.getBaseGeometry().getTimeStep());
   $('#timestep').bind('slide', function(event, ui) {
-      nBodyGeometry.setTimeStep(ui.value);
+      nBodyGeometry.getBaseGeometry().setTimeStep(ui.value);
       scene.redrawAllWindows();
     });
 
-  $('#softening').slider('value', nBodyGeometry.getSoftening());
+  $('#softening').slider('value', nBodyGeometry.getBaseGeometry().getSoftening());
   $('#softening').bind('slide', function(event, ui) {
-      nBodyGeometry.setSoftening(ui.value);
+      nBodyGeometry.getBaseGeometry().setSoftening(ui.value);
       scene.redrawAllWindows();
     });
 
-  $('#damping').slider('value', nBodyGeometry.getDamping());
+  $('#damping').slider('value', nBodyGeometry.getBaseGeometry().getDamping());
   $('#damping').bind('slide', function(event, ui) {
       nBodyGeometry.setDamping(ui.value);
       scene.redrawAllWindows();
     });
 
-  $('#pointSize').slider('value', materialNode.pointSize);
+  $('#pointSize').slider('value', materialNode.getPointSize());
   $('#pointSize').bind('slidechange',
     function(event, ui) {
-      materialNode.pointSize = ui.value;
+      materialNode.setPointSize(ui.value);
       scene.redrawAllWindows();
     });
 

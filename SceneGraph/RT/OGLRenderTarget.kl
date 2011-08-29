@@ -15,11 +15,11 @@ function OGLRenderTarget.genTextures() {
 //    if(self.textures[i].type == COLOR_BUFFER)
 //      self.numColorBuffers++;
 //  }
-  
-  if(maxColorBuffers < self.numColorBuffers){
-    report("Your OpenGL implementation supports only " + maxColorBuffers + " but " + self.numColorBuffers + " are needed");
-    return;
-  }
+//  if(maxColorBuffers < self.numColorBuffers){
+//    report("Your OpenGL implementation supports only " + maxColorBuffers + " but " + self.numColorBuffers + " are needed");
+//    return;
+//  }
+
   //Create Frame Buffer Object
   Size fbos[];
   fbos.resize(1);

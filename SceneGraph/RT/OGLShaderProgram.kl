@@ -560,7 +560,7 @@ function OGLShaderProgram.genAndBindBuffer(
   
   Integer location = self.getAttributeLocation(buffer.attributeID);
   if(self.debug){
-    report("genAndBindBuffer  " + buffer.name + ":" + buffer.bufferID + " elementCount:" + buffer.elementCount  + " location:" + location );
+    report("genAndBindBuffer " + buffer.name + ":" + buffer.bufferID + " elementCount:" + buffer.elementCount  + " attributeID:" + buffer.attributeID + " location:" + location );
   }
   if(location!=-1){
   

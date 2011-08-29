@@ -18,7 +18,9 @@ FABRIC.SceneGraph.registerNodeType('Geometry', {
     scene.assignDefaults(options, {
         dynamicMembers: [],
         genOpenGLBuffers:[],
-        createBoundingBoxNode: true
+        createBoundingBoxNode: true,
+        drawable: true,
+        drawOperator: undefined
       });
   
     var geometryNode = geometryNode = scene.constructNode('SceneGraphNode', options),
@@ -28,6 +30,15 @@ FABRIC.SceneGraph.registerNodeType('Geometry', {
       redrawEventHandler,
       shaderUniforms = [],
       shaderAttributes = [];
+      
+    if(options.drawable){
+      redrawEventHandler = geometryNode.constructEventHandlerNode('Redraw');
+      redrawEventHandler.addScope('uniforms', uniformsdgnode);
+      redrawEventHandler.addScope('attributes', attributesdgnode);
+      if(options.drawOperator != undefined ){
+        redrawEventHandler.postDescendBindings.append(options.drawOperator);
+      }
+    }
 
     attributesdgnode.addDependency(uniformsdgnode, 'uniforms');
     
@@ -48,23 +59,96 @@ FABRIC.SceneGraph.registerNodeType('Geometry', {
       }));
     }
     
+    // Here we are ensuring that the generator ops are added to the
+    // beginning of the operator list. if there are operators for
+    // generating tangents, or any other data, they should always go after
+    // the generator ops.
+    // Currently the generator ops are bound to the attributesdgnode,
+    // but with node nesting, we should put them on the outer node.
+    // this would mean 2 things. We could generate geometry in a
+    // single operator, and we wouldn't need this code here....
+    geometryNode.setGeneratorOps = function(opBindings) {
+      var i;
+      if (attributesdgnode.bindings.empty()) {
+        for (i = 0; i < opBindings.length; i++) {
+          attributesdgnode.bindings.append(opBindings[i]);
+        }
+      }
+      else {
+        for (i = 0; i < opBindings.length; i++) {
+          attributesdgnode.bindings.insert(opBindings[i], i);
+        }
+      }
+    };
+    geometryNode.getRayIntersectionOperator = function() {
+      throw ('Geometry must define this');
+    };
+    
+    var capitalizeFirstLetter = function(str) {
+      return str[0].toUpperCase() + str.substr(1);
+    };
+    
     // extend public interface
     geometryNode.pub.addUniformValue = function(name, type, value, addGetterSetterInterface) {
       uniformsdgnode.addMember(name, type, value);
       if (addGetterSetterInterface) {
         geometryNode.addMemberInterface(uniformsdgnode, name, true);
       }
+      if(name == 'indices'){
+        var registeredTypes = scene.getContext().RegisteredTypesManager.getRegisteredTypes()
+        var attributeID = FABRIC.SceneGraph.getShaderParamID(name);
+        var indicesBuffer = new FABRIC.RT.OGLBuffer(name, attributeID, registeredTypes.Integer);
+        redrawEventHandler.addMember('indicesBuffer', 'OGLBuffer', indicesBuffer);
+
+        redrawEventHandler.preDescendBindings.append(scene.constructOperator({
+          operatorName: 'genVBO',
+          srcFile: 'FABRIC_ROOT/SceneGraph/KL/loadVBO.kl',
+          preProcessorDefinitions: {
+            DATA_TYPE: 'Integer'
+          },
+          entryFunctionName: 'genVBO',
+          parameterLayout: [
+            'uniforms.indices',
+            'self.indicesBuffer'
+          ]
+        }));
+      }
     };
     geometryNode.pub.addVertexAttributeValue = function(name, type, attributeoptions) {
       attributesdgnode.addMember(name, type, options ? options.defaultValue : undefined);
       if(attributeoptions){
-        if (attributeoptions.dynamic === true) {
-          options.dynamicMembers.push(name);
-        }
-        if(attributeoptions.genVBO){
-          shaderAttributes.push(name);
+        if(attributeoptions.genVBO && redrawEventHandler){
+          var registeredTypes = scene.getContext().RegisteredTypesManager.getRegisteredTypes()
+          var typeDesc = registeredTypes[type];
+          var attributeID = FABRIC.SceneGraph.getShaderParamID(name);
+          var bufferMemberName = name + 'Buffer';
+          
+          var buffer = new FABRIC.RT.OGLBuffer(name, attributeID, typeDesc);
+          if(attributeoptions.dynamic){
+            buffer.bufferUsage = FABRIC.SceneGraph.OpenGLConstants.GL_DYNAMIC_DRAW;
+          }
+          
+          redrawEventHandler.addMember(bufferMemberName, 'OGLBuffer', buffer);
+          redrawEventHandler.preDescendBindings.append(scene.constructOperator({
+            operatorName: 'load' + capitalizeFirstLetter(type) +'VBO',
+            srcFile: 'FABRIC_ROOT/SceneGraph/KL/loadVBO.kl',
+            preProcessorDefinitions: {
+              DATA_TYPE: type
+            },
+            entryFunctionName: 'genAndBindVBO',
+            parameterLayout: [
+              'shader.shaderProgram',
+              'attributes.' + name + '[]',
+              'self.' + bufferMemberName
+            ]
+          }));
         }
       }
+    };
+    geometryNode.pub.reloadVBO = function(memberName) {
+      var buffer = redrawEventHandler.getData(memberName + 'Buffer');
+      buffer.reload = true;
+      redrawEventHandler.setData(memberName + 'Buffer', 0, buffer);
     };
     geometryNode.pub.setAttributeDynamic = function(name) {
       dynamicMember = options.dynamicMembers.indexOf(name) != -1;
@@ -115,173 +199,6 @@ FABRIC.SceneGraph.registerNodeType('Geometry', {
         max: bboxdgnode.getData('max')
       }
     };
-
-    // extend private interface
-    // ---------
-    // Here we are ensuring that the generator ops are added to the
-    // beginning of the operator list. if there are operators for
-    // generating tangents, or any other data, they should always go after
-    // the generator ops.
-    // Currently the generator ops are bound to the attributesdgnode,
-    // but with node nesting, we should put them on the outer node.
-    // this would mean 2 trhings. We could generate geometry in a
-    // single operator, and we wouldn't need this code here....
-    geometryNode.setGeneratorOps = function(opBindings) {
-      var i;
-      if (attributesdgnode.bindings.empty()) {
-        for (i = 0; i < opBindings.length; i++) {
-          attributesdgnode.bindings.append(opBindings[i]);
-        }
-      }
-      else {
-        for (i = 0; i < opBindings.length; i++) {
-          attributesdgnode.bindings.insert(opBindings[i], i);
-        }
-      }
-    };
-    geometryNode.getRedrawEventHandler = function(redrawEventHandlerOptions) {
-      var vertexMembers = attributesdgnode.getMembers(),
-        uniformMembers = uniformsdgnode.getMembers(),
-        registeredTypes = scene.getContext().RegisteredTypesManager.getRegisteredTypes(),
-        i;
-
-      // This call will replace the 'getRedrawEventHandler' with an accessor.
-      redrawEventHandler = geometryNode.constructEventHandlerNode('Redraw');
-      redrawEventHandler.addScope('uniforms', uniformsdgnode);
-      redrawEventHandler.addScope('attributes', attributesdgnode);
-      var capitalizeFirstLetter = function(str) {
-        return str[0].toUpperCase() + str.substr(1);
-      };
-
-      if (uniformsdgnode.getMembers().indices) {
-        
-        var indicesBuffer = new FABRIC.RT.OGLBuffer(memberName, attributeID, registeredTypes.Integer);
-        redrawEventHandler.addMember('indicesBuffer', 'OGLBuffer', indicesBuffer);
-
-        redrawEventHandler.preDescendBindings.append(scene.constructOperator({
-          operatorName: 'genVBO',
-          srcFile: 'FABRIC_ROOT/SceneGraph/KL/loadVBO.kl',
-          preProcessorDefinitions: {
-            DATA_TYPE: 'Integer'
-          },
-          entryFunctionName: 'genVBO',
-          parameterLayout: [
-            'uniforms.indices',
-            'self.indicesBuffer'
-          ]
-        }));
-      }
-
-      for (var memberName in vertexMembers) {
-        if(shaderAttributes.indexOf(memberName) == -1){
-          continue;
-        }
-        
-        var attributeID = FABRIC.SceneGraph.getShaderParamID(memberName);
-        var memberType = vertexMembers[memberName].type;
-        var typeDesc = registeredTypes[memberType];
-        var bufferMemberName = memberName + 'Buffer';
-        
-        if(uniformMembers[bufferMemberName]){
-          // If this buffer has already been generated in the Dependency Graph,
-          // then here we just need to bind the exsisting bufferID.
-          redrawEventHandler.preDescendBindings.append(scene.constructOperator({
-            operatorName: 'bind'+memberType+'VBO',
-            srcFile: 'FABRIC_ROOT/SceneGraph/KL/loadVBO.kl',
-            preProcessorDefinitions: {
-              DATA_TYPE: memberType
-            },
-            entryFunctionName: 'bindVBO',
-            parameterLayout: [
-              'shader.shaderProgram',
-              'uniforms.' + bufferMemberName
-            ]
-          }));
-          continue;
-        }
-        
-        var buffer = new FABRIC.RT.OGLBuffer(memberName, attributeID, typeDesc);
-        if(options.dynamicMembers.indexOf(memberName) != -1){
-          buffer.bufferUsage = FABRIC.SceneGraph.OpenGLConstants.GL_DYNAMIC_DRAW;
-        }
-        
-        redrawEventHandler.addMember(bufferMemberName, 'OGLBuffer', buffer);
-        redrawEventHandler.preDescendBindings.append(scene.constructOperator({
-          operatorName: 'load' + capitalizeFirstLetter(memberType) +'VBO',
-          srcFile: 'FABRIC_ROOT/SceneGraph/KL/loadVBO.kl',
-          preProcessorDefinitions: {
-            DATA_TYPE: memberType
-          },
-          entryFunctionName: 'genAndBindVBO',
-          parameterLayout: [
-            'shader.shaderProgram',
-            'attributes.' + memberName + '[]',
-            'self.' + bufferMemberName
-          ]
-        }));
-      }
-      
-      if( !redrawEventHandlerOptions || redrawEventHandlerOptions.createDrawOperator != false ){
-        redrawEventHandler.postDescendBindings.append(geometryNode.getDrawOperator());
-      }
-      return redrawEventHandler;
-    };
-    geometryNode.pub.reloadVBO = function(memberName) {
-      var buffer = redrawEventHandler.getData(memberName + 'Buffer');
-      buffer.reload = true;
-      redrawEventHandler.setData(memberName + 'Buffer', 0, buffer);
-    };
-    geometryNode.getDrawOperator = function() {
-      throw ('Geometry must define this');
-    };
-    geometryNode.getRayintersectionOperator = function() {
-      throw ('Geometry must define this');
-    };
-    
-    /*
-    // Generate a VBO from the dependency graph.
-    // this is usefull when using OpenCL. openGL buffers
-    // can be created and used in both the computation
-    // and rendering. 
-    geometryNode.genDGVBO = function(memberName){
-      var vertexMembers = attributesdgnode.getMembers();
-      var uniformMembers = uniformsdgnode.getMembers();
-      if (!vertexMembers[memberName]) {
-        throw(memberName + " is not an attribute.");
-      }
-      var memberType = vertexMembers[memberName].type;
-      var bufferMemberName = memberName + 'Buffer';
-      var countMemberName = memberName + 'Count';
-        
-      var reloadMemberName = memberName + 'Reload';
-      var dynamicMemberName = memberName + 'Dynamic';
-      
-      geometryNode.pub.addUniformValue(bufferMemberName, 'Integer', 0);
-      geometryNode.pub.addUniformValue(countMemberName, 'Size', 0);
-      geometryNode.pub.addUniformValue(reloadMemberName, 'Boolean', false);
-      geometryNode.pub.addUniformValue(dynamicMemberName, 'Boolean', false);
-
-      attributesdgnode.bindings.append(scene.constructOperator({
-            operatorName: 'gen' + memberName + 'OpenGLBuffer',
-            mainThreadOnly: true,
-            srcFile: 'FABRIC_ROOT/SceneGraph/KL/genAndLoadVBO.kl',
-            preProcessorDefinitions: {
-              DATA_TYPE: memberType,
-              ATTRIBUTE_NAME: memberName,
-              ATTRIBUTE_ID: -1
-            },
-            entryFunctionName: 'genDGVBOOp',
-            parameterLayout: [
-              'self.' + memberName + '[]',
-              'uniforms.' + countMemberName,
-              'uniforms.' + dynamicMemberName,
-              'uniforms.' + reloadMemberName,
-              'uniforms.' + bufferMemberName
-            ]
-          }));
-      return bufferMemberName;
-    }
-    */
     
     return geometryNode;
   }});
@@ -309,6 +226,7 @@ FABRIC.SceneGraph.registerNodeType('GeometryDataCopy', {
     }
     var baseGeometryNode = scene.getPrivateInterface(options.baseGeometryNode);
     options.createBoundingBoxNode = baseGeometryNode.getBoundingBoxDGNode != undefined;
+    options.createDrawOperator = false;
     var geometryDataCopyNode = scene.constructNode('Geometry', options);
     
     geometryDataCopyNode.getUniformsDGNode().addDependency(baseGeometryNode.getUniformsDGNode(), 'parentuniforms');
@@ -337,9 +255,8 @@ FABRIC.SceneGraph.registerNodeType('GeometryDataCopy', {
     geometryDataCopyNode.getRedrawEventHandler = function() {
       // the render traversal passed through this node, loads the VBOs, and them continues
       // to the baseGeometry.
-      var redrawEventHandler = geometryGetRedrawEventHandler( { createDrawOperator: false } );
+      var redrawEventHandler = geometryGetRedrawEventHandler();
       var baseGeometryNodeRedrawEventHandler = baseGeometryNode.getRedrawEventHandler();
-      
       redrawEventHandler.appendChildEventHandler(baseGeometryNodeRedrawEventHandler);
       return redrawEventHandler;
     }
@@ -358,21 +275,20 @@ FABRIC.SceneGraph.registerNodeType('Points', {
   },
   factoryFn: function(options, scene) {
 
+    options.drawOperator = scene.constructOperator({
+        operatorName: 'drawPoints',
+        srcFile: 'FABRIC_ROOT/SceneGraph/KL/drawPoints.kl',
+        entryFunctionName: 'drawPoints',
+        parameterLayout: [
+          'shader.shaderProgram',
+          'instance.drawToggle'
+        ]
+      });
     var pointsNode = scene.constructNode('Geometry', options);
 
     // implement the geometry relevant interfaces
-    pointsNode.getDrawOperator = function() {
-      return scene.constructOperator({
-          operatorName: 'drawPoints',
-          srcFile: 'FABRIC_ROOT/SceneGraph/KL/drawPoints.kl',
-          entryFunctionName: 'drawPoints',
-          parameterLayout: [
-            'shader.shaderProgram',
-            'instance.drawToggle'
-          ]
-        });
-    };
-    pointsNode.getRayintersectionOperator = function(transformNodeMember) {
+
+    pointsNode.getRayIntersectionOperator = function(transformNodeMember) {
       return scene.constructOperator({
           operatorName: 'rayIntersectPoints',
           srcFile: 'FABRIC_ROOT/SceneGraph/KL/rayIntersectPoints.kl',
@@ -402,22 +318,20 @@ FABRIC.SceneGraph.registerNodeType('Lines', {
   },
   factoryFn: function(options, scene) {
 
+    options.drawOperator = scene.constructOperator({
+        operatorName: 'drawLines',
+        srcFile: 'FABRIC_ROOT/SceneGraph/KL/drawLines.kl',
+        parameterLayout: [
+          'shader.shaderProgram',
+          'self.indicesBuffer',
+          'instance.drawToggle'
+        ],
+        entryFunctionName: 'drawLines'
+      });
+    
     var linesNode = scene.constructNode('Geometry', options);
 
-    // implement the geometry relevant interfaces
-    linesNode.getDrawOperator = function() {
-      return scene.constructOperator({
-          operatorName: 'drawLines',
-          srcFile: 'FABRIC_ROOT/SceneGraph/KL/drawLines.kl',
-          parameterLayout: [
-            'shader.shaderProgram',
-            'self.indicesBuffer',
-            'instance.drawToggle'
-          ],
-          entryFunctionName: 'drawLines'
-        });
-    };
-    linesNode.getRayintersectionOperator = function(transformNodeMember) {
+    linesNode.getRayIntersectionOperator = function(transformNodeMember) {
       return scene.constructOperator({
           operatorName: 'rayIntersectLines',
           srcFile: 'FABRIC_ROOT/SceneGraph/KL/rayIntersectLines.kl',
@@ -448,22 +362,20 @@ FABRIC.SceneGraph.registerNodeType('LineStrip', {
   },
   factoryFn: function(options, scene) {
 
+    options.drawOperator = scene.constructOperator({
+        operatorName: 'drawLineStrip',
+        srcFile: 'FABRIC_ROOT/SceneGraph/KL/drawLines.kl',
+        parameterLayout: [
+          'shader.shaderProgram',
+          'self.indicesBuffer',
+          'instance.drawToggle'
+        ],
+        entryFunctionName: 'drawLineStrip'
+      });
+    
     var linesNode = scene.constructNode('Geometry', options);
 
-    // implement the geometry relevant interfaces
-    linesNode.getDrawOperator = function() {
-      return scene.constructOperator({
-          operatorName: 'drawLineStrip',
-          srcFile: 'FABRIC_ROOT/SceneGraph/KL/drawLines.kl',
-          parameterLayout: [
-            'shader.shaderProgram',
-            'self.indicesBuffer',
-            'instance.drawToggle'
-          ],
-          entryFunctionName: 'drawLineStrip'
-        });
-    };
-    linesNode.getRayintersectionOperator = function(transformNodeMember) {
+    linesNode.getRayIntersectionOperator = function(transformNodeMember) {
       return scene.constructOperator({
           operatorName: 'rayIntersectLineStrip',
           srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/rayIntersectLines.kl',
@@ -500,11 +412,7 @@ FABRIC.SceneGraph.registerNodeType('Triangles', {
         tangentsFromUV: undefined
       });
 
-    var trianglesNode = scene.constructNode('Geometry', options);
-
-    // implement the geometry relevant interfaces
-    trianglesNode.getDrawOperator = function() {
-      return scene.constructOperator({
+    options.drawOperator = scene.constructOperator({
           operatorName: 'drawTriangles',
           srcFile: 'FABRIC_ROOT/SceneGraph/KL/drawTriangles.kl',
           parameterLayout: [
@@ -514,8 +422,10 @@ FABRIC.SceneGraph.registerNodeType('Triangles', {
           ],
           entryFunctionName: 'drawTriangles'
         });
-    };
-    trianglesNode.getRayintersectionOperator = function(transformNodeMember) {
+    
+    var trianglesNode = scene.constructNode('Geometry', options);
+    
+    trianglesNode.getRayIntersectionOperator = function(transformNodeMember) {
       return scene.constructOperator({
           operatorName: 'rayIntersectTriangles',
           srcFile: 'FABRIC_ROOT/SceneGraph/KL/rayIntersectTriangles.kl',
@@ -662,9 +572,9 @@ FABRIC.SceneGraph.registerNodeType('Instance', {
       // Ray Cast Event Handling
       if (scene.getSceneRaycastEventHandler() &&
         options.enableRaycasting &&
-        geometryNode.getRayintersectionOperator
+        geometryNode.getRayIntersectionOperator
       ) {
-        var raycastOperator = geometryNode.getRayintersectionOperator(transformNodeMember);
+        var raycastOperator = geometryNode.getRayIntersectionOperator(transformNodeMember);
         raycastEventHandler = instanceNode.constructEventHandlerNode('Raycast');
         raycastEventHandler.addScope('geometry_uniforms', geometryNode.getUniformsDGNode());
         raycastEventHandler.addScope('geometry_attributes', geometryNode.getAttributesDGNode());

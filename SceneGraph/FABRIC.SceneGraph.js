@@ -567,9 +567,9 @@ FABRIC.SceneGraph = {
         throw ('Missing Resource Loader for :' + ext);
       }
     };
-    scene.pub.redrawAllWindows = function() {
+    scene.pub.redrawAllWindows = function(force) {
       for (var i=0; i<viewports.length; i++) {
-        viewports[i].pub.redraw(isPlaying);
+        viewports[i].pub.redraw(force);
       }
     };
     scene.pub.getErrors = function() {
@@ -696,7 +696,7 @@ FABRIC.SceneGraph = {
           if( onAdvanceCallback){
             onAdvanceCallback.call();
           }
-          scene.pub.redrawAllWindows();
+          scene.pub.redrawAllWindows(true);
         }
         var advanceTime = function() {
           var currTime = (new Date).getTime();
@@ -737,7 +737,7 @@ FABRIC.SceneGraph = {
             animationTime = t;
             globalsNode.setData('time', t);
             if(redraw !== false){
-              scene.pub.redrawAllWindows();
+              scene.pub.redrawAllWindows(true);
             }
           },
           getTime:function() {
@@ -779,7 +779,7 @@ FABRIC.SceneGraph = {
             // multiple viewports? Should the 'play' controls be moved to
             // Viewport?
             viewports[0].getFabricWindowObject().setRedrawFinishedCallback(advanceTime);
-            scene.pub.redrawAllWindows();
+            scene.pub.redrawAllWindows(true);
           },
           isPlaying: function(){
             return isPlaying;
@@ -787,14 +787,14 @@ FABRIC.SceneGraph = {
           pause: function() {
             isPlaying = false;
             viewports[0].getFabricWindowObject().setRedrawFinishedCallback(null);
-            scene.pub.redrawAllWindows();
+            scene.pub.redrawAllWindows(true);
           },
           reset: function() {
             isPlaying = false;
             animationTime = 0.0;
             globalsNode.setData('time', 0.0);
             viewports[0].getFabricWindowObject().setRedrawFinishedCallback(null);
-            scene.pub.redrawAllWindows();
+            scene.pub.redrawAllWindows(true);
           },
           step: function() {
             advanceTime();
@@ -1175,13 +1175,15 @@ FABRIC.SceneGraph.registerNodeType('Viewport', {
     // TODO: Not all browsers on OSX features this redraw issue.
     // figures out exactly which ones do and detect only those.
     var onOsX = navigator.userAgent.search("Mac OS X");
-    viewportNode.pub.redraw = function(animating) {
-      fabricwindow.needsRedraw();
-      if(onOsX && !animating && !scene.pub.animation.isPlaying()){
-        fabricwindow.setRedrawFinishedCallback(function(){
-          fabricwindow.setRedrawFinishedCallback(null);
-          fabricwindow.needsRedraw();
-        });
+    viewportNode.pub.redraw = function(force) {
+      if(!scene.pub.animation.isPlaying() || force){
+        fabricwindow.needsRedraw();
+        if(onOsX != -1 && !scene.pub.animation.isPlaying()){
+          fabricwindow.setRedrawFinishedCallback(function(){
+            fabricwindow.setRedrawFinishedCallback(null);
+            fabricwindow.needsRedraw();
+          });
+        }
       }
     };
     viewportNode.pub.writeData = function(sceneSaver, constructionOptions, nodeData) {

@@ -11,7 +11,7 @@ FABRIC.SceneGraph.registerNodeType('MuscleSystem', {
     options = scene.assignDefaults(options, {
       characterRig: undefined,
       volumeConstraintMesh: undefined,
-      gravity: FABRIC.RT.vec3(0, -9.0, 0),
+      gravity: FABRIC.RT.vec3(0, -0.1, 0),
       numRelaxationIterations: 6,
       displacementMapResolution: 32
       });

@@ -4,6 +4,7 @@
 
 use Mat44;
 use FabricOGL;
+use OGLBuffer;
 
 function OGLShaderProgram(String name) {
   self.name = name;

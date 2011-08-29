@@ -567,9 +567,9 @@ FABRIC.SceneGraph = {
         throw ('Missing Resource Loader for :' + ext);
       }
     };
-    scene.pub.redrawAllWindows = function(force) {
+    scene.pub.redrawAllWindows = function() {
       for (var i=0; i<viewports.length; i++) {
-        viewports[i].pub.redraw(force);
+        viewports[i].pub.redraw();
       }
     };
     scene.pub.getErrors = function() {
@@ -670,75 +670,61 @@ FABRIC.SceneGraph = {
         globalsNode.addMember('time', 'Scalar', 0);
         globalsNode.addMember('time_prevupdate', 'Scalar', 0);
         globalsNode.addMember('timestep', 'Scalar', 0);
-        globalsNode.bindings.append(scene.constructOperator({
-          operatorName: 'setTimestep',
-          srcCode:
-            '\noperator setTimestep(io Scalar time, io Scalar time_prevupdate, io Scalar timestep){ \n' +
-            '  timestep = time - time_prevupdate;\n' +
-            '  time_prevupdate = time;\n' +
-            '}',
-          entryFunctionName: 'setTimestep',
-          parameterLayout: [
-            'self.time',
-            'self.time_prevupdate',
-            'self.timestep'
-          ]
-        }));
-
+        
         var isPlaying = false, animationTime = 0;
         var prevTime, playspeed = 1.0;
         var timerange = FABRIC.RT.vec2(-1,-1);
         var looping = false;
         var onAdvanceCallback;
-        var setTime = function(t) {
-          scene.pub.animation.setTime(t, false);
+        var setTime = function(t, timestep, redraw) {
+          
+          if (looping && animationTime > timerange.y){
+            t = timerange.x;
+          }
+          animationTime = t;
+          globalsNode.setBulkData({ time:[t], timestep:[timestep] } );
           
           if( onAdvanceCallback){
             onAdvanceCallback.call();
           }
-          scene.pub.redrawAllWindows(true);
+          if(redraw !== false){
+            scene.pub.redrawAllWindows();
+          }
         }
         var advanceTime = function() {
           var currTime = (new Date).getTime();
           var deltaTime = (currTime - prevTime)/1000;
-          prevTime = currTime;
+          prevTime = (new Date).getTime();
           if (sceneOptions.fixedTimeStep) {
             // In fixed time step mode, the computer will attempt to play back
             // at texactly the given frame rate. If he frame rate cannot be achieved
             // it plays as fast as possible.
             // The time step as used throughout the graph will always be fixed at the
             // given rate. 
-            animationTime += sceneOptions.timeStep;
+            var t = animationTime + sceneOptions.timeStep;
             if(deltaTime < sceneOptions.timeStep){
               var delay = (sceneOptions.timeStep - deltaTime)*1000;
               setTimeout(function(){
-                  setTime(animationTime);
+                  setTime(t, sceneOptions.timeStep);
                 },
                 delay
               );
             }else{
-              setTime(animationTime);
+              setTime(t, sceneOptions.timeStep);
             }
           }
           else {
             // In this mode, the system plays back at the highest framerate possible.
             // The time step as used throughout the graph will vary according to the
             // achieved frame rate. 
-            setTime(animationTime + (deltaTime * playspeed));
+            setTime(animationTime + (deltaTime * playspeed), deltaTime);
           }
         }
         /////////////////////////////////////////////////////////
         // Animation Interface
         scene.pub.animation = {
           setTime:function(t, redraw) {
-            if (looping && animationTime > timerange.y){
-              t = timerange.x;
-            }
-            animationTime = t;
-            globalsNode.setData('time', t);
-            if(redraw !== false){
-              scene.pub.redrawAllWindows(true);
-            }
+            setTime(t, (t - animationTime), redraw);
           },
           getTime:function() {
             return animationTime;
@@ -779,7 +765,7 @@ FABRIC.SceneGraph = {
             // multiple viewports? Should the 'play' controls be moved to
             // Viewport?
             viewports[0].getFabricWindowObject().setRedrawFinishedCallback(advanceTime);
-            scene.pub.redrawAllWindows(true);
+            scene.pub.redrawAllWindows();
           },
           isPlaying: function(){
             return isPlaying;
@@ -787,14 +773,14 @@ FABRIC.SceneGraph = {
           pause: function() {
             isPlaying = false;
             viewports[0].getFabricWindowObject().setRedrawFinishedCallback(null);
-            scene.pub.redrawAllWindows(true);
+            scene.pub.redrawAllWindows();
           },
           reset: function() {
             isPlaying = false;
             animationTime = 0.0;
             globalsNode.setData('time', 0.0);
             viewports[0].getFabricWindowObject().setRedrawFinishedCallback(null);
-            scene.pub.redrawAllWindows(true);
+            scene.pub.redrawAllWindows();
           },
           step: function() {
             advanceTime();
@@ -1175,15 +1161,13 @@ FABRIC.SceneGraph.registerNodeType('Viewport', {
     // TODO: Not all browsers on OSX features this redraw issue.
     // figures out exactly which ones do and detect only those.
     var onOsX = navigator.userAgent.search("Mac OS X");
-    viewportNode.pub.redraw = function(force) {
-      if(!scene.pub.animation.isPlaying() || force){
-        fabricwindow.needsRedraw();
-        if(onOsX != -1 && !scene.pub.animation.isPlaying()){
-          fabricwindow.setRedrawFinishedCallback(function(){
-            fabricwindow.setRedrawFinishedCallback(null);
-            fabricwindow.needsRedraw();
-          });
-        }
+    viewportNode.pub.redraw = function() {
+      fabricwindow.needsRedraw();
+      if(onOsX != -1 && !scene.pub.animation.isPlaying()){
+        fabricwindow.setRedrawFinishedCallback(function(){
+          fabricwindow.setRedrawFinishedCallback(null);
+          fabricwindow.needsRedraw();
+        });
       }
     };
     viewportNode.pub.writeData = function(sceneSaver, constructionOptions, nodeData) {

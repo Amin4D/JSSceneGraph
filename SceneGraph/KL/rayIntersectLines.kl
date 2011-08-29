@@ -1,7 +1,13 @@
-
 //
 // Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
 //
+
+use Ray;
+use RayIntersection;
+use Xfo;
+use Vec2;
+use Vec3;
+use Mat44;
 
 operator rayIntersectLines(
   io Boolean select,

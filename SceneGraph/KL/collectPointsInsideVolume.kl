@@ -1,8 +1,13 @@
-
 //
 // Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
 //
 
+use CollectedPoints;
+use Mat33;
+use Mat44;
+use Vec3;
+use Xfo;
+use Color;
 
 operator collectPointsInsideBrush(
   io Boolean select,

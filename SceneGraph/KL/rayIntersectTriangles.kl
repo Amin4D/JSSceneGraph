@@ -1,9 +1,13 @@
-
 //
 // Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
 //
 
-
+use RayIntersection;
+use Ray;
+use Vec2;
+use Vec3;
+use Xfo;
+use Mat44;
 
 // PT - Note: This intersection test should be performed in object space,
 // removing the need for all the matrix > vector multiplications.

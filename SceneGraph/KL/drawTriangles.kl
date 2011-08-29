@@ -1,7 +1,10 @@
-
 //
 // Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
 //
+
+use OGLShaderProgram;
+use OGLBuffer;
+use FabricOGL;
 
 operator drawTriangles(
   io OGLShaderProgram shaderProgram,

@@ -1,8 +1,8 @@
-
 //
 // Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
 //
 
+use Vec3;
 
 operator setConeVertexCount(
   io Boolean cap,

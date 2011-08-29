@@ -1,12 +1,13 @@
-
 //
 // Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
 //
 
-
-
 #include 'FABRIC_ROOT/SceneGraph/Resources/KL/solveFishingRod.kl'
 #include 'FABRIC_ROOT/SceneGraph/Resources/KL/solveNCFIK.kl'
+
+use Xfo;
+use Bone;
+use BezierKeyframe;
 
 operator solveArmRig(
   io Xfo pose[],

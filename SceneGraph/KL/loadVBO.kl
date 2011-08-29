@@ -1,8 +1,9 @@
-
 //
 // Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
 //
 
+use DATA_TYPE;
+use OGLBuffer, OGLShaderProgram;
 
 // These must be defined in the preprocessor definitions prior to compilation.
 // #define DATA_TYPE Vec3

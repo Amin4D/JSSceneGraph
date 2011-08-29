@@ -1,7 +1,8 @@
-
 //
 // Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
 //
+
+use RotationOrder;
 
 function Quat() {
   self.v = Vec3(0.0, 0.0, 0.0);
@@ -12,7 +13,6 @@ function Quat.identity() {
   self.v = Vec3(0.0, 0.0, 0.0);
   self.w = 1.0;
 }
-
 
 function Quat(in Scalar w, in Vec3 v) {
   self.v = v;

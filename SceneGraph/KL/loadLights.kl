@@ -1,9 +1,13 @@
-
 //
 // Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
 //
 
-
+use OGLShaderProgram;
+use Vec3;
+use Mat33;
+use Mat44;
+use RotationOrder;
+use FabricOGL;
 
 operator loadLight(
   io OGLShaderProgram shaderProgram,

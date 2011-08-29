@@ -1,10 +1,13 @@
-
 //
 // Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
 //
 
 #include 'FABRIC_ROOT/SceneGraph/Resources/KL/drawTexture.kl'
 
+use Vec2;
+use Mat44;
+use OGLRenderTarget;
+use OGLTexture2D;
 
 function Mat44 symmetricFrustum(Scalar r, Scalar t, Scalar n, Scalar f) {
   var Mat44 result(

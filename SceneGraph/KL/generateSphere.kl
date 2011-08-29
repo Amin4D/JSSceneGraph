@@ -2,6 +2,7 @@
 // Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
 //
 
+use Math;
 use Vec2;
 use Vec3;
 
@@ -36,13 +37,12 @@ operator generateSphere(
   numTriangles = 2 * sides * (loops + 1);
   
   indices.resize(numTriangles * 3);
-
-  Scalar PI = 3.141592653589793238462643383279;
+  Math math;
   Integer voff = 0;
   for (var Integer i = 0; i <= nbLoops; i++) {
-    var Scalar theta = (i / Scalar(nbLoops)) * PI;
+    var Scalar theta = (i / Scalar(nbLoops)) * math.PI;
     for (var Integer j = 0; j < nbSides; j++) {
-      var Scalar phi = (j / Scalar(sides)) * 2.0 * PI;
+      var Scalar phi = (j / Scalar(sides)) * 2.0 * math.PI;
 
       normals[voff] = Vec3(
         sin(theta) * cos(phi),

@@ -2,6 +2,7 @@
 // Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
 //
 
+use Math;
 use Vec3;
 use Vec2;
 
@@ -47,13 +48,13 @@ operator generateCylinder(
   }
   indices.resize(numTriangles * 3);
   
-  Scalar PI = 3.141592653589793238462643;
+  Math math;
 
   Integer voff = 0;
   for (Integer i = 0; i <= nbLoops; i++) {
     Scalar y = (i / Scalar(nbLoops)) * height;
     for (Integer j = 0; j < nbSides; j++) {
-      Scalar phi = (j / Scalar(sides)) * 2.0 * PI;
+      Scalar phi = (j / Scalar(sides)) * math.TWO_PI;
 
       normals[voff] = Vec3(
         sin(phi),
@@ -99,7 +100,7 @@ operator generateCylinder(
     Scalar y = height;
         
     for (Integer j = 0; j < nbSides; j++) {
-      Scalar phi = (j / Scalar(sides)) * 2.0 * PI;
+      Scalar phi = (j / Scalar(sides)) * math.TWO_PI;
 
       normals[voff] = nrm;
       positions[voff].set(
@@ -111,7 +112,7 @@ operator generateCylinder(
       voff++;
     }
     for (Integer j = 0; j < nbSides; j++) {
-      Scalar phi = (j / Scalar(sides)) * 2.0 * PI;
+      Scalar phi = (j / Scalar(sides)) * math.TWO_PI;
 
       normals[voff] = nrm;
       positions[voff].setNull();
@@ -144,7 +145,7 @@ operator generateCylinder(
     y = 0.0;
         
     for (Integer j = 0; j < nbSides; j++) {
-      Scalar phi = (j / Scalar(sides)) * 2.0 * PI;
+      Scalar phi = (j / Scalar(sides)) * math.TWO_PI;
 
       normals[voff] = nrm;
       positions[voff].set(
@@ -156,7 +157,7 @@ operator generateCylinder(
       voff++;
     }
     for (Integer j = 0; j < nbSides; j++) {
-      Scalar phi = (j / Scalar(sides)) * 2.0 * PI;
+      Scalar phi = (j / Scalar(sides)) * math.TWO_PI;
 
       normals[voff] = nrm;
       positions[voff].setNull();

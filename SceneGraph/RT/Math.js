@@ -9,18 +9,6 @@
 FABRIC.RT = FABRIC.RT ? FABRIC.RT : {};
 
 /**
- * The precision of the math module.
- */
-FABRIC.RT.precision = 1e-5;
-/**
- * The factor to project radians to degrees.
- */
-FABRIC.RT.radToDeg = 57.2957795;
-/**
- * The factor to project degrees to radians.
- */
-FABRIC.RT.degToRad = 0.0174532925;
-/**
  * Function to test if a given value is a scalar.
  * @param {value} value The value to validate.
  * @return {boolean} True if the given value is a scalar.
@@ -49,12 +37,37 @@ FABRIC.RT.fromString = function(str) {
   return eval(str);
 };
 
-/**
- * Equals implementation for every number in javascript
- * using our precision specification.
- * @param {number} that The number to compare against.
- * @return {boolean} True if the numbers are equal.
- */
-Number.prototype.eql = function(that) {
-  return Math.abs(this - that) < FABRIC.RT.precision;
+
+
+FABRIC.RT.Math = function() {
+  this.precision = 1e-5;
+  this.radToDeg = 57.2957795;
+  this.degToRad = 0.0174532925;
+  this.PI = 3.141592653589793238462643383279;
+  this.TWO_PI = this.PI * 2.0;
+  this.HALF_PI = this.PI * 0.5;
+}
+
+FABRIC.RT.Math.prototype = {
+
+  lerpScalar: function() {
+    return this.isXZY() || this.isZYX() || this.isYXZ();
+  }
 };
+
+FABRIC.RT.math = new FABRIC.RT.Math();
+
+FABRIC.appendOnCreateContextCallback(function(context) {
+  context.RegisteredTypesManager.registerType('Math', {
+    members: {
+      precision: 'Scalar',
+      radToDeg: 'Scalar',
+      degToRad: 'Scalar',
+      PI: 'Scalar',
+      TWO_PI: 'Scalar',
+      HALF_PI: 'Scalar'
+    },
+    constructor: FABRIC.RT.Math,
+    kBindings: FABRIC.loadResourceURL('FABRIC_ROOT/SceneGraph/RT/Math.kl')
+  });
+});

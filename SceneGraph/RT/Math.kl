@@ -1,0 +1,14 @@
+
+//
+// Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
+//
+
+
+function Scalar Math.clamp(in Scalar val, in Scalar minval, in Scalar maxval){
+  return (val < minval ? minval : (val > maxval ? maxval : val));
+}
+
+function Scalar Math.lerp(in Scalar val1, in Scalar val2, in Scalar t){
+  return val1 + ((val2 - val1) * t);
+}
+

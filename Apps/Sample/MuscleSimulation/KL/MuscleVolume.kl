@@ -2,6 +2,7 @@
 
 #include '../../../SceneGraph/KL/evaluateKeyframeAnimationTrack.kl'
 
+use Math;
 use BezierKeyframe;
 use Color;
 use Vec2;
@@ -9,13 +10,6 @@ use Vec3;
 use Xfo;
 use FabricOGL;
 
-function Scalar clamp(in Scalar val, in Scalar minval, in Scalar maxval){
-  return (val < minval ? minval : (val > maxval ? maxval : val));
-}
-
-function Scalar lerp(in Scalar val1, in Scalar val2, in Scalar t){
-  return val1 + ((val2 - val1) * t);
-}
 
 
 function Scalar calcPolarElipse(
@@ -85,10 +79,9 @@ function Ray muscleUVtoRay(
   Integer i;
   Scalar angle, t;
   Ray outRay;
-
-  Scalar PI = 3.141592653589793238462643383279;
+  Math math;
   
-  angle = v * PI * 2.0;  
+  angle = v * math.PI * 2.0;  
   outRay.direction.set( 0.0, -cos( angle ), -sin( angle ) );
 
   outRay.start = evalPiecewiseBSpline( xfos, u, t, i );
@@ -354,7 +347,7 @@ function Integer findCubicRoots(
     return result;
   }
 
-  Scalar PI = 3.14159265358979323846;
+  Math math;
   Scalar a1 = coeff[2] / coeff[3];
   Scalar a2 = coeff[1] / coeff[3];
   Scalar a3 = coeff[0] / coeff[3];
@@ -368,9 +361,9 @@ function Integer findCubicRoots(
   if (d >= 0) {
     Scalar theta = acos( R / sqrt( Qcubed ));
     Scalar sqrtQ = sqrt( Q );
-    x[0] =  -2 * sqrtQ * cos( theta               / 3.0) - a1 / 3.0;
-    x[1] =  -2 * sqrtQ * cos((theta + 2.0 * PI) / 3.0) - a1 / 3.0;
-    x[2] =  -2 * sqrtQ * cos((theta + 4.0 * PI) / 3.0) - a1 / 3.0;
+    x[0] =  -2 * sqrtQ * cos( theta                  / 3.0) - a1 / 3.0;
+    x[1] =  -2 * sqrtQ * cos((theta + 2.0 * math.PI) / 3.0) - a1 / 3.0;
+    x[2] =  -2 * sqrtQ * cos((theta + 4.0 * math.PI) / 3.0) - a1 / 3.0;
     return (3);
   }
 
@@ -469,8 +462,7 @@ function Boolean positionToMuscleUV(
   Vec3 p1, p2, p3, p4, p5, p6, v1, v2, v3;
   Vec3 yaxis, zaxis, yaxisStart, zaxisStart, yaxisEnd, zaxisEnd;
 
-  Scalar PI = 3.14159265358979323846;
-  Scalar TWO_PI = PI * 2.0;
+  Math math;
   
   // Loop through the line segments and do a sweep test using
   // manufactured traingle. The collision fraction is our segment u.
@@ -529,9 +521,9 @@ function Boolean positionToMuscleUV(
 
       Scalar angle = outCoreDir.angleTo( yaxis );
       if( outCoreDir.dot( zaxis ) > 0.0 ){
-        angle = TWO_PI - angle;
+        angle = math.TWO_PI - angle;
       }
-      angle /= TWO_PI;
+      angle /= math.TWO_PI;
       
       outUV.x = ( Scalar(i) + outFraction ) / Scalar( xfos.size() - 1 );
       outUV.y = angle;
@@ -548,8 +540,7 @@ function Vec3 uvwToMusclePosition(
   in Vec3 uvw,
   in Xfo xfos[]
 ){
-  Scalar PI = 3.14159265358979323846;
-  Scalar TWO_PI = PI * 2.0;
+  Math math;
   
   Vec3 offset;
   if( uvw.x < 0.0 )
@@ -579,7 +570,7 @@ function Vec3 uvwToMusclePosition(
     // The one exception would be several segments in arow that were evenly twisted. 
     Quat pointframe = xfos[ i ].ori.nlerp( xfos[ i + 1 ].ori, t );
 
-    offset = pointframe.rotateVector( Vec3( 0.0, -cos( uvw.y * TWO_PI ), -sin( uvw.y * TWO_PI ) ) );
+    offset = pointframe.rotateVector( Vec3( 0.0, -cos( uvw.y * math.TWO_PI ), -sin( uvw.y * math.TWO_PI ) ) );
     
     return (offset * (uvw.z /* muscle->m_scale * muscle->GetMuscleBulge( uvw[0], uvw.y )*/)) + pos;
   }
@@ -596,10 +587,7 @@ function Vec3 positionToMuscleSurfacePosition(
   Scalar fallOff = 0.0;
   Scalar shrinkWrap = 0.0;
   
-  Scalar PI = 3.141592653589793238462643383279;
-  Scalar TWO_PI = PI * 2.0;
-  Scalar HALF_PI = PI * 0.5;
-  
+  Math math;
   Vec3 corePos, posOffsetDir;
   Vec3 orthoNormal, biNormal, posToCore, bisectingVector, muscleNormal, posProjectedOntoSlice;
   Quat sliceframe;
@@ -680,9 +668,9 @@ function Vec3 positionToMuscleSurfacePosition(
 
   Scalar orthoNormalAngle = acos( clamp( muscleNormal.dot( orthoNormal ), -1.0, 1.0 ) );
   if(rhs){
-    orthoNormalAngle = TWO_PI - orthoNormalAngle;
+    orthoNormalAngle = math.TWO_PI - orthoNormalAngle;
   }
-  orthoNormalVvalue = orthoNormalAngle / TWO_PI;
+  orthoNormalVvalue = orthoNormalAngle / math.TWO_PI;
   
   /////////////////////////////////////////////
   orthoNormalThickness  = 1.0;//muscle->GetMuscleThickness( u, orthoNormalVvalue );
@@ -727,11 +715,11 @@ function Vec3 positionToMuscleSurfacePosition(
   for( i=1; i<=numSamples; i++ ){
     tempOffsetVval  = (Scalar(i)/Scalar(numSamples)) * 0.25;
     if( rhs ){
-      tempOffsetAngle =  tempOffsetVval * TWO_PI;
+      tempOffsetAngle =  tempOffsetVval * math.TWO_PI;
       tempV = orthoNormalVvalue - tempOffsetVval;
     }
     else{
-      tempOffsetAngle = -tempOffsetVval * TWO_PI;
+      tempOffsetAngle = -tempOffsetVval * math.TWO_PI;
       tempV = orthoNormalVvalue + tempOffsetVval;
     }
     
@@ -781,8 +769,8 @@ function Vec3 positionToMuscleSurfacePosition(
 
   Scalar fract = (biNormalProjLen - tempBiNormalProjLenPrev)/(tempBiNormalProjLen - tempBiNormalProjLenPrev);
   if( ( tempV - tempVprev ) > 1.0 ) tempVprev -= 1.0;
-  v = lerp( tempVprev, tempV, fract );
-  Scalar angle = lerp( tempOffsetAnglePrev, tempOffsetAngle, fract );
+  v = math.lerp( tempVprev, tempV, fract );
+  Scalar angle = math.lerp( tempOffsetAnglePrev, tempOffsetAngle, fract );
 
   if( v > 1.0 ) v -= 1.0;
   if( v < 0.0 ) v += 1.0;
@@ -798,8 +786,8 @@ function Vec3 positionToMuscleSurfacePosition(
 
   offsetAngle = orthoNormal.angleTo( posToCore );
 
-  if( distToCore < w  || shrinkWrap > 0.0 || abs( offsetAngle ) > HALF_PI ){
-    if( abs( offsetAngle ) < HALF_PI && w < distToCore ){
+  if( distToCore < w  || shrinkWrap > 0.0 || abs( offsetAngle ) > math.HALF_PI ){
+    if( abs( offsetAngle ) < math.HALF_PI && w < distToCore ){
       return (posOffsetDir * (w * shrinkWrap) + corePos) - posProjectedOntoSlice;
     }
     else{

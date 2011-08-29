@@ -148,7 +148,7 @@ FABRIC.RT.Vec4.prototype = {
   },
 
   getAngleTo: function(v) {
-    return Math.acos(this.dot(v)) * FabricMath.radToDeg;
+    return Math.acos(this.dot(v)) * FABRIC.RT.math.radToDeg;
   },
 
   // Returns the length ('length') of the vector

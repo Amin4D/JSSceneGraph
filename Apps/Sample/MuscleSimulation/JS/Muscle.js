@@ -348,7 +348,7 @@ FABRIC.SceneGraph.registerNodeType('Muscle', {
     var coreDisplayLinesNode, coreDisplayPointsNode;
     
     muscle.display = function(){
-      if(!coreDisplayPointsNode){
+      /*
         coreDisplayPointsNode = scene.constructNode('Points', { dynamicMembers: ['positions'] });
         coreDisplayPointsNode.pub.addVertexAttributeValue('vertexColors', 'Color', {
           defaultValue: FABRIC.RT.rgb(1.0, 1.0, 0.0),
@@ -388,8 +388,7 @@ FABRIC.SceneGraph.registerNodeType('Muscle', {
             pointSize: 6
           }).pub
         });
-      }
-      
+      */
       
       var volumeDisplayNode = muscleSystem.getVolumeDisplayNode();
       

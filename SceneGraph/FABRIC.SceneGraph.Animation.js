@@ -93,7 +93,7 @@ FABRIC.SceneGraph.registerNodeType('AnimationTrack', {
           entryFunctionName: 'evaluateKeyframeAnimationTracks',
           parameterLayout: [
             'animationtrack.keys[]',
-            'controller.localtime',
+            'controller.localTime',
             'self.index',
             'self.value',
             'self.keyid'
@@ -170,23 +170,25 @@ FABRIC.SceneGraph.registerNodeType('AnimationController', {
     scene.assignDefaults(options, {
         playbackRate: 1.0,
         bindToGlobalTime: true,
+        timeRange: FABRIC.RT.vec2(0, 10),
         outOfRange: 1 /* 0: linear, 1:loop, 3:clamp */
       });
 
     var animationControllerNode = scene.constructNode('SceneGraphNode', options);
     var dgnode = animationControllerNode.constructDGNode('DGNode');
     dgnode.addMember('playbackRate', 'Scalar', options.playbackRate);
-    dgnode.addMember('localtime', 'Scalar');
-    dgnode.addMember('timerange', 'Vec2', FABRIC.RT.vec2(0, 100));
+    dgnode.addMember('localTime', 'Scalar');
+    dgnode.addMember('timeRange', 'Vec2', options.timeRange);
     dgnode.addMember('outOfRange', 'Integer', options.outOfRange);
     
     // create a getter and setter for the local time
     animationControllerNode.addMemberInterface(dgnode, 'playbackRate', true);
-    animationControllerNode.addMemberInterface(dgnode, 'localtime', true);
+    animationControllerNode.addMemberInterface(dgnode, 'localTime', true);
+    animationControllerNode.addMemberInterface(dgnode, 'timeRange', true);
 
     // extend public interface
     animationControllerNode.pub.setTime = function(time) {
-      dgnode.setData('localtime', 0, time);
+      dgnode.setData('localTime', 0, time);
     };
 
     // Here, the animation controllers time is locked to
@@ -203,11 +205,11 @@ FABRIC.SceneGraph.registerNodeType('AnimationController', {
           entryFunctionName:'incrementControllerLocalTime',
           parameterLayout: [
             'globals.time',
-            'globals.timeStep',
+            'globals.timestep',
             'self.playbackRate',
-            'self.timerange',
+            'self.timeRange',
             'self.outOfRange',
-            'self.localtime'
+            'self.localTime'
           ]
         }));
     }
@@ -429,7 +431,7 @@ FABRIC.SceneGraph.registerNodeType('TrackDisplay', {
       animationTrackNode: 'The AnimationTrack node to evaluate.',
       trackIndex: 'The index of the track in the AnimationTrack node to evaluate.',
       timeRange: 'The time rage to evaluate.',
-      segmentCount: 'The number of steps to divide the timerange by.'
+      segmentCount: 'The number of steps to divide the timeRange by.'
   },
   factoryFn: function(options, scene) {
     scene.assignDefaults(options, {

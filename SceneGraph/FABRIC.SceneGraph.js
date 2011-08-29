@@ -675,7 +675,7 @@ FABRIC.SceneGraph = {
           srcCode:
             '\noperator setTimestep(io Scalar time, io Scalar time_prevupdate, io Scalar timestep){ \n' +
             '  timestep = time - time_prevupdate;\n' +
-            '  ms_prevupdate = time;\n' +
+            '  time_prevupdate = time;\n' +
             '}',
           entryFunctionName: 'setTimestep',
           parameterLayout: [
@@ -690,23 +690,43 @@ FABRIC.SceneGraph = {
         var timerange = FABRIC.RT.vec2(-1,-1);
         var looping = false;
         var onAdvanceCallback;
-        var advanceTime = function() {
-          if (sceneOptions.fixedTimeStep) {
-            animationTime += sceneOptions.timeStep;
-            scene.pub.animation.setTime(animationTime);
-          }
-          else {
-            var currTime = (new Date).getTime();
-            var deltaTime = currTime - prevTime;
-            prevTime = currTime;
-            scene.pub.animation.setTime(animationTime + (deltaTime * playspeed), false);
-          }
+        var setTime = function(t) {
+          scene.pub.animation.setTime(t, false);
+          
           if( onAdvanceCallback){
             onAdvanceCallback.call();
           }
           scene.pub.redrawAllWindows();
         }
-
+        var advanceTime = function() {
+          var currTime = (new Date).getTime();
+          var deltaTime = (currTime - prevTime)/1000;
+          prevTime = currTime;
+          if (sceneOptions.fixedTimeStep) {
+            // In fixed time step mode, the computer will attempt to play back
+            // at texactly the given frame rate. If he frame rate cannot be achieved
+            // it plays as fast as possible.
+            // The time step as used throughout the graph will always be fixed at the
+            // given rate. 
+            animationTime += sceneOptions.timeStep;
+            if(deltaTime < sceneOptions.timeStep){
+              var delay = (sceneOptions.timeStep - deltaTime)*1000;
+              setTimeout(function(){
+                  setTime(animationTime);
+                },
+                delay
+              );
+            }else{
+              setTime(animationTime);
+            }
+          }
+          else {
+            // In this mode, the system plays back at the highest framerate possible.
+            // The time step as used throughout the graph will vary according to the
+            // achieved frame rate. 
+            setTime(animationTime + (deltaTime * playspeed));
+          }
+        }
         /////////////////////////////////////////////////////////
         // Animation Interface
         scene.pub.animation = {
@@ -772,7 +792,7 @@ FABRIC.SceneGraph = {
           reset: function() {
             isPlaying = false;
             animationTime = 0.0;
-            globalsNode.setData('ms', 0.0);
+            globalsNode.setData('time', 0.0);
             viewports[0].getFabricWindowObject().setRedrawFinishedCallback(null);
             scene.pub.redrawAllWindows();
           },

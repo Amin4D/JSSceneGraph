@@ -387,7 +387,7 @@ FABRIC.SceneGraph.registerNodeType('LineStrip', {
     linesNode.getRayIntersectionOperator = function(transformNodeMember) {
       return scene.constructOperator({
           operatorName: 'rayIntersectLineStrip',
-          srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/rayIntersectLines.kl',
+          srcFile: 'FABRIC_ROOT/SceneGraph/KL/rayIntersectLines.kl',
           entryFunctionName: 'rayIntersectLineStrip',
           parameterLayout: [
             'raycastData.ray',

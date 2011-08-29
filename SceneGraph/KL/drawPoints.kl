@@ -4,6 +4,7 @@
 
 use FabricOGL;
 use OGLBuffer;
+use OGLShaderProgram;
 
 operator preDrawSpritePoints(
   io Scalar pointSize

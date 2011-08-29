@@ -645,23 +645,9 @@ function Vec3 positionToMuscleSurfacePosition(
   // 
   Vec3 coreTan = sliceframe.rotateVector( Vec3( 1.0, 0.0, 0.0 ) );
 
-  //////////////////////////////////////////////////
-  // 
-  {
-  //  posProjectedOntoSlice = pos - corePos;
-  //  posProjectedOntoSlice = coreTan.orthogonalProjection( posProjectedOntoSlice );
-  //  posProjectedOntoSlice += corePos;
-    
-    posProjectedOntoSlice = pos - ((pos - corePos).unit() * (pos - corePos).dot(coreTan));
-  }
-
+  posProjectedOntoSlice = pos - ((pos - corePos).unit() * (pos - corePos).dot(coreTan));
   posToCore = posProjectedOntoSlice - corePos;
-
-  //////////////////////////////////////////////////
-  //
   orthoNormal = normal - (normal * normal.dot(coreTan)).unit();
-//  orthoNormal = coreTan.orthogonalProjection( normal );
-//  orthoNormal.setUnit();
 
   biNormal = orthoNormal.cross( coreTan );
   biNormal.setUnit();
@@ -677,7 +663,6 @@ function Vec3 positionToMuscleSurfacePosition(
 
   //////////////////////////////////////////////////
   // Get the non-normalized offset vector, and project it onto the binormal
-  
   biNormalProjLen = posToCore.dot( biNormal );
   Boolean  rhs = ( biNormalProjLen > 0.0 );    
 
@@ -821,52 +806,60 @@ function Vec3 positionToMuscleSurfacePosition(
 
 
 
-function Boolean positionToMuscleUVW(
+function Vec3 positionToMuscleUVW(
   in Vec3 pos,
-  in Xfo xfos[],
-  io Vec3 outUVW,
+  in Xfo xfos[]
 ){
   Vec3 corePos, coreDir;
-  Vec2 outUV;
+  Vec2 uv;
 
-  if( positionToMuscleUV( pos, xfos, outUV, corePos, coreDir ) ){
+  if( positionToMuscleUV( pos, xfos, uv, corePos, coreDir ) ){
     // Now evaluate the spline to get the actual position of the muscle core
     Integer i;
     Scalar t;
-    corePos = evalPiecewiseBSpline( xfos, outUVW.x, t, i );
-    outUVW.x = outUV.x;
-    outUVW.y = outUV.y;
-    outUVW.z = ( corePos - pos ).length();
-    return true;
+    corePos = evalPiecewiseBSpline( xfos, uv.x, t, i );
+    return Vec3(uv.x,
+                uv.y,
+                ( corePos - pos ).length());
   }
   else
   {
     coreDir = pos - xfos[ 0 ].tr;
     if( coreDir.dot( xfos[ 0 ].ori.getXaxis() ) < 0.0 ){
       Quat endFrame = xfos[ 0 ].ori;
-
-      outUVW.x = coreDir.dot( endFrame.getXaxis() );
-      outUVW.y = coreDir.dot( endFrame.getYaxis() );
-      outUVW.z = coreDir.dot( endFrame.getZaxis() );
-
-      return true;
+      return Vec3( coreDir.dot( endFrame.getXaxis() ),
+                   coreDir.dot( endFrame.getYaxis() ),
+                   coreDir.dot( endFrame.getZaxis() ));
     }
 
     coreDir = pos - xfos[ xfos.size()-1 ].tr;
     if( coreDir.dot( xfos[ xfos.size()-1 ].ori.getXaxis( ) ) > 0.0 ){      
       Quat endFrame = xfos[ xfos.size()-1 ].ori;
-
-      outUVW.x = 1.0 + ( coreDir.dot( endFrame.getXaxis( ) )  );
-      outUVW.y = coreDir.dot( endFrame.getYaxis() );
-      outUVW.z = coreDir.dot( endFrame.getZaxis() );
-      return true;
+      return Vec3(1.0 + ( coreDir.dot( endFrame.getXaxis( ) )  ),
+                  coreDir.dot( endFrame.getYaxis() ),
+                  coreDir.dot( endFrame.getZaxis() ));
     }
   }
-
-  return false;
+  return Vec3(0.0, 0.0, 0.0);
 }
 
 
+
+operator calcSkinStickLocations(
+  io Xfo initialXfos[][],
+  io Vec3 parentpositions[],
+
+  io Scalar muscleBindingIds[4],
+  io Vec3 sticklocations[4],
+  in Size index
+){
+  Vec3 stickDelta;
+  for(Integer i=0; i<4; i++){
+    if(muscleBindingIds[i] >= 0){
+      sticklocations[i] = positionToMuscleUVW(parentpositions[index], initialXfos[muscleBindingIds[i]]);
+    }
+  }
+}
 
 operator deformSkin(
   io Integer displacementMapResolution,

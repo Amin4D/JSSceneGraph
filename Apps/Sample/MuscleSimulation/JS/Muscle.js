@@ -450,22 +450,47 @@ FABRIC.SceneGraph.registerNodeType('Skin', {
       muscleSystem: musclesystem,
       baseSkinMesh: undefined
     });
-    
+    if(!options.baseSkinMesh){
+      throw "A base mesh must be provided";
+    }
     var muscleSystem = scene.getPrivateInterface(options.muscleSystem);
   
-  
+    var boundSkin = scene.constructNode('GeometryDataCopy', {
+      baseGeometryNode:options.baseSkinMesh
+    });
+    
+    boundSkin.pub.addVertexAttributeValue('musclebinding', 'Vec3' );
+    boundSkin.pub.addVertexAttributeValue('musclebindingweights', 'Vec3' );
+    boundSkin.pub.addVertexAttributeValue('stickweight', 'Scalar' );
+    boundSkin.pub.addVertexAttributeValue('slideeight', 'Scalar' );
+    boundSkin.pub.addVertexAttributeValue('bulgeweight', 'Scalar' );
+    boundSkin.pub.addVertexAttributeValue('sticklocations', 'Vec4[4]' );
+    boundSkin.getAttributesDGNode().addDependency(muscleSystem.getDGNode(), 'musclesystem');
+    boundSkin.getAttributesDGNode().addDependency(muscleSystem.getMuscles().getInitializationDGNode(), 'musclesinitialization');
+    boundSkin.getAttributesDGNode().bindings.append(scene.constructOperator({
+      operatorName: 'calcSkinStickLocations',
+      srcFile: './KL/muscleVolume.kl',
+      entryFunctionName: 'calcSkinStickLocations',
+      parameterLayout: [
+        'musclesinitialization.initialXfos[]',
+        'parentattributes.positions[]',
+        'self.musclebinding',
+        'self.sticklocations',
+        'self.index'
+      ]
+    }));
+      
     var deformedSkin = scene.constructNode('GeometryDataCopy', {
       baseGeometryNode:options.baseSkinMesh
     });
     deformedSkin.pub.addVertexAttributeValue('positions', 'Vec3', { genVBO:true, dynamic:true } );
     deformedSkin.pub.addVertexAttributeValue('normals', 'Vec3', { genVBO:true, dynamic:true } );
-    deformedSkin.pub.addVertexAttributeValue('musclebinding', 'Vec3' );
-    deformedSkin.pub.addVertexAttributeValue('musclebindingweights', 'Vec3' );
     deformedSkin.getAttributesDGNode().addDependency(muscleSystem.getDGNode(), 'musclesystem');
     deformedSkin.getAttributesDGNode().addDependency(muscleSystem.getMuscles().getInitializationDGNode(), 'musclesinitialization');
     deformedSkin.getAttributesDGNode().addDependency(muscleSystem.getMuscles().getSimulationDGNode(), 'musclessimulation');
+    deformedSkin.getAttributesDGNode().addDependency(boundSkin.getAttributesDGNode(), 'boundskin');
     deformedSkin.getAttributesDGNode().bindings.append(scene.constructOperator({
-      operatorName: 'deformMuscleVolume',
+      operatorName: 'deformSkin',
       srcFile: './KL/muscleVolume.kl',
       entryFunctionName: 'deformSkin',
       parameterLayout: [
@@ -478,8 +503,12 @@ FABRIC.SceneGraph.registerNodeType('Skin', {
         'parentattributes.uvs0[]',
         'self.positions',
         'self.normals',
-        'self.musclebinding',
-        'self.musclebindingweights',
+        'boundskin.musclebinding',
+        'boundskin.musclebindingweights',
+        'boundskin.stickweight',
+        'boundskin.sticklocations',
+        'boundskin.slideeight',
+        'boundskin.bulgeweight',
         'self.index'
       ]
     }));

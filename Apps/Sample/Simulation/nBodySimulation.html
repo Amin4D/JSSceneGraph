@@ -53,17 +53,17 @@ FABRIC.SceneGraph.registerNodeType('NBodySimulation', {
     options.createBoundingBoxNode = false;
     var nBodyGeometry = scene.constructNode('Geometry', options);
     
-    nBodyGeometry.getDrawOperator = function() {
-      return scene.constructOperator({
-          operatorName: 'drawPoints',
-          srcFile: 'FABRIC_ROOT/SceneGraph/KL/drawPoints.kl',
-          entryFunctionName: 'drawPoints',
-          parameterLayout: [
-            'shader.shaderProgram',
-            'instance.drawToggle'
-          ]
-        });
-    };
+    nBodyGeometry.getRedrawEventHandler().postDescendBindings.append(
+      scene.constructOperator({
+        operatorName: 'drawPoints',
+        srcFile: 'FABRIC_ROOT/SceneGraph/KL/drawPoints.kl',
+        entryFunctionName: 'drawPoints',
+        parameterLayout: [
+          'shader.shaderProgram',
+          'instance.drawToggle'
+        ]
+      }));
+      
     nBodyGeometry.pub.addVertexAttributeValue('positions', 'Vec4', { genVBO:false } );
     
     // Add all the paramters, and add getters/setters at the same time.

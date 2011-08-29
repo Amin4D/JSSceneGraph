@@ -120,7 +120,12 @@ function Vec3 Vec3.cross(in Vec3 other) {
   );
 }
 
+// TODO: Depricate the ambiguous function
 function Scalar Vec3.angle(in Vec3 other) {
+  return acos(self.dot(other));
+}
+
+function Scalar Vec3.angleTo(in Vec3 other) {
   return acos(self.dot(other));
 }
 

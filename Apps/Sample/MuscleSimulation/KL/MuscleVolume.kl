@@ -407,6 +407,7 @@ function Boolean testCoplanarity(
   
   // due to raounding error, sometimtes wee need to be a bit forgiving on the root finder. 
   Scalar fuzzyness = 0.0001;
+  Math math;
 
   x21 =  x2 - x1;
   x31 =  x3 - x1;
@@ -436,15 +437,15 @@ function Boolean testCoplanarity(
   Integer numRoots = findCubicRoots( coeff, roots );
   if( numRoots > 0 ){
     if( roots[0] > (0.0 - fuzzyness) && roots[0] < (1.0 + fuzzyness) ){
-      outFraction = clamp(roots[0], 0.0, 1.0 );
+      outFraction = math.clamp(roots[0], 0.0, 1.0 );
       return true;
     }
     if( numRoots > 1 && roots[1] >= (0.0 - fuzzyness) && roots[1] < (1.0 + fuzzyness) ){
-      outFraction = clamp(roots[1], 0.0, 1.0 ); //(Scalar)roots[1];
+      outFraction = math.clamp(roots[1], 0.0, 1.0 ); //(Scalar)roots[1];
       return true; 
     }
     if( numRoots > 2 && roots[2] >= (0.0 - fuzzyness) && roots[2] < (1.0 + fuzzyness) ){
-      outFraction = clamp(roots[2], 0.0, 1.0 ); ;//(Scalar)roots[2];
+      outFraction = math.clamp(roots[2], 0.0, 1.0 ); ;//(Scalar)roots[2];
       return true;
     }
   }
@@ -666,7 +667,7 @@ function Vec3 positionToMuscleSurfacePosition(
   // 
   muscleNormal = sliceframe.rotateVector(Vec3(0.0,-1.0, 0.0));
 
-  Scalar orthoNormalAngle = acos( clamp( muscleNormal.dot( orthoNormal ), -1.0, 1.0 ) );
+  Scalar orthoNormalAngle = acos( math.clamp( muscleNormal.dot( orthoNormal ), -1.0, 1.0 ) );
   if(rhs){
     orthoNormalAngle = math.TWO_PI - orthoNormalAngle;
   }

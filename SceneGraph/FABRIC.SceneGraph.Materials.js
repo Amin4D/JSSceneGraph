@@ -1210,6 +1210,8 @@ FABRIC.SceneGraph.defineEffectFromFile('PhongReflectMaterial', 'FABRIC_ROOT/Scen
 FABRIC.SceneGraph.defineEffectFromFile('GlassMaterial', 'FABRIC_ROOT/SceneGraph/Shaders/GlassShader.xml');
 FABRIC.SceneGraph.defineEffectFromFile('WireframeMaterial', 'FABRIC_ROOT/SceneGraph/Shaders/WireframeShader.xml');
 
+FABRIC.SceneGraph.defineEffectFromFile('OutlineShader', 'FABRIC_ROOT/SceneGraph/Shaders/OutlineShader.xml');
+
 
 FABRIC.SceneGraph.registerNodeType('BloomPostProcessEffect', {
   factoryFn: function(options, scene) {

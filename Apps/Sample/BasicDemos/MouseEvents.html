@@ -65,6 +65,9 @@ $(document).ready(function() {
       scene.constructNode('PhongMaterial', { diffuseColor: FABRIC.RT.rgb(0, 0.8, 0, 1), lightNode: light }),
       scene.constructNode('PhongMaterial', { diffuseColor: FABRIC.RT.rgb(0, 0, 0.8, 1), lightNode: light })
     ];
+  
+  var outlineMaterial = scene.constructNode('OutlineShader', { color: FABRIC.RT.rgb(0.8, 0.8, 0.8, 1) })
+  
 
   var objId = 0;
   var scale = 7.0;
@@ -109,13 +112,17 @@ $(document).ready(function() {
   var mouseUpEventsText = document.getElementById('mouseUpEventsText').childNodes[0];
 
   scene.addEventListener('mouseover_geom', function(evt) {
+      evt.targetNode.setMaterialNode( outlineMaterial );
       mouseOverEventsText.data = 'Mouse Over:' + evt.targetNode.getName();
+      viewport.redraw();
     });
   scene.addEventListener('mousemove_geom', function(evt) {
       mouseMoveEventsText.data = 'Mouse Move:' + evt.targetNode.getName();
     });
   scene.addEventListener('mouseout_geom', function(evt) {
+      evt.targetNode.removeMaterialNode( outlineMaterial );
       mouseOutEventsText.data = 'Mouse Out:' + evt.targetNode.getName();
+      viewport.redraw();
     });
   scene.addEventListener('mousedown_geom', function(evt) {
       mouseDownEventsText.data = 'Mouse Down:' + evt.targetNode.getName();

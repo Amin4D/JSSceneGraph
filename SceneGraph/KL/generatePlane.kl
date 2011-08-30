@@ -10,9 +10,6 @@ operator setPlaneVertexCount(
   io Integer widthSections,
   io Size newCount
 ) {
-  var Integer vi = 0;
-  var Integer ii = 0;
-
   if (lengthSections < 1) {
     lengthSections = 1;
   }
@@ -49,7 +46,7 @@ operator generatePlane(
   Integer nbLengthSections = lengthSections + 1;
   Integer nbWidthSections = widthSections + 1;
   
-  numTriangles = 2 * nbWidthSections * nbLengthSections;
+  numTriangles = 2 * widthSections * lengthSections;
   
   indices.resize(numTriangles * 3);
   
@@ -75,13 +72,13 @@ operator generatePlane(
   Integer fid = 0;
   Integer tid = 0;
   
-  for (Integer i = 0; i < nbLengthSections; i++) {
+  for (Integer i = 0; i < lengthSections; i++) {
     for (Integer j = 0; j < widthSections; j++) {
       
       Integer v0, v1, v2, v3;
       v0 = (nbWidthSections * i) + j;
-      v1 = (nbWidthSections * i) + ((j + 1) % nbWidthSections);
-      v2 = (nbWidthSections * (i+1)) + ((j + 1) % nbWidthSections);
+      v1 = (nbWidthSections * i) + (j + 1);
+      v2 = (nbWidthSections * (i+1)) + (j + 1);
       v3 = (nbWidthSections * (i+1)) + j;
       
       indices[tid++] = v0;

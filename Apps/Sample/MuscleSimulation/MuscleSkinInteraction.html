@@ -87,7 +87,8 @@ $(document).ready(function() {
   viewport.setCameraNode(camera);
   scene.constructNode("CameraManipulator", { targetNode:camera } );
   
-  
+  var light = scene.constructNode('PointLight', { position: FABRIC.RT.vec3(420.0, 1000.0, 600.0) });
+  /*
   // create the scene grid
   scene.constructNode('Instance', {
       geometryNode: scene.constructNode('Grid', {
@@ -97,7 +98,7 @@ $(document).ready(function() {
         sections_z: 20 }),
       materialNode: scene.constructNode('FlatMaterial', { color: FABRIC.RT.rgb(0.4, 0.4, 0.4) })
     });
-  
+  */
   // first create a skeleton
   var skeleton = scene.constructNode('CharacterSkeleton');
 
@@ -114,6 +115,7 @@ $(document).ready(function() {
       skeletonNode: skeleton,
       computeInverseXfos: true
     });
+  
   
   //////////////////////////////////////////////////////////////
   // Manipulators
@@ -149,8 +151,31 @@ $(document).ready(function() {
       color: FABRIC.RT.rgba(1.0, 1.0, 1.0, 1.0),
       boneradius: 0.25
     });
-  
-  
+
+  //////////////////////////////////////////////////////////////
+  //
+  var plane = scene.constructNode('Plane', {
+        length: 15,
+        width: 15,
+        lengthSections: 30,
+        widthSections: 30
+      });
+      
+    scene.constructNode('Instance', {
+      transformNode: scene.constructNode('Transform', {
+        hierarchical: false,
+        globalXfo: FABRIC.RT.xfo({ tr: FABRIC.RT.vec3(0, 6, 0) })
+      }),
+      geometryNode: plane,
+      materialNode: scene.constructNode('PhongMaterial', {
+        diffuseColor: FABRIC.RT.rgb(0.8, 0.5, 0.2),
+        lightNode: light
+      })
+    })
+    .setMaterialNode( scene.constructNode('WireframeMaterial', {
+        color: FABRIC.RT.rgb(0.2, 0.2, 0.2, 1)
+      }));
+
   //////////////////////////////////////////////////////////////
   // Muscle System
   
@@ -163,6 +188,11 @@ $(document).ready(function() {
     xfo: FABRIC.RT.xfo( {
         tr: FABRIC.RT.vec3( 0, 5, 0)
       })
+    });
+  
+  var muscleSystem = scene.constructNode('MuscleSkinDeformation', {
+      muscleSystem: muscleSystem,
+      baseSkinMesh: plane
     });
   
   $('#loadingDialog').dialog({

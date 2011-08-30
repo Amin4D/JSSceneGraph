@@ -161,6 +161,12 @@ FABRIC.SceneGraph.registerNodeType('Geometry', {
     geometryNode.pub.setVertexCount = function(count) {
       attributesdgnode.setCount(count);
     };
+    geometryNode.pub.getBulkAttributeData = function( pointIds ) {
+      return attributesdgnode.getSlicesBulkData( pointIds );
+    };
+    geometryNode.pub.setBulkAttributeData = function( attributeData ) {
+      return attributesdgnode.setSlicesBulkData( attributeData );
+    };
     // This method is used by the parsers such as the collada parser to load
     // parsed data into a constructed geometry.
     geometryNode.pub.loadGeometryData = function(data, datatype, sliceindex) {
@@ -742,6 +748,7 @@ FABRIC.SceneGraph.registerNodeType('Instance', {
   FABRIC.SceneGraph.registerNodeType('ObjLoadTriangles', {
     factoryFn: function(options, scene) {
       scene.assignDefaults(options, {
+        removeParsersOnLoad: false
       });
 
       options.uvSets = 1; //To refine... what if there is no UV set??
@@ -765,6 +772,7 @@ FABRIC.SceneGraph.registerNodeType('Instance', {
 
       trianglesNode.getAttributesDGNode().addDependency(resourceloaddgnode, 'resource');
       trianglesNode.getUniformsDGNode().addDependency(resourceloaddgnode, 'resource');
+      trianglesNode.pub.addUniformValue('reload', 'Boolean', true);
 
       trianglesNode.setGeneratorOps([
         scene.constructOperator({
@@ -773,6 +781,7 @@ FABRIC.SceneGraph.registerNodeType('Instance', {
           entryFunctionName: 'setObjVertexCount',
           parameterLayout: [
             'resource.handle',
+            'uniforms.reload',
             'self.newCount'
           ]
         }),
@@ -785,7 +794,8 @@ FABRIC.SceneGraph.registerNodeType('Instance', {
             'uniforms.indices',
             'self.positions[]',
             'self.normals[]',
-            'self.uvs0[]'
+            'self.uvs0[]',
+            'uniforms.reload'
           ]
         })
       ]);
@@ -793,6 +803,10 @@ FABRIC.SceneGraph.registerNodeType('Instance', {
       trianglesNode.pub.getResourceLoadNode = function() {
         return resourceLoadNode;
       };
+      
+      resourceLoadNode.pub.addOnLoadCallback( function(){
+        trianglesNode.getAttributesDGNode().bindings.empty();
+      });
 
       return trianglesNode;
     }

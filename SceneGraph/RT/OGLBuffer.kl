@@ -1,16 +1,15 @@
-
 //
 // Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
 //
 
-
+use FabricOGL;
 
 function OGLBuffer.genBuffer(
   Data bufferData,
   Size bufferSize,
   Size bufferDataElementCount
 ) {
-  if (self.bufferID <= 0 || bufferDataElementCount != self.elementCount || self.bufferType == GL_DYNAMIC_DRAW || self.reload) {
+  if (self.bufferID <= 0 || bufferDataElementCount != self.elementCount || self.bufferUsage == GL_DYNAMIC_DRAW || self.reload) {
     if (self.bufferID != 0 && (bufferDataElementCount != self.elementCount || self.reload)) {
       var Size bufferIDs[];
       bufferIDs.push(Size(self.bufferID));
@@ -25,9 +24,9 @@ function OGLBuffer.genBuffer(
         self.bufferID = Integer(buffers[0]);
       }
       // Now fill the buffer with the data
-      glBindBuffer(GL_ARRAY_BUFFER, self.bufferID);
-      glBufferData(GL_ARRAY_BUFFER, bufferSize, bufferData, self.bufferType);
-      glBindBuffer(GL_ARRAY_BUFFER, 0);
+      glBindBuffer(self.bufferType, self.bufferID);
+      glBufferData(self.bufferType, bufferSize, bufferData, self.bufferUsage);
+      glBindBuffer(self.bufferType, 0);
       self.elementCount = bufferDataElementCount;
     }
     self.reload = false;
@@ -39,7 +38,7 @@ function OGLBuffer.bindBuffer(
 ) {
   if (self.bufferID > 0) {
     var Data NULL;
-    glBindBuffer(GL_ARRAY_BUFFER, self.bufferID);
+    glBindBuffer(self.bufferType, self.bufferID);
     if (bufferLocation != - 1) {
       glEnableVertexAttribArray(bufferLocation);
       glVertexAttribPointer(bufferLocation, self.numBufferElementComponents, self.bufferElementComponentType, GL_FALSE, self.elementDataSize, NULL);
@@ -47,6 +46,6 @@ function OGLBuffer.bindBuffer(
     else {
       report('Invalid shader attribute location for VBO.');
     }
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindBuffer(self.bufferType, 0);
   }
 }

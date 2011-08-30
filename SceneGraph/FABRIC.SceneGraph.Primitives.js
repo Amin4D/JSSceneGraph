@@ -613,21 +613,25 @@ FABRIC.SceneGraph.registerNodeType('Cylinder', {
         radius: 2.0,
         height: 5.0,
         caps: true,
-        detail: 5
+        sides: 12,
+        loops: 0
       });
 
+    options.uvSets = 1;
     var cylinderNode = scene.constructNode('Triangles', options);
     cylinderNode.pub.addUniformValue('radius', 'Scalar', options.radius);
     cylinderNode.pub.addUniformValue('height', 'Scalar', options.height);
     cylinderNode.pub.addUniformValue('caps', 'Boolean', options.caps);
-    cylinderNode.pub.addUniformValue('detail', 'Integer', options.detail);
+    cylinderNode.pub.addUniformValue('sides', 'Integer', options.sides);
+    cylinderNode.pub.addUniformValue('loops', 'Integer', options.loops);
 
     // getters and setters
     var uniforms = cylinderNode.getUniformsDGNode();
     cylinderNode.addMemberInterface(uniforms, 'radius', true);
     cylinderNode.addMemberInterface(uniforms, 'height', true);
     cylinderNode.addMemberInterface(uniforms, 'cap', true);
-    cylinderNode.addMemberInterface(uniforms, 'detail', true);
+    cylinderNode.addMemberInterface(uniforms, 'sides', true);
+    cylinderNode.addMemberInterface(uniforms, 'loops', true);
 
     cylinderNode.setGeneratorOps([
       scene.constructOperator({
@@ -636,7 +640,8 @@ FABRIC.SceneGraph.registerNodeType('Cylinder', {
         entryFunctionName: 'setCylinderVertexCount',
         parameterLayout: [
           'uniforms.caps',
-          'uniforms.detail',
+          'uniforms.sides',
+          'uniforms.loops',
           'self.newCount'
         ]
       }),
@@ -648,11 +653,13 @@ FABRIC.SceneGraph.registerNodeType('Cylinder', {
           'uniforms.radius',
           'uniforms.height',
           'uniforms.caps',
-          'uniforms.detail',
+          'uniforms.sides',
+          'uniforms.loops',
 
           'uniforms.indices',
           'self.positions[]',
-          'self.normals[]'
+          'self.normals[]',
+          'self.uvs0[]'
         ]
       })
     ]);

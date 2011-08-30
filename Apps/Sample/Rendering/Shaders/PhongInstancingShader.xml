@@ -15,10 +15,11 @@
     <uniform name="u_materialShininess" constant="shininess" type="Scalar" defaultValue="20.0"/>
     
     <uniform name="u_modelViewProjectionMatrix" constant="modelViewProjectionMatrix" type="Mat44" owner="instance"/>
-    <uniform name="u_modelViewMatrix" constant="modelViewMatrix" type="Mat44" owner="instance"/>
-    <uniform name="u_normalMatrix" constant="normalMatrix" type="Mat33" owner="instance"/>
+    <uniform name="u_modelMatrix" constant="modelMatrix" type="Mat44" owner="instance"/>
+    <uniform name="u_viewMatrix" constant="viewMatrix" type="Mat44" owner="instance"/>
+    <uniform name="u_projectionMatrix" constant="projectionMatrix" type="Mat44" owner="instance"/>
     
-    <uniform name="u_instanceOffsets" constant="instanceOffsets" type="Mat44[]" owner="material" />
+    <uniform name="u_instanceTransforms" constant="instanceTransforms" type="Mat44[]" owner="material" />
   </uniforms>
   
   <attributes>
@@ -36,13 +37,15 @@
   
   <vertexshader>
     <source>
+      <![CDATA[
       uniform mat4 u_modelViewProjectionMatrix;
-      uniform mat4 u_modelViewMatrix;
-      uniform mat3 u_normalMatrix;
+      uniform mat4 u_viewMatrix;
+      uniform mat4 u_projectionMatrix;
+      uniform mat4 u_modelMatrix;
       uniform vec4 u_lightPosition;
       
       
-      uniform mat4 u_instanceOffsets[NUM_INSTANCES];
+      uniform mat4 u_instanceTransforms[NUM_INSTANCES];
       
       attribute vec4 a_position;
       attribute vec3 a_normal;
@@ -53,14 +56,20 @@
       
 
       void main(){
-        normal = u_normalMatrix * a_normal;
-        vec4 modelCameraPosition = u_modelViewMatrix * a_position;
+	mat4 modelViewMatrix = u_viewMatrix * u_instanceTransforms[gl_InstanceID] * u_modelMatrix;
+	mat4 modelViewProjectionMatrix = u_projectionMatrix * modelViewMatrix;
+      
+	mat3 normalMatrix = transpose(inverse(mat3(modelViewMatrix[0].xyz, modelViewMatrix[1].xyz, modelViewMatrix[2].xyz)));
+    
+        normal = normalMatrix * a_normal;
+        vec4 modelCameraPosition = modelViewMatrix * a_position;
   
         lightDir = vec3(u_lightPosition - modelCameraPosition);
 
         viewDir = vec3(-modelCameraPosition);
-        gl_Position = u_modelViewProjectionMatrix * u_instanceOffsets[gl_InstanceID] * a_position;
+        gl_Position = modelViewProjectionMatrix * a_position;
       }
+      ]]>
     </source>
   </vertexshader>
   

@@ -23,7 +23,6 @@
     
     <uniform name="u_modelMatrix" constant="modelMatrix" type="Mat44" owner="instance"/>
     <uniform name="u_modelMatrixInverse" constant="modelMatrixInverse" type="Mat44" owner="instance"/>
-    <uniform name="u_viewMatrix" constant="viewMatrix" type="Mat44" owner="instance"/>
     <uniform name="u_cameraPos" constant="cameraPos" type="vec3" owner="instance"/>
   </uniforms>
   <attributes>
@@ -57,7 +56,6 @@
       
       uniform mat4 u_modelMatrix;
       uniform mat4 u_modelMatrixInverse;
-      uniform mat4 u_viewMatrix;
       uniform vec3 u_cameraPos;
       
       

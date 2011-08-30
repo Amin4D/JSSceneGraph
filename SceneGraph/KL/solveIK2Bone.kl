@@ -1,7 +1,9 @@
-
 //
 // Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
 //
+
+use Xfo;
+use Bone;
 
 operator solveIK2Bone(
   io Xfo pose[],

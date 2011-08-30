@@ -1,8 +1,10 @@
-
 //
 // Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
 //
 
+use FabricOGL;
+use OGLBuffer;
+use OGLShaderProgram;
 
 operator preDrawSpritePoints(
   io Scalar pointSize
@@ -35,11 +37,15 @@ operator setPointCount(
 }
 
 operator drawPoints(
-  io OGLBuffer positionsBuffer,
+  io OGLShaderProgram shaderProgram,
   io Boolean drawToggle
 ) {
-  //  report( "drawPoints:" + pointCount );
-  if (drawToggle) {
-    glDrawArrays(GL_POINTS, 0, positionsBuffer.elementCount);
+  if(shaderProgram.debug){
+    report("drawPoints:"+shaderProgram.name);
   }
+  if (drawToggle) {
+    shaderProgram.preDraw();
+    glDrawArrays(GL_POINTS, 0, shaderProgram.attributesElementCount);
+  }
+  shaderProgram.postDraw();
 }

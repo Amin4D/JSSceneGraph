@@ -1,8 +1,10 @@
-
 //
 // Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
 //
 
+use Mat44;
+use Xfo;
+use Bone;
 
 operator calcInverseBindPose(io Bone bones[], io Mat44 invGlobalMat44[]) {
   report('calcInverseBindPose\n');

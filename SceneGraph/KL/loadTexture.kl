@@ -1,7 +1,9 @@
-
 //
 // Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
 //
+
+use OGLTexture2D;
+use FabricOGL, FabricPNG, FabricTGA, FabricHDR;
 
 function decodeLDRImageData(
   io FabricResource resource,

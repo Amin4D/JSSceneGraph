@@ -39,6 +39,9 @@ FABRIC.SceneGraph.registerNodeType('Particles', {
     }
 
     var particlesNode = scene.constructNode('Points', options);
+    
+    particlesNode.pub.setAttributeDynamic('positions');
+    
     particlesNode.pub.addVertexAttributeValue('orientations', 'Vec3');
     particlesNode.pub.addVertexAttributeValue('velocities', 'Vec3');
 

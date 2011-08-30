@@ -21,7 +21,7 @@
 		<uniform name="u_modelViewMatrix" constant="modelViewMatrix" type="Mat44" owner="instance"/>
 		<uniform name="u_normalMatrix" constant="normalMatrix" type="Mat33" owner="instance"/>
 		
-		<uniform name="u_boneMatrices" constant="boneMatrices" type="Mat44" owner="characterInstance"/>
+		<uniform name="u_skinningMatrices" constant="skinningMatrices" type="Mat44" owner="characterInstance"/>
 	</uniforms>
 	
 	<attributes>
@@ -57,15 +57,15 @@
 			uniform vec4 u_lightPosition;
 			
 			// This is an array of all the bones in a skeleton.
-			uniform mat4 u_boneMatrices[NUM_BONES];
+			uniform mat4 u_skinningMatrices[NUM_BONES];
 			
 			attribute vec4 a_position;
 			attribute vec4 a_texCoord;
 			attribute vec3 a_normal;
 			attribute vec4 a_tangent;
 			
-			attribute mat3 a_weight;
-			attribute mat3 a_index;
+			attribute vec4 a_weight;
+			attribute vec4 a_index;
 			
 			varying vec3 normal;
 			varying vec3 tangent;

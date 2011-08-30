@@ -1,9 +1,9 @@
-
 //
 // Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
 //
 
-
+use Xfo, Mat33, Mat44;
+use OGLShaderProgram;
 
 function loadModelProjectionMatricesFn(
   io OGLShaderProgram shaderProgram,
@@ -23,6 +23,10 @@ function loadModelProjectionMatricesFn(
     shaderProgram.loadMat44Uniform(location, Mat44(modelXfo).inverse());
   }
   location = shaderProgram.getUniformLocation(VIEWMATRIX_ATTRIBUTE_ID);
+  if(location!=-1){
+    shaderProgram.loadMat44Uniform(location, cameraMatrix);
+  }
+  location = shaderProgram.getUniformLocation(CAMERAMATRIX_ATTRIBUTE_ID);
   if(location!=-1){
     // Some shaders need the world space transform of the camera.
     // The camera matrix is inverted. 

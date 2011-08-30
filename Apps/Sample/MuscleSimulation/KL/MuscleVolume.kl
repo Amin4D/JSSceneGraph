@@ -1,0 +1,920 @@
+
+
+#include '../../../SceneGraph/KL/evaluateKeyframeAnimationTrack.kl'
+
+use BezierKeyframe;
+use Color;
+use Vec2;
+use Vec3;
+use Xfo;
+use FabricOGL;
+
+function Scalar clamp(in Scalar val, in Scalar minval, in Scalar maxval){
+  return (val < minval ? minval : (val > maxval ? maxval : val));
+}
+
+function Scalar lerp(in Scalar val1, in Scalar val2, in Scalar t){
+  return val1 + ((val2 - val1) * t);
+}
+
+
+function Scalar calcPolarElipse(
+  in Scalar theta,
+  in Scalar semiMajor,
+  in Scalar semiMinor
+){
+  if(semiMajor==0.0 || semiMinor==0.0){
+    return 0.0;
+  }
+  Scalar bcostheta = semiMinor*cos(theta);
+  Scalar asintheta = semiMajor*sin(theta);
+  return (semiMajor*semiMinor)/sqrt((bcostheta*bcostheta)+(asintheta*asintheta));
+}
+
+function Vec3 evalBSpline( Vec3 p1, Vec3 p2, Vec3 p3, Vec3 p4, Scalar t ){
+  Vec3 a0, a1, a2, a3;
+
+  a0 = ( p1.neg() + (p2 * 3.0) - (p3 * 3.0) + p4)/6.0;
+  a1 = ((p1 * 3.0) - (p2 * 6.0) + (p3 * 3.0))/6.0;
+  a2 = ((p1 * -3.0) + (p3 * 3.0))/6.0;
+  a3 = ( p1 + (p2 * 4.0) + p3 )/6.0;
+
+  return a3 + ((a2 + ((a1 + (a0 * t)) * t)) * t);
+}
+
+
+function Vec3 evalPiecewiseBSpline( 
+  in Xfo xfos[],
+  in Scalar u,
+  io Scalar t,
+  io Integer i
+){
+  Vec3 p;
+  t = u * Scalar(xfos.size() - 1);
+  if( t < Scalar(xfos.size() - 1) ){
+    i = Integer(floor( t ));
+    t = t - Scalar(i);
+  }
+  else{
+    i = xfos.size() - 2;
+    t = 1.0;
+  }
+
+  if( i == 0 ){
+    p = xfos[ i ].tr + ( xfos[ i ].tr - xfos[ i + 1 ].tr );
+    return evalBSpline( p, xfos[ i ].tr, xfos[ i + 1 ].tr, xfos[ i + 2 ].tr, t );
+  }
+  else if( i == ( xfos.size() - 2 ) ){
+    p = xfos[ i + 1 ].tr + ( xfos[ i + 1 ].tr - xfos[ i ].tr );
+    return evalBSpline( xfos[ i - 1 ].tr, xfos[ i ].tr, xfos[ i + 1 ].tr, p, t );
+  }
+  else{
+    return evalBSpline( xfos[ i - 1 ].tr, xfos[ i ].tr, xfos[ i + 1 ].tr, xfos[ i + 2 ].tr, t );
+  }
+}
+
+
+// This function gets used to generate the initial rays that are fired at the muscle meshes.
+function Ray muscleUVtoRay(
+  in Scalar u,
+  in Scalar v,
+  in Xfo xfos[] )
+{
+  Mat44 mat;
+  Quat sampleframe;
+  Integer i;
+  Scalar angle, t;
+  Ray outRay;
+
+  Scalar PI = 3.141592653589793238462643383279;
+  
+  angle = v * PI * 2.0;  
+  outRay.direction.set( 0.0, -cos( angle ), -sin( angle ) );
+
+  outRay.start = evalPiecewiseBSpline( xfos, u, t, i );
+
+  // Due to the face that nlerp exibits a slight ease in and ease out on the rotations
+  // I think it is a better slution to interpollating segments. 
+  // The one exception would be several segments in arow that were evenly twisted. 
+  sampleframe =  xfos[ i ].ori.nlerp( xfos[ i + 1 ].ori, t );
+
+  outRay.direction = sampleframe.rotateVector( outRay.direction );
+  return outRay;
+}
+
+
+
+
+function Color lookupDisplacementMap(
+  in Size displacementMapResolution,
+  in Color displacementMap[],
+  in Vec2 uv
+  ){
+  Integer uindex = Integer(uv.x * Scalar(displacementMapResolution-1));
+  Integer vindex = Integer(uv.y * Scalar(displacementMapResolution-1));
+  return displacementMap[(vindex * displacementMapResolution) + uindex];
+}
+
+operator generateDisplacementMap(
+  io Size displacementMapResolution,
+  
+  io BezierKeyframe quadrantCurve0[],
+  io BezierKeyframe quadrantCurve1[],
+  io BezierKeyframe quadrantCurve2[],
+  io BezierKeyframe quadrantCurve3[],
+  io Color displacementMap[],
+  io Boolean regenerate
+  
+  /*
+  io Xfo initialXfos[],
+  io Xfo baseMuscleXfo,
+  
+  io TriangleMesh boundingMesh
+  */
+) {
+  if (regenerate) {
+    displacementMap.resize(displacementMapResolution * displacementMapResolution);
+    Scalar u, v;
+    Scalar val0, val1, val2, val3, val;
+    Integer keyIndex;
+
+    var Size idx = 0;
+    for (var Integer y = 0; y < displacementMapResolution; y++) {
+      u = Scalar(y) / Scalar(displacementMapResolution-1);
+      
+      keyIndex = 0;
+      val0 = evaluateKeyframeAnimationTrack(quadrantCurve0, u, keyIndex);
+      keyIndex = 0;
+      val1 = evaluateKeyframeAnimationTrack(quadrantCurve1, u, keyIndex);
+      keyIndex = 0;
+      val2 = evaluateKeyframeAnimationTrack(quadrantCurve2, u, keyIndex);
+      keyIndex = 0;
+      val3 = evaluateKeyframeAnimationTrack(quadrantCurve3, u, keyIndex);
+      
+      for (var Integer x = 0; x < displacementMapResolution; x++) {
+        v = Scalar(x) / Scalar(displacementMapResolution);
+        Integer quadrant = Integer(floor(u * 4.0));
+        switch(quadrant){
+          case 0: val = calcPolarElipse( v, val0, val1 ); break;
+          case 1: val = calcPolarElipse( v, val1, val2 ); break;
+          case 2: val = calcPolarElipse( v, val2, val3 ); break;
+          case 3: val = calcPolarElipse( v, val3, val0 ); break;
+        }
+        displacementMap[idx].r = val;
+        /*
+        if(false){
+          Ray ray = muscleUVtoRay( u, v, initialXfos );
+          // Fire the ray into the mesh, and get the distance to the mesh surface
+          RayIntersection intersection;
+          if( boundingMesh.intersectRay( ray, intersection ) ){
+            displacementMap[idx] = intersection.distance;
+          }
+        }
+        */
+        idx++;
+      }
+    }
+  }
+}
+
+
+operator generateSystemDisplacementMap(
+  io Size displacementMapResolution,
+  io Scalar systemDisplacementMap[],
+  io Scalar displacementMaps[][],
+  io Size bufferID,
+  io Integer textureUnit
+) {
+  if (!bufferID) {
+    Scalar texData[];
+    texData.resize(displacementMapResolution * displacementMaps.size());
+
+    // Here we merge the displacement maps from all the different muscles into
+    // one big map that we can pass to the shader for rendering. Similar to a
+    // texture atlas. 
+    var Size idx = 0;
+    for (var Integer i = 0; i < displacementMaps.size(); i++) {
+      for (var Integer x = 0; x < displacementMapResolution; x++) {
+        for (var Integer y = 0; y < displacementMapResolution; y++) {
+          texData[idx] = displacementMaps[i][idx];
+          idx++;
+        }
+      }
+    }
+    
+    Integer size_x = displacementMapResolution * displacementMaps.size();
+    Integer size_y = displacementMapResolution;
+    
+
+    var Size buffers[];
+    buffers.push(Size(bufferID));
+    glGenTextures(1, buffers);
+    glActiveTexture(GL_TEXTURE0 + textureUnit);
+    glBindTexture(GL_TEXTURE_2D, bufferID);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16, size_x, size_y, 0, GL_RGBA, GL_UNSIGNED_BYTE, texData.data());
+  }
+  else {
+    glActiveTexture(GL_TEXTURE0 + textureUnit);
+    glBindTexture(GL_TEXTURE_2D, bufferID);
+  }
+}
+
+operator deformMuscleVolume(
+  io Size displacementMapResolution,
+  io Color displacementMap[],
+  io Xfo xfos[],
+  io Scalar compressionFactor,
+  io Vec3 parentpositions[],
+  io Vec3 parentnormals[],
+  io Vec2 parentuvs[],
+  io Vec3 position,
+  io Vec3 normal,
+  in Size index
+){
+  Scalar t;
+  Integer i;
+  Vec3 corepos = evalPiecewiseBSpline( xfos, parentpositions[index].x, t, i );
+  
+  Color volumePixel = lookupDisplacementMap(
+    displacementMapResolution,
+    displacementMap,
+    parentuvs[index]
+  );
+//  Scalar inflation = mix(coreInflationValues[i], coreInflationValues[i+1], t );
+  
+  Vec3 frameoffsetvec = parentpositions[index] * volumePixel.r * compressionFactor;
+  frameoffsetvec.x = 0.0;
+  Quat frame = xfos[i].ori.nlerp( xfos[i+1].ori, t );
+  normal = frame.rotateVector( frameoffsetvec );
+  position = corepos + normal;
+  normal.setUnit();
+}
+
+
+
+//******************************************************************************
+// FindQuadraticRoots
+//
+//      return(2): 2 real roots
+//      return(1): 1 real, Scalar root
+//      return(0): 2 complex roots
+//
+//  The imaginary component may be NULL if not desired.
+//******************************************************************************
+
+
+function Integer findQuadraticRoots(
+  Scalar coeff[3],
+  io Scalar re[2]
+){
+
+  Scalar a = coeff[2];    // Quadratic coefficient 
+  Scalar b = coeff[1];    // Linear coefficient 
+  Scalar c = coeff[0];    // Constant coefficient
+
+  if( abs( a ) < 0.000001 ){
+    // If the quadratic coefficient(a) is 0.0 then this equation becomes linear
+    re[0] = -c/b;
+    return 1;
+  }
+
+  Scalar d = b * b - 4.0 * a * c;
+  
+  // Two real, distinct roots 
+  if (d > 0.0) {
+    Scalar q;
+    d = sqrt(d);
+    q = (-b + ((b < 0) ? -d : d)) * 0.5;
+    re[0] = q / a;
+    re[1] = c / q;
+    return 2;
+  }
+  
+  // One real Scalar root 
+  else if (d == 0.0) {
+    re[0] = re[1] = -b / (2.0 * a);
+    return (1);
+  }
+  
+  // Two complex conjugate roots 
+  else {                                      // d < 0 
+    re[0] = re[1] = -b / (2.0 * a);
+ //   if (im != NULL) {
+ //       im[0] = d / (2 * a);
+ //       im[1] = -im[0];
+ //   }
+    return 0;
+  }
+}
+
+
+// http://www.worldserver.com/turk/opensource/FindCubicRoots.c.txt
+
+// Copyright (C) 1997-2001 Ken Turkowski. <turk@computer.org>
+//
+// All rights reserved.
+//
+// Warranty Information
+//  Even though I have reviewed this software, I make no warranty
+//  or representation, either express or implied, with respect to this
+//  software, its quality, accuracy, merchantability, or fitness for a
+//  particular purpose.  As a result, this software is provided "as is,"
+//  and you, its user, are assuming the entire risk as to its quality
+//  and accuracy.
+//
+// This code may be used and freely distributed as long as it includes
+// this copyright notice and the above warranty information.
+///
+
+//******************************************************************************
+// FindCubicRoots
+//
+//  Solve:
+//      coeff[3] * x^3 + coeff[2] * x^2 + coeff[1] * x + coeff[0] = 0
+//
+//  returns:
+//      3 - 3 real roots
+//      1 - 1 real root (2 complex conjugate)
+//******************************************************************************
+
+function Integer findCubicRoots(
+  in Scalar coeff[4],
+  io Scalar x[3]
+){
+  if( abs( coeff[3] ) < 0.000001 ){
+    // If the cubic coefficient(A) is 0.0 then this equation becomes a quadratic
+    Scalar quadraticoeff[3];
+    quadraticoeff[0] = coeff[0];
+    quadraticoeff[1] = coeff[1];
+    quadraticoeff[2] = coeff[2];
+    Scalar quadratiroots[2];
+    Integer result = findQuadraticRoots( quadraticoeff, quadratiroots );
+    x[0] = quadratiroots[0];
+    x[1] = quadratiroots[1];
+    return result;
+  }
+
+  Scalar PI = 3.14159265358979323846;
+  Scalar a1 = coeff[2] / coeff[3];
+  Scalar a2 = coeff[1] / coeff[3];
+  Scalar a3 = coeff[0] / coeff[3];
+  
+  Scalar Q = (a1 * a1 - 3.0 * a2) / 9.0;
+  Scalar R = (2.0 * a1 * a1 * a1 - 9.0 * a1 * a2 + 27.0 * a3) / 54.0;
+  Scalar Qcubed = Q * Q * Q;
+  Scalar d = Qcubed - R * R;
+  
+  // Three real roots 
+  if (d >= 0) {
+    Scalar theta = acos( R / sqrt( Qcubed ));
+    Scalar sqrtQ = sqrt( Q );
+    x[0] =  -2 * sqrtQ * cos( theta               / 3.0) - a1 / 3.0;
+    x[1] =  -2 * sqrtQ * cos((theta + 2.0 * PI) / 3.0) - a1 / 3.0;
+    x[2] =  -2 * sqrtQ * cos((theta + 4.0 * PI) / 3.0) - a1 / 3.0;
+    return (3);
+  }
+
+  // One real root 
+  else {
+    Scalar e = pow( sqrt( -d ) + abs( R ), 1.0 / 3.0);
+    if (R > 0.0){
+      e = -e;
+    }
+    x[0] = Scalar( (e + Q / e) - a1 / 3.0 );
+    return 1;
+  }
+}
+
+
+///////////////////////////////////////////////////////////////////////////////////////
+// Coplanarity test for 4 moving points. 
+// These moving points could either be a point and a triangle, or 2 edges. 
+// The returned fraction tells us if they will be coplanar within the next time step
+// http://wscg.zcu.cz/wscg2007/Papers_2007/journal/D11-full.pdf
+//
+// a3 = v21 · v31 × v41
+// a2 = x21 · v31 × v41 ? v41 · x31 × v21 ? v21 · x41 × v31
+// a1 = v41 · x21 × x31 ? x21 · x41 × v31 ? x41 · x31 × v21
+// a0 = x41 · x21 × x31 (2)
+//
+// P(t) = a3·t^3 + a2·t^2 + a1·t + a0
+
+function Boolean testCoplanarity(
+  in Vec3 x1,
+  in Vec3 x2,
+  in Vec3 x3,
+  in Vec3 x4,
+  in Vec3 v1,
+  in Vec3 v2,
+  in Vec3 v3,
+  in Vec3 v4,
+  io Scalar outFraction
+){
+  Vec3 x21, x31, x41, v21, v31, v41;
+  
+  // due to raounding error, sometimtes wee need to be a bit forgiving on the root finder. 
+  Scalar fuzzyness = 0.0001;
+
+  x21 =  x2 - x1;
+  x31 =  x3 - x1;
+  x41 =  x4 - x1;
+
+  v21 =  v2 - v1;
+  v31 =  v3 - v1;
+  v41 =  v4 - v1;
+
+  // 
+  Scalar coeff[4];
+  Vec3 v31Xv41, x31Xv21, x41Xv31, x21Xx31;
+
+  v31Xv41 = v31.cross(v41);
+  x31Xv21 = x31.cross(v21);
+  x41Xv31 = x41.cross(v31);
+  x21Xx31 = x21.cross(x31);
+
+  coeff[3] = v21.dot( v31Xv41 );
+  coeff[2] = x21.dot( v31Xv41 ) - v41.dot( x31Xv21 ) - v21.dot( x41Xv31 );
+  coeff[1] = v41.dot( x21Xx31 ) - x21.dot( x41Xv31 ) - x41.dot( x31Xv21 );
+  coeff[0] = x41.dot( x21Xx31 );  
+  
+  // The points will become coplanar in the next timestep if we find at least one
+  // real root and it is between 0 and 1.
+  Scalar roots[3];
+  Integer numRoots = findCubicRoots( coeff, roots );
+  if( numRoots > 0 ){
+    if( roots[0] > (0.0 - fuzzyness) && roots[0] < (1.0 + fuzzyness) ){
+      outFraction = clamp(roots[0], 0.0, 1.0 );
+      return true;
+    }
+    if( numRoots > 1 && roots[1] >= (0.0 - fuzzyness) && roots[1] < (1.0 + fuzzyness) ){
+      outFraction = clamp(roots[1], 0.0, 1.0 ); //(Scalar)roots[1];
+      return true; 
+    }
+    if( numRoots > 2 && roots[2] >= (0.0 - fuzzyness) && roots[2] < (1.0 + fuzzyness) ){
+      outFraction = clamp(roots[2], 0.0, 1.0 ); ;//(Scalar)roots[2];
+      return true;
+    }
+  }
+  return false;
+}
+
+
+function Boolean positionToMuscleUV(
+  in Vec3 pos,
+  in Xfo xfos[],
+  io Vec2 outUV,
+  io Vec3 outCorePos,
+  io Vec3 outCoreDir
+){
+  Vec3 p1, p2, p3, p4, p5, p6, v1, v2, v3;
+  Vec3 yaxis, zaxis, yaxisStart, zaxisStart, yaxisEnd, zaxisEnd;
+
+  Scalar PI = 3.14159265358979323846;
+  Scalar TWO_PI = PI * 2.0;
+  
+  // Loop through the line segments and do a sweep test using
+  // manufactured traingle. The collision fraction is our segment u.
+  // The curvePoints should be the evaluates points on the curve.
+
+  // TODO: Determine if we ever need to store the 'CurvePoints'.
+  // the only time they are actually used is in this function to make the initial 
+  // sweep just a little bit more accurate. Durring Muscle to Muscle collisions we also use them
+  // but maybe we could just evaluate them on demand. Less data == simpler
+
+  Scalar dist;
+  Scalar bigdist = 99999.9;
+  Scalar shortestdist = bigdist;
+
+  for( Integer i = 0; i < ( xfos.size() - 1 ); i++ ){
+    yaxisStart = xfos[ i ].ori.getYaxis( );
+    zaxisStart = xfos[ i ].ori.getZaxis( );
+
+    yaxisEnd = xfos[ i + 1 ].ori.getYaxis( );
+    zaxisEnd = xfos[ i + 1 ].ori.getZaxis( );
+
+    p1 = xfos[ i ].tr;
+    p2 = p1 + yaxisStart;
+    p3 = p1 + zaxisStart;  
+
+    p4 = xfos[ i + 1 ].tr;
+    p5 = p4 + yaxisEnd;
+    p6 = p4 + zaxisEnd;
+
+    v1 = p4 - p1;
+    v2 = p5 - p2;
+    v3 = p6 - p3;
+
+    Scalar outFraction;
+    if( testCoplanarity( pos, p1, p2, p3, Vec3(0.0, 0.0, 0.0), v1, v2, v3, outFraction ) ){
+      ///////////////////////////////////////////
+      // To calculate the v value, we need to reference the linear segments only
+      outCorePos = p1.lerp( p4, outFraction );
+      outCoreDir =  pos - outCorePos;
+
+      dist = outCoreDir.length();
+      if( dist > shortestdist ){
+        // Go through all the segments, and find the closest one
+        continue;
+      }
+
+      outCoreDir /= dist;
+      shortestdist = dist;
+
+      // Pull out the -Y vector. This is the vector that goes straight down on the muscle
+      yaxis = yaxisStart.lerp( yaxisEnd, outFraction );
+      yaxis = yaxis.neg();
+      yaxis.setUnit();
+
+      zaxis = zaxisStart.lerp( zaxisEnd, outFraction );
+
+      Scalar angle = outCoreDir.angleTo( yaxis );
+      if( outCoreDir.dot( zaxis ) > 0.0 ){
+        angle = TWO_PI - angle;
+      }
+      angle /= TWO_PI;
+      
+      outUV.x = ( Scalar(i) + outFraction ) / Scalar( xfos.size() - 1 );
+      outUV.y = angle;
+    }
+  }
+  
+  return (shortestdist < bigdist);
+}
+
+
+// when a point is sticking to the surface of a muscle, it stores a uvw value. 
+// this function returns the new global position.
+function Vec3 uvwToMusclePosition(
+  in Vec3 uvw,
+  in Xfo xfos[]
+){
+  Scalar PI = 3.14159265358979323846;
+  Scalar TWO_PI = PI * 2.0;
+  
+  Vec3 offset;
+  if( uvw.x < 0.0 )
+  {
+    offset = xfos[ 0 ].ori.rotateVector( uvw );
+  //  offset *= muscle->m_scale;
+    // NOTE: We may see artifacts here doue to the fact that the inlation is not applied, 
+    // and yet it is in the code block below. 
+    return xfos[ 0 ].tr + offset;
+  }
+  else if ( uvw.x > 1.0 )
+  {
+    offset = xfos[ xfos.size()-1 ].ori.rotateVector( Vec3( uvw.x - 1.0, uvw.y, uvw.z ) );
+  //  offset *= muscle->m_scale;
+    // NOTE: We may see artifacts here doue to the fact that the inlation is not applied, 
+    // and yet it is in the code block below. 
+    return xfos[ xfos.size()-1 ].tr + offset;
+  }
+  else
+  {
+    Scalar t;
+    Integer i;
+    Vec3 pos = evalPiecewiseBSpline( xfos, uvw.x, t, i );
+
+    // Due to the fact that nlerp exibits a slight ease in and ease out on the rotations
+    // I think it is a better slution to interpollating segments. 
+    // The one exception would be several segments in arow that were evenly twisted. 
+    Quat pointframe = xfos[ i ].ori.nlerp( xfos[ i + 1 ].ori, t );
+
+    offset = pointframe.rotateVector( Vec3( 0.0, -cos( uvw.y * TWO_PI ), -sin( uvw.y * TWO_PI ) ) );
+    
+    return (offset * (uvw.z /* muscle->m_scale * muscle->GetMuscleBulge( uvw[0], uvw.y )*/)) + pos;
+  }
+}
+
+
+
+function Vec3 positionToMuscleSurfacePosition(
+  in Vec3 pos,
+  in Vec3 normal,
+  in Xfo xfos[]
+){
+  // TODO: parameterise these 2 values. 
+  Scalar fallOff = 0.0;
+  Scalar shrinkWrap = 0.0;
+  
+  Scalar PI = 3.141592653589793238462643383279;
+  Scalar TWO_PI = PI * 2.0;
+  Scalar HALF_PI = PI * 0.5;
+  
+  Vec3 corePos, posOffsetDir;
+  Vec3 orthoNormal, biNormal, posToCore, bisectingVector, muscleNormal, posProjectedOntoSlice;
+  Quat sliceframe;
+  Vec2 uv;
+  Scalar u, v, w;
+  Scalar endOffset = 0.0;// If a point is off the end of the muscle, this value will be < 0.0, || > 1.0;
+
+  if( positionToMuscleUV( pos, xfos, uv, corePos, posToCore ) ){
+    u = uv.x;
+
+    // Now evaluate the spline to get the actual position of the muscle core
+    Scalar t;
+    Integer i;
+    corePos = evalPiecewiseBSpline( xfos, u, t, i );  
+    
+    if( i < (xfos.size() - 1) ){
+      sliceframe = xfos[ i ].ori.nlerp( xfos[ i + 1 ].ori, t );
+    }
+    else{
+      sliceframe = xfos[ xfos.size() - 1 ].ori;
+    }
+  }
+  else{
+    Vec3 endPoint = xfos[ 0 ].tr;
+    Quat endFrame = xfos[ 0 ].ori;
+      
+    posToCore = pos - endPoint;
+    endOffset = posToCore.dot( endFrame.getXaxis( ) );
+    if( endOffset <= 0.001 ){
+      corePos = endPoint;
+      sliceframe = endFrame;
+      u = 0.0;
+    }
+    else{
+      endPoint = xfos[ xfos.size()-1 ].tr;
+      endFrame = xfos[ xfos.size()-1 ].ori;
+      posToCore = pos - endPoint;
+      endOffset = posToCore.dot( endFrame.getXaxis( ) );
+      if( endOffset >= -0.001 ){
+        corePos = endPoint;
+        sliceframe = endFrame;
+        u = 1.0;
+      }
+      else{
+        return Vec3(0.0,0.0,0.0);
+      }
+    }
+  }
+  //////////////////////////////////////////////////
+  // 
+  Vec3 coreTan = sliceframe.rotateVector( Vec3( 1.0, 0.0, 0.0 ) );
+
+  posProjectedOntoSlice = pos - ((pos - corePos).unit() * (pos - corePos).dot(coreTan));
+  posToCore = posProjectedOntoSlice - corePos;
+  orthoNormal = normal - (normal * normal.dot(coreTan)).unit();
+
+  biNormal = orthoNormal.cross( coreTan );
+  biNormal.setUnit();
+
+  //////////////////////////////////////////////////
+  // Push the point to the upper side of the muscle using the surface normal.
+  // this method works by calculating the width of the muscle at the closest point
+  // and then calculating a push vector that will push the point to the opposite side 
+  // of the musle, attempting to minimise distortion in the mesh. 
+
+  Scalar biNormalThickness, bisectingVvalue, biNormalProjLen, offsetAngle;
+  Scalar orthoNormalVvalue, orthoNormalThickness;
+
+  //////////////////////////////////////////////////
+  // Get the non-normalized offset vector, and project it onto the binormal
+  biNormalProjLen = posToCore.dot( biNormal );
+  Boolean  rhs = ( biNormalProjLen > 0.0 );    
+
+  //////////////////////////////////////////////////
+  // Recalculate the v value.
+  // 
+  muscleNormal = sliceframe.rotateVector(Vec3(0.0,-1.0, 0.0));
+
+  Scalar orthoNormalAngle = acos( clamp( muscleNormal.dot( orthoNormal ), -1.0, 1.0 ) );
+  if(rhs){
+    orthoNormalAngle = TWO_PI - orthoNormalAngle;
+  }
+  orthoNormalVvalue = orthoNormalAngle / TWO_PI;
+  
+  /////////////////////////////////////////////
+  orthoNormalThickness  = 1.0;//muscle->GetMuscleThickness( u, orthoNormalVvalue );
+
+  /////////////////////////////////////////////
+  // biNormalThickness
+  if( rhs ){
+    bisectingVvalue = orthoNormalVvalue - 0.25;
+    if( bisectingVvalue < 0.0)
+      bisectingVvalue += 1.0;
+  }
+  else{
+    bisectingVvalue    = orthoNormalVvalue + 0.25;
+    if( bisectingVvalue > 1.0 )
+      bisectingVvalue -= 1.0;
+  }
+  biNormalThickness      = 1.0;//muscle->GetMuscleThickness( u, bisectingVvalue );
+  
+  ///////////////////////////////////////////////////////////
+  // Modulator
+  // The modulator creates the end caps on the muscle. 
+  // cos(asin( distRatio ))
+  Scalar modulator = 1.0;
+  if( endOffset < 0.0 ){
+    Scalar distRatio = -endOffset/biNormalThickness;
+    modulator = (distRatio < 1.0) ? cos( asin( distRatio ) ) : 0.0;
+  }
+  else if( endOffset > 0.0 ){
+    Scalar distRatio = endOffset/biNormalThickness;
+    modulator = (distRatio < 1.0) ? cos( asin( distRatio ) ) : 0.0;
+  }
+
+  /////////////////////////////////////////////
+  // 
+  Integer numSamples = 5;
+  Integer i;
+  Scalar tempV, tempVprev = orthoNormalVvalue;
+  Scalar tempBiNormalProjLen, tempBiNormalProjLenPrev = 0.0;
+  Scalar tempOffsetVval, tempOffsetVvalPrev = 0.0;
+  Scalar tempOffsetAngle, tempOffsetAnglePrev = 0.0;
+  Scalar tempMuscleThickness, tempMuscleThicknessPrev = orthoNormalThickness;
+  for( i=1; i<=numSamples; i++ ){
+    tempOffsetVval  = (Scalar(i)/Scalar(numSamples)) * 0.25;
+    if( rhs ){
+      tempOffsetAngle =  tempOffsetVval * TWO_PI;
+      tempV = orthoNormalVvalue - tempOffsetVval;
+    }
+    else{
+      tempOffsetAngle = -tempOffsetVval * TWO_PI;
+      tempV = orthoNormalVvalue + tempOffsetVval;
+    }
+    
+    if( tempV > 1.0 )  tempV -= 1.0;
+    if( tempV < 0.0 )  tempV += 1.0;
+    
+    // find the shadown length of this angle
+    tempMuscleThickness = 1.0;//muscle->GetMuscleThickness( u, tempV );
+    tempBiNormalProjLen = tempMuscleThickness * sin( tempOffsetAngle ) * modulator;
+    if((rhs && tempBiNormalProjLen >= biNormalProjLen ) || ( !rhs && tempBiNormalProjLen <= biNormalProjLen)){
+      break;
+    }
+    if(i < numSamples){
+      tempBiNormalProjLenPrev   = tempBiNormalProjLen;
+      tempOffsetVvalPrev        = tempOffsetVval;
+      tempVprev                 = tempV;
+      tempOffsetAnglePrev       = tempOffsetAngle;  
+      tempMuscleThicknessPrev   = tempMuscleThickness;
+    }
+  }
+ 
+  if(i > numSamples){
+    // The point in question is not in the shadow of the muscle.
+    // We calculate a fall off here.
+    // This is so that points don't pop onto the surface of the muscle when 
+    // they come into the shadow of the muscle.
+    Scalar orthoDist = abs( posToCore.dot( biNormal ));
+    Scalar depthBelowMuscleCore = posToCore.dot( orthoNormal ) * modulator;
+
+    if(depthBelowMuscleCore < 0.0){
+      if( fallOff == 0.0 ){
+        fallOff = -depthBelowMuscleCore;
+      }
+      // Here we calculate the 
+      Scalar weight = (orthoDist - ((orthoNormalThickness < orthoDist) ? orthoNormalThickness : orthoDist )) / fallOff;
+      if( weight >= 0.9999 ){
+        return Vec3(0.0,0.0,0.0);
+      }
+    //  else if( weight < 1.0 )
+      if( weight >= 0.0 ){ //&& weight < 1.0 )
+        return (orthoNormal.unit() * orthoNormal.dot(posToCore)) * -( 1.0 - sin( acos( 1.0 - weight ) ) );
+      //  return orthoNormal.vectorProjection( posToCore ) * -( 1.0 - sin( acos( 1.0 - weight ) ) );
+      }
+    }
+    return Vec3(0.0,0.0,0.0);
+  }
+
+  Scalar fract = (biNormalProjLen - tempBiNormalProjLenPrev)/(tempBiNormalProjLen - tempBiNormalProjLenPrev);
+  if( ( tempV - tempVprev ) > 1.0 ) tempVprev -= 1.0;
+  v = lerp( tempVprev, tempV, fract );
+  Scalar angle = lerp( tempOffsetAnglePrev, tempOffsetAngle, fract );
+
+  if( v > 1.0 ) v -= 1.0;
+  if( v < 0.0 ) v += 1.0;
+  w = 1.0;//muscle->GetMuscleThickness( u, v ) * modulator;
+
+  posOffsetDir = (biNormal * sin( angle )) + (orthoNormal * cos( angle ));
+
+
+  ////////////////////////////////////////////////////////////////////////////////
+  // If the point is below the muscle(angle > HALF_PI), or above but inside(distToCore < w).
+  Scalar distToCore = posToCore.length();
+  posToCore /= distToCore;
+
+  offsetAngle = orthoNormal.angleTo( posToCore );
+
+  if( distToCore < w  || shrinkWrap > 0.0 || abs( offsetAngle ) > HALF_PI ){
+    if( abs( offsetAngle ) < HALF_PI && w < distToCore ){
+      return (posOffsetDir * (w * shrinkWrap) + corePos) - posProjectedOntoSlice;
+    }
+    else{
+      return ((posOffsetDir * w) + corePos) - posProjectedOntoSlice;
+    }
+  }
+  
+  return Vec3(0.0,0.0,0.0);
+}
+
+
+
+
+function Vec3 positionToMuscleUVW(
+  in Vec3 pos,
+  in Xfo xfos[]
+){
+  Vec3 corePos, coreDir;
+  Vec2 uv;
+
+  if( positionToMuscleUV( pos, xfos, uv, corePos, coreDir ) ){
+    // Now evaluate the spline to get the actual position of the muscle core
+    Integer i;
+    Scalar t;
+    corePos = evalPiecewiseBSpline( xfos, uv.x, t, i );
+    return Vec3(uv.x,
+                uv.y,
+                ( corePos - pos ).length());
+  }
+  else
+  {
+    coreDir = pos - xfos[ 0 ].tr;
+    if( coreDir.dot( xfos[ 0 ].ori.getXaxis() ) < 0.0 ){
+      Quat endFrame = xfos[ 0 ].ori;
+      return Vec3( coreDir.dot( endFrame.getXaxis() ),
+                   coreDir.dot( endFrame.getYaxis() ),
+                   coreDir.dot( endFrame.getZaxis() ));
+    }
+
+    coreDir = pos - xfos[ xfos.size()-1 ].tr;
+    if( coreDir.dot( xfos[ xfos.size()-1 ].ori.getXaxis( ) ) > 0.0 ){      
+      Quat endFrame = xfos[ xfos.size()-1 ].ori;
+      return Vec3(1.0 + ( coreDir.dot( endFrame.getXaxis( ) )  ),
+                  coreDir.dot( endFrame.getYaxis() ),
+                  coreDir.dot( endFrame.getZaxis() ));
+    }
+  }
+  return Vec3(0.0, 0.0, 0.0);
+}
+
+
+
+operator calcSkinStickLocations(
+  io Xfo initialXfos[][],
+  io Vec3 parentpositions[],
+
+  io Scalar muscleBindingIds[4],
+  io Vec3 sticklocations[4],
+  in Size index
+){
+  Vec3 stickDelta;
+  for(Integer i=0; i<4; i++){
+    if(muscleBindingIds[i] >= 0){
+      sticklocations[i] = positionToMuscleUVW(parentpositions[index], initialXfos[muscleBindingIds[i]]);
+    }
+  }
+}
+
+operator deformSkin(
+  io Integer displacementMapResolution,
+  io Color displacementMaps[][],
+  io Xfo simulatedXfos[][],
+  io Scalar inflationValues[],
+  io Vec3 parentpositions[],
+  io Vec3 parentnormals[],
+  io Vec2 parentuvs[],
+  io Vec3 position,
+  io Vec3 normal,
+  
+  io Scalar muscleBindingIds[4],
+  io Scalar muscleBindingWeights[4],
+  io Scalar stickweight,
+  io Vec3 sticklocations[4],
+  io Scalar slideweight,
+  io Scalar bulgeweight,
+  in Size index
+){
+  position = parentpositions[index];
+  // Sticking
+  Vec3 stickDelta;
+  for(Integer i=0; i<4; i++){
+    if(muscleBindingIds[i] >= 0 && muscleBindingWeights[i] > 0.0){
+      Vec3 stickPos = uvwToMusclePosition(sticklocations[i], simulatedXfos[muscleBindingIds[i]]);
+      stickDelta += (stickPos - position) * muscleBindingWeights[i];
+    }
+  }
+  position += stickDelta;
+  // Sliding
+  Vec3 slideDelta;
+  for(Integer i=0; i<4; i++){
+    if(muscleBindingIds[i] >= 0 && muscleBindingWeights[i] > 0.0){
+      slideDelta += positionToMuscleSurfacePosition( position, normal, simulatedXfos[muscleBindingIds[i]] ) * muscleBindingWeights[i];
+    }
+  }
+  position += stickDelta;
+  
+  // Bulging
+  Vec3 bulgeDelta;
+  for(Integer i=0; i<4; i++){
+    if(muscleBindingIds[i] >= 0 && muscleBindingWeights[i] > 0.0){
+      bulgeDelta += normal * (muscleBindingWeights[i] * bulgeweight);
+    }
+  }
+  position += bulgeDelta;
+
+}
+
+

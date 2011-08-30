@@ -1,7 +1,20 @@
-
 //
 // Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
 //
+
+use Vec3, Quat, Mat44, RotationOrder, Euler;
+
+function Xfo() {
+  self.tr = self.tr.setNull();
+  self.ori = self.ori.inv();
+  self.sc = self.sc.inv();
+}
+
+function Xfo.identity() {
+  self.tr.setNull();
+  self.ori.identity();
+  self.sc = Vec3(1.0, 1.0, 1.0);
+}
 
 function Xfo * (in Xfo local, in Xfo global) {
   var Quat lcl_ori = local.ori.unit();

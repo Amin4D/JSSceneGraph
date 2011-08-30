@@ -21,6 +21,7 @@ FABRIC.SceneGraph.CharacterSolvers = {
       throw ("CharacterSolver '" + type + "' is not registered.");
     }
     var solver = this.solvers[type](options, scene);
+    solver.name = options.name;
     solver.type = type;
     return solver;
   }

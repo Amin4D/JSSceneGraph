@@ -1,9 +1,13 @@
-
 //
 // Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
 //
 
-#include 'FABRIC_ROOT/SceneGraph/Resources/KL/drawTexture.kl'
+#include 'FABRIC_ROOT/SceneGraph/KL/drawTexture.kl'
+
+use OGLRenderTarget;
+use OGLShaderProgram;
+use OGLTexture2D;
+use FabricOGL;
 
 operator bindRenderTarget(
   io OGLRenderTarget renderTarget

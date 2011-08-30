@@ -41,7 +41,7 @@ FABRIC.SceneGraph.registerNodeType('MuscleSystem', {
     
     simulationdgnode.addDependency( characterRig.getDGNode(), 'characterRig');
     simulationdgnode.addDependency( scene.getGlobalsNode(), 'globals');
-    /*
+    
     simulationdgnode.bindings.append(
       scene.constructOperator({
         operatorName: 'matchCount',
@@ -55,7 +55,7 @@ FABRIC.SceneGraph.registerNodeType('MuscleSystem', {
           'self.newCount'
         ]
       }));
-    */
+    
     /////////////////////////////////////////////////////////
     // Configure the muscle default values. 
     var pointXfos = [],
@@ -429,12 +429,12 @@ operator loadUniform(\n\
           diffuseColor: FABRIC.RT.rgba(0.8, 0.0, 0.0, 0.5),
           lightNode: scene.constructNode('PointLight', { position: FABRIC.RT.vec3(420.0, 1000.0, 600.0) }).pub
         }).pub
-      }).pub
+      });/*.pub
       .setMaterialNode( 
           scene.constructNode('NormalMaterial', {
           color: FABRIC.RT.rgb(0.8, .8, 0.8, 1),
           normalLength: 0.5
-        }).pub);
+        }).pub);*/
       
       volumeDisplayNodes[index] = inst;
     }
@@ -448,7 +448,6 @@ operator loadUniform(\n\
       muscleOptions = scene.assignDefaults(muscleOptions, muscleDefaults);
       var mid = initializationdgnode.getCount();
       initializationdgnode.setCount(mid+1);
-      simulationdgnode.setCount(mid+1);
       var initializationMembers = initializationdgnode.getMembers();
       for(i in muscleOptions){
         if(initializationMembers[i]){

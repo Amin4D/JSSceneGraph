@@ -316,8 +316,7 @@ FABRIC.SceneGraph.registerNodeType('Plane', {
         length: 10,
         width: 10,
         lengthSections: 2,
-        widthSections: 2,
-        doubleSided: false
+        widthSections: 2
       });
 
     options.uvSets = 1;
@@ -327,7 +326,6 @@ FABRIC.SceneGraph.registerNodeType('Plane', {
     planeNode.pub.addUniformValue('width', 'Scalar', options.width);
     planeNode.pub.addUniformValue('lengthSections', 'Integer', options.lengthSections);
     planeNode.pub.addUniformValue('widthSections', 'Integer', options.widthSections);
-    planeNode.pub.addUniformValue('doubleSided', 'Boolean', options.doubleSided);
 
     // getters and setters
     var uniforms = planeNode.getUniformsDGNode();
@@ -344,7 +342,6 @@ FABRIC.SceneGraph.registerNodeType('Plane', {
         parameterLayout: [
           'uniforms.lengthSections',
           'uniforms.widthSections',
-          'uniforms.doubleSided',
           'self.newCount'
         ]
       }),
@@ -358,7 +355,6 @@ FABRIC.SceneGraph.registerNodeType('Plane', {
           'uniforms.width',
           'uniforms.lengthSections',
           'uniforms.widthSections',
-          'uniforms.doubleSided',
 
           'self.positions[]',
           'self.normals[]',

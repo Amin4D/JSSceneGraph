@@ -239,13 +239,13 @@ $(document).ready(function() {
   }
   
   var url = createDownloadURL();
-
+  
   if(url){
     $('#install').button({ disabled: false })
     .click(function() {
       $( "#alphaWarningDialogBox" ).dialog( "open" );
-      
-      window.location = url;
+      parent.location = url;
+    //  parent.location.reload();
     });
   }
   

@@ -121,7 +121,7 @@ operator loadUniform(\n\
     coreDisplayLinesNode.setGeneratorOps([
       scene.constructOperator({
         operatorName: 'setMuscleCoreLinesDisplayVertexCount',
-        srcFile: './KL/muscleRendering.kl',
+        srcFile: './KL/MuscleRendering.kl',
         entryFunctionName: 'setMuscleCoreLinesDisplayVertexCount',
         parameterLayout: [
           'musclesystem.displacementMapResolution',
@@ -130,7 +130,7 @@ operator loadUniform(\n\
       }),
       scene.constructOperator({
         operatorName: 'generateMuscleCoreLine',
-        srcFile: './KL/muscleRendering.kl',
+        srcFile: './KL/MuscleRendering.kl',
         entryFunctionName: 'generateMuscleCoreLine',
         parameterLayout: [
           'self.positions[]',
@@ -250,7 +250,7 @@ FABRIC.SceneGraph.registerNodeType('Muscle', {
     
     initializationdgnode.bindings.append(scene.constructOperator({
         operatorName: 'generateDisplacementMap',
-        srcFile: './KL/muscleVolume.kl',
+        srcFile: './KL/MuscleVolume.kl',
         entryFunctionName: 'generateDisplacementMap',
         preProcessorDefinitions: {
           KEYFRAMETYPE:  'BezierKeyframe',
@@ -295,7 +295,7 @@ FABRIC.SceneGraph.registerNodeType('Muscle', {
     
     simulationdgnode.bindings.append(scene.constructOperator({
         operatorName: 'simulateMuscle',
-        srcFile: './KL/muscle.kl',
+        srcFile: './KL/Muscle.kl',
         entryFunctionName: 'simulateMuscle',
         preProcessorDefinitions: {
           KEYFRAMETYPE:  'BezierKeyframe',
@@ -348,7 +348,7 @@ FABRIC.SceneGraph.registerNodeType('Muscle', {
     var coreDisplayLinesNode, coreDisplayPointsNode;
     
     muscle.display = function(){
-      if(!coreDisplayPointsNode){
+      /*
         coreDisplayPointsNode = scene.constructNode('Points', { dynamicMembers: ['positions'] });
         coreDisplayPointsNode.pub.addVertexAttributeValue('vertexColors', 'Color', {
           defaultValue: FABRIC.RT.rgb(1.0, 1.0, 0.0),
@@ -360,7 +360,7 @@ FABRIC.SceneGraph.registerNodeType('Muscle', {
         coreDisplayPointsNode.setGeneratorOps([
           scene.constructOperator({
             operatorName: 'setMuscleCoreDisplayVertexCount',
-            srcFile: './KL/muscleRendering.kl',
+            srcFile: './KL/MuscleRendering.kl',
             entryFunctionName: 'setMuscleCoreDisplayVertexCount',
             parameterLayout: [
               'simulationdgnode.simulatedXfos',
@@ -369,7 +369,7 @@ FABRIC.SceneGraph.registerNodeType('Muscle', {
           }),
           scene.constructOperator({
             operatorName: 'fitMuscleCoreDisplayToMuscleXfos',
-            srcFile: './KL/muscleRendering.kl',
+            srcFile: './KL/MuscleRendering.kl',
             entryFunctionName: 'fitMuscleCoreDisplayToMuscleXfos',
             parameterLayout: [
               'self.positions[]',
@@ -388,8 +388,7 @@ FABRIC.SceneGraph.registerNodeType('Muscle', {
             pointSize: 6
           }).pub
         });
-      }
-      
+      */
       
       var volumeDisplayNode = muscleSystem.getVolumeDisplayNode();
       
@@ -403,7 +402,7 @@ FABRIC.SceneGraph.registerNodeType('Muscle', {
       deformedVolume.getAttributesDGNode().addDependency(simulationdgnode, 'simulationdgnode');
       deformedVolume.getAttributesDGNode().bindings.append(scene.constructOperator({
         operatorName: 'deformMuscleVolume',
-        srcFile: './KL/muscleVolume.kl',
+        srcFile: './KL/MuscleVolume.kl',
         entryFunctionName: 'deformMuscleVolume',
         preProcessorDefinitions: {
           KEYFRAMETYPE:  'BezierKeyframe',
@@ -471,7 +470,7 @@ FABRIC.SceneGraph.registerNodeType('Skin', {
     boundSkin.getAttributesDGNode().addDependency(muscleSystem.getMuscles().getInitializationDGNode(), 'musclesinitialization');
     boundSkin.getAttributesDGNode().bindings.append(scene.constructOperator({
       operatorName: 'calcSkinStickLocations',
-      srcFile: './KL/muscleVolume.kl',
+      srcFile: './KL/MuscleVolume.kl',
       entryFunctionName: 'calcSkinStickLocations',
       parameterLayout: [
         'musclesinitialization.initialXfos[]',
@@ -493,7 +492,7 @@ FABRIC.SceneGraph.registerNodeType('Skin', {
     deformedSkin.getAttributesDGNode().addDependency(boundSkin.getAttributesDGNode(), 'boundskin');
     deformedSkin.getAttributesDGNode().bindings.append(scene.constructOperator({
       operatorName: 'deformSkin',
-      srcFile: './KL/muscleVolume.kl',
+      srcFile: './KL/MuscleVolume.kl',
       entryFunctionName: 'deformSkin',
       parameterLayout: [
         'musclesystem.displacementMapResolution',

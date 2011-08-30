@@ -454,11 +454,11 @@ function Boolean testCoplanarity(
       return true;
     }
     if( numRoots > 1 && roots[1] >= (0.0 - fuzzyness) && roots[1] < (1.0 + fuzzyness) ){
-      outFraction = clamp(roots[1], 0.0, 1.0 ); //(Scalar)roots[1];
+      outFraction = clamp(roots[1], 0.0, 1.0 );
       return true; 
     }
     if( numRoots > 2 && roots[2] >= (0.0 - fuzzyness) && roots[2] < (1.0 + fuzzyness) ){
-      outFraction = clamp(roots[2], 0.0, 1.0 ); ;//(Scalar)roots[2];
+      outFraction = clamp(roots[2], 0.0, 1.0 );
       return true;
     }
   }
@@ -473,6 +473,7 @@ function Boolean positionToMuscleUV(
   io Vec3 outCorePos,
   io Vec3 outCoreDir
 ){
+//  report("positionToMuscleUV:"+pos);
   Vec3 p1, p2, p3, p4, p5, p6, v1, v2, v3;
   Vec3 yaxis, zaxis, yaxisStart, zaxisStart, yaxisEnd, zaxisEnd;
 
@@ -498,7 +499,7 @@ function Boolean positionToMuscleUV(
 
     yaxisEnd = xfos[ i + 1 ].ori.getYaxis( );
     zaxisEnd = xfos[ i + 1 ].ori.getZaxis( );
-
+    
     p1 = xfos[ i ].tr;
     p2 = p1 + yaxisStart;
     p3 = p1 + zaxisStart;  
@@ -510,29 +511,39 @@ function Boolean positionToMuscleUV(
     v1 = p4 - p1;
     v2 = p5 - p2;
     v3 = p6 - p3;
-
+    
     Scalar outFraction;
     if( testCoplanarity( pos, p1, p2, p3, Vec3(0.0, 0.0, 0.0), v1, v2, v3, outFraction ) ){
       ///////////////////////////////////////////
       // To calculate the v value, we need to reference the linear segments only
       outCorePos = p1.lerp( p4, outFraction );
-      outCoreDir =  pos - outCorePos;
-
+      outCoreDir =  outCorePos - pos;
+      outUV.x = ( Scalar(i) + outFraction ) / Scalar( xfos.size() - 1 );
+      
       dist = outCoreDir.length();
       if( dist > shortestdist ){
         // Go through all the segments, and find the closest one
         continue;
       }
+      
+      if(dist < 0.0001){
+        outUV.y = 0.0;
+      }
 
       outCoreDir /= dist;
       shortestdist = dist;
+      
+      
 
       // Pull out the -Y vector. This is the vector that goes straight down on the muscle
       yaxis = yaxisStart.lerp( yaxisEnd, outFraction );
       yaxis = yaxis.neg();
       yaxis.setUnit();
-
+      
       zaxis = zaxisStart.lerp( zaxisEnd, outFraction );
+      
+      
+    //  report("pos:"+pos+" outCorePos:"+outCorePos+" outCoreDir:"+outCoreDir+" yaxis:"+yaxis);
 
       Scalar angle = outCoreDir.angleTo( yaxis );
       if( outCoreDir.dot( zaxis ) > 0.0 ){
@@ -540,8 +551,10 @@ function Boolean positionToMuscleUV(
       }
       angle /= TWO_PI;
       
-      outUV.x = ( Scalar(i) + outFraction ) / Scalar( xfos.size() - 1 );
       outUV.y = angle;
+      
+      
+    //  report("testCoplanarity outUV:"+outUV);
     }
   }
   
@@ -588,7 +601,8 @@ function Vec3 uvwToMusclePosition(
 
     offset = pointframe.rotateVector( Vec3( 0.0, -cos( uvw.y * TWO_PI ), -sin( uvw.y * TWO_PI ) ) );
     
-    return (offset * (uvw.z /* muscle->m_scale * muscle->GetMuscleBulge( uvw[0], uvw.y )*/)) + pos;
+  //  return (offset * (uvw.z /* muscle->m_scale * muscle->GetMuscleBulge( uvw[0], uvw.y )*/)) + pos;
+    return offset;
   }
 }
 
@@ -826,6 +840,7 @@ function Vec3 positionToMuscleUVW(
 ){
   Vec3 corePos, coreDir;
   Vec2 uv;
+//  report("positionToMuscleUVW:"+pos);
 
   if( positionToMuscleUV( pos, xfos, uv, corePos, coreDir ) ){
     // Now evaluate the spline to get the actual position of the muscle core
@@ -863,30 +878,33 @@ operator calcSkinStickLocations(
   io Xfo initialXfos[][],
   io Vec3 parentpositions[],
 
-  io Scalar muscleBindingIds[4],
+  io Integer muscleBindingIds[4],
   io Vec3 sticklocations[4],
   in Size index
 ){
+  report("calcSkinStickLocations pos:"+parentpositions[index] );
   Vec3 stickDelta;
-  for(Integer i=0; i<4; i++){
+  for(Integer i=0; i<1; i++){
     if(muscleBindingIds[i] >= 0){
-      sticklocations[i] = positionToMuscleUVW(parentpositions[index], initialXfos[muscleBindingIds[i]]);
+      Integer mid = muscleBindingIds[i];
+      sticklocations[i] = positionToMuscleUVW(parentpositions[index], initialXfos[mid]);
     }
   }
 }
 
 operator deformSkin(
-  io Integer displacementMapResolution,
+  io Size displacementMapResolution,
   io Color displacementMaps[][],
   io Xfo simulatedXfos[][],
+  /*
   io Scalar inflationValues[],
+  */
   io Vec3 parentpositions[],
   io Vec3 parentnormals[],
-  io Vec2 parentuvs[],
   io Vec3 position,
   io Vec3 normal,
   
-  io Scalar muscleBindingIds[4],
+  io Integer muscleBindingIds[4],
   io Scalar muscleBindingWeights[4],
   io Scalar stickweight,
   io Vec3 sticklocations[4],
@@ -894,16 +912,21 @@ operator deformSkin(
   io Scalar bulgeweight,
   in Size index
 ){
+//  report("deformSkin");
   position = parentpositions[index];
+  normal = parentnormals[index];
   // Sticking
   Vec3 stickDelta;
-  for(Integer i=0; i<4; i++){
-    if(muscleBindingIds[i] >= 0 && muscleBindingWeights[i] > 0.0){
-      Vec3 stickPos = uvwToMusclePosition(sticklocations[i], simulatedXfos[muscleBindingIds[i]]);
-      stickDelta += (stickPos - position) * muscleBindingWeights[i];
-    }
+  for(Integer i=0; i<1; i++){
+  //  if(muscleBindingIds[i] >= 0 && muscleBindingWeights[i] > 0.0){
+      Integer mid = muscleBindingIds[i];
+      Vec3 delta = uvwToMusclePosition(sticklocations[i], simulatedXfos[mid]);
+      report("pos:"+ position +" sticklocations[i]:"+sticklocations[i]+" delta:"+delta);
+      stickDelta += delta;// * muscleBindingWeights[i];
+  //  }
   }
-  position += stickDelta;
+ // position += stickDelta;
+  /*
   // Sliding
   Vec3 slideDelta;
   for(Integer i=0; i<4; i++){
@@ -921,7 +944,7 @@ operator deformSkin(
     }
   }
   position += bulgeDelta;
-
+  */
 }
 
 

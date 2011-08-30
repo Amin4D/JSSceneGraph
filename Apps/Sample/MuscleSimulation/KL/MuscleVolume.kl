@@ -921,11 +921,11 @@ operator deformSkin(
   //  if(muscleBindingIds[i] >= 0 && muscleBindingWeights[i] > 0.0){
       Integer mid = muscleBindingIds[i];
       Vec3 delta = uvwToMusclePosition(sticklocations[i], simulatedXfos[mid]);
-      report("pos:"+ position +" sticklocations[i]:"+sticklocations[i]+" delta:"+delta);
+  //    report("pos:"+ position +" sticklocations[i]:"+sticklocations[i]+" delta:"+delta);
       stickDelta += delta;// * muscleBindingWeights[i];
   //  }
   }
- // position += stickDelta;
+  position += Vec3(0.0,1.0,0.0);
   /*
   // Sliding
   Vec3 slideDelta;

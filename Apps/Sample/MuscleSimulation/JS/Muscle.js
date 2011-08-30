@@ -479,13 +479,14 @@ FABRIC.SceneGraph.registerNodeType('MuscleSkinDeformation', {
     var muscleSystem = scene.getPrivateInterface(options.muscleSystem);
   
     var boundSkin = scene.constructNode('GeometryDataCopy', {
+      name: 'BoundSkin',
       baseGeometryNode:options.baseSkinMesh
     });
     
     boundSkin.pub.addVertexAttributeValue('muscleBindingIds', 'Integer[4]', [0,-1,-1,-1]);
     boundSkin.pub.addVertexAttributeValue('musclebindingweights', 'Scalar[4]', [1,0,0,0] );
     boundSkin.pub.addVertexAttributeValue('stickweight', 'Scalar' );
-    boundSkin.pub.addVertexAttributeValue('slideeight', 'Scalar' );
+    boundSkin.pub.addVertexAttributeValue('slideweight', 'Scalar' );
     boundSkin.pub.addVertexAttributeValue('bulgeweight', 'Scalar' );
     boundSkin.pub.addVertexAttributeValue('sticklocations', 'Vec3[4]' );
     boundSkin.getAttributesDGNode().addDependency(muscleSystem.getSystemParamsDGNode(), 'musclesystem');
@@ -511,6 +512,7 @@ FABRIC.SceneGraph.registerNodeType('MuscleSkinDeformation', {
     
     
     var deformedSkin = scene.constructNode('GeometryDataCopy', {
+      name: 'DeformedSkin',
       baseGeometryNode:options.baseSkinMesh
     });
     deformedSkin.pub.addVertexAttributeValue('positions', 'Vec3', { genVBO:true, dynamic:true } );
@@ -540,7 +542,7 @@ FABRIC.SceneGraph.registerNodeType('MuscleSkinDeformation', {
         'boundskin.musclebindingweights',
         'boundskin.stickweight',
         'boundskin.sticklocations',
-        'boundskin.slideeight',
+        'boundskin.slideweight',
         'boundskin.bulgeweight',
         'self.index'
       ]

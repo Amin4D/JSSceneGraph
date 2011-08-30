@@ -220,10 +220,11 @@ operator generateSystemDisplacementMap(
 }
 
 operator deformMuscleVolume(
+  io Size muscleIndex,
   io Size displacementMapResolution,
-  io Color displacementMap[],
-  io Xfo xfos[],
-  io Scalar compressionFactor,
+  io Color displacementMaps[][],
+  io Xfo systemxfos[][],
+  io Scalar compressionFactors[],
   io Vec3 parentpositions[],
   io Vec3 parentnormals[],
   io Vec2 parentuvs[],
@@ -231,6 +232,12 @@ operator deformMuscleVolume(
   io Vec3 normal,
   in Size index
 ){
+
+  Color displacementMap[] = displacementMaps[muscleIndex];
+  Xfo xfos[] = systemxfos[muscleIndex];
+  Scalar compressionFactor = compressionFactors[muscleIndex];
+
+
   Scalar t;
   Integer i;
   Vec3 corepos = evalPiecewiseBSpline( xfos, parentpositions[index].x, t, i );

@@ -114,7 +114,10 @@ $(document).ready(function() {
       skeletonNode: skeleton,
       computeInverseXfos: true
     });
-      
+  
+  //////////////////////////////////////////////////////////////
+  // Manipulators
+  
   scene.constructNode('ScreenTranslationManipulator', {
     parentNode: rig,
     parentMember: 'pose',
@@ -141,6 +144,8 @@ $(document).ready(function() {
     radius: 1.0
   });
   
+  //////////////////////////////////////////////////////////////
+  // 
   scene.constructNode('CharacterSkeletonDebug', {
       characterRigNode: rig,
       color: FABRIC.RT.rgba(1.0, 1.0, 1.0, 1.0),
@@ -158,6 +163,14 @@ $(document).ready(function() {
         tr: FABRIC.RT.vec3( 0, 5, 0)
       })
     });
+  
+  
+  var muscle = muscleSystem.addMuscle( {
+    xfo: FABRIC.RT.xfo( {
+        tr: FABRIC.RT.vec3( 0, 0, 0)
+      })
+    });
+  
   
   $('#loadingDialog').dialog({
     modal: true

@@ -41,7 +41,7 @@ FABRIC.SceneGraph.registerNodeType('MuscleSystem', {
     
     simulationdgnode.addDependency( characterRig.getDGNode(), 'characterRig');
     simulationdgnode.addDependency( scene.getGlobalsNode(), 'globals');
-    
+    /*
     simulationdgnode.bindings.append(
       scene.constructOperator({
         operatorName: 'matchCount',
@@ -55,7 +55,7 @@ FABRIC.SceneGraph.registerNodeType('MuscleSystem', {
           'self.newCount'
         ]
       }));
-    
+    */
     /////////////////////////////////////////////////////////
     // Configure the muscle default values. 
     var pointXfos = [],
@@ -170,15 +170,16 @@ FABRIC.SceneGraph.registerNodeType('MuscleSystem', {
           KEYFRAME_EVALUATEDTYPE: 'Scalar'
         },
         parameterLayout: [
-          'initializationdgnode.initialXfos',
-          'initializationdgnode.xfo',
-          'initializationdgnode.segmentLengths',
-          'initializationdgnode.pointEnvelopeIds',
-          'initializationdgnode.pointEnvelopWeights',
-          'initializationdgnode.flexibilityWeights',
-          'initializationdgnode.contractionCurve',
-          'initializationdgnode.contractionWeights',
+          'initializationdgnode.initialXfos[]',
+          'initializationdgnode.xfo[]',
+          'initializationdgnode.segmentLengths[]',
+          'initializationdgnode.pointEnvelopeIds[]',
+          'initializationdgnode.pointEnvelopWeights[]',
+          'initializationdgnode.flexibilityWeights[]',
+          'initializationdgnode.contractionCurve[]',
+          'initializationdgnode.contractionWeights[]',
           
+          'self.index',
           'self.initialized',
           'self.envelopedXfos',
           'self.simulatedXfos',
@@ -207,7 +208,8 @@ FABRIC.SceneGraph.registerNodeType('MuscleSystem', {
         height: 1.0,
         sides: options.displacementMapResolution,
         loops: options.displacementMapResolution,
-        caps: true
+        caps: false,
+        createBoundingBoxNode: false
       });
     
     volumeDisplayNode.getAttributesDGNode().bindings.append(
@@ -346,45 +348,46 @@ operator loadUniform(\n\
     muscleSystem.display = function(index){
       
       /*
-        coreDisplayPointsNode = scene.constructNode('Points', { dynamicMembers: ['positions'] });
-        coreDisplayPointsNode.pub.addVertexAttributeValue('vertexColors', 'Color', {
-          defaultValue: FABRIC.RT.rgb(1.0, 1.0, 0.0),
-          genVBO:true,
-          dynamic:true
-        } );
-        coreDisplayPointsNode.getAttributesDGNode().addDependency(initializationdgnode, 'initializationdgnode');
-        coreDisplayPointsNode.getAttributesDGNode().addDependency(simulationdgnode, 'simulationdgnode');
-        coreDisplayPointsNode.setGeneratorOps([
-          scene.constructOperator({
-            operatorName: 'setMuscleCoreDisplayVertexCount',
-            srcFile: './KL/MuscleRendering.kl',
-            entryFunctionName: 'setMuscleCoreDisplayVertexCount',
-            parameterLayout: [
-              'simulationdgnode.simulatedXfos',
-              'self.newCount'
-            ]
-          }),
-          scene.constructOperator({
-            operatorName: 'fitMuscleCoreDisplayToMuscleXfos',
-            srcFile: './KL/MuscleRendering.kl',
-            entryFunctionName: 'fitMuscleCoreDisplayToMuscleXfos',
-            parameterLayout: [
-              'self.positions[]',
-              'self.vertexColors[]',
-              'simulationdgnode.simulatedXfos',
-              'initializationdgnode.flexibilityWeights',
-            ]
-          })
-        ]);
-        
-        scene.constructNode('Instance', {
-          geometryNode: coreDisplayPointsNode.pub,
-          materialNode: scene.constructNode('VertexColorMaterial', {
-            prototypeMaterialType:'PointMaterial',
-            color: FABRIC.RT.rgb(1.0, 0.0, 0.0),
-            pointSize: 6
-          }).pub
-        });
+      coreDisplayPointsNode = scene.constructNode('Points', { dynamicMembers: ['positions'] });
+      coreDisplayPointsNode.pub.addVertexAttributeValue('vertexColors', 'Color', {
+        defaultValue: FABRIC.RT.rgb(1.0, 1.0, 0.0),
+        genVBO:true,
+        dynamic:true
+      } );
+      coreDisplayPointsNode.getAttributesDGNode().addDependency(initializationdgnode, 'initializationdgnode');
+      coreDisplayPointsNode.getAttributesDGNode().addDependency(simulationdgnode, 'simulationdgnode');
+      coreDisplayPointsNode.setGeneratorOps([
+        scene.constructOperator({
+          operatorName: 'setMuscleCoreDisplayVertexCount',
+          srcFile: './KL/MuscleRendering.kl',
+          entryFunctionName: 'setMuscleCoreDisplayVertexCount',
+          parameterLayout: [
+            'simulationdgnode.simulatedXfos',
+            'self.newCount'
+          ]
+        }),
+        scene.constructOperator({
+          operatorName: 'fitMuscleCoreDisplayToMuscleXfos',
+          srcFile: './KL/MuscleRendering.kl',
+          entryFunctionName: 'fitMuscleCoreDisplayToMuscleXfos',
+          parameterLayout: [
+            'self.positions[]',
+            'self.vertexColors[]',
+            'simulationdgnode.simulatedXfos',
+            'initializationdgnode.flexibilityWeights'
+          ]
+        })
+      ]);
+      
+      scene.constructNode('Instance', {
+        geometryNode: coreDisplayPointsNode.pub,
+        materialNode: scene.constructNode('VertexColorMaterial', {
+          prototypeMaterialType:'PointMaterial',
+          color: FABRIC.RT.rgb(1.0, 0.0, 0.0),
+          pointSize: 6
+        }).pub
+      });
+      
       */
       
       
@@ -393,7 +396,7 @@ operator loadUniform(\n\
       });
       deformedVolume.pub.addVertexAttributeValue('positions', 'Vec3', { genVBO:true, dynamic:true } );
       deformedVolume.pub.addVertexAttributeValue('normals', 'Vec3', { genVBO:true, dynamic:true } );
-      deformedVolume.pub.addUniformValue('muscleIndex', 'Integer', index );
+      deformedVolume.pub.addUniformValue('muscleIndex', 'Size', index );
       deformedVolume.getAttributesDGNode().addDependency(paramsdgnode, 'musclesystem');
       deformedVolume.getAttributesDGNode().addDependency(initializationdgnode, 'initializationdgnode');
       deformedVolume.getAttributesDGNode().addDependency(simulationdgnode, 'simulationdgnode');
@@ -406,10 +409,11 @@ operator loadUniform(\n\
           KEYFRAME_EVALUATEDTYPE: 'Scalar'
         },
         parameterLayout: [
+          'uniforms.muscleIndex',
           'musclesystem.displacementMapResolution',
-          'initializationdgnode.displacementMap',
-          'simulationdgnode.simulatedXfos',
-          'simulationdgnode.compressionFactor',
+          'initializationdgnode.displacementMap[]',
+          'simulationdgnode.simulatedXfos[]',
+          'simulationdgnode.compressionFactor[]',
           'parentattributes.positions[]',
           'parentattributes.normals[]',
           'parentattributes.uvs0[]',
@@ -444,16 +448,17 @@ operator loadUniform(\n\
       muscleOptions = scene.assignDefaults(muscleOptions, muscleDefaults);
       var mid = initializationdgnode.getCount();
       initializationdgnode.setCount(mid+1);
+      simulationdgnode.setCount(mid+1);
       var initializationMembers = initializationdgnode.getMembers();
       for(i in muscleOptions){
         if(initializationMembers[i]){
-          initializationdgnode.setData(i, mid, muscleOptions[i] )
+          initializationdgnode.setData(i, mid, muscleOptions[i]);
         }
       }
       var simulationdMembers = simulationdgnode.getMembers();
       for(i in muscleOptions){
         if(simulationdMembers[i]){
-          simulationdgnode.setData(i, mid, muscleOptions[i] )
+          simulationdgnode.setData(i, mid, muscleOptions[i]);
         }
       }
       if(muscleOptions.display){

@@ -24,6 +24,7 @@
   
   <vertexshader>
     <source>
+      <![CDATA[
       uniform vec4 u_lightPosition;
       uniform mat4 u_modelViewProjectionMatrix;
       uniform mat3 u_normalMatrix;
@@ -37,11 +38,13 @@
         normal = u_normalMatrix * a_normal;
         gl_Position = u_modelViewProjectionMatrix * a_position;
       }
+      ]]>
     </source>
   </vertexshader>
   
   <geometryshader>
     <source>
+      <![CDATA[
       #version 120
       #extension GL_EXT_geometry_shader4 : enable
       
@@ -68,16 +71,19 @@
         EmitVertex();
         EndPrimitive();
       }
+      ]]>
     </source>
   </geometryshader>
   
   <fragmentshader>
     <source>
+      <![CDATA[
       uniform vec4 u_materialColor;
       
       void main(){
         gl_FragColor = u_materialColor;
       }
+      ]]>
     </source>
   </fragmentshader>
 </shader>

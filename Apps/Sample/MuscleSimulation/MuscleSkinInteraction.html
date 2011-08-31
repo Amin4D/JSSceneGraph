@@ -150,11 +150,11 @@ $(document).ready(function() {
   var skeleton = scene.constructNode('CharacterSkeleton');
 
   skeleton.addBone({name: 'anchorLeft', referencePose: FABRIC.RT.xfo({
-      tr: FABRIC.RT.vec3(-6, 5, 0)
+      tr: FABRIC.RT.vec3(-6, 0, 0)
     }) });
   
   skeleton.addBone({name: 'anchorRight', referencePose: FABRIC.RT.xfo({
-      tr: FABRIC.RT.vec3(6, 5, 0)
+      tr: FABRIC.RT.vec3(6, 0, 0)
     }) });
 
   // create the rig
@@ -166,7 +166,6 @@ $(document).ready(function() {
   
   //////////////////////////////////////////////////////////////
   // Manipulators
-  /*
   scene.constructNode('ScreenTranslationManipulator', {
     parentNode: rig,
     parentMember: 'pose',
@@ -192,20 +191,20 @@ $(document).ready(function() {
     parentMemberIndex: skeleton.getBoneIndex('anchorRight'),
     radius: 1.0
   });
-  
+  /*
   scene.constructNode('CharacterSkeletonDebug', {
       characterRigNode: rig,
       color: FABRIC.RT.rgba(1.0, 1.0, 1.0, 1.0),
       boneradius: 0.25
     });
-*/
+  */
   //////////////////////////////////////////////////////////////
   //
   var plane = scene.constructNode('Plane', {
-      length: 8,
-      width: 8,
-      lengthSections: 2,
-      widthSections: 2
+      length: 12,
+      width: 12,
+      lengthSections: 20,
+      widthSections: 20
     });
   var transformedMesh = scene.constructNode('TransformedGeometry', {
       baseGeometryNode: plane,

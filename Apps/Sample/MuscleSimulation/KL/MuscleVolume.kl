@@ -473,7 +473,6 @@ function Boolean positionToMuscleUV(
   io Vec3 outCorePos,
   io Vec3 outCoreDir
 ){
-//  report("positionToMuscleUV:"+pos);
   Vec3 p1, p2, p3, p4, p5, p6, v1, v2, v3;
   Vec3 yaxis, zaxis, yaxisStart, zaxisStart, yaxisEnd, zaxisEnd;
 
@@ -517,7 +516,7 @@ function Boolean positionToMuscleUV(
       ///////////////////////////////////////////
       // To calculate the v value, we need to reference the linear segments only
       outCorePos = p1.lerp( p4, outFraction );
-      outCoreDir =  outCorePos - pos;
+      outCoreDir = pos - outCorePos;
       outUV.x = ( Scalar(i) + outFraction ) / Scalar( xfos.size() - 1 );
       
       dist = outCoreDir.length();
@@ -536,25 +535,13 @@ function Boolean positionToMuscleUV(
       
 
       // Pull out the -Y vector. This is the vector that goes straight down on the muscle
-      yaxis = yaxisStart.lerp( yaxisEnd, outFraction );
-      yaxis = yaxis.neg();
-      yaxis.setUnit();
-      
+      yaxis = yaxisStart.lerp( yaxisEnd, outFraction ).unit();
       zaxis = zaxisStart.lerp( zaxisEnd, outFraction );
-      
-      
-    //  report("pos:"+pos+" outCorePos:"+outCorePos+" outCoreDir:"+outCoreDir+" yaxis:"+yaxis);
-
       Scalar angle = outCoreDir.angleTo( yaxis );
-      if( outCoreDir.dot( zaxis ) > 0.0 ){
-        angle = TWO_PI - angle;
+      if( outCoreDir.dot( zaxis ) < 0.0 ){
+        angle = -angle;
       }
-      angle /= TWO_PI;
-      
       outUV.y = angle;
-      
-      
-    //  report("testCoplanarity outUV:"+outUV);
     }
   }
   
@@ -576,7 +563,7 @@ function Vec3 uvwToMusclePosition(
   {
     offset = xfos[ 0 ].ori.rotateVector( uvw );
   //  offset *= muscle->m_scale;
-    // NOTE: We may see artifacts here doue to the fact that the inlation is not applied, 
+    // NOTE: We may see artifacts here doue to the fact that the inflation is not applied, 
     // and yet it is in the code block below. 
     return xfos[ 0 ].tr + offset;
   }
@@ -593,16 +580,17 @@ function Vec3 uvwToMusclePosition(
     Scalar t;
     Integer i;
     Vec3 pos = evalPiecewiseBSpline( xfos, uvw.x, t, i );
+    
 
     // Due to the fact that nlerp exibits a slight ease in and ease out on the rotations
     // I think it is a better slution to interpollating segments. 
     // The one exception would be several segments in arow that were evenly twisted. 
     Quat pointframe = xfos[ i ].ori.nlerp( xfos[ i + 1 ].ori, t );
 
-    offset = pointframe.rotateVector( Vec3( 0.0, -cos( uvw.y * TWO_PI ), -sin( uvw.y * TWO_PI ) ) );
+    offset = pointframe.rotateVector( Vec3( 0.0, cos( uvw.y ), sin( uvw.y ) ) );
     
   //  return (offset * (uvw.z /* muscle->m_scale * muscle->GetMuscleBulge( uvw[0], uvw.y )*/)) + pos;
-    return offset;
+    return (offset *  (uvw.z)) + pos;
   }
 }
 
@@ -840,8 +828,7 @@ function Vec3 positionToMuscleUVW(
 ){
   Vec3 corePos, coreDir;
   Vec2 uv;
-//  report("positionToMuscleUVW:"+pos);
-
+  
   if( positionToMuscleUV( pos, xfos, uv, corePos, coreDir ) ){
     // Now evaluate the spline to get the actual position of the muscle core
     Integer i;
@@ -882,7 +869,7 @@ operator calcSkinStickLocations(
   io Vec3 sticklocations[4],
   in Size index
 ){
-  report("calcSkinStickLocations pos:"+parentpositions[index] );
+//  report("calcSkinStickLocations pos:"+parentpositions[index] );
   Vec3 stickDelta;
   for(Integer i=0; i<1; i++){
     if(muscleBindingIds[i] >= 0){
@@ -904,28 +891,34 @@ operator deformSkin(
   io Vec3 position,
   io Vec3 normal,
   
-  io Integer muscleBindingIds[4],
-  io Scalar muscleBindingWeights[4],
-  io Scalar stickweight,
-  io Vec3 sticklocations[4],
-  io Scalar slideweight,
-  io Scalar bulgeweight,
+  io Integer allmuscleBindingIds[][4],
+  io Scalar allmuscleBindingWeights[][4],
+  io Scalar stickweights[],
+  io Vec3 allsticklocations[][4],
+  io Scalar slideweights[],
+  io Scalar bulgeweights[],
   in Size index
 ){
-//  report("deformSkin");
   position = parentpositions[index];
   normal = parentnormals[index];
+  
+  Integer muscleBindingIds[4] = allmuscleBindingIds[index];
+  Scalar muscleBindingWeights[4] = allmuscleBindingWeights[index];
+  Scalar stickweight = stickweights[index];
+  Vec3 sticklocations[4] = allsticklocations[index];
+  Scalar slideweight = slideweights[index];
+  Scalar bulgeweight = bulgeweights[index];
+  
   // Sticking
-  Vec3 stickDelta;
+  Vec3 stickDelta(0.0,0.0,0.0);
   for(Integer i=0; i<1; i++){
-  //  if(muscleBindingIds[i] >= 0 && muscleBindingWeights[i] > 0.0){
-      Integer mid = muscleBindingIds[i];
-      Vec3 delta = uvwToMusclePosition(sticklocations[i], simulatedXfos[mid]);
-  //    report("pos:"+ position +" sticklocations[i]:"+sticklocations[i]+" delta:"+delta);
-      stickDelta += delta;// * muscleBindingWeights[i];
-  //  }
+//  if(muscleBindingIds[i] >= 0 && muscleBindingWeights[i] > 0.0){
+      Integer mid = 0;//muscleBindingIds[i];
+      Vec3 stickPos = uvwToMusclePosition(sticklocations[i], simulatedXfos[mid]);
+      stickDelta += (stickPos - position);// * muscleBindingWeights[i];
+//  }
   }
-  position += Vec3(0.0,1.0,0.0);
+  position += stickDelta;
   /*
   // Sliding
   Vec3 slideDelta;

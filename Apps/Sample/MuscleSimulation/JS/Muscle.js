@@ -538,12 +538,12 @@ FABRIC.SceneGraph.registerNodeType('MuscleSkinDeformation', {
         'parentattributes.normals[]',
         'self.positions',
         'self.normals',
-        'boundskin.muscleBindingIds',
-        'boundskin.musclebindingweights',
-        'boundskin.stickweight',
-        'boundskin.sticklocations',
-        'boundskin.slideweight',
-        'boundskin.bulgeweight',
+        'boundskin.muscleBindingIds[]',
+        'boundskin.musclebindingweights[]',
+        'boundskin.stickweight[]',
+        'boundskin.sticklocations[]',
+        'boundskin.slideweight[]',
+        'boundskin.bulgeweight[]',
         'self.index'
       ]
     }));

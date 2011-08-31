@@ -1158,17 +1158,8 @@ FABRIC.SceneGraph.registerNodeType('Viewport', {
       var ray = viewPortRayCastDgNode.getData('ray');
       return ray;
     };
-    // TODO: Not all browsers on OSX features this redraw issue.
-    // figures out exactly which ones do and detect only those.
-    var onOsX = navigator.userAgent.search("Mac OS X");
-    viewportNode.pub.redraw = function() {
+    viewportNode.pub.redraw = function(animating) {
       fabricwindow.needsRedraw();
-      if(onOsX != -1 && !scene.pub.animation.isPlaying()){
-        fabricwindow.setRedrawFinishedCallback(function(){
-          fabricwindow.setRedrawFinishedCallback(null);
-          fabricwindow.needsRedraw();
-        });
-      }
     };
     viewportNode.pub.writeData = function(sceneSaver, constructionOptions, nodeData) {
       nodeData.camera = sceneSaver.wrapQuotes(cameraNode.name);

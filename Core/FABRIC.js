@@ -55,20 +55,37 @@ FABRIC = (function() {
     // TODO: This code will be removed once we get to the end of beta.
     var version = context.build.getPureVersion().split('.');
     var requiredVersion = [1,0,10];
-    for(var i=0; i<3; i++){
-      if(parseInt(version[i]) != requiredVersion[i]){
-        alert("The version of Fabric that you have installed is out of date.\n" +
-              "Please install the updated plugin");
-        createDownloadPrompt();
-        throw("The version of Fabric that you have installed is out of date.\n" +
-              "Please install the updated plugin");
+    var cmpVersions = function (lhs, rhs) {
+      if (lhs[0] < rhs[0])
+        return -1;
+      else if (lhs[0] == rhs[0]) {
+        if (lhs[1] < rhs[1])
+          return -1;
+        else if (lhs[1] == rhs[1]) {
+          if (lhs[2] < rhs[2])
+            return -1;
+          else if (lhs[2] == rhs[2])
+            return 0;
+          else return 1;
+        }
+        else return 1;
       }
+      else return 1;
+    };
+    var outOfDateMessage =
+      "The version of Fabric that you have installed is out of date.\n" +
+      "Please install the updated plugin";
+    if (cmpVersions(version, requiredVersion) < 0) {
+      alert(outOfDateMessage);
+      createDownloadPrompt();
+      throw(outOfDateMessage);
     }
     
     if(context.build.isExpired()){
-      alert("Fabric(Alpha) plugin has expired. Please install the lastest version");
+      var expiredMessage = "Fabric(Alpha) plugin has expired. Please install the lastest version";
+      alert(expiredMessage);
       createDownloadPrompt();
-      throw("Fabric(Alpha) plugin has expired. Please install the lastest version");
+      throw(expiredMessage);
     }
     
     FABRIC.displayDebugger = function(ctx) {

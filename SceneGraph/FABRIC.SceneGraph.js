@@ -780,23 +780,18 @@ FABRIC.SceneGraph = {
             // multiple viewports? Should the 'play' controls be moved to
             // Viewport?
             requestAnimFrame( advanceTime, viewports[0].getWindowElement() );
-          //  scene.pub.redrawAllWindows();
           },
           isPlaying: function(){
             return isPlaying;
           },
           pause: function() {
             isPlaying = false;
-          //  viewports[0].getFabricWindowObject().setRedrawFinishedCallback(null);
-          //  scene.pub.redrawAllWindows();
             requestAnimFrame( undefined, viewports[0].getWindowElement() );
           },
           reset: function() {
             isPlaying = false;
             animationTime = 0.0;
             globalsNode.setData('time', 0.0);
-          //  viewports[0].getFabricWindowObject().setRedrawFinishedCallback(null);
-          //  scene.pub.redrawAllWindows();
             requestAnimFrame( undefined, viewports[0].getWindowElement() );
           },
           step: function() {

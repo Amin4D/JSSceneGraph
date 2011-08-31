@@ -41,9 +41,9 @@ FABRIC.RT.fromString = function(str) {
 
 FABRIC.RT.Math = function() {
   this.precision = 1e-5;
-  this.radToDeg = 57.2957795;
-  this.degToRad = 0.0174532925;
   this.PI = 3.141592653589793238462643383279;
+  this.radToDeg = 180.0 / this.PI;
+  this.degToRad = this.PI / 180.0;
   this.TWO_PI = this.PI * 2.0;
   this.HALF_PI = this.PI * 0.5;
 }

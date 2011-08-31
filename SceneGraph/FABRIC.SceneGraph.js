@@ -676,6 +676,17 @@ FABRIC.SceneGraph = {
         var timerange = FABRIC.RT.vec2(-1,-1);
         var looping = false;
         var onAdvanceCallback;
+        
+        var requestAnimFrame = (function(){
+          return  window.requestAnimationFrame       || 
+                  window.webkitRequestAnimationFrame || 
+                  window.mozRequestAnimationFrame    || 
+                  window.oRequestAnimationFrame      || 
+                  window.msRequestAnimationFrame     || 
+                  function(/* function */ callback, /* DOMElement */ element){
+                    window.setTimeout(callback, 1000 / 60);
+                  };
+        })();
         var setTime = function(t, timestep, redraw) {
           
           if (looping && animationTime > timerange.y){
@@ -689,6 +700,10 @@ FABRIC.SceneGraph = {
           }
           if(redraw !== false){
             scene.pub.redrawAllWindows();
+            if(isPlaying){
+              // Queue up the next redraw immediately. 
+              requestAnimFrame( advanceTime, viewports[0].getWindowElement() );
+            }
           }
         }
         var advanceTime = function() {
@@ -697,7 +712,7 @@ FABRIC.SceneGraph = {
           prevTime = (new Date).getTime();
           if (sceneOptions.fixedTimeStep) {
             // In fixed time step mode, the computer will attempt to play back
-            // at texactly the given frame rate. If he frame rate cannot be achieved
+            // at exactly the given frame rate. If the frame rate cannot be achieved
             // it plays as fast as possible.
             // The time step as used throughout the graph will always be fixed at the
             // given rate. 
@@ -764,23 +779,18 @@ FABRIC.SceneGraph = {
             // we have zero or more windows. What happens when we have
             // multiple viewports? Should the 'play' controls be moved to
             // Viewport?
-            viewports[0].getFabricWindowObject().setRedrawFinishedCallback(advanceTime);
-            scene.pub.redrawAllWindows();
+            requestAnimFrame( advanceTime, viewports[0].getWindowElement() );
           },
           isPlaying: function(){
             return isPlaying;
           },
           pause: function() {
             isPlaying = false;
-            viewports[0].getFabricWindowObject().setRedrawFinishedCallback(null);
-            scene.pub.redrawAllWindows();
           },
           reset: function() {
             isPlaying = false;
             animationTime = 0.0;
             globalsNode.setData('time', 0.0);
-            viewports[0].getFabricWindowObject().setRedrawFinishedCallback(null);
-            scene.pub.redrawAllWindows();
           },
           step: function() {
             advanceTime();
@@ -1158,17 +1168,8 @@ FABRIC.SceneGraph.registerNodeType('Viewport', {
       var ray = viewPortRayCastDgNode.getData('ray');
       return ray;
     };
-    // TODO: Not all browsers on OSX features this redraw issue.
-    // figures out exactly which ones do and detect only those.
-    var onOsX = navigator.userAgent.search("Mac OS X");
-    viewportNode.pub.redraw = function() {
+    viewportNode.pub.redraw = function(animating) {
       fabricwindow.needsRedraw();
-      if(onOsX != -1 && !scene.pub.animation.isPlaying()){
-        fabricwindow.setRedrawFinishedCallback(function(){
-          fabricwindow.setRedrawFinishedCallback(null);
-          fabricwindow.needsRedraw();
-        });
-      }
     };
     viewportNode.pub.writeData = function(sceneSaver, constructionOptions, nodeData) {
       nodeData.camera = sceneSaver.wrapQuotes(cameraNode.name);
@@ -1306,7 +1307,11 @@ FABRIC.SceneGraph.registerNodeType('Viewport', {
       // Mouse wheel events are sent to the document, not the element,
       // so here we catch mouse wheel events only when the mouse goes over the element.
       // TODO: Fix Safari mouse wheel events..
+      var mouseWheelActivated = false;
       var activateMousewheelFn = function(evt) {
+        if(mouseWheelActivated){
+          return;
+        }
         var mousewheelFn = function(evt) {
           fireEvent('mousewheel', evt);
         }
@@ -1314,11 +1319,12 @@ FABRIC.SceneGraph.registerNodeType('Viewport', {
         var deactivateMousewheelFn = function(evt) {
           windowElement.removeEventListener('mouseout', deactivateMousewheelFn, false);
           document.removeEventListener('mousewheel', mousewheelFn, false);
+          mouseWheelActivated = false;
         }
         windowElement.addEventListener('mouseout', deactivateMousewheelFn, false);
+        mouseWheelActivated = true;
       }
-      windowElement.addEventListener('mouseover', activateMousewheelFn, false);
-
+      windowElement.addEventListener('mousemove', activateMousewheelFn, false);
       scene.addEventHandlingFunctions(viewportNode);
     }
 

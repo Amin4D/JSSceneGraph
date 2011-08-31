@@ -154,8 +154,15 @@ FABRIC.SceneGraph.registerNodeType('CameraManipulator', {
         return;
       }
       var mouseDragScreenDelta = evt.screenX - mouseDownScreenPos.x;
-      cameraNode.position = cameraPos.add(cameraPos.subtract(cameraTarget)
-                                     .mulInPlace(mouseDragScreenDelta * options.mouseDragZoomRate));
+      
+      var zoomDist = cameraNode.getFocalDistance() * -options.mouseDragZoomRate * mouseDragScreenDelta;
+      var newcameraXfo = cameraXfo.clone();
+      var cameraZoom = cameraXfo.ori.getZaxis().mulInPlace(zoomDist);
+      newcameraXfo.tr.addInPlace(cameraZoom);
+      cameraNode.getTransformNode().setGlobalXfo(newcameraXfo);
+      if (!cameraNode.getTransformNode().getTarget) {
+        cameraNode.setFocalDistance(cameraNode.getFocalDistance() - zoomDist);
+      }
       viewportNode.redraw(true);
       evt.stopPropagation();
     }

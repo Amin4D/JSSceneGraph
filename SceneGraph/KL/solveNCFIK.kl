@@ -1,0 +1,142 @@
+//
+// Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
+//
+
+use Xfo;
+use Bone;
+
+function Scalar sq(Scalar v) {
+  return v * v;
+}
+
+operator solveNCFIK(
+  io Xfo pose[],
+  io Bone bones[],
+  io Integer boneIndices[],
+  io Xfo target
+) {
+  // Compute the FK pose of the chain.
+  // Note: this should be moved to a separate solver.
+  for (Integer i = 0; i < boneIndices.size(); i++) {
+    pose[boneIndices[i]] = bones[boneIndices[i]].referenceLocalPose * pose[bones[boneIndices[i]].parent];
+  }
+  Integer boneIndex, lastBoneIndex = boneIndices[boneIndices.size() - 1];
+  Scalar distToIkGoal, distToFkChainTip, remainingChainLength = 0;
+  Scalar fkBoneAngle, ikBoneAngle, deltaBoneAngle;
+  Scalar maxFkBoneAngle, maxIkBoneAngle;
+  Vec3 chainRootPos, vecToIkGoal, vecToFkChainTip, goalPosition, fkChainTip;
+  Quat chainOffsetRotation;
+  Xfo boneXfo, boneParentXfo;
+  Bone bone;
+
+  fkChainTip = pose[lastBoneIndex].transform(Vec3(bones[lastBoneIndex].length, 0.0, 0.0));
+  chainRootPos = pose[boneIndices[0]].tr;
+
+  for (Integer i = 0; i < boneIndices.size(); i++) {
+    remainingChainLength += bones[boneIndices[i]].length;
+  }
+
+  // Apply the soft limit to the distance to the IK goal
+  vecToIkGoal = target.tr - chainRootPos;
+  distToIkGoal = vecToIkGoal.norm();
+
+  // Limit the extention to 98% and ramp it up over 5% of the chains length
+  //  vecToIkGoal      *= ( limitValue( distToIkGoal, remainingChainLength * 0.98, remainingChainLength * 0.08 ) ) / distToIkGoal;
+  //  goalPosition    = chainRootPos + vecToIkGoal;
+
+  goalPosition = target.tr;
+
+  for (Integer i = 0; i < boneIndices.size(); i++) {
+    boneIndex = boneIndices[i];
+    bone = bones[boneIndex];
+    boneXfo = pose[boneIndices[i]];
+    if (i == 0) {
+      vecToFkChainTip = fkChainTip - boneXfo.tr;
+    }
+    else {
+      // Transform the bone position by the overall chain offset.
+      vecToFkChainTip = fkChainTip - (chainRootPos + chainOffsetRotation.transform(boneXfo.tr - chainRootPos));
+
+      // Calculate a new pose position based on the parent bones new orientation
+      boneXfo.tr = pose[bone.parent].transform(Vec3(bones[bone.parent].length, 0.0, 0.0));
+    }
+    distToFkChainTip = vecToFkChainTip.norm();
+    vecToFkChainTip *= 1.0 / distToFkChainTip;
+
+    vecToIkGoal = goalPosition - boneXfo.tr;
+    distToIkGoal = vecToIkGoal.norm();
+    vecToIkGoal *= 1.0 / distToIkGoal;
+
+    if (i == 0) {
+      // For the first bone calculate and store the overall chain offset towards the ik target
+      chainOffsetRotation = makeQuatFrom2Vectors(vecToFkChainTip, vecToIkGoal).unit();
+      fkChainTip = boneXfo.tr + (vecToIkGoal * distToFkChainTip);
+      boneXfo.ori = chainOffsetRotation * boneXfo.ori;
+    }
+    else {
+      // Apply the chain offset, and apply any incremental correction.
+      // This additional correction is required due to a new bone position based on the new parent orientation
+      boneXfo.ori = makeQuatFrom2Vectors(vecToFkChainTip, vecToIkGoal) * chainOffsetRotation * boneXfo.ori;
+    }
+
+    // Based on the bone index, select an appropriate method to solve
+    if (i <= (boneIndices.size() - 2)) {
+      // Remove the current bones length from the chain.
+      remainingChainLength -= bone.length;
+      Vec3 boneLengthVector = boneXfo.ori.rotateVector(Vec3(1.0, 0.0, 0.0));
+      Vec3 bendAxis = vecToIkGoal.cross(boneLengthVector);
+      bendAxis.setUnit();
+
+      // this is the current angle of the bone.
+      fkBoneAngle = acos(boneLengthVector.dot(vecToIkGoal));
+
+      if (i == (boneIndices.size() - 2)) {
+        // Use trigonometry to determine the ikBoneAngle
+        // Law of cosines. a = BoneLength; b = Child BoneLength; c = Distance to the Ik Goal;
+        ikBoneAngle = acos(clamp((sq(bone.length) + sq(distToIkGoal) - sq(remainingChainLength)) / (2.0 * bone.length * distToIkGoal), - 1.0, 1.0));
+      }
+      else {
+        // distance from the bone tip to the ik gloal
+        if (distToFkChainTip > remainingChainLength) {
+          // Using the law of cosines, calculate the maximum angle of this bone using the fk Chain tip
+          maxFkBoneAngle = acos(clamp((sq(bone.length) + sq(distToFkChainTip) - sq(remainingChainLength)) / (2.0 * bone.length * distToFkChainTip), - 1.0, 1.0));
+        }
+        else {
+          // Add on the remaining chain length as radians.
+          maxFkBoneAngle = acos(clamp((bone.length * 0.5) / remainingChainLength, 0.0, 1.0));
+          maxFkBoneAngle += (remainingChainLength - distToFkChainTip) / bone.length;
+        }
+
+        // distance from the bone tip to the ik gloal
+        if (distToIkGoal > remainingChainLength) {
+          // Using the law of cosines, calculate the maximum angle of this bone using the fk Chain tip
+          maxIkBoneAngle = acos(clamp((sq(bone.length) + sq(distToIkGoal) - sq(remainingChainLength)) / (2.0 * bone.length * distToIkGoal), - 1.0, 1.0));
+        }
+        else {
+          // Add on the remaining chain length as radians.
+          maxIkBoneAngle = acos(clamp((bone.length * 0.5) / remainingChainLength, 0.0, 1.0));
+          maxIkBoneAngle += (remainingChainLength - distToIkGoal) / bone.length;
+        }
+
+        ikBoneAngle = maxIkBoneAngle * (fkBoneAngle / maxFkBoneAngle);
+      }
+
+      // Subtract off the current angle the bone has with the vecToIkGoal to keep the delta
+      deltaBoneAngle = (ikBoneAngle - fkBoneAngle);
+
+      // Apply the rotation to the current bones
+      boneXfo.ori = axisAndAngleToQuat(bendAxis, deltaBoneAngle) * boneXfo.ori;
+    }
+
+    pose[boneIndex] = boneXfo;
+  }
+}
+
+operator solveInvNCFIK(
+  io Xfo pose[],
+  io Bone bones[],
+  io Integer boneIndices[],
+  io Xfo target
+) {
+  target.tr = pose[boneIndices[boneIndices.size() - 1]].transform(Vec3(bones[boneIndices.size() - 1].length, 0.0, 0.0));
+}

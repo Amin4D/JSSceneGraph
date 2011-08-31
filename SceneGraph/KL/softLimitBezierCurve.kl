@@ -1,0 +1,55 @@
+//
+// Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
+//
+
+use Vec2;
+
+function Scalar applySoftLimitBezierCurve(
+  Scalar val,
+  Scalar minVal,
+  Vec2 minValSoftening,
+  Scalar maxVal,
+  Vec2 maxValSoftening
+) {
+  //  report( "applySoftLimitBezierCurve val: " + val + " minVal: " + minVal + " minValSoftening: " + minValSoftening + " maxVal: " + maxVal + " maxValSoftening: " + maxValSoftening );
+
+  BezierKeyframe key1, key2;
+
+  if (val < (minVal + minValSoftening.y)) {
+    if (val < (minVal - minValSoftening.x)) {
+      return minVal;
+    }
+
+    key1.time = minVal + minValSoftening.y;
+    key1.value = minVal + minValSoftening.y;
+    key1.intangent.x = minValSoftening.y * - 0.5;
+    key1.intangent.y = minValSoftening.y * - 0.5;
+
+    key2.time = minVal - minValSoftening.x;
+    key2.value = minVal;
+    key2.outtangent.x = minValSoftening.x * 0.5;
+    key2.outtangent.y = 0;
+
+    return key2.interpolate(key1, val);
+  }
+  else if (val > (maxVal - maxValSoftening.x)) {
+    if (val > (maxVal + maxValSoftening.y)) {
+      return maxVal;
+    }
+
+    key1.time = maxVal - maxValSoftening.x;
+    key1.value = maxVal - maxValSoftening.x;
+    key1.outtangent.x = maxValSoftening.x * 0.5;
+    key1.outtangent.y = maxValSoftening.x * 0.5;
+
+    key2.time = maxVal + maxValSoftening.y;
+    key2.value = maxVal;
+    key2.intangent.x = maxValSoftening.y * - 0.5;
+    key2.intangent.y = 0;
+
+    return key1.interpolate(key2, val);
+  }
+  else {
+    return val;
+  }
+}

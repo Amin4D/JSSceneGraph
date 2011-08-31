@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<shader>
+	<name>BasicMaterial</name>
+	<uniforms>
+    <uniform name="u_materialColor" constant="color" type="Color"/>
+		<uniform name="u_modelViewProjectionMatrix" constant="modelViewProjectionMatrix" type="Mat44" owner="instance"/>
+		<uniform name="u_modelViewMatrix" constant="modelViewMatrix" type="Mat44" owner="instance"/>
+		<uniform name="u_normalMatrix" constant="normalMatrix" type="Mat33" owner="instance"/>
+	</uniforms>
+	<attributes>
+		<attribute name="a_position" binding="positions"/>
+		<attribute name="a_normal" binding="normals"/>
+	</attributes>
+	<vertexshader>
+		<source>
+
+			uniform mat4 u_modelViewProjectionMatrix;
+			uniform mat4 u_modelViewMatrix;
+			uniform mat3 u_normalMatrix;
+			
+			attribute vec4 a_position;
+			attribute vec3 a_normal;
+
+			varying vec3 normal;
+			varying vec3 viewDir;
+
+			void main(){
+
+				normal = u_normalMatrix * a_normal;
+				viewDir = -vec3(u_modelViewMatrix * a_position);
+
+				gl_Position = u_modelViewProjectionMatrix * a_position;
+			}
+
+		</source>
+	</vertexshader>
+	
+	<fragmentshader>
+		<source>
+      
+      uniform vec4 u_materialColor;
+
+			varying vec3 normal;
+			varying vec3 viewDir;
+
+			void main(){
+        vec3 N = normalize(normal);
+        vec3 V = normalize(viewDir);
+        
+				gl_FragColor = u_materialColor * dot(N,V);
+			}
+
+		</source>
+	</fragmentshader>
+</shader>

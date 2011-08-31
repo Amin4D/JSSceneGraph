@@ -1,0 +1,50 @@
+//
+// Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
+//
+
+use CollectedPoints;
+use Mat33;
+use Mat44;
+use Vec3;
+use Xfo;
+use Color;
+
+operator collectPointsInsideBrush(
+  io Boolean select,
+  io CollectedPoints collectedPoints,
+
+  io Mat44 cameraMatrix,
+  io Mat44 projectionMatrix,
+  io Scalar aspectRatio,
+
+  io Vec3 brushPos,
+  io Scalar brushSize,
+  io Color brushColor,
+
+  io Xfo globalXfo,
+  io Vec3 positions[],
+  io Vec3 normals[],
+  io Color vertexColors[]
+) {
+  select = true;
+  Mat44 modelMatrix = globalXfo;
+  Mat44 modelViewProjectionMatrix = modelMatrix * cameraMatrix * projectionMatrix;
+  Mat33 normalMatrix = modelViewProjectionMatrix.upperLeft().inverse().transpose();
+
+  for (var Integer i = 0; i < positions.size(); i++) {
+    Vec3 n = normals[i] * normalMatrix;
+    if (n.z > 0) {
+      continue;
+    }
+    Vec3 v = positions[i] * modelViewProjectionMatrix;
+    Vec3 delta = v - brushPos;
+    delta.x *= aspectRatio;
+    delta.z *= 0.0;
+    Scalar dist = delta.norm();
+
+    if (dist < brushSize) {
+      collectedPoints.distances.push(dist);
+      collectedPoints.points.push(i);
+    }
+  }
+}

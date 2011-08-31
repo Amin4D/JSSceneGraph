@@ -1,0 +1,10 @@
+//
+// Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
+//
+
+use Mat44, Xfo;
+
+operator xfoToMat44(io Mat44 mat44, io Xfo xfo) {
+  //  console_log( "xfoToMat44 :%i\n",  );
+  mat44 = xfo;
+}

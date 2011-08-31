@@ -1,0 +1,138 @@
+//
+// Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
+//
+
+use Vec2, Vec3, OGLShaderProgram;
+use FabricOGL;
+
+function drawTexture(
+  Integer textureUnit,
+  io Integer program,
+  Vec2 tl,
+  Vec2 br,
+  Boolean flipY
+  
+) {
+  //report("drawTexture: textureUnit=" + textureUnit);
+
+  if (!program) {
+    OGLShaderSource pixelShader;
+    OGLShaderSource fragmentShader;
+    pixelShader.type = GL_VERTEX_SHADER;
+    pixelShader.code = '\
+      attribute vec4 a_position; \
+      attribute vec2 a_texCoord; \
+      void main() { \
+        gl_TexCoord[0].st = a_texCoord; \
+        gl_Position = a_position; \
+      }';
+
+    fragmentShader.type = GL_FRAGMENT_SHADER;
+    fragmentShader.code = '\
+      uniform sampler2D u_rgbaImage; \
+      void main() \
+      { \
+        gl_FragColor = texture2D( u_rgbaImage, gl_TexCoord[0].st ); \
+      }';
+    
+    OGLShaderProgram shaderProgram('renderTextureToView');
+    shaderProgram.debug = false;
+    shaderProgram.shaderSources.push(pixelShader);
+    shaderProgram.shaderSources.push(fragmentShader);
+    shaderProgram.loadShader();
+    if (!shaderProgram.programId) {
+      report('Error in renderTextureToView');
+      return;
+    }
+    program = shaderProgram.programId;
+  }else{
+    glUseProgram(program);
+  }
+
+  var String name = 'a_position';
+  var Integer posLocation = glGetAttribLocation(program, name);
+  name = 'a_texCoord';
+  var Integer texLocation = glGetAttribLocation(program, name);
+  name = 'u_rgbaImage';
+  var Integer smpLocation = glGetUniformLocation(program, name);
+
+  glUniform1i( smpLocation, textureUnit );
+  glPushAttrib(GL_TEXTURE_BIT | GL_ENABLE_BIT | GL_DEPTH_BUFFER_BIT);
+  
+  glEnable(GL_TEXTURE_2D);
+  glDisable(GL_DEPTH_TEST);
+  glDisable(GL_CULL_FACE); 
+
+  // Draw a quad in the upper left with debugging info
+  var Vec3 p[4];
+  p[0] = Vec3(tl.x, tl.y, 0.0);
+  p[1] = Vec3(br.x, tl.y, 0.0);
+  p[2] = Vec3(br.x, br.y, 0.0);
+  p[3] = Vec3(tl.x, br.y, 0.0);
+  
+  var Vec2 t[4];
+  if(flipY){
+    t[0] = Vec2(0.0, 0.0);
+    t[1] = Vec2(1.0, 0.0);
+    t[2] = Vec2(1.0, 1.0);
+    t[3] = Vec2(0.0, 1.0);
+  }else{
+    t[0] = Vec2(0.0, 1.0);
+    t[1] = Vec2(1.0, 1.0);
+    t[2] = Vec2(1.0, 0.0);
+    t[3] = Vec2(0.0, 0.0);
+  }
+  
+  var Integer idx[4];
+  idx[0] = 0; idx[1] = 1; idx[2] = 2; idx[3] = 3;
+
+  var Data NULL;
+
+  var Size bufferIDArray[];
+  bufferIDArray.resize(1);
+
+  glGenBuffers(1, bufferIDArray);
+  var Size bufferID0 = bufferIDArray[0];
+  glGenBuffers(1, bufferIDArray);
+  var Size bufferID1 = bufferIDArray[0];
+  glGenBuffers(1, bufferIDArray);
+  var Size bufferID2 = bufferIDArray[0];
+  
+  glBindBuffer(GL_ARRAY_BUFFER, bufferID0);
+  glBufferData(GL_ARRAY_BUFFER, p.dataSize(), p.data(), GL_STATIC_DRAW);
+  glEnableVertexAttribArray(posLocation);
+  glVertexAttribPointer(posLocation, 3, GL_FLOAT, GL_FALSE, 0, NULL);
+
+  glBindBuffer(GL_ARRAY_BUFFER, bufferID1);
+  glBufferData(GL_ARRAY_BUFFER, t.dataSize(), t.data(), GL_STATIC_DRAW);
+  glEnableVertexAttribArray(texLocation);
+  glVertexAttribPointer(texLocation, 2, GL_FLOAT, GL_FALSE, 0, NULL);
+
+  glBindBuffer(GL_ARRAY_BUFFER, bufferID2);
+  glBufferData(GL_ARRAY_BUFFER, idx.dataSize(), idx.data(), GL_STATIC_DRAW);
+  glBindBuffer(GL_ARRAY_BUFFER, 0);
+  
+  glUniform1i( smpLocation, textureUnit );
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, bufferID2);
+  glDrawElements(GL_QUADS, idx.size(), GL_UNSIGNED_INT, NULL);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+  glPopAttrib();
+
+  bufferIDArray[0] = bufferID0; glDeleteBuffers(1, bufferIDArray);
+  bufferIDArray[0] = bufferID1; glDeleteBuffers(1, bufferIDArray);
+  bufferIDArray[0] = bufferID2; glDeleteBuffers(1, bufferIDArray);
+  
+  glBindTexture( GL_TEXTURE_2D, 0 );
+//  report("<<<drawTexture");
+}
+
+
+operator drawTextureFullScreen(
+  io Integer textureUnit,
+  io Integer program
+) {
+  Vec2 tl(-1.0, 1.0);
+  Vec2 br(1.0, -1.0);
+  drawTexture(textureUnit, program, tl, br, true);
+}

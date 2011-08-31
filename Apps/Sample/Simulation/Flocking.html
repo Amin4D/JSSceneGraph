@@ -1,0 +1,298 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <!--
+    Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
+    -->
+  <head> 
+    <title>FABRIC - Flocking</title> 
+    
+    <meta charset="iso-8859-1"/>
+    <link href="../../../themes/default/style.css" rel="stylesheet" type="text/css" />
+    <link href="../../../themes/default/viewer.css" rel="stylesheet" type="text/css" />
+    
+    <script type="text/javascript" src="../../../ThirdParty/jQuery/jquery-1.4.2.min.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/jQuery/jquery-ui-1.8.5.custom.min.js"></script>
+
+    <link type="text/css" href="../../../ThirdParty/jQuery/css/vader/jquery-ui-1.8.5.custom.css" rel="stylesheet" />
+
+    <script type="text/javascript" src="../../../Core/FABRIC.Wrappers.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../Core/FABRIC.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/Math.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/RGBA.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/Vec2.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/Vec3.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/Vec4.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/Mat22.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/Mat33.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/Mat44.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/Quat.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/Xfo.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/Color.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/Ray.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/CollectedPoints.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/RGBA.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/Euler.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/HashTable.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/OGLShaderProgram.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/OGLBuffer.js" charset="utf-8"></script>
+    
+
+    <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Geometry.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Primitives.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Lights.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Materials.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Manipulation.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Particles.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Kinematics.js" charset="utf-8"></script>
+    
+    <script type="text/javascript">
+    
+$(document).ready(function() {
+
+  $('#play').button({
+    text: true,
+    icons: {
+      primary: 'ui-icon-play'
+    }
+  });
+
+  $('#step').button({
+    text: true,
+    icons: {
+      primary: 'ui-icon-step'
+    }
+  });
+
+  var numAgents, gridSize, cameraPos;
+  var sceneSize = 'huge';
+  if (sceneSize === 'tiny') {
+    cameraPos = FABRIC.RT.vec3(20, 30, -40).scale(0.05);
+    numAgents = 10;
+    gridSize = 6;
+  }
+  else if (sceneSize === 'small') {
+    cameraPos = FABRIC.RT.vec3(20, 30, -40).scale(0.5);
+    numAgents = 100;
+    gridSize = 30;
+  }
+  else if (sceneSize === 'medium') {
+    cameraPos = FABRIC.RT.vec3(20, 30, -40).scale(0.5);
+    numAgents = 7000;
+    gridSize = 80;
+  }
+  else if (sceneSize === 'huge') {
+    cameraPos = FABRIC.RT.vec3(20, 30, -40).scale(1.0);
+    numAgents = 10000;
+    gridSize = 100;
+  }
+  else if (sceneSize === 'massive') {
+    cameraPos = FABRIC.RT.vec3(20, 30, -40).scale(10);
+    numAgents = 160000;
+    gridSize = 800;
+  }
+
+  // Create the scene.
+  scene = FABRIC.SceneGraph.createScene();
+  var viewport = scene.constructNode('Viewport', {
+      windowElement: document.getElementById('FabricContainer'),
+      backgroundColor: FABRIC.RT.rgb(0.5, 0.7, 0.9),
+      enableRaycasting: true
+    });
+
+  var light = scene.constructNode('PointLight', { position: FABRIC.RT.vec3(420.0, 1000.0, 600.0) });
+  // Create a camera to draw the scene from
+  var camera = scene.constructNode('TargetCamera', {
+      target: FABRIC.RT.vec3(0, 0, 0),
+      position: cameraPos,
+      nearDistance: 1,
+      farDistance: 1000
+    });
+  viewport.setCameraNode(camera);
+
+  scene.constructNode('CameraManipulator', { targetNode: camera });
+
+  /////////////////////////////////////////////////
+  // Create the Flock
+  var flockMaterial = scene.constructNode('FlatMaterial', {
+      prototypeMaterialType: 'PointMaterial',
+      pointSize: 3.0 ,
+      color: FABRIC.RT.rgb(1.0, 0.0, 0.0)
+    });
+
+  var particlesNode = scene.constructNode('Flock', {
+      cellsize: 1,
+      x_count: gridSize,
+      y_count: 1,
+      z_count: gridSize,
+      displayGrid: true
+    });
+
+  scene.constructNode('Instance', {
+      geometryNode: particlesNode,
+      materialNode: flockMaterial
+    });
+
+  var particlePositions = [];
+  var particleGoals = [];
+  var particleVelocities = [];
+  for (i = 0; i < numAgents; i++) {
+    particlePositions.push(FABRIC.RT.vec3(
+      (Math.random() - 0.5) * gridSize * 0.95,
+      0.0,
+      (Math.random() - 0.5) * gridSize * 0.95
+    ));
+    particleGoals.push(FABRIC.RT.vec3(
+      (Math.random() - 0.5) * gridSize * 0.95,
+      0.0,
+      (Math.random() - 0.5) * gridSize * 0.95
+    ));
+  //  particleGoals.push( FABRIC.RT.vec3( 0.0, 0.0, 0.0 ) );
+    particleVelocities.push(FABRIC.RT.vec3(
+      Math.random() - 0.5,
+      0.0,
+      Math.random() - 0.5
+    ).scale(0.02));
+  }
+  particlesNode.loadGeometryData({
+    positions: particlePositions,
+    goals: particleGoals,
+    velocities: particleVelocities
+  });
+
+  /////////////////////////////////////////////////
+  // Set up the painting of the ground plane.
+/*  var groundMaterial = scene.constructNode("VertexColorMaterial", {
+    diffuseColor:FABRIC.RT.rgb(0.2,0.7,0.4),
+    lightNode:light
+  });
+  var groundPlane = scene.constructNode("Plane", {
+    length:gridSize,
+    width:gridSize,
+    lengthSections:gridSize/3,
+    widthSections:gridSize/3
+  });
+  groundPlane.addVertexAttributeValue( "vertexColors", "Color", { defaultValue: FABRIC.RT.rgb( 0.0, 0.6, 0.0 ) } );
+  var groundPlaneInstance = scene.constructNode("Instance", {
+      transformNode:scene.constructNode("Transform", {
+        hierarchical:false,
+        globalXfo:FABRIC.RT.xfo({ tr:FABRIC.RT.vec3(0, -0.3, 0) })
+      }),
+      geometryNode:groundPlane,
+      materialNode:groundMaterial,
+      enableRaycasting:false
+    });
+
+  var paintManipulator = scene.constructNode("PaintManipulator" );
+  paintManipulator.addGeometryInstance( groundPlaneInstance );
+
+  var onPaintFn = function( evt ){
+    groundPlane.reloadVBO( "vertexColors" );
+    viewport.redraw();
+  }
+
+  paintManipulator.addEventListener( "onpaint", onPaintFn );
+*/
+
+
+  document.getElementById('numAgents').childNodes[0].data = 'Num Agents:' + numAgents;
+
+  $('#play').button()
+    .click(function() {
+      var options;
+      if ($(this).text() == 'Play') {
+        $(this).button('option', {
+          label: 'Pause',
+          icons: {
+            primary: 'ui-icon-pause'
+          }
+        });
+        scene.animation.play();
+      } else {
+        $(this).button('option', {
+          label: 'Play',
+          icons: {
+            primary: 'ui-icon-play'
+          }
+        });
+        scene.animation.pause();
+      }
+    });
+  $('#step').button()
+    .click(function() {
+      scene.animation.step();
+    });
+      
+  
+  $('#loadingDialog').dialog({
+    modal: true
+  });
+  var count = FABRIC.getAsyncTaskCount();
+  FABRIC.appendOnResolveAsyncTaskCallback(function(label, countRemaining){
+    $('#loadingProgressBar').progressbar({
+      value: (1.0-(countRemaining/count))*100
+    });
+    if(countRemaining===0){
+      $('#loadingDialog').dialog('close');
+      var errors = scene.getErrors();
+      if (errors.length > 0) {
+        throw (errors.toString());
+      }
+      viewport.redraw();
+      
+      setInterval(function() {
+          document.getElementById('frameRate').childNodes[0].data = 'Frame Rate:' + viewport.getFPS().toFixed(2);
+        }, 600);
+    }
+  });
+  
+});
+
+</script>
+
+  </head> 
+  <body>
+    <div id="loadingDialog" title="Loading...">
+      <h4 id="loadingDesc" style="margin-bottom: 10px"></h4>
+      <div id="loadingProgressBar" class="ui-progressbar-value"></div>
+    </div>
+    <div id="wrapper">
+      <ul id="nav">
+        <li><a href="#" id="fabric-logo"><img src="../../../themes/default/_img/projects/fabric-logo.png" /></a></li>
+      </ul>
+      <div id="editor">
+        <div id="viewer">
+          <div id="FabricContainer"></div> 
+        </div><!--viewer-->
+        <div id="sidebar">
+        
+          <div class="box">
+            <h2>INFO</h2>
+              <div class="content">
+              Particle Flocking.<br>
+              Each particle is processed in a different slice, making use of FABRIC's multithreading architecture. 
+            </div><!--content-->
+          </div><!--box-->
+
+          <div class="box">
+            <h2>CONTROLS</h2>
+            <div class="content">
+              <button id="play" style="margin-top:10px;">Play</button>
+              <button id="step" style="margin-top:10px;">Step</button>
+            </div><!--content-->
+          </div><!--box-->
+        
+          <div class="box">
+            <h2 id="agents">CPU FLOCKING</h2>
+            <div class="content" id="numAgents">Num Agents:</div><p></p>
+          </div><!--box-->
+          
+          <div class="box">
+            <h2 id="agents">PERFORMANCE</h2>
+            <div class="content" id="frameRate">Frame Rate:</div><p></p>
+          </div><!--box-->
+      
+        </div><!--sidebar-->
+      </div> <!--editor-->
+    </div><!--wrapper-->
+  </body> 
+  </html>

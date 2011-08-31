@@ -1,0 +1,27 @@
+//
+// Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
+//
+
+use Mat44, Xfo;
+
+operator calcSkinningMatrices(io Xfo pose[], io Mat44 invMatrices[], io Mat44 matrices[]) {
+  if (invMatrices.size() != pose.size()) {
+    //  report("Error in calcSkinningMatrices: invMatrices.size() != pose.size() ");
+    return;
+  }
+  matrices.resize(pose.size());
+  for (var Integer i = 0; i < pose.size(); i++) {
+    matrices[i] = invMatrices[i] * Mat44(pose[i]);
+  }
+}
+
+operator calcSkinningXfos(io Xfo pose[], io Bone bones[], io Xfo xfos[]) {
+  if (bones.size() != pose.size()) {
+    //  report("Error in calcSkinningXfos: bones.size() != pose.size() ");
+    return;
+  }
+  xfos.resize(pose.size());
+  for (var Integer i = 0; i < pose.size(); i++) {
+    xfos[i] = pose[i].project(bones[i].referencePose.inv());
+  }
+}

@@ -8,32 +8,28 @@ FABRIC = (function() {
   // we keep an array of context ids,
   // so we can open the debugger with one
   var contextIDs = [];
-  var bindContextToEmbedTag = function(embedTag) {
-    var result = wrapFabricClient(embedTag, function(s) { console.log(s); } /*, function(s){console.debug(s);}*/);
-
-    /*
-    {
-      contextID: embedTag.contextID,
-      jsonExec: function (jsonEncodedCommands) {
-        return embedTag.jsonExec(jsonEncodedCommands);
-      },
-      setJSONNotifyCallback: function (jsonNotifyCallback) {
-        embedTag.setJSONNotifyCallback(jsonNotifyCallback);
-      },
-      RegisteredTypesManager: embedTag.RegisteredTypesManager,
-      DependencyGraph: embedTag.DependencyGraph,
-      DG: embedTag.DependencyGraph,
-      FrontEnds: embedTag.FrontEnds,
-      IO: embedTag.IO,
-      ThirdParty: embedTag.ThirdParty,
-                        Plugins: embedTag.Plugins,
-    };
-    */
-
-    return result;
-  };
+  
+  var createDownloadPrompt = function( div ){
+    var iframeTag = document.createElement('iframe');
+    iframeTag.setAttributeNS(null, 'src', 'http://demos.fabric-engine.com/Fabric/Core/pluginInstall.html');
+    iframeTag.setAttributeNS(null, 'style', 'position:absolute; left:10px; right:10px; top:10px; bottom:10px; z-index:10');
+    iframeTag.setAttributeNS(null, 'width', '98%');
+    iframeTag.setAttributeNS(null, 'height', '98%');
+    document.body.appendChild(iframeTag);
+  }
 
   var createContext = function(options) {
+    
+    // Check to see if the plugin is loaded.
+    if(!navigator.mimeTypes["application/fabric"]){
+      createDownloadPrompt();
+      throw("Fabric not installed");
+    }else if(!navigator.mimeTypes["application/fabric"].enabledPlugin){
+      alert("Fabric plugin not enabled");
+      throw("Fabric plugin not enabled");
+    }
+    
+    
     if (!options)
       options = {};
 
@@ -51,8 +47,29 @@ FABRIC = (function() {
     // if you do so then Chrome disables the plugin.
     //embedTag.style.display = 'none';
     document.body.appendChild(embedTag);
-
-    var context = bindContextToEmbedTag(embedTag);
+    
+    var context = wrapFabricClient(embedTag, function(s) { console.log(s); } );
+    
+    ///////////////////////////////////////////////////////////
+    // Check the currently installed version.
+    // TODO: This code will be removed once we get to the end of beta.
+    var version = context.build.getPureVersion().split('.');
+    var requiredVersion = [1,0,10];
+    for(var i=0; i<3; i++){
+      if(parseInt(version[i]) != requiredVersion[i]){
+        alert("The version of Fabric that you have installed is out of date.\n" +
+              "Please install the updated plugin");
+        createDownloadPrompt();
+        throw("The version of Fabric that you have installed is out of date.\n" +
+              "Please install the updated plugin");
+      }
+    }
+    
+    if(context.build.isExpired()){
+      alert("Fabric(Alpha) plugin has expired. Please install the lastest version");
+      createDownloadPrompt();
+      throw("Fabric(Alpha) plugin has expired. Please install the lastest version");
+    }
     
     FABRIC.displayDebugger = function(ctx) {
       if(!ctx) ctx = context;
@@ -117,6 +134,9 @@ FABRIC = (function() {
         getContextID: function() {
           return context.getContextID();
         },
+        getLicenses: function() {
+          return context.getLicenses();
+        },
         domElement: embedTag,
         windowNode: context.VP.viewPort.getWindowNode(),
         redrawEvent: context.VP.viewPort.getRedrawEvent(),
@@ -138,7 +158,7 @@ FABRIC = (function() {
       });
       return result;
     };
-
+    
     return context;
   };
 
@@ -174,28 +194,63 @@ FABRIC = (function() {
     }
     return url;
   };
-
-  var loadResourceURL = function(url, mimeType) {
+  
+  var asyncTaskCount = 0;
+  
+  var addAsyncTask = function(callback){
+    asyncTaskCount++;
+    setTimeout(function(){
+      callback();
+      asyncTaskCount--;
+      fireOnResolveAsyncTaskCallbacks('...');
+    }, 1);
+  }
+  
+  var onResolveAsyncTaskCallbacks = [];
+  var appendOnResolveAsyncTaskCallback = function(fn) {
+    onResolveAsyncTaskCallbacks.push(fn);
+  };
+  var fireOnResolveAsyncTaskCallbacks = function(label){
+    for (i=0; i<onResolveAsyncTaskCallbacks.length; i++){
+      if(onResolveAsyncTaskCallbacks[i].call(undefined, label, asyncTaskCount)){
+        onResolveAsyncTaskCallbacks.splice(i, 1);
+        i--;
+      }
+    }
+  }
+  var loadResourceURL = function(url, mimeType, callback) {
     if (!url) {
       throw 'missing URL';
     }
-
+    
     if(document.location.href.split('/')[0] === 'file:'){
       alert('Fabric demos must be loaded from localhost.\nNot directly from the file system.\n\ne.g. "http://localhost/Fabric/Apps/Sample/BasicDemos/Flocking.html"');
       thorow('Fabric demos must be loaded from localhost.\nNot directly from the file system.\n\ne.g. "http://localhost/Fabric/Apps/Sample/BasicDemos/Flocking.html"');
     }
     url = processURL(url);
-
+    
+    var label = url.split('/').pop().split('.')[0];
+    var async = (FABRIC.asyncResourceLoading && callback!==undefined) ? true : false;
+    if(async){
+      asyncTaskCount++;
+    }
     var result = null;
     var xhreq = new XMLHttpRequest();
     xhreq.onreadystatechange = function() {
       if (xhreq.readyState == 4) {
         if (xhreq.status == 200) {
-          result = xhreq.responseText;
+          if(callback){
+            callback(xhreq.responseText);
+            asyncTaskCount--;
+            fireOnResolveAsyncTaskCallbacks(label);
+          }
+          else{
+            result = xhreq.responseText;
+          }
         }
       }
     };
-    xhreq.open('GET', url, false);
+    xhreq.open('GET', url, async);
     xhreq.overrideMimeType(mimeType ? mimeType : 'text/plain');
     xhreq.send(null);
     return result;
@@ -231,6 +286,10 @@ FABRIC = (function() {
     appendOnCreateContextCallback: appendOnCreateContextCallback,
     processURL: processURL,
     loadResourceURL: loadResourceURL,
+    asyncResourceLoading: true,
+    addAsyncTask: addAsyncTask,
+    getAsyncTaskCount: function(){ return asyncTaskCount; },
+    appendOnResolveAsyncTaskCallback: appendOnResolveAsyncTaskCallback,
     convertImageURLToDataURL: convertImageURLToDataURL
   };
 })();

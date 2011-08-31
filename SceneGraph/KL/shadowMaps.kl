@@ -58,7 +58,7 @@ operator debugShadowMapBuffer(
   
   OGLTexture2D colorTexture;// = depthRenderTarget.getFirstColorTexture();
   for(Integer i=0; i<depthRenderTarget.textures.size(); i++){
-    if(depthRenderTarget.textures[i].type == 2){//self.COLOR_BUFFER
+    if(depthRenderTarget.textures[i].type == 2){//this.COLOR_BUFFER
       colorTexture = depthRenderTarget.textures[i].texture;
     }
   }

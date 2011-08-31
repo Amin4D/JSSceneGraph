@@ -6,10 +6,10 @@
 use Math;
 
 function BezierKeyframe(Scalar time, Scalar value, Vec2 intangent, Vec2 outtangent) {
-  self.time = time;
-  self.value = value;
-  self.intangent = intangent;
-  self.outtangent = outtangent;
+  this.time = time;
+  this.value = value;
+  this.intangent = intangent;
+  this.outtangent = outtangent;
 }
 
 function Boolean isZero(Scalar x) {
@@ -96,27 +96,27 @@ function Integer FindRootsToCubic(
 
 function Scalar BezierKeyframe.interpolate(BezierKeyframe key2, Scalar t) {
   var Vec2 outvec, invec;
-  outvec.x = self.time + self.outtangent.x;
-  outvec.y = self.value + self.outtangent.y;
+  outvec.x = this.time + this.outtangent.x;
+  outvec.y = this.value + this.outtangent.y;
   invec.x = key2.time + key2.intangent.x;
   invec.y = key2.value + key2.intangent.y;
 
-  var Scalar u = (t - self.time) / (key2.time - self.time);
+  var Scalar u = (t - this.time) / (key2.time - this.time);
   var Scalar s = 1.0 - u;
   var Scalar u2 = u * u;
 
   // ax3+bx2+cx+d=0
   var Scalar Ax, Bx, Cx, Dx;
-  Ax = key2.time - self.time - 3.0 * invec.x + 3.0 * outvec.x;
-  Bx = self.time - 2.0 * outvec.x + invec.x;
-  Cx = - self.time + outvec.x;
-  Dx = self.time - t;
+  Ax = key2.time - this.time - 3.0 * invec.x + 3.0 * outvec.x;
+  Bx = this.time - 2.0 * outvec.x + invec.x;
+  Cx = - this.time + outvec.x;
+  Dx = this.time - t;
 
   var Scalar Ay, By, Cy, Dy;
-  Ay = key2.value - self.value - 3.0 * invec.y + 3.0 * outvec.y;
-  By = self.value - 2.0 * outvec.y + invec.y;
-  Cy = - self.value + outvec.y;
-  Dy = self.value;
+  Ay = key2.value - this.value - 3.0 * invec.y + 3.0 * outvec.y;
+  By = this.value - 2.0 * outvec.y + invec.y;
+  Cy = - this.value + outvec.y;
+  Dy = this.value;
 
   var Scalar c[4];
   var Scalar roots[3];
@@ -129,8 +129,8 @@ function Scalar BezierKeyframe.interpolate(BezierKeyframe key2, Scalar t) {
   if ((Ax == 0.0) && (Bx == 0.0)) {
     v = u;
   }
-  else if (t == self.time) {
-    return self.value;
+  else if (t == this.time) {
+    return this.value;
   }
   else if (t == key2.time) {
     return key2.value;

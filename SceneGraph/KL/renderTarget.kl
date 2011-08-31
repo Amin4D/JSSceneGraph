@@ -42,7 +42,7 @@ operator drawRenderTargetToView(
 
   OGLTexture2D colorTexture;// = depthRenderTarget.getFirstColorTexture();
   for(Integer i=0; i<renderTarget.textures.size(); i++){
-    if(renderTarget.textures[i].type == 2){//self.COLOR_BUFFER
+    if(renderTarget.textures[i].type == 2){//this.COLOR_BUFFER
       colorTexture = renderTarget.textures[i].texture;
     }
   }

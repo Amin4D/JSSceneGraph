@@ -12,7 +12,7 @@ operator loadObj(
   io Data objParseHandle
 ) {
   report "OBJ decode " + url;
-  FabricOBJDecode(resource.data, resource.dataSize, objParseHandle);
+  FabricOBJDecode(resource.data.data(), resource.data.dataSize(), objParseHandle);
 
   Boolean hadErrors;
   FabricOBJHadErrors( objParseHandle, hadErrors );

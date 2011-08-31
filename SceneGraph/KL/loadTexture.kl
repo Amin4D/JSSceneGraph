@@ -11,17 +11,18 @@ function decodeLDRImageData(
   io Size imageHeight,
   io RGBA imageLDR[]
 ) {
-  if(resource.dataSize == 0)
+report "JCG Texture size " + resource.data.size();
+  if(resource.data.size() == 0)
     return;
   String ext = resource.extension ? resource.extension : resource.mimeType;
   switch (ext) {
     case'png':
     case'image/png':
-      FabricPNGDecode(resource.data, resource.dataSize, imageWidth, imageHeight, imageLDR);
+      FabricPNGDecode(resource.data.data(), resource.data.dataSize(), imageWidth, imageHeight, imageLDR);
       break;
     case'tga':
     case'image/tga':
-      FabricTGADecode(resource.data, resource.dataSize, imageWidth, imageHeight, imageLDR);
+      FabricTGADecode(resource.data.data(), resource.data.dataSize(), imageWidth, imageHeight, imageLDR);
       break;
   }
 }
@@ -32,17 +33,17 @@ function decodeHDRImageData(
   io Size imageHeight,
   io Color imageHDR[]
 ) {
-  if(resource.dataSize == 0)
+  if(resource.data.size() == 0)
     return;
   String ext = resource.extension ? resource.extension : resource.mimeType;
   switch (ext) {
     case'hdr':
     case'image/hdr':
-      FabricHDRDecode(resource.data, resource.dataSize, imageWidth, imageHeight, imageHDR);
+      FabricHDRDecode(resource.data.data(), resource.data.dataSize(), imageWidth, imageHeight, imageHDR);
       break;
     case'exr':
     case'image/exr':
-      FabricHDRDecode(resource.data, resource.dataSize, imageWidth, imageHeight, imageHDR);
+      FabricHDRDecode(resource.data.data(), resource.data.dataSize(), imageWidth, imageHeight, imageHDR);
       break;
   }
 }
@@ -85,7 +86,7 @@ operator loadAndBindTextureLDR(
   io Integer textureUnit
 ) {
 //  report("loadAndBindTextureLDR -> textureUnit:" + textureUnit);
-  if(resource.dataSize == 0)
+  if(resource.data.size() == 0)
     return;
   if(oglTexture2D.bufferID == 0){
     Size width, height;
@@ -93,8 +94,7 @@ operator loadAndBindTextureLDR(
     decodeLDRImageData(resource, width, height, imageLDR);
     oglTexture2D.configure(width, height, imageLDR.data(), imageLDR.size(), GL_RGBA, textureUnit);
     var Data NULL;
-    resource.data = NULL;
-    resource.dataSize = 0;
+    resource.data.resize(0);
   }
   oglTexture2D.bind(textureUnit);
 }

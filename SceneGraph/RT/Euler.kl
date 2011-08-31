@@ -4,27 +4,27 @@
 //
 
 function Euler(in Vec3 angles) {
-  self.x = angles.x;
-  self.y = angles.y;
-  self.z = angles.z;
-  self.ro.setXYZ();
+  this.x = angles.x;
+  this.y = angles.y;
+  this.z = angles.z;
+  this.ro.setXYZ();
 }
 
 function Euler(in Vec3 angles, in RotationOrder order) {
-  self.x = angles.x;
-  self.y = angles.y;
-  self.z = angles.z;
-  self.ro = order;
+  this.x = angles.x;
+  this.y = angles.y;
+  this.z = angles.z;
+  this.ro = order;
 }
 
 function Vec3 Euler.getAngles() {
-  return Vec3(self.x, self.y, self.z);
+  return Vec3(this.x, this.y, this.z);
 }
 
 // Euler <-> Quaternion/Mat33 conversion
 
 function Euler(in Quat q, in RotationOrder ro) {
-  self.ro = ro;
+  this.ro = ro;
 
   var Scalar nq = q.normSq();
   var Scalar s = (nq > 0.0) ? (2.0 / nq) : 0.0;

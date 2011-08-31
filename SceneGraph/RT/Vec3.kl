@@ -5,19 +5,19 @@
 
 
 function Vec3(Scalar x, Scalar y, Scalar z) {
-  self.x = x;
-  self.y = y;
-  self.z = z;
+  this.x = x;
+  this.y = y;
+  this.z = z;
 }
 
 function Vec3.set(Scalar x, Scalar y, Scalar z) {
-  self.x = x;
-  self.y = y;
-  self.z = z;
+  this.x = x;
+  this.y = y;
+  this.z = z;
 }
 
 function Vec3.setNull() {
-  self.x = self.y = self.z = 0.0;
+  this.x = this.y = this.z = 0.0;
 }
 
 function Vec3 + (Vec3 a, Vec3 b) {
@@ -25,7 +25,7 @@ function Vec3 + (Vec3 a, Vec3 b) {
 }
 
 function Vec3. += (Vec3 other) {
-  self = self + other;
+  this = this + other;
 }
 
 function Vec3 - (Vec3 a, Vec3 b) {
@@ -33,7 +33,7 @@ function Vec3 - (Vec3 a, Vec3 b) {
 }
 
 function Vec3. -= (Vec3 other) {
-  self = self - other;
+  this = this - other;
 }
 
 function Vec3 * (Scalar a, Vec3 b) {
@@ -49,11 +49,11 @@ function Vec3 * (Vec3 a, Vec3 b) {
 }
 
 function Vec3. *= (Scalar other) {
-  self = self * other;
+  this = this * other;
 }
 
 function Vec3. *= (Vec3 other) {
-  self = self * other;
+  this = this * other;
 }
 
 function Vec3 / (Vec3 a, Vec3 b) {
@@ -69,94 +69,94 @@ function Vec3 / (Vec3 a, Scalar b) {
 }
 
 function Vec3. /= (Scalar other) {
-  self = self / other;
+  this = this / other;
 }
 
 function Vec3. /= (Vec3 other) {
-  self = self / other;
+  this = this / other;
 }
 
 function Vec3 Vec3.neg() {
-  return Vec3(-self.x, -self.y, -self.z);
+  return Vec3(-this.x, -this.y, -this.z);
 }
 
 function Vec3 Vec3.inv() {
-  return Vec3(1.0 / self.x, 1.0 / self.y, 1.0 / self.z);
+  return Vec3(1.0 / this.x, 1.0 / this.y, 1.0 / this.z);
 }
 
 function Scalar Vec3.dot(Vec3 other) {
-  return self.x * other.x + self.y * other.y + self.z * other.z;
+  return this.x * other.x + this.y * other.y + this.z * other.z;
 }
 
 function Scalar Vec3.normSq() {
-  return self.dot(self);
+  return this.dot(this);
 }
 
 function Scalar Vec3.norm() {
-  return sqrt(self.normSq());
+  return sqrt(this.normSq());
 }
 
 function Scalar Vec3.length() {
-  return sqrt(self.normSq());
+  return sqrt(this.normSq());
 }
 
 function Vec3 Vec3.unit() {
-  var Scalar n = self.norm();
+  var Scalar n = this.norm();
   if (n > 0.0) {
-    return self / n;
+    return this / n;
   }
-  return self;
+  return this;
 }
 
 function Vec3.setUnit() {
-  self = self.unit();
+  this = this.unit();
 }
 
 function Vec3 Vec3.cross(in Vec3 other) {
   return Vec3(
-    self.y * other.z - self.z * other.y,
-    self.z * other.x - self.x * other.z,
-    self.x * other.y - self.y * other.x
+    this.y * other.z - this.z * other.y,
+    this.z * other.x - this.x * other.z,
+    this.x * other.y - this.y * other.x
   );
 }
 
 // TODO: Depricate the ambiguous function
 function Scalar Vec3.angle(in Vec3 other) {
-  return acos(self.dot(other));
+  return acos(this.dot(other));
 }
 
 function Scalar Vec3.angleTo(in Vec3 other) {
-  return acos(self.dot(other));
+  return acos(this.dot(other));
 }
 
 function Scalar Vec3.distSq(in Vec3 other) {
   var Vec3 v;
-  v = self - other;
+  v = this - other;
   return v.normSq();
 }
 
 function Scalar Vec3.dist(in Vec3 other) {
-  return sqrt(self.distSq(other));
+  return sqrt(this.distSq(other));
 }
 
 function Vec3 Vec3.max(in Vec3 other) {
   var Vec3 v;
-  v.x = self.x > other.x ? self.x : other.x;
-  v.y = self.y > other.y ? self.y : other.y;
-  v.z = self.z > other.z ? self.z : other.z;
+  v.x = this.x > other.x ? this.x : other.x;
+  v.y = this.y > other.y ? this.y : other.y;
+  v.z = this.z > other.z ? this.z : other.z;
   return v;
 }
 
 function Vec3 Vec3.min(in Vec3 other) {
   var Vec3 v;
-  v.x = self.x < other.x ? self.x : other.x;
-  v.y = self.y < other.y ? self.y : other.y;
-  v.z = self.z < other.z ? self.z : other.z;
+  v.x = this.x < other.x ? this.x : other.x;
+  v.y = this.y < other.y ? this.y : other.y;
+  v.z = this.z < other.z ? this.z : other.z;
   return v;
 }
 
 function Vec3 Vec3.lerp(in Vec3 other, in Scalar t) {
-  return self + ((other - self) * t);
+  return this + ((other - this) * t);
 }
 
 function Scalar distFromPointToLine(in Vec3 P, in Vec3 lineP0, in Vec3 lineP1) {

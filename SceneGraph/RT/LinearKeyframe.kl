@@ -4,11 +4,11 @@
 //
 
 function LinearKeyframe(Scalar time, Scalar value) {
-  self.time = time;
-  self.value = value;
+  this.time = time;
+  this.value = value;
 }
 
 function Scalar LinearKeyframe.interpolate(LinearKeyframe key2, Scalar t) {
-  var Scalar u = (t - self.time) / (key2.time - self.time);
-  return self.value + ((key2.value - self.value) * u);
+  var Scalar u = (t - this.time) / (key2.time - this.time);
+  return this.value + ((key2.value - this.value) * u);
 }

@@ -6,10 +6,10 @@
 function RotationOrder(in Integer order) {
   if (order < 0 || order > 5) {
     report('Invalid rotation order: ' + order);
-    self.setXYZ();
+    this.setXYZ();
   }
   else
-    self.order = order;
+    this.order = order;
 }
 
 /*
@@ -27,43 +27,43 @@ function String( in RotationOrder o )
 */
 
 function Boolean RotationOrder.isXYZ() {
-  return self.order == 0;
+  return this.order == 0;
 }
 function Boolean RotationOrder.isYZX() {
-  return self.order == 1;
+  return this.order == 1;
 }
 function Boolean RotationOrder.isZXY() {
-  return self.order == 2;
+  return this.order == 2;
 }
 function Boolean RotationOrder.isXZY() {
-  return self.order == 3;
+  return this.order == 3;
 }
 function Boolean RotationOrder.isZYX() {
-  return self.order == 4;
+  return this.order == 4;
 }
 function Boolean RotationOrder.isYXZ() {
-  return self.order == 5;
+  return this.order == 5;
 }
 
 function Boolean RotationOrder.isReversed() {
-  return self.isXZY() || self.isZYX() || self.isYXZ();
+  return this.isXZY() || this.isZYX() || this.isYXZ();
 }
 
 function RotationOrder.setXYZ() {
-  self.order = 0;
+  this.order = 0;
 }
 function RotationOrder.setYZX() {
-  self.order = 1;
+  this.order = 1;
 }
 function RotationOrder.setZXY() {
-  self.order = 2;
+  this.order = 2;
 }
 function RotationOrder.setXZY() {
-  self.order = 3;
+  this.order = 3;
 }
 function RotationOrder.setZYX() {
-  self.order = 4;
+  this.order = 4;
 }
 function RotationOrder.setYXZ() {
-  self.order = 5;
+  this.order = 5;
 }

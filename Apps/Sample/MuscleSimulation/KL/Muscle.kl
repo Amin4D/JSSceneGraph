@@ -93,11 +93,11 @@ operator simulateMuscle(
   
   // Increment the muscle system using basic Verlet simulation.
   if(timeStep>0){
+    Vec3 gravityDisp = gravity * (timeStep * contractionFactor);
     for(i=0; i<simulatedXfos.size(); i++){
       // When under contraction, we remove gravity.
       // Its a bit of a hack to exagerate the strength of the contraction
-      simulatedXfos[i].tr += ((gravity / (timeStep * timeStep)) * contractionFactor) +
-                              (simulatedXfos[i].tr - pointPositionsPrevUpdate[i]);
+      simulatedXfos[i].tr += gravityDisp + (simulatedXfos[i].tr - pointPositionsPrevUpdate[i]);
       simulatedXfos[i].tr = envelopedXfos[i].tr.lerp(simulatedXfos[i].tr, flexibilityWeights[i]);
       simulatedXfos[i].ori = envelopedXfos[i].ori.nlerp(simulatedXfos[i].ori, flexibilityWeights[i]);
     }

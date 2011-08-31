@@ -311,7 +311,7 @@ FABRIC.SceneGraph.registerNodeType('SpotLight', {
   },
   factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
-        coneAngle: 60 * FABRIC.RT.degToRad,
+        coneAngle: Math.degToRad(60),
         castShadows: true,
         nearDistance: 1,
         farDistance: 1000,

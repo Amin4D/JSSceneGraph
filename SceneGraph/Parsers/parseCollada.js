@@ -229,7 +229,7 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
         var fovx = parseFloat(persp.xfov);
         fovx *= 3.1416 / 180.0;
         var fovy = Math.tan(Math.atan(0.5 * fovx) * aspect) * 2.0;
-        camera.fovY = fovy * FABRIC.RT.radToDeg;
+        camera.fovY = Math.radToDeg(fovy);
       }
       else {
         camera.nearDistance = 5;

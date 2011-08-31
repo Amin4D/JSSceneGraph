@@ -2,6 +2,7 @@
 // Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
 //
 
+use Math;
 use Vec2;
 use Vec3;
 
@@ -37,7 +38,6 @@ operator generateSphere(
   
   indices.resize(numTriangles * 3);
 
-  Scalar PI = 3.141592653589793238462643383279;
   Integer voff = 0;
   for (var Integer i = 0; i <= nbLoops; i++) {
     var Scalar theta = (i / Scalar(nbLoops)) * PI;

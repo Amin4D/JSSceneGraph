@@ -2,6 +2,7 @@
 // Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
 //
 
+use Math;
 use Vec3;
 
 operator setTorusVertexCount(
@@ -25,8 +26,6 @@ operator generateTorus(
   io Vec3 positions[],
   io Vec3 normals[]
 ) {
-  var Scalar Pi = 3.141592653589793238462643;
-
   var Integer slices = (detail >= 0) ? (detail + 3) : 3;
   var Integer loops = (detail >= 0) ? ((detail * 2) + 3) : 3;
 
@@ -39,12 +38,12 @@ operator generateTorus(
 
   var Integer tid = 0;
   for (var Integer i = 0; i < loops; i++) {
-    var Scalar theta = (i / Scalar(loops)) * 2.0 * Pi;
+    var Scalar theta = (i / Scalar(loops)) * 2.0 * PI;
     var Scalar ctheta = cos(theta);
     var Scalar stheta = sin(theta);
 
     for (var Integer j = 0; j < slices; j++) {
-      var Scalar phi = (j / Scalar(slices)) * 2.0 * Pi;
+      var Scalar phi = (j / Scalar(slices)) * 2.0 * PI;
 
       var Scalar sphi = sin(phi);
       var Scalar cphi = cos(phi);

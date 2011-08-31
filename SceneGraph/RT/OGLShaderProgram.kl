@@ -232,6 +232,7 @@ function OGLShaderProgram.loadShader() {
   if(self.debug){
     report("----------------------------");
     report("loadShader " + self.name );
+    fglSetDebuggingEnabled( true );
   }
   if (!self.programId) {
     self.createProgramFromShaders();
@@ -261,6 +262,9 @@ function OGLShaderProgram.unloadShader() {
     glPopAttrib();
   }
   self.loadedAttributes.resize(0);
+  if(self.debug){
+    fglSetDebuggingEnabled( false );
+  }
 }
 
 //////////////////////////////////////////////////////////

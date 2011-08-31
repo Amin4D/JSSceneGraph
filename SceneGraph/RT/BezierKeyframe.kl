@@ -3,6 +3,8 @@
 // Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
 //
 
+use Math;
+
 function BezierKeyframe(Scalar time, Scalar value, Vec2 intangent, Vec2 outtangent) {
   this.time = time;
   this.value = value;
@@ -23,7 +25,6 @@ function Integer FindRootsToCubic(
   Scalar c[4],
   io Scalar roots[3]
 ) {
-  var Scalar pi = 3.14159265;
   var Scalar sub;
   var Integer i, num;
   var Scalar A, B, C;
@@ -68,8 +69,9 @@ function Integer FindRootsToCubic(
     var Scalar t = 2.0 * sqrt(-p);
 
     roots[0] = t * cos(phi);
-    roots[1] = - t * cos(phi + pi / 3);
-    roots[2] = - t * cos(phi - pi / 3);
+    roots[1] = - t * cos(phi + PI / 3);
+    roots[2] = - t * cos(phi - PI
+    / 3);
     num = 3;
   }
   else // one real solution

@@ -1087,7 +1087,7 @@ FABRIC.SceneGraph.registerNodeType('PivotRotationManipulator', {
         angle = Math.round(angle / 5.0) * 5.0;
       }
 
-      movement = vec2.subtract(vec1).unit().scale(Math.sin(angle * 0.5 * FABRIC.RT.degToRad) * options.radius * 2.0);
+      movement = vec2.subtract(vec1).unit().scale(Math.sin(Math.degToRad(angle * 0.5)) * options.radius * 2.0);
       if (vec1.cross(vec2).dot(normal) < 0) {
         angle = -angle;
         movement.negate();

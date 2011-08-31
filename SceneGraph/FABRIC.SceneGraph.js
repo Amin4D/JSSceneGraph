@@ -786,13 +786,11 @@ FABRIC.SceneGraph = {
           },
           pause: function() {
             isPlaying = false;
-            requestAnimFrame( undefined, viewports[0].getWindowElement() );
           },
           reset: function() {
             isPlaying = false;
             animationTime = 0.0;
             globalsNode.setData('time', 0.0);
-            requestAnimFrame( undefined, viewports[0].getWindowElement() );
           },
           step: function() {
             advanceTime();

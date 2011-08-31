@@ -154,8 +154,15 @@ FABRIC.SceneGraph.registerNodeType('CameraManipulator', {
         return;
       }
       var mouseDragScreenDelta = evt.screenX - mouseDownScreenPos.x;
-      cameraNode.position = cameraPos.add(cameraPos.subtract(cameraTarget)
-                                     .mulInPlace(mouseDragScreenDelta * options.mouseDragZoomRate));
+      
+      var zoomDist = cameraNode.getFocalDistance() * -options.mouseDragZoomRate * mouseDragScreenDelta;
+      var newcameraXfo = cameraXfo.clone();
+      var cameraZoom = cameraXfo.ori.getZaxis().mulInPlace(zoomDist);
+      newcameraXfo.tr.addInPlace(cameraZoom);
+      cameraNode.getTransformNode().setGlobalXfo(newcameraXfo);
+      if (!cameraNode.getTransformNode().getTarget) {
+        cameraNode.setFocalDistance(cameraNode.getFocalDistance() - zoomDist);
+      }
       viewportNode.redraw(true);
       evt.stopPropagation();
     }
@@ -623,7 +630,11 @@ FABRIC.SceneGraph.registerNodeType('Manipulator', {
     manipulatorNode.pub.addEventListener('mouseout_geom', function(evt) {
         if(!manipulating){
           unhighlightNode();
-          evt.viewportNode.redraw();
+          if(!evt.toElement){
+            // if there is a 'toElement' then there will be a mouseover event.
+            // the redraw will occur then.
+            evt.viewportNode.redraw();
+          }
         }
       });
 
@@ -1076,7 +1087,7 @@ FABRIC.SceneGraph.registerNodeType('PivotRotationManipulator', {
         angle = Math.round(angle / 5.0) * 5.0;
       }
 
-      movement = vec2.subtract(vec1).unit().scale(Math.sin(angle * 0.5 * FABRIC.RT.degToRad) * options.radius * 2.0);
+      movement = vec2.subtract(vec1).unit().scale(Math.sin(Math.degToRad(angle * 0.5)) * options.radius * 2.0);
       if (vec1.cross(vec2).dot(normal) < 0) {
         angle = -angle;
         movement.negate();

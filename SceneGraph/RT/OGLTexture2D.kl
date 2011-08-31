@@ -13,19 +13,19 @@ function OGLTexture2D.configure(
   io Integer textureUnit
 ) {
 //  report("OGLTexture2D.bind:" + textureUnit + " nbPixels:" + nbPixels);
-//  report("createTextureFromImage  bufferID:"+self.bufferID + " textureUnit:"+textureUnit  + " nbPixels:"+nbPixels );
+//  report("createTextureFromImage  bufferID:"+this.bufferID + " textureUnit:"+textureUnit  + " nbPixels:"+nbPixels );
   if(nbPixels > 0){
     var Size buffers[];
     buffers.resize(1);
     glGenTextures(1, buffers);
-    self.bufferID = buffers[0];
+    this.bufferID = buffers[0];
     glActiveTexture(GL_TEXTURE0 + textureUnit);
-    glBindTexture(GL_TEXTURE_2D, self.bufferID);
+    glBindTexture(GL_TEXTURE_2D, this.bufferID);
     
     //Generate the texture
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
     if (nbPixels == (width * height))
-      glTexImage2D(GL_TEXTURE_2D, 0, self.glInternalFormat, width, height, 0, self.glFormat, self.glType, pixels);
+      glTexImage2D(GL_TEXTURE_2D, 0, this.glInternalFormat, width, height, 0, this.glFormat, this.glType, pixels);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -38,7 +38,7 @@ function OGLTexture2D.configure(
 
 function OGLTexture2D.bind(io Integer textureUnit){
   glActiveTexture(GL_TEXTURE0 + textureUnit);
-  glBindTexture(GL_TEXTURE_2D, self.bufferID);
+  glBindTexture(GL_TEXTURE_2D, this.bufferID);
 }
 
 
@@ -48,10 +48,10 @@ function OGLTexture2D.bindImageLDR(
   io RGBA bitmap[],
   io Integer textureUnit
 ) {
-  if (self.bufferID == 0) {
-    self.configure(width, height, bitmap.data(), bitmap.size(), GL_RGBA, textureUnit);
+  if (this.bufferID == 0) {
+    this.configure(width, height, bitmap.data(), bitmap.size(), GL_RGBA, textureUnit);
   }
-  self.bind(textureUnit);
+  this.bind(textureUnit);
 }
 
 
@@ -61,10 +61,10 @@ function OGLTexture2D.bindImageHDR(
   io Color bitmap[],
   io Integer textureUnit
 ) {
-  if (self.bufferID == 0) {
-    self.configure(width, height, bitmap.data(), bitmap.size(), GL_RGBA16F_ARB, textureUnit);
+  if (this.bufferID == 0) {
+    this.configure(width, height, bitmap.data(), bitmap.size(), GL_RGBA16F_ARB, textureUnit);
   }
-  self.bind(textureUnit);
+  this.bind(textureUnit);
 }
 
 
@@ -80,13 +80,13 @@ function OGLTexture2D.genTexture(
   Size bufferIDs[];
   bufferIDs.push(Size(0));
   glGenTextures(1, bufferIDs);
-  self.bufferID = bufferIDs[0];
+  this.bufferID = bufferIDs[0];
   
-  glBindTexture(GL_TEXTURE_2D, self.bufferID);
+  glBindTexture(GL_TEXTURE_2D, this.bufferID);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
   
-  if(self.glInternalFormat == GL_DEPTH_COMPONENT){
+  if(this.glInternalFormat == GL_DEPTH_COMPONENT){
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     
@@ -99,9 +99,9 @@ function OGLTexture2D.genTexture(
   }
   
   //NULL means reserve texture memory, but texels are undefined
-  glTexImage2D(GL_TEXTURE_2D, 0, self.glInternalFormat, width, height, 0, self.glFormat, self.glType, NULL);
+  glTexImage2D(GL_TEXTURE_2D, 0, this.glInternalFormat, width, height, 0, this.glFormat, this.glType, NULL);
   
-  self.nbPixels = width * height;
+  this.nbPixels = width * height;
 }
 
 

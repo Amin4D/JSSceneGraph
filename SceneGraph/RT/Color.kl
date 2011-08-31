@@ -4,10 +4,10 @@
 //
 
 function Color(Scalar r, Scalar g, Scalar b, Scalar a) {
-  self.r = r;
-  self.g = g;
-  self.b = b;
-  self.a = a;
+  this.r = r;
+  this.g = g;
+  this.b = b;
+  this.a = a;
 }
 
 function Color + (Color a, Color b) {
@@ -15,7 +15,7 @@ function Color + (Color a, Color b) {
 }
 
 function Color. += (Color other) {
-  self = self + other;
+  this = this + other;
 }
 
 function Color - (Color a, Color b) {
@@ -23,7 +23,7 @@ function Color - (Color a, Color b) {
 }
 
 function Color. -= (Color other) {
-  self = self - other;
+  this = this - other;
 }
 
 function Color * (Scalar a, Color b) {
@@ -39,11 +39,11 @@ function Color * (Color a, Color b) {
 }
 
 function Color. *= (Scalar other) {
-  self = self * other;
+  this = this * other;
 }
 
 function Color. *= (Color other) {
-  self = self * other;
+  this = this * other;
 }
 
 function Color / (Color a, Color b) {
@@ -59,13 +59,13 @@ function Color / (Color a, Scalar b) {
 }
 
 function Color. /= (Scalar other) {
-  self = self / other;
+  this = this / other;
 }
 
 function Color. /= (Color other) {
-  self = self / other;
+  this = this / other;
 }
 
 function Color Color.lerp(in Color other, in Scalar t) {
-  return self + ((other - self) * t);
+  return this + ((other - this) * t);
 }

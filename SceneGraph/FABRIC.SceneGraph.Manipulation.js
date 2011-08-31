@@ -623,7 +623,11 @@ FABRIC.SceneGraph.registerNodeType('Manipulator', {
     manipulatorNode.pub.addEventListener('mouseout_geom', function(evt) {
         if(!manipulating){
           unhighlightNode();
-          evt.viewportNode.redraw();
+          if(!evt.toElement){
+            // if there is a 'toElement' then there will be a mouseover event.
+            // the redraw will occur then.
+            evt.viewportNode.redraw();
+          }
         }
       });
 

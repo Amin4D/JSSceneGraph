@@ -1307,7 +1307,11 @@ FABRIC.SceneGraph.registerNodeType('Viewport', {
       // Mouse wheel events are sent to the document, not the element,
       // so here we catch mouse wheel events only when the mouse goes over the element.
       // TODO: Fix Safari mouse wheel events..
+      var mouseWheelActivated = false;
       var activateMousewheelFn = function(evt) {
+        if(mouseWheelActivated){
+          return;
+        }
         var mousewheelFn = function(evt) {
           fireEvent('mousewheel', evt);
         }
@@ -1315,11 +1319,12 @@ FABRIC.SceneGraph.registerNodeType('Viewport', {
         var deactivateMousewheelFn = function(evt) {
           windowElement.removeEventListener('mouseout', deactivateMousewheelFn, false);
           document.removeEventListener('mousewheel', mousewheelFn, false);
+          mouseWheelActivated = false;
         }
         windowElement.addEventListener('mouseout', deactivateMousewheelFn, false);
+        mouseWheelActivated = true;
       }
-      windowElement.addEventListener('mouseover', activateMousewheelFn, false);
-
+      windowElement.addEventListener('mousemove', activateMousewheelFn, false);
       scene.addEventHandlingFunctions(viewportNode);
     }
 

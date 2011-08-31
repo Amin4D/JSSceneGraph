@@ -676,6 +676,17 @@ FABRIC.SceneGraph = {
         var timerange = FABRIC.RT.vec2(-1,-1);
         var looping = false;
         var onAdvanceCallback;
+        
+        var requestAnimFrame = (function(){
+          return  window.requestAnimationFrame       || 
+                  window.webkitRequestAnimationFrame || 
+                  window.mozRequestAnimationFrame    || 
+                  window.oRequestAnimationFrame      || 
+                  window.msRequestAnimationFrame     || 
+                  function(/* function */ callback, /* DOMElement */ element){
+                    window.setTimeout(callback, 1000 / 60);
+                  };
+        })();
         var setTime = function(t, timestep, redraw) {
           
           if (looping && animationTime > timerange.y){
@@ -689,6 +700,10 @@ FABRIC.SceneGraph = {
           }
           if(redraw !== false){
             scene.pub.redrawAllWindows();
+            if(isPlaying){
+              // Queue up the next redraw immediately. 
+              requestAnimFrame( advanceTime, viewports[0].getWindowElement() );
+            }
           }
         }
         var advanceTime = function() {
@@ -697,7 +712,7 @@ FABRIC.SceneGraph = {
           prevTime = (new Date).getTime();
           if (sceneOptions.fixedTimeStep) {
             // In fixed time step mode, the computer will attempt to play back
-            // at texactly the given frame rate. If he frame rate cannot be achieved
+            // at exactly the given frame rate. If the frame rate cannot be achieved
             // it plays as fast as possible.
             // The time step as used throughout the graph will always be fixed at the
             // given rate. 
@@ -764,23 +779,25 @@ FABRIC.SceneGraph = {
             // we have zero or more windows. What happens when we have
             // multiple viewports? Should the 'play' controls be moved to
             // Viewport?
-            viewports[0].getFabricWindowObject().setRedrawFinishedCallback(advanceTime);
-            scene.pub.redrawAllWindows();
+            requestAnimFrame( advanceTime, viewports[0].getWindowElement() );
+          //  scene.pub.redrawAllWindows();
           },
           isPlaying: function(){
             return isPlaying;
           },
           pause: function() {
             isPlaying = false;
-            viewports[0].getFabricWindowObject().setRedrawFinishedCallback(null);
-            scene.pub.redrawAllWindows();
+          //  viewports[0].getFabricWindowObject().setRedrawFinishedCallback(null);
+          //  scene.pub.redrawAllWindows();
+            requestAnimFrame( undefined, viewports[0].getWindowElement() );
           },
           reset: function() {
             isPlaying = false;
             animationTime = 0.0;
             globalsNode.setData('time', 0.0);
-            viewports[0].getFabricWindowObject().setRedrawFinishedCallback(null);
-            scene.pub.redrawAllWindows();
+          //  viewports[0].getFabricWindowObject().setRedrawFinishedCallback(null);
+          //  scene.pub.redrawAllWindows();
+            requestAnimFrame( undefined, viewports[0].getWindowElement() );
           },
           step: function() {
             advanceTime();

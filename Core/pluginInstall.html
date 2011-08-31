@@ -235,17 +235,17 @@ $(document).ready(function() {
         alert("Unsupported Browser. Fabric supports only Chrome and Firefox.");
         return false;
     }
-    return "http://dist.fabric-engine.com/latest/FabricEngine-"+os+"-"+arch+"."+ext;
+    return "http://dist.fabric-engine.com/1.0.10/FabricEngine-"+os+"-"+arch+"."+ext;
   }
   
   var url = createDownloadURL();
-
+  
   if(url){
     $('#install').button({ disabled: false })
     .click(function() {
       $( "#alphaWarningDialogBox" ).dialog( "open" );
-      
-      window.location = url;
+      parent.location = url;
+    //  parent.location.reload();
     });
   }
   

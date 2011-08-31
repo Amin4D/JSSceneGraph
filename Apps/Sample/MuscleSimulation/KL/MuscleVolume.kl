@@ -2,6 +2,7 @@
 
 #include '../../../SceneGraph/KL/evaluateKeyframeAnimationTrack.kl'
 
+use Math;
 use BezierKeyframe;
 use Color;
 use Vec2;
@@ -85,8 +86,6 @@ function Ray muscleUVtoRay(
   Integer i;
   Scalar angle, t;
   Ray outRay;
-
-  Scalar PI = 3.141592653589793238462643383279;
   
   angle = v * PI * 2.0;  
   outRay.direction.set( 0.0, -cos( angle ), -sin( angle ) );
@@ -361,7 +360,6 @@ function Integer findCubicRoots(
     return result;
   }
 
-  Scalar PI = 3.14159265358979323846;
   Scalar a1 = coeff[2] / coeff[3];
   Scalar a2 = coeff[1] / coeff[3];
   Scalar a3 = coeff[0] / coeff[3];
@@ -476,8 +474,6 @@ function Boolean positionToMuscleUV(
   Vec3 p1, p2, p3, p4, p5, p6, v1, v2, v3;
   Vec3 yaxis, zaxis, yaxisStart, zaxisStart, yaxisEnd, zaxisEnd;
 
-  Scalar PI = 3.14159265358979323846;
-  Scalar TWO_PI = PI * 2.0;
   
   // Loop through the line segments and do a sweep test using
   // manufactured traingle. The collision fraction is our segment u.
@@ -554,9 +550,6 @@ function Vec3 uvwToMusclePosition(
   in Vec3 uvw,
   in Xfo xfos[]
 ){
-  Scalar PI = 3.14159265358979323846;
-  Scalar TWO_PI = PI * 2.0;
-  
   Vec3 offset;
   if( uvw.x < 0.0 )
   {
@@ -603,10 +596,6 @@ function Vec3 positionToMuscleSurfacePosition(
   // TODO: parameterise these 2 values. 
   Scalar fallOff = 0.0;
   Scalar shrinkWrap = 0.0;
-  
-  Scalar PI = 3.141592653589793238462643383279;
-  Scalar TWO_PI = PI * 2.0;
-  Scalar HALF_PI = PI * 0.5;
   
   Vec3 corePos;
   Vec3 orthoNormal, biNormal, posToCore, bisectingVector, muscleNormal, posProjectedOntoSlice;
@@ -863,9 +852,9 @@ function Vec3 positionToMuscleSurfacePosition(
       return ((posOffsetDir * w) + corePos) - posProjectedOntoSlice;
     }
   }
-  */
   
   return Vec3(0.0,0.0,0.0);
+  */
 }
 
 

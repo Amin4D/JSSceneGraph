@@ -171,11 +171,13 @@ FABRIC.SceneGraph.registerNodeType('AnimationController', {
         playbackRate: 1.0,
         bindToGlobalTime: true,
         timeRange: FABRIC.RT.vec2(0, 10),
+        timeControl: 0, /* 0: absolute, 1:increment */
         outOfRange: 1 /* 0: linear, 1:loop, 3:clamp */
       });
 
     var animationControllerNode = scene.constructNode('SceneGraphNode', options);
     var dgnode = animationControllerNode.constructDGNode('DGNode');
+    dgnode.addMember('timeControl', 'Integer', options.timeControl);
     dgnode.addMember('playbackRate', 'Scalar', options.playbackRate);
     dgnode.addMember('localTime', 'Scalar');
     dgnode.addMember('timeRange', 'Vec2', options.timeRange);
@@ -206,6 +208,7 @@ FABRIC.SceneGraph.registerNodeType('AnimationController', {
           parameterLayout: [
             'globals.time',
             'globals.timestep',
+            'self.timeControl',
             'self.playbackRate',
             'self.timeRange',
             'self.outOfRange',

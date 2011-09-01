@@ -8,12 +8,17 @@ use Vec2;
 operator incrementControllerLocalTime(
   io Scalar globalTime,
   io Scalar timeStep,
+  io Integer timeControl,
   io Scalar playbackRate,
   io Vec2 timerange,
   io Integer outOfRange,
   io Scalar localTime
 ) {
-  localTime += (timeStep * playbackRate);
+  if(timeControl==0){
+    localTime = (globalTime * playbackRate);
+  }else{
+    localTime += (timeStep * playbackRate);
+  }
   if(localTime > timerange.y){
     switch(outOfRange){
     case 0: // Linear

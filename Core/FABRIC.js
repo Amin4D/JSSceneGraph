@@ -173,6 +173,60 @@ FABRIC = (function() {
       result.__defineGetter__('fps', function() {
         return context.VP.viewPort.getFPS();
       });
+
+      // create the query nodes
+      var queryDGNode = context.DG.createNode('OpenGLQuery');
+      queryDGNode.addMember('version', 'String', '');
+      queryDGNode.addMember('token', 'String', '');
+      queryDGNode.addMember('supported', 'Boolean', false);
+      queryDGNode.addDependency(result.windowNode,'window');
+      
+      // operator to query the open gl version
+      var queryOpVersion = context.DG.createOperator('getOpenGLVersion');
+      queryOpVersion.setEntryFunctionName('getOpenGLVersion');
+      queryOpVersion.setSourceCode('use FabricOGL; operator getOpenGLVersion(io String version){\n' +
+        '  glGetVersion(version);\n' +
+        '}');
+      var queryOpVersionBinding = context.DG.createBinding();
+      queryOpVersionBinding.setOperator(queryOpVersion);
+      queryOpVersionBinding.setParameterLayout(['self.version']);
+      queryDGNode.bindings.append(queryOpVersionBinding);
+      
+      // operator to query the support glew features
+      var queryOpGlew = context.DG.createOperator('getGlewSupported');
+      queryOpGlew.setEntryFunctionName('getGlewSupported');
+      queryOpGlew.setSourceCode('use FabricOGL; operator getGlewSupported(io String token, io Boolean supported){\n' +
+        '  report("query: "+token);\n' +
+        '  if(token.length() > 0) glewIsSupported(token,supported);\n' +
+        '}');
+      var queryOpGlewBinding = context.DG.createBinding();
+      queryOpGlewBinding.setOperator(queryOpGlew);
+      queryOpGlewBinding.setParameterLayout(['self.token','self.supported']);
+      queryDGNode.bindings.append(queryOpGlewBinding);
+      
+      var openGLVersion = undefined;
+      var glewSupported = {};
+      result.getOpenGLVersion = function() {
+        // if we already know it, skip it
+        if( openGLVersion == undefined) {
+          // force an eval
+          queryDGNode.evaluate();
+          openGLVersion = queryDGNode.getData('version',0);
+        }
+        return openGLVersion;
+      }
+      result.getGlewSupported = function(token) {
+        // if we already know it, skip it
+        if( glewSupported[token] == undefined) {
+          // force an eval
+          queryDGNode.setData('token',0,token);
+          queryDGNode.evaluate();
+          glewSupported[token] = queryDGNode.getData('supported',0);
+          console.log(glewSupported);
+        }
+        return glewSupported[token];
+      }
+
       return result;
     };
     

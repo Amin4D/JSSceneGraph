@@ -8,12 +8,8 @@ use Vec3;
 operator setPlaneVertexCount(
   io Integer lengthSections,
   io Integer widthSections,
-  io Boolean doubleSided,
   io Size newCount
 ) {
-  var Integer vi = 0;
-  var Integer ii = 0;
-
   if (lengthSections < 1) {
     lengthSections = 1;
   }
@@ -21,20 +17,15 @@ operator setPlaneVertexCount(
     widthSections = 1;
   }
 
-  if(doubleSided){
-    newCount = 2 * (lengthSections + 1) * (widthSections + 1);
-  }else{
-    newCount = (lengthSections + 1) * (widthSections + 1);
-  }
+  newCount = (lengthSections + 1) * (widthSections + 1);
 }
 
 operator generatePlane(
-  io Integer idx[],
+  io Integer indices[],
   io Scalar length,
   io Scalar width,
   io Integer lengthSections,
   io Integer widthSections,
-  io Boolean doubleSided,
 
   io Vec3 positions[],
   io Vec3 normals[],
@@ -49,62 +40,56 @@ operator generatePlane(
   if (widthSections < 1) {
     widthSections = 1;
   }
-
-  Integer numPoints = (lengthSections + 1) * (widthSections + 1);
-  //  positions.resize( numPoints );
-  //  normals.resize( numPoints );
-  //  uvs.resize( numPoints );
-  if(doubleSided){
-    idx.resize(2 * 6 * lengthSections * widthSections);
-  }else{
-    idx.resize(6 * lengthSections * widthSections);
-  }
-  for (Integer i = 0; i <= lengthSections; i++) {
-    for (Integer j = 0; j <= widthSections; j++) {
-      Scalar x = (Scalar(i) / Scalar(lengthSections)) - 0.5;
-      Scalar z = (Scalar(j) / Scalar(widthSections)) - 0.5;
-      positions[vi] = Vec3(x * length, 0.0, z * width);
-      normals[vi] = Vec3(0.0, 1.0, 0.0);
-      uvs[vi] = Vec2(x + 0.5, z + 0.5);
-      vi++;
-      
-      if(doubleSided){
-        positions[vi] = Vec3(x * length, 0.0, z * width);
-        normals[vi] = Vec3(0.0, - 1.0, 0.0);
-        uvs[vi] = Vec2(x + 0.5, z + 0.5);
-        vi++;
-      }
-    }
-  }
-  if(doubleSided){
-    for (Integer i = 0; i < lengthSections; i++) {
-      for (Integer j = 0; j < widthSections; j++) {
-        idx[ii++] = 2 * (j + ((lengthSections + 1) * (i + 1)) + 0);
-        idx[ii++] = 2 * (j + 0);
-        idx[ii++] = 2 * (j + 1);
-        idx[ii++] = 2 * (j + ((lengthSections + 1) * (i + 1)) + 0);
-        idx[ii++] = 2 * (j + 1);
-        idx[ii++] = 2 * (j + ((lengthSections + 1) * (i + 1)) + 1);
   
-        
-        idx[ii++] = 2 * (j + ((lengthSections + 1) * (i + 1)) + 1) + 1;
-        idx[ii++] = 2 * (j + 1) + 1;
-        idx[ii++] = 2 * (j + ((lengthSections + 1) * (i + 1)) + 0) + 1;
-        idx[ii++] = 2 * (j + 1) + 1;
-        idx[ii++] = 2 * (j + 0) + 1;
-        idx[ii++] = 2 * (j + ((lengthSections + 1) * (i + 1)) + 0) + 1;
-      }
+  Integer numTriangles;
+
+  Integer nbLengthSections = lengthSections + 1;
+  Integer nbWidthSections = widthSections + 1;
+  
+  numTriangles = 2 * widthSections * lengthSections;
+  
+  indices.resize(numTriangles * 3);
+  
+  Integer voff = 0;
+  for (Integer j = 0; j < nbWidthSections; j++) {
+    Scalar x = ((j / Scalar(widthSections))-0.5) * width;
+    for (Integer i = 0; i < nbLengthSections; i++) {
+      Scalar z = ((i / Scalar(lengthSections))-0.5) * length;
+
+      normals[voff] = Vec3(
+        0.0,
+        1.0,
+        0.0
+      );
+
+      positions[voff].x = x;
+      positions[voff].z = z;
+      uvs[voff] = Vec2(1.0 - Scalar(j) / Scalar(widthSections), Scalar(i + 1) / Scalar(lengthSections + 1));
+      voff++;
     }
-  } else {
-    for (Integer i = 0; i < lengthSections; i++) {
-      for (Integer j = 0; j < widthSections; j++) {
-        idx[ii++] = (j + ((lengthSections + 1) * (i + 1)) + 0);
-        idx[ii++] = (j + 0);
-        idx[ii++] = (j + 1);
-        idx[ii++] = (j + ((lengthSections + 1) * (i + 1)) + 0);
-        idx[ii++] = (j + 1);
-        idx[ii++] = (j + ((lengthSections + 1) * (i + 1)) + 1);
-      }
+  }
+  
+  Integer fid = 0;
+  Integer tid = 0;
+  
+  for (Integer i = 0; i < lengthSections; i++) {
+    for (Integer j = 0; j < widthSections; j++) {
+      
+      Integer v0, v1, v2, v3;
+      v0 = (nbWidthSections * i) + j;
+      v1 = (nbWidthSections * i) + (j + 1);
+      v2 = (nbWidthSections * (i+1)) + (j + 1);
+      v3 = (nbWidthSections * (i+1)) + j;
+      
+      indices[tid++] = v0;
+      indices[tid++] = v1;
+      indices[tid++] = v3;
+      fid++;
+      
+      indices[tid++] = v1;
+      indices[tid++] = v2;
+      indices[tid++] = v3;
+      fid++;
     }
   }
 }

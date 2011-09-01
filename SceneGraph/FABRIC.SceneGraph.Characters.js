@@ -468,7 +468,7 @@ FABRIC.SceneGraph.registerNodeType('CharacterRig', {
     };
     var numSolverOperators = 0;
     characterRigNode.addSolverOperator = function(operator) {
-      rigNode.getDGNode().bindings.insert(operator, numSolverOperators+1);
+      dgnode.bindings.insert(operator, numSolverOperators);
       numSolverOperators++;
     }
     //////////////////////////////////////////

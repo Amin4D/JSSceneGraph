@@ -203,12 +203,12 @@ $(document).ready(function() {
   var plane = scene.constructNode('Plane', {
       length: 12,
       width: 12,
-      lengthSections: 2,
-      widthSections: 2
+      lengthSections: 10,
+      widthSections: 10
     });
   var transformedMesh = scene.constructNode('TransformedGeometry', {
       baseGeometryNode: plane,
-      xfo: FABRIC.RT.xfo({ tr: FABRIC.RT.vec3(0, 0.5, 0) })
+      xfo: FABRIC.RT.xfo({ tr: FABRIC.RT.vec3(0, 0.5, 0.5) })
     });
       
   //////////////////////////////////////////////////////////////

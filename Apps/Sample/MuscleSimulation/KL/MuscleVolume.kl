@@ -591,7 +591,9 @@ function Vec3 uvwToMusclePosition(
 function Vec3 positionToMuscleSurfacePosition(
   in Vec3 pos,
   in Vec3 normal,
-  in Xfo xfos[]
+  in Xfo xfos[],
+  io Size displacementMapResolution,
+  io Color displacementMap[],
 ){
   // TODO: parameterise these 2 values. 
   Scalar fallOff = 0.0;
@@ -605,7 +607,7 @@ function Vec3 positionToMuscleSurfacePosition(
   Scalar endOffset = 0.0;// If a point is off the end of the muscle, this value will be < 0.0, || > 1.0;
 
   if(!positionToMuscleUV( pos, xfos, uv, corePos, posToCore ) ){
-    return Vec3(0.0,0.0,0.0);
+    return pos;
     /*
     Vec3 endPoint = xfos[ 0 ].tr;
     Quat endFrame = xfos[ 0 ].ori;
@@ -634,8 +636,6 @@ function Vec3 positionToMuscleSurfacePosition(
     */
   }
   
-  report("pos:"+pos);
-
   u = uv.x;
 
   // Now evaluate the spline to get the actual position of the muscle core
@@ -644,7 +644,6 @@ function Vec3 positionToMuscleSurfacePosition(
   corePos = evalPiecewiseBSpline(xfos, u, t, segmentid);  
   
   sliceframe = xfos[segmentid].ori.nlerp(xfos[segmentid + 1].ori, t);
-
 
   //////////////////////////////////////////////////
   // 
@@ -655,11 +654,6 @@ function Vec3 positionToMuscleSurfacePosition(
   
   orthoNormal = normal + (coreTan * normal.dot(coreTan));
   
-  
-  report("orthoNormal:"+orthoNormal);
-  report("posProjectedOntoSlice:"+posProjectedOntoSlice);
-  report("posToCore:"+posToCore);
-
   // The biNormal is orthogonal to the normal
   biNormal = orthoNormal.cross( coreTan ).unit();
 
@@ -674,23 +668,15 @@ function Vec3 positionToMuscleSurfacePosition(
   //////////////////////////////////////////////////
   // Get the non-normalized offset vector, and project it onto the binormal
   biNormalProjLen = posToCore.dot( biNormal );
-  Scalar  dir = ( biNormalProjLen > 0.0 ) ? -1.0 : 1.0;
+  Scalar  dir = ( biNormalProjLen < 0.0 ) ? -1.0 : 1.0;
   
-  
-  report("biNormalProjLen:"+biNormalProjLen);
-
   //////////////////////////////////////////////////
   // Recalculate the v value.
   // 
   muscleNormal = sliceframe.rotateVector(Vec3(0.0, 1.0, 0.0));
 
-//  Scalar orthoNormalAngle = acos( clamp( muscleNormal.dot( orthoNormal ), -1.0, 1.0 ) );
   Scalar orthoNormalAngle = muscleNormal.angleTo( orthoNormal ) * dir;
   Scalar orthoNormalVvalue = (PI - orthoNormalAngle) / TWO_PI;
-  
-  
-  report("orthoNormalAngle:"+orthoNormalAngle);
-  report("orthoNormalVvalue:"+orthoNormalVvalue);
   
   /////////////////////////////////////////////
   Scalar orthoNormalThickness  = 2.0;//muscle->GetMuscleThickness( u, orthoNormalVvalue );
@@ -722,48 +708,53 @@ function Vec3 positionToMuscleSurfacePosition(
   /////////////////////////////////////////////
   // Here we walk down the side of the target quadrant, checking
   // for the hull that extends past the biNormalProjLen.
-  //      ----
+  //      /---
   //    /\   |
   //   |   \ |
   //   |_____| <- biNormalProj
   
-  Integer numSamples = 5;
+  Integer numSamples = 2;
   Integer i;
   Scalar tempV, vdelta2, vdelta1 = 0.0;
-  Scalar t2, t1 = 0.0;
+  Scalar tempA, adelta2, adelta1 = 0.0;
+  Scalar bnlen2, bnlen1 = 0.0;
   for( i=1; i<=numSamples; i++ ){
     Scalar ratio = Scalar(i)/Scalar(numSamples);
-    vdelta2 = sin(ratio * 0.25 * dir);
+    Scalar angle = ratio * HALF_PI;
+    vdelta2  = ratio * 0.25 * dir;
     
     tempV = orthoNormalVvalue + vdelta2;
     if( tempV > 1.0 )  tempV -= 1.0;
     if( tempV < 0.0 )  tempV += 1.0;
     
-    t2 = sin( ratio * HALF_PI ) * 2.0;//muscle->GetMuscleThickness( u, tempV );
+    bnlen2 = sin( angle ) * 2.0;//muscle->GetMuscleThickness( u, tempV );
     
     
-    if(abs(t2) >= abs(biNormalProjLen)){
+    if(abs(bnlen2) >= abs(biNormalProjLen)){
+    //  report("bnlen2:"+bnlen2+" biNormalProjLen:"+biNormalProjLen);
       break;
     }
     vdelta1 = vdelta2;
-    t1 = t2;
+    bnlen1 = bnlen2;
   }
-  if(i < numSamples){
-    return Vec3(0.0,0.0,0.0);
+  if(i >= numSamples){
+    return pos;
   }
-  Scalar fract = (biNormalProjLen - t1)/(t2 - t1);
+  Scalar fract = (biNormalProjLen - bnlen1)/(bnlen2 - bnlen1);
   Scalar vdelta =  lerp(vdelta1, vdelta2, fract);
+  
   v = orthoNormalVvalue + vdelta;
   if(v  > 1.0)  v -= 1.0;
   if(v  < 0.0)  v += 1.0;
-  Scalar angleDelta = vdelta * HALF_PI;
+  Scalar angleDelta = vdelta * TWO_PI;
   
-  Vec3 posOffsetDir = (biNormal * sin( angleDelta )) + (orthoNormal * cos( angleDelta ));
+  
+  Vec3 posOffsetDir = (biNormal * sin( angleDelta * -dir )) + (orthoNormal * cos( angleDelta ));
   
   w = 2.0;//muscle->GetMuscleThickness( u, v ) * modulator;
   
-  return corePos + (posOffsetDir * w);
-  
+  return (corePos + (posOffsetDir * w));
+
 /*
 
   Scalar tempV, tempVprev = orthoNormalVvalue;
@@ -958,11 +949,17 @@ operator deformSkin(
   }
   position += stickDelta;
   */
+  
   // Sliding
-  Vec3 slideDelta;
+  Vec3 slideDelta(0.0,0.0,0.0);
   for(Integer i=0; i<1; i++){
   //  if(muscleBindingIds[i] >= 0 && muscleBindingWeights[i] > 0.0){
-      slideDelta += positionToMuscleSurfacePosition( position, normal, simulatedXfos[muscleBindingIds[i]] ) * muscleBindingWeights[i];
+      Integer mid = 0;//muscleBindingIds[i];
+      if(abs(position.x)<8.0){
+        Vec3 slidePos = positionToMuscleSurfacePosition( position, normal, simulatedXfos[mid], displacementMapResolution, displacementMaps[mid] );
+      //   report("slideDelta:"+slideDelta);
+        slideDelta += (slidePos - position);// * muscleBindingWeights[i];
+      }
   //  }
   }
   position += slideDelta;

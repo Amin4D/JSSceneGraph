@@ -959,23 +959,20 @@ FABRIC.SceneGraph.registerNodeType('Viewport', {
           ]
         }));
 
-    FABRIC.appendOnResolveAsyncTaskCallback(function(label, countRemaining){
-      if(countRemaining===0){
-        fabricwindow = scene.bindViewportToWindow(windowElement, viewportNode);
-        redrawEventHandler.addScope('window', fabricwindow.windowNode);
-        if(scene.getScenePreRedrawEventHandler()){
-          fabricwindow.redrawEvent.appendEventHandler(scene.getScenePreRedrawEventHandler());
-        }
-        fabricwindow.redrawEvent.appendEventHandler(redrawEventHandler);
-        if(scene.getScenePostRedrawEventHandler()){
-          fabricwindow.redrawEvent.appendEventHandler(scene.getScenePostRedrawEventHandler());
-        }
-        if(viewPortRayCastDgNode){
-          viewPortRayCastDgNode.addDependency(fabricwindow.windowNode, 'window');
-        }
-        return true; // remove this event listener. 
-      }
-    });
+
+    var fabricwindow = scene.bindViewportToWindow(windowElement, viewportNode);
+    redrawEventHandler.addScope('window', fabricwindow.windowNode);
+    if(scene.getScenePreRedrawEventHandler()){
+      fabricwindow.redrawEvent.appendEventHandler(scene.getScenePreRedrawEventHandler());
+    }
+    fabricwindow.redrawEvent.appendEventHandler(redrawEventHandler);
+    if(scene.getScenePostRedrawEventHandler()){
+      fabricwindow.redrawEvent.appendEventHandler(scene.getScenePostRedrawEventHandler());
+    }
+    if(viewPortRayCastDgNode){
+      viewPortRayCastDgNode.addDependency(fabricwindow.windowNode, 'window');
+    }
+        
     var propagationRedrawEventHandler = viewportNode.constructEventHandlerNode('DrawPropagation');
     redrawEventHandler.appendChildEventHandler(propagationRedrawEventHandler);
 
@@ -1047,6 +1044,9 @@ FABRIC.SceneGraph.registerNodeType('Viewport', {
     };
 
     // public interface
+    viewportNode.pub.getOpenGLVersion = fabricwindow.getOpenGLVersion;
+    viewportNode.pub.getGlewSupported = fabricwindow.getGlewSupported;
+    
     viewportNode.addMemberInterface(dgnode, 'backgroundColor', true);
     viewportNode.pub.setCameraNode = function(node) {
       if (!node || !node.isTypeOf('Camera')) {

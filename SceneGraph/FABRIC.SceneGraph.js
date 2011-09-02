@@ -706,10 +706,9 @@ FABRIC.SceneGraph = {
             }
           }
         }
-        var advanceTime = function() {
-          var currTime = (new Date).getTime();
+        var advanceTime = function(currTime) {
           var deltaTime = (currTime - prevTime)/1000;
-          prevTime = (new Date).getTime();
+          prevTime = currTime;
           if (sceneOptions.fixedTimeStep) {
             // In fixed time step mode, the computer will attempt to play back
             // at exactly the given frame rate. If the frame rate cannot be achieved

@@ -596,7 +596,6 @@ function Vec3 positionToMuscleSurfacePosition(
   io Color displacementMap[],
 ){
   // TODO: parameterise these 2 values. 
-  Scalar fallOff = 0.0;
   Scalar shrinkWrap = 0.0;
   
   Vec3 corePos;
@@ -645,7 +644,7 @@ function Vec3 positionToMuscleSurfacePosition(
   
   sliceframe = xfos[segmentid].ori.nlerp(xfos[segmentid + 1].ori, t);
 
-  //////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////
   // 
   Vec3 coreTan = sliceframe.rotateVector(Vec3(1.0, 0.0, 0.0));
 
@@ -657,7 +656,7 @@ function Vec3 positionToMuscleSurfacePosition(
   // The biNormal is orthogonal to the normal
   biNormal = orthoNormal.cross( coreTan ).unit();
 
-  //////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////
   // Push the point to the upper side of the muscle using the surface normal.
   // this method works by calculating the width of the muscle at the closest point
   // and then calculating a push vector that will push the point to the opposite side 
@@ -665,12 +664,12 @@ function Vec3 positionToMuscleSurfacePosition(
 
   Scalar biNormalThickness, bisectingVvalue, biNormalProjLen, offsetAngle;
 
-  //////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////
   // Get the non-normalized offset vector, and project it onto the binormal
   biNormalProjLen = posToCore.dot( biNormal );
   Scalar  dir = ( biNormalProjLen < 0.0 ) ? -1.0 : 1.0;
   
-  //////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////
   // Recalculate the v value.
   // 
   muscleNormal = sliceframe.rotateVector(Vec3(0.0, 1.0, 0.0));
@@ -678,10 +677,10 @@ function Vec3 positionToMuscleSurfacePosition(
   Scalar orthoNormalAngle = muscleNormal.angleTo( orthoNormal ) * dir;
   Scalar orthoNormalVvalue = (PI - orthoNormalAngle) / TWO_PI;
   
-  /////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////
   Scalar orthoNormalThickness  = 2.0;//muscle->GetMuscleThickness( u, orthoNormalVvalue );
   
-  /////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////
   // biNormalThickness
   // To find an accurate intersection with the muscle, we only need to test
   // a single quadrant of the muscle. i.e. top-left/top-right.
@@ -691,10 +690,9 @@ function Vec3 positionToMuscleSurfacePosition(
     
   biNormalThickness      = 2.0;//muscle->GetMuscleThickness( u, bisectingVvalue );
   
-  ///////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////
   // Modulator
   // The modulator creates the end caps on the muscle. 
-  // cos(asin( distRatio ))
   Scalar modulator = 1.0;
   if( endOffset < 0.0 ){
     Scalar distRatio = -endOffset/biNormalThickness;
@@ -704,6 +702,27 @@ function Vec3 positionToMuscleSurfacePosition(
     Scalar distRatio = endOffset/biNormalThickness;
     modulator = (distRatio < 1.0) ? cos( asin( distRatio ) ) : 0.0;
   }
+  
+  //////////////////////////////////////////////////////////////////////////////
+  // The point in question is not in the shadow of the muscle.
+  // We calculate a fall off here.
+  // This is so that points don't pop onto the surface of the muscle when 
+  // they come into the shadow of the muscle.
+  if(abs(biNormalProjLen) > biNormalThickness){
+    Scalar depthBelowMuscleCore = posToCore.dot( orthoNormal );// * modulator;
+    if(depthBelowMuscleCore > 0.0){
+      // If the point is below the muscle, but outside of its range, we calculate
+      // an arc that blends the effect of the muscle off over the distanct that
+      // the point is below the surface.
+      Scalar weight = (abs(biNormalProjLen) - orthoNormalThickness) / depthBelowMuscleCore;
+   //   if( weight < 1.0 ){ 
+   //     return (orthoNormal.unit() * cos(asin( weight ))) + pos;
+   //   }
+    }
+    return pos;
+  }
+  
+  
 
   /////////////////////////////////////////////
   // Here we walk down the side of the target quadrant, checking
@@ -737,11 +756,13 @@ function Vec3 positionToMuscleSurfacePosition(
     vdelta1 = vdelta2;
     bnlen1 = bnlen2;
   }
-  if(i >= numSamples){
+  if(i > numSamples){
     return pos;
   }
-  Scalar fract = (biNormalProjLen - bnlen1)/(bnlen2 - bnlen1);
+  Scalar fract = (abs(biNormalProjLen) - bnlen1)/(bnlen2 - bnlen1);
   Scalar vdelta =  lerp(vdelta1, vdelta2, fract);
+  
+  report("pos:"+pos+ "fract:"+fract+ " bnlen1:"+bnlen1+ " bnlen2:"+bnlen2);
   
   v = orthoNormalVvalue + vdelta;
   if(v  > 1.0)  v -= 1.0;
@@ -750,11 +771,9 @@ function Vec3 positionToMuscleSurfacePosition(
   
   
   Vec3 posOffsetDir = (biNormal * sin( angleDelta * -dir )) + (orthoNormal * cos( angleDelta ));
-  
   w = 2.0;//muscle->GetMuscleThickness( u, v ) * modulator;
   
   return (corePos + (posOffsetDir * w));
-
 /*
 
   Scalar tempV, tempVprev = orthoNormalVvalue;
@@ -955,7 +974,7 @@ operator deformSkin(
   for(Integer i=0; i<1; i++){
   //  if(muscleBindingIds[i] >= 0 && muscleBindingWeights[i] > 0.0){
       Integer mid = 0;//muscleBindingIds[i];
-      if(abs(position.x)<8.0){
+      if(abs(position.x)<1.0){
         Vec3 slidePos = positionToMuscleSurfacePosition( position, normal, simulatedXfos[mid], displacementMapResolution, displacementMaps[mid] );
       //   report("slideDelta:"+slideDelta);
         slideDelta += (slidePos - position);// * muscleBindingWeights[i];

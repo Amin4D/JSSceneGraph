@@ -517,6 +517,7 @@ FABRIC.SceneGraph.registerNodeType('MuscleSkinDeformation', {
     });
     deformedSkin.pub.addVertexAttributeValue('positions', 'Vec3', { genVBO:true, dynamic:true } );
     deformedSkin.pub.addVertexAttributeValue('normals', 'Vec3', { genVBO:true, dynamic:true } );
+    deformedSkin.pub.addVertexAttributeValue('debugDraw', 'DebugGeometry' );
     deformedSkin.getAttributesDGNode().addDependency(muscleSystem.getSystemParamsDGNode(), 'musclesystem');
     deformedSkin.getAttributesDGNode().addDependency(muscleSystem.getInitializationDGNode(), 'musclesinitialization');
     deformedSkin.getAttributesDGNode().addDependency(muscleSystem.getSimulationDGNode(), 'musclessimulation');
@@ -544,9 +545,15 @@ FABRIC.SceneGraph.registerNodeType('MuscleSkinDeformation', {
         'boundskin.sticklocations[]',
         'boundskin.slideweight[]',
         'boundskin.bulgeweight[]',
-        'self.index'
+        'self.index',
+        'self.debugDraw'
       ]
     }));
+    
+    var debugGeometryDraw = scene.constructNode('DebugGeometryDraw', {
+        dgnode: deformedSkin.getAttributesDGNode(),
+        debugGemetryMemberName: 'debugDraw'
+    });
 
     return deformedSkin;
   }});

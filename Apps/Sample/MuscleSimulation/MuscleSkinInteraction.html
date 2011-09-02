@@ -46,6 +46,8 @@
     <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Kinematics.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Characters.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.CharacterSolvers.js" charset="utf-8"></script>
+    
+    <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.DebugGeometry.js" charset="utf-8"></script>
     <script type="text/javascript" src="./JS/Muscle.js" charset="utf-8"></script>
 
     
@@ -166,6 +168,7 @@ $(document).ready(function() {
   
   //////////////////////////////////////////////////////////////
   // Manipulators
+  /*
   scene.constructNode('ScreenTranslationManipulator', {
     parentNode: rig,
     parentMember: 'pose',
@@ -201,10 +204,10 @@ $(document).ready(function() {
   //////////////////////////////////////////////////////////////
   //
   var plane = scene.constructNode('Plane', {
-      length: 12,
-      width: 12,
-      lengthSections: 10,
-      widthSections: 10
+      length: 6,
+      width: 6,
+      lengthSections: 6,
+      widthSections: 6
     });
   var transformedMesh = scene.constructNode('TransformedGeometry', {
       baseGeometryNode: plane,

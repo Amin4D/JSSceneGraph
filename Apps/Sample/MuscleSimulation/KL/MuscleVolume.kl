@@ -9,6 +9,7 @@ use Vec2;
 use Vec3;
 use Xfo;
 use FabricOGL;
+use DebugGeometry;
 
 function Scalar clamp(in Scalar val, in Scalar minval, in Scalar maxval){
   return (val < minval ? minval : (val > maxval ? maxval : val));
@@ -594,6 +595,7 @@ function Vec3 positionToMuscleSurfacePosition(
   in Xfo xfos[],
   io Size displacementMapResolution,
   io Color displacementMap[],
+  io DebugGeometry debugDraw
 ){
   // TODO: parameterise these 2 values. 
   Scalar shrinkWrap = 0.0;
@@ -768,6 +770,8 @@ function Vec3 positionToMuscleSurfacePosition(
   if(v  > 1.0)  v -= 1.0;
   if(v  < 0.0)  v += 1.0;
   Scalar angleDelta = vdelta * TWO_PI;
+  
+  debugDraw.addLine(pos, pos+orthoNormal, Color(0.0,0.0,1.0,1.0) );
   
   
   Vec3 posOffsetDir = (biNormal * sin( angleDelta * -dir )) + (orthoNormal * cos( angleDelta ));
@@ -945,7 +949,8 @@ operator deformSkin(
   io Vec3 allsticklocations[][4],
   io Scalar slideweights[],
   io Scalar bulgeweights[],
-  in Size index
+  in Size index,
+  io DebugGeometry debugDraw
 ){
   position = parentpositions[index];
   normal = parentnormals[index];
@@ -975,7 +980,8 @@ operator deformSkin(
   //  if(muscleBindingIds[i] >= 0 && muscleBindingWeights[i] > 0.0){
       Integer mid = 0;//muscleBindingIds[i];
       if(abs(position.x)<1.0){
-        Vec3 slidePos = positionToMuscleSurfacePosition( position, normal, simulatedXfos[mid], displacementMapResolution, displacementMaps[mid] );
+        debugDraw.addPoint(position, Color(1.0,0.0,0.0,1.0));
+        Vec3 slidePos = positionToMuscleSurfacePosition( position, normal, simulatedXfos[mid], displacementMapResolution, displacementMaps[mid], debugDraw);
       //   report("slideDelta:"+slideDelta);
         slideDelta += (slidePos - position);// * muscleBindingWeights[i];
       }

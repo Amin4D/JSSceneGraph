@@ -1,0 +1,49 @@
+
+//
+// Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
+//
+
+use Math;
+
+
+
+function DebugGeometry.addPoint(Vec3 pos, Color color) {
+  Integer id = this.positions.size();
+  
+  this.pointsIndices.resize(this.pointsIndices.size()+1);
+  this.pointsIndices[this.pointsIndices.size()-1] = id;
+  
+  this.positions.resize(id+1);
+  this.positions[id] = pos;
+  
+  this.vertexColors.resize(id+1);
+  this.vertexColors[id] = color;
+}
+
+function DebugGeometry.addLine(Vec3 from, Vec3 to, Color color) {
+  Integer id = this.positions.size();
+  
+  this.linesIndices.resize(this.linesIndices.size()+1);
+  this.linesIndices[this.linesIndices.size()-1] = id;
+  this.positions.resize(id+1);
+  this.positions[id] = from;
+  this.vertexColors.resize(id+1);
+  this.vertexColors[id] = color;
+  
+  
+  id = this.positions.size();
+  this.linesIndices.resize(this.linesIndices.size()+1);
+  this.linesIndices[this.linesIndices.size()-1] = id;
+  this.positions.resize(id+1);
+  this.positions[id] = to;
+  this.vertexColors.resize(id+1);
+  this.vertexColors[id] = color;
+}
+
+
+function DebugGeometry.reset() {
+  this.positions.resize(0);
+  this.vertexColors.resize(0);
+  this.pointsIndices.resize(0);
+  this.linesIndices.resize(0);
+}

@@ -1,0 +1,87 @@
+//
+// Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
+//
+
+use FabricOGL;
+use OGLBuffer;
+use OGLShaderProgram;
+use DebugGeometry;
+
+
+operator debugGeometryDraw(
+  io OGLShaderProgram shaderProgram,
+  io DebugGeometry debugGeometries[],
+  io OGLBuffer positionsBuffer,
+  io OGLBuffer vertexColorsBuffer,
+  io OGLBuffer pointsIndicesBuffer,
+  io OGLBuffer linesIndicesBuffer,
+  io Boolean drawToggle
+) {
+  if(shaderProgram.debug){
+    report("debugGeometryDraw:"+shaderProgram.name);
+  }
+  if (drawToggle) {
+    
+    Vec3 positions[];
+    Color vertexColors[];
+  
+    Integer pointsIndices[];
+    Integer linesIndices[];
+    Integer i,j, voff=0, pioff=0, lioff=0;
+    for(i=0; i<debugGeometries.size(); i++){
+      if(debugGeometries[i].positions.size() != debugGeometries[i].positions.size()){
+        report("ERROR in debugGeometryDraw");
+        return;
+      }
+      positions.resize(voff+debugGeometries[i].positions.size());
+      vertexColors.resize(voff+debugGeometries[i].positions.size());
+      for(j=0; j<debugGeometries[i].positions.size(); j++){
+        positions[voff+j] = debugGeometries[i].positions[j];
+        vertexColors[voff+j] = debugGeometries[i].vertexColors[j];
+      }
+      voff += debugGeometries[i].positions.size();
+      
+      pointsIndices.resize(pioff+debugGeometries[i].pointsIndices.size());
+      for(j=0; j<debugGeometries[i].pointsIndices.size(); j++){
+        pointsIndices[pioff+j] = debugGeometries[i].pointsIndices[j] + voff;
+      }
+      pioff += debugGeometries[i].pointsIndices.size();
+      
+      linesIndices.resize(lioff+debugGeometries[i].linesIndices.size());
+      for(j=0; j<debugGeometries[i].linesIndices.size(); j++){
+        linesIndices[lioff+j] = debugGeometries[i].linesIndices[j] + voff;
+      }
+      lioff += debugGeometries[i].linesIndices.size();
+      
+    }
+    
+    
+    
+    shaderProgram.genAndBindBuffer(positions.data(), positions.dataSize(), positions.size(), positionsBuffer);
+    shaderProgram.genAndBindBuffer(vertexColors.data(), vertexColors.dataSize(), vertexColors.size(), vertexColorsBuffer);
+    pointsIndicesBuffer.genBuffer(pointsIndices.data(), pointsIndices.dataSize(), pointsIndices.size());
+    linesIndicesBuffer.genBuffer(linesIndices.data(), linesIndices.dataSize(), linesIndices.size());
+  
+    shaderProgram.preDraw();
+    glDrawArrays(GL_POINTS, 0, shaderProgram.attributesElementCount);
+    
+    glPointSize(2.0);
+    var Data NULL;
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, pointsIndicesBuffer.bufferID);
+    glDrawElements(GL_POINTS, pointsIndicesBuffer.elementCount, GL_UNSIGNED_INT, NULL);
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, linesIndicesBuffer.bufferID);
+    glDrawElements(GL_LINES, linesIndicesBuffer.elementCount, GL_UNSIGNED_INT, NULL);
+    
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+    
+    /*
+    for(i=0; i<debugGeometries.size(); i++){
+      debugGeometries[i].reset();
+    }
+    */
+  }
+  shaderProgram.postDraw();
+}
+
+

@@ -59,11 +59,11 @@ FABRIC.SceneGraph.registerNodeType('Image', {
         }));
       };
 
-      imageNode.getResourceLoadNode = function() {
-        return resourceLoadNode;
+      imageNode.pub.getResourceLoadNode = function() {
+        return resourceLoadNode.pub;
       };
 
-      imageNode.isImageLoaded = function() {
+      imageNode.pub.isImageLoaded = function() {
         return resourceLoadNode ? resourceLoadNode.pub.isLoaded() : false;
       };
     }
@@ -102,7 +102,7 @@ FABRIC.SceneGraph.registerNodeType('Image', {
       }
     }
 
-    imageNode.getURL = function() {
+    imageNode.pub.getURL = function() {
       return resourceLoadNode ? resourceLoadNode.pub.getUrl() : '';
     };
 

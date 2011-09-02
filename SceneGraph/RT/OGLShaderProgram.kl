@@ -7,14 +7,14 @@ use FabricOGL;
 use OGLBuffer;
 
 function OGLShaderProgram(String name) {
-  self.name = name;
-  self.programId = 0;
+  this.name = name;
+  this.programId = 0;
 }
 
 function Integer OGLShaderProgram.createAndCompileShader(OGLShaderSource shadersrc) {
   var Integer shaderID = glCreateShader(shadersrc.type);
   if (shaderID == 0) {
-    report(self.name + ' : glCreateShader failed');
+    report(this.name + ' : glCreateShader failed');
     return 0;
   }
 
@@ -31,7 +31,7 @@ function Integer OGLShaderProgram.createAndCompileShader(OGLShaderSource shaders
   compiled.push(0);
   glGetShaderiv(shaderID, GL_COMPILE_STATUS, compiled);
   if (compiled[0] == 0)
-    report(self.name + ' : Shader compilation failed:');
+    report(this.name + ' : Shader compilation failed:');
 
   var Integer infoLen[];
   infoLen.resize(1);
@@ -39,7 +39,7 @@ function Integer OGLShaderProgram.createAndCompileShader(OGLShaderSource shaders
 
   if (infoLen[0] > 0) {
     if (compiled[0] > 0) {
-      report(self.name + ' : Shader compilation succeeded with warnings:');
+      report(this.name + ' : Shader compilation succeeded with warnings:');
     }
     var String infoLog;
     var Size bufferSize[];
@@ -70,26 +70,26 @@ function OGLShaderProgram.logShaderParameters() {
   var String name, typeName;
   var Integer i, j;
 
-  for (i = 0; i < self.uniformValues.size(); i++) {
-    self.uniformValues[i].location = glGetUniformLocation(self.programId, self.uniformValues[i].name);
-    if (self.uniformValues[i].location == - 1) {
-      report('ERROR: ' + self.name + ': Attribute does not exist in the shader code: ' + self.uniformValues[i].name);
+  for (i = 0; i < this.uniformValues.size(); i++) {
+    this.uniformValues[i].location = glGetUniformLocation(this.programId, this.uniformValues[i].name);
+    if (this.uniformValues[i].location == - 1) {
+      report('ERROR: ' + this.name + ': Attribute does not exist in the shader code: ' + this.uniformValues[i].name);
     }
   }
 
-  for (i = 0; i < self.attributeValues.size(); i++) {
-    self.attributeValues[i].location = glGetAttribLocation(self.programId, self.attributeValues[i].name);
-    if (self.attributeValues[i].location == - 1) {
-      report('ERROR: ' + self.name + ': Attribute does not exist in the shader code: ' + self.attributeValues[i].name);
+  for (i = 0; i < this.attributeValues.size(); i++) {
+    this.attributeValues[i].location = glGetAttribLocation(this.programId, this.attributeValues[i].name);
+    if (this.attributeValues[i].location == - 1) {
+      report('ERROR: ' + this.name + ': Attribute does not exist in the shader code: ' + this.attributeValues[i].name);
     }
   }
-  if(!self.debug){
+  if(!this.debug){
     return;
   }
 
   var Integer nbUniforms[];
   nbUniforms.push(0);
-  glGetProgramiv(self.programId, GL_ACTIVE_UNIFORMS, nbUniforms);
+  glGetProgramiv(this.programId, GL_ACTIVE_UNIFORMS, nbUniforms);
   for (i = 0; i < nbUniforms[0]; i++) {
     var Integer size[];
     var Size type[];
@@ -97,26 +97,26 @@ function OGLShaderProgram.logShaderParameters() {
     size.push(0);
     type.push(Size(0));
     nbReceived.push(Size(0));
-    glGetActiveUniform(self.programId, i, 1024, nbReceived, size, type, name);
-    if(self.debug){
+    glGetActiveUniform(this.programId, i, 1024, nbReceived, size, type, name);
+    if(this.debug){
       report( "U: " + i + " - " + size + " - " + type + " - " + name );
     }
 
     Boolean found = false;
-    for (j = 0; j < self.uniformValues.size(); j++) {
-      if (name == self.uniformValues[j].name) {
+    for (j = 0; j < this.uniformValues.size(); j++) {
+      if (name == this.uniformValues[j].name) {
         found = true;
         break;
       }
     }
     if (!found) {
-      report('WARNING: ' + self.name + ': Binding not specified for uniform:' + name);
+      report('WARNING: ' + this.name + ': Binding not specified for uniform:' + name);
     }
   }
   
   var Integer nbAttribs[];
   nbAttribs.push(0);
-  glGetProgramiv(self.programId, GL_ACTIVE_ATTRIBUTES, nbAttribs);
+  glGetProgramiv(this.programId, GL_ACTIVE_ATTRIBUTES, nbAttribs);
   for (i = 0; i < nbAttribs[0]; i++) {
     var Integer size[];
     var Size type[];
@@ -124,20 +124,20 @@ function OGLShaderProgram.logShaderParameters() {
     size.push(0);
     type.push(Size(0));
     nbReceived.push(Size(0));
-    glGetActiveAttrib(self.programId, i, 1024, nbReceived, size, type, name);
-    if(self.debug){
+    glGetActiveAttrib(this.programId, i, 1024, nbReceived, size, type, name);
+    if(this.debug){
       report( "A: " + i + " - " + size + " - " + type + " - " + name );
     }
 
     Boolean found = false;
-    for (j = 0; j < self.attributeValues.size(); j++) {
-      if (name == self.attributeValues[j].name) {
+    for (j = 0; j < this.attributeValues.size(); j++) {
+      if (name == this.attributeValues[j].name) {
         found = true;
         break;
       }
     }
     if (!found) {
-      report('WARNING: ' + self.name + ': Binding not specified for attribute:' + name);
+      report('WARNING: ' + this.name + ': Binding not specified for attribute:' + name);
     }
   }
 }
@@ -147,50 +147,50 @@ function OGLShaderProgram.logShaderParameters() {
 
 
 function OGLShaderProgram.createProgramFromShaders() {
-  if (self.shaderSources.size() == 0) {
-    report(self.name + ' : No shaders given to build a self.programId from.');
+  if (this.shaderSources.size() == 0) {
+    report(this.name + ' : No shaders given to build a this.programId from.');
     return;
   }
 
-  if(self.debug){
+  if(this.debug){
     report("createProgramFromShaders:");
   }
   
   var Integer shaderIDs[];
-  for (var Size i = 0; i < self.shaderSources.size(); i++) {
-    var Integer shaderID = self.createAndCompileShader(self.shaderSources[i]);
+  for (var Size i = 0; i < this.shaderSources.size(); i++) {
+    var Integer shaderID = this.createAndCompileShader(this.shaderSources[i]);
     if (shaderID == 0)
       break;
     shaderIDs.push(shaderID);
   }
 
-  if (shaderIDs.size() == self.shaderSources.size()) {
-    self.programId = glCreateProgram();
-    if (self.programId != 0) {
+  if (shaderIDs.size() == this.shaderSources.size()) {
+    this.programId = glCreateProgram();
+    if (this.programId != 0) {
       for (var Size i = 0; i < shaderIDs.size(); i++) {
-        glAttachShader(self.programId, shaderIDs[i]);
+        glAttachShader(this.programId, shaderIDs[i]);
       }
-      // The self.programId parameters need to be added before linking
-      for (var Size i = 0; i < self.programParams.size(); i++) {
-        glProgramParameteriEXT(self.programId, self.programParams[i].id, self.programParams[i].value);
+      // The this.programId parameters need to be added before linking
+      for (var Size i = 0; i < this.programParams.size(); i++) {
+        glProgramParameteriEXT(this.programId, this.programParams[i].id, this.programParams[i].value);
       }
 
-      glLinkProgram(self.programId);
+      glLinkProgram(this.programId);
 
       var Integer linked[];
       linked.push(0);
-      glGetProgramiv(self.programId, GL_LINK_STATUS, linked);
+      glGetProgramiv(this.programId, GL_LINK_STATUS, linked);
       if (linked[0] == 0) {
-        report(self.name + ' : Program linking failed:');
+        report(this.name + ' : Program linking failed:');
       }
 
       var Integer infoLen[];
       infoLen.resize(1);
-      glGetProgramiv(self.programId, GL_INFO_LOG_LENGTH, infoLen);
+      glGetProgramiv(this.programId, GL_INFO_LOG_LENGTH, infoLen);
 
       if (infoLen.size() > 0 && infoLen[0] > 1) {
         if (linked.size() > 0 || linked[0] > 0) {
-          report(self.name + ' : Program linking succeeded, with warnings:');
+          report(this.name + ' : Program linking succeeded, with warnings:');
         }
         var Size bufferSize[];
         var Size bufferTotalSize = 0;
@@ -201,7 +201,7 @@ function OGLShaderProgram.createProgramFromShaders() {
         }
 
         var String infoLog;
-        glGetProgramInfoLog(self.programId, bufferTotalSize, bufferSize, infoLog);
+        glGetProgramInfoLog(this.programId, bufferTotalSize, bufferSize, infoLog);
         report(infoLog);
       }
       else if (!linked) {
@@ -209,8 +209,8 @@ function OGLShaderProgram.createProgramFromShaders() {
       }
 
       if (!linked) {
-        glDeleteProgram(self.programId);
-        self.programId = 0;
+        glDeleteProgram(this.programId);
+        this.programId = 0;
       }
     }
   }
@@ -219,48 +219,52 @@ function OGLShaderProgram.createProgramFromShaders() {
     glDeleteShader(shaderIDs[i]);
   }
   
-  if (self.programId != 0) {
-    self.logShaderParameters();
+  if (this.programId != 0) {
+    this.logShaderParameters();
   }
   
-  if(self.debug){
-    report("createProgramFromShaders Successful :"+ self.programId);
+  if(this.debug){
+    report("createProgramFromShaders Successful :"+ this.programId);
   }
 }
 
 function OGLShaderProgram.loadShader() {
-  if(self.debug){
+  if(this.debug){
     report("----------------------------");
-    report("loadShader " + self.name );
+    report("loadShader " + this.name );
+    fglSetDebuggingEnabled( true );
   }
-  if (!self.programId) {
-    self.createProgramFromShaders();
+  if (!this.programId) {
+    this.createProgramFromShaders();
   }
-  glUseProgram(self.programId);
-  if(self.disableOptions.size() > 0 || self.enableOptions.size() > 0){
+  glUseProgram(this.programId);
+  if(this.disableOptions.size() > 0 || this.enableOptions.size() > 0){
     glPushAttrib(GL_ENABLE_BIT);
-    for(Integer i=0; i<self.enableOptions.size(); i++){
-      glEnable(self.enableOptions[i]);
-      if(self.enableOptions[i]==GL_BLEND && self.blendModeSfactor!=0 && self.blendModeDfactor!=0){
-        glBlendFunc(self.blendModeSfactor, self.blendModeDfactor);
+    for(Integer i=0; i<this.enableOptions.size(); i++){
+      glEnable(this.enableOptions[i]);
+      if(this.enableOptions[i]==GL_BLEND && this.blendModeSfactor!=0 && this.blendModeDfactor!=0){
+        glBlendFunc(this.blendModeSfactor, this.blendModeDfactor);
       }
     }
-    for(Integer i=0; i<self.disableOptions.size(); i++){
-      glDisable(self.disableOptions[i]);
+    for(Integer i=0; i<this.disableOptions.size(); i++){
+      glDisable(this.disableOptions[i]);
     }
     // The culling value can only be modified if the draw options are also modified.
-    if(self.cullFace!=0){
-      glCullFace(self.cullFace);
+    if(this.cullFace!=0){
+      glCullFace(this.cullFace);
     }
   }
-  self.loadedAttributes.resize(0);
+  this.loadedAttributes.resize(0);
 }
 
 function OGLShaderProgram.unloadShader() {
-  if(self.disableOptions.size() > 0 || self.enableOptions.size() > 0){
+  if(this.disableOptions.size() > 0 || this.enableOptions.size() > 0){
     glPopAttrib();
   }
-  self.loadedAttributes.resize(0);
+  this.loadedAttributes.resize(0);
+  if(this.debug){
+    fglSetDebuggingEnabled( false );
+  }
 }
 
 //////////////////////////////////////////////////////////
@@ -274,9 +278,9 @@ function OGLShaderProgram.unloadShader() {
 function Integer OGLShaderProgram.getUniformLocation(
   Integer uniformId
 ) {
-  for (Integer i = 0; i < self.uniformValues.size(); i++) {
-    if (self.uniformValues[i].id == uniformId) {
-      return self.uniformValues[i].location;
+  for (Integer i = 0; i < this.uniformValues.size(); i++) {
+    if (this.uniformValues[i].id == uniformId) {
+      return this.uniformValues[i].location;
     }
   }
   return -1;
@@ -288,8 +292,8 @@ error: not all paths return a value
 function Integer OGLShaderProgram.getUniformLocationByName(
   String name
 ) {
-  if(self.programId!=0){
-    return glGetAttribLocation(self.programId, name);
+  if(this.programId!=0){
+    return glGetAttribLocation(this.programId, name);
   }else{
     return -1;
   }
@@ -305,7 +309,7 @@ function Boolean OGLShaderProgram.validateUniformBinding(
 
   var Integer nbUniforms[];
   nbUniforms.push(0);
-  glGetProgramiv(self.programId, GL_ACTIVE_UNIFORMS, nbUniforms);
+  glGetProgramiv(this.programId, GL_ACTIVE_UNIFORMS, nbUniforms);
   for (i = 0; i < nbUniforms[0]; i++) {
     var Integer size[];
     var Size type[];
@@ -313,8 +317,8 @@ function Boolean OGLShaderProgram.validateUniformBinding(
     size.push(0);
     type.push(Size(0));
     nbReceived.push(Size(0));
-    glGetActiveUniform(self.programId, i, 1024, nbReceived, size, type, name);
-    Integer activeUniformLocation = glGetUniformLocation(self.programId, name);
+    glGetActiveUniform(this.programId, i, 1024, nbReceived, size, type, name);
+    Integer activeUniformLocation = glGetUniformLocation(this.programId, name);
     if(activeUniformLocation == location){
       report("Loading :"+ name);
      // if(dataSize <= size[0]){
@@ -334,13 +338,13 @@ function OGLShaderProgram.loadBooleanUniform(
   Integer location,
   Boolean value
 ) {
-  if(self.programId==0){
+  if(this.programId==0){
     report("ERROR: Shader not in use");
     return;
   }
   if (location != - 1) {
-    if(self.debug){
-    //  self.validateUniformBinding(location, value.dataSize());
+    if(this.debug){
+    //  this.validateUniformBinding(location, value.dataSize());
     }
     glUniform1i(location, (value ? 1 : 0));
   }
@@ -353,13 +357,13 @@ function OGLShaderProgram.loadIntegerUniform(
   Integer location,
   Integer value
 ) {
-  if(self.programId==0){
+  if(this.programId==0){
     report("ERROR: Shader not in use");
     return;
   }
   if (location != - 1) {
-    if(self.debug){
-      self.validateUniformBinding(location, value.dataSize());
+    if(this.debug){
+      this.validateUniformBinding(location, value.dataSize());
     }
     glUniform1i(location, value);
   }
@@ -372,13 +376,13 @@ function OGLShaderProgram.loadScalarUniform(
   Integer location,
   Scalar value
 ) {
-  if(self.programId==0){
+  if(this.programId==0){
     report("ERROR: Shader not in use");
     return;
   }
   if (location != - 1) {
-    if(self.debug){
-      self.validateUniformBinding(location, value.dataSize());
+    if(this.debug){
+      this.validateUniformBinding(location, value.dataSize());
     }
     glUniform1f(location, value);
   }
@@ -391,13 +395,13 @@ function OGLShaderProgram.loadVec2Uniform(
   Integer location,
   Vec2 value
 ) {
-  if(self.programId==0){
+  if(this.programId==0){
     report("ERROR: Shader not in use");
     return;
   }
   if (location != - 1) {
-    if(self.debug){
-      self.validateUniformBinding(location, value.dataSize());
+    if(this.debug){
+      this.validateUniformBinding(location, value.dataSize());
     }
     glUniform2f(location, value.x, value.y);
   }
@@ -410,13 +414,13 @@ function OGLShaderProgram.loadVec3Uniform(
   Integer location,
   Vec3 value
 ) {
-  if(self.programId==0){
+  if(this.programId==0){
     report("ERROR: Shader not in use");
     return;
   }
   if (location != - 1) {
-    if(self.debug){
-      self.validateUniformBinding(location, value.dataSize());
+    if(this.debug){
+      this.validateUniformBinding(location, value.dataSize());
     }
     glUniform3f(location, value.x, value.y, value.z);
   }
@@ -429,13 +433,13 @@ function OGLShaderProgram.loadVec4Uniform(
   Integer location,
   Vec4 value
 ) {
-  if(self.programId==0){
+  if(this.programId==0){
     report("ERROR: Shader not in use");
     return;
   }
   if (location != - 1) {
-    if(self.debug){
-      self.validateUniformBinding(location, value.dataSize());
+    if(this.debug){
+      this.validateUniformBinding(location, value.dataSize());
     }
     glUniform4f(location, value.x, value.y, value.z, value.t);
   }
@@ -448,13 +452,13 @@ function OGLShaderProgram.loadColorUniform(
   Integer location,
   Color value
 ) {
-  if(self.programId==0){
+  if(this.programId==0){
     report("ERROR: Shader not in use");
     return;
   }
   if (location != - 1) {
-    if(self.debug){
-      self.validateUniformBinding(location, value.dataSize());
+    if(this.debug){
+      this.validateUniformBinding(location, value.dataSize());
     }
     glUniform4f(location, value.r, value.g, value.b, value.a);
   }
@@ -467,7 +471,7 @@ function OGLShaderProgram.loadMat33Uniform(
   Integer location,
   Mat33 value
 ) {
-  if(self.programId==0){
+  if(this.programId==0){
     report("ERROR: Shader not in use");
     return;
   }
@@ -485,13 +489,13 @@ function OGLShaderProgram.loadMat44Uniform(
   Integer location,
   Mat44 value
 ) {
-  if(self.programId==0){
+  if(this.programId==0){
     report("ERROR: Shader not in use");
     return;
   }
   if (location != - 1) {
-    if(self.debug){
-      self.validateUniformBinding(location, value.dataSize());
+    if(this.debug){
+      this.validateUniformBinding(location, value.dataSize());
     }
     var Mat44 values[];
     values.push(value);
@@ -506,7 +510,7 @@ function OGLShaderProgram.loadMat44UniformArray(
   Integer location,
   io Mat44 values[] /* PT 28-06-11 I'm not sure why values is an l-value in the following call */
 ) {
-  if(self.programId==0){
+  if(this.programId==0){
     report("ERROR: Shader not in use");
     return;
   }
@@ -525,9 +529,9 @@ function OGLShaderProgram.loadMat44UniformArray(
 function Integer OGLShaderProgram.getAttributeLocation(
   Integer attributeId
 ) {
-  for (Integer i = 0; i < self.attributeValues.size(); i++) {
-    if (self.attributeValues[i].id == attributeId) {
-      return self.attributeValues[i].location;
+  for (Integer i = 0; i < this.attributeValues.size(); i++) {
+    if (this.attributeValues[i].id == attributeId) {
+      return this.attributeValues[i].location;
     }
   }
   return -1;
@@ -536,8 +540,8 @@ function Integer OGLShaderProgram.getAttributeLocation(
 function Boolean OGLShaderProgram.isAttributeLoaded(
   Integer attributeId
 ) {
-  for (Integer i = 0; i < self.loadedAttributes.size(); i++) {
-    if (self.loadedAttributes[i] == attributeId) {
+  for (Integer i = 0; i < this.loadedAttributes.size(); i++) {
+    if (this.loadedAttributes[i] == attributeId) {
       return true;
     }
   }
@@ -551,8 +555,8 @@ function OGLShaderProgram.genAndBindBuffer(
   io OGLBuffer buffer
 ) {
 
-  if(self.isAttributeLoaded(buffer.attributeID)){
-    if(self.debug){
+  if(this.isAttributeLoaded(buffer.attributeID)){
+    if(this.debug){
       report("AttributeLoaded :" + buffer.name );
     }
     // Multiple event handlers can load buffers for the same drawn gometry
@@ -561,33 +565,33 @@ function OGLShaderProgram.genAndBindBuffer(
     return;
   }
   
-  Integer location = self.getAttributeLocation(buffer.attributeID);
-  if(self.debug){
+  Integer location = this.getAttributeLocation(buffer.attributeID);
+  if(this.debug){
     report("genAndBindBuffer " + buffer.name + ":" + buffer.bufferID + " elementCount:" + buffer.elementCount  + " attributeID:" + buffer.attributeID + " location:" + location );
   }
   if(location!=-1){
   
-    if(self.attributesElementCount != bufferDataSize){
-      if(self.attributesElementCount == 0){
-        self.attributesElementCount = bufferDataSize;
+    if(this.attributesElementCount != bufferDataSize){
+      if(this.attributesElementCount == 0){
+        this.attributesElementCount = bufferDataSize;
       }else{
         report("ERROR binding "+buffer.name+": All attributes for a given shader invocation must contain identical element counts");
-        report( buffer.name+".bufferDataSize = "+bufferDataSize + " != " + self.attributesElementCount);
+        report( buffer.name+".bufferDataSize = "+bufferDataSize + " != " + this.attributesElementCount);
         return;
       }
     }
     
     buffer.genBuffer(bufferData, bufferDataElementSize, bufferDataSize);
     buffer.bindBuffer(location);
-    self.loadedAttributes.push(buffer.attributeID);
+    this.loadedAttributes.push(buffer.attributeID);
   }
 }
 
 function OGLShaderProgram.preDraw() {
 //  Boolean valid = true;
-  for (Integer i = 0; i < self.attributeValues.size(); i++) {
-    if (!self.isAttributeLoaded(self.attributeValues[i].id)) {
-      report("Attribute not loaded prior to shader invocation:"+self.attributeValues[i].name);
+  for (Integer i = 0; i < this.attributeValues.size(); i++) {
+    if (!this.isAttributeLoaded(this.attributeValues[i].id)) {
+      report("Attribute not loaded prior to shader invocation:"+this.attributeValues[i].name);
     //  valid = false;
     }
   }
@@ -595,10 +599,10 @@ function OGLShaderProgram.preDraw() {
 }
 
 function OGLShaderProgram.postDraw() {
-  self.loadedAttributes.resize(0);
-  self.attributesElementCount = 0;
+  this.loadedAttributes.resize(0);
+  this.attributesElementCount = 0;
   
-  if(self.debug){
+  if(this.debug){
     report("----------------------------");
   }
 }

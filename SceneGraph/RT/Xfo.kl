@@ -5,15 +5,15 @@
 use Vec3, Quat, Mat44, RotationOrder, Euler;
 
 function Xfo() {
-  self.tr = self.tr.setNull();
-  self.ori = self.ori.inv();
-  self.sc = self.sc.inv();
+  this.tr = this.tr.setNull();
+  this.ori = this.ori.inv();
+  this.sc = this.sc.inv();
 }
 
 function Xfo.identity() {
-  self.tr.setNull();
-  self.ori.identity();
-  self.sc = Vec3(1.0, 1.0, 1.0);
+  this.tr.setNull();
+  this.ori.identity();
+  this.sc = Vec3(1.0, 1.0, 1.0);
 }
 
 function Xfo * (in Xfo local, in Xfo global) {
@@ -31,38 +31,38 @@ function Xfo * (in Xfo local, in Xfo global) {
 
 function Xfo Xfo.inv() {
   var Xfo result;
-  result.tr = self.tr.neg();
-  result.ori = self.ori.inv();
-  result.sc = self.sc.inv();
+  result.tr = this.tr.neg();
+  result.ori = this.ori.inv();
+  result.sc = this.sc.inv();
   return result;
 }
 
 function Xfo Xfo.project(in Xfo xf) {
-  return xf * self;
+  return xf * this;
 }
 
 function Xfo Xfo.invProject(in Xfo xf) {
-  var Xfo selfInv = self.inv();
+  var Xfo thisInv = this.inv();
   var Quat glb_ori = xf.ori.unit();
-  var Quat inv_ori = selfInv.ori.unit();
+  var Quat inv_ori = thisInv.ori.unit();
 
   var Xfo result;
-  result.tr = inv_ori.transform(selfInv.sc * (xf.tr + selfInv.tr));
+  result.tr = inv_ori.transform(thisInv.sc * (xf.tr + thisInv.tr));
   result.ori = glb_ori * inv_ori;
   //  result.ori = inv_ori * glb_ori;
   result.ori.setUnit();
-  result.sc = selfInv.sc * xf.sc;
+  result.sc = thisInv.sc * xf.sc;
   return result;
 }
 
 function Vec3 Xfo.transform(in Vec3 v) {
-  return self.ori.transform(v) * self.sc + self.tr;
+  return this.ori.transform(v) * this.sc + this.tr;
 }
 
 // TODO: Remove the function above. 'transform' is too ambiguous,
 // and inconsistent with our JS library.
 function Vec3 Xfo.transformVector(in Vec3 v) {
-  return self.ori.rotateVector(v) * self.sc + self.tr;
+  return this.ori.rotateVector(v) * this.sc + this.tr;
 }
 
 function Mat44(in Xfo xfo) {
@@ -95,37 +95,37 @@ function Mat44(in Xfo xfo) {
   trn.row3.y = xfo.tr.y;
   trn.row3.z = xfo.tr.z;
 
-  self = scl * rot * trn;
+  this = scl * rot * trn;
 }
 
 function Xfo Mat44.decompose(in RotationOrder ro) {
   var Xfo xfo;
 
-  if (abs(1.0 - self.row3.t) > 0.001) {
+  if (abs(1.0 - this.row3.t) > 0.001) {
     report('Cannot handle denormalized matrices');
-    report(self.row3.t);
+    report(this.row3.t);
     return xfo;
   }
 
-  if (self.row0.t != 0.0 || self.row1.t != 0.0 || self.row2.t != 0.0) {
+  if (this.row0.t != 0.0 || this.row1.t != 0.0 || this.row2.t != 0.0) {
     report('Cannot handle perspective projection matrices');
     return xfo;
   }
 
-  if (abs(self.det()) < 0.00001) {
+  if (abs(this.det()) < 0.00001) {
     report('Matrix is singular.');
     return xfo;
   }
 
   // Grab the translation
-  xfo.tr.x = self.row3.x;
-  xfo.tr.y = self.row3.y;
-  xfo.tr.z = self.row3.z;
+  xfo.tr.x = this.row3.x;
+  xfo.tr.y = this.row3.y;
+  xfo.tr.z = this.row3.z;
 
   var Vec3 row0, row1, row2;
-  row0.set(self.row0.x, self.row0.y, self.row0.z);
-  row1.set(self.row1.x, self.row1.y, self.row1.z);
-  row2.set(self.row2.x, self.row2.y, self.row2.z);
+  row0.set(this.row0.x, this.row0.y, this.row0.z);
+  row1.set(this.row1.x, this.row1.y, this.row1.z);
+  row2.set(this.row2.x, this.row2.y, this.row2.z);
 
   // Grab the X scale and normalize the first row
   xfo.sc.x = row0.norm();
@@ -171,5 +171,5 @@ function Xfo Mat44.decompose(in RotationOrder ro) {
 }
 
 function Xfo(in Mat44 m) {
-  self = m.decompose(RotationOrder(0));
+  this = m.decompose(RotationOrder(0));
 }

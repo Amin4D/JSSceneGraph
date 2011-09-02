@@ -55,20 +55,37 @@ FABRIC = (function() {
     // TODO: This code will be removed once we get to the end of beta.
     var version = context.build.getPureVersion().split('.');
     var requiredVersion = [1,0,10];
-    for(var i=0; i<3; i++){
-      if(parseInt(version[i]) != requiredVersion[i]){
-        alert("The version of Fabric that you have installed is out of date.\n" +
-              "Please install the updated plugin");
-        createDownloadPrompt();
-        throw("The version of Fabric that you have installed is out of date.\n" +
-              "Please install the updated plugin");
+    var cmpVersions = function (lhs, rhs) {
+      if (lhs[0] < rhs[0])
+        return -1;
+      else if (lhs[0] == rhs[0]) {
+        if (lhs[1] < rhs[1])
+          return -1;
+        else if (lhs[1] == rhs[1]) {
+          if (lhs[2] < rhs[2])
+            return -1;
+          else if (lhs[2] == rhs[2])
+            return 0;
+          else return 1;
+        }
+        else return 1;
       }
+      else return 1;
+    };
+    var outOfDateMessage =
+      "The version of Fabric that you have installed is out of date.\n" +
+      "Please install the updated plugin";
+    if (cmpVersions(version, requiredVersion) < 0) {
+      alert(outOfDateMessage);
+      createDownloadPrompt();
+      throw(outOfDateMessage);
     }
     
     if(context.build.isExpired()){
-      alert("Fabric(Alpha) plugin has expired. Please install the lastest version");
+      var expiredMessage = "Fabric(Alpha) plugin has expired. Please install the lastest version";
+      alert(expiredMessage);
       createDownloadPrompt();
-      throw("Fabric(Alpha) plugin has expired. Please install the lastest version");
+      throw(expiredMessage);
     }
     
     FABRIC.displayDebugger = function(ctx) {
@@ -156,6 +173,60 @@ FABRIC = (function() {
       result.__defineGetter__('fps', function() {
         return context.VP.viewPort.getFPS();
       });
+
+      // create the query nodes
+      var queryDGNode = context.DG.createNode('OpenGLQuery');
+      queryDGNode.addMember('version', 'String', '');
+      queryDGNode.addMember('token', 'String', '');
+      queryDGNode.addMember('supported', 'Boolean', false);
+      queryDGNode.addDependency(result.windowNode,'window');
+      
+      // operator to query the open gl version
+      var queryOpVersion = context.DG.createOperator('getOpenGLVersion');
+      queryOpVersion.setEntryFunctionName('getOpenGLVersion');
+      queryOpVersion.setSourceCode('use FabricOGL; operator getOpenGLVersion(io String version){\n' +
+        '  glGetVersion(version);\n' +
+        '}');
+      var queryOpVersionBinding = context.DG.createBinding();
+      queryOpVersionBinding.setOperator(queryOpVersion);
+      queryOpVersionBinding.setParameterLayout(['self.version']);
+      queryDGNode.bindings.append(queryOpVersionBinding);
+      
+      // operator to query the support glew features
+      var queryOpGlew = context.DG.createOperator('getGlewSupported');
+      queryOpGlew.setEntryFunctionName('getGlewSupported');
+      queryOpGlew.setSourceCode('use FabricOGL; operator getGlewSupported(io String token, io Boolean supported){\n' +
+        '  report("query: "+token);\n' +
+        '  if(token.length() > 0) glewIsSupported(token,supported);\n' +
+        '}');
+      var queryOpGlewBinding = context.DG.createBinding();
+      queryOpGlewBinding.setOperator(queryOpGlew);
+      queryOpGlewBinding.setParameterLayout(['self.token','self.supported']);
+      queryDGNode.bindings.append(queryOpGlewBinding);
+      
+      var openGLVersion = undefined;
+      var glewSupported = {};
+      result.getOpenGLVersion = function() {
+        // if we already know it, skip it
+        if( openGLVersion == undefined) {
+          // force an eval
+          queryDGNode.evaluate();
+          openGLVersion = queryDGNode.getData('version',0);
+        }
+        return openGLVersion;
+      }
+      result.getGlewSupported = function(token) {
+        // if we already know it, skip it
+        if( glewSupported[token] == undefined) {
+          // force an eval
+          queryDGNode.setData('token',0,token);
+          queryDGNode.evaluate();
+          glewSupported[token] = queryDGNode.getData('supported',0);
+          console.log(glewSupported);
+        }
+        return glewSupported[token];
+      }
+
       return result;
     };
     

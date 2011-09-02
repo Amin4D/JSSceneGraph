@@ -6,15 +6,16 @@ use Vec3;
 use Mat44;
 
 operator simulateMuscle(
-  io Xfo initialXfos[], /* inital Transforsm  */
-  io Xfo baseMuscleXfo,
-  io Scalar segmentLengths[],
-  io Vec2 pointEnvelopeIds,
-  io Vec2 pointEnvelopWeights[],
-  io Scalar flexibilityWeights[], /* weights determining how much the muscle is simulated. */
-  io BezierKeyframe contractionCurve[],
-  io Scalar contractionWeights[], /* weights determining how much the segments will contract. */
+  io Xfo allinitialXfos[][], /* inital Transforsm  */
+  io Xfo allbaseMuscleXfos[],
+  io Scalar allsegmentLengths[][],
+  io Vec2 allpointEnvelopeIds[],
+  io Vec2 allpointEnvelopWeights[][],
+  io Scalar allflexibilityWeights[][], /* weights determining how much the muscle is simulated. */
+  io BezierKeyframe allcontractionCurve[][],
+  io Scalar allcontractionWeights[][], /* weights determining how much the segments will contract. */
   
+  in Size index,
   io Boolean initialized,
   io Xfo envelopedXfos[], /* Xfos deformed by the skeleton  */
   io Xfo simulatedXfos[], /* Xfos simulated and used to drive the skin deformation */
@@ -33,12 +34,22 @@ operator simulateMuscle(
   io Scalar timeStep,
   io Xfo skeletonXfos[]
 ){
-//  report("simulateMuscle>>>");
+//  report("simulateMuscle>>>:"+index);
   Integer i, j;
   Xfo baseXfo, xfo;
   
+  Xfo initialXfos[] = allinitialXfos[index];
+  Xfo baseMuscleXfo = allbaseMuscleXfos[index];
+  Scalar segmentLengths[] = allsegmentLengths[index];
+  Vec2 pointEnvelopeIds = allpointEnvelopeIds[index];
+  Vec2 pointEnvelopWeights[] = allpointEnvelopWeights[index];
+  Scalar flexibilityWeights[] = allflexibilityWeights[index];
+  BezierKeyframe contractionCurve[] = allcontractionCurve[index];
+  Scalar contractionWeights[] = allcontractionWeights[index];
+  
+  
   if(!initialized || pointPositionsPrevUpdate.size() != simulatedXfos.size()){
-    report("!initialized");
+    report("!initialized:"+index);
     envelopedXfos.resize(initialXfos.size());
     simulatedXfos.resize(initialXfos.size());
     segmentCompressionFactors.resize(initialXfos.size());
@@ -56,7 +67,8 @@ operator simulateMuscle(
   // Envelope the xfos to the skeleton using basic enveloping math.
   Vec3 v3(0.0,0.0,0.0);
   for(i=0; i<simulatedXfos.size(); i++){
-    baseXfo = baseMuscleXfo * initialXfos[i];
+  //  baseXfo = baseMuscleXfo * initialXfos[i];
+    baseXfo = initialXfos[i];
     envelopedXfos[i].identity();
     if (pointEnvelopWeights[i].x > 0.0) {
       xfo = baseXfo * skeletonXfos[Integer(pointEnvelopeIds.x)];
@@ -93,11 +105,11 @@ operator simulateMuscle(
   
   // Increment the muscle system using basic Verlet simulation.
   if(timeStep>0){
+    Vec3 gravityDisp = gravity * (timeStep * contractionFactor);
     for(i=0; i<simulatedXfos.size(); i++){
       // When under contraction, we remove gravity.
       // Its a bit of a hack to exagerate the strength of the contraction
-      simulatedXfos[i].tr += ((gravity / (timeStep * timeStep)) * contractionFactor) +
-                              (simulatedXfos[i].tr - pointPositionsPrevUpdate[i]);
+      simulatedXfos[i].tr += gravityDisp + (simulatedXfos[i].tr - pointPositionsPrevUpdate[i]);
       simulatedXfos[i].tr = envelopedXfos[i].tr.lerp(simulatedXfos[i].tr, flexibilityWeights[i]);
       simulatedXfos[i].ori = envelopedXfos[i].ori.nlerp(simulatedXfos[i].ori, flexibilityWeights[i]);
     }

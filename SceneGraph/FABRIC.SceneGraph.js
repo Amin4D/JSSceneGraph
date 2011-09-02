@@ -78,7 +78,7 @@ FABRIC.SceneGraph = {
         postDraw: true,
         constructAnimationInterface: true,
         fixedTimeStep: true,
-        timeStep: 20,
+        timeStep: 0.02, // 0.02 seconds per frame = 50 fps
         shadowMaterial:'ShadowMaterial'
       });
     
@@ -569,7 +569,7 @@ FABRIC.SceneGraph = {
     };
     scene.pub.redrawAllWindows = function() {
       for (var i=0; i<viewports.length; i++) {
-        viewports[i].pub.redraw(isPlaying);
+        viewports[i].pub.redraw();
       }
     };
     scene.pub.getErrors = function() {
@@ -666,59 +666,80 @@ FABRIC.SceneGraph = {
       globalsNode = scene.constructDependencyGraphNode('Scene_globals');
 
       if (sceneOptions.constructAnimationInterface) {
-
-        globalsNode.addMember('ms', 'Scalar', 0);
-        globalsNode.addMember('ms_prevupdate', 'Scalar', 0);
+        // All time values are in seconds. 
+        globalsNode.addMember('time', 'Scalar', 0);
+        globalsNode.addMember('time_prevupdate', 'Scalar', 0);
         globalsNode.addMember('timestep', 'Scalar', 0);
-        globalsNode.bindings.append(scene.constructOperator({
-          operatorName: 'setTimestep',
-          srcCode:
-            '\noperator setTimestep(io Scalar ms, io Scalar ms_prevupdate, io Scalar timestep){ \n' +
-            '  timestep = ms - ms_prevupdate;\n' +
-            '  ms_prevupdate = ms;\n' +
-            '}',
-          entryFunctionName: 'setTimestep',
-          parameterLayout: [
-            'self.ms',
-            'self.ms_prevupdate',
-            'self.timestep'
-          ]
-        }));
-
+        
         var isPlaying = false, animationTime = 0;
         var prevTime, playspeed = 1.0;
         var timerange = FABRIC.RT.vec2(-1,-1);
         var looping = false;
         var onAdvanceCallback;
-        var advanceTime = function() {
-          if (sceneOptions.fixedTimeStep) {
-            animationTime += sceneOptions.timeStep;
-            scene.pub.animation.setTime(animationTime);
+        
+        var requestAnimFrame = (function(){
+          return  window.requestAnimationFrame       || 
+                  window.webkitRequestAnimationFrame || 
+                  window.mozRequestAnimationFrame    || 
+                  window.oRequestAnimationFrame      || 
+                  window.msRequestAnimationFrame     || 
+                  function(/* function */ callback, /* DOMElement */ element){
+                    window.setTimeout(callback, 1000 / 60);
+                  };
+        })();
+        var setTime = function(t, timestep, redraw) {
+          
+          if (looping && animationTime > timerange.y){
+            t = timerange.x;
           }
-          else {
-            var currTime = (new Date).getTime();
-            var deltaTime = currTime - prevTime;
-            prevTime = currTime;
-            scene.pub.animation.setTime(animationTime + (deltaTime * playspeed), false);
-          }
+          animationTime = t;
+          globalsNode.setBulkData({ time:[t], timestep:[timestep] } );
+          
           if( onAdvanceCallback){
             onAdvanceCallback.call();
           }
-          scene.pub.redrawAllWindows();
+          if(redraw !== false){
+            scene.pub.redrawAllWindows();
+            if(isPlaying){
+              // Queue up the next redraw immediately. 
+              requestAnimFrame( advanceTime, viewports[0].getWindowElement() );
+            }
+          }
         }
-
+        var advanceTime = function() {
+          var currTime = (new Date).getTime();
+          var deltaTime = (currTime - prevTime)/1000;
+          prevTime = (new Date).getTime();
+          if (sceneOptions.fixedTimeStep) {
+            // In fixed time step mode, the computer will attempt to play back
+            // at exactly the given frame rate. If the frame rate cannot be achieved
+            // it plays as fast as possible.
+            // The time step as used throughout the graph will always be fixed at the
+            // given rate. 
+            var t = animationTime + sceneOptions.timeStep;
+            if(deltaTime < sceneOptions.timeStep){
+              var delay = (sceneOptions.timeStep - deltaTime)*1000;
+              setTimeout(function(){
+                  setTime(t, sceneOptions.timeStep);
+                },
+                delay
+              );
+            }else{
+              setTime(t, sceneOptions.timeStep);
+            }
+          }
+          else {
+            // In this mode, the system plays back at the highest framerate possible.
+            // The time step as used throughout the graph will vary according to the
+            // achieved frame rate. 
+            setTime(animationTime + (deltaTime * playspeed), deltaTime);
+          }
+        }
         /////////////////////////////////////////////////////////
         // Animation Interface
         scene.pub.animation = {
           setTime:function(t, redraw) {
-            if (looping && animationTime > timerange.y){
-              t = timerange.x;
-            }
-            animationTime = t;
-            globalsNode.setData('ms', t);
-            if(redraw !== false){
-              scene.pub.redrawAllWindows();
-            }
+            setTime(t, (t - animationTime), redraw);
           },
           getTime:function() {
             return animationTime;
@@ -758,23 +779,18 @@ FABRIC.SceneGraph = {
             // we have zero or more windows. What happens when we have
             // multiple viewports? Should the 'play' controls be moved to
             // Viewport?
-            viewports[0].getFabricWindowObject().setRedrawFinishedCallback(advanceTime);
-            scene.pub.redrawAllWindows();
+            requestAnimFrame( advanceTime, viewports[0].getWindowElement() );
           },
           isPlaying: function(){
             return isPlaying;
           },
           pause: function() {
             isPlaying = false;
-            viewports[0].getFabricWindowObject().setRedrawFinishedCallback(null);
-            scene.pub.redrawAllWindows();
           },
           reset: function() {
             isPlaying = false;
             animationTime = 0.0;
-            globalsNode.setData('ms', 0.0);
-            viewports[0].getFabricWindowObject().setRedrawFinishedCallback(null);
-            scene.pub.redrawAllWindows();
+            globalsNode.setData('time', 0.0);
           },
           step: function() {
             advanceTime();
@@ -1152,17 +1168,8 @@ FABRIC.SceneGraph.registerNodeType('Viewport', {
       var ray = viewPortRayCastDgNode.getData('ray');
       return ray;
     };
-    // TODO: Not all browsers on OSX features this redraw issue.
-    // figures out exactly which ones do and detect only those.
-    var onOsX = navigator.userAgent.search("Mac OS X");
     viewportNode.pub.redraw = function(animating) {
       fabricwindow.needsRedraw();
-      if(onOsX && !animating && !scene.pub.animation.isPlaying()){
-        fabricwindow.setRedrawFinishedCallback(function(){
-          fabricwindow.setRedrawFinishedCallback(null);
-          fabricwindow.needsRedraw();
-        });
-      }
     };
     viewportNode.pub.writeData = function(sceneSaver, constructionOptions, nodeData) {
       nodeData.camera = sceneSaver.wrapQuotes(cameraNode.name);
@@ -1300,7 +1307,11 @@ FABRIC.SceneGraph.registerNodeType('Viewport', {
       // Mouse wheel events are sent to the document, not the element,
       // so here we catch mouse wheel events only when the mouse goes over the element.
       // TODO: Fix Safari mouse wheel events..
+      var mouseWheelActivated = false;
       var activateMousewheelFn = function(evt) {
+        if(mouseWheelActivated){
+          return;
+        }
         var mousewheelFn = function(evt) {
           fireEvent('mousewheel', evt);
         }
@@ -1308,11 +1319,12 @@ FABRIC.SceneGraph.registerNodeType('Viewport', {
         var deactivateMousewheelFn = function(evt) {
           windowElement.removeEventListener('mouseout', deactivateMousewheelFn, false);
           document.removeEventListener('mousewheel', mousewheelFn, false);
+          mouseWheelActivated = false;
         }
         windowElement.addEventListener('mouseout', deactivateMousewheelFn, false);
+        mouseWheelActivated = true;
       }
-      windowElement.addEventListener('mouseover', activateMousewheelFn, false);
-
+      windowElement.addEventListener('mousemove', activateMousewheelFn, false);
       scene.addEventHandlingFunctions(viewportNode);
     }
 
@@ -1410,7 +1422,7 @@ FABRIC.SceneGraph.registerNodeType('Camera', {
       
     dgnode.addMember('nearDistance', 'Scalar', options.nearDistance);
     dgnode.addMember('farDistance', 'Scalar', options.farDistance);
-    dgnode.addMember('fovY', 'Scalar', options.fovY * FABRIC.RT.degToRad);
+    dgnode.addMember('fovY', 'Scalar', Math.degToRad(options.fovY));
     dgnode.addMember('focalDistance', 'Scalar', options.focalDistance);
     dgnode.addMember('cameraMat44', 'Mat44');
     dgnode.addMember('orthographic', 'Boolean', options.orthographic);

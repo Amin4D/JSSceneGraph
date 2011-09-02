@@ -323,6 +323,16 @@ var wrapFabricClient = function(fabricClient, logCallback, debugLogCallback) {
           result.bindings = oldBindings;
         });
       };
+      
+      result.pub.remove = function(index) {
+        var oldBindings = result.bindings;
+        delete result.bindings;
+        DG.queueCommand(dst, 'remove', {
+          index: index,
+        }, function() {
+          result.bindings = oldBindings;
+        });
+      };
 
       return result;
     };

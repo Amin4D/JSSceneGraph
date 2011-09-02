@@ -215,7 +215,8 @@ FABRIC.SceneGraph.registerNodeType('GeometryDataCopy', {
   },
   factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
-        baseGeometryNode: undefined
+        baseGeometryNode: undefined,
+        createBoundingBoxNode: false
       });
     
     if(!options.baseGeometryNode){
@@ -225,7 +226,6 @@ FABRIC.SceneGraph.registerNodeType('GeometryDataCopy', {
       throw ('Incorrect type assignment. Must assign a Geometry');
     }
     var baseGeometryNode = scene.getPrivateInterface(options.baseGeometryNode);
-    options.createBoundingBoxNode = baseGeometryNode.getBoundingBoxDGNode != undefined;
     options.createDrawOperator = false;
     var geometryDataCopyNode = scene.constructNode('Geometry', options);
     

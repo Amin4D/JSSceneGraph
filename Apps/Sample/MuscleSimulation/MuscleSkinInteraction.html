@@ -50,7 +50,54 @@
 
     
     <script type="text/javascript">
+     
+FABRIC.SceneGraph.registerNodeType('TransformedGeometry', {
+  factoryFn: function(options, scene) {
+    options = scene.assignDefaults(options, {
+        baseGeometryNode: undefined,
+        xfo: FABRIC.RT.xfo()
+      });
     
+    var transformedGeometry = scene.constructNode('GeometryDataCopy', {
+      name: 'TransformedGeometry',
+      baseGeometryNode:options.baseGeometryNode
+    });
+  
+    transformedGeometry.pub.addVertexAttributeValue('positions', 'Vec3', { genVBO:true } );
+    transformedGeometry.pub.addVertexAttributeValue('normals', 'Vec3', { genVBO:true } );
+    transformedGeometry.pub.addUniformValue('xfo', 'Xfo', options.xfo);
+    transformedGeometry.getAttributesDGNode().bindings.append(
+      scene.constructOperator({
+        operatorName: 'transformMesh',
+        srcCode: '\n\
+use Vec3;\n\
+use Quat;\n\
+use Xfo;\n\
+operator transformMesh(\n\
+  io Xfo xfo,\n\
+  io Vec3 parentspositions[],\n\
+  io Vec3 parentnormals[],\n\
+  io Vec3 position,\n\
+  io Vec3 normal,\n\
+  in Size index\n\
+) {\n\
+  position = xfo.transform(parentspositions[index]);\n\
+  normal = xfo.ori.rotateVector(parentnormals[index]);\n\
+}\n\
+        ',
+        entryFunctionName: 'transformMesh',
+        parameterLayout: [
+          'uniforms.xfo',
+          'parentattributes.positions[]',
+          'parentattributes.normals[]',
+          'self.positions',
+          'self.normals',
+          'self.index'
+        ]
+      }));
+    return transformedGeometry;
+  
+  }});
     
 $(document).ready(function() {
   
@@ -87,7 +134,8 @@ $(document).ready(function() {
   viewport.setCameraNode(camera);
   scene.constructNode("CameraManipulator", { targetNode:camera } );
   
-  
+  var light = scene.constructNode('PointLight', { position: FABRIC.RT.vec3(420.0, 1000.0, 600.0) });
+  /*
   // create the scene grid
   scene.constructNode('Instance', {
       geometryNode: scene.constructNode('Grid', {
@@ -97,16 +145,16 @@ $(document).ready(function() {
         sections_z: 20 }),
       materialNode: scene.constructNode('FlatMaterial', { color: FABRIC.RT.rgb(0.4, 0.4, 0.4) })
     });
-  
+  */
   // first create a skeleton
   var skeleton = scene.constructNode('CharacterSkeleton');
 
   skeleton.addBone({name: 'anchorLeft', referencePose: FABRIC.RT.xfo({
-      tr: FABRIC.RT.vec3(-6, 5, 0)
+      tr: FABRIC.RT.vec3(-6, 0, 0)
     }) });
   
   skeleton.addBone({name: 'anchorRight', referencePose: FABRIC.RT.xfo({
-      tr: FABRIC.RT.vec3(6, 5, 0)
+      tr: FABRIC.RT.vec3(6, 0, 0)
     }) });
 
   // create the rig
@@ -115,9 +163,9 @@ $(document).ready(function() {
       computeInverseXfos: true
     });
   
+  
   //////////////////////////////////////////////////////////////
   // Manipulators
-  
   scene.constructNode('ScreenTranslationManipulator', {
     parentNode: rig,
     parentMember: 'pose',
@@ -143,20 +191,32 @@ $(document).ready(function() {
     parentMemberIndex: skeleton.getBoneIndex('anchorRight'),
     radius: 1.0
   });
-  
+  /*
   scene.constructNode('CharacterSkeletonDebug', {
       characterRigNode: rig,
       color: FABRIC.RT.rgba(1.0, 1.0, 1.0, 1.0),
       boneradius: 0.25
     });
-  
-  
+  */
+  //////////////////////////////////////////////////////////////
+  //
+  var plane = scene.constructNode('Plane', {
+      length: 12,
+      width: 12,
+      lengthSections: 10,
+      widthSections: 10
+    });
+  var transformedMesh = scene.constructNode('TransformedGeometry', {
+      baseGeometryNode: plane,
+      xfo: FABRIC.RT.xfo({ tr: FABRIC.RT.vec3(0, 0.5, 0.5) })
+    });
+      
   //////////////////////////////////////////////////////////////
   // Muscle System
   
   var muscleSystem = scene.constructNode('MuscleSystem', {
       characterRig: rig,
-      gravity: FABRIC.RT.vec3(0, -9.0, 0)
+      gravity: FABRIC.RT.vec3(0, 0.0, 0)
     });
   
   muscleSystem.addMuscle( {
@@ -164,6 +224,24 @@ $(document).ready(function() {
         tr: FABRIC.RT.vec3( 0, 5, 0)
       })
     });
+  
+  var skin = scene.constructNode('MuscleSkinDeformation', {
+      muscleSystem: muscleSystem,
+      baseSkinMesh: transformedMesh
+    });
+  
+  
+  scene.constructNode('Instance', {
+      geometryNode: skin,
+      materialNode: scene.constructNode('PhongMaterial', {
+        diffuseColor: FABRIC.RT.rgb(0.8, 0.5, 0.2),
+        lightNode: light
+      })
+    })
+    .setMaterialNode( scene.constructNode('WireframeMaterial', {
+        color: FABRIC.RT.rgb(0.2, 0.2, 0.2, 1)
+      }));
+    
   
   $('#loadingDialog').dialog({
     modal: true

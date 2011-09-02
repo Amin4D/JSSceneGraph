@@ -7,29 +7,29 @@ function Mat22(
   Scalar _00, Scalar _01,
   Scalar _10, Scalar _11
 ) {
-  self.row0 = Vec2(_00, _01);
-  self.row1 = Vec2(_10, _11);
+  this.row0 = Vec2(_00, _01);
+  this.row1 = Vec2(_10, _11);
 }
 
 function Mat22(
   Vec2 row0, Vec2 row1
 ) {
-  self.row0 = row0;
-  self.row1 = row1;
+  this.row0 = row0;
+  this.row1 = row1;
 }
 
 function Mat22.setNull() {
   var Vec2 null(0.0, 0.0);
-  self.row0 = self.row1 = null;
+  this.row0 = this.row1 = null;
 }
 
 function Mat22.setDiagonal(in Scalar v) {
-  self.row0.x = self.row1.y = v;
+  this.row0.x = this.row1.y = v;
 }
 
 function Mat22.setDiagonal(in Vec2 v) {
-  self.row0.x = v.x;
-  self.row1.y = v.y;
+  this.row0.x = v.x;
+  this.row1.y = v.y;
 }
 
 function Vec2 * (Vec2 vec2, Mat22 mat22) {
@@ -67,10 +67,10 @@ function Mat22 / (Mat22 mat, Scalar value) {
 function Mat22 Mat22.transpose() {
   var Mat22 result;
 
-  result.row0.x = self.row0.x;
-  result.row0.y = self.row1.x;
-  result.row1.x = self.row0.y;
-  result.row1.y = self.row1.y;
+  result.row0.x = this.row0.x;
+  result.row0.y = this.row1.x;
+  result.row1.x = this.row0.y;
+  result.row1.y = this.row1.y;
 
   return result;
 }

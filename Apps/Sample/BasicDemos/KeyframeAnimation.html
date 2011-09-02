@@ -83,7 +83,9 @@ $(document).ready(function() { var $globalTimeSlider = $('#globalTime').slider({
     height: 25
   });
 
-  var animationControllerNode = scene.constructNode('AnimationController');
+  var animationControllerNode = scene.constructNode('AnimationController', {
+      timeRange: FABRIC.RT.vec2(0, 100)
+    });
 
   // Note on bounding values
   // "globalXfo.tr":[-1,0,1]

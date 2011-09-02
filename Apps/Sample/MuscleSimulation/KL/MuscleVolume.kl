@@ -717,9 +717,9 @@ function Vec3 positionToMuscleSurfacePosition(
       // an arc that blends the effect of the muscle off over the distanct that
       // the point is below the surface.
       Scalar weight = (abs(biNormalProjLen) - orthoNormalThickness) / depthBelowMuscleCore;
-   //   if( weight < 1.0 ){ 
-   //     return (orthoNormal.unit() * cos(asin( weight ))) + pos;
-   //   }
+      if( weight < 1.0 ){ 
+        return (orthoNormal.unit() * depthBelowMuscleCore * (1.0 - sin(acos(1.0-weight)))) + pos;
+      }
     }
     return pos;
   }
@@ -771,14 +771,21 @@ function Vec3 positionToMuscleSurfacePosition(
   if(v  < 0.0)  v += 1.0;
   Scalar angleDelta = vdelta * TWO_PI;
   
-  debugDraw.addLine(pos, corePos, Color(0.0,1.0,0.0,1.0) );
+//  debugDraw.addLine(pos, corePos, Color(0.0,1.0,0.0,1.0) );
   debugDraw.addLine(pos, pos+orthoNormal, Color(0.0,0.0,1.0,1.0) );
+  debugDraw.addLine(pos, pos+(biNormal * 0.3), Color(0.0,1.0,1.0,1.0) );
   
   
-  Vec3 posOffsetDir = (biNormal * sin( angleDelta * -dir )) + (orthoNormal * cos( angleDelta ));
+  Vec3 posOffsetDir = (biNormal * -sin( angleDelta )) + (orthoNormal * cos( angleDelta ));
   w = 2.0;//muscle->GetMuscleThickness( u, v ) * modulator;
   
-  return (corePos + (posOffsetDir * w));
+//  debugDraw.addLine(corePos, corePos+(posOffsetDir * 0.5), Color(1.0,0.0,1.0,1.0) );
+  Vec3 slidePos = (corePos + (posOffsetDir * w));
+  if(((corePos + (posOffsetDir * w)) - pos).dot(orthoNormal) > 0.0){
+    return slidePos;
+  }
+  
+  return pos;
 /*
 
   Scalar tempV, tempVprev = orthoNormalVvalue;
@@ -984,12 +991,12 @@ operator deformSkin(
   for(Integer i=0; i<1; i++){
   //  if(muscleBindingIds[i] >= 0 && muscleBindingWeights[i] > 0.0){
       Integer mid = 0;//muscleBindingIds[i];
-      if(abs(position.x)<1.0){
+    //  if(abs(position.x)<1.0){
         debugDraw.addPoint(position, Color(1.0,0.0,0.0,1.0));
         Vec3 slidePos = positionToMuscleSurfacePosition( position, normal, simulatedXfos[mid], displacementMapResolution, displacementMaps[mid], debugDraw);
       //   report("slideDelta:"+slideDelta);
         slideDelta += (slidePos - position);// * muscleBindingWeights[i];
-      }
+  //    }
   //  }
   }
   position += slideDelta;

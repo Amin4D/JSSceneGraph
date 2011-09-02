@@ -708,7 +708,6 @@ FABRIC.SceneGraph = {
           var t = animationTime + sceneOptions.timeStep;
           if(deltaTime < sceneOptions.timeStep){
             var delay = (sceneOptions.timeStep - deltaTime)*1000;
-            console.log("delay:"+delay);
             setTimeout(function(){
                 setTime(t, sceneOptions.timeStep);
               },

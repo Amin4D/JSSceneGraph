@@ -168,7 +168,7 @@ $(document).ready(function() {
   
   //////////////////////////////////////////////////////////////
   // Manipulators
-  /*
+  
   scene.constructNode('ScreenTranslationManipulator', {
     parentNode: rig,
     parentMember: 'pose',
@@ -181,7 +181,7 @@ $(document).ready(function() {
     parentMemberIndex: skeleton.getBoneIndex('anchorRight'),
     radius: 0.75
   });
-      
+      /*
   scene.constructNode('3AxisRotationManipulator', {
     parentNode: rig,
     parentMember: 'pose',
@@ -204,10 +204,10 @@ $(document).ready(function() {
   //////////////////////////////////////////////////////////////
   //
   var plane = scene.constructNode('Plane', {
-      length: 6,
-      width: 6,
-      lengthSections: 6,
-      widthSections: 6
+      length: 8,
+      width: 8,
+      lengthSections: 16,
+      widthSections: 16
     });
   var transformedMesh = scene.constructNode('TransformedGeometry', {
       baseGeometryNode: plane,

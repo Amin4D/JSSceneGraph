@@ -969,10 +969,7 @@ FABRIC.SceneGraph.registerNodeType('Viewport', {
     if(scene.getScenePostRedrawEventHandler()){
       fabricwindow.redrawEvent.appendEventHandler(scene.getScenePostRedrawEventHandler());
     }
-    if(viewPortRayCastDgNode){
-      viewPortRayCastDgNode.addDependency(fabricwindow.windowNode, 'window');
-    }
-        
+    
     var propagationRedrawEventHandler = viewportNode.constructEventHandlerNode('DrawPropagation');
     redrawEventHandler.appendChildEventHandler(propagationRedrawEventHandler);
 
@@ -988,11 +985,12 @@ FABRIC.SceneGraph.registerNodeType('Viewport', {
     var viewPortRaycastEvent, viewPortRaycastEventHandler, viewPortRayCastDgNode;
     if (scene.getSceneRaycastEventHandler() && options.enableRaycasting) {
 
-      viewPortRayCastDgNode = scene.constructDependencyGraphNode(options.name + '_RayCastNode');
+      viewPortRayCastDgNode = viewportNode.constructDGNode('RayCastDgNodeDGNode');
       viewPortRayCastDgNode.addMember('x', 'Integer');
       viewPortRayCastDgNode.addMember('y', 'Integer');
       viewPortRayCastDgNode.addMember('ray', 'Ray');
       viewPortRayCastDgNode.addMember('threshold', 'Scalar', options.rayIntersectionThreshold);
+      viewPortRayCastDgNode.addDependency(fabricwindow.windowNode, 'window');
 
       // this operator calculates the rayOri and rayDir from the scopes collected so far.
       // The scopes should be the window, viewport, camera and projection.

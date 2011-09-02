@@ -700,10 +700,10 @@ FABRIC.SceneGraph = {
           }
           if(redraw !== false){
             scene.pub.redrawAllWindows();
-            if(isPlaying){
-              // Queue up the next redraw immediately. 
-              requestAnimFrame( advanceTime, viewports[0].getWindowElement() );
-            }
+          //  if(isPlaying){
+          //    // Queue up the next redraw immediately. 
+          //    requestAnimFrame( advanceTime, viewports[0].getWindowElement() );
+          //  }
           }
         }
         var advanceTime = function() {
@@ -719,6 +719,7 @@ FABRIC.SceneGraph = {
             var t = animationTime + sceneOptions.timeStep;
             if(deltaTime < sceneOptions.timeStep){
               var delay = (sceneOptions.timeStep - deltaTime)*1000;
+              console.log("delay:"+delay);
               setTimeout(function(){
                   setTime(t, sceneOptions.timeStep);
                 },
@@ -779,18 +780,23 @@ FABRIC.SceneGraph = {
             // we have zero or more windows. What happens when we have
             // multiple viewports? Should the 'play' controls be moved to
             // Viewport?
-            requestAnimFrame( advanceTime, viewports[0].getWindowElement() );
+            viewports[0].getFabricWindowObject().setRedrawFinishedCallback(advanceTime);
+            scene.pub.redrawAllWindows();
+          //  requestAnimFrame( advanceTime, viewports[0].getWindowElement() );
+            
           },
           isPlaying: function(){
             return isPlaying;
           },
           pause: function() {
             isPlaying = false;
+            viewports[0].getFabricWindowObject().setRedrawFinishedCallback(null);
           },
           reset: function() {
             isPlaying = false;
             animationTime = 0.0;
             globalsNode.setData('time', 0.0);
+            viewports[0].getFabricWindowObject().setRedrawFinishedCallback(null);
           },
           step: function() {
             advanceTime();

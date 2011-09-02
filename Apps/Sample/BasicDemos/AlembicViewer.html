@@ -33,6 +33,7 @@
 
     <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Geometry.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Primitives.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Lights.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Materials.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Manipulation.js" charset="utf-8"></script>
@@ -64,8 +65,8 @@ $(document).ready(function() {
   // Create a camera to draw the scene from
   var camera = scene.constructNode('TargetCamera', {
       nearDistance: 1,
-      farDistance: 20,
-      position: FABRIC.RT.vec3(0, 5, 10)
+      farDistance: 2000,
+      position: FABRIC.RT.vec3(0, 5, 10).scale(10)
     });
 
   scene.constructNode('CameraManipulator', { targetNode: camera });
@@ -77,15 +78,25 @@ $(document).ready(function() {
           diffuseColor: FABRIC.RT.rgb(0.8, 0, 0, 1),
           lightNode: light
         });
-
+  
   // create the alembic content, and fire the load once it is loaded  
-  var assets = scene.importAssetFile('Models/test.abc', {
+  var assets = scene.importAssetFile('Models/octopus.abc', {
     dependentNode: viewport,
     onLoadCallback: function(){
-      console.log(assets.test.getObjects());
+
+      var instanceNode = scene.constructNode('Instance', {
+        geometryNode: scene.constructNode('Cone', {
+            radius: 4.0,
+            height: 16.0,
+            detail: 10
+        }),
+        transformNode: assets.octopus.getParsedNodes()['/octopus_low'],
+        materialNode: redMaterial
+      });
+
+      viewport.redraw();
     }
   });
-  //var instanceNode = scene.constructNode('Instance', { geometryNode: assets['cow'], materialNode: redMaterial });
 
   $('#loadingDialog').dialog({
     modal: true

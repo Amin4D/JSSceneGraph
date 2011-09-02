@@ -836,7 +836,7 @@ FABRIC.SceneGraph.registerNodeType('Instance', {
       }
 
       resourceloaddgnode.addMember('handle', 'Data');
-      resourceloaddgnode.addMember('objects', 'String[]');
+      resourceloaddgnode.addMember('identifiers', 'String[]');
       scene.getView
 
       resourceloaddgnode.bindings.append(scene.constructOperator({
@@ -852,22 +852,87 @@ FABRIC.SceneGraph.registerNodeType('Instance', {
       }));
       
       resourceloaddgnode.bindings.append(scene.constructOperator({
-        operatorName: 'alembicGetObjects',
+        operatorName: 'alembicGetIdentifiers',
         parameterLayout: [
           'self.handle',
-          'self.objects'
+          'self.identifiers'
         ],
-        entryFunctionName: 'alembicGetObjects',
+        entryFunctionName: 'alembicGetIdentifiers',
         srcFile: 'FABRIC_ROOT/SceneGraph/KL/loadAlembic.kl',
         async: false
       }));
       
       // add the main addOnLoadCallBack
+      var parsedNodes = {};
+      resourceLoadNode.pub.getParsedNodes = function(){
+        return parsedNodes;
+      }
+      
       resourceLoadNode.pub.addOnLoadCallback(function(pub) {
 
-        pub.getObjects = function() {
+        // define the getIdentifiers call
+        resourceLoadNode.pub.getIdentifiers = function() {
           resourceloaddgnode.evaluate();
-          return resourceloaddgnode.getData("objects",0);
+          return resourceloaddgnode.getData('identifiers',0);
+        }
+        
+        // define the new nodes based on the identifiers in the file
+        var identifiers = resourceLoadNode.pub.getIdentifiers();
+        
+        // we are assuming that we are always receiving either
+        // a fullname such as /transform/shape
+        // or just a shape /shape
+        var objects = {};
+        var targets = [];
+        for(var i=0;i<identifiers.length;i++) {
+          var parts = identifiers[i].split('|');
+          var identifier = parts[0];
+          var names = identifier.split('/');
+          var name = names[names.length-1];
+          var type = parts[1];
+          objects[identifier] = type;
+          
+          // check if we have a parent transform
+          var parentIdentifier = undefined;
+          if(names.length > 2)
+            parentIdentifier = identifier.substring(0,identifier.lastIndexOf('/'));
+          var parentType = objects[parentIdentifier];
+          
+          // check this type
+          if(type == 'PolyMesh') {
+            
+            console.log("PolyMesh: "+identifier);
+            //var trianglesNode = scene.constructNode('Triangles');
+            
+          }
+          else if(type == 'Xform')
+          {
+            var transformNode = scene.constructNode('Transform');
+            parsedNodes[identifier] = transformNode.pub;
+            
+            // have the transform be driven by the parser
+            var dgnode = transformNode.getDGNode();
+            dgnode.addMember('alembicIdentifier','String',identifier);
+            dgnode.addMember('alembicSamplingIndex','Integer',0);
+            dgnode.addDependency(resourceloaddgnode,'alembic');
+
+            // create the parser operator
+            dgnode.bindings.append(scene.constructOperator({
+              operatorName: 'alembicParseXform',
+              parameterLayout: [
+                'alembic.handle',
+                'self.alembicIdentifier',
+                'self.alembicSamplingIndex',
+                'self.globalXfo'
+              ],
+              entryFunctionName: 'alembicParseXform',
+              srcFile: 'FABRIC_ROOT/SceneGraph/KL/loadAlembic.kl'
+            }));
+          }
+          else
+          {
+            throw("UNSUPPORT ALEMBIC OBJECT TYPE: "+type);
+          }
         }
 
       });

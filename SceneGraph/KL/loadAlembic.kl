@@ -2,6 +2,7 @@
 // Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
 //
 
+use Xfo;
 use FabricALEMBIC;
 
 operator alembicLoad(
@@ -17,10 +18,18 @@ operator alembicLoad(
   }
 }
 
-operator alembicGetObjects(
+operator alembicGetIdentifiers(
   io Data dataHandle,
-  io String objects[]
+  io String identifiers[]
 ) {
-  FabricALEMBICGetObjects(dataHandle,objects);
-  report objects;
+  FabricALEMBICGetIdentifiers(dataHandle,identifiers);
+}
+
+operator alembicParseXform(
+  io Data dataHandle,
+  io String identifier,
+  io Integer sample,
+  io Xfo transform
+) {
+  FabricALEMBICParseXform(dataHandle,identifier,sample,transform);
 }

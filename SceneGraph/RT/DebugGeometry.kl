@@ -8,36 +8,19 @@ use Math;
 
 
 function DebugGeometry.addPoint(Vec3 pos, Color color) {
-  Integer id = this.positions.size();
-  
-  this.pointsIndices.resize(this.pointsIndices.size()+1);
-  this.pointsIndices[this.pointsIndices.size()-1] = id;
-  
-  this.positions.resize(id+1);
-  this.positions[id] = pos;
-  
-  this.vertexColors.resize(id+1);
-  this.vertexColors[id] = color;
+  this.pointsIndices.push(Integer(this.positions.size()));
+  this.positions.push(pos);
+  this.vertexColors.push(color);
 }
 
 function DebugGeometry.addLine(Vec3 from, Vec3 to, Color color) {
-  Integer id = this.positions.size();
+  this.linesIndices.push(Integer(this.positions.size()));
+  this.positions.push(from);
+  this.vertexColors.push(color);
   
-  this.linesIndices.resize(this.linesIndices.size()+1);
-  this.linesIndices[this.linesIndices.size()-1] = id;
-  this.positions.resize(id+1);
-  this.vertexColors.resize(id+1);
-  this.positions[id] = from;
-  this.vertexColors[id] = color;
-  
-  
-  id = this.positions.size();
-  this.linesIndices.resize(this.linesIndices.size()+1);
-  this.linesIndices[this.linesIndices.size()-1] = id;
-  this.positions.resize(id+1);
-  this.vertexColors.resize(id+1);
-  this.positions[id] = to;
-  this.vertexColors[id] = color;
+  this.linesIndices.push(Integer(this.positions.size()));
+  this.positions.push(to);
+  this.vertexColors.push(color);
 }
 
 

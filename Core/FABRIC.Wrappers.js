@@ -647,6 +647,16 @@ var wrapFabricClient = function(fabricClient, logCallback, debugLogCallback) {
         }]);
       };
 
+      result.pub.writeResourceToUserFile = function(memberName, defaultFileName) {
+        result.queueCommand('evaluate');//Make sure the node has evaluated (however it's not garanteed that the resource is there if asynch)
+        executeQueuedCommands();
+        result.queueCommand('writeResourceToUserFile', {
+          'memberName': memberName,
+          'defaultFileName': defaultFileName
+        });
+        executeQueuedCommands();
+      };
+
       return result;
     };
 

@@ -607,9 +607,17 @@ function Vec3 positionToMuscleSurfacePosition(
   Scalar u, v, w;
   Scalar endOffset = 0.0;// If a point is off the end of the muscle, this value will be < 0.0, || > 1.0;
 
-  if(!positionToMuscleUV( pos, xfos, uv, corePos, posToCore ) ){
-    return pos;
-    /*
+  if(positionToMuscleUV( pos, xfos, uv, corePos, posToCore ) ){
+    u = uv.x;
+  
+    // Now evaluate the spline to get the actual position of the muscle core
+    Scalar t;
+    Integer segmentid;
+    corePos = evalPiecewiseBSpline(xfos, u, t, segmentid);  
+    
+    sliceframe = xfos[segmentid].ori.nlerp(xfos[segmentid + 1].ori, t);
+  }
+  else{
     Vec3 endPoint = xfos[ 0 ].tr;
     Quat endFrame = xfos[ 0 ].ori;
       
@@ -631,21 +639,11 @@ function Vec3 positionToMuscleSurfacePosition(
         u = 1.0;
       }
       else{
-        return Vec3(0.0,0.0,0.0);
+        return pos;
       }
     }
-    */
   }
   
-  u = uv.x;
-
-  // Now evaluate the spline to get the actual position of the muscle core
-  Scalar t;
-  Integer segmentid;
-  corePos = evalPiecewiseBSpline(xfos, u, t, segmentid);  
-  
-  sliceframe = xfos[segmentid].ori.nlerp(xfos[segmentid + 1].ori, t);
-
   //////////////////////////////////////////////////////////////////////////////
   // 
   Vec3 coreTan = sliceframe.rotateVector(Vec3(1.0, 0.0, 0.0));
@@ -725,7 +723,6 @@ function Vec3 positionToMuscleSurfacePosition(
   }
   
   
-
   /////////////////////////////////////////////
   // Here we walk down the side of the target quadrant, checking
   // for the hull that extends past the biNormalProjLen.
@@ -752,7 +749,6 @@ function Vec3 positionToMuscleSurfacePosition(
     
     
     if(abs(bnlen2) >= abs(biNormalProjLen)){
-    //  report("bnlen2:"+bnlen2+" biNormalProjLen:"+biNormalProjLen);
       break;
     }
     vdelta1 = vdelta2;
@@ -764,119 +760,20 @@ function Vec3 positionToMuscleSurfacePosition(
   Scalar fract = (abs(biNormalProjLen) - bnlen1)/(bnlen2 - bnlen1);
   Scalar vdelta =  lerp(vdelta1, vdelta2, fract);
   
-//  report("pos:"+pos+ "fract:"+fract+ " bnlen1:"+bnlen1+ " bnlen2:"+bnlen2);
-  
   v = orthoNormalVvalue + vdelta;
   if(v  > 1.0)  v -= 1.0;
   if(v  < 0.0)  v += 1.0;
   Scalar angleDelta = vdelta * TWO_PI;
   
-//  debugDraw.addLine(pos, corePos, Color(0.0,1.0,0.0,1.0) );
-  debugDraw.addLine(pos, pos+orthoNormal, Color(0.0,0.0,1.0,1.0) );
-  debugDraw.addLine(pos, pos+(biNormal * 0.3), Color(0.0,1.0,1.0,1.0) );
-  
-  
   Vec3 posOffsetDir = (biNormal * -sin( angleDelta )) + (orthoNormal * cos( angleDelta ));
   w = 2.0;//muscle->GetMuscleThickness( u, v ) * modulator;
   
-//  debugDraw.addLine(corePos, corePos+(posOffsetDir * 0.5), Color(1.0,0.0,1.0,1.0) );
   Vec3 slidePos = (corePos + (posOffsetDir * w));
   if(((corePos + (posOffsetDir * w)) - pos).dot(orthoNormal) > 0.0){
     return slidePos;
   }
   
   return pos;
-/*
-
-  Scalar tempV, tempVprev = orthoNormalVvalue;
-  Scalar tempBiNormalProjLen, tempBiNormalProjLenPrev = 0.0;
-  Scalar tempOffsetVval, tempOffsetVvalPrev = 0.0;
-  Scalar tempOffsetAngle, tempOffsetAnglePrev = 0.0;
-  Scalar tempMuscleThickness, tempMuscleThicknessPrev = orthoNormalThickness;
-  for( i=1; i<=numSamples; i++ ){
-    tempOffsetVval  = (Scalar(i)/Scalar(numSamples)) * 0.25;
-    if( dir ){
-      tempOffsetAngle =  tempOffsetVval * TWO_PI;
-      tempV = orthoNormalVvalue - tempOffsetVval;
-    }
-    else{
-      tempOffsetAngle = -tempOffsetVval * TWO_PI;
-      tempV = orthoNormalVvalue + tempOffsetVval;
-    }
-    
-    if( tempV > 1.0 )  tempV -= 1.0;
-    if( tempV < 0.0 )  tempV += 1.0;
-    
-    // find the shadow length of this angle
-    tempMuscleThickness = 2.0;//muscle->GetMuscleThickness( u, tempV );
-    tempBiNormalProjLen = tempMuscleThickness * sin( tempOffsetAngle ) * modulator;
-    if((dir && tempBiNormalProjLen >= biNormalProjLen ) || ( !dir && tempBiNormalProjLen <= biNormalProjLen)){
-      break;
-    }
-    if(i < numSamples){
-      tempBiNormalProjLenPrev   = tempBiNormalProjLen;
-      tempOffsetVvalPrev        = tempOffsetVval;
-      tempVprev                 = tempV;
-      tempOffsetAnglePrev       = tempOffsetAngle;  
-      tempMuscleThicknessPrev   = tempMuscleThickness;
-    }
-  }
-  report("i:"+i);
-  if(i > numSamples){
-    // The point in question is not in the shadow of the muscle.
-    // We calculate a fall off here.
-    // This is so that points don't pop onto the surface of the muscle when 
-    // they come into the shadow of the muscle.
-    Scalar orthoDist = abs( posToCore.dot( biNormal ));
-    Scalar depthBelowMuscleCore = posToCore.dot( orthoNormal ) * modulator;
-
-    if(depthBelowMuscleCore < 0.0){
-      if( fallOff == 0.0 ){
-        fallOff = -depthBelowMuscleCore;
-      }
-      // Here we calculate the 
-      Scalar weight = (orthoDist - ((orthoNormalThickness < orthoDist) ? orthoNormalThickness : orthoDist )) / fallOff;
-      if( weight >= 0.9999 ){
-        return Vec3(0.0,0.0,0.0);
-      }
-    //  else if( weight < 1.0 )
-      if( weight >= 0.0 ){ //&& weight < 1.0 )
-        return (orthoNormal.unit() * orthoNormal.dot(posToCore)) * -( 1.0 - sin( acos( 1.0 - weight ) ) );
-      //  return orthoNormal.vectorProjection( posToCore ) * -( 1.0 - sin( acos( 1.0 - weight ) ) );
-      }
-    }
-    return Vec3(0.0,0.0,0.0);
-  }
-  Scalar fract = (biNormalProjLen - tempBiNormalProjLenPrev)/(tempBiNormalProjLen - tempBiNormalProjLenPrev);
-  if( ( tempV - tempVprev ) > 1.0 ) tempVprev -= 1.0;
-  v = lerp( tempVprev, tempV, fract );
-  Scalar angle = lerp( tempOffsetAnglePrev, tempOffsetAngle, fract );
-
-  if( v > 1.0 ) v -= 1.0;
-  if( v < 0.0 ) v += 1.0;
-  w = 2.0;//muscle->GetMuscleThickness( u, v ) * modulator;
-
-  posOffsetDir = (biNormal * sin( angle )) + (orthoNormal * cos( angle ));
-
-
-  ////////////////////////////////////////////////////////////////////////////////
-  // If the point is below the muscle(angle > HALF_PI), or above but inside(distToCore < w).
-  Scalar distToCore = posToCore.length();
-  posToCore /= distToCore;
-
-  offsetAngle = orthoNormal.angleTo( posToCore );
-
-  if( distToCore < w  || shrinkWrap > 0.0 || abs( offsetAngle ) > HALF_PI ){
-    if( abs( offsetAngle ) < HALF_PI && w < distToCore ){
-      return (posOffsetDir * (w * shrinkWrap) + corePos) - posProjectedOntoSlice;
-    }
-    else{
-      return ((posOffsetDir * w) + corePos) - posProjectedOntoSlice;
-    }
-  }
-  
-  return Vec3(0.0,0.0,0.0);
-  */
 }
 
 
@@ -991,10 +888,7 @@ operator deformSkin(
   for(Integer i=0; i<1; i++){
   //  if(muscleBindingIds[i] >= 0 && muscleBindingWeights[i] > 0.0){
       Integer mid = 0;//muscleBindingIds[i];
-    //  if(abs(position.x)<1.0){
-        debugDraw.addPoint(position, Color(1.0,0.0,0.0,1.0));
         Vec3 slidePos = positionToMuscleSurfacePosition( position, normal, simulatedXfos[mid], displacementMapResolution, displacementMaps[mid], debugDraw);
-      //   report("slideDelta:"+slideDelta);
         slideDelta += (slidePos - position);// * muscleBindingWeights[i];
   //    }
   //  }

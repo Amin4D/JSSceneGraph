@@ -63,15 +63,16 @@ operator debugGeometryDraw(
     linesIndicesBuffer.genBuffer(linesIndices.data(), linesIndices.dataSize(), linesIndices.size());
   
     shaderProgram.preDraw();
-    
-    glPointSize(2.0);
     var Data NULL;
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, pointsIndicesBuffer.bufferID);
-    glDrawElements(GL_POINTS, pointsIndicesBuffer.elementCount, GL_UNSIGNED_INT, NULL);
-
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, linesIndicesBuffer.bufferID);
-    glDrawElements(GL_LINES, linesIndicesBuffer.elementCount, GL_UNSIGNED_INT, NULL);
-    
+    if(pointsIndicesBuffer.bufferID > 0){
+      glPointSize(2.0);
+      glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, pointsIndicesBuffer.bufferID);
+      glDrawElements(GL_POINTS, pointsIndicesBuffer.elementCount, GL_UNSIGNED_INT, NULL);
+    }
+    if(linesIndicesBuffer.bufferID > 0){
+      glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, linesIndicesBuffer.bufferID);
+      glDrawElements(GL_LINES, linesIndicesBuffer.elementCount, GL_UNSIGNED_INT, NULL);
+    }
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
     
   }

@@ -715,7 +715,8 @@ function Vec3 positionToMuscleSurfacePosition(
       // an arc that blends the effect of the muscle off over the distanct that
       // the point is below the surface.
       Scalar weight = (abs(biNormalProjLen) - orthoNormalThickness) / depthBelowMuscleCore;
-      if( weight < 1.0 ){ 
+      if( weight <= 1.0 ){ 
+      //  debugDraw.addPoint(pos, Color(1.0,1.0,0.5,1.0));
         return (orthoNormal.unit() * depthBelowMuscleCore * (1.0 - sin(acos(1.0-weight)))) + pos;
       }
     }
@@ -731,7 +732,7 @@ function Vec3 positionToMuscleSurfacePosition(
   //   |   \ |
   //   |_____| <- biNormalProj
   
-  Integer numSamples = 2;
+  Integer numSamples = 4;
   Integer i;
   Scalar tempV, vdelta2, vdelta1 = 0.0;
   Scalar tempA, adelta2, adelta1 = 0.0;
@@ -749,6 +750,7 @@ function Vec3 positionToMuscleSurfacePosition(
     
     
     if(abs(bnlen2) >= abs(biNormalProjLen)){
+    //  debugDraw.addLine(corePos, corePos + (biNormal * -sin( angle )) + (orthoNormal * cos( angle )), Color(1.0,0.0,0.0,1.0) );
       break;
     }
     vdelta1 = vdelta2;
@@ -770,6 +772,7 @@ function Vec3 positionToMuscleSurfacePosition(
   
   Vec3 slidePos = (corePos + (posOffsetDir * w));
   if(((corePos + (posOffsetDir * w)) - pos).dot(orthoNormal) > 0.0){
+//  debugDraw.addLine(slidePos, corePos, Color(0.0,0.0,1.0,1.0) );
     return slidePos;
   }
   

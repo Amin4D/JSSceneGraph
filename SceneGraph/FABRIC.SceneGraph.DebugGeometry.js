@@ -68,16 +68,15 @@ FABRIC.SceneGraph.registerNodeType('DebugGeometryDraw', {
           
     redrawEventHandler.addMember('positionsBuffer', 'OGLBuffer', positionsBuffer);
     
-    var positionsBuffer = new FABRIC.RT.OGLBuffer(
+    var vertexColorsBuffer = new FABRIC.RT.OGLBuffer(
         'vertexColors', 
         FABRIC.SceneGraph.getShaderParamID('vertexColors'), 
         registeredTypes.Color
       );
-    positionsBuffer.bufferUsage = FABRIC.SceneGraph.OpenGLConstants.GL_DYNAMIC_DRAW;
+    vertexColorsBuffer.bufferUsage = FABRIC.SceneGraph.OpenGLConstants.GL_DYNAMIC_DRAW;
           
-    redrawEventHandler.addMember('vertexColorsBuffer', 'OGLBuffer', positionsBuffer);
+    redrawEventHandler.addMember('vertexColorsBuffer', 'OGLBuffer', vertexColorsBuffer);
     
-    var attributeID = FABRIC.SceneGraph.getShaderParamID('indices');
     var indicesBuffer = new FABRIC.RT.OGLBuffer(
         'indices',
         FABRIC.SceneGraph.getShaderParamID('indices'),

@@ -27,7 +27,7 @@ FABRIC.SceneGraph.registerNodeType('MuscleSystem', {
     paramsdgnode.addMember('displacementMapResolution', 'Size', options.displacementMapResolution);
     
     var muscleDefaults = {
-        numSegments: 4,
+        numSegments: 3,
         length: 10,
         display: true,
         xfo: FABRIC.RT.xfo(),
@@ -161,6 +161,9 @@ FABRIC.SceneGraph.registerNodeType('MuscleSystem', {
     simulationdgnode.addMember('pointPositionsPrevUpdate', 'Vec3[]', pointPositions);
     simulationdgnode.addMember('pointPositionsPrevUpdate_Temp', 'Vec3[]', pointPositions);
     
+    
+    simulationdgnode.addMember('debugDraw', 'DebugGeometry' );
+    
     simulationdgnode.bindings.append(scene.constructOperator({
         operatorName: 'simulateMuscle',
         srcFile: './KL/Muscle.kl',
@@ -195,11 +198,18 @@ FABRIC.SceneGraph.registerNodeType('MuscleSystem', {
           'musclesystem.gravity',
           
           'globals.timestep',
-          'characterRig.skinningXfos'
+          'characterRig.skinningXfos',
+          'self.debugDraw'
         ]
       }));
     
     
+    
+    var debugGeometryDraw = scene.constructNode('DebugGeometryDraw', {
+        dgnode: simulationdgnode,
+        debugGemetryMemberName: 'debugDraw'
+    });
+
     
     //////////////////////////////////////////////////////////
     // Volume Display

@@ -764,13 +764,14 @@ function Vec3 positionToMuscleSurfacePosition(
   Scalar fract = (abs(biNormalProjLen) - bnlen1)/(bnlen2 - bnlen1);
   Scalar vdelta =  lerp(vdelta1, vdelta2, fract);
   
-  report("pos:"+pos+ "fract:"+fract+ " bnlen1:"+bnlen1+ " bnlen2:"+bnlen2);
+//  report("pos:"+pos+ "fract:"+fract+ " bnlen1:"+bnlen1+ " bnlen2:"+bnlen2);
   
   v = orthoNormalVvalue + vdelta;
   if(v  > 1.0)  v -= 1.0;
   if(v  < 0.0)  v += 1.0;
   Scalar angleDelta = vdelta * TWO_PI;
   
+  debugDraw.addLine(pos, corePos, Color(0.0,1.0,0.0,1.0) );
   debugDraw.addLine(pos, pos+orthoNormal, Color(0.0,0.0,1.0,1.0) );
   
   
@@ -952,6 +953,7 @@ operator deformSkin(
   in Size index,
   io DebugGeometry debugDraw
 ){
+
   position = parentpositions[index];
   normal = parentnormals[index];
   
@@ -961,6 +963,9 @@ operator deformSkin(
   Vec3 sticklocations[4] = allsticklocations[index];
   Scalar slideweight = slideweights[index];
   Scalar bulgeweight = bulgeweights[index];
+  
+  debugDraw.reset();
+  
   /*
   // Sticking
   Vec3 stickDelta(0.0,0.0,0.0);

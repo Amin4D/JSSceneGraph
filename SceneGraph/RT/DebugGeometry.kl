@@ -26,8 +26,8 @@ function DebugGeometry.addLine(Vec3 from, Vec3 to, Color color) {
   this.linesIndices.resize(this.linesIndices.size()+1);
   this.linesIndices[this.linesIndices.size()-1] = id;
   this.positions.resize(id+1);
-  this.positions[id] = from;
   this.vertexColors.resize(id+1);
+  this.positions[id] = from;
   this.vertexColors[id] = color;
   
   
@@ -35,8 +35,8 @@ function DebugGeometry.addLine(Vec3 from, Vec3 to, Color color) {
   this.linesIndices.resize(this.linesIndices.size()+1);
   this.linesIndices[this.linesIndices.size()-1] = id;
   this.positions.resize(id+1);
-  this.positions[id] = to;
   this.vertexColors.resize(id+1);
+  this.positions[id] = to;
   this.vertexColors[id] = color;
 }
 

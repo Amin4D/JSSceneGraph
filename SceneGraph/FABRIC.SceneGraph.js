@@ -677,16 +677,6 @@ FABRIC.SceneGraph = {
         var looping = false;
         var onAdvanceCallback;
         
-      //  var requestAnimFrame = (function(){
-      //    return  window.requestAnimationFrame       || 
-      //            window.webkitRequestAnimationFrame || 
-      //            window.mozRequestAnimationFrame    || 
-      //            window.oRequestAnimationFrame      || 
-      //            window.msRequestAnimationFrame     || 
-      //            function(/* function */ callback, /* DOMElement */ element){
-      //              window.setTimeout(callback, 1000 / 60);
-      //            };
-      //  })();
         var setTime = function(t, timestep, redraw) {
           
           if (looping && animationTime > timerange.y){
@@ -700,10 +690,6 @@ FABRIC.SceneGraph = {
           }
           if(redraw !== false){
             scene.pub.redrawAllWindows();
-          //  if(isPlaying){
-          //    // Queue up the next redraw immediately. 
-          //    requestAnimFrame( advanceTime, viewports[0].getWindowElement() );
-          //  }
           }
         }
         var advanceTime = function() {
@@ -719,7 +705,6 @@ FABRIC.SceneGraph = {
             var t = animationTime + sceneOptions.timeStep;
             if(deltaTime < sceneOptions.timeStep){
               var delay = (sceneOptions.timeStep - deltaTime)*1000;
-            //  console.log("delay:"+delay);
               setTimeout(function(){
                   setTime(t, sceneOptions.timeStep);
                 },
@@ -782,7 +767,6 @@ FABRIC.SceneGraph = {
             // Viewport?
             viewports[0].getFabricWindowObject().setRedrawFinishedCallback(advanceTime);
             scene.pub.redrawAllWindows();
-          //  requestAnimFrame( advanceTime, viewports[0].getWindowElement() );
             
           },
           isPlaying: function(){

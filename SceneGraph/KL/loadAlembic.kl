@@ -1,0 +1,26 @@
+//
+// Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
+//
+
+use FabricALEMBIC;
+
+operator alembicLoad(
+  io String url,
+  io FabricResource resource,
+  io Data dataHandle
+) {
+  if(resource.dataSize > 0)
+  {
+    //report "ALEMBIC decode " + url;
+    FabricALEMBICDecode(resource.data, resource.dataSize, dataHandle);
+    //report "ALEMBIC decode " + url + " done.";
+  }
+}
+
+operator alembicGetObjects(
+  io Data dataHandle,
+  io String objects[]
+) {
+  FabricALEMBICGetObjects(dataHandle,objects);
+  report objects;
+}

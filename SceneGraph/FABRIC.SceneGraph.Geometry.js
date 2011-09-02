@@ -812,3 +812,71 @@ FABRIC.SceneGraph.registerNodeType('Instance', {
     }
   });
 
+  FABRIC.SceneGraph.registerNodeType('AlembicLoadNode', {
+    factoryFn: function(options, scene) {
+      scene.assignDefaults(options, {
+        removeParsersOnLoad: false,
+        dependentNode: undefined,
+        onLoadCallback: undefined
+      });
+      
+      // remember the original onLoadCallback
+      var prevOnLoadCallback = options.onLoadCallback;
+      options.onLoadCallback = undefined;
+
+      var resourceLoadNode = scene.constructNode('ResourceLoad', options),
+        resourceloaddgnode = resourceLoadNode.getDGLoadNode();
+        
+      // make the dependent node, well, dependent
+      if(options.dependentNode != undefined) {
+        var priv = scene.getPrivateInterface(options.dependentNode);
+        for(var dgnodeName in priv.getDGNodes()) {
+          priv.getDGNodes()[dgnodeName].addDependency(resourceloaddgnode,options.url);
+        }
+      }
+
+      resourceloaddgnode.addMember('handle', 'Data');
+      resourceloaddgnode.addMember('objects', 'String[]');
+      scene.getView
+
+      resourceloaddgnode.bindings.append(scene.constructOperator({
+        operatorName: 'alembicLoad',
+        parameterLayout: [
+          'self.url', //For debugging only
+          'self.resource',
+          'self.handle'
+        ],
+        entryFunctionName: 'alembicLoad',
+        srcFile: 'FABRIC_ROOT/SceneGraph/KL/loadAlembic.kl',
+        async: false
+      }));
+      
+      resourceloaddgnode.bindings.append(scene.constructOperator({
+        operatorName: 'alembicGetObjects',
+        parameterLayout: [
+          'self.handle',
+          'self.objects'
+        ],
+        entryFunctionName: 'alembicGetObjects',
+        srcFile: 'FABRIC_ROOT/SceneGraph/KL/loadAlembic.kl',
+        async: false
+      }));
+      
+      // add the main addOnLoadCallBack
+      resourceLoadNode.pub.addOnLoadCallback(function(pub) {
+
+        pub.getObjects = function() {
+          resourceloaddgnode.evaluate();
+          return resourceloaddgnode.getData("objects",0);
+        }
+
+      });
+      
+      // also add the original on load callback
+      if(prevOnLoadCallback != undefined)
+        resourceLoadNode.pub.addOnLoadCallback(prevOnLoadCallback)
+
+      
+      return resourceLoadNode;
+    }
+  });

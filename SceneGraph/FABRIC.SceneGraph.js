@@ -878,6 +878,9 @@ FABRIC.SceneGraph.registerNodeType('SceneGraphNode', {
         dgnodes[dgnodename] = dgnode;
         return dgnode;
       },
+      getDGNodes: function() {
+        return dgnodes;
+      },
       constructResourceLoadNode: function(dgnodename) {
         return sceneGraphNode.constructDGNode(dgnodename, true);
       },

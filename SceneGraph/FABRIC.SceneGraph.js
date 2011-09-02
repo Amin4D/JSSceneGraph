@@ -1384,6 +1384,10 @@ FABRIC.SceneGraph.registerNodeType('Viewport', {
       }
     };
 
+    resourceLoadNode.pub.getDGNode = function() {
+      return dgnode;
+    }
+
     if (options.onLoadCallback) {
       resourceLoadNode.pub.addOnLoadCallback(options.onLoadCallback);
     }

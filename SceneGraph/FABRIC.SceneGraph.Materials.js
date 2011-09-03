@@ -1256,4 +1256,54 @@ FABRIC.SceneGraph.registerNodeType('GaussianBlurPostProcessEffect', {
     return edgeDetectionEffect;
   }});
 
+  FABRIC.SceneGraph.registerNodeType('ScreenGrab', {
+    factoryFn: function(options, scene) {
+      //TO refine: right now this node is grabbing a screenshot constantly!
+      //We should include a way to 'mute' and 'unmute' it. The problem
+      //is how to know when it is filled with content; an event should be sent. Can
+      //we do this without modifying the core?
+      var screenGrabNode = scene.constructNode('SceneGraphNode', options),
+      screenGrabEventHandler;
+
+      screenGrabEventHandler = screenGrabNode.constructEventHandlerNode('ScreenGrab');
+      screenGrabEventHandler.addMember('width', 'Size');
+      screenGrabEventHandler.addMember('heigth', 'Size');
+      screenGrabEventHandler.addMember('pixels', 'RGBA[]');
+      screenGrabEventHandler.addMember('resource', 'FabricResource');
+
+      screenGrabEventHandler.postDescendBindings.append(scene.constructOperator({
+        operatorName: 'grabViewport',
+        srcFile: 'FABRIC_ROOT/SceneGraph/KL/grabViewport.kl',
+        entryFunctionName: 'grabViewport',
+        parameterLayout: [
+              'self.width',
+              'self.heigth',
+              'self.pixels'
+            ]
+      }));
+
+      scene.getScenePostRedrawEventHandler().appendChildEventHandler(screenGrabEventHandler);
+
+      screenGrabEventHandler.postDescendBindings.append(scene.constructOperator({
+        operatorName: 'encodeImage',
+        srcFile: 'FABRIC_ROOT/SceneGraph/KL/encodeImage.kl',
+        entryFunctionName: 'encodeImageLDR',
+        parameterLayout: [
+              'self.width',
+              'self.heigth',
+              'self.pixels',
+              'self.resource'
+            ]
+      }));
+
+      screenGrabNode.pub.saveAs = function() {
+        try {
+          screenGrabEventHandler.writeResourceToUserFile("resource", "fabricScreenGrab");
+        }
+        catch (e) { }
+      };
+
+      return screenGrabNode;
+    }
+  });
 

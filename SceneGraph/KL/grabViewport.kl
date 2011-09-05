@@ -1,0 +1,43 @@
+//
+// Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
+//
+
+use RGBA;
+use FabricOGL;
+
+operator grabViewport(
+  io Size width,
+  io Size height,
+  io RGBA pixels[]
+) {
+  Integer viewportParams[];
+  viewportParams.resize(4);
+  glGetIntegerv(GL_VIEWPORT, viewportParams);
+
+  width = Size( viewportParams[2] );
+  height = Size( viewportParams[3] );
+  pixels.resize( width*height );
+
+  if( pixels.size() )
+  {
+    glFlush();
+    glPushAttrib(GL_PIXEL_MODE_BIT);
+    glReadBuffer( GL_FRONT );
+    glReadPixels( viewportParams[0], viewportParams[1], viewportParams[2], viewportParams[3], GL_RGBA, GL_UNSIGNED_BYTE, pixels.data );
+    glPopAttrib();
+
+    //For some reason openGL image is flipped vertically; flip it back to normal
+    for( Size row = 0; row < height/2; ++row )
+    {
+      Size offset1 =  row*width;
+      Size offset2 =  (height-row-1)*width;
+
+      for( Size col = 0; col < width; ++col )
+      {
+        RGBA pixIdx1 = pixels[ offset1 + col ];
+        pixels[ offset1 + col ] = pixels[ offset2 + col ];
+        pixels[ offset2 + col ] = pixIdx1;
+      }
+    }
+  }
+}

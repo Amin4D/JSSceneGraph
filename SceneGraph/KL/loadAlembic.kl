@@ -2,34 +2,57 @@
 // Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
 //
 
+use Vec3;
 use Xfo;
 use FabricALEMBIC;
 
 operator alembicLoad(
   io String url,
   io FabricResource resource,
-  io Data dataHandle
+  io Integer archiveID
 ) {
   if(resource.dataSize > 0)
-  {
-    //report "ALEMBIC decode " + url;
-    FabricALEMBICDecode(resource.data, resource.dataSize, dataHandle);
-    //report "ALEMBIC decode " + url + " done.";
-  }
+    FabricALEMBICDecode(resource.data, resource.dataSize, archiveID);
 }
 
 operator alembicGetIdentifiers(
-  io Data dataHandle,
+  io Integer archiveID,
   io String identifiers[]
 ) {
-  FabricALEMBICGetIdentifiers(dataHandle,identifiers);
+  FabricALEMBICGetIdentifiers(archiveID,identifiers);
 }
 
 operator alembicParseXform(
-  io Data dataHandle,
+  io Integer archiveID,
   io String identifier,
   io Integer sample,
   io Xfo transform
 ) {
-  FabricALEMBICParseXform(dataHandle,identifier,sample,transform);
+  FabricALEMBICParseXform(archiveID,identifier,sample,transform);
+}
+
+operator alembicParsePolyMeshCount(
+  io Integer archiveID,
+  io String identifier,
+  io Size count
+) {
+  FabricALEMBICParsePolyMeshCount(archiveID,identifier,count);
+}
+
+operator alembicParsePolyMeshUniforms(
+  io Integer archiveID,
+  io String identifier,
+  io Integer indices[]
+) {
+  FabricALEMBICParsePolyMeshUniforms(archiveID,identifier,indices);
+}
+
+operator alembicParsePolyMeshAttributes(
+  io Integer archiveID,
+  io String identifier,
+  io Integer sample,
+  io Vec3 vertices[],
+  io Vec3 normals[]
+) {
+  FabricALEMBICParsePolyMeshAttributes(archiveID,identifier,sample,vertices,normals);
 }

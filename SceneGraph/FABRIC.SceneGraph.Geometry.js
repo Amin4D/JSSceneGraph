@@ -835,8 +835,9 @@ FABRIC.SceneGraph.registerNodeType('Instance', {
         }
       }
 
-      resourceloaddgnode.addMember('handle', 'Data');
+      resourceloaddgnode.addMember('archiveID', 'Integer',-1);
       resourceloaddgnode.addMember('identifiers', 'String[]');
+      resourceloaddgnode.addMember('sample', 'Integer', 0);
       scene.getView
 
       resourceloaddgnode.bindings.append(scene.constructOperator({
@@ -844,7 +845,7 @@ FABRIC.SceneGraph.registerNodeType('Instance', {
         parameterLayout: [
           'self.url', //For debugging only
           'self.resource',
-          'self.handle'
+          'self.archiveID'
         ],
         entryFunctionName: 'alembicLoad',
         srcFile: 'FABRIC_ROOT/SceneGraph/KL/loadAlembic.kl',
@@ -854,7 +855,7 @@ FABRIC.SceneGraph.registerNodeType('Instance', {
       resourceloaddgnode.bindings.append(scene.constructOperator({
         operatorName: 'alembicGetIdentifiers',
         parameterLayout: [
-          'self.handle',
+          'self.archiveID',
           'self.identifiers'
         ],
         entryFunctionName: 'alembicGetIdentifiers',
@@ -901,9 +902,52 @@ FABRIC.SceneGraph.registerNodeType('Instance', {
           // check this type
           if(type == 'PolyMesh') {
             
-            console.log("PolyMesh: "+identifier);
-            //var trianglesNode = scene.constructNode('Triangles');
+            var trianglesNode = scene.constructNode('Triangles', { uvSets: 1 } );
+            parsedNodes[identifier] = trianglesNode.pub;
+
+            // retrieve thd dgnodes
+            var uniformsdgnode = trianglesNode.getUniformsDGNode();
+            uniformsdgnode.addMember('identifier','String',identifier);
+            uniformsdgnode.addDependency(resourceloaddgnode,'alembic');
+            var attributesdgnode = trianglesNode.getAttributesDGNode();
+            attributesdgnode.addDependency(resourceloaddgnode,'alembic');
             
+            // setup the parse operators
+            uniformsdgnode.bindings.append(scene.constructOperator({
+              operatorName: 'alembicParsePolyMeshUniforms',
+              parameterLayout: [
+                'alembic.archiveID',
+                'self.identifier',
+                'self.indices'
+              ],
+              entryFunctionName: 'alembicParsePolyMeshUniforms',
+              srcFile: 'FABRIC_ROOT/SceneGraph/KL/loadAlembic.kl'
+            }));
+            
+            attributesdgnode.bindings.append(scene.constructOperator({
+              operatorName: 'alembicParsePolyMeshCount',
+              parameterLayout: [
+                'alembic.archiveID',
+                'uniforms.identifier',
+                'self.newCount'
+              ],
+              entryFunctionName: 'alembicParsePolyMeshCount',
+              srcFile: 'FABRIC_ROOT/SceneGraph/KL/loadAlembic.kl'
+            }));
+            
+            attributesdgnode.bindings.append(scene.constructOperator({
+              operatorName: 'alembicParsePolyMeshAttributes',
+              parameterLayout: [
+                'alembic.archiveID',
+                'uniforms.identifier',
+                'alembic.sample',
+                'self.positions[]',
+                'self.normals[]'
+                //'self.uvs_0[]'
+              ],
+              entryFunctionName: 'alembicParsePolyMeshAttributes',
+              srcFile: 'FABRIC_ROOT/SceneGraph/KL/loadAlembic.kl'
+            }));
           }
           else if(type == 'Xform')
           {
@@ -912,17 +956,16 @@ FABRIC.SceneGraph.registerNodeType('Instance', {
             
             // have the transform be driven by the parser
             var dgnode = transformNode.getDGNode();
-            dgnode.addMember('alembicIdentifier','String',identifier);
-            dgnode.addMember('alembicSamplingIndex','Integer',0);
+            dgnode.addMember('identifier','String',identifier);
             dgnode.addDependency(resourceloaddgnode,'alembic');
 
             // create the parser operator
             dgnode.bindings.append(scene.constructOperator({
               operatorName: 'alembicParseXform',
               parameterLayout: [
-                'alembic.handle',
-                'self.alembicIdentifier',
-                'self.alembicSamplingIndex',
+                'alembic.archiveID',
+                'self.identifier',
+                'alembic.sample',
                 'self.globalXfo'
               ],
               entryFunctionName: 'alembicParseXform',

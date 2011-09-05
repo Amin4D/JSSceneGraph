@@ -44,6 +44,12 @@
     <script type="text/javascript">
 $(document).ready(function() {
 
+  var $globalTimeSlider = $('#globalTime').slider({
+      min: 0.0,
+      max: 29.0,
+      step: 1.0
+    });
+
   $('#importModel').button().change(function(e) {
       // TODO: Enable file importing
         console.log($(this).val());
@@ -73,7 +79,7 @@ $(document).ready(function() {
   viewport.setCameraNode(camera);
 
   var redMaterial = scene.constructNode('FlatMaterial', {
-          color: FABRIC.RT.rgb(0.8, 0, 0, 1)
+          color: FABRIC.RT.rgb(0.2, 0.2, 0.2, 1)
         });
   
   // create the alembic content, and fire the load once it is loaded  
@@ -91,6 +97,12 @@ $(document).ready(function() {
       viewport.redraw();
     }
   });
+  
+  $globalTimeSlider.bind('slide',
+    function(event, ui) {
+      assets.octopus.setSample(ui.value);
+      scene.redrawAllWindows();
+    });
 
   $('#loadingDialog').dialog({
     modal: true
@@ -141,15 +153,14 @@ $(document).ready(function() {
             </div><!--content-->
           </div><!--box-->
 
-<!--
-// TODO: Figure out how to load files from HTML
-          <div class="box">
-                    <h2>MODEL</h2>
+                  <div class="box">
+                    <h2>CONTROLS</h2>
                     <div class="content">
-                      <input type="file" id="importModel">
-                    </div><!--content- ->
-                </div><!--box- ->
--->
+                        <div>Global Time:</div>
+                        <div id='globalTime' style="margin-top:10px;"></div>
+                 <button id="curveEditor" style="margin-top:30px;">Open Curve Editor</button>
+                    </div><!--content-->
+                </div><!--box-->
         </div><!--sidebar-->
       </div> <!--editor-->
     </div><!--wrapper-->

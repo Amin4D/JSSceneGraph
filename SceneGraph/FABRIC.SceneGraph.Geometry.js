@@ -838,7 +838,8 @@ FABRIC.SceneGraph.registerNodeType('Instance', {
       resourceloaddgnode.addMember('archiveID', 'Integer',-1);
       resourceloaddgnode.addMember('identifiers', 'String[]');
       resourceloaddgnode.addMember('sample', 'Integer', 0);
-      scene.getView
+      
+      resourceLoadNode.addMemberInterface(resourceloaddgnode, 'sample', true);
 
       resourceloaddgnode.bindings.append(scene.constructOperator({
         operatorName: 'alembicLoad',
@@ -903,6 +904,7 @@ FABRIC.SceneGraph.registerNodeType('Instance', {
           if(type == 'PolyMesh') {
             
             var trianglesNode = scene.constructNode('Triangles', { uvSets: 1 } );
+            trianglesNode.pub.setAttributeDynamic('positions');
             parsedNodes[identifier] = trianglesNode.pub;
 
             // retrieve thd dgnodes

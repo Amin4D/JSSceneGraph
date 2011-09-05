@@ -42,24 +42,20 @@ function DebugGeometry.drawAxis(Xfo xfo, Scalar size, Color color) {
 }
 
 function DebugGeometry.drawCircle(Xfo xfo, Scalar radius, Color color) {
-  Integer numSegments = 16;
+  Integer numSegments = 12;
   var Integer id0 = Integer(this.positions.size());
   Vec3 p;
   for (var Integer i = 0; i < numSegments; i++) {
-    var Scalar angle = (Scalar(i) / Scalar(numSegments)) * PI;
-    p = xfo.ori.rotateVector(Vec3(sin(angle) * radius, 0.0, cos(angle) * radius));
-    
+    var Scalar angle = (Scalar(i) / Scalar(numSegments)) * TWO_PI;
+    p = xfo.tr + xfo.ori.rotateVector(Vec3(sin(angle) * radius, 0.0, cos(angle) * radius));
     this.linesIndices.push(Integer(this.positions.size()));
     this.positions.push(p);
     this.vertexColors.push(color);
-    if(i > 0 && i < (numSegments-1)){
-      if(i < (numSegments-1)){
-        this.linesIndices.push(Integer(this.positions.size()));
-      }else{
-        this.linesIndices.push(id0);
-      }
+    if(i < (numSegments-1)){
+      this.linesIndices.push(Integer(this.positions.size()));
     }
   }
+  this.linesIndices.push(id0);
   
 }
 

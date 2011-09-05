@@ -130,6 +130,7 @@ FABRIC.SceneGraph.registerNodeType('Particles', {
 FABRIC.SceneGraph.registerNodeType('Flock', {
   factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
+      displayDebugging: true
     });
 
     options.createSpatialHashTable = true;
@@ -140,6 +141,10 @@ FABRIC.SceneGraph.registerNodeType('Flock', {
     flockNode.pub.addVertexAttributeValue('goals', 'Vec3');
     flockNode.pub.addVertexAttributeValue('neighborIndices', 'Integer[]');
     flockNode.pub.addVertexAttributeValue('neighborDistances', 'Scalar[]');
+    
+    flockNode.pub.addVertexAttributeValue('debugDraw', 'DebugGeometry' );
+    flockNode.pub.addUniformValue('displayDebugging', 'Boolean', options.displayDebugging, true );
+    
     flockNode.getAttributesDGNode().bindings.append(scene.constructOperator({
       operatorName: 'simulateParticles',
       srcFile: 'FABRIC_ROOT/SceneGraph/KL/flocking.kl',
@@ -162,9 +167,18 @@ FABRIC.SceneGraph.registerNodeType('Flock', {
         'globals.timestep',
 
         'self.neighborIndices',
-        'self.neighborDistances'
+        'self.neighborDistances',
+        'self.debugDraw',
+        'uniforms.displayDebugging'
       ]
     }));
+    
+    
+    var debugGeometryDraw = scene.constructNode('DebugGeometryDraw', {
+        dgnode: flockNode.getAttributesDGNode(),
+        debugGemetryMemberName: 'debugDraw'
+    });
+    
     return flockNode;
   }});
 

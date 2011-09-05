@@ -50,6 +50,8 @@ $(document).ready(function() {
     windowElement: document.getElementById('FabricContainer'),
     backgroundColor: FABRIC.RT.rgb(0.0, 0.05, 0.15)
   });
+  
+  var geometryShadersSupported = viewport.getGlewSupported('GL_EXT_geometry_shader4');
 
   // Create a camera to draw the scene from
   var camera = scene.constructNode('TargetCamera', {
@@ -129,18 +131,24 @@ $(document).ready(function() {
     });
 
   // Normal Geometry Shader
-  var normalMaterial = scene.constructNode('NormalMaterial', {
-      color: FABRIC.RT.rgb(0.8, .8, 0.8, 1)
-    });
+  if(geometryShadersSupported){
+    // The Normal Material uses geometry shaders to generate
+    // lines from the polygon mesh. This material will not render
+    // on machines that do not support geometry shaders.
+    scene.constructNode('Instance', {
+        transformNode: scene.constructNode('Transform', {
+          hierarchical: false,
+          globalXfo: FABRIC.RT.xfo({ tr: FABRIC.RT.vec3(30, 0, 0) })
+        }),
+        geometryNode: sphere,
+        materialNode: scene.constructNode('NormalMaterial', {
+            color: FABRIC.RT.rgb(0.8, .8, 0.8, 1)
+          })
+      });
+  }else{
+    console.log("This material requires OpenGL 3.1 features such as 'GL_EXT_geometry_shader4' to run.");
+  }
 
-  scene.constructNode('Instance', {
-      transformNode: scene.constructNode('Transform', {
-        hierarchical: false,
-        globalXfo: FABRIC.RT.xfo({ tr: FABRIC.RT.vec3(30, 0, 0) })
-      }),
-      geometryNode: sphere,
-      materialNode: normalMaterial
-    });
   
   // Transparency Shader
   var cubeTextureMap = scene.constructNode('CubeMap', {

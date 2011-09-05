@@ -247,91 +247,6 @@ operator rotateMuscleVolume(\n\
       paramsdgnode.addBinding( mesh, 'constraintMesh');
       paramsdgnode.addMember('volumeConstraintMesh', 'TriangleMesh');
     }
-    /*
-    var corePositionsID = FABRIC.SceneGraph.getShaderParamID('corePositions');
-    var loadCorePositionsOp = scene.constructOperator({
-        operatorName: 'loadMuscleCorePositions',
-        srcCode: '\n\
-operator loadUniform(\n\
-  io OGLShaderProgram shaderProgram,\n\
-  io Mat44 values[]\n\
-) {\n\
-  Integer location = shaderProgram.getUniformLocation('+corePositionsID+');\n\
-//  report("Loading corePositions :"+location + " = "+values);\n\
-  if(location!=-1){\n\
-    shaderProgram.loadMat44UniformArray(location, values);\n\
-  }\n\
-}\n\
-        ',
-        entryFunctionName: 'loadUniform',
-        parameterLayout: [
-          'shader.shaderProgram',
-          'muscles.cvPositions[]'
-        ]
-      });
-    
-    var coreFramesID = FABRIC.SceneGraph.getShaderParamID('coreFrames');
-    var loadCoreFramesOp = scene.constructOperator({
-        operatorName: 'loadMuscleCoreFrames',
-        srcCode: '\n\
-operator loadUniform(\n\
-  io OGLShaderProgram shaderProgram,\n\
-  io Mat44 values[]\n\
-) {\n\
-  Integer location = shaderProgram.getUniformLocation('+coreFramesID+');\n\
-//  report("Loading coreFrames :"+location + " = "+values);\n\
-  if(location!=-1){\n\
-    shaderProgram.loadMat44UniformArray(location, values);\n\
-  }\n\
-}\n\
-        ',
-        entryFunctionName: 'loadUniform',
-        parameterLayout: [
-          'shader.shaderProgram',
-          'muscles.cvFrames[]'
-        ]
-      })
-    
-    var light = scene.constructNode('PointLight', { position: FABRIC.RT.vec3(420.0, 1000.0, 600.0) });
-    //////////////////////////////////////////////////////////
-    // Lines Display
-    var coreDisplayLinesNode = scene.constructNode('LineStrip');
-    coreDisplayLinesNode.getAttributesDGNode().addDependency(paramsdgnode, 'musclesystem');
-    coreDisplayLinesNode.setGeneratorOps([
-      scene.constructOperator({
-        operatorName: 'setMuscleCoreLinesDisplayVertexCount',
-        srcFile: './KL/MuscleRendering.kl',
-        entryFunctionName: 'setMuscleCoreLinesDisplayVertexCount',
-        parameterLayout: [
-          'musclesystem.displacementMapResolution',
-          'self.newCount'
-        ]
-      }),
-      scene.constructOperator({
-        operatorName: 'generateMuscleCoreLine',
-        srcFile: './KL/MuscleRendering.kl',
-        entryFunctionName: 'generateMuscleCoreLine',
-        parameterLayout: [
-          'self.positions[]',
-          'uniforms.indices'
-        ]
-      })
-    ]);
-    
-    var redrawEventHandler = coreDisplayLinesNode.getRedrawEventHandler();
-    redrawEventHandler.addScope('muscles', muscles.getSimulationDGNode());
-    redrawEventHandler.preDescendBindings.append(loadCorePositionsOp);
-    redrawEventHandler.preDescendBindings.append(loadCoreFramesOp);
-    
-    var linesInst = scene.constructNode('Instance', {
-      geometryNode: coreDisplayLinesNode.pub,
-      materialNode: scene.constructNode('MuscleCoreLineShader', {
-        diffuseColor: FABRIC.RT.rgb(0.2, 0.0, 0.0),
-        pointSize: 6,
-        numMuscles: 1
-      }).pub
-    });
-    */
     
     muscleSystem.getLength = function(index){
       var pointXfos = initializationdgnode.getData('initialXfos');
@@ -353,50 +268,6 @@ operator loadUniform(\n\
       volumeDisplayNodes = [];
     
     muscleSystem.display = function(index){
-      
-      /*
-      coreDisplayPointsNode = scene.constructNode('Points', { dynamicMembers: ['positions'] });
-      coreDisplayPointsNode.pub.addVertexAttributeValue('vertexColors', 'Color', {
-        defaultValue: FABRIC.RT.rgb(1.0, 1.0, 0.0),
-        genVBO:true,
-        dynamic:true
-      } );
-      coreDisplayPointsNode.getAttributesDGNode().addDependency(initializationdgnode, 'initializationdgnode');
-      coreDisplayPointsNode.getAttributesDGNode().addDependency(simulationdgnode, 'simulationdgnode');
-      coreDisplayPointsNode.setGeneratorOps([
-        scene.constructOperator({
-          operatorName: 'setMuscleCoreDisplayVertexCount',
-          srcFile: './KL/MuscleRendering.kl',
-          entryFunctionName: 'setMuscleCoreDisplayVertexCount',
-          parameterLayout: [
-            'simulationdgnode.simulatedXfos',
-            'self.newCount'
-          ]
-        }),
-        scene.constructOperator({
-          operatorName: 'fitMuscleCoreDisplayToMuscleXfos',
-          srcFile: './KL/MuscleRendering.kl',
-          entryFunctionName: 'fitMuscleCoreDisplayToMuscleXfos',
-          parameterLayout: [
-            'self.positions[]',
-            'self.vertexColors[]',
-            'simulationdgnode.simulatedXfos',
-            'initializationdgnode.flexibilityWeights'
-          ]
-        })
-      ]);
-      
-      var inst = scene.constructNode('Instance', {
-        geometryNode: coreDisplayPointsNode.pub,
-        materialNode: scene.constructNode('VertexColorMaterial', {
-          prototypeMaterialType:'PointMaterial',
-          color: FABRIC.RT.rgb(1.0, 0.0, 0.0),
-          pointSize: 6
-        }).pub
-      });
-      
-      */
-      
       
       var deformedVolume = scene.constructNode('GeometryDataCopy', {
         baseGeometryNode:volumeDisplayNode.pub
@@ -436,12 +307,7 @@ operator loadUniform(\n\
           diffuseColor: FABRIC.RT.rgba(0.8, 0.0, 0.0, 0.5),
           lightNode: scene.constructNode('PointLight', { position: FABRIC.RT.vec3(420.0, 1000.0, 600.0) }).pub
         }).pub
-      });/*.pub
-      .setMaterialNode( 
-          scene.constructNode('NormalMaterial', {
-          color: FABRIC.RT.rgb(0.8, .8, 0.8, 1),
-          normalLength: 0.5
-        }).pub);*/
+      });
       
       volumeDisplayNodes[index] = inst;
     }

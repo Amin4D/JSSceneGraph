@@ -374,7 +374,7 @@ function Integer findCubicRoots(
   if (d >= 0) {
     Scalar theta = acos( R / sqrt( Qcubed ));
     Scalar sqrtQ = sqrt( Q );
-    x[0] =  -2 * sqrtQ * cos( theta               / 3.0) - a1 / 3.0;
+    x[0] =  -2 * sqrtQ * cos( theta             / 3.0) - a1 / 3.0;
     x[1] =  -2 * sqrtQ * cos((theta + 2.0 * PI) / 3.0) - a1 / 3.0;
     x[2] =  -2 * sqrtQ * cos((theta + 4.0 * PI) / 3.0) - a1 / 3.0;
     return (3);
@@ -750,7 +750,7 @@ function Vec3 positionToMuscleSurfacePosition(
     
     
     if(abs(bnlen2) >= abs(biNormalProjLen)){
-    //  debugDraw.addLine(corePos, corePos + (biNormal * -sin( angle )) + (orthoNormal * cos( angle )), Color(1.0,0.0,0.0,1.0) );
+    //  debugDraw.drawLine(corePos, corePos + (biNormal * -sin( angle )) + (orthoNormal * cos( angle )), Color(1.0,0.0,0.0,1.0) );
       break;
     }
     vdelta1 = vdelta2;
@@ -772,7 +772,7 @@ function Vec3 positionToMuscleSurfacePosition(
   
   Vec3 slidePos = (corePos + (posOffsetDir * w));
   if(((corePos + (posOffsetDir * w)) - pos).dot(orthoNormal) > 0.0){
-//  debugDraw.addLine(slidePos, corePos, Color(0.0,0.0,1.0,1.0) );
+//  debugDraw.drawLine(slidePos, corePos, Color(0.0,0.0,1.0,1.0) );
     return slidePos;
   }
   
@@ -860,6 +860,7 @@ operator deformSkin(
   in Size index,
   io DebugGeometry debugDraw
 ){
+  report("deformSkin:");
 
   position = parentpositions[index];
   normal = parentnormals[index];

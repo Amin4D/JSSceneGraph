@@ -5,6 +5,9 @@
 use FabricOGL;
 use OGLBuffer;
 use OGLShaderProgram;
+use Quat;
+use Xfo;
+use Color;
 use DebugGeometry;
 
 

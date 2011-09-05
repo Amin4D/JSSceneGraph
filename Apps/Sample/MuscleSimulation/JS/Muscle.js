@@ -361,10 +361,10 @@ FABRIC.SceneGraph.registerNodeType('MuscleSkinDeformation', {
     
     boundSkin.pub.addVertexAttributeValue('muscleBindingIds', 'Integer[4]', [0,-1,-1,-1]);
     boundSkin.pub.addVertexAttributeValue('musclebindingweights', 'Scalar[4]', [1,0,0,0] );
-    boundSkin.pub.addVertexAttributeValue('stickweight', 'Scalar' );
-    boundSkin.pub.addVertexAttributeValue('slideweight', 'Scalar' );
-    boundSkin.pub.addVertexAttributeValue('bulgeweight', 'Scalar' );
-    boundSkin.pub.addVertexAttributeValue('sticklocations', 'Vec3[4]' );
+    boundSkin.pub.addVertexAttributeValue('stickWeight', 'Scalar' );
+    boundSkin.pub.addVertexAttributeValue('slideWeight', 'Scalar' );
+    boundSkin.pub.addVertexAttributeValue('bulgeWeight', 'Scalar' );
+    boundSkin.pub.addVertexAttributeValue('stickLocations', 'Vec3[4]' );
     boundSkin.getAttributesDGNode().addDependency(muscleSystem.getSystemParamsDGNode(), 'musclesystem');
     boundSkin.getAttributesDGNode().addDependency(muscleSystem.getInitializationDGNode(), 'musclesinitialization');
     var op = scene.constructOperator({
@@ -379,7 +379,7 @@ FABRIC.SceneGraph.registerNodeType('MuscleSkinDeformation', {
         'musclesinitialization.initialXfos[]',
         'parentattributes.positions[]',
         'self.muscleBindingIds',
-        'self.sticklocations',
+        'self.stickLocations',
         'self.index'
       ]
     });
@@ -391,13 +391,30 @@ FABRIC.SceneGraph.registerNodeType('MuscleSkinDeformation', {
       name: 'DeformedSkin',
       baseGeometryNode:options.baseSkinMesh
     });
+    
     deformedSkin.pub.addVertexAttributeValue('positions', 'Vec3', { genVBO:true, dynamic:true } );
     deformedSkin.pub.addVertexAttributeValue('normals', 'Vec3', { genVBO:true, dynamic:true } );
+    deformedSkin.pub.addVertexAttributeValue('vertexColors', 'Color', { genVBO:true });
     deformedSkin.pub.addVertexAttributeValue('debugDraw', 'DebugGeometry' );
     deformedSkin.getAttributesDGNode().addDependency(muscleSystem.getSystemParamsDGNode(), 'musclesystem');
     deformedSkin.getAttributesDGNode().addDependency(muscleSystem.getInitializationDGNode(), 'musclesinitialization');
     deformedSkin.getAttributesDGNode().addDependency(muscleSystem.getSimulationDGNode(), 'musclessimulation');
     deformedSkin.getAttributesDGNode().addDependency(boundSkin.getAttributesDGNode(), 'boundskin');
+    deformedSkin.getAttributesDGNode().addDependency(boundSkin.getUniformsDGNode(), 'boundskinuniforms');
+    
+    deformedSkin.getAttributesDGNode().bindings.append(scene.constructOperator({
+      operatorName: 'setVertexColorByWeight',
+      srcFile: './KL/skin.kl',
+      entryFunctionName: 'setVertexColorByWeight',
+      parameterLayout: [
+        'boundskin.stickWeight[]',
+        'boundskin.slideWeight[]',
+        'boundskin.bulgeWeight[]',
+        'self.vertexColors',
+        'self.index'
+      ]
+    }));
+    
     deformedSkin.getAttributesDGNode().bindings.append(scene.constructOperator({
       operatorName: 'deformSkin',
       srcFile: './KL/MuscleVolume.kl',
@@ -417,10 +434,10 @@ FABRIC.SceneGraph.registerNodeType('MuscleSkinDeformation', {
         'self.normals',
         'boundskin.muscleBindingIds[]',
         'boundskin.musclebindingweights[]',
-        'boundskin.stickweight[]',
-        'boundskin.sticklocations[]',
-        'boundskin.slideweight[]',
-        'boundskin.bulgeweight[]',
+        'boundskin.stickWeight[]',
+        'boundskin.stickLocations[]',
+        'boundskin.slideWeight[]',
+        'boundskin.bulgeWeight[]',
         'self.index',
         'self.debugDraw'
       ]
@@ -430,6 +447,14 @@ FABRIC.SceneGraph.registerNodeType('MuscleSkinDeformation', {
         dgnode: deformedSkin.getAttributesDGNode(),
         debugGemetryMemberName: 'debugDraw'
     });
+    
+    deformedSkin.pub.getBulkAttributeData = function( indices ){
+      return boundSkin.pub.getBulkAttributeData( indices );
+    }
+    deformedSkin.pub.setBulkAttributeData = function( data ){
+      boundSkin.pub.setBulkAttributeData( data );
+      deformedSkin.pub.reloadVBO('vertexColors');
+    }
 
     return deformedSkin;
   }});

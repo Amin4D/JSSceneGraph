@@ -343,19 +343,16 @@ FABRIC.SceneGraph.registerNodeType('PaintManipulator', {
           srcFile: 'FABRIC_ROOT/SceneGraph/KL/collectPointsInsideVolume.kl',
           entryFunctionName: 'collectPointsInsideBrush',
           parameterLayout: [
-  
             'paintData.cameraMatrix',
             'paintData.projectionMatrix',
             'paintData.aspectRatio',
   
             'paintData.brushPos',
             'paintData.brushSize',
-            'paintData.brushColor',
   
             'transform.' + instanceNode.pub.getTransformNodeMember(),
             'geometryattributes.positions[]',
-            'geometryattributes.normals[]',
-            'geometryattributes.vertexColors[]'
+            'geometryattributes.normals[]'
           ],
           async: false
         };

@@ -853,10 +853,10 @@ operator deformSkin(
   
   io Integer allmuscleBindingIds[][4],
   io Scalar allmuscleBindingWeights[][4],
-  io Scalar stickweights[],
+  io Scalar stickWeights[],
   io Vec3 allsticklocations[][4],
-  io Scalar slideweights[],
-  io Scalar bulgeweights[],
+  io Scalar slideWeights[],
+  io Scalar bulgeWeights[],
   in Size index,
   io DebugGeometry debugDraw
 ){
@@ -867,35 +867,32 @@ operator deformSkin(
   
   Integer muscleBindingIds[4] = allmuscleBindingIds[index];
   Scalar muscleBindingWeights[4] = allmuscleBindingWeights[index];
-  Scalar stickweight = stickweights[index];
+  Scalar stickWeight = stickWeights[index];
   Vec3 sticklocations[4] = allsticklocations[index];
-  Scalar slideweight = slideweights[index];
-  Scalar bulgeweight = bulgeweights[index];
+  Scalar slideWeight = slideWeights[index];
+  Scalar bulgeWeight = bulgeWeights[index];
   
   debugDraw.reset();
   
-  /*
   // Sticking
   Vec3 stickDelta(0.0,0.0,0.0);
   for(Integer i=0; i<1; i++){
-//  if(muscleBindingIds[i] >= 0 && muscleBindingWeights[i] > 0.0){
-      Integer mid = 0;//muscleBindingIds[i];
+    if(muscleBindingIds[i] >= 0 && stickWeight > 0.0){
+      Integer mid = muscleBindingIds[i];
       Vec3 stickPos = uvwToMusclePosition(sticklocations[i], simulatedXfos[mid]);
-      stickDelta += (stickPos - position);// * muscleBindingWeights[i];
-//  }
+      stickDelta += (stickPos - position) * stickWeight;
+    }
   }
   position += stickDelta;
-  */
   
   // Sliding
   Vec3 slideDelta(0.0,0.0,0.0);
   for(Integer i=0; i<1; i++){
-  //  if(muscleBindingIds[i] >= 0 && muscleBindingWeights[i] > 0.0){
-      Integer mid = 0;//muscleBindingIds[i];
-        Vec3 slidePos = positionToMuscleSurfacePosition( position, normal, simulatedXfos[mid], displacementMapResolution, displacementMaps[mid], debugDraw);
-        slideDelta += (slidePos - position);// * muscleBindingWeights[i];
-  //    }
-  //  }
+    if(muscleBindingIds[i] >= 0 && slideWeight > 0.0){
+      Integer mid = muscleBindingIds[i];
+      Vec3 slidePos = positionToMuscleSurfacePosition( position, normal, simulatedXfos[mid], displacementMapResolution, displacementMaps[mid], debugDraw);
+      slideDelta += (slidePos - position) * slideWeight;
+    }
   }
   position += slideDelta;
   /*
@@ -903,11 +900,12 @@ operator deformSkin(
   Vec3 bulgeDelta;
   for(Integer i=0; i<4; i++){
     if(muscleBindingIds[i] >= 0 && muscleBindingWeights[i] > 0.0){
-      bulgeDelta += normal * (muscleBindingWeights[i] * bulgeweight);
+      bulgeDelta += normal * (muscleBindingWeights[i] * bulgeWeight);
     }
   }
   position += bulgeDelta;
   */
 }
+
 
 

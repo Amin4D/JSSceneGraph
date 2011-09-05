@@ -29,6 +29,7 @@
     <script type="text/javascript" src="../../../SceneGraph/RT/Color.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/RT/Euler.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/RT/Ray.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/CollectedPoints.js" charset="utf-8"></script>
     
     <script type="text/javascript" src="../../../SceneGraph/RT/Bone.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/RT/BezierKeyframe.js" charset="utf-8"></script>
@@ -130,11 +131,9 @@ $(document).ready(function() {
       position: FABRIC.RT.vec3(0, 5, 10).scale(1.5),
       target: FABRIC.RT.vec3(0, 0, 0)
     });
-
-  scene.constructNode("CameraManipulator", { targetNode:camera } );
-
+  
   viewport.setCameraNode(camera);
-  scene.constructNode("CameraManipulator", { targetNode:camera } );
+  var cameraManipulator = scene.constructNode("CameraManipulator", { targetNode:camera } );
   
   var light = scene.constructNode('PointLight', { position: FABRIC.RT.vec3(420.0, 1000.0, 600.0) });
   /*
@@ -219,7 +218,7 @@ $(document).ready(function() {
   
   var muscleSystem = scene.constructNode('MuscleSystem', {
       characterRig: rig,
-      gravity: FABRIC.RT.vec3(0, 0.0, 0)
+      gravity: FABRIC.RT.vec3(0, -9.0, 0)
     });
   
   muscleSystem.addMuscle( {
@@ -234,18 +233,94 @@ $(document).ready(function() {
     });
   
   
-  scene.constructNode('Instance', {
-      geometryNode: skin,
-      materialNode: scene.constructNode('PhongMaterial', {
+  var skinInst = scene.constructNode('Instance', {
+      geometryNode: skin
+    })
+    .setMaterialNode( scene.constructNode('VertexColorMaterial', {
         diffuseColor: FABRIC.RT.rgb(0.8, 0.5, 0.2),
         lightNode: light
-      })
-    })
+      }))
     .setMaterialNode( scene.constructNode('WireframeMaterial', {
         color: FABRIC.RT.rgb(0.2, 0.2, 0.2, 1)
       }));
-    
+
+  var paintManipulator = scene.constructNode('PaintManipulator', {
+      enabled:false
+    });
+  paintManipulator.addPaintableNode(skinInst);
   
+
+  var onPaintStickFn = function(evt) {
+    if( evt.paintData.points.length == 0 ){
+      return;
+    }
+    var paintData = evt.paintData,
+      vertexData = skin.getBulkAttributeData( paintData.points ),
+      weight,
+      brushSize = paintManipulator.getBrushSize(),
+      modifiedData = [];
+    
+    modifiedData.length = paintData.points.length;
+    for( var i=0; i< paintData.points.length; i++ ){
+      weight = (Math.cos( Math.PI * (paintData.distances[i] / brushSize) ) * 0.5 ) + 0.5;
+      modifiedData[i] = {
+       sliceIndex: paintData.points[i],
+       data: { stickWeight: vertexData[i].stickWeight + ((1.0 - vertexData[i].stickWeight) * weight ) }
+      };
+    }
+    skin.setBulkAttributeData( modifiedData );
+   //  viewport.redraw();
+  };
+  
+  var onPaintSlideFn = function(evt) {
+    if( evt.paintData.points.length == 0 ){
+      return;
+    }
+    var paintData = evt.paintData,
+      vertexData = skin.getBulkAttributeData( paintData.points ),
+      weight,
+      brushSize = paintManipulator.getBrushSize(),
+      modifiedData = [];
+    
+    modifiedData.length = paintData.points.length;
+    for( var i=0; i< paintData.points.length; i++ ){
+      weight = (Math.cos( Math.PI * (paintData.distances[i] / brushSize) ) * 0.5 ) + 0.5;
+      modifiedData[i] = {
+       sliceIndex: paintData.points[i],
+       data: { slideWeight: vertexData[i].slideWeight + ((1.0 - vertexData[i].slideWeight) * weight ) }
+      };
+    }
+    skin.setBulkAttributeData( modifiedData );
+   //  viewport.redraw();
+  };
+  
+    // Switch to stick weight painting when the 'Q' key is pressed
+    // and switch to slide weight painting when the 'W' key is pressed
+  window.onkeydown = function(evt) {
+    if(String.fromCharCode(evt.keyCode) == 'Q'){
+      cameraManipulator.disable();
+      paintManipulator.enable();
+      paintManipulator.addEventListener('onpaint', onPaintStickFn);
+    }
+    else if(String.fromCharCode(evt.keyCode) == 'W'){
+      cameraManipulator.disable();
+      paintManipulator.enable();
+      paintManipulator.addEventListener('onpaint', onPaintSlideFn);
+    }
+  };
+  window.onkeyup = function(evt) {
+    if(String.fromCharCode(evt.keyCode) == 'Q'){
+      cameraManipulator.enable();
+      paintManipulator.disable();
+      paintManipulator.removeEventListener('onpaint', onPaintStickFn);
+    }
+    else if(String.fromCharCode(evt.keyCode) == 'W'){
+      cameraManipulator.enable();
+      paintManipulator.disable();
+      paintManipulator.removeEventListener('onpaint', onPaintSlideFn);
+    }
+  };
+    
   $('#loadingDialog').dialog({
     modal: true
   });

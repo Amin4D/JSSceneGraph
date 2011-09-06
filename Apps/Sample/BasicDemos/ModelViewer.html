@@ -80,7 +80,7 @@ $(document).ready(function() {
           lightNode: light
         });
   
-  var assets = scene.importAssetFile('Models/Arm.dae');
+  var assets = scene.importAssetFile('Models/envelope.dae');
   var instanceNode = scene.constructNode('Instance', { geometryNode: assets['OilTank01'], materialNode: redMaterial });
 
   $('#loadingDialog').dialog({

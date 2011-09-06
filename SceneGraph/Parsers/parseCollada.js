@@ -1608,12 +1608,10 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
   
   var parseLibaryMaterials = function(node) {
     console.log("parseLibaryMaterials");
-  
   }
   
   var parseLibaryAnimations = function(node) {
     console.log("parseLibaryAnimations");
-  
   }
   
   var parseAccessor = function(node){
@@ -1637,7 +1635,7 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
           });
           break;
         default:
-          throw("Error in parseAccessor: Unhandled node '" +child.nodeName + "'");
+          console.warn("Error in parseAccessor: Unhandled node '" +child.nodeName + "'");
       }
       child = child.nextElementSibling;
     }
@@ -1654,7 +1652,7 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
           technique_common.accessors.push(parseAccessor(child));
           break;
         default:
-          throw("Error in parseTechniqueCommon: Unhandled node '" +child.nodeName + "'");
+          console.warn("Error in parseTechniqueCommon: Unhandled node '" +child.nodeName + "'");
       }
       child = child.nextElementSibling;
     }
@@ -1678,11 +1676,14 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
             }
           }
           break;
+        case 'IDREF_array':
+          console.log('TODO');
+          break;
         case 'technique_common':
           source.technique = parseTechniqueCommon(child);
           break;
         default:
-          throw("Error in parseSource: Unhandled node '" +child.nodeName + "'");
+          console.warn("Error in parseSource: Unhandled node '" +child.nodeName + "'");
       }
       child = child.nextElementSibling;
     }
@@ -1723,7 +1724,7 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
           }
           break;
         default:
-          throw("Error in parsePolygons: Unhandled node '" +child.nodeName + "'");
+          console.warn("Error in parsePolygons: Unhandled node '" +child.nodeName + "'");
       }
       child = child.nextElementSibling;
     }
@@ -1754,7 +1755,7 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
           mesh.triangles = parsePolygons(child);
           break;
         default:
-          throw("Error in parseMesh: Unhandled node '" + child.nodeName + "'");
+          console.warn("Error in parseMesh: Unhandled node '" + child.nodeName + "'");
       }
       child = child.nextElementSibling;
     }
@@ -1771,7 +1772,7 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
           return parseMesh(child);
           break;
         default:
-          throw("Error in parseGeometry: Unhandled node '" + child.nodeName + "'");
+          console.warn("Error in parseGeometry: Unhandled node '" + child.nodeName + "'");
       }
       child = child.nextElementSibling;
     }
@@ -1789,15 +1790,71 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
           libaryGeometries[id] = parseGeometry(child);
           break;
         default:
-          throw("Error in parseLibaryGeometries: Unhandled node '" +child.nodeName + "'");
+          console.warn("Error in parseLibaryGeometries: Unhandled node '" +child.nodeName + "'");
       }
       child = child.nextElementSibling;
     }
     return libaryGeometries;
   }
+  
+  var parseSkin = function(node) {
+    console.log("parseSkin");
+    var skin = { };
+    var child = node.firstElementChild;
+    while(child){
+      switch (child.nodeName) {
+        case 'bind_shape_matrix':
+          var str = child.textContent.split(new RegExp("\\s+"));
+          if (str[0] == '')
+            str.splice(0, 1);
+          var matrix44 = FABRIC.RT.mat44();
+          matrix44.row0.set(parseFloat(str[0]), parseFloat(str[1]), parseFloat(str[2]), parseFloat(str[3]));
+          matrix44.row1.set(parseFloat(str[4]), parseFloat(str[5]), parseFloat(str[6]), parseFloat(str[7]));
+          matrix44.row2.set(parseFloat(str[8]), parseFloat(str[9]), parseFloat(str[10]), parseFloat(str[11]));
+          matrix44.row3.set(parseFloat(str[12]), parseFloat(str[13]), parseFloat(str[14]), parseFloat(str[15]));
+          skin.bind_matrix = matrix44.transpose();
+          break;
+        default:
+          console.warn("Error in parseSkin: Unhandled node '" +child.nodeName + "'");
+      }
+      child = child.nextElementSibling;
+    }
+    return skin;
+  }
+  
+  var parseController = function(node) {
+    console.log("parseController");
+    var controller = {};
+    var child = node.firstElementChild;
+    while(child){
+      switch (child.nodeName) {
+        case 'skin':
+          controller.skin = parseSkin(child);
+          break;
+        default:
+          throw("Error in parseLibaryGeometries: Unhandled node '" +child.nodeName + "'");
+      }
+      child = child.nextElementSibling;
+    }
+    return controller;
+  }
+  
   var parseLibaryControllers = function(node) {
     console.log("parseLibaryControllers");
-  
+    var libaryControllers = {};
+    var child = node.firstElementChild;
+    while(child){
+      switch (child.nodeName) {
+        case 'controller':
+          var id = child.getAttribute('id');
+          libaryControllers[id] = parseController(child);
+          break;
+        default:
+          throw("Error in parseLibaryGeometries: Unhandled node '" +child.nodeName + "'");
+      }
+      child = child.nextElementSibling;
+    }
+    return libaryControllers;
   }
   
   var parseNode = function(node) {
@@ -1806,29 +1863,65 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
       name:  node.getAttribute('name'),
       type:  node.getAttribute('type'),
       instance_geometry: undefined,
-      children:{}
+      xfo: FABRIC.RT.xfo(),
+      children:[]
     };
     var child = node.firstElementChild;
     while(child){
       switch (child.nodeName) {
-        case 'translate':
+        case 'translate': {
+          // compute a translated matrix and
+          var str = child.textContent.split(new RegExp("\\s+"));
+          nodeData.xfo.tr.set(parseFloat(str[0]), parseFloat(str[1]), parseFloat(str[2]));
           break;
-        case 'rotate':
+        }
+        case 'rotate': {
+          /*
+          // compute a rotated matrix and
+          var sid = child.getAttribute('sid');
+          switch (sid) {
+            case 'rotation_z':
+              break;
+            case 'rotation_y':
+              break;
+            case 'rotation_x':
+              break;
+          }
+          */
+          var str = child.textContent.split(new RegExp("\\s+"));
+          var q = FABRIC.RT.Quat.makeFromAxisAndAngle(
+                    FABRIC.RT.vec3(
+                      parseFloat(str[0]),
+                      parseFloat(str[1]),
+                      parseFloat(str[2])),
+                    parseFloat(str[3]));
+          nodeData.xfo.ori.mulInPlace(q);
           break;
-        case 'scale':
+        }
+        case 'scale': {
+          // compute a scaled matrix and
+          var str = child.textContent.split(new RegExp("\\s+"));
+          nodeData.xfo.sc.set(parseFloat(str[0]), parseFloat(str[1]), parseFloat(str[2]));
           break;
+        }
         case 'instance_geometry':
           var url = child.getAttribute('url');
           nodeData.instance_geometry = url;
           break;
+        case 'instance_controller':
+          console.log("TODO");
+        //  var url = child.getAttribute('url');
+        //  nodeData.instance_controller = url;
+          break;
         case 'node':
-          nodeData.children[i] = parseNode(child);
+          nodeData.children.push(parseNode(child));
           break;
         default:
           throw("Error in parseLibaryGeometries: Unhandled node '" +child.nodeName + "'");
       }
       child = child.nextElementSibling;
     }
+    return nodeData;
   }
   
   var parseVisualScene = function(node) {
@@ -1869,7 +1962,20 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
   }
   var parseScene = function(node) {
     console.log("parseScene");
-  
+    var scene = {};
+    var child = node.firstElementChild;
+    while(child){
+      switch (child.nodeName) {
+        case 'instance_visual_scene':
+          var url = child.getAttribute('url');
+          scene.url = url;
+          break;
+        default:
+          throw("Error in parseLibaryGeometries: Unhandled node '" +child.nodeName + "'");
+      }
+      child = child.nextElementSibling;
+    }
+    return scene;
   }
   var parseColladaBase = function(node) {
     var colladaData = {}
@@ -1910,7 +2016,6 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
     return colladaData;
   }
   
-    
   // get the root and check its type
   var xmlRoot = xmlDoc.firstChild;
   if (xmlRoot.nodeName != 'COLLADA') {

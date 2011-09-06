@@ -62,20 +62,16 @@ function addCellParticlesToNeighborsArray(
   }
 }
 
+// This function returns all the neighbors from the current particles cell,
+// and the neighboring cells.
 function getNeighboringIndices(
-  io Integer neighbors[],
-  io Scalar neighborDistances[],
-  in Index index,
   io Vec3 position,
-  io Vec3 velocity,
   io Integer cellindex,
   io Vec3 cellcoords,
 
-  io Vec3 previousframe_positions[],
-  io Vec3 previousframe_velocities[],
-
-  io Scalar neighborInfluenceRange,
-  io HashTable hashtable
+  io Vec3 positions[],
+  io HashTable hashtable,
+  io Integer neighbors[]
 ) {
   Integer bufferSize = neighbors.size();
   ///////////////////////////////////////////////
@@ -128,19 +124,5 @@ function getNeighboringIndices(
     addCellParticlesToNeighborsArray(neighbors, hashtable, x_index, y_index, z_index - 1);
   }else if (cellFraction.z > 0.5 && z_index < (hashtable.z_count - 1)) {
     addCellParticlesToNeighborsArray(neighbors, hashtable, x_index, y_index, z_index + 1);
-  }
-
-  ///////////////////////////////////////////////
-  // Narrow Phase Interaction Detection
-  neighborDistances.resize(neighbors.size());
-
-  //  var Scalar neighborInfluenceRangeSq = neighborInfluenceRange * neighborInfluenceRange;
-  for (i = 0; i < neighbors.size; i++) {
-    //    var Scalar distSq = position.distSq( previousframe_positions[neighbors[i]] );
-    //    if( distSq < neighborInfluenceRangeSq ){
-    //      neighbors.push( neighbors[i] );
-    //      neighborDistances.push( sqrt( distSq ) );
-    //    }
-    neighborDistances[i] = position.dist(previousframe_positions[neighbors[i]]);
   }
 }

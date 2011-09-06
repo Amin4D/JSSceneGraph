@@ -1,0 +1,89 @@
+//
+// Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
+//
+
+use Xfo;
+use Bone;
+use Vec3;
+
+operator solveSpine(
+  io Xfo pose[],
+  io Bone bones[],
+
+  io Integer end,
+  io Integer vertebraIndices[],
+  io Scalar uvalues[],
+  io Scalar startTangent,
+  io Scalar endTangent,
+
+  io Xfo startlocalXfo,
+  io Xfo endlocalXfo
+) {
+  if (vertebraIndices.size() != (uvalues.size() - 1)) {
+    // TODO: throw an assert once we are able to do that.
+    report('Error: vertebraIndices count does not match uvalues count');
+    return;
+  }
+
+  Xfo baseXfo = startlocalXfo * pose[bones[vertebraIndices[0]].parent];
+  Xfo tipXfo = endlocalXfo * pose[bones[vertebraIndices[0]].parent];
+
+  var Vec3 p1 = baseXfo.tr;
+  var Vec3 p4 = tipXfo.tr;
+
+  Scalar spineLength = p1.dist(p4);
+
+  var Vec3 p2 = baseXfo.transform(Vec3(spineLength * startTangent, 0.0, 0.0));
+  var Vec3 p3 = tipXfo.transform(Vec3(-spineLength * endTangent, 0.0, 0.0));
+
+  Vec3 curvePoints[];
+  curvePoints.resize(vertebraIndices.size() + 1);
+  curvePoints[0] = p1;
+  curvePoints[vertebraIndices.size()] = p4;
+  for (var Integer i = 1; i < vertebraIndices.size(); i++) {
+    Scalar u = uvalues[i];
+
+    Scalar a = pow(1.0 - u, 3.0);
+    Scalar b = 3.0 * u * pow(1.0 - u, 2.0);
+    Scalar c = 3.0 * pow(u, 2.0) * (1.0 - u);
+    Scalar d = pow(u, 3.0);
+
+    curvePoints[i] = a * p1 + b * p2 + c * p3 + d * p4;
+  }
+
+  for (var Integer i = 0; i < vertebraIndices.size(); i++) {
+    // orient them
+    Xfo vertebreXfo = pose[vertebraIndices[i]];
+    vertebreXfo.tr = curvePoints[i];
+    vertebreXfo.ori = slerp(baseXfo.ori, tipXfo.ori, (uvalues[i] + uvalues[i + 1]) * 0.5);
+
+    var Vec3 alignment = curvePoints[i + 1] - curvePoints[i];
+    Scalar vertebreLength = alignment.norm();
+    alignment *= 1.0 / vertebreLength;
+    var Vec3 xAxis = vertebreXfo.ori.getXaxis();
+    vertebreXfo.ori = makeQuatFrom2Vectors(xAxis, alignment).unit() * vertebreXfo.ori;
+    vertebreXfo.sc.x = vertebreLength / bones[vertebraIndices[i]].length;
+
+    pose[vertebraIndices[i]] = vertebreXfo;
+  }
+
+  pose[end].ori = tipXfo.ori;
+  pose[end].tr = curvePoints[vertebraIndices.size()];
+
+}
+
+operator solveInvSpine(
+  io Xfo pose[],
+  io Xfo local[],
+  io Bone bones[],
+  io Integer start,
+  io Integer end,
+  io Integer vertebraIndices[],
+  io Xfo startlocalXfo,
+  io Xfo endlocalXfo,
+  io Scalar uvalues[],
+  io Scalar startTangent,
+  io Scalar endTangent
+) {
+  // TODO
+}

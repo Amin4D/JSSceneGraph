@@ -1,0 +1,206 @@
+
+//
+// Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
+//
+
+
+
+function OGLRenderTarget.genTextures() {
+//  report("OGLTexture2D.genTextures width:" + this.width + " height:" + this.height);
+
+  Integer i, maxColorBuffers;
+//  glGetIntegerv(GL_MAX_COLOR_ATTACHMENTS, maxColorBuffers);
+//  this.numColorBuffers = 0;
+//  for(i=0; i<this.textures.size(); i++){
+//    if(this.textures[i].type == COLOR_BUFFER)
+//      this.numColorBuffers++;
+//  }
+//  if(maxColorBuffers < this.numColorBuffers){
+//    report("Your OpenGL implementation supports only " + maxColorBuffers + " but " + this.numColorBuffers + " are needed");
+//    return;
+//  }
+
+  //Create Frame Buffer Object
+  Size fbos[];
+  fbos.resize(1);
+  glGenFramebuffers(1, fbos);
+  this.fbo = fbos[0];
+  
+  glBindFramebuffer(GL_FRAMEBUFFER, this.fbo);
+  
+  this.numColorBuffers = 0;
+  Size textureIDs[];
+  textureIDs.resize(1);
+  
+  for(i=0; i<this.textures.size(); i++){
+    if(this.textures[i].texture.bufferID!=0){
+      report("Error: texture is already generated");
+      break;
+    }
+    switch(this.textures[i].type){
+      case 1://this.DEPTH_BUFFER:
+        {
+          if(this.depthBuffer != -1){
+            report( "Creating 2 or more depth buffers is not possible!");
+            break;
+          }
+          if(this.hasDepthBufferTexture){
+            report( "A depth buffer texture has already been created, can not create another depth texture");
+            break;
+          }
+          if(this.textures[i].texture.glInternalFormat != GL_DEPTH_COMPONENT){
+            report( "A Depth Buffer must impliment a GL_DEPTH_COMPONENT internal format.");
+            break;
+          }
+          
+          this.textures[i].texture.genTexture(this.width, this.height);
+          if(this.textures[i].texture.bufferID==0){
+            report("Error generating texture");
+            break;
+          }
+          
+          glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, this.textures[i].texture.bufferID, 0);
+          
+          this.depthBuffer = i;
+          this.hasDepthBufferTexture = true;
+        }
+        break;
+      case 2://this.COLOR_BUFFER:
+        {
+          this.textures[i].texture.genTexture(this.width, this.height);
+          if(this.textures[i].texture.bufferID==0){
+            report("Error generating texture");
+            continue;
+          }
+          glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0+this.numColorBuffers, GL_TEXTURE_2D, this.textures[i].texture.bufferID, 0);
+          
+          this.numColorBuffers++;
+        }
+        break;
+    }
+  }
+
+  /*
+  //Depth buffer only
+  if(this.numColorBuffers <= 0){
+    glDrawBuffer(GL_NONE);
+    glReadBuffer(GL_NONE);
+  }
+  */
+  
+  var Integer status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+  if (status != GL_FRAMEBUFFER_COMPLETE){
+    switch(status){
+      case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT:
+        report( "ERROR: incomplete attachment");
+        break;
+      case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:
+        report( "ERROR: missing attachment");
+        break;
+      case GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER:
+        report( "ERROR: missing draw buffer");
+        break;
+      case GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER:
+        report( "ERROR: missing read buffer");
+        break;
+      case GL_FRAMEBUFFER_UNSUPPORTED:
+        report( "ERROR: rendertarget not supported");
+        break;
+      default:
+        report( "ERROR: unkown error");
+        break;
+    }
+  }
+}
+
+
+function OGLRenderTarget.prebind(
+  Integer currWidth,
+  Integer currHeight
+) {
+//  report("prebind:"+currWidth + ","+currHeight );
+  if(this.fbo == 0){
+    this.width = currWidth;
+    this.height = currHeight;
+  }
+  else {
+    if (this.width != currWidth || this.height != currHeight) {
+      // If this FBO is a full screen FBO, then we check to see
+      // if the viewport dimensions have changed, and rebuild
+      // the textures if they have.
+    
+      Size numTextures = (this.hasDepthBufferTexture ? 1 : 0) + this.numColorBuffers;
+      Size bufferIDs[];
+      bufferIDs.resize(numTextures);
+      
+      for(Integer i=0; i<this.textures.size(); i++){
+        bufferIDs[i] = this.textures[i].texture.bufferID;
+        this.textures[i].texture.bufferID = 0;
+      }
+      // Textures need to be deleted first.;
+      glDeleteTextures(numTextures, bufferIDs);
+
+      bufferIDs.resize(1);
+      bufferIDs[0] = this.fbo;
+      glDeleteFramebuffers(1, bufferIDs);
+
+      this.fbo = 0;
+      this.depthBuffer = -1;
+      this.hasDepthBufferTexture = false;
+      this.width = currWidth;
+      this.height = currHeight;
+    }
+  }
+}
+
+function OGLRenderTarget.bind() {
+//  report("OGLRenderTarget.bind()");
+  
+  Integer prevFbos[];
+  prevFbos.resize(1);
+  glGetIntegerv(GL_FRAMEBUFFER_BINDING, prevFbos);
+  this.prevFbo = prevFbos[0];
+  
+  if(this.fbo==0){
+    this.genTextures();
+  }
+  
+  glBindFramebuffer(GL_FRAMEBUFFER, this.fbo);
+  Size attribs = GL_VIEWPORT_BIT | GL_TEXTURE_BIT;
+  Size options = 0;
+  if(this.clearDepth){
+    attribs = attribs | GL_DEPTH_BUFFER_BIT;
+    options = options | GL_DEPTH_BUFFER_BIT;
+  }
+  if(this.numColorBuffers > 0 && this.clearColorFlag){
+    attribs = attribs | GL_COLOR_BUFFER_BIT;
+    options = options | GL_COLOR_BUFFER_BIT;
+  }
+  
+  glPushAttrib(attribs);
+  if(attribs&GL_COLOR_BUFFER_BIT){
+    glClearColor(this.clearColor.r, this.clearColor.g, this.clearColor.b, 1.0);
+  }
+  glViewport(0,0, this.width, this.height);
+  glClear(options);
+  
+  // Note: I'm not sure if I need to do this every frame
+  //Depth buffer only
+  if(this.numColorBuffers <= 0){
+    glDrawBuffer(GL_NONE);
+    glReadBuffer(GL_NONE);
+  }
+}
+
+function OGLRenderTarget.unbind() {
+//  report("OGLRenderTarget.unbind() prevFbo:" + this.prevFbo);
+  
+  if(this.fbo==0){
+    report("Error: FBO not generated");
+  }
+  // restore the OpenGL state
+  glPopAttrib();
+  glBindFramebuffer(GL_FRAMEBUFFER, this.prevFbo);
+}
+
+

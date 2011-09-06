@@ -1,0 +1,14 @@
+
+//
+// Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
+//
+
+function LinearKeyframe(Scalar time, Scalar value) {
+  this.time = time;
+  this.value = value;
+}
+
+function Scalar LinearKeyframe.interpolate(LinearKeyframe key2, Scalar t) {
+  var Scalar u = (t - this.time) / (key2.time - this.time);
+  return this.value + ((key2.value - this.value) * u);
+}

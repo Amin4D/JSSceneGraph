@@ -1,0 +1,65 @@
+
+//
+// Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
+//
+
+operator videoLoadInfo(
+  io String filename,
+  io Size stream,
+  io Size width,
+  io Size height,
+  io Scalar duration,
+  io Scalar fps
+) {
+  FabricVIDEOOpenStream(filename, stream, width, height, duration, fps);
+}
+
+operator videoSeekTime(
+  io Size stream,
+  io Scalar time
+) {
+  FabricVIDEOSeekTime(stream, time);
+}
+
+operator videoGetPixels(
+  io Size stream,
+  io Size width,
+  io Size height,
+  io RGB pixels[]
+) {
+  FabricVIDEOGetAllPixels(stream, width, height, pixels);
+}
+
+operator videoLoadToGPU(
+  io Size width,
+  io Size height,
+  io RGB pixels[],
+  io Size bufferID,
+  io Integer textureUnit
+) {
+  if (pixels.size() > 0) {
+    if (bufferID == 0) {
+      var Size buffers[];
+      buffers.resize(1);
+      glGenTextures(1, buffers);
+      bufferID = buffers[0];
+      
+      glActiveTexture(GL_TEXTURE0 + textureUnit);
+      glBindTexture(GL_TEXTURE_2D, bufferID);
+
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    }else {
+      glActiveTexture(GL_TEXTURE0 + textureUnit);
+      glBindTexture(GL_TEXTURE_2D, bufferID);
+    }
+
+    //Generate the texture
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    if (pixels.size() == (width * height))
+      glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, pixels.data());
+  }
+}

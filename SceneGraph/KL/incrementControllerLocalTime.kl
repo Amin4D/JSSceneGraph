@@ -1,0 +1,46 @@
+
+//
+// Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
+//
+
+use Vec2;
+
+operator incrementControllerLocalTime(
+  io Scalar globalTime,
+  io Scalar timeStep,
+  io Integer timeControl,
+  io Scalar playbackRate,
+  io Vec2 timerange,
+  io Integer outOfRange,
+  io Scalar localTime
+) {
+  if(timeControl==0){
+    localTime = (globalTime * playbackRate);
+  }else{
+    localTime += (timeStep * playbackRate);
+  }
+  if(localTime > timerange.y){
+    switch(outOfRange){
+    case 0: // Linear
+      break;
+    case 1: // Loop
+      localTime = timerange.x + ((localTime-timerange.x) % (timerange.y-timerange.x));
+      break;
+    case 2: // Clamp
+      localTime = timerange.y;
+      break;
+    }
+  }
+  else if(localTime < timerange.x){
+    switch(outOfRange){
+    case 0: // Linear
+      break;
+    case 1: // Loop
+      localTime = timerange.x + ((localTime-timerange.x) % (timerange.y-timerange.x));
+      break;
+    case 2: // Clamp
+      localTime = timerange.x;
+      break;
+    }
+  }
+}

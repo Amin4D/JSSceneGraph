@@ -1,0 +1,44 @@
+//
+// Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
+//
+
+use OGLShaderProgram;
+use OGLBuffer;
+use FabricOGL;
+
+operator drawTriangles(
+  io OGLShaderProgram shaderProgram,
+  io OGLBuffer indicesBuffer,
+  io Boolean drawToggle
+) {
+  if(shaderProgram.debug){
+    report("drawTriangles:"+shaderProgram.name);
+  }
+  if (drawToggle) {
+    shaderProgram.preDraw();
+    
+    var Data NULL;
+    // By default triangles are drawn using GL_TRIANGLES
+    Integer drawMode = GL_TRIANGLES;
+    if(shaderProgram.drawMode != -1){
+      // The shader can specify a custom draw mode, such as patches for tesselation.
+      // the same geometry can be drawn by multiple shader with different draw modes.
+      drawMode = shaderProgram.drawMode;
+    }
+    
+    if(drawMode == GL_PATCHES){
+      glPatchParameteri(GL_PATCH_VERTICES, 3);
+    }
+    
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indicesBuffer.bufferID);
+    if(shaderProgram.numInstances>1){
+      glDrawElementsInstanced(drawMode, indicesBuffer.elementCount, GL_UNSIGNED_INT, NULL, shaderProgram.numInstances);
+    }
+    else{
+      glDrawElements(drawMode, indicesBuffer.elementCount, GL_UNSIGNED_INT, NULL);
+    }
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+  }
+  
+  shaderProgram.postDraw();
+}

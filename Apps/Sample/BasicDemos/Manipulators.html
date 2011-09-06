@@ -16,29 +16,29 @@
 
     <script type="text/javascript" src="../../../Core/FABRIC.Wrappers.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../Core/FABRIC.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Math.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Vec2.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Vec3.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Vec4.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Mat22.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Mat33.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Mat44.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Quat.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Xfo.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/RGBA.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Color.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Euler.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Ray.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/OGLShaderProgram.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/OGLBuffer.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/Math.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/Vec2.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/Vec3.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/Vec4.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/Mat22.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/Mat33.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/Mat44.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/Quat.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/Xfo.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/RGBA.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/Color.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/Euler.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/Ray.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/OGLShaderProgram.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/OGLBuffer.js" charset="utf-8"></script>
 
-    <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Geometry.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Primitives.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Lights.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Materials.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Manipulation.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Kinematics.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Geometry.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Primitives.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Lights.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Materials.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Manipulation.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Kinematics.js" charset="utf-8"></script>
     
     <script type="text/javascript">
 $(document).ready(function() {
@@ -119,73 +119,9 @@ $(document).ready(function() {
       })
     });
   scene.constructNode('PivotRotationManipulator', { parentNode: cube3Draw });
-/*
-  // Bone
-  var bone = scene.constructNode('Cuboid', { length: 30, width: 3, height: 3 });
-  var cube4Draw = scene.constructNode('Instance', {
-      transformNode: scene.constructNode('Transform', {
-        hierarchical: false,
-        globalXfo: FABRIC.RT.xfo({ tr: FABRIC.RT.vec3(100, 0, 0) })
-      }),
-      geometryNode: bone,
-      materialNode: scene.constructNode('PhongMaterial', {
-        diffuseColor: FABRIC.RT.rgb(0.2, 0.5, 0.8, 1),
-        lightNode: light
-      })
-    });
-  scene.constructNode('BoneManipulator', { parentNode: cube4Draw });
-
-    // first create a skeleton
-    var skeletonNode = scene.constructNode("CharacterSkeleton");
-    skeletonNode.addBone({name:"root",
-      referencePose:FABRIC.RT.xfo( {
-        ori:FABRIC.RT.Quat.makeFromAxisAndAngle( FABRIC.RT.vec3(0,0,1), -25 ),
-        tr:FABRIC.RT.vec3(55,9,0)
-      })
-    });
-
-    skeletonNode.addBone({
-      name:"BoneA",
-      referencePose:FABRIC.RT.xfo( {
-        ori:FABRIC.RT.Quat.makeFromAxisAndAngle( FABRIC.RT.vec3(0,0,1), -25 ),
-        tr:FABRIC.RT.vec3(-3,9,0)
-      }),
-      length:6,
-      parent:"root"
-    });
-
-    skeletonNode.addBone({
-      name:"BoneB",
-      referenceLocalPose:FABRIC.RT.xfo( {
-        ori:FABRIC.RT.Quat.makeFromAxisAndAngle( FABRIC.RT.vec3(0,0,1), -55 ),
-        tr:FABRIC.RT.vec3(6,0,0)
-      }),
-      length:5,
-      parent:"BoneA"
-    });
-
-    skeletonNode.addBone({
-      name:"BoneC",
-      referenceLocalPose:FABRIC.RT.xfo( {
-        ori:FABRIC.RT.Quat.makeFromAxisAndAngle( FABRIC.RT.vec3(0,0,1), 65 ),
-        tr:FABRIC.RT.vec3(5,0,0)
-      }),
-      length:4,
-      parent:"BoneB"
-    });
-
-    // create the rig
-    var rigNode = scene.constructNode("CharacterRig", {
-        skeletonNode:skeletonNode,
-      });
-
-    // create the bone debug drawing
-    scene.constructNode("CharacterSkeletonDebug",{
-        characterRigNode:rigNode,
-        color:FABRIC.RT.rgb(1.0,0.0,0.0)
-      });
-  */
-
+  
+  
+  
   $('#loadingDialog').dialog({
     modal: true
   });

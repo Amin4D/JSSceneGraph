@@ -1,0 +1,187 @@
+//
+// Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
+//
+
+use Math;
+use Vec3;
+use Vec2;
+
+operator setCylinderVertexCount(
+  io Boolean caps,
+  io Integer sides,
+  io Integer loops,
+  io Size newCount
+) {
+  sides = (sides >= 0) ? sides : 3;
+
+  newCount = 2 * sides * (2 + loops);
+
+  if (caps) {
+    newCount += (sides * 4);
+  }
+}
+
+operator generateCylinder(
+  io Scalar radius,
+  io Scalar height,
+  io Boolean caps,
+  io Integer sides,
+  io Integer loops,
+
+  io Integer indices[],
+  io Vec3 positions[],
+  io Vec3 normals[],
+  io Vec2 uvs[]
+) {
+//  report( "Generate cylinder. Radius: " + radius + " Height: " + height + " Caps: " + caps + " Sides: " + sides + " Loops: " + loops );
+  sides = (sides >= 0) ? sides : 3;
+  
+  Integer numTriangles, nbSides, nbLoops;
+
+  nbLoops = loops + 1;
+  nbSides = sides + 1;
+  
+  numTriangles = 2 * sides * (loops + 1);
+
+  if (caps) {
+    numTriangles += (nbSides * 2) * 2;
+  }
+  indices.resize(numTriangles * 3);
+  
+  Integer voff = 0;
+  for (Integer i = 0; i <= nbLoops; i++) {
+    Scalar y = (i / Scalar(nbLoops)) * height;
+    for (Integer j = 0; j < nbSides; j++) {
+      Scalar phi = (j / Scalar(sides)) * 2.0 * PI;
+
+      normals[voff] = Vec3(
+        sin(phi),
+        0.0,
+        cos(phi)
+      );
+
+      positions[voff] = normals[voff] * radius;
+      positions[voff].y = y;
+      uvs[voff] = Vec2(1.0 - Scalar(j) / Scalar(sides), Scalar(i + 1) / Scalar(loops + 1));
+      voff++;
+    }
+  }
+  
+  Integer fid = 0;
+  Integer tid = 0;
+  
+  // Body of the cylinder
+  for (Integer i = 0; i < nbLoops; i++) {
+    for (Integer j = 0; j < sides; j++) {
+      
+      Integer v0, v1, v2, v3;
+      v0 = (nbSides * i) + j;
+      v1 = (nbSides * i) + ((j + 1) % nbSides);
+      v2 = (nbSides * (i+1)) + ((j + 1) % nbSides);
+      v3 = (nbSides * (i+1)) + j;
+      
+      indices[tid++] = v0;
+      indices[tid++] = v1;
+      indices[tid++] = v3;
+      fid++;
+      
+      indices[tid++] = v1;
+      indices[tid++] = v2;
+      indices[tid++] = v3;
+      fid++;
+    }
+  }
+
+  if (caps) {
+    // Top cap
+    Vec3 nrm(0.0, 1.0, 0.0);
+    Scalar y = height;
+        
+    for (Integer j = 0; j < nbSides; j++) {
+      Scalar phi = (j / Scalar(sides)) * 2.0 * PI;
+
+      normals[voff] = nrm;
+      positions[voff].set(
+        sin(phi) * radius,
+        y,
+        cos(phi) * radius
+      );
+      uvs[voff] = Vec2(1.0 - Scalar(j) / Scalar(sides), 0.0);
+      voff++;
+    }
+    for (Integer j = 0; j < nbSides; j++) {
+      Scalar phi = (j / Scalar(sides)) * 2.0 * PI;
+
+      normals[voff] = nrm;
+      positions[voff].setNull();
+      positions[voff].y = y;
+      uvs[voff] = Vec2(1.0 - Scalar(j) / Scalar(sides), 1.0);
+      voff++;
+    }
+    
+    for (Integer j = 0; j < sides; j++) {
+      Integer i = nbLoops;
+      Integer v0, v1, v2, v3;
+      v0 = (nbSides * (nbLoops+1)) + j;
+      v1 = (nbSides * (nbLoops+1)) + ((j + 1) % nbSides);
+      v2 = (nbSides * (nbLoops+2)) + ((j + 1) % nbSides);
+      v3 = (nbSides * (nbLoops+2)) + j;
+      
+      indices[tid++] = v0;
+      indices[tid++] = v1;
+      indices[tid++] = v3;
+      fid++;
+      
+      indices[tid++] = v1;
+      indices[tid++] = v2;
+      indices[tid++] = v3;
+      fid++;
+    }
+    
+    // Bottom cap
+    nrm.set(0.0, -1.0, 0.0);
+    y = 0.0;
+        
+    for (Integer j = 0; j < nbSides; j++) {
+      Scalar phi = (j / Scalar(sides)) * 2.0 * PI;
+
+      normals[voff] = nrm;
+      positions[voff].set(
+        sin(phi) * radius,
+        y,
+        cos(phi) * radius
+      );
+      uvs[voff] = Vec2(1.0 - Scalar(j) / Scalar(sides), 0.0);
+      voff++;
+    }
+    for (Integer j = 0; j < nbSides; j++) {
+      Scalar phi = (j / Scalar(sides)) * 2.0 * PI;
+
+      normals[voff] = nrm;
+      positions[voff].setNull();
+      positions[voff].y = y;
+      uvs[voff] = Vec2(1.0 - Scalar(j) / Scalar(sides), 0.0);
+      voff++;
+    }
+    
+    for (Integer j = 0; j < sides; j++) {
+      Integer i = nbLoops;
+      Integer v0, v1, v2, v3;
+      v0 = (nbSides * (nbLoops+3)) + j;
+      v1 = (nbSides * (nbLoops+3)) + ((j + 1) % nbSides);
+      v2 = (nbSides * (nbLoops+4)) + ((j + 1) % nbSides);
+      v3 = (nbSides * (nbLoops+4)) + j;
+      
+      indices[tid++] = v3;
+      indices[tid++] = v1;
+      indices[tid++] = v0;
+      fid++;
+      
+      indices[tid++] = v3;
+      indices[tid++] = v2;
+      indices[tid++] = v1;
+      fid++;
+    }
+    
+  }
+}

@@ -14,30 +14,30 @@
 
     <link type="text/css" href="../../../ThirdParty/jQuery/css/vader/jquery-ui-1.8.5.custom.css" rel="stylesheet" />
 
-      <script type="text/javascript" src="../../../Core/FABRIC.Wrappers.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../Core/FABRIC.Wrappers.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../Core/FABRIC.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Math.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Vec2.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Vec3.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Vec4.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Mat22.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Mat33.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Mat44.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Quat.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Xfo.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/RGBA.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Color.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Euler.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/OGLShaderProgram.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/OGLBuffer.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/Math.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/Vec2.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/Vec3.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/Vec4.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/Mat22.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/Mat33.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/Mat44.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/Quat.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/Xfo.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/RGBA.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/Color.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/Euler.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/OGLShaderProgram.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/OGLBuffer.js" charset="utf-8"></script>
 
-    <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Geometry.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Primitives.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Lights.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Materials.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Manipulation.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Kinematics.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Geometry.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Primitives.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Lights.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Materials.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Manipulation.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Kinematics.js" charset="utf-8"></script>
     
     <script type="text/javascript">
     
@@ -86,7 +86,14 @@ $(document).ready(function() {
     diffuseColor: FABRIC.RT.rgb(0, 0, 0.8),
     lightNode: light
   });
-
+  
+  var wireframeMaterial = scene.constructNode('WireframeMaterial', {
+    color: FABRIC.RT.rgb(0.2, 0.2, 0.2, 1)
+  });
+  var normalMaterial = scene.constructNode('NormalMaterial', {
+    color: FABRIC.RT.rgb(0.2, 0.2, 0.2, 1)
+  });
+  
   // Cross
   scene.constructNode('Instance', {
       transformNode: scene.constructNode('Transform', {
@@ -178,7 +185,8 @@ $(document).ready(function() {
         widthSections: 3
       }),
       materialNode: greenPhongMaterial
-    });
+    })
+    .setMaterialNode( wireframeMaterial );
 
   // Phong Cuboid
   scene.constructNode('Instance', {
@@ -192,7 +200,8 @@ $(document).ready(function() {
         height: 15
       }),
       materialNode: redPhongMaterial
-    });
+    })
+    .setMaterialNode( wireframeMaterial );
 
   // Phong Cone
   scene.constructNode('Instance', {
@@ -206,7 +215,8 @@ $(document).ready(function() {
         detail: 10
       }),
       materialNode: greenPhongMaterial
-    });
+    })
+    .setMaterialNode( wireframeMaterial );
 
   // Phong Sphere
   scene.constructNode('Instance', {
@@ -219,7 +229,8 @@ $(document).ready(function() {
         detail: 10
       }),
       materialNode: bluePhongMaterial
-    });
+    })
+    .setMaterialNode( wireframeMaterial );
 
   // Phong Torus
   scene.constructNode('Instance', {
@@ -233,7 +244,8 @@ $(document).ready(function() {
         detail: 10
       }),
       materialNode: greenPhongMaterial
-    });
+    })
+    .setMaterialNode( wireframeMaterial );
 
   // Phong Cylinder
   scene.constructNode('Instance', {
@@ -244,9 +256,15 @@ $(document).ready(function() {
       geometryNode: scene.constructNode('Cylinder', {
         radius: 4.0,
         height: 16.0,
-        detail: 10 }),
-      materialNode: redPhongMaterial
-    });
+        sides: 24,
+        loops: 2,
+        caps: true
+      }),
+      materialNode: redPhongMaterial 
+    })
+    .setMaterialNode( wireframeMaterial );/*
+    .setMaterialNode( normalMaterial );
+    */
 
   // Phong Teapot
   scene.constructNode('Instance', {
@@ -259,8 +277,9 @@ $(document).ready(function() {
         detail: 10
       }),
       materialNode: bluePhongMaterial
-    });
-  
+    })
+    .setMaterialNode( wireframeMaterial );
+
   $('#loadingDialog').dialog({
     modal: true
   });

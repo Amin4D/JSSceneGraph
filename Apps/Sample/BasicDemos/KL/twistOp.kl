@@ -1,12 +1,24 @@
-
 //
 // Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
 //
 
-operator twistOp(io Vec3 position, io Vec3 normal, io Scalar twist) {
-  // report("twistOp");
+use Vec3;
+use Quat;
 
-  var Quat q = axisAndAngleToQuat(Vec3(1.0, 0.0, 0.0), position.x * twist);
-  position = q.transform(position);
-  normal = q.transform(normal);
+operator twistOp(
+  io Vec3 parentpositions[],
+  io Vec3 parentnormals[],
+  io Vec3 boundingboxmin,
+  io Vec3 boundingboxmax,
+  io Scalar twist,
+  io Vec3 position,
+  io Vec3 normal,
+  in Size index
+){
+//  report("twistOp");
+  Scalar u = parentpositions[index].x / (boundingboxmax.x - boundingboxmin.x);
+
+  Quat q = axisAndAngleToQuat(Vec3(1.0, 0.0, 0.0), u * twist);
+  position = q.transform(parentpositions[index]);
+  normal = q.transform(parentnormals[index]);
 }

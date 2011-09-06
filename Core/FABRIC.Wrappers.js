@@ -323,6 +323,16 @@ var wrapFabricClient = function(fabricClient, logCallback, debugLogCallback) {
           result.bindings = oldBindings;
         });
       };
+      
+      result.pub.remove = function(index) {
+        var oldBindings = result.bindings;
+        delete result.bindings;
+        DG.queueCommand(dst, 'remove', {
+          index: index,
+        }, function() {
+          result.bindings = oldBindings;
+        });
+      };
 
       return result;
     };
@@ -645,6 +655,14 @@ var wrapFabricClient = function(fabricClient, logCallback, debugLogCallback) {
           sliceIndex: sliceIndex,
           data: data
         }]);
+      };
+
+      result.pub.writeResourceToUserFile = function(memberName, defaultFileName) {
+        result.queueCommand('writeResourceToUserFile', {
+          'memberName': memberName,
+          'defaultFileName': defaultFileName
+        });
+        executeQueuedCommands();
       };
 
       return result;

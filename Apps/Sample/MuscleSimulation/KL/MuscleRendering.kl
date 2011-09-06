@@ -1,0 +1,44 @@
+
+use Color;
+use Vec3;
+use Xfo;
+
+operator setMuscleCoreDisplayVertexCount(
+  io Xfo segmentXfos[],
+  io Size newCount
+  ){
+  newCount = segmentXfos.size();
+}
+
+
+operator fitMuscleCoreDisplayToMuscleXfos(
+  io Vec3 positions[],
+  io Color vertexColors[],
+  io Xfo xfos[],
+  io Scalar weights[]
+  ){
+  positions.resize(xfos.size());
+  for( Integer i=0; i<xfos.size(); i++){
+    positions[i] = xfos[i].tr;
+    vertexColors[i].r = weights[i];
+    vertexColors[i].g = 1.0;
+  }
+}
+
+operator setMuscleCoreLinesDisplayVertexCount(
+  io Size count,
+  io Size newCount
+  ){
+  newCount = count;
+}
+
+operator generateMuscleCoreLine(
+  io Vec3 positions[],
+  io Integer indices[]
+  ){
+  indices.resize(positions.size());
+  for( Integer i=0; i<positions.size(); i++){
+    positions[i].x = Scalar(i)/Scalar(positions.size()-1);
+    indices[i] = i;
+  }
+}

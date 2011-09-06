@@ -1,20 +1,202 @@
 
-operator setMuscleCoreVertexCount(
-  io Xfo segmentXfos[],
-  io Integer indices[],
-  io Size newCount
-  ){
-  indices.resize(segmentXfos.size());
-  newCount = segmentXfos.size();
-}
+#include '../../../SceneGraph/KL/evaluateKeyframeAnimationTrack.kl'
 
+use Xfo;
+use Vec3;
+use Mat44;
 
-operator fitMuscleCoreToMuscleXfos(
-  io Xfo segmentXfos[],
-  io Integer positions[]
-  ){
-  for( Integer i=0; i<segmentXfos.size(); i++){
-    positions[i] = segmentXfos[i].tr;
+operator simulateMuscle(
+  io Xfo allinitialXfos[][], /* inital Transforsm  */
+  io Xfo allbaseMuscleXfos[],
+  io Scalar allsegmentLengths[][],
+  io Vec2 allpointEnvelopeIds[],
+  io Vec2 allpointEnvelopWeights[][],
+  io Scalar allflexibilityWeights[][], /* weights determining how much the muscle is simulated. */
+  io BezierKeyframe allcontractionCurve[][],
+  io Scalar allcontractionWeights[][], /* weights determining how much the segments will contract. */
+  
+  in Size index,
+  io Boolean initialized,
+  io Xfo envelopedXfos[], /* Xfos deformed by the skeleton  */
+  io Xfo simulatedXfos[], /* Xfos simulated and used to drive the skin deformation */
+  io Scalar compressionFactor,
+  io Scalar segmentCompressionFactors[],
+  
+  
+  io Mat44 cvPositions,
+  io Mat44 cvFrames,
+  
+  io Vec3 pointPositionsPrevUpdate[],
+  io Vec3 pointPositionsPrevUpdate_Temp[],
+  io Size numRelaxationIterations,
+  
+  io Vec3 gravity,
+  io Scalar timeStep,
+  io Xfo skeletonXfos[]
+){
+//  report("simulateMuscle>>>:"+index);
+  Integer i, j;
+  Xfo baseXfo, xfo;
+  
+  Xfo initialXfos[] = allinitialXfos[index];
+  Xfo baseMuscleXfo = allbaseMuscleXfos[index];
+  Scalar segmentLengths[] = allsegmentLengths[index];
+  Vec2 pointEnvelopeIds = allpointEnvelopeIds[index];
+  Vec2 pointEnvelopWeights[] = allpointEnvelopWeights[index];
+  Scalar flexibilityWeights[] = allflexibilityWeights[index];
+  BezierKeyframe contractionCurve[] = allcontractionCurve[index];
+  Scalar contractionWeights[] = allcontractionWeights[index];
+  
+  
+  if(!initialized || pointPositionsPrevUpdate.size() != simulatedXfos.size()){
+    report("!initialized:"+index);
+    envelopedXfos.resize(initialXfos.size());
+    simulatedXfos.resize(initialXfos.size());
+    segmentCompressionFactors.resize(initialXfos.size());
+    pointPositionsPrevUpdate.resize(initialXfos.size());
+    pointPositionsPrevUpdate_Temp.resize(initialXfos.size());
+    for(i=0; i<initialXfos.size(); i++){
+      simulatedXfos[i] = initialXfos[i];
+      pointPositionsPrevUpdate[i] = initialXfos[i].tr;
+    }
+    initialized = false;
   }
+  
+  /////////////////////////////////////////////////
+  // Enveloping/Skinning
+  // Envelope the xfos to the skeleton using basic enveloping math.
+  Vec3 v3(0.0,0.0,0.0);
+  for(i=0; i<simulatedXfos.size(); i++){
+  //  baseXfo = baseMuscleXfo * initialXfos[i];
+    baseXfo = initialXfos[i];
+    envelopedXfos[i].identity();
+    if (pointEnvelopWeights[i].x > 0.0) {
+      xfo = baseXfo * skeletonXfos[Integer(pointEnvelopeIds.x)];
+      envelopedXfos[i].tr += xfo.tr * pointEnvelopWeights[i].x;
+      envelopedXfos[i].ori += xfo.ori * pointEnvelopWeights[i].x;
+    }
+    if (pointEnvelopWeights[i].y > 0.0) {
+      xfo = baseXfo * skeletonXfos[Integer(pointEnvelopeIds.y)];
+      envelopedXfos[i].tr += xfo.tr * pointEnvelopWeights[i].y;
+      envelopedXfos[i].ori += xfo.ori * pointEnvelopWeights[i].y;
+    }
+    envelopedXfos[i].ori.normalize();
+  }
+  
+  // Measure the distance from the 2 anchor points of the muscle.
+  // Use this to look up the curve and calculate the current contraction of the muscle
+  Scalar contractionFactor = envelopedXfos[0].tr.dist(envelopedXfos[envelopedXfos.size()-1].tr) /
+                               initialXfos[0].tr.dist(initialXfos[initialXfos.size()-1].tr);
+  Integer keyIndex = 0;
+  contractionFactor = evaluateKeyframeAnimationTrack(contractionCurve, contractionFactor, keyIndex);
+  
+  /////////////////////////////////////////////////
+  // Simulation
+  if(!initialized){
+    for(i=0; i<initialXfos.size(); i++){
+      simulatedXfos[i] = envelopedXfos[i];
+    }
+    initialized = true;
+  }
+  
+  for(i=0; i<simulatedXfos.size(); i++){
+    pointPositionsPrevUpdate_Temp[i] = simulatedXfos[i].tr;
+  }
+  
+  // Increment the muscle system using basic Verlet simulation.
+  if(timeStep>0){
+    Vec3 gravityDisp = gravity * (timeStep * contractionFactor);
+    for(i=0; i<simulatedXfos.size(); i++){
+      // When under contraction, we remove gravity.
+      // Its a bit of a hack to exagerate the strength of the contraction
+      simulatedXfos[i].tr += gravityDisp + (simulatedXfos[i].tr - pointPositionsPrevUpdate[i]);
+      simulatedXfos[i].tr = envelopedXfos[i].tr.lerp(simulatedXfos[i].tr, flexibilityWeights[i]);
+      simulatedXfos[i].ori = envelopedXfos[i].ori.nlerp(simulatedXfos[i].ori, flexibilityWeights[i]);
+    }
+  }
+  
+  // Now relax the muscle iteratively maintaining the original segment lengths.
+  Vec3 deltas[];
+  Vec3 delta;
+  Scalar segmentContraction;
+  deltas.resize(simulatedXfos.size());
+  for(j=0; j<numRelaxationIterations; j++){
+    for( i=0; i<simulatedXfos.size(); i++){
+      delta.setNull();
+      if(i>0){
+        segmentContraction = 1.0 + ((contractionFactor - 1.0) * contractionWeights[i-1]);
+        Vec3 segmentPrev = (simulatedXfos[i-1].tr - simulatedXfos[i].tr);
+        Scalar segmentLength = segmentPrev.length();
+        delta += segmentPrev * ((segmentLength - (segmentLengths[i-1] * segmentContraction)) / segmentLength);
+      }
+      if(i<simulatedXfos.size()-1){
+        segmentContraction = 1.0 + ((contractionFactor - 1.0) * contractionWeights[i]);
+        Vec3 segmentNext = (simulatedXfos[i+1].tr - simulatedXfos[i].tr);
+        Scalar segmentLength = segmentNext.length();
+        delta += segmentNext * ((segmentLength - (segmentLengths[i] * segmentContraction)) / segmentLength);
+      }
+      deltas[i] = delta;
+    }
+    for( i=0; i<simulatedXfos.size(); i++){
+      simulatedXfos[i].tr += deltas[i] * (flexibilityWeights[i] * 0.45);// The 0.45 stabilizes the simulation.;
+    }
+  }
+  
+  for(i=0; i<simulatedXfos.size(); i++){
+    pointPositionsPrevUpdate[i] = pointPositionsPrevUpdate_Temp[i];
+  }
+  
+  /////////////////////////////////////////////////
+  // Frame Alignement
+  // Align the quaternions to the muscle segments
+  for(i=0; i<simulatedXfos.size(); i++){
+    if(i==0){
+    //  simulatedXfos[i].ori = envelopedXfos[i].ori * makeQuatFrom2Vectors( envelopedXfos[i].ori.rotateVector(Vec3(1.0, 0.0, 0.0)),
+    //                                             (simulatedXfos[i+1].tr - simulatedXfos[i].tr).unit());
+    }else if(i==(simulatedXfos.size()-1)){
+    //  simulatedXfos[i].ori = envelopedXfos[i].ori * makeQuatFrom2Vectors( envelopedXfos[i].ori.rotateVector(Vec3(1.0, 0.0, 0.0)),
+    //                                             (simulatedXfos[i].tr - simulatedXfos[i-1].tr).unit());
+    }else{
+      simulatedXfos[i].ori = envelopedXfos[i].ori * makeQuatFrom2Vectors( envelopedXfos[i].ori.rotateVector(Vec3(1.0, 0.0, 0.0)),
+                                                 (simulatedXfos[i+1].tr - simulatedXfos[i-1].tr).unit());
+    }
+  }
+  
+  
+  // Now measure how much each segment has compressed/stretched
+  // this is used to control the bulging/volume preservation of the muscle
+  compressionFactor = 0.0;
+  for(i=0; i<simulatedXfos.size(); i++){
+    Scalar compression = 0.0;
+    if(i>0){
+      compression += (simulatedXfos[i].tr.dist(simulatedXfos[i-1].tr) / segmentLengths[i-1]);
+    }else{
+      compression += 1.0;
+    }
+    if(i<simulatedXfos.size()-1){
+      compression += (simulatedXfos[i].tr.dist(simulatedXfos[i+1].tr) / segmentLengths[i]);
+    }else{
+      compression += 1.0;
+    }
+    compressionFactor += compression;
+    // TODO: Impliment volume preserving formula
+    segmentCompressionFactors[i] = 1.0/(compression / 2.0);
+    
+  }
+  compressionFactor = 1.0/(compressionFactor / Scalar(simulatedXfos.size() * 2.0));
+  
+  /*
+  cvPositions.row0.set(simulatedXfos[0].tr.x, simulatedXfos[0].tr.y, simulatedXfos[0].tr.z, segmentCompressionFactors[0]);
+  cvPositions.row1.set(simulatedXfos[1].tr.x, simulatedXfos[1].tr.y, simulatedXfos[1].tr.z, segmentCompressionFactors[1]);
+  cvPositions.row2.set(simulatedXfos[2].tr.x, simulatedXfos[2].tr.y, simulatedXfos[2].tr.z, segmentCompressionFactors[2]);
+  cvPositions.row3.set(simulatedXfos[3].tr.x, simulatedXfos[3].tr.y, simulatedXfos[3].tr.z, segmentCompressionFactors[3]);
+  
+  cvFrames.row0.set(simulatedXfos[0].ori.v.x, simulatedXfos[0].ori.v.y, simulatedXfos[0].ori.v.z, simulatedXfos[0].ori.w);
+  cvFrames.row1.set(simulatedXfos[1].ori.v.x, simulatedXfos[1].ori.v.y, simulatedXfos[1].ori.v.z, simulatedXfos[1].ori.w);
+  cvFrames.row2.set(simulatedXfos[2].ori.v.x, simulatedXfos[2].ori.v.y, simulatedXfos[2].ori.v.z, simulatedXfos[2].ori.w);
+  cvFrames.row3.set(simulatedXfos[3].ori.v.x, simulatedXfos[3].ori.v.y, simulatedXfos[3].ori.v.z, simulatedXfos[3].ori.w);
+  */
+//  report("simulateMuscle<<<");
 }
+
 

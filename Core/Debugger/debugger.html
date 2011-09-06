@@ -380,7 +380,7 @@ $(document).ready(function() {
   svgRoot.setEdgeHolderGroup(edgeHolderGroup);
   
   
-  svgRoot.draggable({mouseButton:1, delegateTranslateObj:graphPosGroup, highlight:false })
+  svgRoot.draggable({mouseButton:0, delegateTranslateObj:graphPosGroup, highlight:false })
     .zoomable({delegateZoomObj:graphSclGroup });
   
   $(window).resize(function () {

@@ -1,0 +1,125 @@
+//
+// Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
+//
+
+#include 'FABRIC_ROOT/SceneGraph/KL/solveFishingRod.kl'
+#include 'FABRIC_ROOT/SceneGraph/KL/solveNCFIK.kl'
+
+use Xfo;
+use Bone;
+use BezierKeyframe;
+
+operator solveArmRig(
+  io Xfo pose[],
+  io Bone bones[],
+
+  io Integer boneIndices[],
+  io Xfo wristOffsetXfo,
+
+  io Xfo handControlXfo,
+  io Scalar ikBlend,
+) {
+  if (ikBlend > 0.0) {
+    Xfo fkPose[];
+    fkPose.resize(boneIndices.size());
+    for (Integer i = 0; i < boneIndices.size(); i++) {
+      fkPose[i] = pose[boneIndices[i]];
+    }
+
+    Xfo targetXfo;
+    targetXfo = wristOffsetXfo * handControlXfo;
+
+    Scalar maxLineLength = bones[boneIndices[1]].length + bones[boneIndices[2]].length;
+    Vec2 maxLineLengthSoftening(maxLineLength * 0.1, maxLineLength * 0.1);
+    applyFishingRod(
+      pose[boneIndices[0]],
+      bones[boneIndices[0]].length,
+      targetXfo,
+      Vec3(1.0, 0.0, 0.0),
+
+      0.0,
+      Vec2(0.0, 0.0),
+      maxLineLength,
+      maxLineLengthSoftening
+    );
+
+    pose[boneIndices[1]].tr = pose[boneIndices[0]].transform(Vec3(bones[boneIndices[0]].length, 0.0, 0.0));
+
+    Integer ikboneIndices[];
+    for (Integer i = 1; i < boneIndices.size() - 1; i++) {
+      ikboneIndices.push(boneIndices[i]);
+    }
+    solveNCFIK(pose, bones, ikboneIndices, targetXfo);
+
+    Integer wristIndex = boneIndices[boneIndices.size() - 1];
+    Integer forearmIndex = boneIndices[boneIndices.size() - 2];
+    pose[wristIndex].tr = pose[forearmIndex].transform(Vec3(bones[forearmIndex].length, 0.0, 0.0));
+    pose[wristIndex].ori = targetXfo.ori;
+
+    for (Integer i = 0; i < boneIndices.size(); i++) {
+      pose[boneIndices[i]].ori = slerp(fkPose[i].ori, pose[boneIndices[i]].ori, ikBlend);
+      if (i > 0) {
+        pose[boneIndices[i]].tr = pose[boneIndices[i - 1]].transform(bones[boneIndices[i]].referenceLocalPose.tr);
+      }
+    }
+  }
+
+}
+
+operator solveLegRig(
+  io Xfo pose[],
+  io Bone bones[],
+
+  io Integer boneIndices[],
+
+  io Xfo footPlatformXfo,
+  io Xfo ankleIKAnimationXfo,
+  io Scalar ikBlend,
+) {
+  if (ikBlend > 0.0) {
+    Xfo fkPose[];
+    fkPose.resize(boneIndices.size());
+    for (Integer i = 0; i < boneIndices.size(); i++) {
+      fkPose[i] = pose[boneIndices[i]];
+    }
+
+    Integer thighIndex = boneIndices[0];
+    Integer calfIndex = boneIndices[1];
+    Integer ankleIndex = boneIndices[2];
+
+    Xfo targetXfo;
+    targetXfo = ankleIKAnimationXfo * footPlatformXfo;
+
+    Scalar maxLineLength = bones[thighIndex].length + bones[calfIndex].length;
+    Vec2 maxLineLengthSoftening(maxLineLength * 0.03, maxLineLength * 0.03);
+    applyFishingRod(
+      targetXfo,
+      bones[ankleIndex].length,
+      pose[thighIndex],
+      Vec3(-1.0, 0.0, 0.0),
+
+      0.0,
+      Vec2(0.0, 0.0),
+      maxLineLength,
+      maxLineLengthSoftening
+    );
+
+    targetXfo.tr = targetXfo.transform(Vec3(-bones[ankleIndex].length, 0.0, 0.0));
+
+    Integer ikboneIndices[];
+    ikboneIndices.push(thighIndex);
+    ikboneIndices.push(calfIndex);
+
+    solveNCFIK(pose, bones, ikboneIndices, targetXfo);
+
+    pose[ankleIndex].tr = pose[calfIndex].transform(Vec3(bones[calfIndex].length, 0.0, 0.0));
+    pose[ankleIndex].ori = targetXfo.ori;
+
+    for (Integer i = 0; i < boneIndices.size(); i++) {
+      pose[boneIndices[i]].ori = slerp(fkPose[i].ori, pose[boneIndices[i]].ori, ikBlend);
+      if (i > 0) {
+        pose[boneIndices[i]].tr = pose[boneIndices[i - 1]].transform(bones[boneIndices[i]].referenceLocalPose.tr);
+      }
+    }
+  }
+}

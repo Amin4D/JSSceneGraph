@@ -11,7 +11,7 @@ FABRIC = (function() {
   
   var createDownloadPrompt = function( div ){
     var iframeTag = document.createElement('iframe');
-    iframeTag.setAttributeNS(null, 'src', 'http://localhost/~Phil/Fabric/Core/pluginInstall.html');
+    iframeTag.setAttributeNS(null, 'src', 'http://demos.fabric-engine.com/Fabric/Core/pluginInstall.html');
     iframeTag.setAttributeNS(null, 'style', 'position:absolute; left:10px; right:10px; top:10px; bottom:10px; z-index:10');
     iframeTag.setAttributeNS(null, 'width', '98%');
     iframeTag.setAttributeNS(null, 'height', '98%');
@@ -28,6 +28,7 @@ FABRIC = (function() {
       alert("Fabric plugin not enabled");
       throw("Fabric plugin not enabled");
     }
+    
     
     if (!options)
       options = {};
@@ -48,6 +49,44 @@ FABRIC = (function() {
     document.body.appendChild(embedTag);
     
     var context = wrapFabricClient(embedTag, function(s) { console.log(s); } );
+    
+    ///////////////////////////////////////////////////////////
+    // Check the currently installed version.
+    // TODO: This code will be removed once we get to the end of beta.
+    var version = context.build.getPureVersion().split('.');
+    var requiredVersion = [1,0,10];
+    var cmpVersions = function (lhs, rhs) {
+      if (lhs[0] < rhs[0])
+        return -1;
+      else if (lhs[0] == rhs[0]) {
+        if (lhs[1] < rhs[1])
+          return -1;
+        else if (lhs[1] == rhs[1]) {
+          if (lhs[2] < rhs[2])
+            return -1;
+          else if (lhs[2] == rhs[2])
+            return 0;
+          else return 1;
+        }
+        else return 1;
+      }
+      else return 1;
+    };
+    var outOfDateMessage =
+      "The version of Fabric that you have installed is out of date.\n" +
+      "Please install the updated plugin";
+    if (cmpVersions(version, requiredVersion) < 0) {
+      alert(outOfDateMessage);
+      createDownloadPrompt();
+      throw(outOfDateMessage);
+    }
+    
+    if(context.build.isExpired()){
+      var expiredMessage = "Fabric(Alpha) plugin has expired. Please install the lastest version";
+      alert(expiredMessage);
+      createDownloadPrompt();
+      throw(expiredMessage);
+    }
     
     FABRIC.displayDebugger = function(ctx) {
       if(!ctx) ctx = context;
@@ -131,11 +170,72 @@ FABRIC = (function() {
           context.VP.viewPort.addPopUpMenuItem(name, desc, callback);
         }
       };
-      result.__defineGetter__('fps', function() {
-        return context.VP.viewPort.getFPS();
-      });
+
+  
+      var queryDGNode;
+      var openGLVersion = undefined;
+      var glewSupported = {};
+      var constructGLEWQueryNode = function(){
+        // create the query nodes
+        queryDGNode = context.DG.createNode('OpenGLQuery');
+        queryDGNode.addMember('version', 'String', '');
+        queryDGNode.addMember('token', 'String', '');
+        queryDGNode.addMember('supported', 'Boolean', false);
+        queryDGNode.addDependency(result.windowNode,'window');
+        
+        // operator to query the open gl version
+        var queryOpVersion = context.DG.createOperator('getOpenGLVersion');
+        queryOpVersion.setEntryFunctionName('getOpenGLVersion');
+        queryOpVersion.setSourceCode('use FabricOGL; operator getOpenGLVersion(io String version){\n' +
+          '  glGetVersion(version);\n' +
+          '}');
+        var queryOpVersionBinding = context.DG.createBinding();
+        queryOpVersionBinding.setOperator(queryOpVersion);
+        queryOpVersionBinding.setParameterLayout(['self.version']);
+        queryDGNode.bindings.append(queryOpVersionBinding);
+        
+        // operator to query the support glew features
+        var queryOpGlew = context.DG.createOperator('getGlewSupported');
+        queryOpGlew.setEntryFunctionName('getGlewSupported');
+        queryOpGlew.setSourceCode('use FabricOGL; operator getGlewSupported(io String token, io Boolean supported){\n' +
+          '  report("query: "+token);\n' +
+          '  if(token.length() > 0) glewIsSupported(token,supported);\n' +
+          '}');
+        var queryOpGlewBinding = context.DG.createBinding();
+        queryOpGlewBinding.setOperator(queryOpGlew);
+        queryOpGlewBinding.setParameterLayout(['self.token','self.supported']);
+        queryDGNode.bindings.append(queryOpGlewBinding);
+      }
+      
+      result.getOpenGLVersion = function() {
+        if(!queryDGNode){
+          constructGLEWQueryNode();
+        }
+        // if we already know it, skip it
+        if( openGLVersion == undefined) {
+          // force an eval
+          queryDGNode.evaluate();
+          openGLVersion = queryDGNode.getData('version',0);
+        }
+        return openGLVersion;
+      }
+      result.getGlewSupported = function(token) {
+        if(!queryDGNode){
+          constructGLEWQueryNode();
+        }
+        // if we already know it, skip it
+        if( glewSupported[token] == undefined) {
+          // force an eval
+          queryDGNode.setData('token',0,token);
+          queryDGNode.evaluate();
+          glewSupported[token] = queryDGNode.getData('supported',0);
+        }
+        return glewSupported[token];
+      }
+    
       return result;
     };
+    
     
     return context;
   };

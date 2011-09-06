@@ -29,14 +29,17 @@
         right:10px;
         top:10px;
         bottom:50px;
+        padding:5px 7px 5px 5px; 
       }
       #eula{
-        position:absolute;
-        left:10px;
-        right:10px;
-        top:10px;
-        bottom:10px;
-        resize: none;
+        display:block;
+        width:99%;
+        height:93%;
+        padding:0.5%;
+        margin:0;
+        border:1px solid #f0f040;
+        background-color:#fffff0;
+        overflow:auto;
       }
       
       #install{
@@ -44,6 +47,7 @@
         right:10px;
         bottom:10px;
       }
+      
 
     </style>
   </head>
@@ -53,6 +57,8 @@
 $(document).ready(function() {
   
   $('#install').button({ disabled: true });
+  
+  $('#eula').attr("disabled", "disabled");
   
   var BrowserDetect = {
     init: function () {
@@ -74,11 +80,10 @@ $(document).ready(function() {
         else if (dataProp)
           return data[i].identity;
       }
-      return "";
     },
     searchVersion: function (dataString) {
       var index = dataString.indexOf(this.versionSearchString);
-      if (index == -1) return -1;
+      if (index == -1) return;
       return parseFloat(dataString.substring(index+this.versionSearchString.length+1));
     },
     dataBrowser: [
@@ -87,10 +92,64 @@ $(document).ready(function() {
         subString: "Chrome",
         identity: "Chrome"
       },
+      { 	string: navigator.userAgent,
+        subString: "OmniWeb",
+        versionSearch: "OmniWeb/",
+        identity: "OmniWeb"
+      },
+      {
+        string: navigator.vendor,
+        subString: "Apple",
+        identity: "Safari",
+        versionSearch: "Version"
+      },
+      {
+        prop: window.opera,
+        identity: "Opera",
+        versionSearch: "Version"
+      },
+      {
+        string: navigator.vendor,
+        subString: "iCab",
+        identity: "iCab"
+      },
+      {
+        string: navigator.vendor,
+        subString: "KDE",
+        identity: "Konqueror"
+      },
       {
         string: navigator.userAgent,
         subString: "Firefox",
         identity: "Firefox"
+      },
+      {
+        string: navigator.vendor,
+        subString: "Camino",
+        identity: "Camino"
+      },
+      {		// for newer Netscapes (6+)
+        string: navigator.userAgent,
+        subString: "Netscape",
+        identity: "Netscape"
+      },
+      {
+        string: navigator.userAgent,
+        subString: "MSIE",
+        identity: "Explorer",
+        versionSearch: "MSIE"
+      },
+      {
+        string: navigator.userAgent,
+        subString: "Gecko",
+        identity: "Mozilla",
+        versionSearch: "rv"
+      },
+      { 		// for older Netscapes (4-)
+        string: navigator.userAgent,
+        subString: "Mozilla",
+        identity: "Netscape",
+        versionSearch: "Mozilla"
       }
     ],
     dataOS : [
@@ -105,24 +164,49 @@ $(document).ready(function() {
         identity: "Mac"
       },
       {
+           string: navigator.userAgent,
+           subString: "iPhone",
+           identity: "iPhone/iPod"
+      },
+      {
+        string: navigator.platform,
+        subString: "Linux",
+        identity: "Linux"
+      }
+    ],
+    dataCPUArch : [
+      {
+        string: navigator.appVersion,
+        subString: "x86_64",
+        identity: "x86_64"
+      },
+      {
+        string: navigator.appVersion,
+        subString: "Mac",
+        identity: "Mac"
+      },
+      {
+           string: navigator.appVersion,
+           subString: "iPhone",
+           identity: "iPhone/iPod"
+      },
+      {
         string: navigator.platform,
         subString: "Linux",
         identity: "Linux"
       }
     ]
-  
   };
   BrowserDetect.init();
 
   
   var createDownloadURL = function( div ){
+   
     var os, arch, ext;
     switch(BrowserDetect.OS){
       case "Mac":
         os = "Darwin";
-        if(navigator.platform == "MacIntel")
-             arch = "i386";
-        else arch = "x86_64";
+        arch = "universal";
         break;
       case "Windows":
         os = "Windows";
@@ -130,10 +214,9 @@ $(document).ready(function() {
         break;
       case "Linux":
         os = "Linux";
-        throw("Helge: Fix me...");
-        if(navigator.platform == "x86")
-             arch = "x86";
-        else arch = "x86_64";
+        if(navigator.appVersion.indexOf("x86_64") != -1)
+             arch = "x86_64";
+        else arch = "i686";
         break;
       default:
         alert("Unsupported Operating system. Fabric supports only Windows, Linux and OsX.");
@@ -146,23 +229,30 @@ $(document).ready(function() {
         alert("Unsupported Browser. Fabric supports only Chrome and Firefox.");
         return false;
     }
-    return "http://dist.fabric-engine.com/latest/FabricEngine-"+os+"-"+arch+"."+ext;
+    return "http://dist.fabric-engine.com/1.0.10/FabricEngine-"+os+"-"+arch+"."+ext;
   }
   
   var url = createDownloadURL();
-
+  
   if(url){
     $('#install').button({ disabled: false })
     .click(function() {
-      window.location = url;
+      $( "#alphaWarningDialogBox" ).dialog( "open" );
+      parent.location = url;
+    //  parent.location.reload();
     });
   }
   
-  $("#compliationErrorDialog").dialog({
+  $("#alphaWarningDialogBox").dialog({
       autoOpen: false,
-      width: window.innerWidth * 0.75,
-      height: window.innerHeight * 0.85,
-      modal: true
+      width: 500,
+      height: 250,
+      modal: true,
+      buttons: {
+       Ok: function() {
+         $( this ).dialog( "close" );
+       }
+     }
     });
   
 });
@@ -177,7 +267,8 @@ $(document).ready(function() {
       <div id="editor">
         
         <div id="eulaContainer">
-        <textarea id="eula" name="eula">END-USER LICENSE AGREEMENT FOR Fabric Engine
+        <textarea id="eula" name="eula" rows="100" cols="150">
+END-USER LICENSE AGREEMENT FOR Fabric Engine
 
 IMPORTANT PLEASE READ THE TERMS AND CONDITIONS OF THIS LICENSE AGREEMENT CAREFULLY BEFORE CONTINUING WITH THIS PROGRAM INSTALL: Fabric Technologies, Inc.'s End-User License Agreement ("EULA") is a legal agreement between you (either an individual or a single entity) and Fabric Technologies, Inc. for the Fabric Technologies, Inc. software product(s) identified above which may include associated software components, media, printed materials, and "online" or electronic documentation ("SOFTWARE PRODUCT"). By installing, copying, or otherwise using the SOFTWARE PRODUCT, you agree to be bound by the terms of this EULA. This license agreement represents the entire agreement concerning the program between you and Fabric Technologies, Inc., (referred to as "licenser"), and it supersedes any prior proposal, representation, or understanding between the parties. If you do not agree to the terms of this EULA, do not install or use the SOFTWARE PRODUCT.
 
@@ -219,13 +310,18 @@ In no event shall Fabric Technologies, Inc. be liable for any damages (including
         </div><!--code-->
         
         <div id="bottomToolbar">
-                 <button id="install" style="margin-top:10px;">Agree and Install</button>
+                 <button id="install" style="margin-top:10px;">Accept the END-USER LICENSE AGREEMENT and Install</button>
         </div><!--bottomToolbar-->
       </div> <!--editor-->
     </div><!--wrapper-->
 
-    <div id="compliationErrorDialog" title="Compilation Error">
-      <pre id="compliationErrors" class="content"></pre>
+    <div id="alphaWarningDialogBox" title="Alpha Warning">
+      <div class="content">
+        This is an Alpha release of Fabric Engine, and we are working continuously to improve the developer experience and the plugin plugin performance. To be notified of updates, please register
+        <u><a href="http://fabric-engine.com/2011/07/looking-for-early-testers">here</a></u>.
+        <br><br>
+        Please refresh the page on completion of the plugin installation
+      </div>
     </div>
 
   </body>

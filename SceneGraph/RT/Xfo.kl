@@ -1,0 +1,175 @@
+//
+// Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
+//
+
+use Vec3, Quat, Mat44, RotationOrder, Euler;
+
+function Xfo() {
+  this.tr = this.tr.setNull();
+  this.ori = this.ori.inv();
+  this.sc = this.sc.inv();
+}
+
+function Xfo.identity() {
+  this.tr.setNull();
+  this.ori.identity();
+  this.sc = Vec3(1.0, 1.0, 1.0);
+}
+
+function Xfo * (in Xfo local, in Xfo global) {
+  var Quat lcl_ori = local.ori.unit();
+  var Quat glb_ori = global.ori.unit();
+
+  var Xfo result;
+  result.tr = global.tr + glb_ori.transform(global.sc * local.tr);
+  //  result.ori = lcl_ori * glb_ori;
+  result.ori = glb_ori * lcl_ori;
+  result.ori.setUnit();
+  result.sc = global.sc * local.sc;
+  return result;
+}
+
+function Xfo Xfo.inv() {
+  var Xfo result;
+  result.tr = this.tr.neg();
+  result.ori = this.ori.inv();
+  result.sc = this.sc.inv();
+  return result;
+}
+
+function Xfo Xfo.project(in Xfo xf) {
+  return xf * this;
+}
+
+function Xfo Xfo.invProject(in Xfo xf) {
+  var Xfo thisInv = this.inv();
+  var Quat glb_ori = xf.ori.unit();
+  var Quat inv_ori = thisInv.ori.unit();
+
+  var Xfo result;
+  result.tr = inv_ori.transform(thisInv.sc * (xf.tr + thisInv.tr));
+  result.ori = glb_ori * inv_ori;
+  //  result.ori = inv_ori * glb_ori;
+  result.ori.setUnit();
+  result.sc = thisInv.sc * xf.sc;
+  return result;
+}
+
+function Vec3 Xfo.transform(in Vec3 v) {
+  return this.ori.transform(v) * this.sc + this.tr;
+}
+
+// TODO: Remove the function above. 'transform' is too ambiguous,
+// and inconsistent with our JS library.
+function Vec3 Xfo.transformVector(in Vec3 v) {
+  return this.ori.rotateVector(v) * this.sc + this.tr;
+}
+
+function Mat44(in Xfo xfo) {
+  var Mat44 scl, rot, trn;
+
+  scl.setNull();
+  scl.setDiagonal(Vec4(xfo.sc.x, xfo.sc.y, xfo.sc.z, 1.0));
+
+  // [hi 20110311 this transpose shouldn't be needed but we do]
+  var Quat q = xfo.ori;
+  rot.setNull();
+  rot.row0.x = 1.0 - 2.0 * (q.v.y * q.v.y + q.v.z * q.v.z);
+  rot.row0.y = 2.0 * (q.v.x * q.v.y - q.v.z * q.w);
+  rot.row0.z = 2.0 * (q.v.x * q.v.z + q.v.y * q.w);
+
+  rot.row1.x = 2.0 * (q.v.x * q.v.y + q.v.z * q.w);
+  rot.row1.y = 1.0 - 2.0 * (q.v.x * q.v.x + q.v.z * q.v.z);
+  rot.row1.z = 2.0 * (q.v.y * q.v.z - q.v.x * q.w);
+
+  rot.row2.x = 2.0 * (q.v.x * q.v.z - q.v.y * q.w);
+  rot.row2.y = 2.0 * (q.v.y * q.v.z + q.v.x * q.w);
+  rot.row2.z = 1.0 - 2.0 * (q.v.x * q.v.x + q.v.y * q.v.y);
+
+  rot.row3.t = 1.0;
+  rot = rot.transpose();
+
+  trn.setNull();
+  trn.setDiagonal(1.0);
+  trn.row3.x = xfo.tr.x;
+  trn.row3.y = xfo.tr.y;
+  trn.row3.z = xfo.tr.z;
+
+  this = scl * rot * trn;
+}
+
+function Xfo Mat44.decompose(in RotationOrder ro) {
+  var Xfo xfo;
+
+  if (abs(1.0 - this.row3.t) > 0.001) {
+    report('Cannot handle denormalized matrices');
+    report(this.row3.t);
+    return xfo;
+  }
+
+  if (this.row0.t != 0.0 || this.row1.t != 0.0 || this.row2.t != 0.0) {
+    report('Cannot handle perspective projection matrices');
+    return xfo;
+  }
+
+  if (abs(this.det()) < 0.00001) {
+    report('Matrix is singular.');
+    return xfo;
+  }
+
+  // Grab the translation
+  xfo.tr.x = this.row3.x;
+  xfo.tr.y = this.row3.y;
+  xfo.tr.z = this.row3.z;
+
+  var Vec3 row0, row1, row2;
+  row0.set(this.row0.x, this.row0.y, this.row0.z);
+  row1.set(this.row1.x, this.row1.y, this.row1.z);
+  row2.set(this.row2.x, this.row2.y, this.row2.z);
+
+  // Grab the X scale and normalize the first row
+  xfo.sc.x = row0.norm();
+  row0.setUnit();
+
+  // Make the 2nd row orthogonal to the 1st
+  row1 -= row0 * row0.dot(row1);
+
+  // Grab the Y scale and normalize
+  xfo.sc.y = row1.norm();
+  row1.setUnit();
+
+  // Make the 3rd row orthogonal to the 1st and 2nd
+  row2 -= row0 * row0.dot(row2);
+  row2 -= row1 * row1.dot(row2);
+
+  xfo.sc.z = row2.norm();
+  row2.setUnit();
+
+  var Vec3 rot;
+
+  if (ro.isXYZ()) {
+    rot.y = asin(row0.z);
+    if (abs(row0.z) > 0.9995) {
+      rot.x = atan2(row2.y, row1.y);
+      rot.y = row0.z < 0.0 ? - rot.y : rot.y;
+      rot.z = 0.0;
+    }
+    else {
+      rot.x = atan2(-row1.z, row2.z);
+      rot.z = atan2(-row0.y, row0.x);
+    }
+  }
+  else {
+    report('Mat44.decompose only implemented for XYZ rotation order');
+  }
+
+  var Euler e(rot, ro);
+  var Quat q(e);
+  xfo.ori = q;
+
+  return xfo;
+}
+
+function Xfo(in Mat44 m) {
+  this = m.decompose(RotationOrder(0));
+}

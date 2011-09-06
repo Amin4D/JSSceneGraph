@@ -1,0 +1,128 @@
+
+//
+// Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
+//
+
+function Vec4(Scalar x, Scalar y, Scalar z, Scalar t) {
+  this.x = x;
+  this.y = y;
+  this.z = z;
+  this.t = t;
+}
+
+function Vec4.set(Scalar x, Scalar y, Scalar z, Scalar t) {
+  this.x = x;
+  this.y = y;
+  this.z = z;
+  this.t = t;
+}
+
+function Vec4.setNull() {
+  this.x = this.y = this.z = this.t = 0.0;
+}
+
+function Vec4 + (Vec4 a, Vec4 b) {
+  return Vec4(a.x + b.x, a.y + b.y, a.z + b.z, a.t + b.t);
+}
+
+function Vec4. += (Vec4 other) {
+  this = this + other;
+}
+
+function Vec4 - (Vec4 a, Vec4 b) {
+  return Vec4(a.x - b.x, a.y - b.y, a.z - b.z, a.t - b.t);
+}
+
+function Vec4. -= (Vec4 other) {
+  this = this - other;
+}
+
+function Vec4 * (Scalar a, Vec4 b) {
+  return Vec4(a * b.x, a * b.y, a * b.z, a * b.t);
+}
+
+function Vec4 * (Vec4 a, Scalar b) {
+  return Vec4(a.x * b, a.y * b, a.z * b, a.t * b);
+}
+
+function Vec4 * (Vec4 a, Vec4 b) {
+  return Vec4(a.x * b.x, a.y * b.y, a.z * b.z, a.t * b.t);
+}
+
+function Vec4. *= (Scalar other) {
+  this = this * other;
+}
+
+function Vec4. *= (Vec4 other) {
+  this = this * other;
+}
+
+function Vec4 / (Vec4 a, Vec4 b) {
+  return Vec4(a.x / b.x, a.y / b.y, a.z / b.z, a.t / b.t);
+}
+
+function Vec4 / (Scalar a, Vec4 b) {
+  return Vec4(a / b.x, a / b.y, a / b.z, a / b.t);
+}
+
+function Vec4 / (Vec4 a, Scalar b) {
+  return Vec4(a.x / b, a.y / b, a.z / b, a.t / b);
+}
+
+function Vec4. /= (Scalar other) {
+  this = this / other;
+}
+
+function Vec4. /= (Vec4 other) {
+  this = this / other;
+}
+
+function Vec4 Vec4.neg() {
+  return Vec4(-this.x, - this.y, - this.z, - this.t);
+}
+
+function Scalar Vec4.dot(in Vec4 other) {
+  return this.x * other.x + this.y * other.y + this.z * other.z + this.t * other.t;
+}
+
+function Scalar Vec4.normSq() {
+  return this.dot(this);
+}
+
+function Scalar Vec4.norm() {
+  return sqrt(this.normSq());
+}
+
+function Vec4 Vec4.unit() {
+  var Scalar n = this.norm();
+  if (n > 0.0)
+    return this / n;
+  return this;
+}
+
+function Vec4.setUnit() {
+  this = this.unit();
+}
+
+function Vec4 Vec4.max(in Vec4 other) {
+  var Vec4 v;
+  v.x = this.x > other.x ? this.x : other.x;
+  v.y = this.y > other.y ? this.y : other.y;
+  v.z = this.z > other.z ? this.z : other.z;
+  v.t = this.t > other.t ? this.t : other.t;
+  return v;
+}
+
+function Vec4 Vec4.min(in Vec4 other) {
+  var Vec4 v;
+  v.x = this.x < other.x ? this.x : other.x;
+  v.y = this.y < other.y ? this.y : other.y;
+  v.z = this.z < other.z ? this.z : other.z;
+  v.t = this.t < other.t ? this.t : other.t;
+  return v;
+}
+
+
+function Vec4 Vec4.lerp(in Vec4 other, in Scalar t) {
+  return this + ((other - this) * t);
+}

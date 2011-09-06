@@ -1,0 +1,184 @@
+//
+// Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
+//
+
+use OGLTexture2D;
+use FabricOGL, FabricPNG, FabricTGA, FabricHDR;
+
+function decodeLDRImageData(
+  io FabricResource resource,
+  io Size imageWidth,
+  io Size imageHeight,
+  io RGBA imageLDR[]
+) {
+report "JCG Texture size " + resource.data.size();
+  if(resource.data.size() == 0)
+    return;
+  String ext = resource.extension ? resource.extension : resource.mimeType;
+  switch (ext) {
+    case'png':
+    case'image/png':
+      FabricPNGDecode(resource.data.data(), resource.data.dataSize(), imageWidth, imageHeight, imageLDR);
+      break;
+    case'tga':
+    case'image/tga':
+      FabricTGADecode(resource.data.data(), resource.data.dataSize(), imageWidth, imageHeight, imageLDR);
+      break;
+  }
+}
+
+function decodeHDRImageData(
+  io FabricResource resource,
+  io Size imageWidth,
+  io Size imageHeight,
+  io Color imageHDR[]
+) {
+  if(resource.data.size() == 0)
+    return;
+  String ext = resource.extension ? resource.extension : resource.mimeType;
+  switch (ext) {
+    case'hdr':
+    case'image/hdr':
+      FabricHDRDecode(resource.data.data(), resource.data.dataSize(), imageWidth, imageHeight, imageHDR);
+      break;
+    case'exr':
+    case'image/exr':
+      FabricHDRDecode(resource.data.data(), resource.data.dataSize(), imageWidth, imageHeight, imageHDR);
+      break;
+  }
+}
+
+operator loadImageHDR(
+  io FabricResource resource,
+  io Size imageWidth,
+  io Size imageHeight,
+  io Color imageHDR[],
+) {
+  decodeHDRImageData(resource, imageWidth, imageHeight, imageHDR);
+}
+
+operator loadImageLDR(
+  io FabricResource resource,
+  io Size imageWidth,
+  io Size imageHeight,
+  io RGBA imageLDR[],
+) {
+  decodeLDRImageData(resource, imageWidth, imageHeight, imageLDR);
+}
+
+operator bindTextureLDR(
+  io Size width,
+  io Size height,
+  io RGBA bitmap[],
+  io OGLTexture2D oglTexture2D,
+  io Integer textureUnit
+) {
+//  report("createTextureFromImageLDR -> textureUnit:" + textureUnit + " bufferID:" + bufferID );
+  oglTexture2D.bindImageLDR(width, height, bitmap, textureUnit);
+}
+
+// This operator takes a resource, decodes it, and immediately
+// uploads it to the GPU. This simplifies the graph, because 
+// a node is not created to store the data in main memory. 
+operator loadAndBindTextureLDR(
+  io FabricResource resource,
+  io OGLTexture2D oglTexture2D,
+  io Integer textureUnit
+) {
+//  report("loadAndBindTextureLDR -> textureUnit:" + textureUnit);
+  if(resource.data.size() == 0)
+    return;
+  if(oglTexture2D.bufferID == 0){
+    Size width, height;
+    RGBA imageLDR[];
+    decodeLDRImageData(resource, width, height, imageLDR);
+    oglTexture2D.configure(width, height, imageLDR.data(), imageLDR.size(), GL_RGBA, textureUnit);
+    var Data NULL;
+    resource.data.resize(0);
+  }
+  oglTexture2D.bind(textureUnit);
+}
+
+operator bindTextureHDR(
+  io Size width,
+  io Size height,
+  io Color bitmap[],
+  io OGLTexture2D oglTexture2D,
+  io Integer textureUnit
+) {
+  oglTexture2D.bindImageHDR(width, height, bitmap, textureUnit);
+}
+
+
+operator unbindTextures(
+  io Size numTextures
+){
+  for(Integer i=0; i<numTextures; i++){
+    glActiveTexture(GL_TEXTURE0 + i);
+    glBindTexture(GL_TEXTURE_2D, 0);
+  }
+}
+
+operator createSpriteTexture(
+  io Integer res,
+  io Size bufferID,
+  io Integer textureUnit
+) {
+  if (!bufferID && res > 0) {
+    var RGBA texData[];
+    texData.resize(res * res);
+
+    var Size idx = 0;
+    var Scalar dt = 2.0 / Scalar(res);
+    var Scalar ty = - 1.0;
+    for (var Integer y = 0; y < res; y++) {
+      var Scalar tx = - 1.0;
+      for (var Integer x = 0; x < res; x++) {
+        var Scalar t = sqrt(tx * tx + ty * ty);
+        if (t > 1.0) t = 1.0;
+          t = 2.0 * t * t * t - 3.0 * t * t + 1.0;
+        texData[idx].r = texData[idx].g = texData[idx].b = texData[idx].a = Byte(t * 255.0);
+        idx++;
+        tx += dt;
+      }
+      ty += dt;
+    }
+
+    var Size buffers[];
+    buffers.push(Size(bufferID));
+    glGenTextures(1, buffers);
+    glActiveTexture(GL_TEXTURE0 + textureUnit);
+    glBindTexture(GL_TEXTURE_2D, bufferID);
+    glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, 1);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, res, res, 0, GL_RGBA, GL_UNSIGNED_BYTE, texData.data());
+  }
+  else {
+    glActiveTexture(GL_TEXTURE0 + textureUnit);
+    glBindTexture(GL_TEXTURE_2D, bufferID);
+  }
+}
+
+operator createErrorTexture(
+  io Size bufferID,
+  io Integer textureUnit
+) {
+  if (!bufferID) {
+    var RGBA texData[];
+    texData.resize(1);
+    texData[0].r = 1.0;
+    texData[0].g = texData[0].b = texData[0].a = 0.0;
+    var Size buffers[];
+    buffers.resize(1);
+    glGenTextures(1, buffers);
+    bufferID = buffers[0];
+    glActiveTexture(GL_TEXTURE0 + textureUnit);
+    glBindTexture(GL_TEXTURE_2D, bufferID);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, texData.data());
+  }
+  else {
+    glActiveTexture(GL_TEXTURE0 + textureUnit);
+    glBindTexture(GL_TEXTURE_2D, bufferID);
+  }
+}

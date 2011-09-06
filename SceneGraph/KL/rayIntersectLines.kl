@@ -1,0 +1,98 @@
+//
+// Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
+//
+
+use Ray;
+use RayIntersection;
+use Xfo;
+use Vec2;
+use Vec3;
+use Mat44;
+
+operator rayIntersectLines(
+  io Boolean select,
+  io RayIntersection intersection,
+  io Ray ray,
+  io Scalar threshold,
+  io Xfo globalXfo,
+  io Vec3 positions<>,
+  io Integer indices[],
+  io Vec3 bboxmin,
+  io Vec3 bboxmax
+) {
+  Mat44 globalMat44 = Mat44(globalXfo);
+  Mat44 invGlobalMat44 = globalMat44.inverse();
+  Ray objRay;
+  objRay.start = ray.start * invGlobalMat44;
+  invGlobalMat44.row3.x = 0.0;
+  invGlobalMat44.row3.y = 0.0;
+  invGlobalMat44.row3.z = 0.0;
+  objRay.direction = ray.direction * invGlobalMat44;
+  
+  if (indices.size() > 2 && !objRay.intersectBoundingBox(bboxmin, bboxmax)) {
+    return;
+  }
+
+  intersection.distance = 1.0e20;
+  for (Integer i = 0; i < indices.size(); i += 2) {
+    var Vec3 v0 = positions[indices[i + 0]];
+    var Vec3 v1 = positions[indices[i + 1]];
+    var Vec3 point;
+    var Scalar dist, rayParam, segmentParam;
+    if(objRay.intersectLineSegment(v0, v1, dist, rayParam, segmentParam)){
+      if (dist < threshold) {
+        select = true;
+        if (dist < intersection.distance) {
+          intersection.point = v0.lerp(v1, segmentParam) * globalMat44;
+          intersection.distance = rayParam;
+          intersection.elementid = i;
+        }
+      }
+    }
+  }
+}
+
+
+operator rayIntersectLineStrip(
+  io Boolean select,
+  io RayIntersection intersection,
+  io Ray ray,
+  io Scalar threshold,
+  io Xfo globalXfo,
+  io Vec3 positions[],
+  io Integer indices[],
+  io Vec3 bboxmin,
+  io Vec3 bboxmax
+) {
+  Mat44 globalMat44 = Mat44(globalXfo);
+  Mat44 invGlobalMat44 = globalMat44.inverse();
+  Ray objRay;
+  objRay.start = ray.start * invGlobalMat44;
+  invGlobalMat44.row3.x = 0.0;
+  invGlobalMat44.row3.y = 0.0;
+  invGlobalMat44.row3.z = 0.0;
+  objRay.direction = ray.direction * invGlobalMat44;
+  
+  if (indices.size() > 2 && !objRay.intersectBoundingBox(bboxmin, bboxmax)) {
+    return;
+  }
+
+  intersection.distance = 1.0e20;
+  for (Integer i = 0; i < indices.size(); i += 1) {
+    var Vec3 v0 = positions[indices[i + 0]];
+    var Vec3 v1 = positions[indices[i + 1]];
+    var Vec3 point;
+    var Scalar dist, rayParam, segmentParam;
+    if(objRay.intersectLineSegment(v0, v1, dist, rayParam, segmentParam)){
+      if (dist < threshold) {
+        select = true;
+        if (dist < intersection.distance) {
+          intersection.point = v0.lerp(v1, segmentParam) * globalMat44;
+          intersection.distance = rayParam;
+          intersection.elementid = i;
+        }
+      }
+    }
+  }
+}
+

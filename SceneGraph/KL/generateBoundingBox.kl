@@ -1,0 +1,40 @@
+//
+// Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
+//
+
+use Vec3;
+
+operator generateBoundingBox(
+  io Vec3 positions<>,
+  io Integer indices[],
+  io Vec3 bboxmin,
+  io Vec3 bboxmax
+) {
+  positions[0] = Vec3(bboxmin.x, bboxmin.y, bboxmin.z);
+  positions[1] = Vec3(bboxmin.x, bboxmax.y, bboxmin.z);
+  positions[2] = Vec3(bboxmin.x, bboxmax.y, bboxmax.z);
+  positions[3] = Vec3(bboxmin.x, bboxmin.y, bboxmax.z);
+
+  positions[4] = Vec3(bboxmax.x, bboxmin.y, bboxmin.z);
+  positions[5] = Vec3(bboxmax.x, bboxmax.y, bboxmin.z);
+  positions[6] = Vec3(bboxmax.x, bboxmax.y, bboxmax.z);
+  positions[7] = Vec3(bboxmax.x, bboxmin.y, bboxmax.z);
+
+  Integer i = 0;
+  indices.resize(24);
+  indices[i++] = 0; indices[i++] = 4;
+  indices[i++] = 1; indices[i++] = 5;
+  indices[i++] = 2; indices[i++] = 6;
+  indices[i++] = 3; indices[i++] = 7;
+
+  indices[i++] = 0; indices[i++] = 1;
+  indices[i++] = 1; indices[i++] = 2;
+  indices[i++] = 2; indices[i++] = 3;
+  indices[i++] = 3; indices[i++] = 0;
+
+  indices[i++] = 4; indices[i++] = 5;
+  indices[i++] = 5; indices[i++] = 6;
+  indices[i++] = 6; indices[i++] = 7;
+  indices[i++] = 7; indices[i++] = 4;
+
+}

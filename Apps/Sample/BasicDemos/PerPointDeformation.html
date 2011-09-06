@@ -16,37 +16,68 @@
 
       <script type="text/javascript" src="../../../Core/FABRIC.Wrappers.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../Core/FABRIC.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Math.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Vec2.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Vec3.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Vec4.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Mat22.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Mat33.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Mat44.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Quat.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Xfo.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Euler.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/RGBA.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Color.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/OGLShaderProgram.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/OGLBuffer.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/Math.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/Vec2.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/Vec3.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/Vec4.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/Mat22.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/Mat33.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/Mat44.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/Quat.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/Xfo.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/Euler.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/RGBA.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/Color.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/OGLShaderProgram.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/OGLBuffer.js" charset="utf-8"></script>
     
-    <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Geometry.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Kinematics.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Lights.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Materials.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Manipulation.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/Parsers/parseOBJ.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Geometry.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Kinematics.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Lights.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Materials.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Manipulation.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Parsers/parseOBJ.js" charset="utf-8"></script>
     
     <script type="text/javascript">
     
+    
+FABRIC.SceneGraph.registerNodeType('TwistedMesh', {
+factoryFn: function(options, scene) {
+    scene.assignDefaults(options, {
+        twist: 3.0
+      });
+
+    var twistedMesh = scene.constructNode('GeometryDataCopy', options );
+    twistedMesh.pub.addVertexAttributeValue('positions', 'Vec3', { genVBO:true, dynamic:true } );
+    twistedMesh.pub.addVertexAttributeValue('normals', 'Vec3', { genVBO:true, dynamic:true } );
+    twistedMesh.pub.addUniformValue('twist', 'Scalar', options.twist, true);
+    twistedMesh.getAttributesDGNode().bindings.append(scene.constructOperator({
+      operatorName: 'twistOp',
+      srcFile: 'KL/twistOp.kl',
+      entryFunctionName: 'twistOp',
+      parameterLayout: [
+        'parentattributes.positions[]',
+        'parentattributes.normals[]',
+        'parentboundingbox.min',
+        'parentboundingbox.max',
+        'uniforms.twist',
+        'self.positions',
+        'self.normals',
+        'self.index'
+      ]
+    }));
+
+    return twistedMesh;
+  }});
+
+
 $(document).ready(function() {
   
   var $twistAmount = $('#twistAmount').slider({
-      min: -0.5,
-      max: 0.5,
-      step: 0.001
+      min: -3,
+      max: 3,
+      step: 0.1
     });
 
   $('#importModel').button().change(function(e) {
@@ -83,33 +114,25 @@ $(document).ready(function() {
 
   viewport.setCameraNode(camera);
 
-  triangles = scene.importAssetFile('Models/cow.obj')['cow'];
-
-  deformationBuffer = triangles.addDeformationBuffer(['positions', 'normals']);
-  deformationBuffer.addUniformValue('twist', 'Scalar', 0.02, true);
-  deformationBuffer.assignOperator({
-    operatorName: 'twistOp',
-    srcFile: 'KL/twistOp.kl',
-    entryFunctionName: 'twistOp',
-    parameterLayout: [
-      'self.positions',
-      'self.normals',
-      'bufferuniforms.twist'
-    ]
-  });
+  var triangles = scene.importAssetFile('Models/cow.obj')['cow'];
+  
+  var twistedMesh = scene.constructNode('TwistedMesh', { baseGeometryNode: triangles });
 
   var material = scene.constructNode('PhongMaterial', {
       diffuseColor: FABRIC.RT.rgb(0.8, 0, 0, 1),
       lightNode: light
     });
 
-  instanceNode = scene.constructNode('Instance', { geometryNode: triangles, materialNode: material });
+  instanceNode = scene.constructNode('Instance', {
+    geometryNode: twistedMesh,
+    materialNode: material
+  });
 
 
-  $twistAmount.slider('value', triangles.getTwist());
+  $twistAmount.slider('value', twistedMesh.getTwist());
   $twistAmount.bind('slide',
     function(event, ui) {
-      triangles.setTwist(ui.value);
+      twistedMesh.setTwist(ui.value);
       viewport.redraw();
       return true;
     });

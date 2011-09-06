@@ -1,0 +1,415 @@
+<html xmlns="http://www.w3.org/1999/xhtml"> 
+  <!--
+    Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
+    -->
+  <head> 
+    <title>FABRIC - n-Body Simulation</title> 
+    
+    <meta charset="iso-8859-1"/>
+    <link href="../../../themes/default/style.css" rel="stylesheet" type="text/css" />
+    <link href="../../../themes/default/viewer.css" rel="stylesheet" type="text/css" />
+    
+    <script type="text/javascript" src="../../../ThirdParty/jQuery/jquery-1.4.2.min.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/jQuery/jquery-ui-1.8.5.custom.min.js"></script>
+
+    <link type="text/css" href="../../../ThirdParty/jQuery/css/vader/jquery-ui-1.8.5.custom.css" rel="stylesheet" />
+
+    <script type="text/javascript" src="../../../Core/FABRIC.Wrappers.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../Core/FABRIC.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/Math.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/RGBA.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/Vec2.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/Vec3.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/Vec4.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/Mat22.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/Mat33.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/Mat44.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/Quat.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/Xfo.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/Color.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/Euler.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/OGLShaderProgram.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/OGLTexture2D.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/OGLBuffer.js" charset="utf-8"></script>
+    
+    <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Geometry.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Lights.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Materials.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Manipulation.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Kinematics.js" charset="utf-8"></script>
+    
+    <script type="text/javascript">
+    
+    
+
+FABRIC.SceneGraph.registerNodeType('NBodySimulation', {
+  factoryFn: function(options, scene) {
+    scene.assignDefaults(options, {
+        nBodies: 1024
+      });
+    options.positionsVec4 = true;
+    options.velocitiesVec4 = true;
+    options.createBoundingBoxNode = false;
+    var nBodyGeometry = scene.constructNode('Geometry', options);
+    
+    nBodyGeometry.getRedrawEventHandler().postDescendBindings.append(
+      scene.constructOperator({
+        operatorName: 'drawPoints',
+        srcFile: 'FABRIC_ROOT/SceneGraph/KL/drawPoints.kl',
+        entryFunctionName: 'drawPoints',
+        parameterLayout: [
+          'shader.shaderProgram',
+          'instance.drawToggle'
+        ]
+      }));
+      
+    nBodyGeometry.pub.addVertexAttributeValue('positions', 'Vec4', { genVBO:false } );
+    
+    // Add all the paramters, and add getters/setters at the same time.
+    nBodyGeometry.pub.addUniformValue('timeStep', 'Scalar', 0.1, true);
+    nBodyGeometry.pub.addUniformValue('clusterScale', 'Scalar', 1.54, true);
+    nBodyGeometry.pub.addUniformValue('velocityScale', 'Scalar', 8.0, true);
+    nBodyGeometry.pub.addUniformValue('softening', 'Scalar', 0.15, true);
+    nBodyGeometry.pub.addUniformValue('damping', 'Scalar', 0.9, true);
+    nBodyGeometry.pub.addUniformValue('systemType', 'Integer', 2, true);
+  
+    nBodyGeometry.pub.addVertexAttributeValue('velocities', 'Vec4');
+    nBodyGeometry.pub.addVertexAttributeValue('mass', 'Scalar');
+    nBodyGeometry.pub.addVertexAttributeValue('vertexColors', 'Color', { genVBO:true } );
+    nBodyGeometry.pub.addVertexAttributeValue('posPrev', 'Vec4');
+    nBodyGeometry.pub.addVertexAttributeValue('velPrev', 'Vec4');
+
+    var nBodyKernelGPUSrc = FABRIC.loadResourceURL('CL/nBodyKernel.cl');
+  
+    nBodyGeometry.pub.addUniformValue('clContextIni', 'cl_context');
+    nBodyGeometry.pub.addUniformValue('clContext', 'cl_context');
+    nBodyGeometry.pub.addUniformValue('clCommandQueue', 'cl_command_queue');
+    nBodyGeometry.pub.addUniformValue('clKernel', 'cl_kernel');
+    nBodyGeometry.pub.addUniformValue('kernelSrc', 'String', nBodyKernelGPUSrc);
+    nBodyGeometry.pub.addUniformValue('positionMem', 'cl_mem');
+    nBodyGeometry.pub.addUniformValue('velocityMem', 'cl_mem');
+    nBodyGeometry.pub.addUniformValue('positionPrevMem', 'cl_mem');
+    nBodyGeometry.pub.addUniformValue('velocityPrevMem', 'cl_mem');
+    nBodyGeometry.pub.addUniformValue('pointCount', 'Size');
+    
+    var nBodySimulateNodeGPU = nBodyGeometry.getAttributesDGNode();
+    nBodySimulateNodeGPU.bindings.append(
+      scene.constructOperator({
+          operatorName: 'nBodyInitOp',
+          entryFunctionName: 'nBodyInit',
+          srcFile: 'KL/nBodyOp.kl',
+          parameterLayout: [
+            'self.index',
+            'self.count',
+            'self.positions',
+            'self.velocities',
+            'self.mass',
+            'self.vertexColors',
+            'uniforms.systemType',
+            'uniforms.clusterScale',
+            'uniforms.velocityScale'
+          ]
+        }));
+    nBodyGeometry.pub.setVertexCount(options.nBodies);
+    
+    var nBodyGeometrySimulation = scene.constructNode('GeometryDataCopy', {
+      baseGeometryNode: nBodyGeometry.pub
+    });
+    nBodyGeometrySimulation.pub.addVertexAttributeValue('positions', 'Vec4', { genVBO:true, dynamic:true } );
+    nBodyGeometrySimulation.getAttributesDGNode().addDependency(scene.getGlobalsNode(), 'globals');
+    nBodyGeometrySimulation.getAttributesDGNode().bindings.append(scene.constructOperator({
+        operatorName: 'nBodySimulateGPUOp',
+        mainThreadOnly: true,
+        entryFunctionName: 'nBodySimulateGPU',
+        srcFile: 'KL/nBodyOpGPU.kl',
+        parameterLayout: [
+          'globals.ms',
+          'parentattributes.positions[]',
+          'parentattributes.velocities[]',
+          'parentattributes.mass[]',
+          'parentuniforms.clContext',
+          'parentuniforms.clCommandQueue',
+          'parentuniforms.clKernel',
+          'parentuniforms.kernelSrc',
+          'parentuniforms.positionMem',
+          'parentuniforms.velocityMem',
+          'parentuniforms.positionPrevMem',
+          'parentuniforms.velocityPrevMem',
+          'parentuniforms.pointCount',
+          'parentuniforms.timeStep',
+          'parentuniforms.softening',
+          'parentuniforms.damping',
+          'self.positions[]'
+        ]
+      }));
+    
+    nBodyGeometrySimulation.getRedrawEventHandler().setScopeName('nbodysimulation');
+    
+    
+    return nBodyGeometrySimulation;
+  }});
+    
+    
+$(document).ready(function() { $('#play').button({
+    text: true,
+    icons: {
+      primary: 'ui-icon-play'
+    }
+  });
+
+  $('#step').button({
+    text: true,
+    icons: {
+      primary: 'ui-icon-step'
+    }
+  });
+
+  $('#reset').button({
+    text: true,
+    icons: {
+      primary: 'ui-icon-seek-first'
+    }
+  });
+
+  // Static params
+  $('#nbodies').slider({ min: 1, max: 20000, step: 1 });
+  $('#clsscale').slider({ min: 0.0, max: 10.0, step: 0.01 });
+  $('#velscale').slider({ min: 0.0, max: 10.0, step: 0.01 });
+
+  // Dynamic params
+  $('#timestep').slider({ min: 0.0, max: 1.0, step: 0.001 });
+  $('#softening').slider({ min: 0.001, max: 1.0, step: 0.0001 });
+  $('#damping').slider({ min: 0.5, max: 1.0, step: 0.0001 });
+  $('#pointSize').slider({ min: 0.0, max: 10.0, step: 0.1 });
+  
+  
+
+
+  // Create the scene.
+  var scene = FABRIC.SceneGraph.createScene();
+  var viewport = scene.constructNode('Viewport', {
+      windowElement: document.getElementById('FabricContainer'),
+      backgroundColor: FABRIC.RT.rgb(0.0, 0.0, 0.0)
+    });
+
+  // Create a camera to draw the scene from
+  camera = scene.constructNode('TargetCamera', {
+      position: FABRIC.RT.vec3(0, 0, -100),
+      target: FABRIC.RT.vec3(0, 0, 0)
+    });
+
+  scene.constructNode('CameraManipulator', { targetNode: camera });
+  viewport.setCameraNode(camera);
+  
+  var nBodies = 8192;
+
+  var materialNode = scene.constructNode('PointSpriteMaterial', { pointSize: 1.0 });
+  var nBodyGeometry = scene.constructNode('NBodySimulation', { nBodies: nBodies });
+  var xformNode = scene.constructNode('Transform', { hierarchical: false });
+
+  document.getElementById('nbodiesDisp').childNodes[0].data = 'Num Bodies: ' + nBodies;
+      
+  var nBodyInstanceNode = scene.constructNode('Instance', {
+      transformNode: xformNode,
+      geometryNode: nBodyGeometry,
+      materialNode: materialNode
+    });
+
+  var resetSimulation = function() {
+    if ($('#play').text() == 'Pause') {
+      console.log('Reset');
+      $('#play').button('option', {
+        label: 'Play',
+        icons: {
+          primary: 'ui-icon-play'
+        }
+      });
+    }
+    scene.animation.reset();
+  //  nBodySimulateNodeGPU.evaluate();
+  };
+
+  window.setSystemType = function(id) {
+    nBodyGeometry.setUniformValue('systemType', parseInt(id));
+    resetSimulation();
+  };
+
+  $('#play').button()
+    .click(function() {
+      var options;
+      if ($(this).text() == 'Play') {
+        $(this).button('option', {
+          label: 'Pause',
+          icons: {
+            primary: 'ui-icon-pause'
+          }
+        });
+        scene.animation.play();
+      } else {
+        $(this).button('option', {
+          label: 'Play',
+          icons: {
+            primary: 'ui-icon-play'
+          }
+        });
+        scene.animation.pause();
+      }
+    });
+  $('#step').button()
+    .click(function() {
+      scene.animation.step();
+    });
+
+  $('#reset').button()
+    .click(function() {
+      resetSimulation();
+    });
+    
+    
+  $('#nbodies').slider('value', nBodyGeometry.getBaseGeometry().getVertexCount());
+  $('#nbodies').bind('slidechange',
+    function(event, ui) {
+      var count = ui.value;
+      if (count < 1) count = 1;
+      nBodyGeometry.getBaseGeometry().setVertexCount(count);
+      document.getElementById('nbodiesDisp').childNodes[0].data = 'Num Bodies: ' + count;
+      resetSimulation();
+    });
+
+  $('#clsscale').slider('value', nBodyGeometry.getBaseGeometry().getClusterScale());
+  $('#clsscale').bind('slidechange', function(event, ui) {
+      nBodyGeometry.getBaseGeometry().setClusterScale(ui.value);
+      resetSimulation();
+    });
+
+  $('#velscale').slider('value', nBodyGeometry.getBaseGeometry().getVelocityScale());
+  $('#velscale').bind('slidechange', function(event, ui) {
+      nBodyGeometry.getBaseGeometry().setVelocityScale(ui.value);
+      resetSimulation();
+    });
+
+  $('#timestep').slider('value', nBodyGeometry.getBaseGeometry().getTimeStep());
+  $('#timestep').bind('slide', function(event, ui) {
+      nBodyGeometry.getBaseGeometry().setTimeStep(ui.value);
+      scene.redrawAllWindows();
+    });
+
+  $('#softening').slider('value', nBodyGeometry.getBaseGeometry().getSoftening());
+  $('#softening').bind('slide', function(event, ui) {
+      nBodyGeometry.getBaseGeometry().setSoftening(ui.value);
+      scene.redrawAllWindows();
+    });
+
+  $('#damping').slider('value', nBodyGeometry.getBaseGeometry().getDamping());
+  $('#damping').bind('slide', function(event, ui) {
+      nBodyGeometry.setDamping(ui.value);
+      scene.redrawAllWindows();
+    });
+
+  $('#pointSize').slider('value', materialNode.getPointSize());
+  $('#pointSize').bind('slidechange',
+    function(event, ui) {
+      materialNode.setPointSize(ui.value);
+      scene.redrawAllWindows();
+    });
+
+  $('#loadingDialog').dialog({
+    modal: true
+  });
+  var count = FABRIC.getAsyncTaskCount();
+  FABRIC.appendOnResolveAsyncTaskCallback(function(label, countRemaining){
+    $('#loadingProgressBar').progressbar({
+      value: (1.0-(countRemaining/count))*100
+    });
+    if(countRemaining===0){
+      $('#loadingDialog').dialog('close');
+      var errors = scene.getErrors();
+      if (errors.length > 0) {
+        throw (errors.toString());
+      }
+      viewport.redraw();
+      
+      setInterval(function() {
+        document.getElementById('frameRate').childNodes[0].data = 'Frame Rate:' + viewport.getFPS().toFixed(2);
+      }, 600);
+    }
+  });
+  
+});
+
+</script>
+
+  </head> 
+  <body>
+    <div id="loadingDialog" title="Loading...">
+      <h4 id="loadingDesc" style="margin-bottom: 10px"></h4>
+      <div id="loadingProgressBar" class="ui-progressbar-value"></div>
+    </div>
+    <div id="wrapper">
+      <ul id="nav">
+        <li><a href="#" id="fabric-logo"><img src="../../../themes/default/_img/projects/fabric-logo.png" /></a></li>
+      </ul>
+      <div id="editor">
+        <div id="viewer">
+          <div id="FabricContainer"></div> 
+        </div><!--viewer-->
+
+        <div id="sidebar">
+
+          <div class="box">
+            <h2>INFO</h2>
+            <div class="content">
+              nBodySimulation.<br>
+              This sample uses OpenCL, and therefore currently doesn't run on linux.
+              The sample uses OpenCL to simulate geometry on the GPU, providing excellent performance
+              as well as programmable pipeline features for deformation + simulation.
+            </div><!--content-->
+          </div><!--box-->
+
+
+          <div class="box">
+            <h2>Playback</h2>
+            <div class="content">
+              <button id="play">Play</button>
+              <button id="step">Step</button>
+              <button id="reset" style="margin-top:10px;">Reset</button>
+              <div id="frameRate" style="margin-top:10px;">Frame Rate:</div><p></p>
+            </div><!--content-->
+          </div><!--box-->
+          <div class="box">
+            <h2>Initial Settings</h2>
+            <div class="content">
+              <div>System Type:
+              <select onchange="setSystemType(this.options[this.selectedIndex].value);">
+                <option value="0">Spherical</option>
+                <option value="1">Shell</option>
+                <option value="2" selected>Expand</option>
+              </select></div>
+              <div id="nbodiesDisp" style="margin-top:10px;">Number of Bodies:</div><p></p>
+              <div id='nbodies' style="margin-top:10px;"></div>
+              <div style="margin-top:10px;">Cluster Scale:</div>
+              <div id='clsscale' style="margin-top:10px;"></div>
+              <div style="margin-top:10px;">Velocity Scale:</div>
+              <div id='velscale' style="margin-top:10px;"></div>
+            </div><!--content-->
+          </div><!--box-->
+          <div class="box">
+            <h2>Simulation Settings</h2>
+            <div class="content">
+              <div>Time Step:</div>
+              <div id='timestep' style="margin-top:10px;"></div>
+              <div style="margin-top:10px;">Softening:</div>
+              <div id='softening' style="margin-top:10px;"></div>
+              <div style="margin-top:10px;">Damping:</div>
+              <div id='damping' style="margin-top:10px;"></div>
+              <div style="margin-top:10px;">Size of Bodies:</div>
+              <div id='pointSize' style="margin-top:10px;"></div>
+            </div><!--content-->
+          </div><!--box-->
+            
+        </div><!--sidebar-->
+      </div> <!--editor-->
+    </div><!--wrapper-->
+  </body> 
+  </html>

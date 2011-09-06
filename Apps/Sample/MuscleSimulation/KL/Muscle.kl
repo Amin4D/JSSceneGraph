@@ -4,6 +4,8 @@
 use Xfo;
 use Vec3;
 use Mat44;
+use Color;
+use DebugGeometry;
 
 operator simulateMuscle(
   io Xfo allinitialXfos[][], /* inital Transforsm  */
@@ -32,7 +34,8 @@ operator simulateMuscle(
   
   io Vec3 gravity,
   io Scalar timeStep,
-  io Xfo skeletonXfos[]
+  io Xfo skeletonXfos[],
+  io DebugGeometry debugDraw
 ){
 //  report("simulateMuscle>>>:"+index);
   Integer i, j;
@@ -46,6 +49,8 @@ operator simulateMuscle(
   Scalar flexibilityWeights[] = allflexibilityWeights[index];
   BezierKeyframe contractionCurve[] = allcontractionCurve[index];
   Scalar contractionWeights[] = allcontractionWeights[index];
+  
+  debugDraw.reset();
   
   
   if(!initialized || pointPositionsPrevUpdate.size() != simulatedXfos.size()){
@@ -182,6 +187,7 @@ operator simulateMuscle(
     // TODO: Impliment volume preserving formula
     segmentCompressionFactors[i] = 1.0/(compression / 2.0);
     
+    debugDraw.drawAxis(simulatedXfos[i], 2.0, Color(1.0,0.0,0.0,1.0));
   }
   compressionFactor = 1.0/(compressionFactor / Scalar(simulatedXfos.size() * 2.0));
   

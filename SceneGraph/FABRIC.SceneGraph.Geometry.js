@@ -87,7 +87,7 @@ FABRIC.SceneGraph.registerNodeType('Geometry', {
         geometryNode.addMemberInterface(uniformsdgnode, name, true);
       }
       if(name == 'indices'){
-        var registeredTypes = scene.getContext().RegisteredTypesManager.getRegisteredTypes()
+        var registeredTypes = scene.getContext().RegisteredTypesManager.getRegisteredTypes();
         var attributeID = FABRIC.SceneGraph.getShaderParamID(name);
         var indicesBuffer = new FABRIC.RT.OGLBuffer(name, attributeID, registeredTypes.Integer);
         redrawEventHandler.addMember('indicesBuffer', 'OGLBuffer', indicesBuffer);
@@ -110,7 +110,7 @@ FABRIC.SceneGraph.registerNodeType('Geometry', {
       attributesdgnode.addMember(name, type, attributeoptions ? attributeoptions.defaultValue : undefined);
       if(attributeoptions){
         if(attributeoptions.genVBO && redrawEventHandler){
-          var registeredTypes = scene.getContext().RegisteredTypesManager.getRegisteredTypes()
+          var registeredTypes = scene.getContext().RegisteredTypesManager.getRegisteredTypes();
           var typeDesc = registeredTypes[type];
           var attributeID = FABRIC.SceneGraph.getShaderParamID(name);
           var bufferMemberName = name + 'Buffer';

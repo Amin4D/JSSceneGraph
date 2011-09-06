@@ -6,6 +6,12 @@
 
 #include 'FABRIC_ROOT/SceneGraph/KL/spatialHashTable.kl'
 
+use Vec3;
+use Quat;
+use Xfo;
+use Color;
+use DebugGeometry;
+
 operator simulateParticles(
   in Size index,
   io Vec3 position,
@@ -23,83 +29,80 @@ operator simulateParticles(
   io Scalar timestep,
 
   io Integer neighborIndices[],
-  io Scalar neighborDistances[]
+  io Scalar neighborDistances[],
+  io DebugGeometry debugDraw,
+  io Boolean displayDebugging
 ) {
-  // We start with our back buffer position
+  var Integer i;
+  // We start with our previous frame position, and simulate using the pevious
+  // frame data to calculate the new current frame data. This happens in parallal
+  // across many particles at once.
   position = previousframe_positions[index];
   velocity = previousframe_velocities[index];
 
+  ///////////////////////////////////////////////
+  // Broad Phase Interaction Detection
+  // This function gathers all the points fomr the current cell, and neighboring cells.
   getNeighboringIndices(
-    neighborIndices,
-    neighborDistances,
-    index,
     position,
-    velocity,
     cellindex,
     cellcoords,
     previousframe_positions,
-    previousframe_velocities,
-    neighborInfluenceRange,
-  hashtable);
+    hashtable,
+    neighborIndices
+  );
+  
+  ///////////////////////////////////////////////
+  // Narrow Phase Interaction Detection
+  neighborDistances.resize(neighborIndices.size());
+  for (i = 0; i < neighborIndices.size; i++) {
+    neighborDistances[i] = position.dist(previousframe_positions[neighborIndices[i]]);
+  }
+  
+  debugDraw.reset();
 
   //////////////////////////////////////////////////////
-  // Now we do some simulations
-
-  var Integer i;
-
-  // Drag
-{
-    var Scalar speed = velocity.norm();
-    var Scalar slowdown = 0.00001;
-    if (speed > 0.0) {
-      if (speed < slowdown) {
-        velocity.setNull();
-      }else {
-        velocity = velocity - (velocity * (1.0 / speed) * slowdown);
-      }
-    }
-  }
+  // Now we do some simulation
 
   // Goal Seek
-{
+  {
     var Vec3 goalDir = goal - position;
     var Scalar goalDist = goalDir.norm();
 
-    if (goalDist < 0.01) {
+    if (goalDist < neighborInfluenceRange) {
       velocity = velocity.lerp(Vec3(0.0, 0.0, 0.0), 0.1);
-
     }
     else {
       velocity = velocity.lerp(goalDir * (0.05 / goalDist), 0.1);
     }
-
   }
 
   if (neighborIndices.size > 0) {
+    
     //////////////////////////////////////////////////////
     // Separation
-  {
-      var Scalar separationWeight = 0.1;
+    {
+      var Scalar separationWeight = 0.05;
       var Scalar separationDistance = neighborInfluenceRange * 0.65;
       var Vec3 separationVector(0.0, 0.0, 0.0);
       for (i = 0; i < neighborIndices.size; i++) {
         var Integer neighborId = neighborIndices[i];
+        if (neighborId == index) {
+          continue;
+        }
+        var Scalar neighborDist = neighborDistances[i];
 
-        if (neighborId != index) {
-          var Scalar neighborDist = neighborDistances[i];
-
-          if (neighborDist == 0.0) {
-            // Two particles are sitting on top of each other.
-            // We move them to a safe distance appart
-            if (neighborId < index) {
-              position += Vec3(separationDistance * 0.25, 0.0, separationDistance * 0.25);
-            }else {
-              position -= Vec3(separationDistance * 0.25, 0.0, separationDistance * 0.25);
-            }
+        if (neighborDist == 0.0) {
+          // Two particles are sitting on top of each other.
+          // We move them to a safe distance appart
+          if (neighborId < index) {
+            position += Vec3(separationDistance * 0.25, 0.0, separationDistance * 0.25);
+          }else {
+            position -= Vec3(separationDistance * 0.25, 0.0, separationDistance * 0.25);
           }
-          else if (neighborDist < separationDistance) {
-            separationVector += (position - previousframe_positions[neighborId]) * ((1.0 / neighborDist) * (separationDistance - neighborDist));
-          }
+        }
+        else if (neighborDist < separationDistance) {
+          separationVector += (position - previousframe_positions[neighborId]) * ((1.0 / neighborDist) * (separationDistance - neighborDist));
         }
       }
       velocity += separationVector * separationWeight;
@@ -152,5 +155,19 @@ operator simulateParticles(
   }
   if (position.z < (hashtable.z_count * - hashtable.cellsize * 0.475)) {
     position.z = hashtable.z_count * - hashtable.cellsize * 0.475;
+  }
+  
+  
+  if(displayDebugging){
+    for (i = 0; i < neighborIndices.size; i++) {
+      var Integer neighborId = neighborIndices[i];
+      var Scalar neighborDist = neighborDistances[i];
+      if( neighborDist > 0.0 && neighborDist < neighborInfluenceRange){
+        debugDraw.drawLine(position, position + ((previousframe_positions[neighborId]-position) * 0.45), Color(1.0, 0.75, 0.5, 1.0));
+      }
+    }
+    
+    debugDraw.drawLine(previousframe_positions[index], position, Color(0.75, 0.0, 0.0, 1.0));
+    debugDraw.drawCircle(Xfo(previousframe_positions[index], Quat()), neighborInfluenceRange, Color(1.0, 0.25, 0.25, 1.0));
   }
 }

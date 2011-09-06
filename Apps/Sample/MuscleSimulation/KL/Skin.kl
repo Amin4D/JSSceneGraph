@@ -1,0 +1,25 @@
+
+
+use Math;
+use BezierKeyframe;
+use Color;
+use Vec2;
+use Vec3;
+use Xfo;
+use FabricOGL;
+use DebugGeometry;
+
+
+operator setVertexColorByWeight(
+  io Scalar stickWeights[],
+  io Scalar slideWeights[],
+  io Scalar bulgeWeights[],
+  io Color vertexColor,
+  in Size index
+){
+  vertexColor.r = 0.5 + (0.5 * stickWeights[index]);
+  vertexColor.g = 0.5 + (0.5 * slideWeights[index]);
+  vertexColor.b = 0.5 + (0.5 * bulgeWeights[index]);
+}
+
+

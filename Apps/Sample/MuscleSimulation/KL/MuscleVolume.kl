@@ -285,24 +285,27 @@ function Integer findQuadraticRoots(
     return 1;
   }
 
-  Scalar d = b * b - 4.0 * a * c;
+  Scalar d = b * b - (4.0 * a * c);
   
   // Two real, distinct roots 
   if (d > 0.0) {
     Scalar q;
     d = sqrt(d);
-    q = (-b + ((b < 0) ? -d : d)) * 0.5;
+    q = (-b + ((b < 0.0) ? -d : d)) * 0.5;
     re[0] = q / a;
     re[1] = c / q;
+    
+  //  re[0] = (-b/(2.0 * a)) + (d/2.0 * a);
+  //  re[1] = (-b/(2.0 * a)) - (d/2.0 * a);
     return 2;
   }
   
   // One real Scalar root 
   else if (d == 0.0) {
     re[0] = re[1] = -b / (2.0 * a);
-    return (1);
+    return 1;
   }
-  
+  /*
   // Two complex conjugate roots 
   else {                                      // d < 0 
     re[0] = re[1] = -b / (2.0 * a);
@@ -312,6 +315,8 @@ function Integer findQuadraticRoots(
  //   }
     return 0;
   }
+  */
+  return 0;
 }
 
 
@@ -360,7 +365,7 @@ function Integer findCubicRoots(
     x[1] = quadratiroots[1];
     return result;
  // }
-
+/*
   Scalar a1 = coeff[2] / coeff[3];
   Scalar a2 = coeff[1] / coeff[3];
   Scalar a3 = coeff[0] / coeff[3];
@@ -389,6 +394,7 @@ function Integer findCubicRoots(
     x[0] = Scalar( (e + Q / e) - a1 / 3.0 );
     return 1;
   }
+  */
 }
 
 

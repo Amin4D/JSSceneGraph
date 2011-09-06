@@ -367,7 +367,7 @@ FABRIC.SceneGraph.registerNodeType('MuscleSkinDeformation', {
     boundSkin.pub.addVertexAttributeValue('stickLocations', 'Vec3[4]' );
     boundSkin.getAttributesDGNode().addDependency(muscleSystem.getSystemParamsDGNode(), 'musclesystem');
     boundSkin.getAttributesDGNode().addDependency(muscleSystem.getInitializationDGNode(), 'musclesinitialization');
-    var op = scene.constructOperator({
+    var calcSkinStickLocationsOp = scene.constructOperator({
       operatorName: 'calcSkinStickLocations',
       srcFile: './KL/MuscleVolume.kl',
       entryFunctionName: 'calcSkinStickLocations',
@@ -383,8 +383,8 @@ FABRIC.SceneGraph.registerNodeType('MuscleSkinDeformation', {
         'self.index'
       ]
     });
-    op.getOperator().setMainThreadOnly(true);
-    boundSkin.getAttributesDGNode().bindings.append(op);
+    calcSkinStickLocationsOp.getOperator().setMainThreadOnly(true);
+    boundSkin.getAttributesDGNode().bindings.append(calcSkinStickLocationsOp);
     
     
     var deformedSkin = scene.constructNode('GeometryDataCopy', {
@@ -415,7 +415,7 @@ FABRIC.SceneGraph.registerNodeType('MuscleSkinDeformation', {
       ]
     }));
     
-    deformedSkin.getAttributesDGNode().bindings.append(scene.constructOperator({
+    var deformSkinOp = scene.constructOperator({
       operatorName: 'deformSkin',
       srcFile: './KL/MuscleVolume.kl',
       entryFunctionName: 'deformSkin',
@@ -441,7 +441,10 @@ FABRIC.SceneGraph.registerNodeType('MuscleSkinDeformation', {
         'self.index',
         'self.debugDraw'
       ]
-    }));
+    });
+    
+  //  deformSkinOp.getOperator().setMainThreadOnly(true);
+    deformedSkin.getAttributesDGNode().bindings.append(deformSkinOp);
     
     var debugGeometryDraw = scene.constructNode('DebugGeometryDraw', {
         dgnode: deformedSkin.getAttributesDGNode(),

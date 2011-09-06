@@ -6,12 +6,10 @@ use FabricOBJ;
 use Vec2;
 use Vec3;
 
-operator loadObj(
-  io String url,
+function loadObj(
   io FabricResource resource,
   io Data objParseHandle
 ) {
-  report "OBJ decode " + url;
   FabricOBJDecode(resource.data.data(), resource.data.dataSize(), objParseHandle);
 
   Boolean hadErrors;
@@ -21,18 +19,24 @@ operator loadObj(
     String errors[];
     FabricOBJGetErrors( objParseHandle, errors );
     for( Integer i = 0; i < errors.size; i++ )
-      report 'Error while parsing obj file ' + url + ': ' + errors[i];
+      report 'Error while parsing obj file ' + resource.url + ': ' + errors[i];
   }
 }
 
-operator setObjVertexCount(
+operator parseObjAndSetVertexCount(
+  io FabricResource resource,
   io Data objParseHandle,
   io Boolean reload,
   io Size newCount
 ) {
   if(reload){
+    Boolean validHandle;
+    FabricOBJIsHandleValid( objParseHandle, validHandle );
+    if( !validHandle )
+      loadObj( resource, objParseHandle);
+
     FabricOBJGetNbPoints(objParseHandle, newCount);
-    report "OBJ setObjVertexCount: " + newCount;
+    report "OBJ " + resource.url + ": " + newCount + " vertices";
   }
 }
 
@@ -44,7 +48,6 @@ operator setObjGeom(
   io Vec2 uvs[],
   io Boolean reload
 ) {
-//  report "OBJ setObjGeom";
   if(reload){
     FabricOBJGetTriangleIndices( objParseHandle, indices );
     FabricOBJGetPoints( objParseHandle, positions );
@@ -61,4 +64,11 @@ operator setObjGeom(
     }
     report "OBJ setObjGeom: Done";
   }
+}
+
+operator freeObjParsedData(
+  io Data objParseHandle
+) {
+  report "freeObjParsedData";
+  FabricOBJFreeParsedData(objParseHandle);
 }

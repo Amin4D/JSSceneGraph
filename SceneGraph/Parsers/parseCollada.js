@@ -551,6 +551,7 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
   var parser = new DOMParser();
   var xmlDoc = parser.parseFromString(xmlText, 'text/xml');
 
+/*
   // create some helper functions to find elements
   var getChildByNodeName = function(node, nodeName) {
     var len = searchNode.childNodes.length;
@@ -1182,53 +1183,58 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
               }
               semantic.stride = container.semantics.length;
             }
-
-            // let's convert the indices to a flat list
-            var indices = [];
-            var str = node.textContent.replace('\r', '').replace('\t', '').replace('  ', ' ').split('\n');
-            for (var line in str)
-              str[line] = str[line].replace(/^\s+|\s+$/g, '');
-            str = str.join(' ').split(' ');
-            for (var i in str) {
-              if (str[i] == '')
-                continue;
-              indices.push(parseInt(str[i]));
-            }
-
-            // now let's convert the indices to data!
-            var offset = 0;
-            while (offset < indices.length) {
-              for (var i = 0; i < storage.length; i++) {
-                if (types[i] == 'int') {
-                  if (sources[i])
-                    storage[i].push(sources[i][indices[offset + offsets[i]]]);
-                  else
-                    storage[i].push(indices[offset + offsets[i]]);
-                }
-                else if (types[i] == 'vec3') {
-                  var vec3 = FABRIC.RT.vec3();
-                  if (sources[i])
-                  {
-                    var index = (indices[offset + offsets[i]]) * 3;
-                    vec3.x = sources[i][index];
-                    vec3.y = sources[i][index + 1];
-                    vec3.z = sources[i][index + 2];
-                  }
-                  storage[i].push(vec3);
-                }
-                else if (types[i] == 'vec2') {
-                  var vec2 = FABRIC.RT.vec2();
-                  if (sources[i])
-                  {
-                    var index = (indices[offset + offsets[i]]) * 2;
-                    vec2.x = sources[i][index];
-                    vec2.y = sources[i][index + 1];
-                  }
-                  storage[i].push(vec2);
-                }
+            var parseIndices = function(node){
+              // let's convert the indices to a flat list
+              var indices = [];
+              var str = node.textContent.replace('\r', '').replace('\t', '').replace('  ', ' ').split('\n');
+              for (var line in str)
+                str[line] = str[line].replace(/^\s+|\s+$/g, '');
+              str = str.join(' ').split(' ');
+              for (var i in str) {
+                if (str[i] == '')
+                  continue;
+                indices.push(parseInt(str[i]));
               }
-              offset += storage.length;
+  
+              // now let's convert the indices to data!
+              var offset = 0;
+              while (offset < indices.length) {
+                for (var i = 0; i < storage.length; i++) {
+                  if (types[i] == 'int') {
+                    if (sources[i])
+                      storage[i].push(sources[i][indices[offset + offsets[i]]]);
+                    else
+                      storage[i].push(indices[offset + offsets[i]]);
+                  }
+                  else if (types[i] == 'vec3') {
+                    var vec3 = FABRIC.RT.vec3();
+                    if (sources[i])
+                    {
+                      var index = (indices[offset + offsets[i]]) * 3;
+                      vec3.x = sources[i][index];
+                      vec3.y = sources[i][index + 1];
+                      vec3.z = sources[i][index + 2];
+                    }
+                    storage[i].push(vec3);
+                  }
+                  else if (types[i] == 'vec2') {
+                    var vec2 = FABRIC.RT.vec2();
+                    if (sources[i])
+                    {
+                      var index = (indices[offset + offsets[i]]) * 2;
+                      vec2.x = sources[i][index];
+                      vec2.y = sources[i][index + 1];
+                    }
+                    storage[i].push(vec2);
+                  }
+                }
+                offset += storage.length;
+              }
+              if(node.nextElementSibling.nodeName == 'p'){
+                parseIndices(node.nextElementSibling);
+              }
             }
+            parseIndices(node);
         }
         break;
       }
@@ -1593,6 +1599,324 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
 
   // run the recursive parse on the root
   parseXmlNode(xmlRoot, options);
+  */
+
+
+  var parseLibaryEffects = function(node) {
+    console.log("parseLibaryEffects");
+  }
+  
+  var parseLibaryMaterials = function(node) {
+    console.log("parseLibaryMaterials");
+  
+  }
+  
+  var parseLibaryAnimations = function(node) {
+    console.log("parseLibaryAnimations");
+  
+  }
+  
+  var parseAccessor = function(node){
+    console.log("parseAccessor");
+    
+    var accessor = {
+      source: node.getAttribute('source'),
+      count: parseInt(node.getAttribute('count')),
+      stride: parseInt(node.getAttribute('stride')),
+      params: []
+    };
+                
+    var technique_common = {};
+    var child = node.firstElementChild;
+    while(child){
+      switch (child.nodeName) {
+        case 'param':
+          accessor.params.push({
+            name: child.getAttribute('name'),
+            type: child.getAttribute('type')
+          });
+          break;
+        default:
+          throw("Error in parseAccessor: Unhandled node '" +child.nodeName + "'");
+      }
+      child = child.nextElementSibling;
+    }
+    return accessor;
+  }
+  
+  var parseTechniqueCommon = function(node){
+    console.log("parseTechniqueCommon");
+    var technique_common = { accessors:[] };
+    var child = node.firstElementChild;
+    while(child){
+      switch (child.nodeName) {
+        case 'accessor':
+          technique_common.accessors.push(parseAccessor(child));
+          break;
+        default:
+          throw("Error in parseTechniqueCommon: Unhandled node '" +child.nodeName + "'");
+      }
+      child = child.nextElementSibling;
+    }
+    return technique_common;
+  }
+  var parseSource = function(node){
+    console.log("parseSource");
+    var val, source = {
+      data: [],
+      technique: undefined
+    };
+    var child = node.firstElementChild;
+    while(child){
+      switch (child.nodeName) {
+        case 'float_array':
+          var id = child.getAttribute('id');
+          var float_array_text = child.textContent.split(new RegExp("\\s+"));
+          for(var i=0; i<float_array_text.length; i++){
+            if(float_array_text[i] != ""){
+              source.data.push(parseFloat(float_array_text[i]));
+            }
+          }
+          break;
+        case 'technique_common':
+          source.technique = parseTechniqueCommon(child);
+          break;
+        default:
+          throw("Error in parseSource: Unhandled node '" +child.nodeName + "'");
+      }
+      child = child.nextElementSibling;
+    }
+    return source;
+  }
+  
+  var parseInput = function(node){
+    console.log("parseInput");
+    var input = {
+      'semantic': node.getAttribute('semantic'),
+      'source': node.getAttribute('source')
+    };
+    if(node.getAttribute('offset')){
+      input.offset = parseInt(node.getAttribute('offset'));
+    }
+    return input;
+  }
+  
+  var parsePolygons = function(node){
+    console.log("parsePolygons");
+    var count = parseInt(node.getAttribute('count'));
+    var polygons = {
+      inputs: [],
+      indices: []
+    };
+    var child = node.firstElementChild;
+    while(child){
+      switch (child.nodeName) {
+        case 'input':
+          polygons.inputs.push(parseInput(child));
+          break;
+        case 'p':
+          var float_array_text = child.textContent.split(new RegExp("\\s+"));
+          for(var i=0; i<float_array_text.length; i++){
+            if(float_array_text[i] != ""){
+              polygons.indices.push(parseFloat(float_array_text[i]));
+            }
+          }
+          break;
+        default:
+          throw("Error in parsePolygons: Unhandled node '" +child.nodeName + "'");
+      }
+      child = child.nextElementSibling;
+    }
+    return polygons;
+  }
+  var parseMesh = function(node){
+    console.log("parseMesh");
+    var mesh = {
+      sources: {},
+      vertices: {}
+    };
+    
+    var child = node.firstElementChild;
+    while(child){
+      switch (child.nodeName) {
+        case 'source':
+          var id = child.getAttribute('id');
+          mesh.sources[id] = parseSource(child);
+          break;
+        case 'vertices':
+          var id = child.getAttribute('id');
+          mesh.vertices[id] = parseInput(child.firstElementChild);
+          break;
+        case 'polygons':
+          mesh.polygons = parsePolygons(child);
+          break;
+        case 'triangles':
+          mesh.triangles = parsePolygons(child);
+          break;
+        default:
+          throw("Error in parseMesh: Unhandled node '" + child.nodeName + "'");
+      }
+      child = child.nextElementSibling;
+    }
+    return mesh;
+  }
+  
+  var parseGeometry = function(node){
+    console.log("parseGeometry");
+    
+    var child = node.firstElementChild;
+    while(child){
+      switch (child.nodeName) {
+        case 'mesh':
+          return parseMesh(child);
+          break;
+        default:
+          throw("Error in parseGeometry: Unhandled node '" + child.nodeName + "'");
+      }
+      child = child.nextElementSibling;
+    }
+    return undefined;
+  }
+  
+  var parseLibaryGeometries = function(node) {
+    console.log("parseLibaryGeometries");
+    var libaryGeometries = {};
+    var child = node.firstElementChild;
+    while(child){
+      switch (child.nodeName) {
+        case 'geometry':
+          var id = child.getAttribute('id');
+          libaryGeometries[id] = parseGeometry(child);
+          break;
+        default:
+          throw("Error in parseLibaryGeometries: Unhandled node '" +child.nodeName + "'");
+      }
+      child = child.nextElementSibling;
+    }
+    return libaryGeometries;
+  }
+  var parseLibaryControllers = function(node) {
+    console.log("parseLibaryControllers");
+  
+  }
+  
+  var parseNode = function(node) {
+    console.log("parseNode");
+    var nodeData = {
+      name:  node.getAttribute('name'),
+      type:  node.getAttribute('type'),
+      instance_geometry: undefined,
+      children:{}
+    };
+    var child = node.firstElementChild;
+    while(child){
+      switch (child.nodeName) {
+        case 'translate':
+          break;
+        case 'rotate':
+          break;
+        case 'scale':
+          break;
+        case 'instance_geometry':
+          var url = child.getAttribute('url');
+          nodeData.instance_geometry = url;
+          break;
+        case 'node':
+          nodeData.children[i] = parseNode(child);
+          break;
+        default:
+          throw("Error in parseLibaryGeometries: Unhandled node '" +child.nodeName + "'");
+      }
+      child = child.nextElementSibling;
+    }
+  }
+  
+  var parseVisualScene = function(node) {
+    console.log("parseVisualScenes");
+    var scene = {
+      nodes: {}
+    };
+    var child = node.firstElementChild;
+    while(child){
+      switch (child.nodeName) {
+        case 'node':
+          var id = child.getAttribute('id');
+          scene.nodes[id] = parseNode(child);
+          break;
+        default:
+          throw("Error in parseLibaryGeometries: Unhandled node '" +child.nodeName + "'");
+      }
+      child = child.nextElementSibling;
+    }
+    return scene;
+  }
+  var parseLibraryVisualScenes = function(node) {
+    console.log("parseLibraryVisualScenes");
+    var scenes = {};
+    var child = node.firstElementChild;
+    while(child){
+      switch (child.nodeName) {
+        case 'visual_scene':
+          var id = child.getAttribute('id');
+          scenes[id] = parseVisualScene(child);
+          break;
+        default:
+          throw("Error in parseLibaryGeometries: Unhandled node '" +child.nodeName + "'");
+      }
+      child = child.nextElementSibling;
+    }
+    return scenes;
+  }
+  var parseScene = function(node) {
+    console.log("parseScene");
+  
+  }
+  var parseColladaBase = function(node) {
+    var colladaData = {}
+    var child = node.firstElementChild;
+    while(child){
+      switch (child.nodeName) {
+        case 'asset': 
+          break;
+        case 'library_effects':
+          colladaData.libaryEffects = parseLibaryEffects(child);
+          break;
+        case 'library_materials': 
+          colladaData.libaryMaterials = parseLibaryMaterials(child);
+          break;
+        case 'library_animations': 
+          colladaData.libaryAnimations = parseLibaryAnimations(child);
+          break;
+        case 'library_geometries': 
+          colladaData.libaryGeometries = parseLibaryGeometries(child);
+          break;
+        case 'library_controllers': 
+          colladaData.libaryControllers = parseLibaryControllers(child);
+          break;
+        case 'library_visual_scenes':
+          colladaData.libraryVisualScenes = parseLibraryVisualScenes(child);
+          break;
+        case 'visual_scenes':
+          colladaData.visualScenes = parseVisualScenes(child);
+          break;
+        case 'scene':
+          colladaData.scene = parseScene(child);
+          break;
+        default:
+          throw("Error in parseCollada: Unhandled node '" +child.nodeName + "'");
+      }
+      child = child.nextElementSibling;
+    }
+    return colladaData;
+  }
+  
+    
+  // get the root and check its type
+  var xmlRoot = xmlDoc.firstChild;
+  if (xmlRoot.nodeName != 'COLLADA') {
+    throw 'Collada file is corrupted.';
+  }
+  var colladaData = parseColladaBase(xmlRoot);
 
   // The file may contain a hierarchy that can be used to generate a skeleton
   if (options.buildSkeletonFromHierarchy) {

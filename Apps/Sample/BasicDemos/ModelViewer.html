@@ -39,6 +39,7 @@
     <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Kinematics.js" charset="utf-8"></script>
 
     <script type="text/javascript" src="../../../SceneGraph/Parsers/parseOBJ.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Parsers/parseCollada.js" charset="utf-8"></script>
 
     <script type="text/javascript">
 $(document).ready(function() {
@@ -79,8 +80,8 @@ $(document).ready(function() {
           lightNode: light
         });
   
-  var assets = scene.importAssetFile('Models/cow.obj');
-  var instanceNode = scene.constructNode('Instance', { geometryNode: assets['cow'], materialNode: redMaterial });
+  var assets = scene.importAssetFile('Models/Arm.dae');
+  var instanceNode = scene.constructNode('Instance', { geometryNode: assets['OilTank01'], materialNode: redMaterial });
 
   $('#loadingDialog').dialog({
     modal: true

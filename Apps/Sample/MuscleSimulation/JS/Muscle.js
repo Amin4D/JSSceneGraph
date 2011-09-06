@@ -448,13 +448,18 @@ FABRIC.SceneGraph.registerNodeType('MuscleSkinDeformation', {
         debugGemetryMemberName: 'debugDraw'
     });
     
+    deformedSkin.getBoundSkin = function(){
+      return boundSkin;
+    };
+    
     deformedSkin.pub.getBulkAttributeData = function( indices ){
       return boundSkin.pub.getBulkAttributeData( indices );
-    }
+    };
+    
     deformedSkin.pub.setBulkAttributeData = function( data ){
       boundSkin.pub.setBulkAttributeData( data );
       deformedSkin.pub.reloadVBO('vertexColors');
-    }
+    };
 
     return deformedSkin;
   }});

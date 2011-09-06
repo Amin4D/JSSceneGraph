@@ -101,7 +101,81 @@ operator transformMesh(\n\
     return transformedGeometry;
   
   }});
+
+/*
+FABRIC.SceneGraph.registerNodeType('PaintSkinWeightsManipulator', {
+  factoryFn: function(options, scene) {
+    scene.assignDefaults(options, {
+      mode: 0
+      });
     
+    
+    var paintSkinWeightsManipulator = scene.constructNode('PaintManipulator', options);
+    var paintableNodes = [];
+    var paintableNodePaintHandlers = [];
+    paintSkinWeightsManipulator.pub.addPaintableNode = function(node) {
+      if (!node.isTypeOf || !node.isTypeOf('Instance')) {
+        throw ('Incorrect type. Must assign a Instance');
+      }
+
+      if (!node.getGeometryNode().isTypeOf('Skin')) {
+        throw ('Incorrect type. Must assign a Skin');
+      }
+
+      var paintInstanceEventHandler,
+        instanceNode = scene.getPrivateInterface(node),
+        geometryNode = scene.getPrivateInterface(instanceNode.pub.getGeometryNode()),
+        transformNode = scene.getPrivateInterface(instanceNode.pub.getTransformNode()),
+        paintOperator;
+
+      paintInstanceEventHandler = paintManipulatorNode.constructEventHandlerNode('Paint' + node.getName());
+      paintInstanceEventHandler.addScope('boundgeometryattributes', geometryNode.getBoundSkin().getAttributesDGNode());
+      paintInstanceEventHandler.addScope('geometryattributes', geometryNode.getAttributesDGNode());
+      paintInstanceEventHandler.addScope('geometryuniforms', geometryNode.getAttributesDGNode());
+      paintInstanceEventHandler.addScope('transform', transformNode.getDGNode());
+      paintInstanceEventHandler.addScope('instance', instanceNode.getDGNode());
+
+      // The selector will return the node bound with the given binding name.
+      var paintingOpDef = {
+          operatorName: 'paintSkinWeights',
+          srcFile: './KL/paintSkinOp.kl',
+          entryFunctionName: 'paintSkinWeights',
+          parameterLayout: [
+            'paintData.cameraMatrix',
+            'paintData.projectionMatrix',
+            'paintData.aspectRatio',
+  
+            'paintData.brushPos',
+            'paintData.brushSize',
+            'paintData.mode',
+  
+            'transform.globalXfo',
+            'geometryattributes.positions[]',
+            'geometryattributes.normals[]',
+            'geometryattributes.vertexColors[]',
+            
+            'boundgeometryattributes.stickWeight[]',
+            'boundgeometryattributes.slideWeight[]',
+            'boundgeometryattributes.bulgeWeight[]'
+          ],
+          async: false
+        };
+      }
+      paintInstanceEventHandler.setSelector('instance', scene.constructOperator(paintingOpDef));
+      paintEventHandler.appendChildEventHandler(paintInstanceEventHandler);
+
+      paintableNodes.push(instanceNode);
+      paintableNodePaintHandlers.push(paintInstanceEventHandler);
+    };
+    
+    var paintEventHandler = vertexColorsPaintManipulator.getPaintEventHandler();
+    paintEventHandler.addMember('mode', 'Integer', options.mode);
+    paintSkinWeightsManipulator.addMemberInterface(paintEventHandler, 'mode', true);
+    
+    return paintSkinWeightsManipulator;
+  }});
+*/
+
 $(document).ready(function() {
   
   $('#play').button({

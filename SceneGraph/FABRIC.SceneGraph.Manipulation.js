@@ -194,8 +194,7 @@ FABRIC.SceneGraph.registerNodeType('PaintManipulator', {
       });
 
     var paintManipulatorNode = scene.constructNode('SceneGraphNode', options),
-      collectPointsDgNode = paintManipulatorNode.constructDGNode('DGNode'),
-      paintEventHandler,
+      paintEventHandler = paintManipulatorNode.constructEventHandlerNode('Paint'),
       paintEvent,
       viewportNode,
       brushPos,
@@ -210,16 +209,15 @@ FABRIC.SceneGraph.registerNodeType('PaintManipulator', {
 
     scene.addEventHandlingFunctions(paintManipulatorNode);
     
-    collectPointsDgNode.addMember('cameraMatrix', 'Mat44');
-    collectPointsDgNode.addMember('projectionMatrix', 'Mat44');
-    collectPointsDgNode.addMember('aspectRatio', 'Scalar');
-    collectPointsDgNode.addMember('brushPos', 'Vec3');
+    paintEventHandler.addMember('cameraMatrix', 'Mat44');
+    paintEventHandler.addMember('projectionMatrix', 'Mat44');
+    paintEventHandler.addMember('aspectRatio', 'Scalar');
+    paintEventHandler.addMember('brushPos', 'Vec3');
     
-    collectPointsDgNode.addMember('brushSize', 'Scalar', options.brushSize);
-    paintManipulatorNode.addMemberInterface(collectPointsDgNode, 'brushSize', true);
+    paintEventHandler.addMember('brushSize', 'Scalar', options.brushSize);
+    paintManipulatorNode.addMemberInterface(paintEventHandler, 'brushSize', true);
 
-    paintEventHandler = paintManipulatorNode.constructEventHandlerNode('Paint');
-    paintEventHandler.addScope('paintData', collectPointsDgNode);
+    paintEventHandler.setScopeName('paintData');
 
     // Raycast events are fired from the viewport. As the event
     // propagates down the tree it collects scopes and fires operators.
@@ -240,10 +238,10 @@ FABRIC.SceneGraph.registerNodeType('PaintManipulator', {
       });
 
     var collectPoints = function() {
-      collectPointsDgNode.setData('brushPos', brushPos);
-      collectPointsDgNode.setData('cameraMatrix', cameraMatrix);
-      collectPointsDgNode.setData('projectionMatrix', projectionMatrix);
-      collectPointsDgNode.setData('aspectRatio', aspectRatio);
+      paintEventHandler.setData('brushPos', brushPos);
+      paintEventHandler.setData('cameraMatrix', cameraMatrix);
+      paintEventHandler.setData('projectionMatrix', projectionMatrix);
+      paintEventHandler.setData('aspectRatio', aspectRatio);
       return paintEvent.select('CollectedPoints');
     };
 
@@ -253,7 +251,7 @@ FABRIC.SceneGraph.registerNodeType('PaintManipulator', {
       }
       options.brushSize += evt.wheelDelta * 0.0001 * options.brushScaleSpeed;
       options.brushSize = Math.max(options.brushSize, 0.01);
-      collectPointsDgNode.setData('brushSize', options.brushSize);
+      paintEventHandler.setData('brushSize', options.brushSize);
       evt.stopPropagation();
       evt.viewportNode.redraw();
     }
@@ -317,6 +315,9 @@ FABRIC.SceneGraph.registerNodeType('PaintManipulator', {
       document.removeEventListener('mousemove', paintFn, false);
       document.removeEventListener('mouseup', releasePaintFn, false);
     }
+    
+    paintManipulatorNode.addPaintableNode = function(node) {
+      
 
     paintManipulatorNode.pub.addPaintableNode = function(node) {
       if (!node.isTypeOf || !node.isTypeOf('Instance')) {
@@ -357,9 +358,11 @@ FABRIC.SceneGraph.registerNodeType('PaintManipulator', {
           async: false
         };
       }
+      // At this moment, the operators bindings are checked and the binding with the
+      // given name is searched for. (instance). This is why the operator must be
+      // constructed synchronously.
       paintInstanceEventHandler.setSelector('instance', scene.constructOperator(paintingOpDef));
-
-      // the sceneRaycastEventHandler propogates the event throughtout the scene.
+      
       paintEventHandler.appendChildEventHandler(paintInstanceEventHandler);
 
       paintableNodes.push(instanceNode);

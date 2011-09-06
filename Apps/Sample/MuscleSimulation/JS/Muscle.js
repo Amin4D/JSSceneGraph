@@ -361,9 +361,9 @@ FABRIC.SceneGraph.registerNodeType('MuscleSkinDeformation', {
     
     boundSkin.pub.addVertexAttributeValue('muscleBindingIds', 'Integer[4]', [0,-1,-1,-1]);
     boundSkin.pub.addVertexAttributeValue('musclebindingweights', 'Scalar[4]', [1,0,0,0] );
-    boundSkin.pub.addVertexAttributeValue('stickWeight', 'Scalar' );
-    boundSkin.pub.addVertexAttributeValue('slideWeight', 'Scalar' );
-    boundSkin.pub.addVertexAttributeValue('bulgeWeight', 'Scalar' );
+    boundSkin.pub.addVertexAttributeValue('stickWeight', 'Scalar', { defaultValue:0.0 } );
+    boundSkin.pub.addVertexAttributeValue('slideWeight', 'Scalar', { defaultValue:1.0 } );
+    boundSkin.pub.addVertexAttributeValue('bulgeWeight', 'Scalar', { defaultValue:0.0 } );
     boundSkin.pub.addVertexAttributeValue('stickLocations', 'Vec3[4]' );
     boundSkin.getAttributesDGNode().addDependency(muscleSystem.getSystemParamsDGNode(), 'musclesystem');
     boundSkin.getAttributesDGNode().addDependency(muscleSystem.getInitializationDGNode(), 'musclesinitialization');

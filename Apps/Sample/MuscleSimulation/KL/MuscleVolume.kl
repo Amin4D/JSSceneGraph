@@ -348,7 +348,7 @@ function Integer findCubicRoots(
   in Scalar coeff[4],
   io Scalar x[3]
 ){
-  if( abs( coeff[3] ) < 0.000001 ){
+ // if( abs( coeff[3] ) < 0.000001 ){
     // If the cubic coefficient(A) is 0.0 then this equation becomes a quadratic
     Scalar quadraticoeff[3];
     quadraticoeff[0] = coeff[0];
@@ -359,7 +359,7 @@ function Integer findCubicRoots(
     x[0] = quadratiroots[0];
     x[1] = quadratiroots[1];
     return result;
-  }
+ // }
 
   Scalar a1 = coeff[2] / coeff[3];
   Scalar a2 = coeff[1] / coeff[3];

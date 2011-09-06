@@ -316,9 +316,7 @@ FABRIC.SceneGraph.registerNodeType('PaintManipulator', {
       document.removeEventListener('mouseup', releasePaintFn, false);
     }
     
-    paintManipulatorNode.addPaintableNode = function(node) {
-      
-
+    
     paintManipulatorNode.pub.addPaintableNode = function(node) {
       if (!node.isTypeOf || !node.isTypeOf('Instance')) {
         throw ('Incorrect type. Must assign a Instance');

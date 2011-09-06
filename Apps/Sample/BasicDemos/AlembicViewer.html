@@ -38,15 +38,14 @@
     <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Materials.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Manipulation.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Kinematics.js" charset="utf-8"></script>
-
-    <script type="text/javascript" src="../../../SceneGraph/Parsers/parseALEMBIC.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Alembic.js" charset="utf-8"></script>
 
     <script type="text/javascript">
 $(document).ready(function() {
 
   var $globalTimeSlider = $('#globalTime').slider({
       min: 0.0,
-      max: 29.0,
+      max: 117.0,
       step: 1.0
     });
 
@@ -72,35 +71,43 @@ $(document).ready(function() {
   var camera = scene.constructNode('TargetCamera', {
       nearDistance: 1,
       farDistance: 2000,
-      position: FABRIC.RT.vec3(0, 5, 10).scale(10)
+      position: FABRIC.RT.vec3(0, 5, 10).scale(2)
     });
 
   scene.constructNode('CameraManipulator', { targetNode: camera });
   viewport.setCameraNode(camera);
 
-  var redMaterial = scene.constructNode('FlatMaterial', {
-          color: FABRIC.RT.rgb(0.2, 0.2, 0.2, 1)
-        });
+  var light = scene.constructNode('PointLight', { position: FABRIC.RT.vec3(10, 30, 100) });
+
+  var redMaterial = scene.constructNode('PhongMaterial', {
+    diffuseColor: FABRIC.RT.rgb(0.8, 0.2, 0.2, 1),
+    lightNode: light,
+  });
   
-  // create the alembic content, and fire the load once it is loaded  
-  var assets = scene.importAssetFile('Models/octopus.abc', {
+  // create the alembic content, and fire the load once it is loaded
+  var resourceName = 'monster';
+  var assets = scene.importAssetFile('Models/'+resourceName+'.abc', {
     dependentNode: viewport,
     onLoadCallback: function(){
-
-      scene.constructNode('Instance', {
-        transformNode: assets.octopus.getParsedNodes()['/octopus_low'],
-        geometryNode: assets.octopus.getParsedNodes()['/octopus_low/octopus_lowShape'],
-        //geometryNode: scene.constructNode("Cone"),
-        materialNode: redMaterial
-      });
-
+      
+      // loop over all assets and create an instance
+      for(var name in assets[resourceName].getParsedNodes()) {
+        if(assets[resourceName].getParsedNodes()[name].isTypeOf('Triangles'))
+        {
+          scene.constructNode('Instance', {
+            transformNode: assets[resourceName].getCorrespondingTransform(name),
+            geometryNode: assets[resourceName].getParsedNodes()[name],
+            materialNode: redMaterial
+          });
+        }
+      }
       viewport.redraw();
     }
   });
   
   $globalTimeSlider.bind('slide',
     function(event, ui) {
-      assets.octopus.setSample(ui.value);
+      assets[resourceName].setSample(ui.value);
       scene.redrawAllWindows();
     });
 
@@ -158,7 +165,6 @@ $(document).ready(function() {
                     <div class="content">
                         <div>Global Time:</div>
                         <div id='globalTime' style="margin-top:10px;"></div>
-                 <button id="curveEditor" style="margin-top:30px;">Open Curve Editor</button>
                     </div><!--content-->
                 </div><!--box-->
         </div><!--sidebar-->

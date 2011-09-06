@@ -44,7 +44,8 @@ operator alembicParsePolyMeshUniforms(
   io String identifier,
   io Integer indices[]
 ) {
-  FabricALEMBICParsePolyMeshUniforms(archiveID,identifier,indices);
+  if(indices.size() == 0)
+    FabricALEMBICParsePolyMeshUniforms(archiveID,identifier,indices);
 }
 
 operator alembicParsePolyMeshAttributes(
@@ -54,5 +55,6 @@ operator alembicParsePolyMeshAttributes(
   io Vec3 vertices[],
   io Vec3 normals[]
 ) {
-  FabricALEMBICParsePolyMeshAttributes(archiveID,identifier,sample,vertices,normals);
+  if(vertices.size() > 0)
+    FabricALEMBICParsePolyMeshAttributes(archiveID,identifier,sample,vertices,normals);
 }

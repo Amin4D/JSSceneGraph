@@ -62,13 +62,11 @@ operator setObjGeom(
     if(positions.size()>1){
       reload = false;
     }
-    report "OBJ setObjGeom: Done";
   }
 }
 
 operator freeObjParsedData(
   io Data objParseHandle
 ) {
-  report "freeObjParsedData";
   FabricOBJFreeParsedData(objParseHandle);
 }

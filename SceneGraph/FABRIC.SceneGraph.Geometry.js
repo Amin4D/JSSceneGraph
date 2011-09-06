@@ -783,7 +783,8 @@ FABRIC.SceneGraph.registerNodeType('Instance', {
             'uniforms.indices',
             'self.positions<>',
             'self.normals<>',
-            'self.uvs0<>'
+            'self.uvs0<>',
+            'uniforms.reload'
           ]
         }),
         scene.constructOperator({

@@ -43,21 +43,21 @@ operator parseObjAndSetVertexCount(
 operator setObjGeom(
   io Data objParseHandle,
   io Integer indices[],
-  io Vec3 positions[],
-  io Vec3 normals[],
-  io Vec2 uvs[],
+  io Vec3 positions<>,
+  io Vec3 normals<>,
+  io Vec2 uvs<>,
   io Boolean reload
 ) {
   if(reload){
     FabricOBJGetTriangleIndices( objParseHandle, indices );
-    FabricOBJGetPoints( objParseHandle, positions );
-    FabricOBJGetNormals( objParseHandle, normals );
+    FabricOBJGetPointsSliced( objParseHandle, positions );
+    FabricOBJGetNormalsSliced( objParseHandle, normals );
   
     Boolean hasTexture = false;
     FabricOBJHasTextureCoords( objParseHandle, hasTexture );
     if( hasTexture )
     {
-      FabricOBJGetTextureCoords( objParseHandle, uvs );
+      FabricOBJGetTextureCoordsSliced( objParseHandle, uvs );
     }
     if(positions.size()>1){
       reload = false;

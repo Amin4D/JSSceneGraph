@@ -278,8 +278,9 @@ function Integer findQuadraticRoots(
   Float64 b = coeff[1];    // Linear coefficient 
   Float64 c = coeff[0];    // Constant coefficient
 
-  if( abs( a ) < 0.000001 ){
-    // If the quadratic coefficient(a) is 0.0 then this equation becomes linear
+  if( abs( a ) < 0.001 ){
+    // If the quadratic coefficient(a) is close to 0.0 then this equation
+    // converges to becomes linear
     re[0] = -c/b;
     return 1;
   }
@@ -289,18 +290,9 @@ function Integer findQuadraticRoots(
   if (d > 0.0) {
     Float64 q;
     d = sqrt(d);
-    if(b < 0.0){
-      q = (-b - d) * 0.5;
-    }else{
-      q = (-b + d) * 0.5;
-    }
-  //  q = (-b + ((b < 0.0) ? -d : d)) * 0.5;
+    q = (-b + ((b < 0.0) ? -d : d)) * 0.5;
     re[0] = q / a;
     re[1] = c / q;
-    
-  //  report("findQuadraticRoots d:"+d + " q:"+q + " c:"+c + " b:"+b );
-  //  re[0] = (-b/(2.0 * a)) + (d/2.0 * a);
-  //  re[1] = (-b/(2.0 * a)) - (d/2.0 * a);
     return 2;
   }
   
@@ -309,17 +301,7 @@ function Integer findQuadraticRoots(
     re[0] = re[1] = -b / (2.0 * a);
     return 1;
   }
-  /*
   // Two complex conjugate roots 
-  else {                                      // d < 0 
-    re[0] = re[1] = -b / (2.0 * a);
- //   if (im != NULL) {
- //       im[0] = d / (2 * a);
- //       im[1] = -im[0];
- //   }
-    return 0;
-  }
-  */
   return 0;
 }
 
@@ -357,7 +339,10 @@ function Integer findCubicRoots(
   in Float64 coeff[4],
   io Float64 roots[3]
 ){
-  if( abs( coeff[3] ) < 0.000001 ){
+  // Note on this fuzziness value. The root finding becomes highly unstable as the
+  // exqueations converge from cubit to quadratic to linear. By using fairly course
+  // fuzzy values, the function gets downgraded quickly, therby increacing stability. 
+  if( abs( coeff[3] ) < 0.001 ){
     // If the cubic coefficient(A) is 0.0 then this equation becomes a quadratic
     Float64 quadraticCoeff[3];
     quadraticCoeff[0] = coeff[0];
@@ -390,12 +375,12 @@ function Integer findCubicRoots(
   }
 
   // One real root 
-    Float64 e = pow( sqrt( -d ) + abs( R ), 1.0 / 3.0);
-    if (R > 0.0){
-      e = -e;
-    }
-    roots[0] = (e + Q / e) - a1 / 3.0;
-    return 1;
+  Float64 e = pow( sqrt( -d ) + abs( R ), 1.0 / 3.0);
+  if (R > 0.0){
+    e = -e;
+  }
+  roots[0] = (e + Q / e) - a1 / 3.0;
+  return 1;
 }
 
 
@@ -424,9 +409,6 @@ function Boolean testCoplanarity(
   io Scalar outFraction
 ){
   Vec3 x21, x31, x41, v21, v31, v41;
-  
-  // due to raounding error, sometimtes wee need to be a bit forgiving on the root finder. 
-  Scalar fuzzyness = 0.00000001;
 
   x21 =  x2 - x1;
   x31 =  x3 - x1;
@@ -454,8 +436,9 @@ function Boolean testCoplanarity(
   // real root and it is between 0 and 1.
   Float64 roots[3];
   Integer numRoots = findCubicRoots( coeff, roots );
-//  report("coeff:"+coeff + " numRoots:"+numRoots + " roots:"+roots);
   if( numRoots > 0 ){
+    // due to raounding error, we need to be a bit forgiving on the root finder. 
+    Scalar fuzzyness = 0.001;
     if( roots[0] > (0.0 - fuzzyness) && roots[0] < (1.0 + fuzzyness) ){
       outFraction = clamp(Scalar(roots[0]), 0.0, 1.0 );
       return true;

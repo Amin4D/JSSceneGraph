@@ -10,6 +10,18 @@ function Xfo() {
   this.sc = this.sc.inv();
 }
 
+function Xfo(Vec3 tr, Quat ori) {
+  this.tr = tr;
+  this.ori = ori;
+  this.sc = Vec3(1.0, 1.0, 1.0);
+}
+
+function Xfo(Vec3 tr, Quat ori, Vec3 sc) {
+  this.tr = tr;
+  this.ori = ori;
+  this.sc = sc;
+}
+
 function Xfo.identity() {
   this.tr.setNull();
   this.ori.identity();

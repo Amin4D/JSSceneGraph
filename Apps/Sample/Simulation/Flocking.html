@@ -74,12 +74,12 @@ $(document).ready(function() {
   var numAgents, gridSize, cameraPos;
   switch(flockParams.sceneSize){
     case 'tiny':
-      cameraPos = FABRIC.RT.vec3(20, 30, -40).scale(0.05);
+      cameraPos = FABRIC.RT.vec3(20, 30, -40).scale(0.1);
       numAgents = 10;
       gridSize = 6;
       break;
     case 'small':
-      cameraPos = FABRIC.RT.vec3(20, 30, -40).scale(0.5);
+      cameraPos = FABRIC.RT.vec3(20, 30, -40).scale(0.2);
       numAgents = 100;
       gridSize = 10;
       break;
@@ -294,7 +294,7 @@ $(document).ready(function() {
             <h2>INFO</h2>
               <div class="content">
               Particle Flocking.<br>
-              Each particle is processed in a different slice, making use of FABRIC's multithreading architecture. 
+              Each particle is processed in a different slice, making use of FABRIC's multithreading architecture. Note: the debugging display will often cost more than the flocking in large crowds.
             </div><!--content-->
           </div><!--box-->
 
@@ -306,11 +306,10 @@ $(document).ready(function() {
               </br>
               <label for="numAgents" style="margin-top:10px;">Num Agents:</label>
               <select id='numAgents' style="margin-top:10px;">
-                <option value="tiny">10
-                <option value="small">100
-                <option value="medium">2000
-                <option value="huge">10000
-                <option value="massive">100000
+                <option value="small">Small:100
+                <option value="medium">Medium:2000
+                <option value="huge">Huge:10000
+                <option value="massive">Massive:100000
               </select>
               </br>
               <input type="checkbox" id="displayDebugging" style="margin-top:10px;"/><label for="displayDebugging">Display Debugging:</label>

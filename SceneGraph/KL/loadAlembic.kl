@@ -54,8 +54,10 @@ operator alembicParsePolyMeshAttributes(
   io String identifier,
   io Integer sample,
   io Vec3 vertices[],
-  io Vec3 normals[]
+  io Vec3 normals[],
+  io Boolean uvsLoaded,
+  io Vec2 uvs[]
 ) {
   if(vertices.size() > 0)
-    FabricALEMBICParsePolyMeshAttributes(archiveID,identifier,sample,vertices,normals);
+    FabricALEMBICParsePolyMeshAttributes(archiveID,identifier,sample,vertices,normals,uvsLoaded,uvs);
 }

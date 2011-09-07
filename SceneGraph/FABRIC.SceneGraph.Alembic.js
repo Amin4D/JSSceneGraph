@@ -115,11 +115,13 @@ FABRIC.SceneGraph.registerNodeType('AlembicLoadNode', {
           var trianglesNode = scene.constructNode('Triangles', { uvSets: 1 } );
           trianglesNode.pub.setAttributeDynamic('positions');
           trianglesNode.pub.setAttributeDynamic('normals');
+          trianglesNode.pub.setAttributeDynamic('uvs0');
           parsedNodes[identifier] = trianglesNode.pub;
 
           // retrieve thd dgnodes
           var uniformsdgnode = trianglesNode.getUniformsDGNode();
           uniformsdgnode.addMember('identifier','String',identifier);
+          uniformsdgnode.addMember('uvsLoaded','Boolean',false);
           uniformsdgnode.addDependency(resourceloaddgnode,'alembic');
           var attributesdgnode = trianglesNode.getAttributesDGNode();
           attributesdgnode.addDependency(resourceloaddgnode,'alembic');
@@ -154,8 +156,9 @@ FABRIC.SceneGraph.registerNodeType('AlembicLoadNode', {
               'uniforms.identifier',
               'alembic.sample',
               'self.positions[]',
-              'self.normals[]'
-              //'self.uvs_0[]'
+              'self.normals[]',
+              'uniforms.uvsLoaded',
+              'self.uvs0[]'
             ],
             entryFunctionName: 'alembicParsePolyMeshAttributes',
             srcFile: 'FABRIC_ROOT/SceneGraph/KL/loadAlembic.kl'

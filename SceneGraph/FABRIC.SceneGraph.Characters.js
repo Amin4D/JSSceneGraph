@@ -39,31 +39,31 @@ FABRIC.SceneGraph.registerNodeType('CharacterMesh', {
     }));
     
     characterMeshNode.getRedrawEventHandler().postDescendBindings.append( scene.constructOperator({
-          operatorName: 'drawCharacterInstance',
-          srcFile: 'FABRIC_ROOT/SceneGraph/KL/drawCharacterInstance.kl',
-          preProcessorDefinitions: {
-            SKINNING_MATRICIES_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('skinningMatrices'),
-            MODELMATRIXINVERSE_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('modelMatrixInverse'),
-            MODELMATRIX_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('modelMatrix'),
-            VIEWMATRIX_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('viewMatrix'),
-            CAMERAMATRIX_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('cameraMatrix'),
-            CAMERAPOS_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('cameraPos'),
-            PROJECTIONMATRIX_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('projectionMatrix'),
-            PROJECTIONMATRIXINV_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('projectionMatrixInv'),
-            NORMALMATRIX_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('normalMatrix'),
-            MODELVIEW_MATRIX_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('modelViewMatrix'),
-            MODELVIEWPROJECTION_MATRIX_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('modelViewProjectionMatrix')
-          },
-          entryFunctionName: 'drawCharacterInstance',
-          parameterLayout: [
-            'shader.shaderProgram',
-            'rig.skinningMatrices',
-            'camera.cameraMat44',
-            'camera.projectionMat44',
-            'self.indicesBuffer',
-            'instance.drawToggle'
-          ]
-        }));
+      operatorName: 'drawCharacterInstance',
+      srcFile: 'FABRIC_ROOT/SceneGraph/KL/drawCharacterInstance.kl',
+      preProcessorDefinitions: {
+        SKINNING_MATRICIES_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('skinningMatrices'),
+        MODELMATRIXINVERSE_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('modelMatrixInverse'),
+        MODELMATRIX_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('modelMatrix'),
+        VIEWMATRIX_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('viewMatrix'),
+        CAMERAMATRIX_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('cameraMatrix'),
+        CAMERAPOS_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('cameraPos'),
+        PROJECTIONMATRIX_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('projectionMatrix'),
+        PROJECTIONMATRIXINV_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('projectionMatrixInv'),
+        NORMALMATRIX_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('normalMatrix'),
+        MODELVIEW_MATRIX_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('modelViewMatrix'),
+        MODELVIEWPROJECTION_MATRIX_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('modelViewProjectionMatrix')
+      },
+      entryFunctionName: 'drawCharacterInstance',
+      parameterLayout: [
+        'shader.shaderProgram',
+        'rig.skinningMatrices',
+        'camera.cameraMat44',
+        'camera.projectionMat44',
+        'self.indicesBuffer',
+        'instance.drawToggle'
+      ]
+    }));
     
     return characterMeshNode;
   }});

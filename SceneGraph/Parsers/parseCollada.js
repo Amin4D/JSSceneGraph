@@ -2021,6 +2021,80 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
   }
   var colladaData = parseColladaBase(xmlRoot);
   
+  var constructGeometry = function(triangles){
+    // This method returns an array of values from the given source data. 
+    var getSourceData = function(source, id){
+      var accessor = source.technique.accessors[0];
+      var sid = id * accessor.stride;
+      return source.data.slice( sid, sid + accessor.params.length );
+    }
+    
+    
+      var trianglesName = name+i;
+      var numTriangles = triangles.count;
+      var meshTriangleSourceData = {};
+      var meshTriangleData = {
+        indices: []
+      };
+      var trianglesOptions = {
+        name: trianglesName
+      };
+      for(var j=0; j<triangles.inputs.length; j++){
+        switch(triangles.inputs[j].semantic){
+          case 'VERTEX':
+            meshTriangleSourceData.positions = {
+              source: mesh.sources[mesh.vertices[triangles.inputs[j].source.slice(1)].source.slice(1)],
+              constructorFn: FABRIC.RT.vec3
+            };
+            meshTriangleData.positions = [];
+            break;
+          case 'NORMAL':
+            meshTriangleSourceData.normals = {
+              source: mesh.sources[triangles.inputs[j].source.slice(1)],
+              constructorFn: FABRIC.RT.vec3
+            };
+            meshTriangleData.normals = [];
+            break;
+          case 'TEXCOORD':
+            var uvset = 'uvs' + triangles.inputs[j].set;
+            meshTriangleSourceData[uvset] = {
+              source: mesh.sources[triangles.inputs[j].source.slice(1)],
+              constructorFn: FABRIC.RT.vec2
+            };
+            meshTriangleData[uvset] = [];
+            if(!trianglesOptions.uvSets){
+              trianglesOptions.uvSets = 1;
+            }else{
+              trianglesOptions.uvSets++;
+            }
+            trianglesOptions.tangentsFromUV = trianglesOptions.uvSets-1;
+            break;
+          default:
+            throw "Error: unhandled semantic '" + triangles.inputs[j].semantic +"'";
+        }
+      }
+      
+      var vid = 0;
+      var vattrid = 0; // vertex attribute id
+      for(var tid=0; tid<numTriangles; tid++){
+        for(var j=0; j<3; j++){
+          meshTriangleData.indices.push(vid);
+          for(var inputid in meshTriangleSourceData){
+            var elementid = triangles.indices[vattrid];
+            var sourceData = getSourceData(meshTriangleSourceData[inputid].source, elementid);
+            var constructorFn = meshTriangleSourceData[inputid].constructorFn;
+            meshTriangleData[inputid].push(constructorFn.apply(undefined, sourceData));
+            vattrid++;
+          }
+          vid++;
+        }
+      }
+      var geometryNode = scene.constructNode('Triangles', trianglesOptions);
+      geometryNode.loadGeometryData(meshTriangleData);
+      assetNodes[trianglesName] = geometryNode;
+      
+  }
+  
   // Construct the Geometries.
   for(var id in colladaData.libaryGeometries){
     var geom = colladaData.libaryGeometries[id];
@@ -2028,81 +2102,13 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
     if(geom.mesh){
       var mesh = geom.mesh;
       
-      // This method returns an array of values from the given source data. 
-      var getSourceData = function(source, id){
-        var accessor = source.technique.accessors[0];
-        var sid = id * accessor.stride;
-        return source.data.slice( sid, sid + accessor.params.length );
-      }
-      
       for(var i=0; i<mesh.triangles.length; i++){
         var triangles = mesh.triangles[i];
-        var trianglesName = name+i;
-        var numTriangles = triangles.count;
-        var meshTriangleSourceData = {};
-        var meshTriangleData = {
-          indices: []
-        };
-        var trianglesOptions = {
-          name: trianglesName
-        };
-        for(var j=0; j<triangles.inputs.length; j++){
-          switch(triangles.inputs[j].semantic){
-            case 'VERTEX':
-              meshTriangleSourceData.positions = {
-                source: mesh.sources[mesh.vertices[triangles.inputs[j].source.slice(1)].source.slice(1)],
-                constructorFn: FABRIC.RT.vec3
-              };
-              meshTriangleData.positions = [];
-              break;
-            case 'NORMAL':
-              meshTriangleSourceData.normals = {
-                source: mesh.sources[triangles.inputs[j].source.slice(1)],
-                constructorFn: FABRIC.RT.vec3
-              };
-              meshTriangleData.normals = [];
-              break;
-            case 'TEXCOORD':
-              var uvset = 'uvs' + triangles.inputs[j].set;
-              meshTriangleSourceData[uvset] = {
-                source: mesh.sources[triangles.inputs[j].source.slice(1)],
-                constructorFn: FABRIC.RT.vec2
-              };
-              meshTriangleData[uvset] = [];
-              if(!trianglesOptions.uvSets){
-                trianglesOptions.uvSets = 1;
-              }else{
-                trianglesOptions.uvSets++;
-              }
-              trianglesOptions.tangentsFromUV = trianglesOptions.uvSets-1;
-              break;
-            default:
-              throw "Error: unhandled semantic '" + triangles.inputs[j].semantic +"'";
-          }
-        }
-        /*
-        var vid = 0;
-        var vattrid = 0; // vertex attribute id
-        for(var tid=0; tid<numTriangles; tid++){
-          for(var i=0; i<3; j++){
-            meshTriangleData.indices.push(vid);
-            for(var inputid in meshTriangleSourceData){
-              var elementid = triangles.indices[vattrid];
-              var sourceData = getSourceData(meshTriangleSourceData[inputid].source, elementid);
-              var constructorFn = meshTriangleSourceData[inputid].constructorFn;
-              meshTriangleData[inputid].push(constructorFn.apply(undefined, sourceData));
-              vattrid++;
-            }
-            vid++;
-          }
-        }
-        var geometryNode = scene.constructNode('Triangles', trianglesOptions);
-        geometryNode.loadGeometryData(meshTriangleData);
-        assetNodes[trianglesName] = geometryNode;
-        */
+        constructGeometry(triangles);
       }
-      for(var i=0; i<mesh.polygons; i++){
-        
+      for(var i=0; i<mesh.polygons.length; i++){
+        var triangles = mesh.polygons[i];
+        constructGeometry(triangles);
       }
     }
   }

@@ -21,8 +21,8 @@ operator collectPointsInsideBrush(
   io Scalar brushSize,
 
   io Xfo globalXfo,
-  io Vec3 positions[],
-  io Vec3 normals[]
+  io Vec3 positions<>,
+  io Vec3 normals<>
 ) {
   select = true;
   Mat44 modelMatrix = globalXfo;

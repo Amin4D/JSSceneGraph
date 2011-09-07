@@ -68,11 +68,11 @@ $(document).ready(function() {
   var spotLightNode = scene.constructNode('SpotLight', {
     position: FABRIC.RT.vec3(10, 20, 5),
     target: FABRIC.RT.vec3(0, 2, -6),
-    coneAngle: 80.0 * FABRIC.RT.degToRad,
+    coneAngle: Math.degToRad(80.0),
     farDistance: 60,
     castShadows: true,
     displayShadowDebug: false,
-    display: false
+    display: true
   });
 
   var lightTrManip = scene.constructNode('3AxisTranslationManipulator', { parentNode: spotLightNode.getTransformNode(), size: 4 });
@@ -86,7 +86,7 @@ $(document).ready(function() {
     diffuseColor: FABRIC.RT.rgb(0.3, 0.9, 0.3),
     lightNode: spotLightNode
   });
-
+  
   scene.constructNode('Instance', {
       transformNode: scene.constructNode('Transform', {
         hierarchical: false,

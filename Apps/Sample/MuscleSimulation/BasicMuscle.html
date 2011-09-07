@@ -46,6 +46,7 @@
     <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Kinematics.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Characters.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.CharacterSolvers.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.DebugGeometry.js" charset="utf-8"></script>
     <script type="text/javascript" src="./JS/Muscle.js" charset="utf-8"></script>
 
     
@@ -130,7 +131,7 @@ $(document).ready(function() {
     parentMemberIndex: skeleton.getBoneIndex('anchorRight'),
     radius: 0.75
   });
-      
+      /*
   scene.constructNode('3AxisRotationManipulator', {
     parentNode: rig,
     parentMember: 'pose',
@@ -143,7 +144,7 @@ $(document).ready(function() {
     parentMemberIndex: skeleton.getBoneIndex('anchorRight'),
     radius: 1.0
   });
-  
+      */
   scene.constructNode('CharacterSkeletonDebug', {
       characterRigNode: rig,
       color: FABRIC.RT.rgba(1.0, 1.0, 1.0, 1.0),

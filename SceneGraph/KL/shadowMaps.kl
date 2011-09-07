@@ -63,8 +63,8 @@ operator debugShadowMapBuffer(
     }
   }
   if(colorTexture.bufferID > 0 ){
-    Integer textureUnit = GL_TEXTURE0;
-    glActiveTexture(textureUnit);
+    Integer textureUnit = 0;
+    glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, colorTexture.bufferID);
     
     Vec2 tl(-1.0, 1.0);

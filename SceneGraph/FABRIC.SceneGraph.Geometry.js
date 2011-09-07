@@ -754,30 +754,19 @@ FABRIC.SceneGraph.registerNodeType('Instance', {
         resourceloaddgnode = resourceLoadNode.getDGLoadNode(),
         trianglesNode = scene.constructNode('Triangles', options);
 
-      resourceloaddgnode.addMember('handle', 'Data');
-
-      resourceloaddgnode.bindings.append(scene.constructOperator({
-        operatorName: 'loadObj',
-        parameterLayout: [
-          'self.url', //For debugging only
-          'self.resource',
-          'self.handle'
-        ],
-        entryFunctionName: 'loadObj',
-        srcFile: 'FABRIC_ROOT/SceneGraph/KL/loadObj.kl'
-      }));
-
       trianglesNode.getAttributesDGNode().addDependency(resourceloaddgnode, 'resource');
       trianglesNode.getUniformsDGNode().addDependency(resourceloaddgnode, 'resource');
       trianglesNode.pub.addUniformValue('reload', 'Boolean', true);
+      trianglesNode.pub.addUniformValue('handle', 'Data');
 
       trianglesNode.setGeneratorOps([
         scene.constructOperator({
-          operatorName: 'setObjVertexCount',
+          operatorName: 'parseObjAndSetVertexCount',
           srcFile: 'FABRIC_ROOT/SceneGraph/KL/loadObj.kl',
-          entryFunctionName: 'setObjVertexCount',
+          entryFunctionName: 'parseObjAndSetVertexCount',
           parameterLayout: [
-            'resource.handle',
+            'resource.resource',
+            'uniforms.handle',
             'uniforms.reload',
             'self.newCount'
           ]
@@ -787,21 +776,30 @@ FABRIC.SceneGraph.registerNodeType('Instance', {
           srcFile: 'FABRIC_ROOT/SceneGraph/KL/loadObj.kl',
           entryFunctionName: 'setObjGeom',
           parameterLayout: [
-            'resource.handle',
+            'uniforms.handle',
             'uniforms.indices',
             'self.positions[]',
             'self.normals[]',
             'self.uvs0[]',
             'uniforms.reload'
           ]
+        }),
+        scene.constructOperator({
+          operatorName: 'freeObjParsedData',
+          srcFile: 'FABRIC_ROOT/SceneGraph/KL/loadObj.kl',
+          entryFunctionName: 'freeObjParsedData',
+          parameterLayout: [
+            'uniforms.handle'
+          ]
         })
       ]);
+      /////////////////////////////////////////////////////////////////////
 
       trianglesNode.pub.getResourceLoadNode = function() {
         return resourceLoadNode;
       };
-      
-      resourceLoadNode.pub.addOnLoadCallback( function(){
+
+      resourceLoadNode.pub.addOnLoadCallback(function() {
         trianglesNode.getAttributesDGNode().bindings.empty();
       });
 

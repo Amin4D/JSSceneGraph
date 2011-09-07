@@ -1676,9 +1676,6 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
             }
           }
           break;
-        case 'IDREF_array':
-          console.log('TODO');
-          break;
         case 'technique_common':
           source.technique = parseTechniqueCommon(child);
           break;
@@ -1699,13 +1696,16 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
     if(node.getAttribute('offset')){
       input.offset = parseInt(node.getAttribute('offset'));
     }
+    if(node.getAttribute('set')){
+      input.set = parseInt(node.getAttribute('set'));
+    }
     return input;
   }
   
   var parsePolygons = function(node){
     console.log("parsePolygons");
-    var count = parseInt(node.getAttribute('count'));
     var polygons = {
+      count: parseInt(node.getAttribute('count')),
       inputs: [],
       indices: []
     };
@@ -1734,25 +1734,25 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
     console.log("parseMesh");
     var mesh = {
       sources: {},
-      vertices: {}
+      vertices: {},
+      polygons: [],
+      triangles: []
     };
     
     var child = node.firstElementChild;
     while(child){
       switch (child.nodeName) {
         case 'source':
-          var id = child.getAttribute('id');
-          mesh.sources[id] = parseSource(child);
+          mesh.sources[child.getAttribute('id')] = parseSource(child);
           break;
         case 'vertices':
-          var id = child.getAttribute('id');
-          mesh.vertices[id] = parseInput(child.firstElementChild);
+          mesh.vertices[child.getAttribute('id')] = parseInput(child.firstElementChild);
           break;
         case 'polygons':
-          mesh.polygons = parsePolygons(child);
+          mesh.polygons.push(parsePolygons(child));
           break;
         case 'triangles':
-          mesh.triangles = parsePolygons(child);
+          mesh.triangles.push(parsePolygons(child));
           break;
         default:
           console.warn("Error in parseMesh: Unhandled node '" + child.nodeName + "'");
@@ -1764,19 +1764,21 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
   
   var parseGeometry = function(node){
     console.log("parseGeometry");
-    
+    var geometry = {
+      name: node.getAttribute('name')
+    };
     var child = node.firstElementChild;
     while(child){
       switch (child.nodeName) {
         case 'mesh':
-          return parseMesh(child);
+          geometry.mesh = parseMesh(child);
           break;
         default:
           console.warn("Error in parseGeometry: Unhandled node '" + child.nodeName + "'");
       }
       child = child.nextElementSibling;
     }
-    return undefined;
+    return geometry;
   }
   
   var parseLibaryGeometries = function(node) {
@@ -1786,8 +1788,7 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
     while(child){
       switch (child.nodeName) {
         case 'geometry':
-          var id = child.getAttribute('id');
-          libaryGeometries[id] = parseGeometry(child);
+          libaryGeometries[child.getAttribute('id')] = parseGeometry(child);
           break;
         default:
           console.warn("Error in parseLibaryGeometries: Unhandled node '" +child.nodeName + "'");
@@ -1832,7 +1833,7 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
           controller.skin = parseSkin(child);
           break;
         default:
-          throw("Error in parseLibaryGeometries: Unhandled node '" +child.nodeName + "'");
+          console.warn("Error in parseController: Unhandled node '" +child.nodeName + "'");
       }
       child = child.nextElementSibling;
     }
@@ -1846,11 +1847,10 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
     while(child){
       switch (child.nodeName) {
         case 'controller':
-          var id = child.getAttribute('id');
-          libaryControllers[id] = parseController(child);
+          libaryControllers[child.getAttribute('id')] = parseController(child);
           break;
         default:
-          throw("Error in parseLibaryGeometries: Unhandled node '" +child.nodeName + "'");
+          console.warn("Error in parseLibaryControllers: Unhandled node '" +child.nodeName + "'");
       }
       child = child.nextElementSibling;
     }
@@ -1917,7 +1917,7 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
           nodeData.children.push(parseNode(child));
           break;
         default:
-          throw("Error in parseLibaryGeometries: Unhandled node '" +child.nodeName + "'");
+          console.warn("Error in parseNode: Unhandled node '" +child.nodeName + "'");
       }
       child = child.nextElementSibling;
     }
@@ -1933,11 +1933,10 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
     while(child){
       switch (child.nodeName) {
         case 'node':
-          var id = child.getAttribute('id');
-          scene.nodes[id] = parseNode(child);
+          scene.nodes[child.getAttribute('id')] = parseNode(child);
           break;
         default:
-          throw("Error in parseLibaryGeometries: Unhandled node '" +child.nodeName + "'");
+          console.warn("Error in parseVisualScene: Unhandled node '" +child.nodeName + "'");
       }
       child = child.nextElementSibling;
     }
@@ -1950,11 +1949,10 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
     while(child){
       switch (child.nodeName) {
         case 'visual_scene':
-          var id = child.getAttribute('id');
-          scenes[id] = parseVisualScene(child);
+          scenes[child.getAttribute('id')] = parseVisualScene(child);
           break;
         default:
-          throw("Error in parseLibaryGeometries: Unhandled node '" +child.nodeName + "'");
+          console.warn("Error in parseLibraryVisualScenes: Unhandled node '" +child.nodeName + "'");
       }
       child = child.nextElementSibling;
     }
@@ -1971,7 +1969,7 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
           scene.url = url;
           break;
         default:
-          throw("Error in parseLibaryGeometries: Unhandled node '" +child.nodeName + "'");
+          console.warn("Error in parseScene: Unhandled node '" +child.nodeName + "'");
       }
       child = child.nextElementSibling;
     }
@@ -2009,7 +2007,7 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
           colladaData.scene = parseScene(child);
           break;
         default:
-          throw("Error in parseCollada: Unhandled node '" +child.nodeName + "'");
+          console.warn("Error in parseColladaBase: Unhandled node '" +child.nodeName + "'");
       }
       child = child.nextElementSibling;
     }
@@ -2022,6 +2020,93 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
     throw 'Collada file is corrupted.';
   }
   var colladaData = parseColladaBase(xmlRoot);
+  
+  // Construct the Geometries.
+  for(var id in colladaData.libaryGeometries){
+    var geom = colladaData.libaryGeometries[id];
+    var name = geom.name;
+    if(geom.mesh){
+      var mesh = geom.mesh;
+      
+      // This method returns an array of values from the given source data. 
+      var getSourceData = function(source, id){
+        var accessor = source.technique.accessors[0];
+        var sid = id * accessor.stride;
+        return source.data.slice( sid, sid + accessor.params.length );
+      }
+      
+      for(var i=0; i<mesh.triangles.length; i++){
+        var triangles = mesh.triangles[i];
+        var trianglesName = name+i;
+        var numTriangles = triangles.count;
+        var meshTriangleSourceData = {};
+        var meshTriangleData = {
+          indices: []
+        };
+        var trianglesOptions = {
+          name: trianglesName
+        };
+        for(var j=0; j<triangles.inputs.length; j++){
+          switch(triangles.inputs[j].semantic){
+            case 'VERTEX':
+              meshTriangleSourceData.positions = {
+                source: mesh.sources[mesh.vertices[triangles.inputs[j].source.slice(1)].source.slice(1)],
+                constructorFn: FABRIC.RT.vec3
+              };
+              meshTriangleData.positions = [];
+              break;
+            case 'NORMAL':
+              meshTriangleSourceData.normals = {
+                source: mesh.sources[triangles.inputs[j].source.slice(1)],
+                constructorFn: FABRIC.RT.vec3
+              };
+              meshTriangleData.normals = [];
+              break;
+            case 'TEXCOORD':
+              var uvset = 'uvs' + triangles.inputs[j].set;
+              meshTriangleSourceData[uvset] = {
+                source: mesh.sources[triangles.inputs[j].source.slice(1)],
+                constructorFn: FABRIC.RT.vec2
+              };
+              meshTriangleData[uvset] = [];
+              if(!trianglesOptions.uvSets){
+                trianglesOptions.uvSets = 1;
+              }else{
+                trianglesOptions.uvSets++;
+              }
+              trianglesOptions.tangentsFromUV = trianglesOptions.uvSets-1;
+              break;
+            default:
+              throw "Error: unhandled semantic '" + triangles.inputs[j].semantic +"'";
+          }
+        }
+        /*
+        var vid = 0;
+        var vattrid = 0; // vertex attribute id
+        for(var tid=0; tid<numTriangles; tid++){
+          for(var i=0; i<3; j++){
+            meshTriangleData.indices.push(vid);
+            for(var inputid in meshTriangleSourceData){
+              var elementid = triangles.indices[vattrid];
+              var sourceData = getSourceData(meshTriangleSourceData[inputid].source, elementid);
+              var constructorFn = meshTriangleSourceData[inputid].constructorFn;
+              meshTriangleData[inputid].push(constructorFn.apply(undefined, sourceData));
+              vattrid++;
+            }
+            vid++;
+          }
+        }
+        var geometryNode = scene.constructNode('Triangles', trianglesOptions);
+        geometryNode.loadGeometryData(meshTriangleData);
+        assetNodes[trianglesName] = geometryNode;
+        */
+      }
+      for(var i=0; i<mesh.polygons; i++){
+        
+      }
+    }
+  }
+  
 
   // The file may contain a hierarchy that can be used to generate a skeleton
   if (options.buildSkeletonFromHierarchy) {

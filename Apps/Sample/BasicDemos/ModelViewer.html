@@ -80,8 +80,14 @@ $(document).ready(function() {
           lightNode: light
         });
   
-  var assets = scene.importAssetFile('Models/envelope.dae');
-  var instanceNode = scene.constructNode('Instance', { geometryNode: assets['OilTank01'], materialNode: redMaterial });
+  var assets = scene.importAssetFile('Models/bricks.dae');
+  for( var i in assets){
+    scene.constructNode('Instance', {
+      geometryNode: assets[i],
+      materialNode: redMaterial
+    });
+  }
+//  var instanceNode = scene.constructNode('Instance', { geometryNode: assets['OilTank01'], materialNode: redMaterial });
 
   $('#loadingDialog').dialog({
     modal: true

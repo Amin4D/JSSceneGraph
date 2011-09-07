@@ -2239,116 +2239,130 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
   }
   */
   
-  var constructGeometry = function(geometry){
-    var constructTriangles = function(triangles){
-      // This method returns an array of values from the given source data. 
-      var getSourceData = function(source, id){
-        var accessor = source.technique.accessors[0];
-        var sid = id * accessor.stride;
-        return source.data.slice( sid, sid + accessor.params.length );
-      }
-      
-      var trianglesName = name+i;
-      var numTriangles = triangles.count;
-      var attrcount = 0;
-      var meshTriangleSourceData = {};
-      var meshTriangleData = {
-        indices: []
-      };
-      var trianglesOptions = {
-        name: trianglesName
-      };
-      for(var semantic in triangles.inputs){
-        var input = triangles.inputs[semantic];
-        var sourceName = input.source.slice(1);
-        switch(semantic){
-          case 'VERTEX':
-            meshTriangleSourceData.positions = {
-              source: mesh.sources[mesh.vertices.source.slice(1)],
-              constructorFn: FABRIC.RT.vec3
-            };
-            meshTriangleData.positions = [];
-            break;
-          case 'NORMAL':
-            meshTriangleSourceData.normals = {
-              source: mesh.sources[sourceName],
-              constructorFn: FABRIC.RT.vec3
-            };
-            meshTriangleData.normals = [];
-            break;
-          case 'TEXCOORD':
-            var uvset = 'uvs' + input.set;
-            meshTriangleSourceData[uvset] = {
-              source: mesh.sources[sourceName],
-              constructorFn: FABRIC.RT.vec2
-            };
-            meshTriangleData[uvset] = [];
-            if(!trianglesOptions.uvSets){
-              trianglesOptions.uvSets = 1;
-            }else{
-              trianglesOptions.uvSets++;
-            }
-            trianglesOptions.tangentsFromUV = trianglesOptions.uvSets-1;
-            break;
-          default:
-            throw "Error: unhandled semantic '" + semantic +"'";
-        }
-        attrcount++
-      }
-      
-      var indicesMapping = {};
-      var vcount = 0;
-      var vid = 0;
-      for(var tid=0; tid<numTriangles; tid++){
-        for(var j=0; j<3; j++){
-          var attributeDataIndices = triangles.indices.slice( vid*attrcount, (vid*attrcount) + attrcount );
-          var vertexMappingID = 'vid' + attributeDataIndices.join('_');
-          // By using the attribute indices to generate a unique id for each vertex,
-          // we can detect if a vertex is being reused. In the collada specification
-          // all attributes have different counts, but in Fabric, all attributes have the
-          // same count. To share a vertex, we must share all attribute data.
-          if(!indicesMapping[vertexMappingID]){
-            var vattrid = 0; // vertex attribute id
-            for(var inputid in meshTriangleSourceData){
-              var elementid = attributeDataIndices[vattrid];
-              var sourceData = getSourceData(meshTriangleSourceData[inputid].source, elementid);
-              var constructorFn = meshTriangleSourceData[inputid].constructorFn;
-              meshTriangleData[inputid].push(constructorFn.apply(undefined, sourceData));
-              vattrid++;
-            }
-            meshTriangleData.indices.push(vcount);
-            indicesMapping[vertexMappingID] = vcount;
-            vcount++;
+  // This method returns an array of values from the given source data. 
+  var getSourceData = function(source, id){
+    var accessor = source.technique.accessors[0];
+    var sid = id * accessor.stride;
+    return source.data.slice( sid, sid + accessor.params.length );
+  }
+    
+  var processGeometryData = function(meshData, trianglesData, trianglesOptions){
+    var numTriangles = trianglesData.count;
+    var attrcount = 0;
+    var meshTriangleSourceData = {};
+    var processedGeometryData = {
+      indices: []
+    };
+    for(var semantic in trianglesData.inputs){
+      var input = trianglesData.inputs[semantic];
+      var sourceName = input.source.slice(1);
+      switch(semantic){
+        case 'VERTEX':
+          meshTriangleSourceData.positions = {
+            source: meshData.sources[meshData.vertices.source.slice(1)],
+            constructorFn: FABRIC.RT.vec3
+          };
+          processedGeometryData.positions = [];
+          break;
+        case 'NORMAL':
+          meshTriangleSourceData.normals = {
+            source: meshData.sources[sourceName],
+            constructorFn: FABRIC.RT.vec3
+          };
+          processedGeometryData.normals = [];
+          break;
+        case 'TEXCOORD':
+          var uvset = 'uvs' + input.set;
+          meshTriangleSourceData[uvset] = {
+            source: meshData.sources[sourceName],
+            constructorFn: FABRIC.RT.vec2
+          };
+          processedGeometryData[uvset] = [];
+          if(!trianglesOptions.uvSets){
+            trianglesOptions.uvSets = 1;
+          }else{
+            trianglesOptions.uvSets++;
           }
-          else{
-            meshTriangleData.indices.push(indicesMapping[vertexMappingID]);
-          }
-          vid++;
-        }
+          trianglesOptions.tangentsFromUV = trianglesOptions.uvSets-1;
+          break;
+        default:
+          throw "Error: unhandled semantic '" + semantic +"'";
       }
-      var geometryNode = scene.constructNode('Triangles', trianglesOptions);
-      geometryNode.loadGeometryData(meshTriangleData);
-      assetNodes[trianglesName] = geometryNode;
-      return geometryNode;
+      attrcount++
     }
     
-    var name = geometry.name;
+    var indicesMapping = {};
+    var vcount = 0;
+    var vid = 0;
+    for(var tid=0; tid<numTriangles; tid++){
+      for(var j=0; j<3; j++){
+        var attributeDataIndices = trianglesData.indices.slice( vid*attrcount, (vid*attrcount) + attrcount );
+        var vertexMappingID = 'vid' + attributeDataIndices.join('_');
+        // By using the attribute indices to generate a unique id for each vertex,
+        // we can detect if a vertex is being reused. In the collada specification
+        // all attributes have different counts, but in Fabric, all attributes have the
+        // same count. To share a vertex, we must share all attribute data.
+        if(!indicesMapping[vertexMappingID]){
+          var vattrid = 0; // vertex attribute id
+          for(var inputid in meshTriangleSourceData){
+            var elementid = attributeDataIndices[vattrid];
+            var sourceData = getSourceData(meshTriangleSourceData[inputid].source, elementid);
+            var constructorFn = meshTriangleSourceData[inputid].constructorFn;
+            processedGeometryData[inputid].push(constructorFn.apply(undefined, sourceData));
+            vattrid++;
+          }
+          processedGeometryData.indices.push(vcount);
+          indicesMapping[vertexMappingID] = vcount;
+          vcount++;
+        }
+        else{
+          processedGeometryData.indices.push(indicesMapping[vertexMappingID]);
+        }
+        vid++;
+      }
+    }
+    return processedGeometryData;
+  }
+  
+  var constructGeometry = function(geometryData){
+    
+    var name = geometryData.name;
     var geometryNode;
-    if(geometry.mesh){
-      var mesh = geometry.mesh;
-      for(var i=0; i<mesh.triangles.length; i++){
+    if(geometryData.mesh){
+      var meshData = geometryData.mesh;
+      for(var i=0; i<meshData.triangles.length; i++){
         if(i>0){
           alert("This collada importer only supports one triangle mesh per instance.");
           throw "This collada importer only supports one triangle mesh per instance."
         }
-        geometryNode = constructTriangles(mesh.triangles[i]);
+        
+        // Note: we could make an option on the constructor to pass in the geometry data to scene.constructNode('Triangles',...
+        // This would mean the processGeometryData function only returns a single value. Right now its ugly. 
+        var trianglesOptions = {
+          name: name+i
+        };
+        var meshTriangleData = processGeometryData(meshData, meshData.triangles[i], trianglesOptions);
+        
+        var geometryNode = scene.constructNode('Triangles', trianglesOptions);
+        geometryNode.loadGeometryData(meshTriangleData);
+        assetNodes[trianglesOptions.name] = geometryNode;
       }
-      for(var i=0; i<mesh.polygons.length; i++){
+      for(var i=0; i<meshData.polygons.length; i++){
         if(i>0){
           alert("This collada importer only supports one polygon mesh per instance.");
           throw "This collada importer only supports one polygon mesh per instance."
         }
-        geometryNode = constructTriangles(mesh.polygons[i]);
+        
+        // Note: we could make an option on the constructor to pass in the geometry data to scene.constructNode('Triangles',...
+        // This would mean the processGeometryData function only returns a single value. Right now its ugly. 
+        var trianglesOptions = {
+          name: name+i
+        };
+        var meshTriangleData = processGeometryData(meshData, meshData.polygons[i], trianglesOptions);
+        
+        var geometryNode = scene.constructNode('Triangles', trianglesOptions);
+        geometryNode.loadGeometryData(meshTriangleData);
+        assetNodes[trianglesOptions.name] = geometryNode;
       }
     }
     else{
@@ -2358,12 +2372,56 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
     return geometryNode;
   }
   
+  
+  var constructSkin = function(skinData){
+    // Get the geometry data that this skin mesh is based on
+    var geometryData = colladaData.libraryGeometries[skinData.source];
+    
+    var meshData = geometryData.mesh;
+    for(var i=0; i<meshData.triangles.length; i++){
+      if(i>0){
+        alert("This collada importer only supports one triangle mesh per instance.");
+        throw "This collada importer only supports one triangle mesh per instance."
+      }
+      
+      // Note: we could make an option on the constructor to pass in the geometry data to scene.constructNode('Triangles',...
+      // This would mean the processGeometryData function only returns a single value. Right now its ugly. 
+      var trianglesOptions = {
+        name: trianglesName
+      };
+      var meshTriangleData = processGeometryData(meshData, meshData.triangles[i], trianglesOptions);
+      
+      var characterMeshNode = scene.constructNode('CharacterMesh', trianglesOptions);
+      geometryNode.loadGeometryData(meshTriangleData);
+      
+      assetNodes[trianglesName] = characterMeshNode;
+    }
+  
+  }
+  
   // Construct the Geometries.
   var libraryGeometries = {};
+  var getGeometryNode = function(geomid){
+    // Lazy construction of geometries
+    if(!libraryGeometries[geomid]){
+      libraryGeometries[geomid] = constructGeometry(colladaData.libraryGeometries[geomid]);
+    }
+    return libraryGeometries[geomid];
+  }
+  
+  var librarySkins = {};
+  var getSkinNode = function(skinid){
+    // Lazy construction of geometries
+    if(!librarySkins[skinid]){
+      librarySkins[skinid] = constructSkin(colladaData.libraryControllers[skinid].skin);
+    }
+    return librarySkins[skinid];
+  }
+  /*
   for(var geomid in colladaData.libraryGeometries){
     libraryGeometries[geomid] = constructGeometry(colladaData.libraryGeometries[geomid]);
   }
-  
+  */
   // Construct the Scene
   var constructScene = function(sceneData){
     console.log("constructScene");
@@ -2372,7 +2430,7 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
       var geometryNode, materialNode = defaultMaterial;
       if(instanceData.instance_geometry){
         var url = instanceData.instance_geometry.url.slice(1);
-        geometryNode = libraryGeometries[url];
+        geometryNode = getGeometryNode(url);
         if(instanceData.instance_geometry.instance_material){
           // TODO:
         }

@@ -2176,111 +2176,112 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
   }
   var colladaData = parseColladaBase(xmlRoot);
   
-  var constructGeometry = function(triangles){
-    // This method returns an array of values from the given source data. 
-    var getSourceData = function(source, id){
-      var accessor = source.technique.accessors[0];
-      var sid = id * accessor.stride;
-      return source.data.slice( sid, sid + accessor.params.length );
-    }
-    
-    var trianglesName = name+i;
-    var numTriangles = triangles.count;
-    var meshTriangleSourceData = {};
-    var meshTriangleData = {
-      indices: []
-    };
-    var trianglesOptions = {
-      name: trianglesName
-    };
-    for(var j=0; j<triangles.inputs.length; j++){
-      switch(triangles.inputs[j].semantic){
-        case 'VERTEX':
-          meshTriangleSourceData.positions = {
-            source: mesh.sources[mesh.vertices[triangles.inputs[j].source.slice(1)].source.slice(1)],
-            constructorFn: FABRIC.RT.vec3
-          };
-          meshTriangleData.positions = [];
-          break;
-        case 'NORMAL':
-          meshTriangleSourceData.normals = {
-            source: mesh.sources[triangles.inputs[j].source.slice(1)],
-            constructorFn: FABRIC.RT.vec3
-          };
-          meshTriangleData.normals = [];
-          break;
-        case 'TEXCOORD':
-          var uvset = 'uvs' + triangles.inputs[j].set;
-          meshTriangleSourceData[uvset] = {
-            source: mesh.sources[triangles.inputs[j].source.slice(1)],
-            constructorFn: FABRIC.RT.vec2
-          };
-          meshTriangleData[uvset] = [];
-          if(!trianglesOptions.uvSets){
-            trianglesOptions.uvSets = 1;
-          }else{
-            trianglesOptions.uvSets++;
-          }
-          trianglesOptions.tangentsFromUV = trianglesOptions.uvSets-1;
-          break;
-        default:
-          throw "Error: unhandled semantic '" + triangles.inputs[j].semantic +"'";
+  var constructGeometry = function(geometry){
+    var constructTriangles = function(triangles){
+      // This method returns an array of values from the given source data. 
+      var getSourceData = function(source, id){
+        var accessor = source.technique.accessors[0];
+        var sid = id * accessor.stride;
+        return source.data.slice( sid, sid + accessor.params.length );
       }
-    }
-    
-    var indicesMapping = {};
-    var vcount = 0;
-    var attrcount = triangles.inputs.length;
-    var vid = 0;
-    for(var tid=0; tid<numTriangles; tid++){
-      for(var j=0; j<3; j++){
-        var attributeDataIndices = triangles.indices.slice( vid*attrcount, (vid*attrcount) + attrcount );
-        var vertexMappingID = 'vid' + attributeDataIndices.join('_');
-        // By using the attribute indices to generate a unique id for each vertex,
-        // we can detect if a vertex is being reused. In the collada specification
-        // all attributes have different counts, but in Fabric, all attributes have the
-        // same count. To share a vertex, we must share all attribute data.
-        if(!indicesMapping[vertexMappingID]){
-          var vattrid = 0; // vertex attribute id
-          for(var inputid in meshTriangleSourceData){
-            var elementid = attributeDataIndices[vattrid];
-            var sourceData = getSourceData(meshTriangleSourceData[inputid].source, elementid);
-            var constructorFn = meshTriangleSourceData[inputid].constructorFn;
-            meshTriangleData[inputid].push(constructorFn.apply(undefined, sourceData));
-            vattrid++;
-          }
-          meshTriangleData.indices.push(vcount);
-          indicesMapping[vertexMappingID] = vcount;
-          vcount++;
-        }
-        else{
-          meshTriangleData.indices.push(indicesMapping[vertexMappingID]);
-        }
-        vid++;
-      }
-    }
-    var geometryNode = scene.constructNode('Triangles', trianglesOptions);
-    geometryNode.loadGeometryData(meshTriangleData);
-    assetNodes[trianglesName] = geometryNode;
       
+      var trianglesName = name+i;
+      var numTriangles = triangles.count;
+      var meshTriangleSourceData = {};
+      var meshTriangleData = {
+        indices: []
+      };
+      var trianglesOptions = {
+        name: trianglesName
+      };
+      for(var j=0; j<triangles.inputs.length; j++){
+        switch(triangles.inputs[j].semantic){
+          case 'VERTEX':
+            meshTriangleSourceData.positions = {
+              source: mesh.sources[mesh.vertices[triangles.inputs[j].source.slice(1)].source.slice(1)],
+              constructorFn: FABRIC.RT.vec3
+            };
+            meshTriangleData.positions = [];
+            break;
+          case 'NORMAL':
+            meshTriangleSourceData.normals = {
+              source: mesh.sources[triangles.inputs[j].source.slice(1)],
+              constructorFn: FABRIC.RT.vec3
+            };
+            meshTriangleData.normals = [];
+            break;
+          case 'TEXCOORD':
+            var uvset = 'uvs' + triangles.inputs[j].set;
+            meshTriangleSourceData[uvset] = {
+              source: mesh.sources[triangles.inputs[j].source.slice(1)],
+              constructorFn: FABRIC.RT.vec2
+            };
+            meshTriangleData[uvset] = [];
+            if(!trianglesOptions.uvSets){
+              trianglesOptions.uvSets = 1;
+            }else{
+              trianglesOptions.uvSets++;
+            }
+            trianglesOptions.tangentsFromUV = trianglesOptions.uvSets-1;
+            break;
+          default:
+            throw "Error: unhandled semantic '" + triangles.inputs[j].semantic +"'";
+        }
+      }
+      
+      var indicesMapping = {};
+      var vcount = 0;
+      var attrcount = triangles.inputs.length;
+      var vid = 0;
+      for(var tid=0; tid<numTriangles; tid++){
+        for(var j=0; j<3; j++){
+          var attributeDataIndices = triangles.indices.slice( vid*attrcount, (vid*attrcount) + attrcount );
+          var vertexMappingID = 'vid' + attributeDataIndices.join('_');
+          // By using the attribute indices to generate a unique id for each vertex,
+          // we can detect if a vertex is being reused. In the collada specification
+          // all attributes have different counts, but in Fabric, all attributes have the
+          // same count. To share a vertex, we must share all attribute data.
+          if(!indicesMapping[vertexMappingID]){
+            var vattrid = 0; // vertex attribute id
+            for(var inputid in meshTriangleSourceData){
+              var elementid = attributeDataIndices[vattrid];
+              var sourceData = getSourceData(meshTriangleSourceData[inputid].source, elementid);
+              var constructorFn = meshTriangleSourceData[inputid].constructorFn;
+              meshTriangleData[inputid].push(constructorFn.apply(undefined, sourceData));
+              vattrid++;
+            }
+            meshTriangleData.indices.push(vcount);
+            indicesMapping[vertexMappingID] = vcount;
+            vcount++;
+          }
+          else{
+            meshTriangleData.indices.push(indicesMapping[vertexMappingID]);
+          }
+          vid++;
+        }
+      }
+      var geometryNode = scene.constructNode('Triangles', trianglesOptions);
+      geometryNode.loadGeometryData(meshTriangleData);
+      assetNodes[trianglesName] = geometryNode;
+    }
+    
+    var name = geometry.name;
+    if(geometry.mesh){
+      var mesh = geometry.mesh;
+      for(var i=0; i<mesh.triangles.length; i++){
+        var triangles = mesh.triangles[i];
+        constructTriangles(triangles);
+      }
+      for(var i=0; i<mesh.polygons.length; i++){
+        var triangles = mesh.polygons[i];
+        constructTriangles(triangles);
+      }
+    }
   }
   
   // Construct the Geometries.
   for(var id in colladaData.libaryGeometries){
-    var geom = colladaData.libaryGeometries[id];
-    var name = geom.name;
-    if(geom.mesh){
-      var mesh = geom.mesh;
-      
-      for(var i=0; i<mesh.triangles.length; i++){
-        var triangles = mesh.triangles[i];
-        constructGeometry(triangles);
-      }
-      for(var i=0; i<mesh.polygons.length; i++){
-        var triangles = mesh.polygons[i];
-        constructGeometry(triangles);
-      }
-    }
+    constructGeometry(colladaData.libaryGeometries[id]);
   }
   
 

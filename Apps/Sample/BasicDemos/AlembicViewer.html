@@ -83,9 +83,12 @@ $(document).ready(function() {
     diffuseColor: FABRIC.RT.rgb(0.8, 0.2, 0.2, 1),
     lightNode: light,
   });
-  
+  var normalMaterial = scene.constructNode('NormalMaterial', {
+      color: FABRIC.RT.rgb(0.8, .8, 0.8, 1)
+    });
+
   // create the alembic content, and fire the load once it is loaded
-  var resourceName = 'monster';
+  var resourceName = 'cube';
   var assets = scene.importAssetFile('Models/'+resourceName+'.abc', {
     dependentNode: viewport,
     onLoadCallback: function(){
@@ -98,6 +101,11 @@ $(document).ready(function() {
             transformNode: assets[resourceName].getCorrespondingTransform(name),
             geometryNode: assets[resourceName].getParsedNodes()[name],
             materialNode: redMaterial
+          });
+          scene.constructNode('Instance', {
+            transformNode: assets[resourceName].getCorrespondingTransform(name),
+            geometryNode: assets[resourceName].getParsedNodes()[name],
+            materialNode: normalMaterial
           });
         }
       }

@@ -36,7 +36,8 @@ operator alembicParsePolyMeshCount(
   io String identifier,
   io Size count
 ) {
-  FabricALEMBICParsePolyMeshCount(archiveID,identifier,count);
+  if(count <= 1)
+    FabricALEMBICParsePolyMeshCount(archiveID,identifier,count);
 }
 
 operator alembicParsePolyMeshUniforms(

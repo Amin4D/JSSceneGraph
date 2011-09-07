@@ -281,6 +281,18 @@ FABRIC.SceneGraph.registerNodeType('CharacterSkeletonDebug', {
       characterSkeletonDebug.pub.addUniformValue('offsetpose', 'Xfo', options.offsetpose);
 
       // now append the operator to create the lines
+      
+      // now append the operator to create the lines
+      characterSkeletonDebug.getAttributesDGNode().bindings.append(scene.constructOperator({
+          operatorName: 'setSkeletonVertexCount',
+          srcFile: 'FABRIC_ROOT/SceneGraph/KL/generateSkeleton.kl',
+          entryFunctionName: 'setSkeletonVertexCount',
+          parameterLayout: [
+            'skeleton.bones',
+            'self.newCount'
+          ]
+        }));
+      
       characterSkeletonDebug.getAttributesDGNode().bindings.append(scene.constructOperator({
           operatorName: 'generateSkeletonOp',
           srcFile: 'FABRIC_ROOT/SceneGraph/KL/generateSkeleton.kl',

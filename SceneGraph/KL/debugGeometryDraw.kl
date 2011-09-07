@@ -13,7 +13,7 @@ use DebugGeometry;
 
 operator debugGeometryDraw(
   io OGLShaderProgram shaderProgram,
-  io DebugGeometry debugGeometries[],
+  io DebugGeometry debugGeometries<>,
   io OGLBuffer positionsBuffer,
   io OGLBuffer vertexColorsBuffer,
   io OGLBuffer pointsIndicesBuffer,

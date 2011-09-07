@@ -118,7 +118,7 @@ FABRIC.SceneGraph.registerNodeType('Particles', {
         entryFunctionName: 'populateHashTable',
         parameterLayout: [
           'hashtable.hashtable',
-          'self.cellindices[]'
+          'self.cellindices<>'
         ]
       }));
     }
@@ -159,7 +159,7 @@ FABRIC.SceneGraph.registerNodeType('Flock', {
         'self.cellcoords',
 
         'self.previousframe_positions<>',
-        'self.previousframe_velocities[]',
+        'self.previousframe_velocities<>',
 
         'self.neighborinfluencerange',
         'hashtable.hashtable',

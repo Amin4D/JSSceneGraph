@@ -690,7 +690,7 @@ FABRIC.SceneGraph.registerNodeType('Teapot', {
     teapotNode.setGeneratorOps([
       scene.constructOperator({
         operatorName: 'setTeapotVertexCount',
-        srcFile: 'FABRIC_ROOT/SceneGraph/Resources/KL/generateTeapot.kl',
+        srcFile: 'FABRIC_ROOT/SceneGraph/KL/generateTeapot.kl',
         entryFunctionName: 'setTeapotVertexCount',
         parameterLayout: [
           'uniforms.detail',

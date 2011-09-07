@@ -27,9 +27,9 @@ operator generatePlane(
   io Integer lengthSections,
   io Integer widthSections,
 
-  io Vec3 positions[],
-  io Vec3 normals[],
-  io Vec2 uvs[]
+  io Vec3 positions<>,
+  io Vec3 normals<>,
+  io Vec2 uvs<>
 ) {
   var Integer vi = 0;
   var Integer ii = 0;

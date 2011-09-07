@@ -2010,6 +2010,21 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
     return libaryControllers;
   }
   
+  var parseInstanceGeometry = function(node) {
+    console.log("parseInstanceGeometry");
+    var instanceController = {
+      url: node.getAttribute('url')
+      };
+    var child = node.firstElementChild;
+    while(child){
+      switch (child.nodeName) {
+        default:
+          console.warn("Warning in parseInstanceGeometry: Unhandled node '" +child.nodeName + "'");
+      }
+      child = child.nextElementSibling;
+    }
+    return instanceController;
+  }
   var parseInstanceController = function(node) {
     console.log("parseInstanceController");
     var instanceController = {
@@ -2062,8 +2077,7 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
           break;
         }
         case 'instance_geometry':
-          var url = child.getAttribute('url');
-          nodeData.instance_geometry = url;
+          nodeData.instance_geometry = parseInstanceGeometry(child);
           break;
         case 'instance_controller':
           nodeData.instance_controller = parseInstanceController(child);
@@ -2120,8 +2134,7 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
     while(child){
       switch (child.nodeName) {
         case 'instance_visual_scene':
-          var url = child.getAttribute('url');
-          scene.url = url;
+          scene.url = child.getAttribute('url');
           break;
         default:
           console.warn("Warning in parseScene: Unhandled node '" +child.nodeName + "'");
@@ -2263,25 +2276,92 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
       var geometryNode = scene.constructNode('Triangles', trianglesOptions);
       geometryNode.loadGeometryData(meshTriangleData);
       assetNodes[trianglesName] = geometryNode;
+      return geometryNode;
     }
     
     var name = geometry.name;
+    var geometryNode;
     if(geometry.mesh){
       var mesh = geometry.mesh;
       for(var i=0; i<mesh.triangles.length; i++){
-        var triangles = mesh.triangles[i];
-        constructTriangles(triangles);
+        if(i>0){
+          alert("This collada importer only supports one triangle mesh per instance.");
+          throw "This collada importer only supports one triangle mesh per instance."
+        }
+        geometryNode = constructTriangles(mesh.triangles[i]);
       }
       for(var i=0; i<mesh.polygons.length; i++){
-        var triangles = mesh.polygons[i];
-        constructTriangles(triangles);
+        if(i>0){
+          alert("This collada importer only supports one polygon mesh per instance.");
+          throw "This collada importer only supports one polygon mesh per instance."
+        }
+        geometryNode = constructTriangles(mesh.polygons[i]);
+      }
+    }
+    else{
+      alert("This collada importer only supports polygon and triangle meshes.");
+      throw "This collada importer only supports polygon and triangle meshes."
+    }
+    return geometryNode;
+  }
+  
+  // Construct the Materials.
+  var defaultMaterial = scene.constructNode('PhongMaterial', {
+      diffuseColor: FABRIC.RT.rgb(0.8, 0, 0, 1),
+      lightNode: scene.constructNode('PointLight', { position: FABRIC.RT.vec3(420.0, 1000.0, 600.0) })
+    });
+  /*
+  var libaryMaterials;
+  for(var id in colladaData.libaryGeometries){
+    libaryGeometries[id] = constructGeometry(colladaData.libaryGeometries[id]);
+  }
+  */
+  
+  // Construct the Geometries.
+  var libaryGeometries = {};
+  for(var geomid in colladaData.libaryGeometries){
+    libaryGeometries[geomid] = constructGeometry(colladaData.libaryGeometries[geomid]);
+  }
+  
+  // Construct the Scene
+  var constructScene = function(sceneData){
+    console.log("constructScene");
+    var constructInstance = function(instance, parentNode){
+      var transformNode, geometryNode, materialNode = defaultMaterial;
+      if(instance.instance_geometry){
+        geometryNode = libaryGeometries[instance.instance_geometry.url.slice(1)];
+        if(instance.instance_geometry.instance_material){
+          // TODO:
+        }
+      }
+      else if(instance.instance_controller){
+        // TODO:
+      }
+      
+      if(geometryNode && materialNode){
+        var transformNodeOptions = { };
+        if(parentNode){
+          transformNodeOptions.hierarchical = true;
+          transformNodeOptions.localXfo = instance.xfo;
+        }else{
+          transformNodeOptions.hierarchical = false;
+          transformNodeOptions.globalXfo = instance.xfo;
+        }
+        scene.constructNode('Instance', {
+          transformNode: scene.constructNode('Transform', transformNodeOptions ),
+          geometryNode: geometryNode,
+          materialNode: materialNode
+        });
+      }
+    }
+    for(var nodeId in sceneData.nodes){
+      if(sceneData.nodes[nodeId].type != 'JOINT'){
+        constructInstance(sceneData.nodes[nodeId]);
       }
     }
   }
-  
-  // Construct the Geometries.
-  for(var id in colladaData.libaryGeometries){
-    constructGeometry(colladaData.libaryGeometries[id]);
+  if(colladaData.scene){
+    constructScene(colladaData.libraryVisualScenes[colladaData.scene.url.slice(1)]);
   }
   
 

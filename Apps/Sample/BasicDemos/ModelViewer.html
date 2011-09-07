@@ -72,21 +72,23 @@ $(document).ready(function() {
   scene.constructNode('CameraManipulator', { targetNode: camera });
 
   viewport.setCameraNode(camera);
-
+/*
   var light = scene.constructNode('PointLight', { position: FABRIC.RT.vec3(420.0, 1000.0, 600.0) });
   
   var redMaterial = scene.constructNode('PhongMaterial', {
           diffuseColor: FABRIC.RT.rgb(0.8, 0, 0, 1),
           lightNode: light
         });
-  
-  var assets = scene.importAssetFile('Models/envelope.dae');
+*/
+  var assets = scene.importAssetFile('Models/bricks.dae');
+  /*
   for( var i in assets){
     scene.constructNode('Instance', {
       geometryNode: assets[i],
       materialNode: redMaterial
     });
   }
+  */
 //  var instanceNode = scene.constructNode('Instance', { geometryNode: assets['OilTank01'], materialNode: redMaterial });
 
   $('#loadingDialog').dialog({

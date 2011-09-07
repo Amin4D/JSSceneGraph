@@ -22,7 +22,7 @@ operator calcCellIndex(
 
 operator populateHashTable(
   io HashTable hashtable,
-  io Integer particleCellIndices[]
+  io Integer particleCellIndices<>
 ) {
   // Reset the hash table, and re-accumulate the ids.
   Size numCells = hashtable.x_count * hashtable.y_count * hashtable.z_count;
@@ -69,7 +69,7 @@ function getNeighboringIndices(
   io Integer cellindex,
   io Vec3 cellcoords,
 
-  io Vec3 positions[],
+  io Vec3 positions<>,
   io HashTable hashtable,
   io Integer neighbors[]
 ) {

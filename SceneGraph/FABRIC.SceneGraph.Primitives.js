@@ -62,7 +62,7 @@ FABRIC.SceneGraph.registerNodeType('Cross', {
         srcFile: 'FABRIC_ROOT/SceneGraph/KL/generateCross.kl',
         entryFunctionName: 'generateCross',
         parameterLayout: [
-          'self.positions[]',
+          'self.positions<>',
           'uniforms.indices',
           'uniforms.crosssize'
         ]
@@ -96,7 +96,7 @@ FABRIC.SceneGraph.registerNodeType('Rectangle', {
         srcFile: 'FABRIC_ROOT/SceneGraph/KL/generateRectangle.kl',
         entryFunctionName: 'generateRectangle',
         parameterLayout: [
-          'self.positions[]',
+          'self.positions<>',
           'uniforms.indices',
           'uniforms.length',
           'uniforms.width'
@@ -133,7 +133,7 @@ FABRIC.SceneGraph.registerNodeType('BoundingBox', {
         srcFile: 'FABRIC_ROOT/SceneGraph/KL/generateBoundingBox.kl',
         entryFunctionName: 'generateBoundingBox',
         parameterLayout: [
-          'self.positions[]',
+          'self.positions<>',
           'uniforms.indices',
           'uniforms.bboxmin',
           'uniforms.bboxmax'
@@ -191,7 +191,7 @@ FABRIC.SceneGraph.registerNodeType('Grid', {
         srcFile: 'FABRIC_ROOT/SceneGraph/KL/generateGrid.kl',
         entryFunctionName: 'generateGrid',
         parameterLayout: [
-          'self.positions[]',
+          'self.positions<>',
           'uniforms.indices',
           'uniforms.size_x',
           'uniforms.size_y',
@@ -236,7 +236,7 @@ FABRIC.SceneGraph.registerNodeType('Axes', {
         srcFile: 'FABRIC_ROOT/SceneGraph/KL/generateAxes.kl',
         entryFunctionName: 'generateAxes',
         parameterLayout: [
-          'self.positions[]',
+          'self.positions<>',
           'uniforms.indices',
           'uniforms.size'
         ]
@@ -288,7 +288,7 @@ FABRIC.SceneGraph.registerNodeType('Circle', {
         srcFile: 'FABRIC_ROOT/SceneGraph/KL/generateCircle.kl',
         entryFunctionName: 'generateCircle',
         parameterLayout: [
-          'self.positions[]',
+          'self.positions<>',
           'uniforms.indices',
           'uniforms.radius',
           'uniforms.arcAngle',
@@ -356,9 +356,9 @@ FABRIC.SceneGraph.registerNodeType('Plane', {
           'uniforms.lengthSections',
           'uniforms.widthSections',
 
-          'self.positions[]',
-          'self.normals[]',
-          'self.uvs0[]'
+          'self.positions<>',
+          'self.normals<>',
+          'self.uvs0<>'
         ]
       })
     ]);
@@ -407,8 +407,8 @@ FABRIC.SceneGraph.registerNodeType('Cuboid', {
         srcFile: 'FABRIC_ROOT/SceneGraph/KL/generateCuboid.kl',
         entryFunctionName: 'generateCuboid',
         parameterLayout: [
-          'self.positions[]',
-          'self.normals[]',
+          'self.positions<>',
+          'self.normals<>',
           'uniforms.indices',
           'uniforms.length',
           'uniforms.height',
@@ -464,9 +464,9 @@ FABRIC.SceneGraph.registerNodeType('Sphere', {
           'uniforms.detail',
 
           'uniforms.indices',
-          'self.positions[]',
-          'self.normals[]',
-          'self.uvs0[]'
+          'self.positions<>',
+          'self.normals<>',
+          'self.uvs0<>'
         ]
       })
     ]);
@@ -523,8 +523,8 @@ FABRIC.SceneGraph.registerNodeType('Torus', {
           'uniforms.detail',
 
           'uniforms.indices',
-          'self.positions[]',
-          'self.normals[]'
+          'self.positions<>',
+          'self.normals<>'
         ]
       })
     ]);
@@ -585,8 +585,8 @@ FABRIC.SceneGraph.registerNodeType('Cone', {
           'uniforms.detail',
 
           'uniforms.indices',
-          'self.positions[]',
-          'self.normals[]'
+          'self.positions<>',
+          'self.normals<>'
         ]
       })
     ]);
@@ -653,9 +653,9 @@ FABRIC.SceneGraph.registerNodeType('Cylinder', {
           'uniforms.loops',
 
           'uniforms.indices',
-          'self.positions[]',
-          'self.normals[]',
-          'self.uvs0[]'
+          'self.positions<>',
+          'self.normals<>',
+          'self.uvs0<>'
         ]
       })
     ]);
@@ -677,7 +677,7 @@ FABRIC.SceneGraph.registerNodeType('Teapot', {
         size: 5.0,
         detail: 5
       });
-
+    options.uvSets = 1;
     var teapotNode = scene.constructNode('Triangles', options);
     teapotNode.pub.addUniformValue('size', 'Scalar', options.size);
     teapotNode.pub.addUniformValue('detail', 'Integer', options.detail);
@@ -689,6 +689,15 @@ FABRIC.SceneGraph.registerNodeType('Teapot', {
 
     teapotNode.setGeneratorOps([
       scene.constructOperator({
+        operatorName: 'setTeapotVertexCount',
+        srcFile: 'FABRIC_ROOT/SceneGraph/KL/generateTeapot.kl',
+        entryFunctionName: 'setTeapotVertexCount',
+        parameterLayout: [
+          'uniforms.detail',
+          'self.newCount'
+        ]
+      }),
+      scene.constructOperator({
         operatorName: 'generateTeapot',
         srcFile: 'FABRIC_ROOT/SceneGraph/KL/generateTeapot.kl',
         entryFunctionName: 'generateTeapot',
@@ -697,8 +706,9 @@ FABRIC.SceneGraph.registerNodeType('Teapot', {
           'uniforms.detail',
 
           'uniforms.indices',
-          'self.positions[]',
-          'self.normals[]'
+          'self.positions<>',
+          'self.normals<>',
+          'self.uvs0<>'
         ]
       })
     ]);

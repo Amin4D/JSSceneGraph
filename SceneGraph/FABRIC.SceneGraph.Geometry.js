@@ -44,7 +44,7 @@ FABRIC.SceneGraph.registerNodeType('Geometry', {
         srcFile: 'FABRIC_ROOT/SceneGraph/KL/calcBoundingBox.kl',
         entryFunctionName: 'calcBoundingBox',
         parameterLayout: [
-          'attributes.positions[]',
+          'attributes.positions<>',
           'self.min',
           'self.max'
         ]
@@ -130,7 +130,7 @@ FABRIC.SceneGraph.registerNodeType('Geometry', {
             entryFunctionName: 'genAndBindVBO',
             parameterLayout: [
               'shader.shaderProgram',
-              'attributes.' + name + '[]',
+              'attributes.' + name + '<>',
               'self.' + bufferMemberName
             ]
           }));
@@ -300,7 +300,7 @@ FABRIC.SceneGraph.registerNodeType('Points', {
             'raycastData.ray',
             'raycastData.threshold',
             'transform.' + transformNodeMember,
-            'geometry_attributes.positions[]',
+            'geometry_attributes.positions<>',
             'boundingbox.min',
             'boundingbox.max'
           ]
@@ -349,7 +349,7 @@ FABRIC.SceneGraph.registerNodeType('Lines', {
             'raycastData.ray',
             'raycastData.threshold',
             'transform.' + transformNodeMember,
-            'geometry_attributes.positions[]',
+            'geometry_attributes.positions<>',
             'geometry_uniforms.indices',
             'boundingbox.min',
             'boundingbox.max'
@@ -399,7 +399,7 @@ FABRIC.SceneGraph.registerNodeType('LineStrip', {
             'raycastData.ray',
             'raycastData.threshold',
             'transform.' + transformNodeMember,
-            'geometry_attributes.positions[]',
+            'geometry_attributes.positions<>',
             'geometry_uniforms.indices',
             'boundingbox.min',
             'boundingbox.max'
@@ -451,7 +451,7 @@ FABRIC.SceneGraph.registerNodeType('Triangles', {
           parameterLayout: [
             'raycastData.ray',
             'transform.' + transformNodeMember,
-            'geometry_attributes.positions[]',
+            'geometry_attributes.positions<>',
             'geometry_uniforms.indices',
             'boundingbox.min',
             'boundingbox.max'
@@ -491,10 +491,10 @@ FABRIC.SceneGraph.registerNodeType('Triangles', {
           entryFunctionName: 'computeTriangleTangents',
           parameterLayout: [
             'uniforms.indices',
-            'self.positions[]',
-            'self.normals[]',
-            'self.uvs' + tangentUVIndex + '[]',
-            'self.tangents[]'
+            'self.positions<>',
+            'self.normals<>',
+            'self.uvs' + tangentUVIndex + '<>',
+            'self.tangents<>'
           ]
         }));
       }
@@ -778,9 +778,9 @@ FABRIC.SceneGraph.registerNodeType('Instance', {
           parameterLayout: [
             'uniforms.handle',
             'uniforms.indices',
-            'self.positions[]',
-            'self.normals[]',
-            'self.uvs0[]',
+            'self.positions<>',
+            'self.normals<>',
+            'self.uvs0<>',
             'uniforms.reload'
           ]
         }),

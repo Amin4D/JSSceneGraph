@@ -20,8 +20,8 @@ operator simulateParticles(
   io Integer cellindex,
   io Vec3 cellcoords,
 
-  io Vec3 previousframe_positions[],
-  io Vec3 previousframe_velocities[],
+  io Vec3 previousframe_positions<>,
+  io Vec3 previousframe_velocities<>,
 
   io Scalar neighborInfluenceRange,
   io HashTable hashtable,

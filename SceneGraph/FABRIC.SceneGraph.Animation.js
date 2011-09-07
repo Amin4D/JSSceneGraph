@@ -92,7 +92,7 @@ FABRIC.SceneGraph.registerNodeType('AnimationTrack', {
           },
           entryFunctionName: 'evaluateKeyframeAnimationTracks',
           parameterLayout: [
-            'animationtrack.keys[]',
+            'animationtrack.keys<>',
             'controller.localTime',
             'self.index',
             'self.value',
@@ -110,7 +110,7 @@ FABRIC.SceneGraph.registerNodeType('AnimationTrack', {
           },
           entryFunctionName: 'evaluateCurve',
           parameterLayout: [
-            'animationtrack.keys[]',
+            'animationtrack.keys<>',
             'parameters.trackIndex',
             'parameters.timeRange',
             'self.index',
@@ -283,10 +283,10 @@ FABRIC.SceneGraph.registerNodeType('AnimationEvaluator', {
       var targetNodeMembers = targetnode.getDGNode().getMembers();
 
       var operatorName = 'bindAnimationTracksTo' + JSON.stringify(memberBindings).replace(/[^a-zA-Z 0-9]+/g, '');
-      var operatorHeaderSrc = '\nuse Vec3, Euler, Quat, RotationOrder; operator ' + operatorName + '(\n\tio ' + evaluatorDatatype + ' curvevalues[]';
+      var operatorHeaderSrc = '\nuse Vec3, Euler, Quat, RotationOrder; operator ' + operatorName + '(\n\tio ' + evaluatorDatatype + ' curvevalues<>';
       var operatorArraySrc = {};
       var operatorBodySrc = '';
-      var parameterLayout = ['animationevaluator.value[]'];
+      var parameterLayout = ['animationevaluator.value<>'];
       var tempVariables = {};
       for (var memberAccessor in memberBindings) {
         var memberBinding = memberBindings[memberAccessor];

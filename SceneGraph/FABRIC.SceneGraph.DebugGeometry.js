@@ -120,7 +120,7 @@ FABRIC.SceneGraph.registerNodeType('DebugGeometryDraw', {
       entryFunctionName: 'debugGeometryDraw',
       parameterLayout: [
         'shader.shaderProgram',
-        'debuggeometrynode.' + options.debugGemetryMemberName + '[]',
+        'debuggeometrynode.' + options.debugGemetryMemberName + '<>',
         'self.positionsBuffer',
         'self.vertexColorsBuffer',
         'self.pointsIndicesBuffer',

@@ -11,48 +11,47 @@ operator setAxesVertexCount(
 }
 
 operator generateAxes(
-  io Vec3 vertices[],
+  io Vec3 positions<>,
   io Integer indices[],
   io Scalar size
 ) {
-  //  vertices.resize( 19 );
   indices.resize(23);
 
   Integer iidx = 0;
   Integer vidx = 0;
   // X-axis
-  vertices[vidx++] = Vec3(size, 0.0, 0.0);
-  vertices[vidx++] = Vec3(0.0, 0.0, 0.0);
+  positions[vidx++] = Vec3(size, 0.0, 0.0);
+  positions[vidx++] = Vec3(0.0, 0.0, 0.0);
   indices[iidx++] = 0; indices[iidx++] = 1;
-  vertices[vidx++] = Vec3(1.2 * size, 0.2 * size, 0.0);
-  vertices[vidx++] = Vec3(1.6 * size, - 0.2 * size, 0.0);
+  positions[vidx++] = Vec3(1.2 * size, 0.2 * size, 0.0);
+  positions[vidx++] = Vec3(1.6 * size, - 0.2 * size, 0.0);
   indices[iidx++] = 2; indices[iidx++] = 3;
-  vertices[vidx++] = Vec3(1.6 * size, 0.2 * size, 0.0);
-  vertices[vidx++] = Vec3(1.2 * size, - 0.2 * size, 0.0);
+  positions[vidx++] = Vec3(1.6 * size, 0.2 * size, 0.0);
+  positions[vidx++] = Vec3(1.2 * size, - 0.2 * size, 0.0);
   indices[iidx++] = 4; indices[iidx++] = 5;
 
   // Y-axis
-  vertices[vidx++] = Vec3(0.0, size, 0.0);
-  vertices[vidx++] = Vec3(0.0, 0.0, 0.0);
+  positions[vidx++] = Vec3(0.0, size, 0.0);
+  positions[vidx++] = Vec3(0.0, 0.0, 0.0);
   indices[iidx++] = 6; indices[iidx++] = 7;
-  vertices[vidx++] = Vec3(0.0, 1.2 * size, 0.0);
-  vertices[vidx++] = Vec3(0.0, 1.4 * size, 0.0);
+  positions[vidx++] = Vec3(0.0, 1.2 * size, 0.0);
+  positions[vidx++] = Vec3(0.0, 1.4 * size, 0.0);
   indices[iidx++] = 8; indices[iidx++] = 9;
-  vertices[vidx++] = Vec3(-0.2 * size, 1.6 * size, 0.0);
+  positions[vidx++] = Vec3(-0.2 * size, 1.6 * size, 0.0);
   indices[iidx++] = 9; indices[iidx++] = 10;
-  vertices[vidx++] = Vec3(0.2 * size, 1.6 * size, 0.0);
+  positions[vidx++] = Vec3(0.2 * size, 1.6 * size, 0.0);
   indices[iidx++] = 9; indices[iidx++] = 11;
 
   // Z-axis
-  vertices[vidx++] = Vec3(0.0, 0.0, size);
-  vertices[vidx++] = Vec3(0.0, 0.0, 0.0);
+  positions[vidx++] = Vec3(0.0, 0.0, size);
+  positions[vidx++] = Vec3(0.0, 0.0, 0.0);
   indices[iidx++] = 12; indices[iidx++] = 13;
-  vertices[vidx++] = Vec3(0.0, - 0.2 * size, 1.2 * size);
-  vertices[vidx++] = Vec3(0.0, - 0.2 * size, 1.6 * size);
+  positions[vidx++] = Vec3(0.0, - 0.2 * size, 1.2 * size);
+  positions[vidx++] = Vec3(0.0, - 0.2 * size, 1.6 * size);
   indices[iidx++] = 14; indices[iidx++] = 15;
-  vertices[vidx++] = Vec3(0.0, 0.2 * size, 1.2 * size);
+  positions[vidx++] = Vec3(0.0, 0.2 * size, 1.2 * size);
   indices[iidx++] = 15; indices[iidx++] = 16;
-  vertices[vidx++] = Vec3(0.0, 0.2 * size, 1.6 * size);
+  positions[vidx++] = Vec3(0.0, 0.2 * size, 1.6 * size);
   indices[iidx++] = 16; indices[iidx++] = 17;
 
 }

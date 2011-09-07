@@ -33,8 +33,8 @@ FABRIC.SceneGraph.registerNodeType('CharacterMesh', {
         'uniforms.boneCountArray',
         'uniforms.boneIdsArray',
         'uniforms.boneWeightsArray',
-        'self.boneIds[]',
-        'self.boneWeights[]'
+        'self.boneIds<>',
+        'self.boneWeights<>'
       ]
     }));
     
@@ -281,6 +281,18 @@ FABRIC.SceneGraph.registerNodeType('CharacterSkeletonDebug', {
       characterSkeletonDebug.pub.addUniformValue('offsetpose', 'Xfo', options.offsetpose);
 
       // now append the operator to create the lines
+      
+      // now append the operator to create the lines
+      characterSkeletonDebug.getAttributesDGNode().bindings.append(scene.constructOperator({
+          operatorName: 'setSkeletonVertexCount',
+          srcFile: 'FABRIC_ROOT/SceneGraph/KL/generateSkeleton.kl',
+          entryFunctionName: 'setSkeletonVertexCount',
+          parameterLayout: [
+            'skeleton.bones',
+            'self.newCount'
+          ]
+        }));
+      
       characterSkeletonDebug.getAttributesDGNode().bindings.append(scene.constructOperator({
           operatorName: 'generateSkeletonOp',
           srcFile: 'FABRIC_ROOT/SceneGraph/KL/generateSkeleton.kl',
@@ -288,7 +300,7 @@ FABRIC.SceneGraph.registerNodeType('CharacterSkeletonDebug', {
           parameterLayout: [
             'skeleton.bones',
             'rig.pose',
-            'self.positions[]',
+            'self.positions<>',
             'uniforms.indices',
             'uniforms.boneradius',
             'uniforms.offsetpose'
@@ -626,7 +638,7 @@ FABRIC.SceneGraph.registerNodeType('CharacterRigDebug', {
           parameterLayout: [
             'uniforms.debugpose',
             'uniforms.offsetpose',
-            'self.positions[]',
+            'self.positions<>',
             'self.vertexColors[]',
             'uniforms.singlecolor'
           ]

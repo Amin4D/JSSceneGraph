@@ -31,11 +31,9 @@ operator reduceBoneBinding(
   io Integer boneCountArray[],
   io Integer boneIndicesArray[],
   io Scalar boneWeightsArray[],
-  io Vec4 boneIndices[],
-  io Vec4 boneWeights[]
+  io Vec4 boneIndices<>,
+  io Vec4 boneWeights<>
 ) {
-  boneIndices.resize(boneCountArray.size());
-  boneWeights.resize(boneCountArray.size());
   var Integer offset = 0;
   for (var Integer i = 0; i < boneCountArray.size(); i++) {
     boneWeights[i] = Vec4(0.0, 0.0, 0.0, 0.0);

@@ -21,9 +21,9 @@ operator generateSphere(
   io Integer detail,
 
   io Integer indices[],
-  io Vec3 positions[],
-  io Vec3 normals[],
-  io Vec2 uvs[]
+  io Vec3 positions<>,
+  io Vec3 normals<>,
+  io Vec2 uvs<>
 ) {
   Integer sides = (detail >= 0) ? (detail * 2 + 3) : 3;
   Integer loops = (detail >= 0) ? (detail + 1) : 1;

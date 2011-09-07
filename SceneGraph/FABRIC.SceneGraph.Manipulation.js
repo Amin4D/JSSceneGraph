@@ -350,8 +350,8 @@ FABRIC.SceneGraph.registerNodeType('PaintManipulator', {
             'paintData.brushSize',
   
             'transform.' + instanceNode.pub.getTransformNodeMember(),
-            'geometryattributes.positions[]',
-            'geometryattributes.normals[]'
+            'geometryattributes.positions<>',
+            'geometryattributes.normals<>'
           ],
           async: false
         };

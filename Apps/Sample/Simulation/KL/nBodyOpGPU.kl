@@ -62,9 +62,9 @@ function initOpenCL
 
 operator nBodySimulateGPU(
   io Scalar time,
-  io Vec4 posInit[],
-  io Vec4 velInit[],
-  io Scalar massInit[],
+  io Vec4 posInit<>,
+  io Vec4 velInit<>,
+  io Scalar massInit<>,
 
   io cl_context clContext,
   io cl_command_queue clCommandQueue,
@@ -80,7 +80,7 @@ operator nBodySimulateGPU(
   io Scalar softening,
   io Scalar damping,
   
-  io Vec4 posDraw[],
+  io Vec4 posDraw<>,
 ) {
   var Data NULL;
   var Integer clErr;
@@ -175,7 +175,7 @@ operator nBodySimulateGPU(
   
     clErr = clEnqueueReadBuffer(clCommandQueue, posCurrent, CL_TRUE, 0, readData.dataSize, readData.data, eventWaitList, event);
 
-    posDraw.resize(clPointCount);
+  //  posDraw.resize(clPointCount);
     for (var Size i = 0; i < clPointCount; i++) {
       posDraw[i] = readData[i];
     }

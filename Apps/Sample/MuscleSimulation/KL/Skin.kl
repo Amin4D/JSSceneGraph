@@ -11,9 +11,9 @@ use DebugGeometry;
 
 
 operator setVertexColorByWeight(
-  io Scalar stickWeights[],
-  io Scalar slideWeights[],
-  io Scalar bulgeWeights[],
+  io Scalar stickWeights<>,
+  io Scalar slideWeights<>,
+  io Scalar bulgeWeights<>,
   io Color vertexColor,
   in Size index
 ){

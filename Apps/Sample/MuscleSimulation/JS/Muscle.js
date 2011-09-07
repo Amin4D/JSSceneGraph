@@ -173,14 +173,14 @@ FABRIC.SceneGraph.registerNodeType('MuscleSystem', {
           KEYFRAME_EVALUATEDTYPE: 'Scalar'
         },
         parameterLayout: [
-          'initializationdgnode.initialXfos[]',
-          'initializationdgnode.xfo[]',
-          'initializationdgnode.segmentLengths[]',
-          'initializationdgnode.pointEnvelopeIds[]',
-          'initializationdgnode.pointEnvelopWeights[]',
-          'initializationdgnode.flexibilityWeights[]',
-          'initializationdgnode.contractionCurve[]',
-          'initializationdgnode.contractionWeights[]',
+          'initializationdgnode.initialXfos<>',
+          'initializationdgnode.xfo<>',
+          'initializationdgnode.segmentLengths<>',
+          'initializationdgnode.pointEnvelopeIds<>',
+          'initializationdgnode.pointEnvelopWeights<>',
+          'initializationdgnode.flexibilityWeights<>',
+          'initializationdgnode.contractionCurve<>',
+          'initializationdgnode.contractionWeights<>',
           
           'self.index',
           'self.initialized',
@@ -289,12 +289,12 @@ operator rotateMuscleVolume(\n\
         parameterLayout: [
           'uniforms.muscleIndex',
           'musclesystem.displacementMapResolution',
-          'initializationdgnode.displacementMap[]',
-          'simulationdgnode.simulatedXfos[]',
-          'simulationdgnode.compressionFactor[]',
-          'parentattributes.positions[]',
-          'parentattributes.normals[]',
-          'parentattributes.uvs0[]',
+          'initializationdgnode.displacementMap<>',
+          'simulationdgnode.simulatedXfos<>',
+          'simulationdgnode.compressionFactor<>',
+          'parentattributes.positions<>',
+          'parentattributes.normals<>',
+          'parentattributes.uvs0<>',
           'self.positions',
           'self.normals',
           'self.index'
@@ -376,8 +376,8 @@ FABRIC.SceneGraph.registerNodeType('MuscleSkinDeformation', {
         KEYFRAME_EVALUATEDTYPE: 'Scalar'
       },
       parameterLayout: [
-        'musclesinitialization.initialXfos[]',
-        'parentattributes.positions[]',
+        'musclesinitialization.initialXfos<>',
+        'parentattributes.positions<>',
         'self.muscleBindingIds',
         'self.stickLocations',
         'self.index'
@@ -407,9 +407,9 @@ FABRIC.SceneGraph.registerNodeType('MuscleSkinDeformation', {
       srcFile: './KL/skin.kl',
       entryFunctionName: 'setVertexColorByWeight',
       parameterLayout: [
-        'boundskin.stickWeight[]',
-        'boundskin.slideWeight[]',
-        'boundskin.bulgeWeight[]',
+        'boundskin.stickWeight<>',
+        'boundskin.slideWeight<>',
+        'boundskin.bulgeWeight<>',
         'self.vertexColors',
         'self.index'
       ]
@@ -425,19 +425,19 @@ FABRIC.SceneGraph.registerNodeType('MuscleSkinDeformation', {
       },
       parameterLayout: [
         'musclesystem.displacementMapResolution',
-        'musclesinitialization.displacementMap[]',
-        'musclessimulation.simulatedXfos[]',
+        'musclesinitialization.displacementMap<>',
+        'musclessimulation.simulatedXfos<>',
         
-        'parentattributes.positions[]',
-        'parentattributes.normals[]',
+        'parentattributes.positions<>',
+        'parentattributes.normals<>',
         'self.positions',
         'self.normals',
-        'boundskin.muscleBindingIds[]',
-        'boundskin.musclebindingweights[]',
-        'boundskin.stickWeight[]',
-        'boundskin.stickLocations[]',
-        'boundskin.slideWeight[]',
-        'boundskin.bulgeWeight[]',
+        'boundskin.muscleBindingIds<>',
+        'boundskin.musclebindingweights<>',
+        'boundskin.stickWeight<>',
+        'boundskin.stickLocations<>',
+        'boundskin.slideWeight<>',
+        'boundskin.bulgeWeight<>',
         'self.index',
         'self.debugDraw'
       ]

@@ -11,7 +11,7 @@ FABRIC.RT = FABRIC.RT ? FABRIC.RT : {};
 /**
  * The precision of the math module.
  */
-FABRIC.RT.precision = 1e-5;
+FABRIC.RT.precision = 10e-30
 /**
  * The factor to project radians to degrees.
  */

@@ -140,7 +140,7 @@ function Mat44 Mat44.inverse() {
 
   var Mat44 result;
 
-  if (abs(det) < 0.00001) {
+  if (abs(det) < PRECISION) {
     result.setNull();
     return result;
   }

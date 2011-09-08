@@ -325,7 +325,7 @@ FABRIC.RT.Vec3.rayIntersectPlane = function(
   D = planeNormal.dot(rayDirection);
   N = - planeNormal.dot(w);
 
-  if (Math.abs(D) < 0.0001) {
+  if (Math.abs(D) < PRECISION) {
     // segment is parallel to plane
     if (N === 0)// segment lies in plane
       return - 1;

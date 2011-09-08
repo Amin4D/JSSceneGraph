@@ -91,7 +91,7 @@ FABRIC.RT.Quat.makeFromAxisAndAngle = function(vec, degrees) {
 FABRIC.RT.Quat.makeFrom2Vectors = function (vec1, vec2, arbitraryIfAmbiguous) {
   var q = new FABRIC.RT.Quat();
   var val = vec1.dot(vec2) + 1;
-  if (val <= 0.00001) {
+  if (val <= PRECISION) {
     // the vectors pointed in opposite directions OR they are not unit vectors.
     // creating the quaterion is ambiguous (many answers)
     if (arbitraryIfAmbiguous === true) {

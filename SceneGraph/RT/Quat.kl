@@ -131,7 +131,7 @@ function Quat slerp(in Quat a, in Quat b, in Scalar t) {
     var Scalar halfTheta = acos(cosHalfTheta);
     var Scalar sinHalfTheta = sqrt(1.0 - cosHalfTheta * cosHalfTheta);
 
-    if (abs(sinHalfTheta) < 0.00001) {
+    if (abs(sinHalfTheta) < PRECISION) {
       r = Quat((a.w + b.w) * 0.5, (a.v + b.v) * 0.5);
     }
     else {

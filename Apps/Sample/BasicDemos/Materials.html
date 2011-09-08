@@ -51,6 +51,10 @@ $(document).ready(function() {
     backgroundColor: FABRIC.RT.rgb(0.0, 0.05, 0.15)
   });
   
+  viewport.setBackgroundTextureImage(scene.constructNode('Image', {
+    url: 'Resources/fabric-demo-gradient.png'
+  }));
+  
   var geometryShadersSupported = viewport.getGlewSupported('GL_EXT_geometry_shader4');
 
   // Create a camera to draw the scene from

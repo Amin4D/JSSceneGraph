@@ -59,11 +59,15 @@ $(document).ready(function() {
   $('#curveEditor').button();
 
   // Create the scene.
-   scene = FABRIC.SceneGraph.createScene();
+  var scene = FABRIC.SceneGraph.createScene();
   var viewport = scene.constructNode('Viewport', {
     enableRaycasting: true,
     windowElement: document.getElementById('FabricContainer')
   });
+  
+  viewport.setBackgroundTextureImage(scene.constructNode('Image', {
+    url: 'Resources/fabric-demo-gradient.png'
+  }));
 
   // Create a camera to draw the scene from
   var haveCameraManipulator = false;

@@ -34,6 +34,7 @@
     <script type="text/javascript" src="../../../SceneGraph/RT/HashTable.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/RT/OGLShaderProgram.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/RT/OGLBuffer.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/OGLTexture2D.js" charset="utf-8"></script>
     
 
     <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.js" charset="utf-8"></script>
@@ -111,6 +112,10 @@ $(document).ready(function() {
       backgroundColor: FABRIC.RT.rgb(0.5, 0.7, 0.9),
       enableRaycasting: true
     });
+  
+  viewport.setBackgroundTextureImage(scene.constructNode('Image', {
+    url: '../BasicDemos/Resources/fabric-demo-gradient.png'
+  }));
 
   var light = scene.constructNode('PointLight', { position: FABRIC.RT.vec3(420.0, 1000.0, 600.0) });
   // Create a camera to draw the scene from

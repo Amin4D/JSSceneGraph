@@ -166,6 +166,11 @@ $(document).ready(function() {
     windowElement: document.getElementById('FabricContainer'),
     backgroundColor: FABRIC.RT.rgb(0.75, 0.75, 0.75)
   });
+  
+  
+  viewport.setBackgroundTextureImage(scene.constructNode('Image', {
+    url: '../BasicDemos/Resources/fabric-demo-gradient.png'
+  }));
 
   // Create a camera to draw the scene from
   camera = scene.constructNode('TargetCamera', {

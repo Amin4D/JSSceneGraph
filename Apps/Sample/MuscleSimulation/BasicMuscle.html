@@ -74,6 +74,11 @@ $(document).ready(function() {
     backgroundColor: FABRIC.RT.rgb(0.0, 0.05, 0.15),
     enableRaycasting: true
   });
+  
+  viewport.setBackgroundTextureImage(scene.constructNode('Image', {
+    url: '../BasicDemos/Resources/fabric-demo-gradient.png'
+  }));
+  
 
   // Create a camera to draw the scene from
   var camera = scene.constructNode('TargetCamera', {

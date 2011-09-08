@@ -47,15 +47,17 @@ $(document).ready(function() {
 
   // Create the scene.
   var scene = FABRIC.SceneGraph.createScene();
-//  var postProcessEffect = scene.constructNode( "BloomPostProcessEffect" );
 
   var viewport = scene.constructNode('Viewport', {
-    /*postProcessEffect:postProcessEffect,*/
     windowElement: document.getElementById('FabricContainer'),
     enableRaycasting: true,
     backgroundColor: FABRIC.RT.rgb(0.1, 0.1, 0.1)
   });
 
+  viewport.setBackgroundTextureImage(scene.constructNode('Image', {
+    url: '../BasicDemos/Resources/fabric-demo-gradient.png'
+  }));
+  
   // Create a camera to draw the scene from
   var camera = scene.constructNode('TargetCamera', {
     position: FABRIC.RT.vec3(30, 30, 0),

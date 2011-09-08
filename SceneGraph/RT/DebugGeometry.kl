@@ -1,0 +1,68 @@
+
+//
+// Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
+//
+
+use Math;
+
+
+
+function DebugGeometry.drawPoint(Vec3 pos, Color color) {
+  this.pointsIndices.push(Integer(this.positions.size()));
+  this.positions.push(pos);
+  this.vertexColors.push(color);
+}
+
+function DebugGeometry.drawLine(Vec3 from, Vec3 to, Color color) {
+  this.linesIndices.push(Integer(this.positions.size()));
+  this.positions.push(from);
+  this.vertexColors.push(color);
+  
+  this.linesIndices.push(Integer(this.positions.size()));
+  this.positions.push(to);
+  this.vertexColors.push(color);
+}
+
+function DebugGeometry.drawLineStrip(Vec3 points[], Color color) {
+  for( Integer i=0; i<points.size(); i++){
+    this.linesIndices.push(Integer(this.positions.size()));
+    this.positions.push(points[i]);
+    this.vertexColors.push(color);
+    if(i > 0 && i < (points.size()-1)){
+      this.linesIndices.push(Integer(this.positions.size()));
+    }
+  }
+}
+
+function DebugGeometry.drawAxis(Xfo xfo, Scalar size, Color color) {
+  this.drawPoint(xfo.tr, color);
+  this.drawLine(xfo.tr, xfo.tr + xfo.ori.rotateVector(Vec3(size, 0.0, 0.0)), Color(1.0, 0.0, 0.0, 1.0));
+  this.drawLine(xfo.tr, xfo.tr + xfo.ori.rotateVector(Vec3(0.0, size, 0.0)), Color(0.0, 1.0, 0.0, 1.0));
+  this.drawLine(xfo.tr, xfo.tr + xfo.ori.rotateVector(Vec3(0.0, 0.0, size)), Color(0.0, 0.0, 1.0, 1.0));
+}
+
+function DebugGeometry.drawCircle(Xfo xfo, Scalar radius, Color color) {
+  Integer numSegments = 12;
+  var Integer id0 = Integer(this.positions.size());
+  Vec3 p;
+  for (var Integer i = 0; i < numSegments; i++) {
+    var Scalar angle = (Scalar(i) / Scalar(numSegments)) * TWO_PI;
+    p = xfo.tr + xfo.ori.rotateVector(Vec3(sin(angle) * radius, 0.0, cos(angle) * radius));
+    this.linesIndices.push(Integer(this.positions.size()));
+    this.positions.push(p);
+    this.vertexColors.push(color);
+    if(i < (numSegments-1)){
+      this.linesIndices.push(Integer(this.positions.size()));
+    }
+  }
+  this.linesIndices.push(id0);
+  
+}
+
+
+function DebugGeometry.reset() {
+  this.positions.resize(0);
+  this.vertexColors.resize(0);
+  this.pointsIndices.resize(0);
+  this.linesIndices.resize(0);
+}

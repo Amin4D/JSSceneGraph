@@ -15,7 +15,7 @@ operator rayIntersectLines(
   io Ray ray,
   io Scalar threshold,
   io Xfo globalXfo,
-  io Vec3 positions[],
+  io Vec3 positions<>,
   io Integer indices[],
   io Vec3 bboxmin,
   io Vec3 bboxmax

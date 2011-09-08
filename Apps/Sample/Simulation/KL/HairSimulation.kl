@@ -7,10 +7,10 @@ use FabricMath;
 
 operator initHair(
   in Size index,
-  io Vec3 trianglePositions[],
-  io Vec3 triangleNormals[],
-  io Vec4 localBoneIds[],
-  io Vec4 localBoneWeights[],
+  io Vec3 trianglePositions<>,
+  io Vec3 triangleNormals<>,
+  io Vec4 localBoneIds<>,
+  io Vec4 localBoneWeights<>,
   io Integer triangleIndices[],
   io Color rootColorLimits[2],
   io Color tipColorLimits[2],
@@ -79,14 +79,14 @@ operator initHair(
 
 operator simulateHair(
   in Size index,
-  io Vec3 localposition[],
-  io Vec3 localnormal[],
-  io Vec4 boneIds[],
-  io Vec4 boneWeights[],
-  io Scalar stiffness[],
-  io Scalar gravity[],
-  io Scalar segmentlength[],
-  io Color color[],
+  io Vec3 localposition<>,
+  io Vec3 localnormal<>,
+  io Vec4 boneIds<>,
+  io Vec4 boneWeights<>,
+  io Scalar stiffness<>,
+  io Scalar gravity<>,
+  io Scalar segmentlength<>,
+  io Color color<>,
   io Vec3 position,
   io Vec3 prevposition,
   io Vec3 normal,
@@ -146,10 +146,10 @@ operator simulateHair(
 }
 
 operator shiftPositions(
-  io Vec3 positions[],
-  io Vec3 prevpositions[],
-  io Vec3 normals[],
-  io Vec3 prevnormals[]
+  io Vec3 positions<>,
+  io Vec3 prevpositions<>,
+  io Vec3 normals<>,
+  io Vec3 prevnormals<>
 )
 {
   for(Size i=1; i<prevpositions.size(); ++i )

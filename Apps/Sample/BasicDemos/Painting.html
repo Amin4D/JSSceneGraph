@@ -62,7 +62,7 @@
     <script type="text/javascript">
     
     
-FABRIC.SceneGraph.registerNodeType('VertexColorsPaintManipulator', {
+FABRIC.SceneGraph.registerNodeType('PaintVertexColorsManipulator', {
   factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
       brushColor: FABRIC.RT.rgb(0.8, 0.0, 0.0)
@@ -82,21 +82,18 @@ FABRIC.SceneGraph.registerNodeType('VertexColorsPaintManipulator', {
             'paintData.brushColor',
 
             'transform.globalXfo',
-            'geometryattributes.positions[]',
-            'geometryattributes.normals[]',
-            'geometryattributes.vertexColors[]'
+            'geometryattributes.positions<>',
+            'geometryattributes.normals<>',
+            'geometryattributes.vertexColors<>'
           ],
           async: false
         };
     
     var vertexColorsPaintManipulator = scene.constructNode('PaintManipulator', options);
     
-    var dgnode = vertexColorsPaintManipulator.getDGNode();
-    dgnode.addMember('brushColor', 'Color', options.brushColor);
-    vertexColorsPaintManipulator.addMemberInterface(dgnode, 'brushColor', true);
-    
     var paintEventHandler = vertexColorsPaintManipulator.getPaintEventHandler();
-
+    paintEventHandler.addMember('brushColor', 'Color', options.brushColor);
+    vertexColorsPaintManipulator.addMemberInterface(paintEventHandler, 'brushColor', true);
     
     return vertexColorsPaintManipulator;
   }});
@@ -151,7 +148,7 @@ $(document).ready(function() {
   // Set up the painting manipulator
   var brushSize = 0.1;
   var brushColor = FABRIC.RT.rgb(0.8, 0.0, 0.0);
-  var paintManipulator = scene.constructNode('VertexColorsPaintManipulator', {
+  var paintManipulator = scene.constructNode('PaintVertexColorsManipulator', {
       brushSize: brushSize,
       enabled:false,
       brushColor: brushColor

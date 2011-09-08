@@ -6,7 +6,7 @@ use Vec2;
 use Vec3;
 
 struct Patch {
-  Integer idx[4][4];
+  Integer indices[4][4];
 };
 
 function Patch(
@@ -15,28 +15,28 @@ function Patch(
   in Integer a20, in Integer a21, in Integer a22, in Integer a23,
   in Integer a30, in Integer a31, in Integer a32, in Integer a33
 ) {
-  this.idx[0][0] = a00; this.idx[0][1] = a01; this.idx[0][2] = a02; this.idx[0][3] = a03;
-  this.idx[1][0] = a10; this.idx[1][1] = a11; this.idx[1][2] = a12; this.idx[1][3] = a13;
-  this.idx[2][0] = a20; this.idx[2][1] = a21; this.idx[2][2] = a22; this.idx[2][3] = a23;
-  this.idx[3][0] = a30; this.idx[3][1] = a31; this.idx[3][2] = a32; this.idx[3][3] = a33;
+  this.indices[0][0] = a00; this.indices[0][1] = a01; this.indices[0][2] = a02; this.indices[0][3] = a03;
+  this.indices[1][0] = a10; this.indices[1][1] = a11; this.indices[1][2] = a12; this.indices[1][3] = a13;
+  this.indices[2][0] = a20; this.indices[2][1] = a21; this.indices[2][2] = a22; this.indices[2][3] = a23;
+  this.indices[3][0] = a30; this.indices[3][1] = a31; this.indices[3][2] = a32; this.indices[3][3] = a33;
 }
 
 struct Quad {
-  Integer idx[2][2];
+  Integer indices[2][2];
   Vec3 normal;
 };
 
-function Quad(in Vec3 v[], in Integer i00, in Integer i01, in Integer i10, in Integer i11) {
-  this.idx[0][0] = i00;
-  this.idx[0][1] = i01;
-  this.idx[1][0] = i10;
-  this.idx[1][1] = i11;
+function Quad(in Vec3 positions[], in Integer i00, in Integer i01, in Integer i10, in Integer i11) {
+  this.indices[0][0] = i00;
+  this.indices[0][1] = i01;
+  this.indices[1][0] = i10;
+  this.indices[1][1] = i11;
 
   // Compute the face normal from the diagonals
   var Vec3 d0, d1;
 
-  d0 = v[i11] - v[i00];
-  d1 = v[i10] - v[i01];
+  d0 = positions[i11] - positions[i00];
+  d1 = positions[i10] - positions[i01];
 
   this.normal = d0.cross(d1).unit();
 }
@@ -47,8 +47,8 @@ struct Adjacency {
 
 function computeNormals(
   io Patch p[],
-  io Vec3 v[],
-  io Vec3 n[]
+  io Vec3 positions[],
+  io Vec3 normals[]
 ) {
   var Quad q[];
 
@@ -56,24 +56,24 @@ function computeNormals(
   for (var Size i = 0; i < p.size(); i++) {
     for (var Size j = 0; j < 3; j++) {
       for (var Size k = 0; k < 3; k++) {
-        q.push(Quad(v, p[i].idx[j][k], p[i].idx[j][k + 1], p[i].idx[j + 1][k], p[i].idx[j + 1][k + 1]));
+        q.push(Quad(positions, p[i].indices[j][k], p[i].indices[j][k + 1], p[i].indices[j + 1][k], p[i].indices[j + 1][k + 1]));
       }
     }
   }
 
   var Adjacency a[];
-  a.resize(v.size());
+  a.resize(positions.size());
 
   // Build adjacency information
   for (var Size i = 0; i < q.size(); i++) {
     for (var Size j = 0; j < 2; j++) {
       for (var Size k = 0; k < 2; k++) {
-        a[q[i].idx[j][k]].qidx.push(Integer(i));
+        a[q[i].indices[j][k]].qidx.push(Integer(i));
       }
     }
   }
   // Compute vertex normals from surrounding face normals
-  n.resize(v.size());
+  normals.resize(positions.size());
   for (var Size i = 0; i < a.size(); i++) {
     var Vec3 avgn(0.0, 0.0, 0.0);
 
@@ -83,14 +83,14 @@ function computeNormals(
     if (avgn.norm() > 0.0)
       avgn.setUnit();
 
-    n[i] = avgn;
+    normals[i] = avgn;
   }
 }
 
 function getTeapotHull(
   io Patch p[],
-  io Vec3 v[],
-  io Vec3 n[]
+  io Vec3 positions[],
+  io Vec3 normals[]
 ) {
   p.resize(0);
   p.push(Patch(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15));
@@ -126,63 +126,63 @@ function getTeapotHull(
   p.push(Patch(269, 269, 269, 269, 290, 297, 298, 299, 287, 294, 295, 296, 284, 291, 292, 293));
   p.push(Patch(269, 269, 269, 269, 299, 304, 305, 278, 296, 302, 303, 274, 293, 300, 301, 270));
 
-  v.resize(0);
-  v.push(Vec3(1.40000, 2.40000, - 0.00000)); v.push(Vec3(1.40000, 2.40000, 0.78400)); v.push(Vec3(0.78400, 2.40000, 1.40000)); v.push(Vec3(0.00000, 2.40000, 1.40000)); v.push(Vec3(1.33750, 2.53125, - 0.00000)); v.push(Vec3(1.33750, 2.53125, 0.74900)); v.push(Vec3(0.74900, 2.53125, 1.33750)); v.push(Vec3(0.00000, 2.53125, 1.33750)); v.push(Vec3(1.43750, 2.53125, - 0.00000)); v.push(Vec3(1.43750, 2.53125, 0.80500));
-  v.push(Vec3(0.80500, 2.53125, 1.43750)); v.push(Vec3(0.00000, 2.53125, 1.43750)); v.push(Vec3(1.50000, 2.40000, - 0.00000)); v.push(Vec3(1.50000, 2.40000, 0.84000)); v.push(Vec3(0.84000, 2.40000, 1.50000)); v.push(Vec3(0.00000, 2.40000, 1.50000)); v.push(Vec3(-0.78400, 2.40000, 1.40000)); v.push(Vec3(-1.40000, 2.40000, 0.78400)); v.push(Vec3(-1.40000, 2.40000, - 0.00000)); v.push(Vec3(-0.74900, 2.53125, 1.33750));
-  v.push(Vec3(-1.33750, 2.53125, 0.74900)); v.push(Vec3(-1.33750, 2.53125, - 0.00000)); v.push(Vec3(-0.80500, 2.53125, 1.43750)); v.push(Vec3(-1.43750, 2.53125, 0.80500)); v.push(Vec3(-1.43750, 2.53125, - 0.00000)); v.push(Vec3(-0.84000, 2.40000, 1.50000)); v.push(Vec3(-1.50000, 2.40000, 0.84000)); v.push(Vec3(-1.50000, 2.40000, - 0.00000)); v.push(Vec3(-1.40000, 2.40000, - 0.78400)); v.push(Vec3(-0.78400, 2.40000, - 1.40000));
-  v.push(Vec3(0.00000, 2.40000, - 1.40000)); v.push(Vec3(-1.33750, 2.53125, - 0.74900)); v.push(Vec3(-0.74900, 2.53125, - 1.33750)); v.push(Vec3(0.00000, 2.53125, - 1.33750)); v.push(Vec3(-1.43750, 2.53125, - 0.80500)); v.push(Vec3(-0.80500, 2.53125, - 1.43750)); v.push(Vec3(0.00000, 2.53125, - 1.43750)); v.push(Vec3(-1.50000, 2.40000, - 0.84000)); v.push(Vec3(-0.84000, 2.40000, - 1.50000)); v.push(Vec3(0.00000, 2.40000, - 1.50000));
-  v.push(Vec3(0.78400, 2.40000, - 1.40000)); v.push(Vec3(1.40000, 2.40000, - 0.78400)); v.push(Vec3(0.74900, 2.53125, - 1.33750)); v.push(Vec3(1.33750, 2.53125, - 0.74900)); v.push(Vec3(0.80500, 2.53125, - 1.43750)); v.push(Vec3(1.43750, 2.53125, - 0.80500)); v.push(Vec3(0.84000, 2.40000, - 1.50000)); v.push(Vec3(1.50000, 2.40000, - 0.84000)); v.push(Vec3(1.75000, 1.87500, - 0.00000)); v.push(Vec3(1.75000, 1.87500, 0.98000));
-  v.push(Vec3(0.98000, 1.87500, 1.75000)); v.push(Vec3(0.00000, 1.87500, 1.75000)); v.push(Vec3(2.00000, 1.35000, - 0.00000)); v.push(Vec3(2.00000, 1.35000, 1.12000)); v.push(Vec3(1.12000, 1.35000, 2.00000)); v.push(Vec3(0.00000, 1.35000, 2.00000)); v.push(Vec3(2.00000, 0.90000, - 0.00000)); v.push(Vec3(2.00000, 0.90000, 1.12000)); v.push(Vec3(1.12000, 0.90000, 2.00000)); v.push(Vec3(0.00000, 0.90000, 2.00000));
-  v.push(Vec3(-0.98000, 1.87500, 1.75000)); v.push(Vec3(-1.75000, 1.87500, 0.98000)); v.push(Vec3(-1.75000, 1.87500, - 0.00000)); v.push(Vec3(-1.12000, 1.35000, 2.00000)); v.push(Vec3(-2.00000, 1.35000, 1.12000)); v.push(Vec3(-2.00000, 1.35000, - 0.00000)); v.push(Vec3(-1.12000, 0.90000, 2.00000)); v.push(Vec3(-2.00000, 0.90000, 1.12000)); v.push(Vec3(-2.00000, 0.90000, - 0.00000)); v.push(Vec3(-1.75000, 1.87500, - 0.98000));
-  v.push(Vec3(-0.98000, 1.87500, - 1.75000)); v.push(Vec3(0.00000, 1.87500, - 1.75000)); v.push(Vec3(-2.00000, 1.35000, - 1.12000)); v.push(Vec3(-1.12000, 1.35000, - 2.00000)); v.push(Vec3(0.00000, 1.35000, - 2.00000)); v.push(Vec3(-2.00000, 0.90000, - 1.12000)); v.push(Vec3(-1.12000, 0.90000, - 2.00000)); v.push(Vec3(0.00000, 0.90000, - 2.00000)); v.push(Vec3(0.98000, 1.87500, - 1.75000)); v.push(Vec3(1.75000, 1.87500, - 0.98000));
-  v.push(Vec3(1.12000, 1.35000, - 2.00000)); v.push(Vec3(2.00000, 1.35000, - 1.12000)); v.push(Vec3(1.12000, 0.90000, - 2.00000)); v.push(Vec3(2.00000, 0.90000, - 1.12000)); v.push(Vec3(2.00000, 0.45000, - 0.00000)); v.push(Vec3(2.00000, 0.45000, 1.12000)); v.push(Vec3(1.12000, 0.45000, 2.00000)); v.push(Vec3(0.00000, 0.45000, 2.00000)); v.push(Vec3(1.50000, 0.22500, - 0.00000)); v.push(Vec3(1.50000, 0.22500, 0.84000));
-  v.push(Vec3(0.84000, 0.22500, 1.50000)); v.push(Vec3(0.00000, 0.22500, 1.50000)); v.push(Vec3(1.50000, 0.15000, - 0.00000)); v.push(Vec3(1.50000, 0.15000, 0.84000)); v.push(Vec3(0.84000, 0.15000, 1.50000)); v.push(Vec3(0.00000, 0.15000, 1.50000)); v.push(Vec3(-1.12000, 0.45000, 2.00000)); v.push(Vec3(-2.00000, 0.45000, 1.12000)); v.push(Vec3(-2.00000, 0.45000, - 0.00000)); v.push(Vec3(-0.84000, 0.22500, 1.50000));
-  v.push(Vec3(-1.50000, 0.22500, 0.84000)); v.push(Vec3(-1.50000, 0.22500, - 0.00000)); v.push(Vec3(-0.84000, 0.15000, 1.50000)); v.push(Vec3(-1.50000, 0.15000, 0.84000)); v.push(Vec3(-1.50000, 0.15000, - 0.00000)); v.push(Vec3(-2.00000, 0.45000, - 1.12000)); v.push(Vec3(-1.12000, 0.45000, - 2.00000)); v.push(Vec3(0.00000, 0.45000, - 2.00000)); v.push(Vec3(-1.50000, 0.22500, - 0.84000)); v.push(Vec3(-0.84000, 0.22500, - 1.50000));
-  v.push(Vec3(0.00000, 0.22500, - 1.50000)); v.push(Vec3(-1.50000, 0.15000, - 0.84000)); v.push(Vec3(-0.84000, 0.15000, - 1.50000)); v.push(Vec3(0.00000, 0.15000, - 1.50000)); v.push(Vec3(1.12000, 0.45000, - 2.00000)); v.push(Vec3(2.00000, 0.45000, - 1.12000)); v.push(Vec3(0.84000, 0.22500, - 1.50000)); v.push(Vec3(1.50000, 0.22500, - 0.84000)); v.push(Vec3(0.84000, 0.15000, - 1.50000)); v.push(Vec3(1.50000, 0.15000, - 0.84000));
-  v.push(Vec3(-1.60000, 2.02500, - 0.00000)); v.push(Vec3(-1.60000, 2.02500, 0.30000)); v.push(Vec3(-1.50000, 2.25000, 0.30000)); v.push(Vec3(-1.50000, 2.25000, - 0.00000)); v.push(Vec3(-2.30000, 2.02500, - 0.00000)); v.push(Vec3(-2.30000, 2.02500, 0.30000)); v.push(Vec3(-2.50000, 2.25000, 0.30000)); v.push(Vec3(-2.50000, 2.25000, - 0.00000)); v.push(Vec3(-2.70000, 2.02500, - 0.00000)); v.push(Vec3(-2.70000, 2.02500, 0.30000));
-  v.push(Vec3(-3.00000, 2.25000, 0.30000)); v.push(Vec3(-3.00000, 2.25000, - 0.00000)); v.push(Vec3(-2.70000, 1.80000, - 0.00000)); v.push(Vec3(-2.70000, 1.80000, 0.30000)); v.push(Vec3(-3.00000, 1.80000, 0.30000)); v.push(Vec3(-3.00000, 1.80000, - 0.00000)); v.push(Vec3(-1.50000, 2.25000, - 0.30000)); v.push(Vec3(-1.60000, 2.02500, - 0.30000)); v.push(Vec3(-2.50000, 2.25000, - 0.30000)); v.push(Vec3(-2.30000, 2.02500, - 0.30000));
-  v.push(Vec3(-3.00000, 2.25000, - 0.30000)); v.push(Vec3(-2.70000, 2.02500, - 0.30000)); v.push(Vec3(-3.00000, 1.80000, - 0.30000)); v.push(Vec3(-2.70000, 1.80000, - 0.30000)); v.push(Vec3(-2.70000, 1.57500, - 0.00000)); v.push(Vec3(-2.70000, 1.57500, 0.30000)); v.push(Vec3(-3.00000, 1.35000, 0.30000)); v.push(Vec3(-3.00000, 1.35000, - 0.00000)); v.push(Vec3(-2.50000, 1.12500, - 0.00000)); v.push(Vec3(-2.50000, 1.12500, 0.30000));
-  v.push(Vec3(-2.65000, 0.93750, 0.30000)); v.push(Vec3(-2.65000, 0.93750, - 0.00000)); v.push(Vec3(-2.00000, 0.90000, 0.30000)); v.push(Vec3(-1.90000, 0.60000, 0.30000)); v.push(Vec3(-1.90000, 0.60000, - 0.00000)); v.push(Vec3(-3.00000, 1.35000, - 0.30000)); v.push(Vec3(-2.70000, 1.57500, - 0.30000)); v.push(Vec3(-2.65000, 0.93750, - 0.30000)); v.push(Vec3(-2.50000, 1.12500, - 0.30000)); v.push(Vec3(-1.90000, 0.60000, - 0.30000));
-  v.push(Vec3(-2.00000, 0.90000, - 0.30000)); v.push(Vec3(1.70000, 1.42500, - 0.00000)); v.push(Vec3(1.70000, 1.42500, 0.66000)); v.push(Vec3(1.70000, 0.60000, 0.66000)); v.push(Vec3(1.70000, 0.60000, - 0.00000)); v.push(Vec3(2.60000, 1.42500, - 0.00000)); v.push(Vec3(2.60000, 1.42500, 0.66000)); v.push(Vec3(3.10000, 0.82500, 0.66000)); v.push(Vec3(3.10000, 0.82500, - 0.00000)); v.push(Vec3(2.30000, 2.10000, - 0.00000));
-  v.push(Vec3(2.30000, 2.10000, 0.25000)); v.push(Vec3(2.40000, 2.02500, 0.25000)); v.push(Vec3(2.40000, 2.02500, - 0.00000)); v.push(Vec3(2.70000, 2.40000, - 0.00000)); v.push(Vec3(2.70000, 2.40000, 0.25000)); v.push(Vec3(3.30000, 2.40000, 0.25000)); v.push(Vec3(3.30000, 2.40000, - 0.00000)); v.push(Vec3(1.70000, 0.60000, - 0.66000)); v.push(Vec3(1.70000, 1.42500, - 0.66000)); v.push(Vec3(3.10000, 0.82500, - 0.66000));
-  v.push(Vec3(2.60000, 1.42500, - 0.66000)); v.push(Vec3(2.40000, 2.02500, - 0.25000)); v.push(Vec3(2.30000, 2.10000, - 0.25000)); v.push(Vec3(3.30000, 2.40000, - 0.25000)); v.push(Vec3(2.70000, 2.40000, - 0.25000)); v.push(Vec3(2.80000, 2.47500, - 0.00000)); v.push(Vec3(2.80000, 2.47500, 0.25000)); v.push(Vec3(3.52500, 2.49375, 0.25000)); v.push(Vec3(3.52500, 2.49375, - 0.00000)); v.push(Vec3(2.90000, 2.47500, - 0.00000));
-  v.push(Vec3(2.90000, 2.47500, 0.15000)); v.push(Vec3(3.45000, 2.51250, 0.15000)); v.push(Vec3(3.45000, 2.51250, - 0.00000)); v.push(Vec3(2.80000, 2.40000, - 0.00000)); v.push(Vec3(2.80000, 2.40000, 0.15000)); v.push(Vec3(3.20000, 2.40000, 0.15000)); v.push(Vec3(3.20000, 2.40000, - 0.00000)); v.push(Vec3(3.52500, 2.49375, - 0.25000)); v.push(Vec3(2.80000, 2.47500, - 0.25000)); v.push(Vec3(3.45000, 2.51250, - 0.15000));
-  v.push(Vec3(2.90000, 2.47500, - 0.15000)); v.push(Vec3(3.20000, 2.40000, - 0.15000)); v.push(Vec3(2.80000, 2.40000, - 0.15000)); v.push(Vec3(0.00000, 3.15000, - 0.00000)); v.push(Vec3(0.00000, 3.15000, 0.00200)); v.push(Vec3(0.00200, 3.15000, - 0.00000)); v.push(Vec3(0.80000, 3.15000, - 0.00000)); v.push(Vec3(0.80000, 3.15000, 0.45000)); v.push(Vec3(0.45000, 3.15000, 0.80000)); v.push(Vec3(0.00000, 3.15000, 0.80000));
-  v.push(Vec3(0.00000, 2.85000, - 0.00000)); v.push(Vec3(0.20000, 2.70000, - 0.00000)); v.push(Vec3(0.20000, 2.70000, 0.11200)); v.push(Vec3(0.11200, 2.70000, 0.20000)); v.push(Vec3(0.00000, 2.70000, 0.20000)); v.push(Vec3(-0.00200, 3.15000, - 0.00000)); v.push(Vec3(-0.45000, 3.15000, 0.80000)); v.push(Vec3(-0.80000, 3.15000, 0.45000)); v.push(Vec3(-0.80000, 3.15000, - 0.00000)); v.push(Vec3(-0.11200, 2.70000, 0.20000));
-  v.push(Vec3(-0.20000, 2.70000, 0.11200)); v.push(Vec3(-0.20000, 2.70000, - 0.00000)); v.push(Vec3(0.00000, 3.15000, - 0.00200)); v.push(Vec3(-0.80000, 3.15000, - 0.45000)); v.push(Vec3(-0.45000, 3.15000, - 0.80000)); v.push(Vec3(0.00000, 3.15000, - 0.80000)); v.push(Vec3(-0.20000, 2.70000, - 0.11200)); v.push(Vec3(-0.11200, 2.70000, - 0.20000)); v.push(Vec3(0.00000, 2.70000, - 0.20000)); v.push(Vec3(0.45000, 3.15000, - 0.80000));
-  v.push(Vec3(0.80000, 3.15000, - 0.45000)); v.push(Vec3(0.11200, 2.70000, - 0.20000)); v.push(Vec3(0.20000, 2.70000, - 0.11200)); v.push(Vec3(0.40000, 2.55000, - 0.00000)); v.push(Vec3(0.40000, 2.55000, 0.22400)); v.push(Vec3(0.22400, 2.55000, 0.40000)); v.push(Vec3(0.00000, 2.55000, 0.40000)); v.push(Vec3(1.30000, 2.55000, - 0.00000)); v.push(Vec3(1.30000, 2.55000, 0.72800)); v.push(Vec3(0.72800, 2.55000, 1.30000));
-  v.push(Vec3(0.00000, 2.55000, 1.30000)); v.push(Vec3(1.30000, 2.40000, - 0.00000)); v.push(Vec3(1.30000, 2.40000, 0.72800)); v.push(Vec3(0.72800, 2.40000, 1.30000)); v.push(Vec3(0.00000, 2.40000, 1.30000)); v.push(Vec3(-0.22400, 2.55000, 0.40000)); v.push(Vec3(-0.40000, 2.55000, 0.22400)); v.push(Vec3(-0.40000, 2.55000, - 0.00000)); v.push(Vec3(-0.72800, 2.55000, 1.30000)); v.push(Vec3(-1.30000, 2.55000, 0.72800));
-  v.push(Vec3(-1.30000, 2.55000, - 0.00000)); v.push(Vec3(-0.72800, 2.40000, 1.30000)); v.push(Vec3(-1.30000, 2.40000, 0.72800)); v.push(Vec3(-1.30000, 2.40000, - 0.00000)); v.push(Vec3(-0.40000, 2.55000, - 0.22400)); v.push(Vec3(-0.22400, 2.55000, - 0.40000)); v.push(Vec3(0.00000, 2.55000, - 0.40000)); v.push(Vec3(-1.30000, 2.55000, - 0.72800)); v.push(Vec3(-0.72800, 2.55000, - 1.30000)); v.push(Vec3(0.00000, 2.55000, - 1.30000));
-  v.push(Vec3(-1.30000, 2.40000, - 0.72800)); v.push(Vec3(-0.72800, 2.40000, - 1.30000)); v.push(Vec3(0.00000, 2.40000, - 1.30000)); v.push(Vec3(0.22400, 2.55000, - 0.40000)); v.push(Vec3(0.40000, 2.55000, - 0.22400)); v.push(Vec3(0.72800, 2.55000, - 1.30000)); v.push(Vec3(1.30000, 2.55000, - 0.72800)); v.push(Vec3(0.72800, 2.40000, - 1.30000)); v.push(Vec3(1.30000, 2.40000, - 0.72800)); v.push(Vec3(0.00000, 0.00000, - 0.00000));
-  v.push(Vec3(1.50000, 0.15000, - 0.00000)); v.push(Vec3(1.50000, 0.15000, - 0.84000)); v.push(Vec3(0.84000, 0.15000, - 1.50000)); v.push(Vec3(0.00000, 0.15000, - 1.50000)); v.push(Vec3(1.50000, 0.07500, - 0.00000)); v.push(Vec3(1.50000, 0.07500, - 0.84000)); v.push(Vec3(0.84000, 0.07500, - 1.50000)); v.push(Vec3(0.00000, 0.07500, - 1.50000)); v.push(Vec3(1.42500, 0.00000, - 0.00000)); v.push(Vec3(1.42500, 0.00000, - 0.79800));
-  v.push(Vec3(0.79800, 0.00000, - 1.42500)); v.push(Vec3(0.00000, 0.00000, - 1.42500)); v.push(Vec3(-0.84000, 0.15000, - 1.50000)); v.push(Vec3(-1.50000, 0.15000, - 0.84000)); v.push(Vec3(-1.50000, 0.15000, - 0.00000)); v.push(Vec3(-0.84000, 0.07500, - 1.50000)); v.push(Vec3(-1.50000, 0.07500, - 0.84000)); v.push(Vec3(-1.50000, 0.07500, - 0.00000)); v.push(Vec3(-0.79800, 0.00000, - 1.42500)); v.push(Vec3(-1.42500, 0.00000, - 0.79800));
-  v.push(Vec3(-1.42500, 0.00000, - 0.00000)); v.push(Vec3(-1.50000, 0.15000, 0.84000)); v.push(Vec3(-0.84000, 0.15000, 1.50000)); v.push(Vec3(0.00000, 0.15000, 1.50000)); v.push(Vec3(-1.50000, 0.07500, 0.84000)); v.push(Vec3(-0.84000, 0.07500, 1.50000)); v.push(Vec3(0.00000, 0.07500, 1.50000)); v.push(Vec3(-1.42500, 0.00000, 0.79800)); v.push(Vec3(-0.79800, 0.00000, 1.42500)); v.push(Vec3(0.00000, 0.00000, 1.42500));
-  v.push(Vec3(0.84000, 0.15000, 1.50000)); v.push(Vec3(1.50000, 0.15000, 0.84000)); v.push(Vec3(0.84000, 0.07500, 1.50000)); v.push(Vec3(1.50000, 0.07500, 0.84000)); v.push(Vec3(0.79800, 0.00000, 1.42500)); v.push(Vec3(1.42500, 0.00000, 0.79800));
+  positions.resize(0);
+  positions.push(Vec3(1.40000, 2.40000, - 0.00000)); positions.push(Vec3(1.40000, 2.40000, 0.78400)); positions.push(Vec3(0.78400, 2.40000, 1.40000)); positions.push(Vec3(0.00000, 2.40000, 1.40000)); positions.push(Vec3(1.33750, 2.53125, - 0.00000)); positions.push(Vec3(1.33750, 2.53125, 0.74900)); positions.push(Vec3(0.74900, 2.53125, 1.33750)); positions.push(Vec3(0.00000, 2.53125, 1.33750)); positions.push(Vec3(1.43750, 2.53125, - 0.00000)); positions.push(Vec3(1.43750, 2.53125, 0.80500));
+  positions.push(Vec3(0.80500, 2.53125, 1.43750)); positions.push(Vec3(0.00000, 2.53125, 1.43750)); positions.push(Vec3(1.50000, 2.40000, - 0.00000)); positions.push(Vec3(1.50000, 2.40000, 0.84000)); positions.push(Vec3(0.84000, 2.40000, 1.50000)); positions.push(Vec3(0.00000, 2.40000, 1.50000)); positions.push(Vec3(-0.78400, 2.40000, 1.40000)); positions.push(Vec3(-1.40000, 2.40000, 0.78400)); positions.push(Vec3(-1.40000, 2.40000, - 0.00000)); positions.push(Vec3(-0.74900, 2.53125, 1.33750));
+  positions.push(Vec3(-1.33750, 2.53125, 0.74900)); positions.push(Vec3(-1.33750, 2.53125, - 0.00000)); positions.push(Vec3(-0.80500, 2.53125, 1.43750)); positions.push(Vec3(-1.43750, 2.53125, 0.80500)); positions.push(Vec3(-1.43750, 2.53125, - 0.00000)); positions.push(Vec3(-0.84000, 2.40000, 1.50000)); positions.push(Vec3(-1.50000, 2.40000, 0.84000)); positions.push(Vec3(-1.50000, 2.40000, - 0.00000)); positions.push(Vec3(-1.40000, 2.40000, - 0.78400)); positions.push(Vec3(-0.78400, 2.40000, - 1.40000));
+  positions.push(Vec3(0.00000, 2.40000, - 1.40000)); positions.push(Vec3(-1.33750, 2.53125, - 0.74900)); positions.push(Vec3(-0.74900, 2.53125, - 1.33750)); positions.push(Vec3(0.00000, 2.53125, - 1.33750)); positions.push(Vec3(-1.43750, 2.53125, - 0.80500)); positions.push(Vec3(-0.80500, 2.53125, - 1.43750)); positions.push(Vec3(0.00000, 2.53125, - 1.43750)); positions.push(Vec3(-1.50000, 2.40000, - 0.84000)); positions.push(Vec3(-0.84000, 2.40000, - 1.50000)); positions.push(Vec3(0.00000, 2.40000, - 1.50000));
+  positions.push(Vec3(0.78400, 2.40000, - 1.40000)); positions.push(Vec3(1.40000, 2.40000, - 0.78400)); positions.push(Vec3(0.74900, 2.53125, - 1.33750)); positions.push(Vec3(1.33750, 2.53125, - 0.74900)); positions.push(Vec3(0.80500, 2.53125, - 1.43750)); positions.push(Vec3(1.43750, 2.53125, - 0.80500)); positions.push(Vec3(0.84000, 2.40000, - 1.50000)); positions.push(Vec3(1.50000, 2.40000, - 0.84000)); positions.push(Vec3(1.75000, 1.87500, - 0.00000)); positions.push(Vec3(1.75000, 1.87500, 0.98000));
+  positions.push(Vec3(0.98000, 1.87500, 1.75000)); positions.push(Vec3(0.00000, 1.87500, 1.75000)); positions.push(Vec3(2.00000, 1.35000, - 0.00000)); positions.push(Vec3(2.00000, 1.35000, 1.12000)); positions.push(Vec3(1.12000, 1.35000, 2.00000)); positions.push(Vec3(0.00000, 1.35000, 2.00000)); positions.push(Vec3(2.00000, 0.90000, - 0.00000)); positions.push(Vec3(2.00000, 0.90000, 1.12000)); positions.push(Vec3(1.12000, 0.90000, 2.00000)); positions.push(Vec3(0.00000, 0.90000, 2.00000));
+  positions.push(Vec3(-0.98000, 1.87500, 1.75000)); positions.push(Vec3(-1.75000, 1.87500, 0.98000)); positions.push(Vec3(-1.75000, 1.87500, - 0.00000)); positions.push(Vec3(-1.12000, 1.35000, 2.00000)); positions.push(Vec3(-2.00000, 1.35000, 1.12000)); positions.push(Vec3(-2.00000, 1.35000, - 0.00000)); positions.push(Vec3(-1.12000, 0.90000, 2.00000)); positions.push(Vec3(-2.00000, 0.90000, 1.12000)); positions.push(Vec3(-2.00000, 0.90000, - 0.00000)); positions.push(Vec3(-1.75000, 1.87500, - 0.98000));
+  positions.push(Vec3(-0.98000, 1.87500, - 1.75000)); positions.push(Vec3(0.00000, 1.87500, - 1.75000)); positions.push(Vec3(-2.00000, 1.35000, - 1.12000)); positions.push(Vec3(-1.12000, 1.35000, - 2.00000)); positions.push(Vec3(0.00000, 1.35000, - 2.00000)); positions.push(Vec3(-2.00000, 0.90000, - 1.12000)); positions.push(Vec3(-1.12000, 0.90000, - 2.00000)); positions.push(Vec3(0.00000, 0.90000, - 2.00000)); positions.push(Vec3(0.98000, 1.87500, - 1.75000)); positions.push(Vec3(1.75000, 1.87500, - 0.98000));
+  positions.push(Vec3(1.12000, 1.35000, - 2.00000)); positions.push(Vec3(2.00000, 1.35000, - 1.12000)); positions.push(Vec3(1.12000, 0.90000, - 2.00000)); positions.push(Vec3(2.00000, 0.90000, - 1.12000)); positions.push(Vec3(2.00000, 0.45000, - 0.00000)); positions.push(Vec3(2.00000, 0.45000, 1.12000)); positions.push(Vec3(1.12000, 0.45000, 2.00000)); positions.push(Vec3(0.00000, 0.45000, 2.00000)); positions.push(Vec3(1.50000, 0.22500, - 0.00000)); positions.push(Vec3(1.50000, 0.22500, 0.84000));
+  positions.push(Vec3(0.84000, 0.22500, 1.50000)); positions.push(Vec3(0.00000, 0.22500, 1.50000)); positions.push(Vec3(1.50000, 0.15000, - 0.00000)); positions.push(Vec3(1.50000, 0.15000, 0.84000)); positions.push(Vec3(0.84000, 0.15000, 1.50000)); positions.push(Vec3(0.00000, 0.15000, 1.50000)); positions.push(Vec3(-1.12000, 0.45000, 2.00000)); positions.push(Vec3(-2.00000, 0.45000, 1.12000)); positions.push(Vec3(-2.00000, 0.45000, - 0.00000)); positions.push(Vec3(-0.84000, 0.22500, 1.50000));
+  positions.push(Vec3(-1.50000, 0.22500, 0.84000)); positions.push(Vec3(-1.50000, 0.22500, - 0.00000)); positions.push(Vec3(-0.84000, 0.15000, 1.50000)); positions.push(Vec3(-1.50000, 0.15000, 0.84000)); positions.push(Vec3(-1.50000, 0.15000, - 0.00000)); positions.push(Vec3(-2.00000, 0.45000, - 1.12000)); positions.push(Vec3(-1.12000, 0.45000, - 2.00000)); positions.push(Vec3(0.00000, 0.45000, - 2.00000)); positions.push(Vec3(-1.50000, 0.22500, - 0.84000)); positions.push(Vec3(-0.84000, 0.22500, - 1.50000));
+  positions.push(Vec3(0.00000, 0.22500, - 1.50000)); positions.push(Vec3(-1.50000, 0.15000, - 0.84000)); positions.push(Vec3(-0.84000, 0.15000, - 1.50000)); positions.push(Vec3(0.00000, 0.15000, - 1.50000)); positions.push(Vec3(1.12000, 0.45000, - 2.00000)); positions.push(Vec3(2.00000, 0.45000, - 1.12000)); positions.push(Vec3(0.84000, 0.22500, - 1.50000)); positions.push(Vec3(1.50000, 0.22500, - 0.84000)); positions.push(Vec3(0.84000, 0.15000, - 1.50000)); positions.push(Vec3(1.50000, 0.15000, - 0.84000));
+  positions.push(Vec3(-1.60000, 2.02500, - 0.00000)); positions.push(Vec3(-1.60000, 2.02500, 0.30000)); positions.push(Vec3(-1.50000, 2.25000, 0.30000)); positions.push(Vec3(-1.50000, 2.25000, - 0.00000)); positions.push(Vec3(-2.30000, 2.02500, - 0.00000)); positions.push(Vec3(-2.30000, 2.02500, 0.30000)); positions.push(Vec3(-2.50000, 2.25000, 0.30000)); positions.push(Vec3(-2.50000, 2.25000, - 0.00000)); positions.push(Vec3(-2.70000, 2.02500, - 0.00000)); positions.push(Vec3(-2.70000, 2.02500, 0.30000));
+  positions.push(Vec3(-3.00000, 2.25000, 0.30000)); positions.push(Vec3(-3.00000, 2.25000, - 0.00000)); positions.push(Vec3(-2.70000, 1.80000, - 0.00000)); positions.push(Vec3(-2.70000, 1.80000, 0.30000)); positions.push(Vec3(-3.00000, 1.80000, 0.30000)); positions.push(Vec3(-3.00000, 1.80000, - 0.00000)); positions.push(Vec3(-1.50000, 2.25000, - 0.30000)); positions.push(Vec3(-1.60000, 2.02500, - 0.30000)); positions.push(Vec3(-2.50000, 2.25000, - 0.30000)); positions.push(Vec3(-2.30000, 2.02500, - 0.30000));
+  positions.push(Vec3(-3.00000, 2.25000, - 0.30000)); positions.push(Vec3(-2.70000, 2.02500, - 0.30000)); positions.push(Vec3(-3.00000, 1.80000, - 0.30000)); positions.push(Vec3(-2.70000, 1.80000, - 0.30000)); positions.push(Vec3(-2.70000, 1.57500, - 0.00000)); positions.push(Vec3(-2.70000, 1.57500, 0.30000)); positions.push(Vec3(-3.00000, 1.35000, 0.30000)); positions.push(Vec3(-3.00000, 1.35000, - 0.00000)); positions.push(Vec3(-2.50000, 1.12500, - 0.00000)); positions.push(Vec3(-2.50000, 1.12500, 0.30000));
+  positions.push(Vec3(-2.65000, 0.93750, 0.30000)); positions.push(Vec3(-2.65000, 0.93750, - 0.00000)); positions.push(Vec3(-2.00000, 0.90000, 0.30000)); positions.push(Vec3(-1.90000, 0.60000, 0.30000)); positions.push(Vec3(-1.90000, 0.60000, - 0.00000)); positions.push(Vec3(-3.00000, 1.35000, - 0.30000)); positions.push(Vec3(-2.70000, 1.57500, - 0.30000)); positions.push(Vec3(-2.65000, 0.93750, - 0.30000)); positions.push(Vec3(-2.50000, 1.12500, - 0.30000)); positions.push(Vec3(-1.90000, 0.60000, - 0.30000));
+  positions.push(Vec3(-2.00000, 0.90000, - 0.30000)); positions.push(Vec3(1.70000, 1.42500, - 0.00000)); positions.push(Vec3(1.70000, 1.42500, 0.66000)); positions.push(Vec3(1.70000, 0.60000, 0.66000)); positions.push(Vec3(1.70000, 0.60000, - 0.00000)); positions.push(Vec3(2.60000, 1.42500, - 0.00000)); positions.push(Vec3(2.60000, 1.42500, 0.66000)); positions.push(Vec3(3.10000, 0.82500, 0.66000)); positions.push(Vec3(3.10000, 0.82500, - 0.00000)); positions.push(Vec3(2.30000, 2.10000, - 0.00000));
+  positions.push(Vec3(2.30000, 2.10000, 0.25000)); positions.push(Vec3(2.40000, 2.02500, 0.25000)); positions.push(Vec3(2.40000, 2.02500, - 0.00000)); positions.push(Vec3(2.70000, 2.40000, - 0.00000)); positions.push(Vec3(2.70000, 2.40000, 0.25000)); positions.push(Vec3(3.30000, 2.40000, 0.25000)); positions.push(Vec3(3.30000, 2.40000, - 0.00000)); positions.push(Vec3(1.70000, 0.60000, - 0.66000)); positions.push(Vec3(1.70000, 1.42500, - 0.66000)); positions.push(Vec3(3.10000, 0.82500, - 0.66000));
+  positions.push(Vec3(2.60000, 1.42500, - 0.66000)); positions.push(Vec3(2.40000, 2.02500, - 0.25000)); positions.push(Vec3(2.30000, 2.10000, - 0.25000)); positions.push(Vec3(3.30000, 2.40000, - 0.25000)); positions.push(Vec3(2.70000, 2.40000, - 0.25000)); positions.push(Vec3(2.80000, 2.47500, - 0.00000)); positions.push(Vec3(2.80000, 2.47500, 0.25000)); positions.push(Vec3(3.52500, 2.49375, 0.25000)); positions.push(Vec3(3.52500, 2.49375, - 0.00000)); positions.push(Vec3(2.90000, 2.47500, - 0.00000));
+  positions.push(Vec3(2.90000, 2.47500, 0.15000)); positions.push(Vec3(3.45000, 2.51250, 0.15000)); positions.push(Vec3(3.45000, 2.51250, - 0.00000)); positions.push(Vec3(2.80000, 2.40000, - 0.00000)); positions.push(Vec3(2.80000, 2.40000, 0.15000)); positions.push(Vec3(3.20000, 2.40000, 0.15000)); positions.push(Vec3(3.20000, 2.40000, - 0.00000)); positions.push(Vec3(3.52500, 2.49375, - 0.25000)); positions.push(Vec3(2.80000, 2.47500, - 0.25000)); positions.push(Vec3(3.45000, 2.51250, - 0.15000));
+  positions.push(Vec3(2.90000, 2.47500, - 0.15000)); positions.push(Vec3(3.20000, 2.40000, - 0.15000)); positions.push(Vec3(2.80000, 2.40000, - 0.15000)); positions.push(Vec3(0.00000, 3.15000, - 0.00000)); positions.push(Vec3(0.00000, 3.15000, 0.00200)); positions.push(Vec3(0.00200, 3.15000, - 0.00000)); positions.push(Vec3(0.80000, 3.15000, - 0.00000)); positions.push(Vec3(0.80000, 3.15000, 0.45000)); positions.push(Vec3(0.45000, 3.15000, 0.80000)); positions.push(Vec3(0.00000, 3.15000, 0.80000));
+  positions.push(Vec3(0.00000, 2.85000, - 0.00000)); positions.push(Vec3(0.20000, 2.70000, - 0.00000)); positions.push(Vec3(0.20000, 2.70000, 0.11200)); positions.push(Vec3(0.11200, 2.70000, 0.20000)); positions.push(Vec3(0.00000, 2.70000, 0.20000)); positions.push(Vec3(-0.00200, 3.15000, - 0.00000)); positions.push(Vec3(-0.45000, 3.15000, 0.80000)); positions.push(Vec3(-0.80000, 3.15000, 0.45000)); positions.push(Vec3(-0.80000, 3.15000, - 0.00000)); positions.push(Vec3(-0.11200, 2.70000, 0.20000));
+  positions.push(Vec3(-0.20000, 2.70000, 0.11200)); positions.push(Vec3(-0.20000, 2.70000, - 0.00000)); positions.push(Vec3(0.00000, 3.15000, - 0.00200)); positions.push(Vec3(-0.80000, 3.15000, - 0.45000)); positions.push(Vec3(-0.45000, 3.15000, - 0.80000)); positions.push(Vec3(0.00000, 3.15000, - 0.80000)); positions.push(Vec3(-0.20000, 2.70000, - 0.11200)); positions.push(Vec3(-0.11200, 2.70000, - 0.20000)); positions.push(Vec3(0.00000, 2.70000, - 0.20000)); positions.push(Vec3(0.45000, 3.15000, - 0.80000));
+  positions.push(Vec3(0.80000, 3.15000, - 0.45000)); positions.push(Vec3(0.11200, 2.70000, - 0.20000)); positions.push(Vec3(0.20000, 2.70000, - 0.11200)); positions.push(Vec3(0.40000, 2.55000, - 0.00000)); positions.push(Vec3(0.40000, 2.55000, 0.22400)); positions.push(Vec3(0.22400, 2.55000, 0.40000)); positions.push(Vec3(0.00000, 2.55000, 0.40000)); positions.push(Vec3(1.30000, 2.55000, - 0.00000)); positions.push(Vec3(1.30000, 2.55000, 0.72800)); positions.push(Vec3(0.72800, 2.55000, 1.30000));
+  positions.push(Vec3(0.00000, 2.55000, 1.30000)); positions.push(Vec3(1.30000, 2.40000, - 0.00000)); positions.push(Vec3(1.30000, 2.40000, 0.72800)); positions.push(Vec3(0.72800, 2.40000, 1.30000)); positions.push(Vec3(0.00000, 2.40000, 1.30000)); positions.push(Vec3(-0.22400, 2.55000, 0.40000)); positions.push(Vec3(-0.40000, 2.55000, 0.22400)); positions.push(Vec3(-0.40000, 2.55000, - 0.00000)); positions.push(Vec3(-0.72800, 2.55000, 1.30000)); positions.push(Vec3(-1.30000, 2.55000, 0.72800));
+  positions.push(Vec3(-1.30000, 2.55000, - 0.00000)); positions.push(Vec3(-0.72800, 2.40000, 1.30000)); positions.push(Vec3(-1.30000, 2.40000, 0.72800)); positions.push(Vec3(-1.30000, 2.40000, - 0.00000)); positions.push(Vec3(-0.40000, 2.55000, - 0.22400)); positions.push(Vec3(-0.22400, 2.55000, - 0.40000)); positions.push(Vec3(0.00000, 2.55000, - 0.40000)); positions.push(Vec3(-1.30000, 2.55000, - 0.72800)); positions.push(Vec3(-0.72800, 2.55000, - 1.30000)); positions.push(Vec3(0.00000, 2.55000, - 1.30000));
+  positions.push(Vec3(-1.30000, 2.40000, - 0.72800)); positions.push(Vec3(-0.72800, 2.40000, - 1.30000)); positions.push(Vec3(0.00000, 2.40000, - 1.30000)); positions.push(Vec3(0.22400, 2.55000, - 0.40000)); positions.push(Vec3(0.40000, 2.55000, - 0.22400)); positions.push(Vec3(0.72800, 2.55000, - 1.30000)); positions.push(Vec3(1.30000, 2.55000, - 0.72800)); positions.push(Vec3(0.72800, 2.40000, - 1.30000)); positions.push(Vec3(1.30000, 2.40000, - 0.72800)); positions.push(Vec3(0.00000, 0.00000, - 0.00000));
+  positions.push(Vec3(1.50000, 0.15000, - 0.00000)); positions.push(Vec3(1.50000, 0.15000, - 0.84000)); positions.push(Vec3(0.84000, 0.15000, - 1.50000)); positions.push(Vec3(0.00000, 0.15000, - 1.50000)); positions.push(Vec3(1.50000, 0.07500, - 0.00000)); positions.push(Vec3(1.50000, 0.07500, - 0.84000)); positions.push(Vec3(0.84000, 0.07500, - 1.50000)); positions.push(Vec3(0.00000, 0.07500, - 1.50000)); positions.push(Vec3(1.42500, 0.00000, - 0.00000)); positions.push(Vec3(1.42500, 0.00000, - 0.79800));
+  positions.push(Vec3(0.79800, 0.00000, - 1.42500)); positions.push(Vec3(0.00000, 0.00000, - 1.42500)); positions.push(Vec3(-0.84000, 0.15000, - 1.50000)); positions.push(Vec3(-1.50000, 0.15000, - 0.84000)); positions.push(Vec3(-1.50000, 0.15000, - 0.00000)); positions.push(Vec3(-0.84000, 0.07500, - 1.50000)); positions.push(Vec3(-1.50000, 0.07500, - 0.84000)); positions.push(Vec3(-1.50000, 0.07500, - 0.00000)); positions.push(Vec3(-0.79800, 0.00000, - 1.42500)); positions.push(Vec3(-1.42500, 0.00000, - 0.79800));
+  positions.push(Vec3(-1.42500, 0.00000, - 0.00000)); positions.push(Vec3(-1.50000, 0.15000, 0.84000)); positions.push(Vec3(-0.84000, 0.15000, 1.50000)); positions.push(Vec3(0.00000, 0.15000, 1.50000)); positions.push(Vec3(-1.50000, 0.07500, 0.84000)); positions.push(Vec3(-0.84000, 0.07500, 1.50000)); positions.push(Vec3(0.00000, 0.07500, 1.50000)); positions.push(Vec3(-1.42500, 0.00000, 0.79800)); positions.push(Vec3(-0.79800, 0.00000, 1.42500)); positions.push(Vec3(0.00000, 0.00000, 1.42500));
+  positions.push(Vec3(0.84000, 0.15000, 1.50000)); positions.push(Vec3(1.50000, 0.15000, 0.84000)); positions.push(Vec3(0.84000, 0.07500, 1.50000)); positions.push(Vec3(1.50000, 0.07500, 0.84000)); positions.push(Vec3(0.79800, 0.00000, 1.42500)); positions.push(Vec3(1.42500, 0.00000, 0.79800));
 
   // Center on teapot's median point
   var Vec3 vmin, vmax, vmid;
   vmin.setNull();
   vmax.setNull();
-  for (var Size i = 0; i < v.size(); i++) {
-    vmin = vmin.min(v[i]);
-    vmax = vmax.max(v[i]);
+  for (var Size i = 0; i < positions.size(); i++) {
+    vmin = vmin.min(positions[i]);
+    vmax = vmax.max(positions[i]);
   }
 
   vmid = (vmin + vmax) * 0.5;
-  for (var Size i = 0; i < v.size(); i++)
-    v[i] -= vmid;
+  for (var Size i = 0; i < positions.size(); i++)
+    positions[i] -= vmid;
 
-  computeNormals(p, v, n);
+  computeNormals(p, positions, normals);
 }
 
 operator subdividePatch(
   in Patch p,
   io Vec3 pv[],
   io Vec3 pn[],
-  io Vec3 v[],
-  io Vec3 n[],
-  io Vec2 t[],
-  io Integer idx[],
+  io Vec3 positions<>,
+  io Vec3 normals<>,
+  io Vec2 uvs<>,
+  io Integer indices[],
   io Size voff,
   io Size idxoff,
   in Integer nb_points,
@@ -222,15 +222,15 @@ operator subdividePatch(
   for (var Integer i = 0; i < nb_points; i++) {
     for (var Integer j = 0; j < 4; j++) {
       rv[i][j] =
-        b[i][0] * pv[p.idx[j][0]] +
-        b[i][1] * pv[p.idx[j][1]] +
-        b[i][2] * pv[p.idx[j][2]] +
-        b[i][3] * pv[p.idx[j][3]];
+        b[i][0] * pv[p.indices[j][0]] +
+        b[i][1] * pv[p.indices[j][1]] +
+        b[i][2] * pv[p.indices[j][2]] +
+        b[i][3] * pv[p.indices[j][3]];
       rn[i][j] =
-        b[i][0] * pn[p.idx[j][0]] +
-        b[i][1] * pn[p.idx[j][1]] +
-        b[i][2] * pn[p.idx[j][2]] +
-        b[i][3] * pn[p.idx[j][3]];
+        b[i][0] * pn[p.indices[j][0]] +
+        b[i][1] * pn[p.indices[j][1]] +
+        b[i][2] * pn[p.indices[j][2]] +
+        b[i][3] * pn[p.indices[j][3]];
 
       if (genTex) {
         rt[i][j] =
@@ -247,20 +247,20 @@ operator subdividePatch(
   var Integer offset = voff;
   for (var Integer i = 0; i < nb_points; i++) {
     for (var Integer j = 0; j < nb_points; j++) {
-      v[voff] =
+      positions[voff] =
         b[i][0] * rv[j][0] +
         b[i][1] * rv[j][1] +
         b[i][2] * rv[j][2] +
         b[i][3] * rv[j][3];
-      n[voff] =
+      normals[voff] =
         b[i][0] * rn[j][0] +
         b[i][1] * rn[j][1] +
         b[i][2] * rn[j][2] +
         b[i][3] * rn[j][3];
-      n[voff].setUnit();
+      normals[voff].setUnit();
 
       if (genTex) {
-        t[voff] =
+        uvs[voff] =
           b[i][0] * rt[j][0] +
           b[i][1] * rt[j][1] +
           b[i][2] * rt[j][2] +
@@ -279,13 +279,13 @@ operator subdividePatch(
       c2 = (i + 1) * nb_points + j;
       c3 = (i + 1) * nb_points + j + 1;
 
-      idx[idxoff++] = offset + c0;
-      idx[idxoff++] = offset + c1;
-      idx[idxoff++] = offset + c2;
+      indices[idxoff++] = offset + c0;
+      indices[idxoff++] = offset + c1;
+      indices[idxoff++] = offset + c2;
 
-      idx[idxoff++] = offset + c1;
-      idx[idxoff++] = offset + c3;
-      idx[idxoff++] = offset + c2;
+      indices[idxoff++] = offset + c1;
+      indices[idxoff++] = offset + c3;
+      indices[idxoff++] = offset + c2;
     }
   }
 }
@@ -295,10 +295,10 @@ function generateTeapotBase(
   in Integer detail,
   in Boolean genTex,
 
-  io Integer idx[],
-  io Vec3 v[],
-  io Vec3 n[],
-  io Vec2 t[]
+  io Integer indices[],
+  io Vec3 positions<>,
+  io Vec3 normals<>,
+  io Vec2 uvs<>
 ) {
   var Integer nb_points = (detail >= 0) ? (detail + 2) : 2;
 
@@ -307,50 +307,52 @@ function generateTeapotBase(
 
   getTeapotHull(tp, tv, tn);
 
-  v.resize(tp.size() * nb_points * nb_points);
-  n.resize(v.size());
-  if (genTex) {
-    t.resize(v.size());
-  }
-  idx.resize(tp.size() * (nb_points - 1) * (nb_points - 1) * 6);
+//  positions.resize(tp.size() * nb_points * nb_points);
+//  normals.resize(positions.size());
+//  if (genTex) {
+//    uvs.resize(positions.size());
+//  }
+  indices.resize(tp.size() * (nb_points - 1) * (nb_points - 1) * 6);
 
   var Size voff = 0.0, idxoff = 0;
   for (var Size i = 0; i < tp.size(); i++) {
-    subdividePatch(tp[i], tv, tn, v, n, t, idx, voff, idxoff, nb_points, genTex);
+    subdividePatch(tp[i], tv, tn, positions, normals, uvs, indices, voff, idxoff, nb_points, genTex);
   }
   var Scalar maxV = 0.0;
-  for (var Size i = 0; i < v.size(); i++) {
-    if (v[i].norm() > maxV) {
-      maxV = v[i].norm();
+  for (var Size i = 0; i < positions.size(); i++) {
+    if (positions[i].norm() > maxV) {
+      maxV = positions[i].norm();
     }
   }
   var Scalar scale = (size / maxV) * 2.0;
 
-  for (var Size i = 0; i < v.size(); i++) {
-    v[i] *= scale;
+  for (var Size i = 0; i < positions.size(); i++) {
+    positions[i] *= scale;
   }
 }
+
+
+operator setTeapotVertexCount(
+  io Integer detail,
+  io Size newCount
+) {
+  var Integer nb_points = (detail >= 0) ? (detail + 2) : 2;
+  var Patch tp[];
+  var Vec3 tv[], tn[];
+  getTeapotHull(tp, tv, tn);
+
+  newCount = tp.size() * nb_points * nb_points;
+}
+
 
 operator generateTeapot(
   io Scalar size,
   io Integer detail,
 
-  io Integer idx[],
-  io Vec3 v[],
-  io Vec3 n[]
+  io Integer indices[],
+  io Vec3 positions<>,
+  io Vec3 normals<>,
+  io Vec2 uvs<>
 ) {
-  var Vec2 t[];
-  generateTeapotBase(size, detail, false, idx, v, n, t);
-}
-
-operator generateTeapotTex(
-  io Scalar size,
-  io Integer detail,
-
-  io Integer idx[],
-  io Vec3 v[],
-  io Vec3 n[],
-  io Vec2 t[]
-) {
-  generateTeapotBase(size, detail, true, idx, v, n, t);
+  generateTeapotBase(size, detail, true, indices, positions, normals, uvs);
 }

@@ -100,10 +100,10 @@ FABRIC.SceneGraph.registerNodeType('Hair', {
       srcFile: 'KL/HairSimulation.kl',
       parameterLayout: [
         "self.index",
-        "meshattributes.positions[]",
-        "meshattributes.normals[]",
-        "meshattributes.boneIds[]",
-        "meshattributes.boneWeights[]",
+        "meshattributes.positions<>",
+        "meshattributes.normals<>",
+        "meshattributes.boneIds<>",
+        "meshattributes.boneWeights<>",
         "meshuniforms.indices",
         "uniforms.rootColor",
         "uniforms.tipColor",
@@ -162,14 +162,14 @@ FABRIC.SceneGraph.registerNodeType('Hair', {
       srcFile: 'KL/HairSimulation.kl',
       parameterLayout: [
         "self.index",
-        "points.positions[]",
-        "points.normals[]",
-        "points.boneIds[]",
-        "points.boneWeights[]",
-        "points.stiffness[]",
-        "points.gravity[]",
-        "points.segmentlength[]",
-        "points.vertexColors[]",
+        "points.positions<>",
+        "points.normals<>",
+        "points.boneIds<>",
+        "points.boneWeights<>",
+        "points.stiffness<>",
+        "points.gravity<>",
+        "points.segmentlength<>",
+        "points.vertexColors<>",
         "self.positions",
         "self.prevpositions",
         "self.normals",
@@ -188,10 +188,10 @@ FABRIC.SceneGraph.registerNodeType('Hair', {
       operatorName: 'shiftPositions',
       srcFile: 'KL/HairSimulation.kl',
       parameterLayout: [
-        "self.positions[]",
-        "self.prevpositions[]",
-        "self.normals[]",
-        "self.prevnormals[]"
+        "self.positions<>",
+        "self.prevpositions<>",
+        "self.normals<>",
+        "self.prevnormals<>"
       ],
       preProcessorDefinitions: {
         SEGMENT_COUNT: options.segments + 1

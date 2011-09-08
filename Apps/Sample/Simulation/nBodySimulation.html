@@ -124,10 +124,10 @@ FABRIC.SceneGraph.registerNodeType('NBodySimulation', {
         entryFunctionName: 'nBodySimulateGPU',
         srcFile: 'KL/nBodyOpGPU.kl',
         parameterLayout: [
-          'globals.ms',
-          'parentattributes.positions[]',
-          'parentattributes.velocities[]',
-          'parentattributes.mass[]',
+          'globals.time',
+          'parentattributes.positions<>',
+          'parentattributes.velocities<>',
+          'parentattributes.mass<>',
           'parentuniforms.clContext',
           'parentuniforms.clCommandQueue',
           'parentuniforms.clKernel',
@@ -140,7 +140,7 @@ FABRIC.SceneGraph.registerNodeType('NBodySimulation', {
           'parentuniforms.timeStep',
           'parentuniforms.softening',
           'parentuniforms.damping',
-          'self.positions[]'
+          'self.positions<>'
         ]
       }));
     

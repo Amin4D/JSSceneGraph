@@ -206,13 +206,7 @@ $(document).ready(function() {
     switch(BrowserDetect.OS){
       case "Mac":
         os = "Darwin";
-        switch(BrowserDetect.browser){
-          case "Chrome": arch = "i386"; break;
-          case "Firefox": arch = "x86_64"; break;
-          default:
-            alert("Unsupported Browser. Fabric Alpha supports only Chrome and Firefox. Other browsers will be supported shortly");
-            return false;
-        }
+        arch = "universal";
         break;
       case "Windows":
         os = "Windows";

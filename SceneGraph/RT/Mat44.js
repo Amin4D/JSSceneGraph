@@ -82,7 +82,14 @@ FABRIC.RT.Mat44 = function() {
  * @return {object} The matrix44 object.
  */
 FABRIC.RT.mat44 = function(row0, row1, row2, row3) {
-  return new FABRIC.RT.Mat44(row0, row1, row2, row3);
+  // The following is a bit of a hack. Not sure if we can combine new and apply.
+  if (arguments.length === 0) return new FABRIC.RT.Mat44();
+  if (arguments.length === 1) return new FABRIC.RT.Mat44(arguments[0]);
+  if (arguments.length === 4) return new FABRIC.RT.Mat44(arguments[0], arguments[1], arguments[2], arguments[3]);
+  if (arguments.length === 16) return new FABRIC.RT.Mat44(arguments[0], arguments[1], arguments[2], arguments[3],
+                                                          arguments[4], arguments[5], arguments[6], arguments[7],
+                                                          arguments[8], arguments[9], arguments[10], arguments[11],
+                                                          arguments[12], arguments[13], arguments[14], arguments[15]);
 };
 
 FABRIC.RT.Mat44.prototype = {

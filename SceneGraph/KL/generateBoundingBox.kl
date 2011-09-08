@@ -5,20 +5,20 @@
 use Vec3;
 
 operator generateBoundingBox(
-  io Vec3 vertices[],
+  io Vec3 positions<>,
   io Integer indices[],
   io Vec3 bboxmin,
   io Vec3 bboxmax
 ) {
-  vertices[0] = Vec3(bboxmin.x, bboxmin.y, bboxmin.z);
-  vertices[1] = Vec3(bboxmin.x, bboxmax.y, bboxmin.z);
-  vertices[2] = Vec3(bboxmin.x, bboxmax.y, bboxmax.z);
-  vertices[3] = Vec3(bboxmin.x, bboxmin.y, bboxmax.z);
+  positions[0] = Vec3(bboxmin.x, bboxmin.y, bboxmin.z);
+  positions[1] = Vec3(bboxmin.x, bboxmax.y, bboxmin.z);
+  positions[2] = Vec3(bboxmin.x, bboxmax.y, bboxmax.z);
+  positions[3] = Vec3(bboxmin.x, bboxmin.y, bboxmax.z);
 
-  vertices[4] = Vec3(bboxmax.x, bboxmin.y, bboxmin.z);
-  vertices[5] = Vec3(bboxmax.x, bboxmax.y, bboxmin.z);
-  vertices[6] = Vec3(bboxmax.x, bboxmax.y, bboxmax.z);
-  vertices[7] = Vec3(bboxmax.x, bboxmin.y, bboxmax.z);
+  positions[4] = Vec3(bboxmax.x, bboxmin.y, bboxmin.z);
+  positions[5] = Vec3(bboxmax.x, bboxmax.y, bboxmin.z);
+  positions[6] = Vec3(bboxmax.x, bboxmax.y, bboxmax.z);
+  positions[7] = Vec3(bboxmax.x, bboxmin.y, bboxmax.z);
 
   Integer i = 0;
   indices.resize(24);

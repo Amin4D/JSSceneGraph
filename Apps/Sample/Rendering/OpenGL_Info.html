@@ -1,0 +1,55 @@
+<html xmlns="http://www.w3.org/1999/xhtml"> 
+  <!--
+    Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
+    -->
+  <head> 
+    <title>FABRIC - OpenGL Information</title> 
+    
+    <meta charset="iso-8859-1"/>
+    <script type="text/javascript" src="../../../ThirdParty/jQuery/jquery-1.4.2.min.js"></script>
+
+    <script type="text/javascript" src="../../../Core/FABRIC.Wrappers.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../Core/FABRIC.js" charset="utf-8"></script>
+    
+
+<script type="text/javascript">
+
+$(document).ready(function() {
+  
+  // create a context and store it
+  var context = FABRIC.createContext();
+  var window = context.createWindow(document.getElementById('FabricContainer'));
+  
+  // create html for the types
+  var html = "<b>OpenGL Information</b><br>";
+  
+  // ask for the opengl version
+  html += "<br>OpenGL Version Number: <i>"+window.getOpenGLVersion()+"</i><br>";
+  
+  var features = [
+    'GL_VERSION_1_4 GL_ARB_point_sprite',
+    'GL_ARB_fragment_program',
+    'GL_EXT_draw_instanced',
+    'GL_ARB_tessellation_shader',
+    'GL_VERSION_4_0',
+    'WGL_ARB_pbuffer'
+  ];
+  for(var i=0;i<features.length;i++) {
+    html += "<br>"+features[i]+": <i>"+window.getGlewSupported(features[i])+"</i>";
+  }
+  
+  // output the html to the div
+  $("#output").html(html);
+});
+
+</script>
+
+  </head> 
+  <body>
+    <div id="FabricContainer" style="width: 1px; height: 1px">
+    </div>
+    <br>
+    <div id="output">
+    </div>
+  </body> 
+  </html>

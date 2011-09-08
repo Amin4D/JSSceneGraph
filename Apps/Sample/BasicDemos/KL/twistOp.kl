@@ -6,8 +6,8 @@ use Vec3;
 use Quat;
 
 operator twistOp(
-  io Vec3 parentpositions[],
-  io Vec3 parentnormals[],
+  io Vec3 parentpositions<>,
+  io Vec3 parentnormals<>,
   io Vec3 boundingboxmin,
   io Vec3 boundingboxmax,
   io Scalar twist,

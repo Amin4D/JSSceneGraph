@@ -18,7 +18,7 @@ operator rayIntersectTriangles(
   io RayIntersection intersection,
   io Ray ray,
   io Xfo globalXfo,
-  io Vec3 positions[],
+  io Vec3 positions<>,
   io Integer indices[],
   io Vec3 bboxmin,
   io Vec3 bboxmax

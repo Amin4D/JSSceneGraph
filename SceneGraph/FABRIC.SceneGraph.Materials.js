@@ -59,11 +59,11 @@ FABRIC.SceneGraph.registerNodeType('Image', {
         }));
       };
 
-      imageNode.getResourceLoadNode = function() {
-        return resourceLoadNode;
+      imageNode.pub.getResourceLoadNode = function() {
+        return resourceLoadNode.pub;
       };
 
-      imageNode.isImageLoaded = function() {
+      imageNode.pub.isImageLoaded = function() {
         return resourceLoadNode ? resourceLoadNode.pub.isLoaded() : false;
       };
     }
@@ -102,7 +102,7 @@ FABRIC.SceneGraph.registerNodeType('Image', {
       }
     }
 
-    imageNode.getURL = function() {
+    imageNode.pub.getURL = function() {
       return resourceLoadNode ? resourceLoadNode.pub.getUrl() : '';
     };
 
@@ -454,20 +454,21 @@ FABRIC.SceneGraph.registerNodeType('Material', {
       shader,
       i;
 
+    if(options.drawOverlayed){
+      options.disableOptions = (options.disableOptions ? options.disableOptions : []);
+      if(options.disableOptions.indexOf(FABRIC.SceneGraph.OpenGLConstants.GL_DEPTH_TEST) == -1){
+        options.disableOptions.push(FABRIC.SceneGraph.OpenGLConstants.GL_DEPTH_TEST);
+      }
+      // TODO: add an 'overlay' subtree to the render graph. This tree should render after transparency
+      options.parentEventHandler = scene.getSceneRedrawTransparentObjectsEventHandler();
+      options.shaderNameDecoration = (options.shaderNameDecoration ? options.shaderNameDecoration : "") + "Overlay";
+    }
+        
     if (options.separateShaderNode) {
       if(options.shaderNode){
         shader = options.shaderNode;
       }
       else{
-        if(options.drawOverlayed){
-          options.disableOptions = (options.disableOptions ? options.disableOptions : []);
-          if(options.disableOptions.indexOf(FABRIC.SceneGraph.OpenGLConstants.GL_DEPTH_TEST) == -1){
-            options.disableOptions.push(FABRIC.SceneGraph.OpenGLConstants.GL_DEPTH_TEST);
-          }
-          // TODO: add an 'overlay' subtree to the render graph. This tree should render after transparency
-          options.parentEventHandler = scene.getSceneRedrawTransparentObjectsEventHandler();
-          options.shaderNameDecoration = (options.shaderNameDecoration ? options.shaderNameDecoration : "") + "Overlay";
-        }
       
         var shaderName = materialType + 'Shader' + (options.shaderNameDecoration !== undefined ?
                                                 options.shaderNameDecoration : '');
@@ -1256,4 +1257,54 @@ FABRIC.SceneGraph.registerNodeType('GaussianBlurPostProcessEffect', {
     return edgeDetectionEffect;
   }});
 
+  FABRIC.SceneGraph.registerNodeType('ScreenGrab', {
+    factoryFn: function(options, scene) {
+      //TO refine: right now this node is grabbing a screenshot constantly!
+      //We should include a way to 'mute' and 'unmute' it. The problem
+      //is how to know when it is filled with content; an event should be sent. Can
+      //we do this without modifying the core?
+      var screenGrabNode = scene.constructNode('SceneGraphNode', options),
+      screenGrabEventHandler;
+
+      screenGrabEventHandler = screenGrabNode.constructEventHandlerNode('ScreenGrab');
+      screenGrabEventHandler.addMember('width', 'Size');
+      screenGrabEventHandler.addMember('heigth', 'Size');
+      screenGrabEventHandler.addMember('pixels', 'RGBA[]');
+      screenGrabEventHandler.addMember('resource', 'FabricResource');
+
+      screenGrabEventHandler.postDescendBindings.append(scene.constructOperator({
+        operatorName: 'grabViewport',
+        srcFile: 'FABRIC_ROOT/SceneGraph/KL/grabViewport.kl',
+        entryFunctionName: 'grabViewport',
+        parameterLayout: [
+              'self.width',
+              'self.heigth',
+              'self.pixels'
+            ]
+      }));
+
+      scene.getScenePostRedrawEventHandler().appendChildEventHandler(screenGrabEventHandler);
+
+      screenGrabEventHandler.postDescendBindings.append(scene.constructOperator({
+        operatorName: 'encodeImage',
+        srcFile: 'FABRIC_ROOT/SceneGraph/KL/encodeImage.kl',
+        entryFunctionName: 'encodeImageLDR',
+        parameterLayout: [
+              'self.width',
+              'self.heigth',
+              'self.pixels',
+              'self.resource'
+            ]
+      }));
+
+      screenGrabNode.pub.saveAs = function() {
+        try {
+          screenGrabEventHandler.writeResourceToUserFile("resource", "fabricScreenGrab");
+        }
+        catch (e) { }
+      };
+
+      return screenGrabNode;
+    }
+  });
 

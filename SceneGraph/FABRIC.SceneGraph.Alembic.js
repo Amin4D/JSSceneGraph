@@ -40,6 +40,26 @@ FABRIC.SceneGraph.registerNodeType('AlembicLoadNode', {
     resourceloaddgnode.addMember('sample', 'Integer', 0);
     
     resourceLoadNode.addMemberInterface(resourceloaddgnode, 'sample', true);
+    
+    // create an animation controller for the sample
+    var animationController = scene.constructNode('AnimationController');
+    resourceLoadNode.pub.getAnimationController = function() {
+      return animationController;
+    };
+    var animationControllerDGNode = animationController.getDGNode();
+    resourceloaddgnode.addDependency(animationControllerDGNode,'controller');
+
+    resourceloaddgnode.bindings.append(scene.constructOperator({
+      operatorName: 'alembicLoad',
+      parameterLayout: [
+        'self.url', //For debugging only
+        'self.resource',
+        'self.archiveID'
+      ],
+      entryFunctionName: 'alembicLoad',
+      srcFile: 'FABRIC_ROOT/SceneGraph/KL/loadAlembic.kl',
+      async: false
+    }));
 
     resourceloaddgnode.bindings.append(scene.constructOperator({
       operatorName: 'alembicLoad',
@@ -113,6 +133,7 @@ FABRIC.SceneGraph.registerNodeType('AlembicLoadNode', {
         if(type == 'PolyMesh') {
           
           var trianglesNode = scene.constructNode('Triangles', { uvSets: 1 } );
+          trianglesNode
           trianglesNode.pub.setAttributeDynamic('positions');
           trianglesNode.pub.setAttributeDynamic('normals');
           trianglesNode.pub.setAttributeDynamic('uvs0');
@@ -155,10 +176,10 @@ FABRIC.SceneGraph.registerNodeType('AlembicLoadNode', {
               'alembic.archiveID',
               'uniforms.identifier',
               'alembic.sample',
-              'self.positions[]',
-              'self.normals[]',
+              'self.positions<>',
+              'self.normals<>',
               'uniforms.uvsLoaded',
-              'self.uvs0[]'
+              'self.uvs0<>'
             ],
             entryFunctionName: 'alembicParsePolyMeshAttributes',
             srcFile: 'FABRIC_ROOT/SceneGraph/KL/loadAlembic.kl'

@@ -219,11 +219,11 @@ FABRIC.RT.Xfo.prototype = {
  */
 FABRIC.RT.xfo = function() {
   // The following is a bit of a hack. Not sure if we can combine new and apply.
-  if (arguments.length === 0)return new FABRIC.RT.Xfo();
-    if (arguments.length === 1)return new FABRIC.RT.Xfo(arguments[0]);
-    if (arguments.length === 2)return new FABRIC.RT.Xfo(arguments[0], arguments[1]);
-    if (arguments.length === 3)return new FABRIC.RT.Xfo(arguments[0], arguments[1], arguments[2]);
-  };
+  if (arguments.length === 0) return new FABRIC.RT.Xfo();
+  if (arguments.length === 1) return new FABRIC.RT.Xfo(arguments[0]);
+  if (arguments.length === 2) return new FABRIC.RT.Xfo(arguments[0], arguments[1]);
+  if (arguments.length === 3) return new FABRIC.RT.Xfo(arguments[0], arguments[1], arguments[2]);
+};
 
 FABRIC.appendOnCreateContextCallback(function(context) {
   context.RegisteredTypesManager.registerType('Xfo', {

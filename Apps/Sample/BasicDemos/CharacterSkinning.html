@@ -85,21 +85,7 @@ $(document).ready(function() {
           materialNode: scene.constructNode('FlatMaterial')
       });
 
-  var assetNodes = scene.importAssetFile('Models/envelope.dae', { nodesToIgnore: {image: true} });
-
-  // loop over all assetNodes and create
-  // just the transform nodes for now
-  var transformNodes = {};
-  for (var id in assetNodes){
-    if (assetNodes[id].type == 'Camera'){
-      if (!haveCameraManipulator){
-        scene.constructNode('CameraManipulator', { targetNode: assetNodes[id] });
-        viewport.setCameraNode(assetNodes[id]);
-        haveCameraManipulator = true;
-      }
-      continue;
-    }
-  }
+  var assetNodes = scene.importAssetFile('Models/BendyBox.dae');
 
   // create the shaders
   //var image = scene.constructNode("Image", { url:"Models/Images/monster_diffuse.png" } );

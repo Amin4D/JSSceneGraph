@@ -1658,12 +1658,12 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
   
   var parseTechniqueCommon = function(node){
     console.log("parseTechniqueCommon");
-    var technique_common = { accessors:[] };
+    var technique_common = { };
     var child = node.firstElementChild;
     while(child){
       switch (child.nodeName) {
         case 'accessor':
-          technique_common.accessors.push(parseAccessor(child));
+          technique_common.accessor = parseAccessor(child);
           break;
         default:
           console.warn("Warning in parseTechniqueCommon: Unhandled node '" +child.nodeName + "'");
@@ -1768,6 +1768,12 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
     var child = node.firstElementChild;
     while(child){
       switch (child.nodeName) {
+        case 'animation':
+          // Note: collada files exported from 3dsmax have an extra level here
+          // where animation is nested under animation. it also has a 'name'
+          // attribute for the name of the target node. 
+          return parseAnimation(child, channelMap);
+          break;
         case 'source':
           animationData.sources[child.getAttribute('id')] = parseSource(child);
           break;
@@ -1781,12 +1787,12 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
           }
           break;
         default:
-          console.warn("Warning in parseLibaryGeometries: Unhandled node '" +child.nodeName + "'");
+          console.warn("Warning in parseAnimation: Unhandled node '" +child.nodeName + "'");
       }
       child = child.nextElementSibling;
     }
     var targetNodeName = animationData.channel.target.split('/')[0];
-    var targetChannelName = animationData.channel.target.split('/')[0];
+    var targetChannelName = animationData.channel.target.split('/')[1];
     
     if(!channelMap[targetNodeName]){
       channelMap[targetNodeName] = {};
@@ -1848,9 +1854,7 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
     console.log("parseMesh");
     var mesh = {
       sources: {},
-      vertices: {},
-      polygons: [],
-      triangles: []
+      vertices: {}
     };
     
     var child = node.firstElementChild;
@@ -1863,9 +1867,11 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
           mesh.vertices = parseInput(child.firstElementChild);
           break;
         case 'polygons':
+          if(!mesh.polygons) mesh.polygons = [];
           mesh.polygons.push(parsePolygons(child));
           break;
         case 'triangles':
+          if(!mesh.triangles) mesh.triangles = [];
           mesh.triangles.push(parsePolygons(child));
           break;
         default:
@@ -1916,7 +1922,7 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
     console.log("parseVertexWeights");
     var vertexWeights = {
       count: parseInt(node.getAttribute('count')),
-      inputs: [],
+      inputs: {},
       vcounts: [],
       indices: []
     };
@@ -1952,12 +1958,12 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
   
   var parseJoints = function(node) {
     console.log("parseJoints");
-    var joints = [];
+    var joints = {};
     var child = node.firstElementChild;
     while(child){
       switch (child.nodeName) {
         case 'input':
-          joints.push(parseInput(child));
+          joints[child.getAttribute('semantic')] = parseInput(child);
           break;
         default:
           console.warn("Warning in parseJoints: Unhandled node '" +child.nodeName + "'");
@@ -2227,31 +2233,28 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
   //////////////////////////////////////////////////////////////////////////////
   // SceneGraph Construction
   
-  // Construct the Materials.
   var defaultMaterial = scene.constructNode('PhongMaterial', {
       diffuseColor: FABRIC.RT.rgb(0.8, 0, 0, 1),
       lightNode: scene.constructNode('PointLight', { position: FABRIC.RT.vec3(420.0, 1000.0, 600.0) })
     });
-  /*
-  var libraryMaterials;
-  for(var id in colladaData.libraryGeometries){
-    libraryGeometries[id] = constructGeometry(colladaData.libraryGeometries[id]);
-  }
-  */
   
   // This method returns an array of values from the given source data. 
   var getSourceData = function(source, id){
-    var accessor = source.technique.accessors[0];
-    var sid = id * accessor.stride;
-    return source.data.slice( sid, sid + accessor.params.length );
+    var accessor = source.technique.accessor;
+    var elemid = id * accessor.stride;
+    return source.data.slice( elemid, elemid + accessor.stride );
   }
     
-  var processGeometryData = function(meshData, trianglesData, trianglesOptions){
+  var processGeometryData = function(meshData, trianglesData){
     var numTriangles = trianglesData.count;
     var attrcount = 0;
     var meshTriangleSourceData = {};
-    var processedGeometryData = {
-      indices: []
+    var processedData = {
+      constructionOptions: {},
+      geometryData: {
+        indices: []
+      },
+      vertexRemapping: []
     };
     for(var semantic in trianglesData.inputs){
       var input = trianglesData.inputs[semantic];
@@ -2262,14 +2265,14 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
             source: meshData.sources[meshData.vertices.source.slice(1)],
             constructorFn: FABRIC.RT.vec3
           };
-          processedGeometryData.positions = [];
+          processedData.geometryData.positions = [];
           break;
         case 'NORMAL':
           meshTriangleSourceData.normals = {
             source: meshData.sources[sourceName],
             constructorFn: FABRIC.RT.vec3
           };
-          processedGeometryData.normals = [];
+          processedData.geometryData.normals = [];
           break;
         case 'TEXCOORD':
           var uvset = 'uvs' + input.set;
@@ -2277,13 +2280,13 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
             source: meshData.sources[sourceName],
             constructorFn: FABRIC.RT.vec2
           };
-          processedGeometryData[uvset] = [];
-          if(!trianglesOptions.uvSets){
-            trianglesOptions.uvSets = 1;
+          processedData.geometryData[uvset] = [];
+          if(!processedData.constructionOptions.uvSets){
+            processedData.constructionOptions.uvSets = 1;
           }else{
-            trianglesOptions.uvSets++;
+            processedData.constructionOptions.uvSets++;
           }
-          trianglesOptions.tangentsFromUV = trianglesOptions.uvSets-1;
+          processedData.constructionOptions.tangentsFromUV = processedData.constructionOptions.uvSets-1;
           break;
         default:
           throw "Error: unhandled semantic '" + semantic +"'";
@@ -2302,67 +2305,63 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
         // we can detect if a vertex is being reused. In the collada specification
         // all attributes have different counts, but in Fabric, all attributes have the
         // same count. To share a vertex, we must share all attribute data.
-        if(!indicesMapping[vertexMappingID]){
+      //  if(!indicesMapping[vertexMappingID]){
           var vattrid = 0; // vertex attribute id
           for(var inputid in meshTriangleSourceData){
             var elementid = attributeDataIndices[vattrid];
             var sourceData = getSourceData(meshTriangleSourceData[inputid].source, elementid);
             var constructorFn = meshTriangleSourceData[inputid].constructorFn;
-            processedGeometryData[inputid].push(constructorFn.apply(undefined, sourceData));
+            processedData.geometryData[inputid].push(constructorFn.apply(undefined, sourceData));
             vattrid++;
           }
-          processedGeometryData.indices.push(vcount);
+          processedData.geometryData.indices.push(vcount);
           indicesMapping[vertexMappingID] = vcount;
+          // We are remapping the vertices, and need to keep track of this so we can remap other
+          // vertex data such as bone weights and indices
+          processedData.vertexRemapping[vcount] = attributeDataIndices[0];
           vcount++;
-        }
-        else{
-          processedGeometryData.indices.push(indicesMapping[vertexMappingID]);
-        }
+      //  }
+      //  else{
+      //    processedGeometryData.indices.push(indicesMapping[vertexMappingID]);
+      //  }
         vid++;
       }
     }
-    return processedGeometryData;
+    return processedData;
   }
   
   var constructGeometry = function(geometryData){
-    
     var name = geometryData.name;
     var geometryNode;
     if(geometryData.mesh){
       var meshData = geometryData.mesh;
-      for(var i=0; i<meshData.triangles.length; i++){
-        if(i>0){
-          alert("This collada importer only supports one triangle mesh per instance.");
-          throw "This collada importer only supports one triangle mesh per instance."
+      if(meshData.triangles){
+        for(var i=0; i<meshData.triangles.length; i++){
+          if(i>0){
+            alert("This collada importer only supports one triangle mesh per instance.");
+            throw "This collada importer only supports one triangle mesh per instance."
+          }
+          
+          var processedData = processGeometryData(meshData, meshData.triangles[i]);
+          processedData.constructionOptions.name = name+i
+          var geometryNode = scene.constructNode('Triangles', processedData.constructionOptions);
+          geometryNode.loadGeometryData(processedData.geometryData);
+          assetNodes[processedData.constructionOptions.name] = geometryNode;
         }
-        
-        // Note: we could make an option on the constructor to pass in the geometry data to scene.constructNode('Triangles',...
-        // This would mean the processGeometryData function only returns a single value. Right now its ugly. 
-        var trianglesOptions = {
-          name: name+i
-        };
-        var meshTriangleData = processGeometryData(meshData, meshData.triangles[i], trianglesOptions);
-        
-        var geometryNode = scene.constructNode('Triangles', trianglesOptions);
-        geometryNode.loadGeometryData(meshTriangleData);
-        assetNodes[trianglesOptions.name] = geometryNode;
       }
-      for(var i=0; i<meshData.polygons.length; i++){
-        if(i>0){
-          alert("This collada importer only supports one polygon mesh per instance.");
-          throw "This collada importer only supports one polygon mesh per instance."
+      if(meshData.polygons){
+        for(var i=0; i<meshData.polygons.length; i++){
+          if(i>0){
+            alert("This collada importer only supports one polygon mesh per instance.");
+            throw "This collada importer only supports one polygon mesh per instance."
+          }
+          
+          var processedData = processGeometryData(meshData, meshData.polygons[i]);
+          processedData.constructionOptions.name = name+i
+          var geometryNode = scene.constructNode('Triangles', processedData.constructionOptions);
+          geometryNode.loadGeometryData(processedData.geometryData);
+          assetNodes[processedData.constructionOptions.name] = geometryNode;
         }
-        
-        // Note: we could make an option on the constructor to pass in the geometry data to scene.constructNode('Triangles',...
-        // This would mean the processGeometryData function only returns a single value. Right now its ugly. 
-        var trianglesOptions = {
-          name: name+i
-        };
-        var meshTriangleData = processGeometryData(meshData, meshData.polygons[i], trianglesOptions);
-        
-        var geometryNode = scene.constructNode('Triangles', trianglesOptions);
-        geometryNode.loadGeometryData(meshTriangleData);
-        assetNodes[trianglesOptions.name] = geometryNode;
       }
     }
     else{
@@ -2375,28 +2374,82 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
   
   var constructSkin = function(skinData){
     // Get the geometry data that this skin mesh is based on
-    var geometryData = colladaData.libraryGeometries[skinData.source];
+    var geometryData = colladaData.libraryGeometries[skinData.source.slice(1)];
     
-    var meshData = geometryData.mesh;
-    for(var i=0; i<meshData.triangles.length; i++){
-      if(i>0){
-        alert("This collada importer only supports one triangle mesh per instance.");
-        throw "This collada importer only supports one triangle mesh per instance."
-      }
-      
-      // Note: we could make an option on the constructor to pass in the geometry data to scene.constructNode('Triangles',...
-      // This would mean the processGeometryData function only returns a single value. Right now its ugly. 
-      var trianglesOptions = {
-        name: trianglesName
-      };
-      var meshTriangleData = processGeometryData(meshData, meshData.triangles[i], trianglesOptions);
-      
-      var characterMeshNode = scene.constructNode('CharacterMesh', trianglesOptions);
-      geometryNode.loadGeometryData(meshTriangleData);
-      
-      assetNodes[trianglesName] = characterMeshNode;
+    var sourceMeshArray = geometryData.mesh.triangles ? geometryData.mesh.triangles : geometryData.mesh.polygons;
+    if(!sourceMeshArray){
+      throw "No gometry specified";
     }
-  
+    if(sourceMeshArray.length !== 1){
+      alert("This collada importer only supports one triangle mesh per instance.");
+      throw "This collada importer only supports one triangle mesh per instance."
+    }
+    var meshData = sourceMeshArray[0];
+    
+    var processedData = processGeometryData(geometryData.mesh, meshData);
+    
+    // Vertex Weights
+    var vertexWeightsSource = skinData.sources[skinData.vertex_weights.inputs.WEIGHT.source.slice(1)];
+    var jointDataSource = skinData.sources[skinData.vertex_weights.inputs.JOINT.source.slice(1)];
+    
+    var boneCountArray = [];
+    var boneIdsArray = [];
+    var boneWeightsArray = [];
+    
+    // the vcount table tells us how many bindings deform this vertex.
+    // the vertices array is a pair of indices for each joint binding.
+    // The first is the JOINT, and then 2nd the WEIGHT
+    var bid = 0;
+    for (var i = 0; i < skinData.vertex_weights.vcounts.length; i++) {
+      var subBoneIdsArray = [];
+      var subBoneWeightsArray = [];
+      for (var j = 0; j < skinData.vertex_weights.vcounts[i]; j++) {
+        var jointid = skinData.vertex_weights.indices[bid];
+        var jointweightid = skinData.vertex_weights.indices[bid+1];
+        subBoneIdsArray.push(jointid);
+        subBoneWeightsArray.push(vertexWeightsSource.data[jointweightid]);
+        bid += 2;
+      }
+      boneCountArray.push(skinData.vertex_weights.vcounts[i]);
+      boneIdsArray.push(subBoneIdsArray);
+      boneWeightsArray.push(subBoneWeightsArray);
+    }
+    
+    // Now remap the generated arrays to the vertices in the mesh we store.
+    processedData.geometryData.boneCountArray = [];
+    processedData.geometryData.boneIdsArray = [];
+    processedData.geometryData.boneWeightsArray = [];
+    var vid = 0;
+    for (var i = 0; i < processedData.vertexRemapping.length; i++) {
+      var vid = processedData.vertexRemapping[i];
+      processedData.geometryData.boneCountArray.push(boneCountArray[vid]);
+      processedData.geometryData.boneIdsArray.push(boneIdsArray[vid]);
+      processedData.geometryData.boneWeightsArray.push(boneWeightsArray[vid]);
+    }
+    
+    /*
+    var jointDataSource = skinData.sources[skinData.joints.JOINT.source.slice(1)];
+    var bindPoseDataSource = skinData.sources[skinData.joints.INV_BIND_MATRIX.source.slice(1)];
+    
+    // set inverse binding matrices
+    var invmatrices = [];
+    for (var i = 0; i < jointDataSource.data.length; i++) {
+      var jointName = getSourceData(jointDataSource, i);
+      var bindPoseValues = getSourceData(bindPoseDataSource, i);
+      invmatrices.push(FABRIC.RT.mat44.apply(undefined, bindPoseValues));
+    }
+//    skeletonNode.setInvMatrices(invmatrices);
+          
+//    var skeletonNode = createSkeletonFromHierarchy(assetData.id, rootJointName);//,true);
+    */
+    
+    
+    processedData.constructionOptions.name = geometryData.name;
+    var characterMeshNode = scene.constructNode('CharacterMesh', processedData.constructionOptions);
+    characterMeshNode.loadGeometryData(processedData.geometryData);
+    
+    assetNodes[geometryData.name] = characterMeshNode;
+    return characterMeshNode;
   }
   
   // Construct the Geometries.
@@ -2417,11 +2470,7 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
     }
     return librarySkins[skinid];
   }
-  /*
-  for(var geomid in colladaData.libraryGeometries){
-    libraryGeometries[geomid] = constructGeometry(colladaData.libraryGeometries[geomid]);
-  }
-  */
+  
   // Construct the Scene
   var constructScene = function(sceneData){
     console.log("constructScene");
@@ -2437,7 +2486,7 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
       }
       else if(instanceData.instance_controller){
         var url = instanceData.instance_controller.url.slice(1);
-        var constrollerData = colladaData.libraryControllers[url];
+        geometryNode = getSkinNode(url);
         if(instanceData.instance_controller.instance_material){
           // TODO:
         }
@@ -2481,7 +2530,11 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
       }
       var rootNode = sceneData.nodeLibrary[rootNodeName];
       var skeletonNode = scene.constructNode('CharacterSkeleton', {
-        name:skeletonName
+        name:skeletonName,
+        calcReferenceLocalPose: true,
+        calcReferenceGlobalPose: true,
+        calcInvMatricies: false,
+        calcReferencePoseFromInverseBindPose: true
       });
       
       // recurse on the hierarchy

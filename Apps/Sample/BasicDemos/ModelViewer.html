@@ -64,16 +64,16 @@ $(document).ready(function() {
 
   // Create a camera to draw the scene from
   var camera = scene.constructNode('TargetCamera', {
-      nearDistance: 1,
-      farDistance: 20,
-      position: FABRIC.RT.vec3(0, 5, 10)
+      nearDistance: 10,
+      farDistance: 200,
+      position: FABRIC.RT.vec3(0, 50, 100)
     });
 
   scene.constructNode('CameraManipulator', { targetNode: camera });
 
   viewport.setCameraNode(camera);
 
-  var assets = scene.importAssetFile('Models/bricks.dae');
+  var assets = scene.importAssetFile('Models/Sphere.DAE');
 
   $('#loadingDialog').dialog({
     modal: true

@@ -49,6 +49,7 @@ FABRIC.SceneGraph = {
     return result;
   },
   registerParser: function(ext, parserFn) {
+    ext = ext.toLocaleLowerCase();
     var makeFileHandle = function(filePath) {
       return filePath.split('/').pop().split('.')[0];
     }
@@ -557,7 +558,7 @@ FABRIC.SceneGraph = {
       return globalsNode;
     };
     scene.pub.importAssetFile = function(file, options) {
-      var ext = file.split('.').pop();
+      var ext = file.split('.').pop().toLocaleLowerCase();
       if (FABRIC.SceneGraph.assetLoaders[ext]) {
         var assets = FABRIC.SceneGraph.assetLoaders[ext](scene.pub, file, options);
         return assets;

@@ -359,14 +359,14 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
     while(child){
       switch (child.nodeName) {
         case 'bind_shape_matrix':
-          var str = child.textContent.split(new RegExp("\\s+"));
-          if (str[0] == '')
-            str.splice(0, 1);
-          var matrix44 = FABRIC.RT.mat44();
-          matrix44.row0.set(parseFloat(str[0]), parseFloat(str[1]), parseFloat(str[2]), parseFloat(str[3]));
-          matrix44.row1.set(parseFloat(str[4]), parseFloat(str[5]), parseFloat(str[6]), parseFloat(str[7]));
-          matrix44.row2.set(parseFloat(str[8]), parseFloat(str[9]), parseFloat(str[10]), parseFloat(str[11]));
-          matrix44.row3.set(parseFloat(str[12]), parseFloat(str[13]), parseFloat(str[14]), parseFloat(str[15]));
+          var text_array = child.textContent.split(new RegExp("\\s+"));
+          var float_array = [];
+          for(var i=0; i<text_array.length; i++){
+            if(text_array[i] != ""){
+              float_array.push(parseFloat(text_array[i]));
+            }
+          }
+          var matrix44 = FABRIC.RT.mat44.apply(undefined, float_array);
           skin.bind_matrix = matrix44.transpose();
           break;
         case 'source':
@@ -464,12 +464,13 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
     while(child){
       switch (child.nodeName) {
         case 'translate': {
-          // compute a translated matrix and
+          var sid = child.getAttribute('sid');
           var str = child.textContent.split(new RegExp("\\s+"));
           nodeData.xfo.tr.set(parseFloat(str[0]), parseFloat(str[1]), parseFloat(str[2]));
           break;
         }
         case 'rotate': {
+          var sid = child.getAttribute('sid');
           var str = child.textContent.split(new RegExp("\\s+"));
           var q = FABRIC.RT.Quat.makeFromAxisAndAngle(
                     FABRIC.RT.vec3(
@@ -477,11 +478,11 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
                       parseFloat(str[1]),
                       parseFloat(str[2])),
                     parseFloat(str[3]));
-          nodeData.xfo.ori.mulInPlace(q);
+          nodeData.xfo.ori.preMultiplyInPlace(q);
           break;
         }
         case 'scale': {
-          // compute a scaled matrix and
+          var sid = child.getAttribute('sid');
           var str = child.textContent.split(new RegExp("\\s+"));
           nodeData.xfo.sc.set(parseFloat(str[0]), parseFloat(str[1]), parseFloat(str[2]));
           break;
@@ -1070,7 +1071,8 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
     assetNodes[geometryData.name] = characterMeshNode;
     return {
       characterMeshNode:characterMeshNode,
-      skeletonData: skeletonData
+      skeletonData: skeletonData,
+      skinData: skinData
     }
   }
   
@@ -1139,11 +1141,18 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
         if(instanceData.instance_controller.instance_material){
           // TODO:
         }
+        var xfo = FABRIC.RT.xfo();
+        xfo.setFromMat44(skinData.skinData.bind_matrix);
+        var transformNode = scene.constructNode('Transform', {
+          hierarchical: false,
+          globalXfo: xfo
+        });
         
         var characterNode = scene.constructNode('CharacterInstance', {
             name: url+'CharacterInstance',
             geometryNode: skinData.characterMeshNode,
             materialNode: materialNode,
+            transformNode: transformNode,
             rigNode: skinData.skeletonData.rigNode
           });
         assetNodes[characterNode.getName()] = characterNode;
@@ -1160,16 +1169,19 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
         constructInstance(sceneData.nodes[i]);
       }
     }
+    
+    
+    // The file may contain a hierarchy that can be used to generate a skeleton
+    if (options.constructSkeletonFromHierarchy) {
+      var skeletonNode = constructSkeletonFromHierarchy(sceneData, options.constructSkeletonFromHierarchy);
+    }
   }
   
   if(colladaData.scene){
     constructScene(colladaData.libraryVisualScenes[colladaData.scene.url.slice(1)]);
+    
   }
   
-  // The file may contain a hierarchy that can be used to generate a skeleton
-  if (options.constructSkeletonFromHierarchy) {
-    var skeletonNode = constructSkeletonFromHierarchy(options.constructSkeletonFromHierarchy);
-  }
 
   return assetNodes;
 });

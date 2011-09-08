@@ -80,17 +80,14 @@ $(document).ready(function() {
     target: FABRIC.RT.vec3(-10, 5, 10)
   });
 
-  var assets = scene.importAssetFile('Models/mocap_01.dae', {
+  var assetNodes = scene.importAssetFile('Models/mocap_01.dae', {
     constructSkeletonFromHierarchy: 'Biped_Nulls_UpperBody'
   });
 
-  var skeletonNode = assets['Biped_Nulls_UpperBodyCharacterSkeleton'];
-  var variablesNode = assets['Biped_Nulls_UpperBodyCharacterVariables'];
-
   // create a character rig!
   var characterRig = scene.constructNode('CharacterRig', {
-      skeletonNode: skeletonNode,
-      variablesNode: variablesNode
+      skeletonNode: assetNodes.Biped_Nulls_UpperBody,
+      variablesNode: assetNodes.Biped_Nulls_UpperBodyVariables
     });
   characterRig.addSolver('solveColladaPose', 'FKHierarchySolver', { localxfoMemberName: 'localxfos' });
 
@@ -116,7 +113,7 @@ $(document).ready(function() {
     materialNode: scene.constructNode('FlatMaterial')
   });
   
-  assets.Biped_Nulls_UpperBodyAnimationController.setTimeRange(FABRIC.RT.vec2(0, 2.5));
+  assetNodes.Biped_Nulls_UpperBodyController.setTimeRange(FABRIC.RT.vec2(0, 2.5));
   
   
   $('#loadingDialog').dialog({

@@ -244,15 +244,15 @@ FABRIC.RT.Quat.prototype = {
   },
 
   // Quat self referenced multiplication.
+  // Note: there must be a bug here....
+  // 'multiply' uses postMultiply for quaternion multiplication
+  // but 'mulInPlace' uses 'preMultiplyInPlace'. one of these must be wrong.
   mulInPlace: function(v) {
     if (typeof v == 'number') {
       this.v.mulInPlace(v);
       this.w *= v;
     }else {
-      var gq = v;
-      var w = this.w * gq.w - this.v.dot(gq.v);
-      this.v = gq.v.multiply(this.w).addInPlace(this.v.multiply(gq.w)).addInPlace(this.v.cross(gq.v));
-      this.w = w;
+      this.preMultiplyInPlace(v);
     }
     return this;
   },

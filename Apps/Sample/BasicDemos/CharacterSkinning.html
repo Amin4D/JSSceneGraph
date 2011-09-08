@@ -68,11 +68,11 @@ $(document).ready(function() {
   // Create a camera to draw the scene from
   var haveCameraManipulator = false;
   var camera = scene.constructNode('TargetCamera', {
-      position: FABRIC.RT.vec3(1, 3, 10).scale(0.5),
+      position: FABRIC.RT.vec3(1, 100, 300).scale(0.5),
       target: FABRIC.RT.vec3(0, 2, 0),
       roll: 0,
-      nearDistance: 0.1,
-      farDistance: 200
+      nearDistance: 10.0,
+      farDistance: 2000
     });
   
     // create the scene grid
@@ -85,22 +85,11 @@ $(document).ready(function() {
           materialNode: scene.constructNode('FlatMaterial')
       });
 
-  var assetNodes = scene.importAssetFile('Models/envelope.dae');
-/*
-  // create the shaders
-  //var image = scene.constructNode("Image", { url:"Models/Images/monster_diffuse.png" } );
-  var light = scene.constructNode('PointLight', { position: FABRIC.RT.vec3(10, 30, 100) });
+  var assetNodes = scene.importAssetFile('Models/BendyBox2.DAE');
 
-  var skinMaterial = scene.constructNode('PhongSkinningMaterial', {
-      lightNode: light,
-      diffuseColor: FABRIC.RT.rgba(1.0, 0.0, 0.0, 1.0),
-      numBones: assetNodes.polymshCharacterSkeleton.getNumBones()
-    });
-  
-  assetNodes.polymshInstance.setMaterialNode(skinMaterial);
-*/
+
   var skeletonGeometryNode = scene.constructNode("CharacterSkeletonDebug",{
-    characterRigNode:assetNodes.geometries_0SkeletonCharacterRig,
+    characterRigNode:assetNodes.Box01MeshSkeletonCharacterRig,
     boneradius: 0.2
   });
 

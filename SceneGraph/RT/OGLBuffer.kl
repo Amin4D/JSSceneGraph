@@ -9,43 +9,43 @@ function OGLBuffer.genBuffer(
   Size bufferSize,
   Size bufferDataElementCount
 ) {
-  if (self.bufferID <= 0 || bufferDataElementCount != self.elementCount || self.bufferUsage == GL_DYNAMIC_DRAW || self.reload) {
-    if (self.bufferID != 0 && (bufferDataElementCount != self.elementCount || self.reload)) {
+  if (this.bufferID <= 0 || bufferDataElementCount != this.elementCount || this.bufferUsage == GL_DYNAMIC_DRAW || this.reload) {
+    if (this.bufferID != 0 && (bufferDataElementCount != this.elementCount || this.reload)) {
       var Size bufferIDs[];
-      bufferIDs.push(Size(self.bufferID));
+      bufferIDs.push(Size(this.bufferID));
       glDeleteBuffers(1, bufferIDs);
-      self.bufferID = 0;
+      this.bufferID = 0;
     }
     if (bufferSize > 0) {
-      if (self.bufferID == 0) {
+      if (this.bufferID == 0) {
         var Size buffers[];
         buffers.push(Size(0));
         glGenBuffers(1, buffers);
-        self.bufferID = Integer(buffers[0]);
+        this.bufferID = Integer(buffers[0]);
       }
       // Now fill the buffer with the data
-      glBindBuffer(self.bufferType, self.bufferID);
-      glBufferData(self.bufferType, bufferSize, bufferData, self.bufferUsage);
-      glBindBuffer(self.bufferType, 0);
-      self.elementCount = bufferDataElementCount;
+      glBindBuffer(this.bufferType, this.bufferID);
+      glBufferData(this.bufferType, bufferSize, bufferData, this.bufferUsage);
+      glBindBuffer(this.bufferType, 0);
+      this.elementCount = bufferDataElementCount;
     }
-    self.reload = false;
+    this.reload = false;
   }
 }
 
 function OGLBuffer.bindBuffer(
   Integer bufferLocation
 ) {
-  if (self.bufferID > 0) {
+  if (this.bufferID > 0) {
     var Data NULL;
-    glBindBuffer(self.bufferType, self.bufferID);
+    glBindBuffer(this.bufferType, this.bufferID);
     if (bufferLocation != - 1) {
       glEnableVertexAttribArray(bufferLocation);
-      glVertexAttribPointer(bufferLocation, self.numBufferElementComponents, self.bufferElementComponentType, GL_FALSE, self.elementDataSize, NULL);
+      glVertexAttribPointer(bufferLocation, this.numBufferElementComponents, this.bufferElementComponentType, GL_FALSE, this.elementDataSize, NULL);
     }
     else {
       report('Invalid shader attribute location for VBO.');
     }
-    glBindBuffer(self.bufferType, 0);
+    glBindBuffer(this.bufferType, 0);
   }
 }

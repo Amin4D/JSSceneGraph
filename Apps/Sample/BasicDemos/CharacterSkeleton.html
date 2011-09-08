@@ -51,11 +51,18 @@
     
 $(document).ready(function() {
   
-  var $globalTimeSlider = $('#globalTime').slider({
-      min: 0.0,
-      max: 1.5,
-      step: 0.01
+  $('#play').button({
+      text: true,
+      icons: {
+        primary: 'ui-icon-play'
+      }
     });
+  $('#step').button({
+    text: true,
+    icons: {
+      primary: 'ui-icon-step'
+    }
+  });
 
   // Create the scene.
   var scene = FABRIC.SceneGraph.createScene();
@@ -73,17 +80,14 @@ $(document).ready(function() {
     target: FABRIC.RT.vec3(-10, 5, 10)
   });
 
-  var assets = scene.importAssetFile('Models/mocap_01.dae', {
-    buildSkeletonFromHierarchy: 'Biped_Nulls_UpperBody'
+  var assetNodes = scene.importAssetFile('Models/mocap_01.dae', {
+    constructSkeletonFromHierarchy: 'Biped_Nulls_UpperBody'
   });
-
-  var skeletonNode = assets['Biped_Nulls_UpperBodyCharacterSkeleton'];
-  var variablesNode = assets['Biped_Nulls_UpperBodyCharacterVariables'];
 
   // create a character rig!
   var characterRig = scene.constructNode('CharacterRig', {
-      skeletonNode: skeletonNode,
-      variablesNode: variablesNode
+      skeletonNode: assetNodes.Biped_Nulls_UpperBody,
+      variablesNode: assetNodes.Biped_Nulls_UpperBodyVariables
     });
   characterRig.addSolver('solveColladaPose', 'FKHierarchySolver', { localxfoMemberName: 'localxfos' });
 
@@ -108,13 +112,8 @@ $(document).ready(function() {
       sections_z: 20 }),
     materialNode: scene.constructNode('FlatMaterial')
   });
-
-  $globalTimeSlider.slider('value', 0.0);
-  $globalTimeSlider.bind('slide',
-    function(event, ui) {
-      scene.animation.setTime(ui.value);
-      scene.redrawAllWindows();
-    });
+  
+  assetNodes.Biped_Nulls_UpperBodyController.setTimeRange(FABRIC.RT.vec2(0, 2.5));
   
   
   $('#loadingDialog').dialog({
@@ -128,6 +127,40 @@ $(document).ready(function() {
     });
     if(countRemaining===0){
       $('#loadingDialog').dialog('close');
+      
+      var errors = scene.getErrors();
+      if (errors.length > 0) {
+        throw (errors.toString());
+      }
+      
+      $('#play').button()
+        .click(function() {
+          var options;
+          if ($(this).text() == 'Play') {
+            $(this).button('option', {
+              label: 'Pause',
+              icons: {
+                primary: 'ui-icon-pause'
+              }
+            });
+            scene.animation.play();
+          } else {
+            $(this).button('option', {
+              label: 'Play',
+              icons: {
+                primary: 'ui-icon-play'
+              }
+            });
+            scene.animation.pause();
+          }
+        });
+      
+      $('#step').button()
+        .click(function() {
+          scene.animation.step();
+        });
+        
+        
       viewport.redraw();
       return true;
     }
@@ -166,8 +199,8 @@ $(document).ready(function() {
                   <div class="box">
                     <h2>CONTROLS</h2>
                     <div class="content">
-                        <div>Global Time:</div>
-                        <div id='globalTime' style="margin-top:10px;"></div>
+                      <button id="play" style="margin-top:10px;">Play</button>
+                      <button id="step" style="margin-top:10px;">Step</button>
                     </div><!--content-->
                 </div><!--box-->
         </div><!--sidebar-->

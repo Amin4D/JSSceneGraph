@@ -58,13 +58,13 @@ operator debugShadowMapBuffer(
   
   OGLTexture2D colorTexture;// = depthRenderTarget.getFirstColorTexture();
   for(Integer i=0; i<depthRenderTarget.textures.size(); i++){
-    if(depthRenderTarget.textures[i].type == 2){//self.COLOR_BUFFER
+    if(depthRenderTarget.textures[i].type == 2){//this.COLOR_BUFFER
       colorTexture = depthRenderTarget.textures[i].texture;
     }
   }
   if(colorTexture.bufferID > 0 ){
-    Integer textureUnit = GL_TEXTURE0;
-    glActiveTexture(textureUnit);
+    Integer textureUnit = 0;
+    glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, colorTexture.bufferID);
     
     Vec2 tl(-1.0, 1.0);

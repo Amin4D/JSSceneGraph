@@ -49,6 +49,7 @@ FABRIC.SceneGraph = {
     return result;
   },
   registerParser: function(ext, parserFn) {
+    ext = ext.toLocaleLowerCase();
     var makeFileHandle = function(filePath) {
       return filePath.split('/').pop().split('.')[0];
     }
@@ -77,8 +78,7 @@ FABRIC.SceneGraph = {
         preDraw: true,
         postDraw: true,
         constructAnimationInterface: true,
-        fixedTimeStep: true,
-        timeStep: 20,
+        timeStep: 1/50, /* 50 fps */
         shadowMaterial:'ShadowMaterial'
       });
     
@@ -558,7 +558,7 @@ FABRIC.SceneGraph = {
       return globalsNode;
     };
     scene.pub.importAssetFile = function(file, options) {
-      var ext = file.split('.').pop();
+      var ext = file.split('.').pop().toLocaleLowerCase();
       if (FABRIC.SceneGraph.assetLoaders[ext]) {
         var assets = FABRIC.SceneGraph.assetLoaders[ext](scene.pub, file, options);
         return assets;
@@ -569,7 +569,7 @@ FABRIC.SceneGraph = {
     };
     scene.pub.redrawAllWindows = function() {
       for (var i=0; i<viewports.length; i++) {
-        viewports[i].pub.redraw(isPlaying);
+        viewports[i].pub.redraw();
       }
     };
     scene.pub.getErrors = function() {
@@ -666,89 +666,72 @@ FABRIC.SceneGraph = {
       globalsNode = scene.constructDependencyGraphNode('Scene_globals');
 
       if (sceneOptions.constructAnimationInterface) {
-
-        globalsNode.addMember('ms', 'Scalar', 0);
-        globalsNode.addMember('ms_prevupdate', 'Scalar', 0);
+        // All time values are in seconds. 
+        globalsNode.addMember('time', 'Scalar', 0);
+        globalsNode.addMember('time_prevupdate', 'Scalar', 0);
         globalsNode.addMember('timestep', 'Scalar', 0);
-        globalsNode.bindings.append(scene.constructOperator({
-          operatorName: 'setTimestep',
-          srcCode:
-            '\noperator setTimestep(io Scalar ms, io Scalar ms_prevupdate, io Scalar timestep){ \n' +
-            '  timestep = ms - ms_prevupdate;\n' +
-            '  ms_prevupdate = ms;\n' +
-            '}',
-          entryFunctionName: 'setTimestep',
-          parameterLayout: [
-            'self.ms',
-            'self.ms_prevupdate',
-            'self.timestep'
-          ]
-        }));
-
+        
         var isPlaying = false, animationTime = 0;
-        var prevTime, playspeed = 1.0;
-        var timerange = FABRIC.RT.vec2(-1,-1);
-        var looping = false;
-        var onAdvanceCallback;
-        var advanceTime = function() {
-          if (sceneOptions.fixedTimeStep) {
-            animationTime += sceneOptions.timeStep;
-            scene.pub.animation.setTime(animationTime);
-          }
-          else {
-            var currTime = (new Date).getTime();
-            var deltaTime = currTime - prevTime;
-            prevTime = currTime;
-            scene.pub.animation.setTime(animationTime + (deltaTime * playspeed), false);
-          }
+        var prevTime, onAdvanceCallback;
+        var requestAnimFrame = (function(){
+          return  window.requestAnimationFrame       || 
+                  window.webkitRequestAnimationFrame || 
+                  window.mozRequestAnimationFrame    || 
+                  window.oRequestAnimationFrame      || 
+                  window.msRequestAnimationFrame     || 
+                  function(/* function */ callback, /* DOMElement */ element){
+                    window.setTimeout(callback, 1000 / 60);
+                  };
+        })();
+        var setTime = function(t, timestep, redraw) {
+          animationTime = t;
+          globalsNode.setBulkData({ time:[t], timestep:[timestep] } );
+          
           if( onAdvanceCallback){
             onAdvanceCallback.call();
           }
-          scene.pub.redrawAllWindows();
+          if(redraw !== false){
+            scene.pub.redrawAllWindows();
+            if(isPlaying){
+              // Queue up the next redraw immediately. 
+              requestAnimFrame( advanceTime, viewports[0].getWindowElement() );
+            }
+          }
         }
-
+        var advanceTime = function(currTime) {
+          var deltaTime = (currTime - prevTime)/1000;
+          prevTime = currTime;
+          // The computer will attempt to play back
+          // at exactly the given frame rate. If the frame rate cannot be achieved
+          // it plays as fast as possible.
+          // The time step as used throughout the graph will always be fixed at the
+          // given rate.
+          var t = animationTime + sceneOptions.timeStep;
+          if(deltaTime < sceneOptions.timeStep){
+            var delay = (sceneOptions.timeStep - deltaTime)*1000;
+            setTimeout(function(){
+                setTime(t, sceneOptions.timeStep);
+              },
+              delay
+            );
+          }else{
+            setTime(t, sceneOptions.timeStep);
+          }
+        }
         /////////////////////////////////////////////////////////
         // Animation Interface
         scene.pub.animation = {
           setTime:function(t, redraw) {
-            if (looping && animationTime > timerange.y){
-              t = timerange.x;
-            }
-            animationTime = t;
-            globalsNode.setData('ms', t);
-            if(redraw !== false){
-              scene.pub.redrawAllWindows();
-            }
+            setTime(t, (t - animationTime), redraw);
           },
           getTime:function() {
             return animationTime;
-          },
-          setPlaybackSpeed:function(speed) {
-            playspeed = speed;
-          },
-          getPlaybackSpeed:function() {
-            return playspeed;
           },
           setTimeStep:function(val) {
             sceneOptions.timeStep = val;
           },
           getTimeStep:function() {
             return sceneOptions.timeStep;
-          },
-          setTimeRange:function(val) {
-            if (!val.getType || val.getType() !== 'FABRIC.RT.Vec2') {
-              throw ('Incorrect type assignment. Must assign a FABRIC.RT.Vec2');
-            }
-            timerange = val;
-          },
-          getTimeRange:function() {
-            return timerange;
-          },
-          setLoop:function(loop) {
-            looping = loop;
-          },
-          getLoop:function() {
-            return looping;
           },
           play: function(callback) {
             prevTime = (new Date).getTime();
@@ -758,23 +741,18 @@ FABRIC.SceneGraph = {
             // we have zero or more windows. What happens when we have
             // multiple viewports? Should the 'play' controls be moved to
             // Viewport?
-            viewports[0].getFabricWindowObject().setRedrawFinishedCallback(advanceTime);
-            scene.pub.redrawAllWindows();
+            requestAnimFrame( advanceTime, viewports[0].getWindowElement() );
           },
           isPlaying: function(){
             return isPlaying;
           },
           pause: function() {
             isPlaying = false;
-            viewports[0].getFabricWindowObject().setRedrawFinishedCallback(null);
-            scene.pub.redrawAllWindows();
           },
           reset: function() {
             isPlaying = false;
             animationTime = 0.0;
-            globalsNode.setData('ms', 0.0);
-            viewports[0].getFabricWindowObject().setRedrawFinishedCallback(null);
-            scene.pub.redrawAllWindows();
+            globalsNode.setData('time', 0.0);
           },
           step: function() {
             advanceTime();
@@ -944,23 +922,17 @@ FABRIC.SceneGraph.registerNodeType('Viewport', {
           ]
         }));
 
-    FABRIC.appendOnResolveAsyncTaskCallback(function(label, countRemaining){
-      if(countRemaining===0){
-        fabricwindow = scene.bindViewportToWindow(windowElement, viewportNode);
-        redrawEventHandler.addScope('window', fabricwindow.windowNode);
-        if(scene.getScenePreRedrawEventHandler()){
-          fabricwindow.redrawEvent.appendEventHandler(scene.getScenePreRedrawEventHandler());
-        }
-        fabricwindow.redrawEvent.appendEventHandler(redrawEventHandler);
-        if(scene.getScenePostRedrawEventHandler()){
-          fabricwindow.redrawEvent.appendEventHandler(scene.getScenePostRedrawEventHandler());
-        }
-        if(viewPortRayCastDgNode){
-          viewPortRayCastDgNode.addDependency(fabricwindow.windowNode, 'window');
-        }
-        return true; // remove this event listener. 
-      }
-    });
+
+    var fabricwindow = scene.bindViewportToWindow(windowElement, viewportNode);
+    redrawEventHandler.addScope('window', fabricwindow.windowNode);
+    if(scene.getScenePreRedrawEventHandler()){
+      fabricwindow.redrawEvent.appendEventHandler(scene.getScenePreRedrawEventHandler());
+    }
+    fabricwindow.redrawEvent.appendEventHandler(redrawEventHandler);
+    if(scene.getScenePostRedrawEventHandler()){
+      fabricwindow.redrawEvent.appendEventHandler(scene.getScenePostRedrawEventHandler());
+    }
+    
     var propagationRedrawEventHandler = viewportNode.constructEventHandlerNode('DrawPropagation');
     redrawEventHandler.appendChildEventHandler(propagationRedrawEventHandler);
 
@@ -976,11 +948,12 @@ FABRIC.SceneGraph.registerNodeType('Viewport', {
     var viewPortRaycastEvent, viewPortRaycastEventHandler, viewPortRayCastDgNode;
     if (scene.getSceneRaycastEventHandler() && options.enableRaycasting) {
 
-      viewPortRayCastDgNode = scene.constructDependencyGraphNode(options.name + '_RayCastNode');
+      viewPortRayCastDgNode = viewportNode.constructDGNode('RayCastDgNodeDGNode');
       viewPortRayCastDgNode.addMember('x', 'Integer');
       viewPortRayCastDgNode.addMember('y', 'Integer');
       viewPortRayCastDgNode.addMember('ray', 'Ray');
       viewPortRayCastDgNode.addMember('threshold', 'Scalar', options.rayIntersectionThreshold);
+      viewPortRayCastDgNode.addDependency(fabricwindow.windowNode, 'window');
 
       // this operator calculates the rayOri and rayDir from the scopes collected so far.
       // The scopes should be the window, viewport, camera and projection.
@@ -1032,6 +1005,9 @@ FABRIC.SceneGraph.registerNodeType('Viewport', {
     };
 
     // public interface
+    viewportNode.pub.getOpenGLVersion = fabricwindow.getOpenGLVersion;
+    viewportNode.pub.getGlewSupported = fabricwindow.getGlewSupported;
+    
     viewportNode.addMemberInterface(dgnode, 'backgroundColor', true);
     viewportNode.pub.setCameraNode = function(node) {
       if (!node || !node.isTypeOf('Camera')) {
@@ -1152,16 +1128,16 @@ FABRIC.SceneGraph.registerNodeType('Viewport', {
       var ray = viewPortRayCastDgNode.getData('ray');
       return ray;
     };
-    // TODO: Not all browsers on OSX features this redraw issue.
-    // figures out exactly which ones do and detect only those.
-    var onOsX = navigator.userAgent.search("Mac OS X");
-    viewportNode.pub.redraw = function(animating) {
-      fabricwindow.needsRedraw();
-      if(onOsX && !animating && !scene.pub.animation.isPlaying()){
-        fabricwindow.setRedrawFinishedCallback(function(){
-          fabricwindow.setRedrawFinishedCallback(null);
+    viewportNode.pub.redraw = function() {
+      if(scene.pub.animation.isPlaying()){
+        fabricwindow.needsRedraw();
+      }else{
+        // If we give the browser a millisecond pause, then the redraw will
+        // occur. Otherwist this message gets lost, causing a blank screen when
+        // demos load. 
+        setTimeout(function(){
           fabricwindow.needsRedraw();
-        });
+        }, 1);
       }
     };
     viewportNode.pub.writeData = function(sceneSaver, constructionOptions, nodeData) {
@@ -1300,7 +1276,11 @@ FABRIC.SceneGraph.registerNodeType('Viewport', {
       // Mouse wheel events are sent to the document, not the element,
       // so here we catch mouse wheel events only when the mouse goes over the element.
       // TODO: Fix Safari mouse wheel events..
+      var mouseWheelActivated = false;
       var activateMousewheelFn = function(evt) {
+        if(mouseWheelActivated){
+          return;
+        }
         var mousewheelFn = function(evt) {
           fireEvent('mousewheel', evt);
         }
@@ -1308,11 +1288,12 @@ FABRIC.SceneGraph.registerNodeType('Viewport', {
         var deactivateMousewheelFn = function(evt) {
           windowElement.removeEventListener('mouseout', deactivateMousewheelFn, false);
           document.removeEventListener('mousewheel', mousewheelFn, false);
+          mouseWheelActivated = false;
         }
         windowElement.addEventListener('mouseout', deactivateMousewheelFn, false);
+        mouseWheelActivated = true;
       }
-      windowElement.addEventListener('mouseover', activateMousewheelFn, false);
-
+      windowElement.addEventListener('mousemove', activateMousewheelFn, false);
       scene.addEventHandlingFunctions(viewportNode);
     }
 
@@ -1372,6 +1353,10 @@ FABRIC.SceneGraph.registerNodeType('Viewport', {
       }
     };
 
+    resourceLoadNode.pub.getDGNode = function() {
+      return dgnode;
+    }
+
     if (options.onLoadCallback) {
       resourceLoadNode.pub.addOnLoadCallback(options.onLoadCallback);
     }
@@ -1406,7 +1391,7 @@ FABRIC.SceneGraph.registerNodeType('Camera', {
       
     dgnode.addMember('nearDistance', 'Scalar', options.nearDistance);
     dgnode.addMember('farDistance', 'Scalar', options.farDistance);
-    dgnode.addMember('fovY', 'Scalar', options.fovY * FABRIC.RT.degToRad);
+    dgnode.addMember('fovY', 'Scalar', Math.degToRad(options.fovY));
     dgnode.addMember('focalDistance', 'Scalar', options.focalDistance);
     dgnode.addMember('cameraMat44', 'Mat44');
     dgnode.addMember('orthographic', 'Boolean', options.orthographic);

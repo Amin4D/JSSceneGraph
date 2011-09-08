@@ -154,8 +154,15 @@ FABRIC.SceneGraph.registerNodeType('CameraManipulator', {
         return;
       }
       var mouseDragScreenDelta = evt.screenX - mouseDownScreenPos.x;
-      cameraNode.position = cameraPos.add(cameraPos.subtract(cameraTarget)
-                                     .mulInPlace(mouseDragScreenDelta * options.mouseDragZoomRate));
+      
+      var zoomDist = cameraNode.getFocalDistance() * -options.mouseDragZoomRate * mouseDragScreenDelta;
+      var newcameraXfo = cameraXfo.clone();
+      var cameraZoom = cameraXfo.ori.getZaxis().mulInPlace(zoomDist);
+      newcameraXfo.tr.addInPlace(cameraZoom);
+      cameraNode.getTransformNode().setGlobalXfo(newcameraXfo);
+      if (!cameraNode.getTransformNode().getTarget) {
+        cameraNode.setFocalDistance(cameraNode.getFocalDistance() - zoomDist);
+      }
       viewportNode.redraw(true);
       evt.stopPropagation();
     }
@@ -187,8 +194,7 @@ FABRIC.SceneGraph.registerNodeType('PaintManipulator', {
       });
 
     var paintManipulatorNode = scene.constructNode('SceneGraphNode', options),
-      collectPointsDgNode = paintManipulatorNode.constructDGNode('RayCastDGNode'),
-      paintEventHandler,
+      paintEventHandler = paintManipulatorNode.constructEventHandlerNode('Paint'),
       paintEvent,
       viewportNode,
       brushPos,
@@ -203,28 +209,22 @@ FABRIC.SceneGraph.registerNodeType('PaintManipulator', {
 
     scene.addEventHandlingFunctions(paintManipulatorNode);
     
-    collectPointsDgNode.addMember('cameraMatrix', 'Mat44');
-    collectPointsDgNode.addMember('projectionMatrix', 'Mat44');
-    collectPointsDgNode.addMember('aspectRatio', 'Scalar');
-    collectPointsDgNode.addMember('brushPos', 'Vec3');
+    paintEventHandler.addMember('cameraMatrix', 'Mat44');
+    paintEventHandler.addMember('projectionMatrix', 'Mat44');
+    paintEventHandler.addMember('aspectRatio', 'Scalar');
+    paintEventHandler.addMember('brushPos', 'Vec3');
     
-    collectPointsDgNode.addMember('brushSize', 'Scalar', options.brushSize);
-    paintManipulatorNode.addMemberInterface(collectPointsDgNode, 'brushSize', true);
+    paintEventHandler.addMember('brushSize', 'Scalar', options.brushSize);
+    paintManipulatorNode.addMemberInterface(paintEventHandler, 'brushSize', true);
 
-    // Note: this is not the intended design model for our brushing tools.
-    // Adding the color here is just a hack to make the demo work well.
-    collectPointsDgNode.addMember('brushColor', 'Color', options.brushColor);
-    paintManipulatorNode.addMemberInterface(collectPointsDgNode, 'brushColor', true);
-
-    paintEventHandler = paintManipulatorNode.constructEventHandlerNode('Paint');
-    paintEventHandler.addScope('paintData', collectPointsDgNode);
+    paintEventHandler.setScopeName('paintData');
 
     // Raycast events are fired from the viewport. As the event
     // propagates down the tree it collects scopes and fires operators.
     // The operators us the collected scopes to calculate the ray.
     paintEvent = paintManipulatorNode.constructEventNode('Event');
     paintEvent.appendEventHandler(paintEventHandler);
-
+    
     var brushMaterial = scene.constructNode('FlatScreenSpaceMaterial', { color: FABRIC.RT.rgb(0.8, 0, 0) });
     var brushShapeTransform = scene.constructNode('Transform', { hierarchical: false, globalXfo: FABRIC.RT.xfo({
         ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(1, 0, 0), 90),
@@ -238,10 +238,10 @@ FABRIC.SceneGraph.registerNodeType('PaintManipulator', {
       });
 
     var collectPoints = function() {
-      collectPointsDgNode.setData('brushPos', brushPos);
-      collectPointsDgNode.setData('cameraMatrix', cameraMatrix);
-      collectPointsDgNode.setData('projectionMatrix', projectionMatrix);
-      collectPointsDgNode.setData('aspectRatio', aspectRatio);
+      paintEventHandler.setData('brushPos', brushPos);
+      paintEventHandler.setData('cameraMatrix', cameraMatrix);
+      paintEventHandler.setData('projectionMatrix', projectionMatrix);
+      paintEventHandler.setData('aspectRatio', aspectRatio);
       return paintEvent.select('CollectedPoints');
     };
 
@@ -251,7 +251,7 @@ FABRIC.SceneGraph.registerNodeType('PaintManipulator', {
       }
       options.brushSize += evt.wheelDelta * 0.0001 * options.brushScaleSpeed;
       options.brushSize = Math.max(options.brushSize, 0.01);
-      collectPointsDgNode.setData('brushSize', options.brushSize);
+      paintEventHandler.setData('brushSize', options.brushSize);
       evt.stopPropagation();
       evt.viewportNode.redraw();
     }
@@ -287,7 +287,7 @@ FABRIC.SceneGraph.registerNodeType('PaintManipulator', {
       moveBrush(evt);
       var points = collectPoints();
 
-  //    evt.paintData = points[0].value;
+      evt.paintData = points.length > 0 ? points[0].value : null;
       paintManipulatorNode.pub.fireEvent('onpaint', evt);
       viewportNode.redraw();
       evt.stopPropagation();
@@ -315,7 +315,8 @@ FABRIC.SceneGraph.registerNodeType('PaintManipulator', {
       document.removeEventListener('mousemove', paintFn, false);
       document.removeEventListener('mouseup', releasePaintFn, false);
     }
-
+    
+    
     paintManipulatorNode.pub.addPaintableNode = function(node) {
       if (!node.isTypeOf || !node.isTypeOf('Instance')) {
         throw ('Incorrect type. Must assign a Instance');
@@ -327,35 +328,39 @@ FABRIC.SceneGraph.registerNodeType('PaintManipulator', {
         transformNode = scene.getPrivateInterface(instanceNode.pub.getTransformNode()),
         paintOperator;
 
-      paintInstanceEventHandler = paintManipulatorNode.constructEventHandlerNode('Paint_' + node.name);
-      paintInstanceEventHandler.addScope('geometry_vertexattributes', geometryNode.getAttributesDGNode());
+      paintInstanceEventHandler = paintManipulatorNode.constructEventHandlerNode('Paint' + node.getName());
+      paintInstanceEventHandler.addScope('geometryattributes', geometryNode.getAttributesDGNode());
+      paintInstanceEventHandler.addScope('geometryuniforms', geometryNode.getAttributesDGNode());
       paintInstanceEventHandler.addScope('transform', transformNode.getDGNode());
       paintInstanceEventHandler.addScope('instance', instanceNode.getDGNode());
 
       // The selector will return the node bound with the given binding name.
-      paintInstanceEventHandler.setSelector('instance', scene.constructOperator({
+      var paintingOpDef = options.paintingOpDef;
+      if(!paintingOpDef){
+        paintingOpDef = {
           operatorName: 'collectPointsInsideBrush',
           srcFile: 'FABRIC_ROOT/SceneGraph/KL/collectPointsInsideVolume.kl',
           entryFunctionName: 'collectPointsInsideBrush',
           parameterLayout: [
-
             'paintData.cameraMatrix',
             'paintData.projectionMatrix',
             'paintData.aspectRatio',
-
+  
             'paintData.brushPos',
             'paintData.brushSize',
-            'paintData.brushColor',
-
+  
             'transform.' + instanceNode.pub.getTransformNodeMember(),
-            'geometry_vertexattributes.positions[]',
-            'geometry_vertexattributes.normals[]',
-            'geometry_vertexattributes.vertexColors[]'
+            'geometryattributes.positions<>',
+            'geometryattributes.normals<>'
           ],
           async: false
-        }));
-
-      // the sceneRaycastEventHandler propogates the event throughtout the scene.
+        };
+      }
+      // At this moment, the operators bindings are checked and the binding with the
+      // given name is searched for. (instance). This is why the operator must be
+      // constructed synchronously.
+      paintInstanceEventHandler.setSelector('instance', scene.constructOperator(paintingOpDef));
+      
       paintEventHandler.appendChildEventHandler(paintInstanceEventHandler);
 
       paintableNodes.push(instanceNode);
@@ -623,7 +628,11 @@ FABRIC.SceneGraph.registerNodeType('Manipulator', {
     manipulatorNode.pub.addEventListener('mouseout_geom', function(evt) {
         if(!manipulating){
           unhighlightNode();
-          evt.viewportNode.redraw();
+          if(!evt.toElement){
+            // if there is a 'toElement' then there will be a mouseover event.
+            // the redraw will occur then.
+            evt.viewportNode.redraw();
+          }
         }
       });
 
@@ -1076,7 +1085,7 @@ FABRIC.SceneGraph.registerNodeType('PivotRotationManipulator', {
         angle = Math.round(angle / 5.0) * 5.0;
       }
 
-      movement = vec2.subtract(vec1).unit().scale(Math.sin(angle * 0.5 * FABRIC.RT.degToRad) * options.radius * 2.0);
+      movement = vec2.subtract(vec1).unit().scale(Math.sin(Math.degToRad(angle * 0.5)) * options.radius * 2.0);
       if (vec1.cross(vec2).dot(normal) < 0) {
         angle = -angle;
         movement.negate();

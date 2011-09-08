@@ -44,7 +44,7 @@ FABRIC.SceneGraph.registerNodeType('Geometry', {
         srcFile: 'FABRIC_ROOT/SceneGraph/KL/calcBoundingBox.kl',
         entryFunctionName: 'calcBoundingBox',
         parameterLayout: [
-          'attributes.positions[]',
+          'attributes.positions<>',
           'self.min',
           'self.max'
         ]
@@ -87,7 +87,7 @@ FABRIC.SceneGraph.registerNodeType('Geometry', {
         geometryNode.addMemberInterface(uniformsdgnode, name, true);
       }
       if(name == 'indices'){
-        var registeredTypes = scene.getContext().RegisteredTypesManager.getRegisteredTypes()
+        var registeredTypes = scene.getContext().RegisteredTypesManager.getRegisteredTypes();
         var attributeID = FABRIC.SceneGraph.getShaderParamID(name);
         var indicesBuffer = new FABRIC.RT.OGLBuffer(name, attributeID, registeredTypes.Integer);
         redrawEventHandler.addMember('indicesBuffer', 'OGLBuffer', indicesBuffer);
@@ -110,7 +110,7 @@ FABRIC.SceneGraph.registerNodeType('Geometry', {
       attributesdgnode.addMember(name, type, attributeoptions ? attributeoptions.defaultValue : undefined);
       if(attributeoptions){
         if(attributeoptions.genVBO && redrawEventHandler){
-          var registeredTypes = scene.getContext().RegisteredTypesManager.getRegisteredTypes()
+          var registeredTypes = scene.getContext().RegisteredTypesManager.getRegisteredTypes();
           var typeDesc = registeredTypes[type];
           var attributeID = FABRIC.SceneGraph.getShaderParamID(name);
           var bufferMemberName = name + 'Buffer';
@@ -130,7 +130,7 @@ FABRIC.SceneGraph.registerNodeType('Geometry', {
             entryFunctionName: 'genAndBindVBO',
             parameterLayout: [
               'shader.shaderProgram',
-              'attributes.' + name + '[]',
+              'attributes.' + name + '<>',
               'self.' + bufferMemberName
             ]
           }));
@@ -160,6 +160,12 @@ FABRIC.SceneGraph.registerNodeType('Geometry', {
     };
     geometryNode.pub.setVertexCount = function(count) {
       attributesdgnode.setCount(count);
+    };
+    geometryNode.pub.getBulkAttributeData = function( pointIds ) {
+      return attributesdgnode.getSlicesBulkData( pointIds );
+    };
+    geometryNode.pub.setBulkAttributeData = function( attributeData ) {
+      return attributesdgnode.setSlicesBulkData( attributeData );
     };
     // This method is used by the parsers such as the collada parser to load
     // parsed data into a constructed geometry.
@@ -209,7 +215,8 @@ FABRIC.SceneGraph.registerNodeType('GeometryDataCopy', {
   },
   factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
-        baseGeometryNode: undefined
+        baseGeometryNode: undefined,
+        createBoundingBoxNode: false
       });
     
     if(!options.baseGeometryNode){
@@ -219,7 +226,6 @@ FABRIC.SceneGraph.registerNodeType('GeometryDataCopy', {
       throw ('Incorrect type assignment. Must assign a Geometry');
     }
     var baseGeometryNode = scene.getPrivateInterface(options.baseGeometryNode);
-    options.createBoundingBoxNode = baseGeometryNode.getBoundingBoxDGNode != undefined;
     options.createDrawOperator = false;
     var geometryDataCopyNode = scene.constructNode('Geometry', options);
     
@@ -294,7 +300,7 @@ FABRIC.SceneGraph.registerNodeType('Points', {
             'raycastData.ray',
             'raycastData.threshold',
             'transform.' + transformNodeMember,
-            'geometry_attributes.positions[]',
+            'geometry_attributes.positions<>',
             'boundingbox.min',
             'boundingbox.max'
           ]
@@ -343,7 +349,7 @@ FABRIC.SceneGraph.registerNodeType('Lines', {
             'raycastData.ray',
             'raycastData.threshold',
             'transform.' + transformNodeMember,
-            'geometry_attributes.positions[]',
+            'geometry_attributes.positions<>',
             'geometry_uniforms.indices',
             'boundingbox.min',
             'boundingbox.max'
@@ -393,7 +399,7 @@ FABRIC.SceneGraph.registerNodeType('LineStrip', {
             'raycastData.ray',
             'raycastData.threshold',
             'transform.' + transformNodeMember,
-            'geometry_attributes.positions[]',
+            'geometry_attributes.positions<>',
             'geometry_uniforms.indices',
             'boundingbox.min',
             'boundingbox.max'
@@ -445,7 +451,7 @@ FABRIC.SceneGraph.registerNodeType('Triangles', {
           parameterLayout: [
             'raycastData.ray',
             'transform.' + transformNodeMember,
-            'geometry_attributes.positions[]',
+            'geometry_attributes.positions<>',
             'geometry_uniforms.indices',
             'boundingbox.min',
             'boundingbox.max'
@@ -485,10 +491,10 @@ FABRIC.SceneGraph.registerNodeType('Triangles', {
           entryFunctionName: 'computeTriangleTangents',
           parameterLayout: [
             'uniforms.indices',
-            'self.positions[]',
-            'self.normals[]',
-            'self.uvs' + tangentUVIndex + '[]',
-            'self.tangents[]'
+            'self.positions<>',
+            'self.normals<>',
+            'self.uvs' + tangentUVIndex + '<>',
+            'self.tangents<>'
           ]
         }));
       }
@@ -680,9 +686,6 @@ FABRIC.SceneGraph.registerNodeType('Instance', {
       if (!node.isTypeOf('Material')) {
         throw (':Incorrect type assignment. Must assign a Material');
       }
-      if (!geometryNode) {
-        throw (':Geometry node not assigned. Geometry must be assigned before setting materials.');
-      }
       node = scene.getPrivateInterface(node);
       node.getRedrawEventHandler().appendChildEventHandler(redrawEventHandler);
       materialNodes.push(node);
@@ -742,6 +745,7 @@ FABRIC.SceneGraph.registerNodeType('Instance', {
   FABRIC.SceneGraph.registerNodeType('ObjLoadTriangles', {
     factoryFn: function(options, scene) {
       scene.assignDefaults(options, {
+        removeParsersOnLoad: false
       });
 
       options.uvSets = 1; //To refine... what if there is no UV set??
@@ -750,29 +754,20 @@ FABRIC.SceneGraph.registerNodeType('Instance', {
         resourceloaddgnode = resourceLoadNode.getDGLoadNode(),
         trianglesNode = scene.constructNode('Triangles', options);
 
-      resourceloaddgnode.addMember('handle', 'Data');
-
-      resourceloaddgnode.bindings.append(scene.constructOperator({
-        operatorName: 'loadObj',
-        parameterLayout: [
-          'self.url', //For debugging only
-          'self.resource',
-          'self.handle'
-        ],
-        entryFunctionName: 'loadObj',
-        srcFile: 'FABRIC_ROOT/SceneGraph/KL/loadObj.kl'
-      }));
-
       trianglesNode.getAttributesDGNode().addDependency(resourceloaddgnode, 'resource');
       trianglesNode.getUniformsDGNode().addDependency(resourceloaddgnode, 'resource');
+      trianglesNode.pub.addUniformValue('reload', 'Boolean', true);
+      trianglesNode.pub.addUniformValue('handle', 'Data');
 
       trianglesNode.setGeneratorOps([
         scene.constructOperator({
-          operatorName: 'setObjVertexCount',
+          operatorName: 'parseObjAndSetVertexCount',
           srcFile: 'FABRIC_ROOT/SceneGraph/KL/loadObj.kl',
-          entryFunctionName: 'setObjVertexCount',
+          entryFunctionName: 'parseObjAndSetVertexCount',
           parameterLayout: [
-            'resource.handle',
+            'resource.resource',
+            'uniforms.handle',
+            'uniforms.reload',
             'self.newCount'
           ]
         }),
@@ -781,18 +776,32 @@ FABRIC.SceneGraph.registerNodeType('Instance', {
           srcFile: 'FABRIC_ROOT/SceneGraph/KL/loadObj.kl',
           entryFunctionName: 'setObjGeom',
           parameterLayout: [
-            'resource.handle',
+            'uniforms.handle',
             'uniforms.indices',
-            'self.positions[]',
-            'self.normals[]',
-            'self.uvs0[]'
+            'self.positions<>',
+            'self.normals<>',
+            'self.uvs0<>',
+            'uniforms.reload'
+          ]
+        }),
+        scene.constructOperator({
+          operatorName: 'freeObjParsedData',
+          srcFile: 'FABRIC_ROOT/SceneGraph/KL/loadObj.kl',
+          entryFunctionName: 'freeObjParsedData',
+          parameterLayout: [
+            'uniforms.handle'
           ]
         })
       ]);
+      /////////////////////////////////////////////////////////////////////
 
       trianglesNode.pub.getResourceLoadNode = function() {
         return resourceLoadNode;
       };
+
+      resourceLoadNode.pub.addOnLoadCallback(function() {
+        trianglesNode.getAttributesDGNode().bindings.empty();
+      });
 
       return trianglesNode;
     }

@@ -45,6 +45,7 @@
     <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Particles.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Kinematics.js" charset="utf-8"></script>
     
+    <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.DebugGeometry.js" charset="utf-8"></script>
     <script type="text/javascript">
     
 $(document).ready(function() {
@@ -62,33 +63,45 @@ $(document).ready(function() {
       primary: 'ui-icon-step'
     }
   });
+  
+  var flockParams = document.cookie ? JSON.parse(document.cookie) : { sceneSize:'medium', displayDebugging: true };
+ // var flockParams = { sceneSize:'medium', displayDebugging: true };
+        
+  $("#numAgents").val(flockParams.sceneSize);
+  $("#displayDebugging").attr('checked', flockParams.displayDebugging);
+  
 
   var numAgents, gridSize, cameraPos;
-  var sceneSize = 'huge';
-  if (sceneSize === 'tiny') {
-    cameraPos = FABRIC.RT.vec3(20, 30, -40).scale(0.05);
-    numAgents = 10;
-    gridSize = 6;
+  switch(flockParams.sceneSize){
+    case 'tiny':
+      cameraPos = FABRIC.RT.vec3(20, 30, -40).scale(0.1);
+      numAgents = 10;
+      gridSize = 6;
+      break;
+    case 'small':
+      cameraPos = FABRIC.RT.vec3(20, 30, -40).scale(0.2);
+      numAgents = 100;
+      gridSize = 10;
+      break;
+    case 'medium':
+      cameraPos = FABRIC.RT.vec3(20, 30, -40).scale(0.5);
+      numAgents = 2000;
+      gridSize = 30;
+      break;
+    case 'huge':
+      cameraPos = FABRIC.RT.vec3(20, 30, -40).scale(1.0);
+      numAgents = 10000;
+      gridSize = 100;
+      break;
+    case 'massive':
+      cameraPos = FABRIC.RT.vec3(20, 30, -40).scale(10);
+      numAgents = 160000;
+      gridSize = 800;
+      break;
   }
-  else if (sceneSize === 'small') {
-    cameraPos = FABRIC.RT.vec3(20, 30, -40).scale(0.5);
-    numAgents = 100;
-    gridSize = 30;
-  }
-  else if (sceneSize === 'medium') {
-    cameraPos = FABRIC.RT.vec3(20, 30, -40).scale(0.5);
-    numAgents = 7000;
-    gridSize = 80;
-  }
-  else if (sceneSize === 'huge') {
-    cameraPos = FABRIC.RT.vec3(20, 30, -40).scale(1.0);
-    numAgents = 10000;
-    gridSize = 100;
-  }
-  else if (sceneSize === 'massive') {
-    cameraPos = FABRIC.RT.vec3(20, 30, -40).scale(10);
-    numAgents = 160000;
-    gridSize = 800;
+  
+  var storeFlockParams = function(){
+    document.cookie=JSON.stringify(flockParams);
   }
 
   // Create the scene.
@@ -119,16 +132,17 @@ $(document).ready(function() {
       color: FABRIC.RT.rgb(1.0, 0.0, 0.0)
     });
 
-  var particlesNode = scene.constructNode('Flock', {
+  var flockNode = scene.constructNode('Flock', {
       cellsize: 1,
       x_count: gridSize,
       y_count: 1,
       z_count: gridSize,
-      displayGrid: true
+      displayGrid: true,
+      displayDebugging: flockParams.displayDebugging
     });
 
   scene.constructNode('Instance', {
-      geometryNode: particlesNode,
+      geometryNode: flockNode,
       materialNode: flockMaterial
     });
 
@@ -153,7 +167,7 @@ $(document).ready(function() {
       Math.random() - 0.5
     ).scale(0.02));
   }
-  particlesNode.loadGeometryData({
+  flockNode.loadGeometryData({
     positions: particlePositions,
     goals: particleGoals,
     velocities: particleVelocities
@@ -192,9 +206,6 @@ $(document).ready(function() {
 
   paintManipulator.addEventListener( "onpaint", onPaintFn );
 */
-
-
-  document.getElementById('numAgents').childNodes[0].data = 'Num Agents:' + numAgents;
 
   $('#play').button()
     .click(function() {
@@ -239,6 +250,20 @@ $(document).ready(function() {
       }
       viewport.redraw();
       
+      $("#numAgents").change(function() {
+        sceneSize = $("#numAgents :selected").attr("value");
+        flockParams.sceneSize = sceneSize;
+        storeFlockParams();
+        window.location.reload();
+      });
+      
+      $("#displayDebugging").change(function() {
+        var displayDebugging = $("#displayDebugging").is(":checked");
+        flockNode.setDisplayDebugging(displayDebugging);
+        flockParams.displayDebugging = displayDebugging;
+        storeFlockParams();
+      });
+      
       setInterval(function() {
           document.getElementById('frameRate').childNodes[0].data = 'Frame Rate:' + viewport.getFPS().toFixed(2);
         }, 600);
@@ -269,7 +294,7 @@ $(document).ready(function() {
             <h2>INFO</h2>
               <div class="content">
               Particle Flocking.<br>
-              Each particle is processed in a different slice, making use of FABRIC's multithreading architecture. 
+              Each particle is processed in a different slice, making use of FABRIC's multithreading architecture. Note: the debugging display will often cost more than the flocking in large crowds.
             </div><!--content-->
           </div><!--box-->
 
@@ -278,13 +303,19 @@ $(document).ready(function() {
             <div class="content">
               <button id="play" style="margin-top:10px;">Play</button>
               <button id="step" style="margin-top:10px;">Step</button>
+              </br>
+              <label for="numAgents" style="margin-top:10px;">Num Agents:</label>
+              <select id='numAgents' style="margin-top:10px;">
+                <option value="small">Small:100
+                <option value="medium">Medium:2000
+                <option value="huge">Huge:10000
+                <option value="massive">Massive:100000
+              </select>
+              </br>
+              <input type="checkbox" id="displayDebugging" style="margin-top:10px;"/><label for="displayDebugging">Display Debugging:</label>
             </div><!--content-->
           </div><!--box-->
         
-          <div class="box">
-            <h2 id="agents">CPU FLOCKING</h2>
-            <div class="content" id="numAgents">Num Agents:</div><p></p>
-          </div><!--box-->
           
           <div class="box">
             <h2 id="agents">PERFORMANCE</h2>

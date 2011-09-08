@@ -4,11 +4,10 @@
 //
 
 operator generateCross(
-  io Vec3 positions[],
+  io Vec3 positions<>,
   io Integer indices[],
   io Scalar size
 ) {
-  //  positions.resize( 6 );
   indices.resize(6);
 
   positions[0].x = size;

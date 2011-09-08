@@ -1,0 +1,27 @@
+//
+// Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
+//
+
+use FabricPNG;
+
+operator encodeImageLDR(
+  io Size imageWidth,
+  io Size imageHeight,
+  io RGBA imageLDR[],
+  io FabricResource resource
+) {
+  resource.data.resize(0);
+  String ext = resource.extension ? resource.extension : resource.mimeType;
+  if( !ext )
+    ext = 'png';
+  switch (ext) {
+    case'png':
+    case'image/png':
+      FabricPNGEncode(imageWidth, imageHeight, imageLDR, resource.data);
+      resource.extension = 'png';
+      resource.mimeType = 'image/png';
+      break;
+    default:
+      report "Error, encoding is not supported for image type " + ext;
+  }
+}

@@ -16,9 +16,8 @@ operator videoLoadInfo(
 
 operator videoSeekTime(
   io Size stream,
-  io Scalar ms
+  io Scalar time
 ) {
-  var Scalar time = ms / 1000.0;
   FabricVIDEOSeekTime(stream, time);
 }
 

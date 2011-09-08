@@ -8,17 +8,17 @@ function Mat33(
   Scalar _10, Scalar _11, Scalar _12,
   Scalar _20, Scalar _21, Scalar _22
 ) {
-  self.row0 = Vec3(_00, _01, _02);
-  self.row1 = Vec3(_10, _11, _12);
-  self.row2 = Vec3(_20, _21, _22);
+  this.row0 = Vec3(_00, _01, _02);
+  this.row1 = Vec3(_10, _11, _12);
+  this.row2 = Vec3(_20, _21, _22);
 }
 
 function Mat33(
   Vec3 row0, Vec3 row1, Vec3 row2
 ) {
-  self.row0 = row0;
-  self.row1 = row1;
-  self.row2 = row2;
+  this.row0 = row0;
+  this.row1 = row1;
+  this.row2 = row2;
 }
 
 function Mat33(in Euler e) {
@@ -40,29 +40,29 @@ function Mat33(in Euler e) {
   Rz.row1.x = Sz; Rz.row1.y = Cz; Rz.row1.z = 0.0;
   Rz.row2.x = 0.0; Rz.row2.y = 0.0; Rz.row2.z = 1.0;
 
-  if (e.ro.isXYZ()) self = Rx * Ry * Rz;
-    else if (e.ro.isYZX()) self = Ry * Rz * Rx;
-    else if (e.ro.isZXY()) self = Rz * Rx * Ry;
-    else if (e.ro.isXZY()) self = Rx * Rz * Ry;
-    else if (e.ro.isZYX()) self = Rz * Ry * Rx;
-    else if (e.ro.isYXZ()) self = Ry * Rx * Rz;
+  if (e.ro.isXYZ()) this = Rx * Ry * Rz;
+    else if (e.ro.isYZX()) this = Ry * Rz * Rx;
+    else if (e.ro.isZXY()) this = Rz * Rx * Ry;
+    else if (e.ro.isXZY()) this = Rx * Rz * Ry;
+    else if (e.ro.isZYX()) this = Rz * Ry * Rx;
+    else if (e.ro.isYXZ()) this = Ry * Rx * Rz;
 
-    report(self);
+    report(this);
 }
 
 function Mat33.setNull() {
   var Vec3 null(0.0, 0.0, 0.0);
-  self.row0 = self.row1 = self.row2 = null;
+  this.row0 = this.row1 = this.row2 = null;
 }
 
 function Mat33.setDiagonal(in Scalar v) {
-  self.row0.x = self.row1.y = self.row2.z = v;
+  this.row0.x = this.row1.y = this.row2.z = v;
 }
 
 function Mat33.setDiagonal(in Vec3 v) {
-  self.row0.x = v.x;
-  self.row1.y = v.y;
-  self.row2.z = v.z;
+  this.row0.x = v.x;
+  this.row1.y = v.y;
+  this.row2.z = v.z;
 }
 
 function Vec3 * (Vec3 vec3, Mat33 mat33) {
@@ -107,52 +107,52 @@ function Mat33 / (Mat33 mat, Scalar value) {
 }
 
 function Scalar Mat33.det() {
-  return self.row0.x * self.row1.y * self.row2.z
-  + self.row0.y * self.row1.z * self.row2.x
-  + self.row0.z * self.row1.x * self.row2.y
-  - self.row0.x * self.row1.z * self.row2.y
-  - self.row0.y * self.row1.x * self.row2.z
-  - self.row0.z * self.row1.y * self.row2.x;
+  return this.row0.x * this.row1.y * this.row2.z
+  + this.row0.y * this.row1.z * this.row2.x
+  + this.row0.z * this.row1.x * this.row2.y
+  - this.row0.x * this.row1.z * this.row2.y
+  - this.row0.y * this.row1.x * this.row2.z
+  - this.row0.z * this.row1.y * this.row2.x;
 }
 
 function Mat33 Mat33.adjoint() {
   var Mat33 result;
 
-  result.row0.x = self.row1.y * self.row2.z - self.row1.z * self.row2.y;
-  result.row0.y = self.row0.z * self.row2.y - self.row0.y * self.row2.z;
-  result.row0.z = self.row0.y * self.row1.z - self.row0.z * self.row1.y;
+  result.row0.x = this.row1.y * this.row2.z - this.row1.z * this.row2.y;
+  result.row0.y = this.row0.z * this.row2.y - this.row0.y * this.row2.z;
+  result.row0.z = this.row0.y * this.row1.z - this.row0.z * this.row1.y;
 
-  result.row1.x = self.row1.z * self.row2.x - self.row1.x * self.row2.z;
-  result.row1.y = self.row0.x * self.row2.z - self.row0.z * self.row2.x;
-  result.row1.z = self.row0.z * self.row1.x - self.row0.x * self.row1.z;
+  result.row1.x = this.row1.z * this.row2.x - this.row1.x * this.row2.z;
+  result.row1.y = this.row0.x * this.row2.z - this.row0.z * this.row2.x;
+  result.row1.z = this.row0.z * this.row1.x - this.row0.x * this.row1.z;
 
-  result.row2.x = self.row1.x * self.row2.y - self.row1.y * self.row2.x;
-  result.row2.y = self.row0.y * self.row2.x - self.row0.x * self.row2.y;
-  result.row2.z = self.row0.x * self.row1.y - self.row0.y * self.row1.x;
+  result.row2.x = this.row1.x * this.row2.y - this.row1.y * this.row2.x;
+  result.row2.y = this.row0.y * this.row2.x - this.row0.x * this.row2.y;
+  result.row2.z = this.row0.x * this.row1.y - this.row0.y * this.row1.x;
 
   return result;
 }
 
 function Mat33 Mat33.inverse() {
-  var Mat33 result = self.adjoint();
-  result = result / self.det();
+  var Mat33 result = this.adjoint();
+  result = result / this.det();
   return result;
 }
 
 function Mat33 Mat33.transpose() {
   var Mat33 result;
 
-  result.row0.x = self.row0.x;
-  result.row0.y = self.row1.x;
-  result.row0.z = self.row2.x;
+  result.row0.x = this.row0.x;
+  result.row0.y = this.row1.x;
+  result.row0.z = this.row2.x;
 
-  result.row1.x = self.row0.y;
-  result.row1.y = self.row1.y;
-  result.row1.z = self.row2.y;
+  result.row1.x = this.row0.y;
+  result.row1.y = this.row1.y;
+  result.row1.z = this.row2.y;
 
-  result.row2.x = self.row0.z;
-  result.row2.y = self.row1.z;
-  result.row2.z = self.row2.z;
+  result.row2.x = this.row0.z;
+  result.row2.y = this.row1.z;
+  result.row2.z = this.row2.z;
 
   return result;
 }

@@ -2,6 +2,7 @@
 // Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
 //
 
+use Math;
 use Vec3;
 use Vec2;
 
@@ -28,9 +29,9 @@ operator generateCylinder(
   io Integer loops,
 
   io Integer indices[],
-  io Vec3 positions[],
-  io Vec3 normals[],
-  io Vec2 uvs[]
+  io Vec3 positions<>,
+  io Vec3 normals<>,
+  io Vec2 uvs<>
 ) {
 //  report( "Generate cylinder. Radius: " + radius + " Height: " + height + " Caps: " + caps + " Sides: " + sides + " Loops: " + loops );
   sides = (sides >= 0) ? sides : 3;
@@ -47,8 +48,6 @@ operator generateCylinder(
   }
   indices.resize(numTriangles * 3);
   
-  Scalar PI = 3.141592653589793238462643;
-
   Integer voff = 0;
   for (Integer i = 0; i <= nbLoops; i++) {
     Scalar y = (i / Scalar(nbLoops)) * height;

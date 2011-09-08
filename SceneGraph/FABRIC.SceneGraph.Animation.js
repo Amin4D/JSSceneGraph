@@ -92,8 +92,8 @@ FABRIC.SceneGraph.registerNodeType('AnimationTrack', {
           },
           entryFunctionName: 'evaluateKeyframeAnimationTracks',
           parameterLayout: [
-            'animationtrack.keys[]',
-            'controller.localtime',
+            'animationtrack.keys<>',
+            'controller.localTime',
             'self.index',
             'self.value',
             'self.keyid'
@@ -110,7 +110,7 @@ FABRIC.SceneGraph.registerNodeType('AnimationTrack', {
           },
           entryFunctionName: 'evaluateCurve',
           parameterLayout: [
-            'animationtrack.keys[]',
+            'animationtrack.keys<>',
             'parameters.trackIndex',
             'parameters.timeRange',
             'self.index',
@@ -169,21 +169,28 @@ FABRIC.SceneGraph.registerNodeType('AnimationController', {
   factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
         playbackRate: 1.0,
-        bindToGlobalTime: true
+        bindToGlobalTime: true,
+        timeRange: FABRIC.RT.vec2(0, 10),
+        timeControl: 0, /* 0: absolute, 1:increment */
+        outOfRange: 1 /* 0: linear, 1:loop, 3:clamp */
       });
 
     var animationControllerNode = scene.constructNode('SceneGraphNode', options);
     var dgnode = animationControllerNode.constructDGNode('DGNode');
+    dgnode.addMember('timeControl', 'Integer', options.timeControl);
     dgnode.addMember('playbackRate', 'Scalar', options.playbackRate);
-    dgnode.addMember('localtime', 'Scalar');
+    dgnode.addMember('localTime', 'Scalar');
+    dgnode.addMember('timeRange', 'Vec2', options.timeRange);
+    dgnode.addMember('outOfRange', 'Integer', options.outOfRange);
     
     // create a getter and setter for the local time
     animationControllerNode.addMemberInterface(dgnode, 'playbackRate', true);
-    animationControllerNode.addMemberInterface(dgnode, 'localtime', true);
+    animationControllerNode.addMemberInterface(dgnode, 'localTime', true);
+    animationControllerNode.addMemberInterface(dgnode, 'timeRange', true);
 
     // extend public interface
     animationControllerNode.pub.setTime = function(time) {
-      dgnode.setData('localtime', 0, time);
+      dgnode.setData('localTime', 0, time);
     };
 
     // Here, the animation controllers time is locked to
@@ -191,35 +198,23 @@ FABRIC.SceneGraph.registerNodeType('AnimationController', {
     // is computed, or simulated based on scene events.
     if(options.bindToGlobalTime) {
       dgnode.addDependency(scene.getGlobalsNode(), 'globals');
-      dgnode.bindings.append(scene.constructOperator(
-        {
-          operatorName: 'setControllerLocalTime.kl',
-          srcCode:
-            '\noperator setControllerLocalTime(io Scalar globalTime, io Scalar localTime) \n' +
-            '{\n' +
-            '  localTime = globalTime;\n' +
-            '}',
-          entryFunctionName: 'setControllerLocalTime',
-          parameterLayout: [
-            'globals.ms',
-            'self.localtime'
-          ]
-        }));
+      
       // This operator might simulate the platback local time by incrementing
       // it each frame by a rate specified by the playbackRate parameter.
-    /*  dgnode.bindings.append(scene.constructOperator(
-        {
+      dgnode.bindings.append(scene.constructOperator( {
           operatorName:'incrementControllerLocalTime',
           srcFile:'FABRIC_ROOT/SceneGraph/KL/incrementControllerLocalTime.kl',
           entryFunctionName:'incrementControllerLocalTime',
-          parameterLayout:[
+          parameterLayout: [
             'globals.time',
-            'globals.timeStep',
+            'globals.timestep',
+            'self.timeControl',
             'self.playbackRate',
-            'self.localtime'
+            'self.timeRange',
+            'self.outOfRange',
+            'self.localTime'
           ]
         }));
-    */
     }
     return animationControllerNode;
   }});
@@ -288,10 +283,10 @@ FABRIC.SceneGraph.registerNodeType('AnimationEvaluator', {
       var targetNodeMembers = targetnode.getDGNode().getMembers();
 
       var operatorName = 'bindAnimationTracksTo' + JSON.stringify(memberBindings).replace(/[^a-zA-Z 0-9]+/g, '');
-      var operatorHeaderSrc = '\nuse Vec3, Euler, Quat, RotationOrder; operator ' + operatorName + '(\n\tio ' + evaluatorDatatype + ' curvevalues[]';
+      var operatorHeaderSrc = '\nuse Vec3, Euler, Quat, RotationOrder; operator ' + operatorName + '(\n\tio ' + evaluatorDatatype + ' curvevalues<>';
       var operatorArraySrc = {};
       var operatorBodySrc = '';
-      var parameterLayout = ['animationevaluator.value[]'];
+      var parameterLayout = ['animationevaluator.value<>'];
       var tempVariables = {};
       for (var memberAccessor in memberBindings) {
         var memberBinding = memberBindings[memberAccessor];
@@ -439,7 +434,7 @@ FABRIC.SceneGraph.registerNodeType('TrackDisplay', {
       animationTrackNode: 'The AnimationTrack node to evaluate.',
       trackIndex: 'The index of the track in the AnimationTrack node to evaluate.',
       timeRange: 'The time rage to evaluate.',
-      segmentCount: 'The number of steps to divide the timerange by.'
+      segmentCount: 'The number of steps to divide the timeRange by.'
   },
   factoryFn: function(options, scene) {
     scene.assignDefaults(options, {

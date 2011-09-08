@@ -45,7 +45,7 @@ FABRIC.RT.Ray.prototype = {
   distanceToPoint: function(point) {
     var v, w, c1, c2, rayT, dist;
 
-    w = point.subtract(self.start);
+    w = point.subtract(this.start);
     c1 = w.dot(this.direction);
     c2 = this.direction.dot(this.direction);
     rayT = c1 / c2;
@@ -55,7 +55,7 @@ FABRIC.RT.Ray.prototype = {
       return pointOnRay.dist(point);
     }
     else {
-      return self.start.dist(point);
+      return this.start.dist(point);
     }
   },
 

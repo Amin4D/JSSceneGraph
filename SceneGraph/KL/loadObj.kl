@@ -6,13 +6,11 @@ use FabricOBJ;
 use Vec2;
 use Vec3;
 
-operator loadObj(
-  io String url,
+function loadObj(
   io FabricResource resource,
   io Data objParseHandle
 ) {
-  report "OBJ decode " + url;
-  FabricOBJDecode(resource.data, resource.dataSize, objParseHandle);
+  FabricOBJDecode(resource.data.data(), resource.data.dataSize(), objParseHandle);
 
   Boolean hadErrors;
   FabricOBJHadErrors( objParseHandle, hadErrors );
@@ -21,35 +19,54 @@ operator loadObj(
     String errors[];
     FabricOBJGetErrors( objParseHandle, errors );
     for( Integer i = 0; i < errors.size; i++ )
-      report 'Error while parsing obj file ' + url + ': ' + errors[i];
+      report 'Error while parsing obj file ' + resource.url + ': ' + errors[i];
   }
 }
 
-operator setObjVertexCount(
+operator parseObjAndSetVertexCount(
+  io FabricResource resource,
   io Data objParseHandle,
+  io Boolean reload,
   io Size newCount
 ) {
-  FabricOBJGetNbPoints(objParseHandle, newCount);
-  report "OBJ setObjVertexCount: " + newCount;
+  if(reload){
+    Boolean validHandle;
+    FabricOBJIsHandleValid( objParseHandle, validHandle );
+    if( !validHandle )
+      loadObj( resource, objParseHandle);
+
+    FabricOBJGetNbPoints(objParseHandle, newCount);
+    report "OBJ " + resource.url + ": " + newCount + " vertices";
+  }
 }
 
 operator setObjGeom(
   io Data objParseHandle,
   io Integer indices[],
-  io Vec3 positions[],
-  io Vec3 normals[],
-  io Vec2 uvs[]
+  io Vec3 positions<>,
+  io Vec3 normals<>,
+  io Vec2 uvs<>,
+  io Boolean reload
 ) {
-//  report "OBJ setObjGeom";
-  FabricOBJGetTriangleIndices( objParseHandle, indices );
-  FabricOBJGetPoints( objParseHandle, positions );
-  FabricOBJGetNormals( objParseHandle, normals );
-
-  Boolean hasTexture = false;
-  FabricOBJHasTextureCoords( objParseHandle, hasTexture );
-  if( hasTexture )
-  {
-    FabricOBJGetTextureCoords( objParseHandle, uvs );
+  if(reload){
+    FabricOBJGetTriangleIndices( objParseHandle, indices );
+    FabricOBJGetPointsSliced( objParseHandle, positions );
+    FabricOBJGetNormalsSliced( objParseHandle, normals );
+  
+    Boolean hasTexture = false;
+    FabricOBJHasTextureCoords( objParseHandle, hasTexture );
+    if( hasTexture )
+    {
+      FabricOBJGetTextureCoordsSliced( objParseHandle, uvs );
+    }
+    if(positions.size()>1){
+      reload = false;
+    }
   }
-  report "OBJ setObjGeom: Done";
+}
+
+operator freeObjParsedData(
+  io Data objParseHandle
+) {
+  FabricOBJFreeParsedData(objParseHandle);
 }

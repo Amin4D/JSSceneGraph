@@ -206,13 +206,7 @@ $(document).ready(function() {
     switch(BrowserDetect.OS){
       case "Mac":
         os = "Darwin";
-        switch(BrowserDetect.browser){
-          case "Chrome": arch = "i386"; break;
-          case "Firefox": arch = "x86_64"; break;
-          default:
-            alert("Unsupported Browser. Fabric Alpha supports only Chrome and Firefox. Other browsers will be supported shortly");
-            return false;
-        }
+        arch = "universal";
         break;
       case "Windows":
         os = "Windows";
@@ -239,13 +233,13 @@ $(document).ready(function() {
   }
   
   var url = createDownloadURL();
-
+  
   if(url){
     $('#install').button({ disabled: false })
     .click(function() {
       $( "#alphaWarningDialogBox" ).dialog( "open" );
-      
-      window.location = url;
+      parent.location = url;
+    //  parent.location.reload();
     });
   }
   
@@ -324,7 +318,7 @@ In no event shall Fabric Technologies, Inc. be liable for any damages (including
     <div id="alphaWarningDialogBox" title="Alpha Warning">
       <div class="content">
         This is an Alpha release of Fabric Engine, and we are working continuously to improve the developer experience and the plugin plugin performance. To be notified of updates, please register
-        <a href="http://fabric-engine.com/2011/07/looking-for-early-testers">here</a>.
+        <u><a href="http://fabric-engine.com/2011/07/looking-for-early-testers">here</a></u>.
         <br><br>
         Please refresh the page on completion of the plugin installation
       </div>

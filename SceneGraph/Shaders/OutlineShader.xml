@@ -5,7 +5,6 @@
     <uniform name="u_materialColor" constant="color" type="Color"/>
     <uniform name="u_outlineThickness" constant="thickness" type="Scalar" defaultValue="0.5"/>
     <uniform name="u_modelViewProjectionMatrix" constant="modelViewProjectionMatrix" type="Mat44" owner="instance"/>
-    <uniform name="u_modelViewMatrix" constant="modelViewMatrix" type="Mat44" owner="instance"/>
     <uniform name="u_normalMatrix" constant="normalMatrix" type="Mat33" owner="instance"/>
   </uniforms>
   <attributes>
@@ -25,15 +24,13 @@
       <![CDATA[
       
       uniform mat4 u_modelViewProjectionMatrix;
-      uniform mat4 u_modelViewMatrix;
       uniform mat3 u_normalMatrix;
       uniform float u_outlineThickness;
       attribute vec4 a_position;
       attribute vec3 a_normal;
       
       void main(){
-        vec3 outlinedisp = mat3(u_modelViewProjectionMatrix[0].xyz, u_modelViewProjectionMatrix[1].xyz, u_modelViewProjectionMatrix[2].xyz) * a_normal;
-      //  vec3 outlinedisp = u_normalMatrix * a_normal;
+        vec3 outlinedisp = u_normalMatrix * a_normal;
         outlinedisp.z = 0.0;
         if(outlinedisp.x != 0.0 && outlinedisp.y != 0.0){
           outlinedisp = normalize(outlinedisp) * u_outlineThickness;
@@ -54,7 +51,7 @@
       void main(){
         gl_FragColor = u_materialColor;
       }
-
+      
       ]]>
     </source>
   </fragmentshader>

@@ -66,7 +66,10 @@ $(document).ready(function() {
       scene.constructNode('PhongMaterial', { diffuseColor: FABRIC.RT.rgb(0, 0, 0.8, 1), lightNode: light })
     ];
   
-  var outlineMaterial = scene.constructNode('OutlineShader', { color: FABRIC.RT.rgb(0.8, 0.8, 0.8, 1) })
+  var outlineMaterial = scene.constructNode('OutlineShader', {
+    color: FABRIC.RT.rgb(0.8, 0.8, 0.8, 1),
+    thickness: 0.3
+  })
   
 
   var objId = 0;
@@ -182,15 +185,15 @@ $(document).ready(function() {
           </div><!--box-->
 
           <div class="box">
-                    <h2>EVENTS</h2>
+            <h2>EVENTS</h2>
             <div class="content">
-                      <p id="mouseOverEventsText">Mouse Over:
-                      <p id="mouseOutEventsText">Mouse Out:
-                      <p id="mouseMoveEventsText">Mouse Move:
-                      <p id="mouseDownEventsText">Mouse Down:
-                      <p id="mouseUpEventsText">Mouse Up:
-                    </div>
-                </div><!--box-->
+              <p id="mouseOverEventsText">Mouse Over:</p>
+              <p id="mouseOutEventsText">Mouse Out:</p>
+              <p id="mouseMoveEventsText">Mouse Move:</p>
+              <p id="mouseDownEventsText">Mouse Down:</p>
+              <p id="mouseUpEventsText">Mouse Up:</p>
+            </div>
+          </div><!--box-->
             
         </div><!--sidebar-->
       </div> <!--editor-->

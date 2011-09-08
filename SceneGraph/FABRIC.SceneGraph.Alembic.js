@@ -44,10 +44,21 @@ FABRIC.SceneGraph.registerNodeType('AlembicLoadNode', {
     // create an animation controller for the sample
     var animationController = scene.constructNode('AnimationController');
     resourceLoadNode.pub.getAnimationController = function() {
-      return animationController;
+      return animationController.pub;
     };
     var animationControllerDGNode = animationController.getDGNode();
     resourceloaddgnode.addDependency(animationControllerDGNode,'controller');
+
+    resourceloaddgnode.bindings.append(scene.constructOperator({
+      operatorName: 'alembicSetSample',
+      parameterLayout: [
+        'controller.localTime',
+        'self.sample'
+      ],
+      entryFunctionName: 'alembicSetSample',
+      srcFile: 'FABRIC_ROOT/SceneGraph/KL/loadAlembic.kl',
+      async: false
+    }));
 
     resourceloaddgnode.bindings.append(scene.constructOperator({
       operatorName: 'alembicLoad',

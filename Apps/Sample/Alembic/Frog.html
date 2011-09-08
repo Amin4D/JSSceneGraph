@@ -90,6 +90,8 @@ $(document).ready(function() {
     dependentNode: viewport,
     onLoadCallback: function(){
 
+      assets.frog.getAnimationController().setTimeRange(FABRIC.RT.vec2(0, 50/30));
+
       // create the camera
       var nodes = assets.frog.getParsedNodes();
       viewport.setCameraNode(assets.frog.getParsedNodes()['/Camera/CameraShape']);
@@ -140,8 +142,6 @@ $(document).ready(function() {
     .click(function() {
       scene.animation.step();
     });
-  scene.animation.setTimeRange(FABRIC.RT.vec2(0, 70/30));
-  scene.animation.setLoop(true);
 
   $('#loadingDialog').dialog({
     modal: true

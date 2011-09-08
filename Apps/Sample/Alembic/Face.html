@@ -100,6 +100,8 @@ $(document).ready(function() {
     dependentNode: viewport,
     onLoadCallback: function(){
       
+      assets[resourceName].getAnimationController().setTimeRange(FABRIC.RT.vec2(0, 11));
+      
       // loop over all assets and create an instance
       for(var name in assets[resourceName].getParsedNodes()) {
         if(assets[resourceName].getParsedNodes()[name].isTypeOf('Triangles'))
@@ -143,8 +145,6 @@ $(document).ready(function() {
     .click(function() {
       scene.animation.step();
     });
-  scene.animation.setTimeRange(FABRIC.RT.vec2(0, 11));
-  scene.animation.setLoop(true);
   
   $('#loadingDialog').dialog({
     modal: true

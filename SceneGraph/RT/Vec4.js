@@ -64,7 +64,8 @@ FABRIC.RT.vec4 = function(x, y, z, t) {
 
 FABRIC.RT.Vec4.prototype = {
   set: function(x, y, z, t) {
-    return this.x = x; this.y = y; this.z = z; this.t = t;
+    this.x = x; this.y = y; this.z = z; this.t = t;
+    return this;
   },
   // Returns true if the vector is equal to the argument
   eql: function(v) {

@@ -176,6 +176,7 @@ FABRIC.RT.Quat.prototype = {
   set: function(w, vec) {
     this.v = vec.clone();
     this.w = w;
+    return this;
   },
 
   // Returns true if the vector is equal to the argument

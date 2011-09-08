@@ -68,11 +68,11 @@ $(document).ready(function() {
   // Create a camera to draw the scene from
   var haveCameraManipulator = false;
   var camera = scene.constructNode('TargetCamera', {
-      position: FABRIC.RT.vec3(1, 100, 300).scale(0.5),
+      position: FABRIC.RT.vec3(1, 2, 10).scale(0.5),
       target: FABRIC.RT.vec3(0, 2, 0),
       roll: 0,
-      nearDistance: 10.0,
-      farDistance: 2000
+      nearDistance: 1.0,
+      farDistance: 200
     });
   
     // create the scene grid
@@ -85,11 +85,11 @@ $(document).ready(function() {
           materialNode: scene.constructNode('FlatMaterial')
       });
 
-  var assetNodes = scene.importAssetFile('Models/BendyBox2.DAE');
+  var assetNodes = scene.importAssetFile('Models/envelope.dae');
 
 
   var skeletonGeometryNode = scene.constructNode("CharacterSkeletonDebug",{
-    characterRigNode:assetNodes.Box01MeshSkeletonCharacterRig,
+    characterRigNode:assetNodes.geometries_0SkeletonCharacterRig,
     boneradius: 0.2
   });
 

@@ -478,7 +478,11 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
                       parseFloat(str[1]),
                       parseFloat(str[2])),
                     parseFloat(str[3]));
-          nodeData.xfo.ori.preMultiplyInPlace(q);
+          if(sid.slice(0, sid.length-1) == 'jointOrient'){
+            nodeData.xfo.multiply(FABRIC.RT.xfo({ori:q}));
+          }else{
+            nodeData.xfo.ori.preMultiplyInPlace(q);
+          }
           break;
         }
         case 'scale': {
@@ -1055,7 +1059,8 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
     for (var i = 0; i < jointDataSource.data.length; i++) {
       var jointName = getSourceData(jointDataSource, i);
       var bindPoseValues = getSourceData(bindPoseDataSource, i);
-      invmatrices.push(FABRIC.RT.mat44.apply(undefined, bindPoseValues).transpose());
+      var mat = FABRIC.RT.mat44.apply(undefined, bindPoseValues).transpose();
+      invmatrices.push(skinData.bind_matrix.mul(mat));
     }
     // Note1: The root of the hierarchy may not be the first listed bone. There may be more than
     // one hierarchy deforming this mesh. Pass in an array of nodes, and construct the skleton node from that list.
@@ -1141,6 +1146,7 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
         if(instanceData.instance_controller.instance_material){
           // TODO:
         }
+        
         var xfo = FABRIC.RT.xfo();
         xfo.setFromMat44(skinData.skinData.bind_matrix);
         var transformNode = scene.constructNode('Transform', {
@@ -1152,7 +1158,7 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
             name: url+'CharacterInstance',
             geometryNode: skinData.characterMeshNode,
             materialNode: materialNode,
-            transformNode: transformNode,
+            transformNode: transformNode, 
             rigNode: skinData.skeletonData.rigNode
           });
         assetNodes[characterNode.getName()] = characterNode;

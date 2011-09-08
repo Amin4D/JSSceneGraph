@@ -85,8 +85,8 @@ $(document).ready(function() {
           materialNode: scene.constructNode('FlatMaterial')
       });
 
-  var assetNodes = scene.importAssetFile('Models/BendyBox.dae');
-
+  var assetNodes = scene.importAssetFile('Models/envelope.dae');
+/*
   // create the shaders
   //var image = scene.constructNode("Image", { url:"Models/Images/monster_diffuse.png" } );
   var light = scene.constructNode('PointLight', { position: FABRIC.RT.vec3(10, 30, 100) });
@@ -98,12 +98,12 @@ $(document).ready(function() {
     });
   
   assetNodes.polymshInstance.setMaterialNode(skinMaterial);
-
+*/
   var skeletonGeometryNode = scene.constructNode("CharacterSkeletonDebug",{
-    characterRigNode:assetNodes.polymshCharacterRig,
+    characterRigNode:assetNodes.geometries_0SkeletonCharacterRig,
     boneradius: 0.2
   });
-  
+
   if (!haveCameraManipulator){
     scene.constructNode('CameraManipulator', { targetNode: camera });
     viewport.setCameraNode(camera);

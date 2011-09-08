@@ -6,21 +6,20 @@
 FABRIC.SceneGraph.registerNodeType('CharacterMesh', {
   factoryFn: function(options, scene) {
 
-    options.uvSets = 1;
-    options.tangentsFromUV = 0;
-    options.dynamic = true;
-    options.assignDrawOperator = false;
-
     var characterMeshNode = scene.constructNode('Triangles', options);
-
+    
+    characterMeshNode.pub.setAttributeDynamic('positions');
+    
+    characterMeshNode.pub.addVertexAttributeValue('boneIds', 'Vec4', { genVBO:true } );
+    characterMeshNode.pub.addVertexAttributeValue('boneWeights', 'Vec4', { genVBO: true });
+    
+    /*
     // The CharacterMesh stores aditional enveloping information.
     // These first to members sotre the values loaded from an asset
     // file like Collada.
     characterMeshNode.pub.addUniformValue('boneCountArray', 'Integer[]');
     characterMeshNode.pub.addUniformValue('boneIdsArray', 'Integer[]');
     characterMeshNode.pub.addUniformValue('boneWeightsArray', 'Scalar[]');
-    characterMeshNode.pub.addVertexAttributeValue('boneIds', 'Vec4', { genVBO:true } );
-    characterMeshNode.pub.addVertexAttributeValue('boneWeights', 'Vec4', { genVBO: true });
 
     // The enveloping shader can only accept bone bindings in Mat33 values.
     // Here we take the list of bone weights, sort them, and pick the top
@@ -37,6 +36,7 @@ FABRIC.SceneGraph.registerNodeType('CharacterMesh', {
         'self.boneWeights<>'
       ]
     }));
+    */
     
     characterMeshNode.getRedrawEventHandler().postDescendBindings.append( scene.constructOperator({
       operatorName: 'drawCharacterInstance',

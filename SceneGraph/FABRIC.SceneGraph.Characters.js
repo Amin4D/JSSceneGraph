@@ -13,31 +13,6 @@ FABRIC.SceneGraph.registerNodeType('CharacterMesh', {
     characterMeshNode.pub.addVertexAttributeValue('boneIds', 'Vec4', { genVBO:true } );
     characterMeshNode.pub.addVertexAttributeValue('boneWeights', 'Vec4', { genVBO: true });
     
-    /*
-    // The CharacterMesh stores aditional enveloping information.
-    // These first to members sotre the values loaded from an asset
-    // file like Collada.
-    characterMeshNode.pub.addUniformValue('boneCountArray', 'Integer[]');
-    characterMeshNode.pub.addUniformValue('boneIdsArray', 'Integer[]');
-    characterMeshNode.pub.addUniformValue('boneWeightsArray', 'Scalar[]');
-
-    // The enveloping shader can only accept bone bindings in Mat33 values.
-    // Here we take the list of bone weights, sort them, and pick the top
-    // 9 weights, and re-normalize.
-    characterMeshNode.getAttributesDGNode().bindings.append(scene.constructOperator({
-      operatorName: 'reduceBoneBindingOp',
-      srcFile: 'FABRIC_ROOT/SceneGraph/KL/reduceBoneBinding.kl',
-      entryFunctionName: 'reduceBoneBinding',
-      parameterLayout: [
-        'uniforms.boneCountArray',
-        'uniforms.boneIdsArray',
-        'uniforms.boneWeightsArray',
-        'self.boneIds<>',
-        'self.boneWeights<>'
-      ]
-    }));
-    */
-    
     characterMeshNode.getRedrawEventHandler().postDescendBindings.append( scene.constructOperator({
       operatorName: 'drawCharacterInstance',
       srcFile: 'FABRIC_ROOT/SceneGraph/KL/drawCharacterInstance.kl',

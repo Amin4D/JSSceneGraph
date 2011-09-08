@@ -809,4 +809,3 @@ FABRIC.SceneGraph.registerNodeType('Instance', {
       return trianglesNode;
     }
   });
-

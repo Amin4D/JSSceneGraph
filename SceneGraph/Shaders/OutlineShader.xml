@@ -13,12 +13,6 @@
     <attribute name="a_normal" binding="normals"/>
   </attributes>
   
-  <programParams>
-    <attribute name="GL_GEOMETRY_INPUT_TYPE_EXT" value="GL_TRIANGLES_ADJACENCY"/>
-    <attribute name="GL_GEOMETRY_OUTPUT_TYPE_EXT" value="GL_LINE_STRIP"/>
-    <attribute name="GL_GEOMETRY_VERTICES_OUT_EXT" value="6"/>
-  </programParams>
-  
   <openglstateparams>
     <enableOptions>
       <option>GL_CULL_FACE</option>
@@ -30,56 +24,26 @@
     <source>
       <![CDATA[
       
-      uniform vec4 u_lightPosition;
       uniform mat4 u_modelViewProjectionMatrix;
+      uniform mat4 u_modelViewMatrix;
       uniform mat3 u_normalMatrix;
-      
+      uniform float u_outlineThickness;
       attribute vec4 a_position;
       attribute vec3 a_normal;
       
-      varying vec3 normal;
-      
       void main(){
-        normal = u_normalMatrix * a_normal;
-        gl_Position = u_modelViewProjectionMatrix * a_position;
+        vec3 outlinedisp = mat3(u_modelViewProjectionMatrix[0].xyz, u_modelViewProjectionMatrix[1].xyz, u_modelViewProjectionMatrix[2].xyz) * a_normal;
+      //  vec3 outlinedisp = u_normalMatrix * a_normal;
+        outlinedisp.z = 0.0;
+        if(outlinedisp.x != 0.0 && outlinedisp.y != 0.0){
+          outlinedisp = normalize(outlinedisp) * u_outlineThickness;
+        }
+        gl_Position = u_modelViewProjectionMatrix * a_position + (vec4(outlinedisp, 0.0));
       }
+
       ]]>
     </source>
   </vertexshader>
-  
-  <geometryshader>
-    <source>
-      <![CDATA[
-      #version 120
-      #extension GL_EXT_geometry_shader4 : enable
-      
-      uniform mat4 u_projectionMatrix;
-      uniform mat4 u_projectionMatrixInv;
-      uniform float u_normalLength;
-
-      // Geometry shader takes the varying from the vertex
-      // shader as an array equal to the number of components
-      // being passed to the geometry shader.
-      varying in vec3 normal[];
-      
-      void main(){
-        // Add the normal, which is a vector in view-model space, to the position, which is a point in 
-        // projection-view-model space, by transforming the point from projection space, adding the
-        // normal, and transforming the resulting offset point back to projection space.
-        vec4 V0, V1;
-        V0 = gl_PositionIn[0];
-        V1 = u_projectionMatrix * ( u_projectionMatrixInv * V0 + (vec4( normal[0], 0.0 ) * u_normalLength) );
-        
-        gl_Position = V0;
-        EmitVertex();
-        gl_Position = V1;
-        EmitVertex();
-        EndPrimitive();
-      }
-      
-      ]]>
-    </source>
-  </geometryshader>
   
   <fragmentshader>
     <source>

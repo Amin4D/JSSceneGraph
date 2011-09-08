@@ -30,6 +30,7 @@
     <script type="text/javascript" src="../../../SceneGraph/RT/Euler.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/RT/OGLShaderProgram.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/RT/OGLTexture2D.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/OGLTextureCube.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/RT/OGLBuffer.js" charset="utf-8"></script>
 
     <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.js" charset="utf-8"></script>
@@ -75,43 +76,57 @@ $(document).ready(function() {
   var scene = FABRIC.SceneGraph.createScene();
   var viewport = scene.constructNode('Viewport', { windowElement: document.getElementById('FabricContainer') });
 
-  scene.constructNode('Instance', {
-          geometryNode: scene.constructNode('Grid', {
-              size_x: 120.0,
-              size_z: 120.0,
-              sections_x: 32,
-              sections_z: 32 }),
-          materialNode: scene.constructNode('FlatMaterial')
+  // Create a camera to draw the scene from
+  var camera = scene.constructNode('TargetCamera', {
+      nearDistance: 1,
+      farDistance: 2000,
+      position: FABRIC.RT.vec3(-.2, 1, 1).scale(18),
+      target: FABRIC.RT.vec3(0, .2, 0).scale(13),
+    });
+
+  scene.constructNode('CameraManipulator', { targetNode: camera });
+  viewport.setCameraNode(camera);
+
+  var light = scene.constructNode('PointLight', { position: FABRIC.RT.vec3(10, 30, 100).scale(3) });
+
+  var cubeTextureMap = scene.constructNode('CubeMap', {
+        urls: [
+          '../BasicDemos/Resources/cubemap_opensea/opensea_positive_x.png',
+          '../BasicDemos/Resources/cubemap_opensea/opensea_negative_x.png',
+          '../BasicDemos/Resources/cubemap_opensea/opensea_positive_y.png',
+          '../BasicDemos/Resources/cubemap_opensea/opensea_negative_y.png',
+          '../BasicDemos/Resources/cubemap_opensea/opensea_positive_z.png',
+          '../BasicDemos/Resources/cubemap_opensea/opensea_negative_z.png'
+        ]
       });
   
+  var phongMaterial = scene.constructNode('PhongMaterial', {
+    diffuseColor: FABRIC.RT.rgb(1.0, 0.1, 0.1, 1),
+    lightNode: light,
+  });
+  
   // create the alembic content, and fire the load once it is loaded
-  var assets = scene.importAssetFile('Models/frog.abc', {
+  var resourceName = 'softbodies';
+  var assets = scene.importAssetFile('Models/'+resourceName+'.abc', {
     dependentNode: viewport,
     onLoadCallback: function(){
-
-      // create the camera
-      var nodes = assets.frog.getParsedNodes();
-      viewport.setCameraNode(assets.frog.getParsedNodes()['/Camera/CameraShape']);
-
-      var materialNode = scene.constructNode('PhongTextureSimpleMaterial', {
-        diffuseTextureNode: scene.constructNode('Image', { url: 'Models/frog_diffuse.png' }),
-        lightNode: scene.constructNode('PointLight', {
-          position: FABRIC.RT.vec3(100, 100, 0)
-        }),
-        specularColor: FABRIC.RT.rgba(0.2,0.2,0.2,1)
-      });
-
-      scene.constructNode('Instance', {
-        transformNode: assets.frog.getParsedNodes()['/low'],
-        geometryNode: assets.frog.getParsedNodes()['/low/lowShape'],
-        materialNode: materialNode
-      });
-
+      
+      // loop over all assets and create an instance
+      for(var name in assets[resourceName].getParsedNodes()) {
+        if(assets[resourceName].getParsedNodes()[name].isTypeOf('Triangles'))
+        {
+          scene.constructNode('Instance', {
+            transformNode: assets[resourceName].getCorrespondingTransform(name),
+            geometryNode: assets[resourceName].getParsedNodes()[name],
+            materialNode: phongMaterial
+          });
+        }
+      }
       $('#loadingDialog').dialog('close');
       viewport.redraw();
     }
   });
-  
+
   $('#play').button()
     .click(function() {
       var options;
@@ -123,7 +138,7 @@ $(document).ready(function() {
           }
         });
         scene.animation.play( function(){
-          assets.frog.setSample(parseInt(scene.animation.getTime() * 30.0));
+          assets[resourceName].setSample(parseInt(scene.animation.getTime() * 30.0));
         });
       } else {
         $(this).button('option', {
@@ -139,9 +154,9 @@ $(document).ready(function() {
     .click(function() {
       scene.animation.step();
     });
-  scene.animation.setTimeRange(FABRIC.RT.vec2(0, 70/30));
+  scene.animation.setTimeRange(FABRIC.RT.vec2(0, 11));
   scene.animation.setLoop(true);
-
+  
   $('#loadingDialog').dialog({
     modal: true
   });

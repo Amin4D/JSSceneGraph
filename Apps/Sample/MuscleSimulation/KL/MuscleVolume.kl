@@ -181,7 +181,7 @@ operator generateDisplacementMap(
 operator generateSystemDisplacementMap(
   io Size displacementMapResolution,
   io Scalar systemDisplacementMap[],
-  io Scalar displacementMaps[][],
+  io Scalar displacementMaps<>[],
   io Size bufferID,
   io Integer textureUnit
 ) {
@@ -222,12 +222,12 @@ operator generateSystemDisplacementMap(
 operator deformMuscleVolume(
   io Size muscleIndex,
   io Size displacementMapResolution,
-  io Color displacementMaps[][],
-  io Xfo systemxfos[][],
-  io Scalar compressionFactors[],
-  io Vec3 parentpositions[],
-  io Vec3 parentnormals[],
-  io Vec2 parentuvs[],
+  io Color displacementMaps<>[],
+  io Xfo systemxfos<>[],
+  io Scalar compressionFactors<>,
+  io Vec3 parentpositions<>,
+  io Vec3 parentnormals<>,
+  io Vec2 parentuvs<>,
   io Vec3 position,
   io Vec3 normal,
   in Size index
@@ -813,8 +813,8 @@ function Vec3 positionToMuscleUVW(
 
 
 operator calcSkinStickLocations(
-  io Xfo initialXfos[][],
-  io Vec3 parentpositions[],
+  io Xfo initialXfos<>[],
+  io Vec3 parentpositions<>,
 
   io Integer muscleBindingIds[4],
   io Vec3 sticklocations[4],
@@ -832,22 +832,22 @@ operator calcSkinStickLocations(
 
 operator deformSkin(
   io Size displacementMapResolution,
-  io Color displacementMaps[][],
-  io Xfo simulatedXfos[][],
+  io Color displacementMaps<>[],
+  io Xfo simulatedXfos<>[],
   /*
-  io Scalar inflationValues[],
+  io Scalar inflationValues<>,
   */
-  io Vec3 parentpositions[],
-  io Vec3 parentnormals[],
+  io Vec3 parentpositions<>,
+  io Vec3 parentnormals<>,
   io Vec3 position,
   io Vec3 normal,
   
-  io Integer allmuscleBindingIds[][4],
-  io Scalar allmuscleBindingWeights[][4],
-  io Scalar stickWeights[],
-  io Vec3 allsticklocations[][4],
-  io Scalar slideWeights[],
-  io Scalar bulgeWeights[],
+  io Integer allmuscleBindingIds<>[4],
+  io Scalar allmuscleBindingWeights<>[4],
+  io Scalar stickWeights<>,
+  io Vec3 allsticklocations<>[4],
+  io Scalar slideWeights<>,
+  io Scalar bulgeWeights<>,
   in Size index,
   io DebugGeometry debugDraw
 ){

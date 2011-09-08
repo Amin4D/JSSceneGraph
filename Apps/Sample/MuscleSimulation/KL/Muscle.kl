@@ -8,14 +8,14 @@ use Color;
 use DebugGeometry;
 
 operator simulateMuscle(
-  io Xfo allinitialXfos[][], /* inital Transforsm  */
-  io Xfo allbaseMuscleXfos[],
-  io Scalar allsegmentLengths[][],
-  io Vec2 allpointEnvelopeIds[],
-  io Vec2 allpointEnvelopWeights[][],
-  io Scalar allflexibilityWeights[][], /* weights determining how much the muscle is simulated. */
-  io BezierKeyframe allcontractionCurve[][],
-  io Scalar allcontractionWeights[][], /* weights determining how much the segments will contract. */
+  io Xfo allinitialXfos<>[], /* inital Transforsm  */
+  io Xfo allbaseMuscleXfos<>,
+  io Scalar allsegmentLengths<>[],
+  io Vec2 allpointEnvelopeIds<>,
+  io Vec2 allpointEnvelopWeights<>[],
+  io Scalar allflexibilityWeights<>[], /* weights determining how much the muscle is simulated. */
+  io BezierKeyframe allcontractionCurve<>[],
+  io Scalar allcontractionWeights<>[], /* weights determining how much the segments will contract. */
   
   in Size index,
   io Boolean initialized,

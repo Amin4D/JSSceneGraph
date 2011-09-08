@@ -164,9 +164,41 @@ FABRIC.SceneGraph.registerNodeType('AlembicLoadNode', {
             srcFile: 'FABRIC_ROOT/SceneGraph/KL/loadAlembic.kl'
           }));
         }
+        else if(type == 'Camera') {
+          
+          var transformNode = parsedNodes[parentIdentifier];
+          /*
+          var cameraNode = scene.constructNode('TargetCamera', {
+            position: FABRIC.RT.vec3(10, 20, 20),
+            target: FABRIC.RT.vec3(0, 0, 0)
+          });
+          */
+
+          var cameraNode = scene.constructNode('Camera', { transformNode: transformNode } );
+          parsedNodes[identifier] = cameraNode.pub;
+
+          var dgnode = cameraNode.getDGNode();
+          dgnode.addDependency(resourceloaddgnode,'alembic');
+          dgnode.addMember('identifier','String',identifier);
+          
+          // setup the parse operators
+          dgnode.bindings.insert(scene.constructOperator({
+            operatorName: 'alembicParseCamera',
+            parameterLayout: [
+              'alembic.archiveID',
+              'self.identifier',
+              'alembic.sample',
+              'self.nearDistance',
+              'self.farDistance',
+              'self.fovY'
+            ],
+            entryFunctionName: 'alembicParseCamera',
+            srcFile: 'FABRIC_ROOT/SceneGraph/KL/loadAlembic.kl'
+          }),0);
+        }
         else if(type == 'Xform')
         {
-          var transformNode = scene.constructNode('Transform');
+          var transformNode = scene.constructNode('Transform', {hierarchical: false});
           parsedNodes[identifier] = transformNode.pub;
           
           // have the transform be driven by the parser

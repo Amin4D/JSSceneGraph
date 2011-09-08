@@ -11,8 +11,8 @@ operator alembicLoad(
   io FabricResource resource,
   io Integer archiveID
 ) {
-  if(resource.dataSize > 0)
-    FabricALEMBICDecode(resource.data, resource.dataSize, archiveID);
+  if(resource.data.dataSize() > 0)
+    FabricALEMBICDecode(resource.data.data(), resource.data.dataSize(), archiveID);
 }
 
 operator alembicGetIdentifiers(
@@ -29,6 +29,17 @@ operator alembicParseXform(
   io Xfo transform
 ) {
   FabricALEMBICParseXform(archiveID,identifier,sample,transform);
+}
+
+operator alembicParseCamera(
+  io Integer archiveID,
+  io String identifier,
+  io Integer sample,
+  io Scalar near,
+  io Scalar far,
+  io Scalar fovY
+) {
+  FabricALEMBICParseCamera(archiveID,identifier,sample,near,far,fovY);
 }
 
 operator alembicParsePolyMeshCount(

@@ -3,7 +3,7 @@
     Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
     -->
   <head> 
-    <title>FABRIC - Shadow Casting Lights</title> 
+    <title>FABRIC - Alembic Viewer</title> 
     
     <meta charset="iso-8859-1"/>
     <link href="../../../themes/default/style.css" rel="stylesheet" type="text/css" />
@@ -14,24 +14,22 @@
 
     <link type="text/css" href="../../../ThirdParty/jQuery/css/vader/jquery-ui-1.8.5.custom.css" rel="stylesheet" />
 
-    <script type="text/javascript" src="../../../Core/FABRIC.Wrappers.js" charset="utf-8"></script>
+      <script type="text/javascript" src="../../../Core/FABRIC.Wrappers.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../Core/FABRIC.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/RT/Math.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/RT/Vec2.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/RT/Vec3.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/RT/Vec4.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/RT/Quat.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/RT/Euler.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/RT/Mat22.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/RT/Mat33.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/RT/Mat44.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/Quat.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/RT/Xfo.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/RT/RGBA.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/RT/Color.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/RT/Ray.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/Euler.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/RT/OGLShaderProgram.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/RT/OGLTexture2D.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/RT/OGLRenderTarget.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/RT/OGLBuffer.js" charset="utf-8"></script>
 
     <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.js" charset="utf-8"></script>
@@ -41,85 +39,112 @@
     <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Materials.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Manipulation.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Kinematics.js" charset="utf-8"></script>
-    
+    <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Alembic.js" charset="utf-8"></script>
+
     <script type="text/javascript">
 $(document).ready(function() {
 
-  // Create the scene.
-  var scene = FABRIC.SceneGraph.createScene();
-//  var postProcessEffect = scene.constructNode( "BloomPostProcessEffect" );
+  $('#play').button({
+      text: true,
+      icons: {
+        primary: 'ui-icon-play'
+      }
+    });
+  $('#step').button({
+    text: true,
+    icons: {
+      primary: 'ui-icon-step'
+    }
+  });  
 
-  var viewport = scene.constructNode('Viewport', {
-    /*postProcessEffect:postProcessEffect,*/
-    windowElement: document.getElementById('FabricContainer'),
-    enableRaycasting: true,
-    backgroundColor: FABRIC.RT.rgb(0.1, 0.1, 0.1)
-  });
+  $('#importModel').button().change(function(e) {
+      // TODO: Enable file importing
+        console.log($(this).val());
+      var assets = scene.importAssetFile($(this).val());
+      for (i in assets) {
+        assets[i].setMaterialNode(redMaterial);
+        drawNode.setGeometryNode(assets[i]);
+      }
+
+      var errors = scene.getErrors();
+      if (errors.length > 0) {
+        throw (errors.toString());
+      }
+    });
+
+  var scene = FABRIC.SceneGraph.createScene();
+  var viewport = scene.constructNode('Viewport', { windowElement: document.getElementById('FabricContainer') });
 
   // Create a camera to draw the scene from
   var camera = scene.constructNode('TargetCamera', {
-    position: FABRIC.RT.vec3(30, 30, 0),
-    target: FABRIC.RT.vec3(2, 0, -3)
-  });
+      nearDistance: 1,
+      farDistance: 2000,
+      position: FABRIC.RT.vec3(.2, 5, 1).scale(13.5),
+      target: FABRIC.RT.vec3(0, 5, 0).scale(13.5),
+    });
 
-  scene.constructNode("CameraManipulator", { targetNode:camera } );
+  scene.constructNode('CameraManipulator', { targetNode: camera });
   viewport.setCameraNode(camera);
 
-  var spotLightNode = scene.constructNode('SpotLight', {
-    position: FABRIC.RT.vec3(10, 20, 5),
-    target: FABRIC.RT.vec3(0, 2, -6),
-    coneAngle: Math.degToRad(80.0),
-    farDistance: 60,
-    castShadows: true,
-    displayShadowDebug: false,
-    display: true
-  });
+  var light = scene.constructNode('PointLight', { position: FABRIC.RT.vec3(10, 30, 100).scale(3) });
 
-  var lightTrManip = scene.constructNode('3AxisTranslationManipulator', { parentNode: spotLightNode.getTransformNode(), size: 4 });
-  var lightOriManip = scene.constructNode('3AxisRotationManipulator', { parentNode: spotLightNode.getTransformNode(), radius: 3 });
-
-  var bluePhongMaterial = scene.constructNode('PhongMaterial', {
-    diffuseColor: FABRIC.RT.rgb(0, 0, 0.8),
-    lightNode: spotLightNode
-    });
-  var greenPhongMaterial = scene.constructNode('ShadowReceivingPhongMaterial', {
-    diffuseColor: FABRIC.RT.rgb(0.3, 0.9, 0.3),
-    lightNode: spotLightNode
+  var phongMaterial = scene.constructNode('PhongMaterial', {
+    diffuseColor: FABRIC.RT.rgb(0.5, 0.5, 0.5, 1),
+    lightNode: light,
   });
   
-  scene.constructNode('Instance', {
-      transformNode: scene.constructNode('Transform', {
-        hierarchical: false,
-        globalXfo: FABRIC.RT.xfo({ tr: FABRIC.RT.vec3(0, 3.8, -16) })
-      }),
-      geometryNode: scene.constructNode('Teapot', { size: 4 }),
-      materialNode: bluePhongMaterial,
-      enableShadowCasting: true
-    });
+  // create the alembic content, and fire the load once it is loaded
+  var resourceName = 'face';
+  var assets = scene.importAssetFile('Models/'+resourceName+'.abc', {
+    dependentNode: viewport,
+    onLoadCallback: function(){
+      
+      // loop over all assets and create an instance
+      for(var name in assets[resourceName].getParsedNodes()) {
+        if(assets[resourceName].getParsedNodes()[name].isTypeOf('Triangles'))
+        {
+          scene.constructNode('Instance', {
+            transformNode: assets[resourceName].getCorrespondingTransform(name),
+            geometryNode: assets[resourceName].getParsedNodes()[name],
+            materialNode: phongMaterial
+          });
+        }
+      }
+      $('#loadingDialog').dialog('close');
+      viewport.redraw();
+    }
+  });
 
-  scene.constructNode('Instance', {
-      transformNode: scene.constructNode('Transform', {
-        hierarchical: false,
-        globalXfo: FABRIC.RT.xfo({ tr: FABRIC.RT.vec3(0, 2, -5) })
-      }),
-      geometryNode: scene.constructNode('Cuboid', {
-        length: 4,
-        width: 4,
-        height: 16
-      }),
-      materialNode: bluePhongMaterial,
-      enableShadowCasting: true
+  $('#play').button()
+    .click(function() {
+      var options;
+      if ($(this).text() == 'Play') {
+        $(this).button('option', {
+          label: 'Pause',
+          icons: {
+            primary: 'ui-icon-pause'
+          }
+        });
+        scene.animation.play( function(){
+          assets[resourceName].setSample(parseInt(scene.animation.getTime() * 30.0));
+        });
+      } else {
+        $(this).button('option', {
+          label: 'Play',
+          icons: {
+            primary: 'ui-icon-play'
+          }
+        });
+        scene.animation.pause();
+      }
     });
-
-  scene.constructNode('Instance', {
-      transformNode: scene.constructNode('Transform', {
-        hierarchical: false,
-        globalXfo: FABRIC.RT.xfo({ tr: FABRIC.RT.vec3(-10, 0, -10) })
-      }),
-      geometryNode: scene.constructNode('Plane', { length: 50, width: 50, doubleSided: false }),
-      materialNode: greenPhongMaterial
+  $('#step').button()
+    .click(function() {
+      scene.animation.step();
     });
-
+  scene.animation.setTimeRange(FABRIC.RT.vec2(0, 11));
+  scene.animation.setLoop(true);
+  
   $('#loadingDialog').dialog({
     modal: true
   });
@@ -129,12 +154,10 @@ $(document).ready(function() {
       value: (1.0-(countRemaining/count))*100
     });
     if(countRemaining===0){
-      $('#loadingDialog').dialog('close');
       var errors = scene.getErrors();
       if (errors.length > 0) {
         throw (errors.toString());
       }
-      viewport.redraw();
       return true;
     }
   });
@@ -146,7 +169,7 @@ $(document).ready(function() {
   </head> 
   <body>
     <div id="loadingDialog" title="Loading...">
-      <h4 id="loadingDesc" style="margin-bottom: 10px"></h4>
+      <h4 id="loadingDesc" style="margin-bottom: 10px">Downloading Alembic File.<br>This may take some time.</h4>
       <div id="loadingProgressBar" class="ui-progressbar-value"></div>
     </div>
     <div id="wrapper">
@@ -162,12 +185,20 @@ $(document).ready(function() {
           <div class="box">
             <h2>INFO</h2>
             <div class="content">
-              Shadow Casting Lights.<br>
-              This sample illustrates the use of FABRIC's drawing pipeline for creating shadows.
-              Refer to the FABRIC documentation for a detailed description of how this works.
+              ModelViewer.<br>
+              The model seen in this sample is imported using FABRIC's OBJ parser, and then drawn using
+              a phong material. This very basic sample makes use of FABRIC's parser features, and illustrates
+              how to utilize external models for visualization resp. inspection.
             </div><!--content-->
           </div><!--box-->
 
+                  <div class="box">
+                    <h2>CONTROLS</h2>
+                    <div class="content">
+                        <button id="play" style="margin-top:10px;">Play</button>
+                        <button id="step" style="margin-top:10px;">Step</button>
+                    </div><!--content-->
+                </div><!--box-->
         </div><!--sidebar-->
       </div> <!--editor-->
     </div><!--wrapper-->

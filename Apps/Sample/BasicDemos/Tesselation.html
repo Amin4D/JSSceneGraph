@@ -52,8 +52,8 @@ $(document).ready(function() {
   
   
   if(!viewport.getGlewSupported('GL_ARB_tessellation_shader')){
-    alert("This demo requires OpenGL 4.0 features such as 'GL_ARB_tessellation_shader' to run.");
-    throw("This demo requires OpenGL 4.0 features such as 'GL_ARB_tessellation_shader' to run.");
+    alert("This demo requires OpenGL 4.0 features such as 'GL_ARB_tessellation_shader' to run.\n\nIt appears that your graphics card does not support tesselation shaders.");
+    throw("This demo requires OpenGL 4.0 features such as 'GL_ARB_tessellation_shader' to run.\n\nIt appears that your graphics card does not support tesselation shaders.");
   }
   
 

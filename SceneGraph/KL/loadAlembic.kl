@@ -31,6 +31,17 @@ operator alembicParseXform(
   FabricALEMBICParseXform(archiveID,identifier,sample,transform);
 }
 
+operator alembicParseCamera(
+  io Integer archiveID,
+  io String identifier,
+  io Integer sample,
+  io Scalar near,
+  io Scalar far,
+  io Scalar fovY
+) {
+  FabricALEMBICParseCamera(archiveID,identifier,sample,near,far,fovY);
+}
+
 operator alembicParsePolyMeshCount(
   io Integer archiveID,
   io String identifier,

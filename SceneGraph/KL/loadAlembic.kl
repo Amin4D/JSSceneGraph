@@ -11,8 +11,8 @@ operator alembicLoad(
   io FabricResource resource,
   io Integer archiveID
 ) {
-  if(resource.dataSize > 0)
-    FabricALEMBICDecode(resource.data, resource.dataSize, archiveID);
+  if(resource.data.dataSize() > 0)
+    FabricALEMBICDecode(resource.data.data(), resource.data.dataSize(), archiveID);
 }
 
 operator alembicGetIdentifiers(

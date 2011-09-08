@@ -15,6 +15,13 @@ operator alembicLoad(
     FabricALEMBICDecode(resource.data.data(), resource.data.dataSize(), archiveID);
 }
 
+operator alembicSetSample(
+  io Scalar time,
+  io Integer sample
+) {
+  sample = Integer(time * 30.0);
+}
+
 operator alembicGetIdentifiers(
   io Integer archiveID,
   io String identifiers[]

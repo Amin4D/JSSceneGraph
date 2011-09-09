@@ -97,6 +97,7 @@ $(document).ready(function() {
       value: (1.0-(countRemaining/count))*100
     });
     if(countRemaining===0){
+      viewport.redraw();
       var errors = scene.getErrors();
       if (errors.length > 0) {
         throw (errors.toString());

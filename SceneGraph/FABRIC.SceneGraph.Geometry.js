@@ -580,7 +580,7 @@ FABRIC.SceneGraph.registerNodeType('Instance', {
             preProcessorDefinitions: preProcessorDefinitions,
             parameterLayout: [
               'shader.shaderProgram',
-              'transform.' + transformNodeMember + '[]',
+              'transform.' + transformNodeMember + '<>',
               'self.transformNodeIndex',
               'camera.cameraMat44',
               'camera.projectionMat44'

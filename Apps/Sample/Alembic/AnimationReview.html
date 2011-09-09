@@ -70,6 +70,9 @@ $(document).ready(function() {
           materialNode: scene.constructNode('FlatMaterial')
       });
   
+  var cameraMaterial = scene.constructNode('FlatMaterial', { color: FABRIC.RT.rgb(0.0, 0.0, 1.0, 1) });
+  var cameraPrimitive = scene.constructNode('CameraPrimitive', { size: 1.2 });
+  
   // load the alembic content based on user interaction
   var loadAlembicAsset = function(url) {
     var assets = scene.importAssetFile(url, {
@@ -87,24 +90,51 @@ $(document).ready(function() {
         var resourceLoadNode = assets[assetName];
         var parsedNodes = resourceLoadNode.getParsedNodes();
         
+        var objectListHtml = "";
+        
         // loop over all assets and create an instance
-        var parsedCamera = undefined;
+        var parsedCameras = {};
+        var parsedInstances = {};
         for(var name in parsedNodes) {
-          if(parsedNodes[name].isTypeOf('Triangles')) {
-            var inst = scene.constructNode('Instance', {
+          var parsedNode = parsedNodes[name];
+          if(parsedNode.isTypeOf('Triangles')) {
+            parsedInstances[name] = scene.constructNode('Instance', {
               transformNode: resourceLoadNode.getCorrespondingTransform(name),
-              geometryNode: parsedNodes[name],
+              geometryNode: parsedNode,
               materialNode: scene.constructNode('PhongMaterial', {
                 diffuseColor: FABRIC.RT.rgb(0.5, 0.5, 0.5, 1),
                 specularColor: FABRIC.RT.rgb(0.15, 0.15, 0.15, 1),
                 lightNode: light,
               })
             });
+            objectListHtml += "<option value='"+name+"'>"+name.substring(name.lastIndexOf('/')+1,1000)+"</option>"
           }
-          else if(parsedNodes[name].isTypeOf('Triangles')) {
-            parsedCamera = parsedNodes[name];
+          else if(parsedNode.isTypeOf('Camera')) {
+            
+            // create a primitive for this camera
+            parsedCameras[name] = scene.constructNode('Instance', {
+              transformNode: parsedNode.getTransformNode(),
+              geometryNode: cameraPrimitive,
+              materialNode: cameraMaterial
+            });
+            parsedCameras[name].getCameraNode = function() {
+              return parsedNode;
+            };
           }
         }
+        
+        $('#objectlist').html(objectListHtml).change( function(ui) {
+          
+          var selectedName = $('#objectlist').attr('value');
+          for(var name in parsedInstances) {
+            var mat = parsedInstances[name].getMaterialNode();
+            if(name == selectedName)
+              mat.setDiffuseColor(FABRIC.RT.rgb(0.85, 0.85, 0.85, 1));
+            else
+              mat.setDiffuseColor(FABRIC.RT.rgb(0.5, 0.5, 0.5, 1));
+          }
+          viewport.redraw();
+        });
         
         //$('#loadingDialog').dialog('close');
         viewport.redraw();
@@ -199,6 +229,12 @@ $(document).ready(function() {
                 <div>Light Direction:</div>
                 <div id='lightDirection' style="margin-top:10px;"></div>
                 <button id="play" style="margin-top:10px;">Play</button>
+            </div><!--content-->
+          </div><!--box-->
+          <div class="box">
+            <h2>Objects</h2>
+            <div class="content">
+                <select multi size=5 id='objectlist' style='width: 200px'/>
             </div><!--content-->
           </div><!--box-->
         </div><!--sidebar-->

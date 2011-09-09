@@ -245,6 +245,42 @@ FABRIC.SceneGraph.registerNodeType('Axes', {
     return axesNode;
   }});
 
+FABRIC.SceneGraph.registerNodeType('CameraPrimitive', {
+  briefDesc: 'The camera primitive draws a box with a cone up front.',
+  detailedDesc: 'The camera primitive draws a box with a cone up front.',
+  parentNodeDesc: 'Lines',
+  optionsDesc: {
+    size: 'The size of the camera primitive draw.'
+  },
+  factoryFn: function(options, scene) {
+    scene.assignDefaults(options, {
+        size: 2.0
+    });
+
+    var cameraPrimNode = scene.constructNode('Lines', options);
+    cameraPrimNode.pub.addUniformValue('size', 'Scalar', options.size);
+    cameraPrimNode.setGeneratorOps([
+      scene.constructOperator({
+        operatorName: 'setCameraPrimVertexCount',
+        srcFile: 'FABRIC_ROOT/SceneGraph/KL/generateCameraPrim.kl',
+        entryFunctionName: 'setCameraPrimVertexCount',
+        parameterLayout: [
+          'self.newCount'
+        ]
+      }),
+      scene.constructOperator({
+        operatorName: 'generateCameraPrim',
+        srcFile: 'FABRIC_ROOT/SceneGraph/KL/generateCameraPrim.kl',
+        entryFunctionName: 'generateCameraPrim',
+        parameterLayout: [
+          'self.positions<>',
+          'uniforms.indices',
+          'uniforms.size'
+        ]
+      })
+    ]);
+    return cameraPrimNode;
+  }});
 
 FABRIC.SceneGraph.registerNodeType('Circle', {
   briefDesc: 'The Circle primitive draws a circle or arc using line segments.',

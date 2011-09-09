@@ -1,0 +1,59 @@
+//
+// Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
+//
+
+use Vec3;
+
+operator setCameraPrimVertexCount(
+  io Size newCount
+) {
+  newCount = 13;
+}
+
+operator generateCameraPrim(
+  io Vec3 positions<>,
+  io Integer indices[],
+  io Scalar size
+) {
+  Integer iidx = 0;
+  Integer vidx = 0;
+
+  var Scalar bodySize = 0.85;
+  var Scalar lensSize = 0.6;
+  positions[vidx++] = Vec3(bodySize * size, bodySize * size, size);
+  positions[vidx++] = Vec3(bodySize * -size, bodySize * size, size);
+  positions[vidx++] = Vec3(bodySize * -size, bodySize * -size, size);
+  positions[vidx++] = Vec3(bodySize * size, bodySize * -size, size);
+  positions[vidx++] = Vec3(bodySize * size, bodySize * size, -size);
+  positions[vidx++] = Vec3(bodySize * -size, bodySize * size, -size);
+  positions[vidx++] = Vec3(bodySize * -size, bodySize * -size, -size);
+  positions[vidx++] = Vec3(bodySize * size, bodySize * -size, -size);
+  
+  positions[vidx++] = Vec3(lensSize * size, lensSize * size, -size * 2.0);
+  positions[vidx++] = Vec3(lensSize * -size, lensSize * size, -size * 2.0);
+  positions[vidx++] = Vec3(lensSize * -size, lensSize * -size, -size * 2.0);
+  positions[vidx++] = Vec3(lensSize * size, lensSize * -size, -size * 2.0);
+  positions[vidx++] = Vec3(0.0, 0.0, -size);
+
+  indices.resize(40);
+  indices[iidx++] = 0; indices[iidx++] = 1;
+  indices[iidx++] = 1; indices[iidx++] = 2;
+  indices[iidx++] = 2; indices[iidx++] = 3;
+  indices[iidx++] = 3; indices[iidx++] = 0;
+  indices[iidx++] = 4; indices[iidx++] = 5;
+  indices[iidx++] = 5; indices[iidx++] = 6;
+  indices[iidx++] = 6; indices[iidx++] = 7;
+  indices[iidx++] = 7; indices[iidx++] = 4;
+  indices[iidx++] = 0; indices[iidx++] = 4;
+  indices[iidx++] = 1; indices[iidx++] = 5;
+  indices[iidx++] = 2; indices[iidx++] = 6;
+  indices[iidx++] = 3; indices[iidx++] = 7;
+  indices[iidx++] = 8; indices[iidx++] = 9;
+  indices[iidx++] = 9; indices[iidx++] = 10;
+  indices[iidx++] = 10; indices[iidx++] = 11;
+  indices[iidx++] = 11; indices[iidx++] = 8;
+  indices[iidx++] = 8; indices[iidx++] = 12;
+  indices[iidx++] = 9; indices[iidx++] = 12;
+  indices[iidx++] = 10; indices[iidx++] = 12;
+  indices[iidx++] = 11; indices[iidx++] = 12;
+}

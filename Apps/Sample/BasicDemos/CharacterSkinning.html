@@ -90,10 +90,19 @@ $(document).ready(function() {
       });
 
   var assetNodes = scene.importAssetFile('Models/envelope.dae');
+  
+  var rigNode = assetNodes.polymshCharacterRig;
+  var rigInstanceNode = assetNodes.polymshCharacterInstance;
 
-
+  var materialNode = scene.constructNode('PhongSkinningMaterial', {
+      lightNode: scene.constructNode('PointLight', { position: FABRIC.RT.vec3(420.0, 1000.0, 600.0) }),
+      diffuseColor: FABRIC.RT.rgba(1.0, 0.0, 0.0, 1.0),
+      numBones: rigNode.getSkeletonNode().getNumBones()
+    });
+  rigInstanceNode.setMaterialNode(materialNode);
+  
   var skeletonGeometryNode = scene.constructNode("CharacterSkeletonDebug",{
-    characterRigNode:assetNodes.geometries_0SkeletonCharacterRig,
+    characterRigNode:rigNode,
     boneradius: 0.2
   });
 

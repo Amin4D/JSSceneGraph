@@ -198,7 +198,6 @@ FABRIC = (function() {
         var queryOpGlew = context.DG.createOperator('getGlewSupported');
         queryOpGlew.setEntryFunctionName('getGlewSupported');
         queryOpGlew.setSourceCode('use FabricOGL; operator getGlewSupported(io String token, io Boolean supported){\n' +
-          '  report("query: "+token);\n' +
           '  if(token.length() > 0) glewIsSupported(token,supported);\n' +
           '}');
         var queryOpGlewBinding = context.DG.createBinding();

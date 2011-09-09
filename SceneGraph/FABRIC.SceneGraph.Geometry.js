@@ -686,9 +686,6 @@ FABRIC.SceneGraph.registerNodeType('Instance', {
       if (!node.isTypeOf('Material')) {
         throw (':Incorrect type assignment. Must assign a Material');
       }
-      if (!geometryNode) {
-        throw (':Geometry node not assigned. Geometry must be assigned before setting materials.');
-      }
       node = scene.getPrivateInterface(node);
       node.getRedrawEventHandler().appendChildEventHandler(redrawEventHandler);
       materialNodes.push(node);

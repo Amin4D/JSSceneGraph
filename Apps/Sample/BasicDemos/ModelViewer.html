@@ -39,6 +39,7 @@
     <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Kinematics.js" charset="utf-8"></script>
 
     <script type="text/javascript" src="../../../SceneGraph/Parsers/parseOBJ.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Parsers/parseCollada.js" charset="utf-8"></script>
 
     <script type="text/javascript">
 $(document).ready(function() {
@@ -62,25 +63,33 @@ $(document).ready(function() {
   var viewport = scene.constructNode('Viewport', { windowElement: document.getElementById('FabricContainer') });
 
   // Create a camera to draw the scene from
-  var camera = scene.constructNode('TargetCamera', {
+ camera = scene.constructNode('TargetCamera', {
       nearDistance: 1,
       farDistance: 20,
-      position: FABRIC.RT.vec3(0, 5, 10)
+      target: FABRIC.RT.vec3(-10, -1.2, -0.15),
+      position: FABRIC.RT.vec3(-1.8, 4.77, 7.93)
     });
 
   scene.constructNode('CameraManipulator', { targetNode: camera });
 
   viewport.setCameraNode(camera);
 
-  var light = scene.constructNode('PointLight', { position: FABRIC.RT.vec3(420.0, 1000.0, 600.0) });
-  
-  var redMaterial = scene.constructNode('PhongMaterial', {
-          diffuseColor: FABRIC.RT.rgb(0.8, 0, 0, 1),
-          lightNode: light
-        });
-  
   var assets = scene.importAssetFile('Models/cow.obj');
-  var instanceNode = scene.constructNode('Instance', { geometryNode: assets['cow'], materialNode: redMaterial });
+  
+  var light = scene.constructNode('PointLight', { position: FABRIC.RT.vec3(420.0, 1000.0, 600.0) });
+  var phongMaterial = scene.constructNode('PhongMaterial', {
+      diffuseColor: FABRIC.RT.rgb(0.8, 0, 0, 1),
+      lightNode: light
+    });
+
+  scene.constructNode('Instance', {
+      transformNode: scene.constructNode('Transform', {
+          hierarchical: false,
+          globalXfo: FABRIC.RT.xfo({ tr: FABRIC.RT.vec3(-10, 0, 0) })
+        }),
+      geometryNode: assets.cow,
+      materialNode: phongMaterial
+    });
 
   $('#loadingDialog').dialog({
     modal: true

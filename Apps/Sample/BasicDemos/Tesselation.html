@@ -71,7 +71,7 @@ $(document).ready(function() {
   viewport.setCameraNode(camera);
 
   var light = scene.constructNode('PointLight', { position: FABRIC.RT.vec3(420.0, 1000.0, 600.0) });
-  var triangles = scene.importAssetFile('Models/bricks.dae')['sphere'];
+  var assetNodes = scene.importAssetFile('Models/bricks.dae');
   
   var depthTexture = scene.constructNode('Image', { url: 'Resources/bricks_depth.png' });
   
@@ -83,14 +83,8 @@ $(document).ready(function() {
       depthTextureNode: depthTexture
     });
 
-  scene.constructNode('Instance', {
-      transformNode: scene.constructNode('Transform', {
-          hierarchical: false
-        }),
-      geometryNode: triangles,
-      materialNode: tesselationMaterial
-    });
-
+  assetNodes.sphere.setMaterialNode(tesselationMaterial);
+  
   $('#tesselationlevel')
   .slider({
       min: 1.0,

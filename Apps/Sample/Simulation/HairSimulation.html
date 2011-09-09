@@ -248,18 +248,11 @@ $(document).ready(function() {
 
   // T - character
   var assetNodes = scene.importAssetFile('../BasicDemos/Models/envelope.dae', { bindToGlobalTime: true });
-  var skinMaterial = scene.constructNode('PhongSkinningMaterial', {
-      lightNode: light,
-      diffuseColor: FABRIC.RT.rgba(0.0, 0.25, 1.0, 1.0),
-      numBones: assetNodes.polymshCharacterSkeleton.getNumBones()
-    });
-  assetNodes.polymshInstance.setMaterialNode(skinMaterial);
-  var animationController = assetNodes.polymshAnimationController;
-  
-  animationController.setTimeRange(FABRIC.RT.vec2(0, 5));
+
+  assetNodes.polymshController.setTimeRange(FABRIC.RT.vec2(0, 5));
 
   var hairGeometry = scene.constructNode('Hair', {
-      characterMeshNode: assetNodes.polymsh,
+      characterMeshNode: assetNodes.geometries_0,
       characterRigNode: assetNodes.polymshCharacterRig,
       segments: 5,
       length: FABRIC.RT.vec2(0.5,1),

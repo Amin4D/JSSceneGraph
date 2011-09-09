@@ -904,7 +904,7 @@ FABRIC.SceneGraph.registerNodeType('Viewport', {
       throw ('Must provide a window to this constructor');
     }
 
-    var cameraNode, fabricwindow;
+    var cameraNode = undefined, fabricwindow;
     var windowElement = options.windowElement;
     var viewportNode = scene.constructNode('SceneGraphNode', options),
       dgnode = viewportNode.constructDGNode('DGNode'),
@@ -1015,6 +1015,10 @@ FABRIC.SceneGraph.registerNodeType('Viewport', {
     viewportNode.pub.setCameraNode = function(node) {
       if (!node || !node.isTypeOf('Camera')) {
         throw ('Incorrect type assignment. Must assign a Camera');
+      }
+      // remove the child event handler first
+      if(cameraNode != undefined) {
+        propagationRedrawEventHandler.removeChildEventHandler(cameraNode.getRedrawEventHandler());
       }
       cameraNode = scene.getPrivateInterface(node);
       propagationRedrawEventHandler.appendChildEventHandler(cameraNode.getRedrawEventHandler());

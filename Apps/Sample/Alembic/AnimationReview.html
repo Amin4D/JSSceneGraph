@@ -72,9 +72,36 @@ $(document).ready(function() {
   
   var cameraMaterial = scene.constructNode('FlatMaterial', { color: FABRIC.RT.rgb(0.0, 0.0, 1.0, 1) });
   var cameraPrimitive = scene.constructNode('CameraPrimitive', { size: 1.2 });
+
+  // hook for the alembic content
+  var resourceLoadNode = undefined;
+  var parsedCameras = {};
+  var parsedInstances = {};
+
+  // deal with camera switchting
+  var usedCamera = "userCamera";
+  var switchCamera = function(cameraName) {
+    if(cameraName == usedCamera)
+      return;
+    usedCamera = cameraName;
+    
+    if(cameraName == "userCamera") {
+      viewport.setCameraNode(camera);
+      for(var name in parsedCameras) {
+        parsedCameras[name].setDrawToggle(true);
+      }
+    } else {
+      viewport.setCameraNode(resourceLoadNode.getParsedNodes()[cameraName]);
+      for(var name in parsedCameras) {
+        parsedCameras[name].setDrawToggle(false);
+      }
+    }
+    
+    viewport.redraw();
+  };
+  
   
   // load the alembic content based on user interaction
-  var resourceLoadNode = undefined;
   var selectedNode = undefined;
   var loadAlembicAsset = function(url) {
     var assets = scene.importAssetFile(url, {
@@ -91,6 +118,7 @@ $(document).ready(function() {
         resourceLoadNode = assets[assetName];
         var parsedNodes = resourceLoadNode.getParsedNodes();
         var objectListHtml = "";
+        var cameraListHtml = "<option value='userCamera'>Free Camera</option>";
         
         // setup the animation time
         $('#localtime').slider({
@@ -105,8 +133,6 @@ $(document).ready(function() {
         });
         
         // loop over all assets and create an instance
-        var parsedCameras = {};
-        var parsedInstances = {};
         for(var name in parsedNodes) {
           var parsedNode = parsedNodes[name];
           if(parsedNode.isTypeOf('Triangles')) {
@@ -131,9 +157,8 @@ $(document).ready(function() {
               geometryNode: cameraPrimitive,
               materialNode: cameraMaterial
             });
-            parsedCameras[name].getCameraNode = function() {
-              return parsedNode;
-            };
+
+            cameraListHtml += "<option value='"+name+"'>"+name.substring(name.lastIndexOf('/')+1,1000)+"</option>"
           }
         }
         
@@ -151,6 +176,10 @@ $(document).ready(function() {
           viewport.redraw();
         });
         
+        $('#cameralist').html(cameraListHtml).change( function(ui) {
+          switchCamera($('#cameralist').attr('value'));
+        });
+
         //$('#loadingDialog').dialog('close');
         viewport.redraw();
       }
@@ -226,6 +255,15 @@ $(document).ready(function() {
       createPlane();
     });
   
+  $('#switchcamera').button({
+      text: true,
+    })
+    .click(function() {
+      if(!resourceLoadNode)
+        return;
+      switchCamera();
+    });
+
   $('#play').button({
       text: true,
       icons: {
@@ -300,11 +338,9 @@ $(document).ready(function() {
             <h2>Scene</h2>
             <div class="content">
                 <div id='lightDirection' style="margin-top:10px;"></div>
-            </div><!--content-->
-            <h2>Playback</h2>
-            <div class="content">
-                <button id="play" style="margin-top:10px;">Play</button>
-                <div id='localtime' style="margin-top:10px;"></div>
+                <select multi size=3 id='cameralist' style='width: 200px; margin-top: 10px'>
+                  <option value='userCamera'>Free Camera</option>
+                </select>
             </div><!--content-->
             <h2>Objects</h2>
             <div class="content">
@@ -318,6 +354,11 @@ $(document).ready(function() {
                 </select>
                 <div id='planetime' style="margin-top:10px;"></div>
                 <div id='planeblend' style="margin-top:10px;"></div>
+            </div><!--content-->
+            <h2>Playback</h2>
+            <div class="content">
+                <button id="play" style="margin-top:10px;">Play</button>
+                <div id='localtime' style="margin-top:10px;"></div>
             </div><!--content-->
           </div><!--box-->
           </div><!--box-->

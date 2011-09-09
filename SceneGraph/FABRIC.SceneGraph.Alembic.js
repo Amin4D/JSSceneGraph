@@ -38,8 +38,10 @@ FABRIC.SceneGraph.registerNodeType('AlembicLoadNode', {
     resourceloaddgnode.addMember('archiveID', 'Integer',-1);
     resourceloaddgnode.addMember('identifiers', 'String[]');
     resourceloaddgnode.addMember('sample', 'Integer', 0);
+    resourceloaddgnode.addMember('numSamples', 'Integer', 0);
     
     resourceLoadNode.addMemberInterface(resourceloaddgnode, 'sample', true);
+    resourceLoadNode.addMemberInterface(resourceloaddgnode, 'numSamples', false);
     
     // create an animation controller for the sample
     var animationController = scene.constructNode('AnimationController');
@@ -65,25 +67,14 @@ FABRIC.SceneGraph.registerNodeType('AlembicLoadNode', {
       parameterLayout: [
         'self.url', //For debugging only
         'self.resource',
-        'self.archiveID'
+        'self.archiveID',
+        'self.numSamples'
       ],
       entryFunctionName: 'alembicLoad',
       srcFile: 'FABRIC_ROOT/SceneGraph/KL/loadAlembic.kl',
       async: false
     }));
 
-    resourceloaddgnode.bindings.append(scene.constructOperator({
-      operatorName: 'alembicLoad',
-      parameterLayout: [
-        'self.url', //For debugging only
-        'self.resource',
-        'self.archiveID'
-      ],
-      entryFunctionName: 'alembicLoad',
-      srcFile: 'FABRIC_ROOT/SceneGraph/KL/loadAlembic.kl',
-      async: false
-    }));
-    
     resourceloaddgnode.bindings.append(scene.constructOperator({
       operatorName: 'alembicGetIdentifiers',
       parameterLayout: [

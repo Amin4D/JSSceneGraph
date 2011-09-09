@@ -194,6 +194,7 @@ FABRIC.SceneGraph.registerNodeType('Geometry', {
       if(!bboxdgnode){
         throw("Goemetry does not support a Bounding Box");
       }
+      bboxdgnode.evaluate();
       return {
         min: bboxdgnode.getData('min'),
         max: bboxdgnode.getData('max')

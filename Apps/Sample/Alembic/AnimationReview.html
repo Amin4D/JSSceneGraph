@@ -96,10 +96,8 @@ $(document).ready(function() {
         parsedCameras[name].setDrawToggle(false);
       }
     }
-    
     viewport.redraw();
   };
-  
   
   // load the alembic content based on user interaction
   var selectedNode = undefined;
@@ -191,10 +189,38 @@ $(document).ready(function() {
   
   // deal with plane generation
   var planes = {};
+  var planeGeometry = scene.constructNode('Plane');
   var createPlane = function() {
+
+    // get the center of the selected object
+    var bbox = selectedNode.getBoundingBox();
+    var center = bbox.min.add(bbox.max).scale(0.5);
+    var cameraXfo = viewport.getCameraNode().getTransformNode().getGlobalXfo();
+    center = cameraXfo.projectInv(FABRIC.RT.xfo({tr: center})).tr;
+    center.x = center.y = 0.0;
+    var planeXfo = cameraXfo.project(FABRIC.RT.xfo({
+      tr: center,
+      ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(1,0,0),90)
+    }));
     
-    console.log('asdasdasds');
+    // compute the width and height of the plane
+    var fovY = viewport.getCameraNode().getFovY();
+    var height = 0.15 * Math.abs(center.z) * Math.tan(fovY * 0.5);
+    var aspect = $('#FabricContainer').width() / $('#FabricContainer').height();
+    var width = height * aspect;
+    planeXfo.sc.x = width;
+    planeXfo.sc.z = height;
+
+    var planeMaterial = scene.constructNode('FlatMaterial', { color: FABRIC.RT.rgba(1.0,0.0,0.0,1.0)});
     
+    // now create a plane
+    var planeInstance = scene.constructNode('Instance', {
+      transformNode: scene.constructNode('Transform', { globalXfo: planeXfo }),
+      geometryNode: planeGeometry,
+      materialNode: planeMaterial
+    });
+
+    scene.redrawAllWindows();
   };
   
   // setup all sliders

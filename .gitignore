@@ -3,10 +3,4 @@
 # Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
 #
 
-build/
-.DS_Store
-public-*
-private-*
-third-party-builds-*
-third-party-source-packages-*
-*.pyc
+*.config

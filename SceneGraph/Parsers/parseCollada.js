@@ -630,6 +630,7 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
   var processGeometryData = function(meshData, trianglesData){
     var numTriangles = trianglesData.count;
     var attrcount = 0;
+    var numUVsets = 0;
     var meshTriangleSourceData = {};
     var processedData = {
       constructionOptions: {},
@@ -657,18 +658,15 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
           processedData.geometryData.normals = [];
           break;
         case 'TEXCOORD':
-          var uvset = 'uvs' + input.set;
+          var uvset = 'uvs' + numUVsets;
           meshTriangleSourceData[uvset] = {
             source: meshData.sources[sourceName],
             constructorFn: FABRIC.RT.vec2
           };
           processedData.geometryData[uvset] = [];
-          if(!processedData.constructionOptions.uvSets){
-            processedData.constructionOptions.uvSets = 1;
-          }else{
-            processedData.constructionOptions.uvSets++;
-          }
-          processedData.constructionOptions.tangentsFromUV = processedData.constructionOptions.uvSets-1;
+          processedData.constructionOptions.tangentsFromUV = numUVsets;
+          numUVsets++;
+          processedData.constructionOptions.uvSets = numUVsets;
           break;
         default:
           throw "Error: unhandled semantic '" + semantic +"'";

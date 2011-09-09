@@ -187,12 +187,16 @@ operator initImageFromColor(
   io Size width,
   io Size height,
   io RGBA color,
-  io RGBA pixels[]
+  io RGBA pixels[],
+  io Boolean initiated
 ) {
-  pixels.resize(width * height);
-  for(var Size i=0;i<pixels.size();i++)
-  {
-    pixels[i] = color;
-    pixels[i].r = pixels[i].a = 255 * Scalar(i % width) / Scalar(width);
+  if(!initiated) {
+    pixels.resize(width * height);
+    for(var Size i=0;i<pixels.size();i++)
+    {
+      pixels[i] = color;
+      pixels[i].r = pixels[i].a = 255 * Scalar(i % width) / Scalar(width);
+    }
+    initiated = true;
   }
 }

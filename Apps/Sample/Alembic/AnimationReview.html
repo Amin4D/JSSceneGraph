@@ -43,6 +43,142 @@
     <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Alembic.js" charset="utf-8"></script>
 
     <script type="text/javascript">
+FABRIC.SceneGraph.registerNodeType('PaintPlaneInstance', {
+  factoryFn: function(options, scene) {
+    scene.assignDefaults(options, {
+      cameraNode: undefined,
+      planeNode: undefined,
+      trianglesNode: undefined,
+      animationControllerNode: undefined,
+      planeTime: 0.0,
+      planeBlend: 5.0 / 30.0,
+      resolutionFactor: 0.25
+    });
+
+    // check all of our required nodes
+    if (!options.cameraNode) {
+      throw ('cameraNode not specified');
+    }
+    var cameraNode = scene.getPrivateInterface(options.cameraNode);
+    if(!cameraNode.pub.isTypeOf('Camera')) {
+      throw('cameraNode is not of type Camera!');
+    }
+    if (!options.planeNode) {
+      throw ('planeNode not specified');
+    }
+    var planeNode = scene.getPrivateInterface(options.planeNode);
+    if(!planeNode.pub.isTypeOf('Plane')) {
+      throw('planeNode is not of type Plane!');
+    }
+    if (!options.trianglesNode) {
+      throw ('trianglesNode not specified');
+    }
+    var trianglesNode = scene.getPrivateInterface(options.trianglesNode);
+    if(!trianglesNode.pub.isTypeOf('Triangles')) {
+      throw('trianglesNode is not of type Triangles!');
+    }
+    if (!options.animationControllerNode) {
+      throw ('animationControllerNode not specified');
+    }
+    var animationControllerNode = scene.getPrivateInterface(options.animationControllerNode);
+    if(!animationControllerNode.pub.isTypeOf('AnimationController')) {
+      throw('animationControllerNode is not of type AnimationController!');
+    }
+    
+    // get the center of the triangles object
+    var bbox = trianglesNode.pub.getBoundingBox();
+    var center = bbox.min.add(bbox.max).scale(0.5);
+    var cameraXfo = cameraNode.pub.getTransformNode().getGlobalXfo();
+    center = cameraXfo.projectInv(FABRIC.RT.xfo({tr: center})).tr;
+    center.x = center.y = 0.0;
+    var planeXfo = cameraXfo.project(FABRIC.RT.xfo({
+      tr: center,
+      ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(1,0,0),90)
+    }));
+    
+    // compute the width and height of the plane
+    var fovY = cameraNode.pub.getFovY();
+    var height = 0.15 * Math.abs(center.z) * Math.tan(fovY * 0.5);
+    var widthPixels = $('#FabricContainer').width();
+    var heightPixels = $('#FabricContainer').height();
+    var aspect = widthPixels / heightPixels;
+    var width = height * aspect;
+    planeXfo.sc.x = width;
+    planeXfo.sc.z = height;
+
+    // create a texture to paint onto
+    var textureNode = scene.constructNode('Image', {
+      createDgNode: true,
+      createResourceLoadNode: false,
+      width: parseInt(widthPixels * options.resolutionFactor),
+      height: parseInt(heightPixels * options.resolutionFactor)
+    });
+    
+    // create a flat texture material
+    var materialNode = scene.constructNode('FlatBlendTextureMaterial', {
+      textureNode: textureNode.pub,
+      enableOptions: [FABRIC.SceneGraph.OpenGLConstants.GL_BLEND],
+      blendModeSfactor: FABRIC.SceneGraph.OpenGLConstants.GL_SRC_ALPHA,
+      blendModeDfactor: FABRIC.SceneGraph.OpenGLConstants.GL_ONE_MINUS_SRC_ALPHA,
+    });
+    
+    // now create a plane
+    var instanceNode = scene.constructNode('Instance', {
+      transformNode: scene.constructNode('Transform', { globalXfo: planeXfo }).pub,
+      geometryNode: planeNode.pub,
+    });
+
+    // now create the time relevant members
+    var dgnode = instanceNode.getDGNode();
+    var animationdgnode = animationControllerNode.getDGNode();
+    dgnode.addMember('colorBlend','Scalar',1.0);
+    dgnode.addMember('planeTime','Scalar',options.planeTime);
+    dgnode.addMember('planeBlend','Scalar',options.planeBlend);
+    instanceNode.addMemberInterface(dgnode, 'planeTime', true);
+    instanceNode.addMemberInterface(dgnode, 'planeBlend', true);
+    
+    // link the material node to the animation controller
+    dgnode.addDependency(animationdgnode,'animation');
+    dgnode.bindings.append(scene.constructOperator({
+      operatorName: 'setTextureBlend',
+      srcCode:
+        "operator setTextureBlend(io Scalar colorBlend, io Boolean drawToggle, io Scalar planeTime, io Scalar planeBlend, io Scalar localTime) {\n" +
+        "  colorBlend = abs(planeTime - localTime) / planeBlend;\n" + 
+        "  if(colorBlend > 1.0)colorBlend = 1.0;\n" +
+        "  colorBlend = 1.0 - colorBlend;\n" +
+        "  drawToggle = colorBlend > 0.0;\n" +
+        "}\n",
+      entryFunctionName: 'setTextureBlend',
+      parameterLayout: [
+        'self.colorBlend',
+        'self.drawToggle',
+        'self.planeTime',
+        'self.planeBlend',
+        'animation.localTime'
+      ]
+    }));
+    
+    instanceNode.getRedrawEventHandler().preDescendBindings.append(scene.constructOperator({
+      operatorName: 'loadColorBlend',
+      srcFile: 'FABRIC_ROOT/SceneGraph/KL/loadUniforms.kl',
+      preProcessorDefinitions: {
+        ATTRIBUTE_NAME: 'u_colorBlend',
+        ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('colorBlend'),
+        DATA_TYPE: 'Scalar'
+      },
+      entryFunctionName: 'loadUniform',
+      parameterLayout: [
+        'shader.shaderProgram',
+        'instance.colorBlend'
+      ]
+    }));
+    
+    // set the material
+    instanceNode.pub.setMaterialNode(materialNode.pub);
+
+    return instanceNode;    
+  }});    
+
 $(document).ready(function() {
 
   var scene = FABRIC.SceneGraph.createScene();
@@ -124,11 +260,6 @@ $(document).ready(function() {
             max: resourceLoadNode.getAnimationController().getTimeRange().y,
             step: 0.01
         });
-        $('#planetime').slider({
-            min: resourceLoadNode.getAnimationController().getTimeRange().x,
-            max: resourceLoadNode.getAnimationController().getTimeRange().y,
-            step: 0.01
-        });
         
         // loop over all assets and create an instance
         for(var name in parsedNodes) {
@@ -191,47 +322,55 @@ $(document).ready(function() {
   var planes = {};
   var planeGeometry = scene.constructNode('Plane');
   var createPlane = function() {
-
-    // get the center of the selected object
-    var bbox = selectedNode.getBoundingBox();
-    var center = bbox.min.add(bbox.max).scale(0.5);
-    var cameraXfo = viewport.getCameraNode().getTransformNode().getGlobalXfo();
-    center = cameraXfo.projectInv(FABRIC.RT.xfo({tr: center})).tr;
-    center.x = center.y = 0.0;
-    var planeXfo = cameraXfo.project(FABRIC.RT.xfo({
-      tr: center,
-      ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(1,0,0),90)
-    }));
     
-    // compute the width and height of the plane
-    var fovY = viewport.getCameraNode().getFovY();
-    var height = 0.15 * Math.abs(center.z) * Math.tan(fovY * 0.5);
-    var widthPixels = $('#FabricContainer').width();
-    var heightPixels = $('#FabricContainer').height();
-    var aspect = widthPixels / heightPixels;
-    var width = height * aspect;
-    planeXfo.sc.x = width;
-    planeXfo.sc.z = height;
-
-    var planeMaterial = scene.constructNode('FlatTextureMaterial', {
-      textureNode: scene.constructNode('Image', {
-        createDgNode: true,
-        createResourceLoadNode: false,
-        width: parseInt(widthPixels / 2),
-        height: parseInt(heightPixels / 2)
-      }),
-      enableOptions: [FABRIC.SceneGraph.OpenGLConstants.GL_BLEND],
-      blendModeSfactor: FABRIC.SceneGraph.OpenGLConstants.GL_SRC_ALPHA,
-      blendModeDfactor: FABRIC.SceneGraph.OpenGLConstants.GL_ONE_MINUS_SRC_ALPHA,
+    var timeKey = resourceLoadNode.getAnimationController().getLocalTime();
+    timeKey = ''+parseInt(timeKey * 30 + 0.5);
+    if(planes[timeKey] != undefined)
+      return;
+    var newPlane = scene.constructNode('PaintPlaneInstance', {
+      cameraNode: viewport.getCameraNode(),
+      planeNode: planeGeometry,
+      trianglesNode: selectedNode,
+      animationControllerNode: resourceLoadNode.getAnimationController(),
+      planeTime: resourceLoadNode.getAnimationController().getLocalTime(),
+      planeBlend: 5.0 / 30.0,
+      resolutionFactor: 0.25
     });
+    planes[timeKey] = {
+      instance: newPlane,
+      time: resourceLoadNode.getAnimationController().getLocalTime()
+    };
+
+    // setup the function to change the active plane    
+    var setActivePlane = function(key) {
+      var plane = planes[key];
+      if(plane == undefined)
+        return;
+      
+      scene.animation.setTime(plane.time);
+      $('#localtime').slider('value', plane.time);
+      $('#planeblend').slider('value', plane.instance.getPlaneBlend());
+      $('#planeblend').unbind('slide').bind('slide',
+          function(event, ui) {
+            plane.instance.setPlaneBlend(ui.value);
+            viewport.redraw();
+        });
+      viewport.redraw();
+    };
     
-    // now create a plane
-    var planeInstance = scene.constructNode('Instance', {
-      transformNode: scene.constructNode('Transform', { globalXfo: planeXfo }),
-      geometryNode: planeGeometry,
-      materialNode: planeMaterial
+    // re-create the list html
+    var planeListHtml = "";
+    for(var key in planes) {
+      if(key == timeKey)
+        planeListHtml += "<option selected value='"+key+"'>At time "+planes[key].time+"</option>";
+      else
+        planeListHtml += "<option value='"+key+"'>At time "+planes[key].time+"</option>";
+    }
+    $('#planelist').html(planeListHtml).change( function (ui) {
+      setActivePlane($('#planelist').attr('value'));
     });
-
+    setActivePlane(timeKey);
+    
     viewport.redraw();
   };
   
@@ -261,27 +400,11 @@ $(document).ready(function() {
         scene.animation.setTime(ui.value);
         scene.redrawAllWindows();
     });  
-  $('#planetime').slider().bind('slide',
-      function(event, ui) {
-        $('#play').button('option', {
-          label: 'Play',
-          icons: {
-            primary: 'ui-icon-play'
-          }
-        });
-        scene.animation.pause();
-        scene.animation.setTime(ui.value);
-        $('#localtime').slider('value', ui.value);
-        scene.redrawAllWindows();
-    });  
   $('#planeblend').slider({
       min: 0.0,
-      max: 10.0,
-      step: 1.0,
-      value: 5.0
-    }).bind('slide',
-      function(event, ui) {
-        scene.redrawAllWindows();
+      max: 2.0,
+      step: 1.0/30.0,
+      value: 5.0/30.0
     });
   
   $('#createplane').button({
@@ -390,7 +513,6 @@ $(document).ready(function() {
                 <button id="createplane" style="margin-top:10px;">Create</button>
                 <select multi size=10 id='planelist' style='width: 200px'>
                 </select>
-                <div id='planetime' style="margin-top:10px;"></div>
                 <div id='planeblend' style="margin-top:10px;"></div>
             </div><!--content-->
             <h2>Playback</h2>

@@ -72,13 +72,15 @@ FABRIC.SceneGraph.registerNodeType('Image', {
     } else {
       if(options.createDgNode){
         dgnode.addMember('color', 'RGBA', options.color);
+        dgnode.addMember('initiated', 'Boolean', false);
         dgnode.bindings.append(scene.constructOperator({
           operatorName: 'initImageFromColor',
           parameterLayout: [
             'self.width',
             'self.height',
             'self.color',
-            'self.pixels'
+            'self.pixels',
+            'self.initiated'
           ],
           entryFunctionName: 'initImageFromColor',
           srcFile: 'FABRIC_ROOT/SceneGraph/KL/loadTexture.kl'
@@ -1211,6 +1213,7 @@ FABRIC.SceneGraph.defineEffectFromFile('PhongMaterial', 'FABRIC_ROOT/SceneGraph/
 FABRIC.SceneGraph.defineEffectFromFile('ShadowMaterial', 'FABRIC_ROOT/SceneGraph/Shaders/ShadowMapShader.xml');
 
 FABRIC.SceneGraph.defineEffectFromFile('FlatTextureMaterial', 'FABRIC_ROOT/SceneGraph/Shaders/FlatTextureShader.xml');
+FABRIC.SceneGraph.defineEffectFromFile('FlatBlendTextureMaterial', 'FABRIC_ROOT/SceneGraph/Shaders/FlatBlendTextureShader.xml');
 FABRIC.SceneGraph.defineEffectFromFile('PhongTextureMaterial', 'FABRIC_ROOT/SceneGraph/Shaders/PhongTextureShader.xml');
 FABRIC.SceneGraph.defineEffectFromFile('PhongTextureSimpleMaterial', 'FABRIC_ROOT/SceneGraph/Shaders/PhongTextureShaderSimple.xml');
 FABRIC.SceneGraph.defineEffectFromFile('PhongBumpReflectMaterial', 'FABRIC_ROOT/SceneGraph/Shaders/PhongBumpReflectShader.xml');

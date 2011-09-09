@@ -3,7 +3,7 @@
     Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
     -->
   <head> 
-    <title>FABRIC - Character Skinning</title> 
+    <title>FABRIC - Alembic Viewer</title> 
     
     <meta charset="iso-8859-1"/>
     <link href="../../../themes/default/style.css" rel="stylesheet" type="text/css" />
@@ -25,109 +25,133 @@
     <script type="text/javascript" src="../../../SceneGraph/RT/Mat44.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/RT/Quat.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/RT/Xfo.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/RT/Color.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/RT/Ray.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/RT/RGBA.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/Color.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/RT/Euler.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/RT/BezierKeyframe.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/RT/LinearKeyframe.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/RT/Bone.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/RT/OGLShaderProgram.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/RT/OGLTexture2D.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/RT/OGLBuffer.js" charset="utf-8"></script>
-    
+
     <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Geometry.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Primitives.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Lights.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Materials.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Geometry.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Manipulation.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Primitives.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Animation.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Characters.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.CharacterSolvers.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Kinematics.js" charset="utf-8"></script>
-    
-    <script type="text/javascript" src="../../../SceneGraph/Parsers/parseCollada.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Animation.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Alembic.js" charset="utf-8"></script>
+
     <script type="text/javascript">
 $(document).ready(function() {
-  var $globalTimeSlider = $('#globalTime').slider({
-      min: 0.0,
-      max: 5.0,
-      step: 0.01
+
+  $('#play').button({
+      text: true,
+      icons: {
+        primary: 'ui-icon-play'
+      }
+    });
+  $('#step').button({
+    text: true,
+    icons: {
+      primary: 'ui-icon-step'
+    }
+  });  
+
+  $('#importModel').button().change(function(e) {
+      // TODO: Enable file importing
+        console.log($(this).val());
+      var assets = scene.importAssetFile($(this).val());
+      for (i in assets) {
+        assets[i].setMaterialNode(redMaterial);
+        drawNode.setGeometryNode(assets[i]);
+      }
+
+      var errors = scene.getErrors();
+      if (errors.length > 0) {
+        throw (errors.toString());
+      }
     });
 
-  $('#curveEditor').button();
-
-  // Create the scene.
   var scene = FABRIC.SceneGraph.createScene();
-  var viewport = scene.constructNode('Viewport', {
-    enableRaycasting: true,
-    windowElement: document.getElementById('FabricContainer')
-  });
-  
-  viewport.setBackgroundTextureImage(scene.constructNode('Image', {
-    url: 'Resources/fabric-demo-gradient.png'
-  }));
+  var viewport = scene.constructNode('Viewport', { windowElement: document.getElementById('FabricContainer') });
 
   // Create a camera to draw the scene from
-  var haveCameraManipulator = false;
   var camera = scene.constructNode('TargetCamera', {
-      position: FABRIC.RT.vec3(1, 2, 10).scale(0.5),
-      target: FABRIC.RT.vec3(0, 2, 0),
-      roll: 0,
-      nearDistance: 1.0,
-      farDistance: 200
+      nearDistance: 1,
+      farDistance: 2000,
+      position: FABRIC.RT.vec3(.2, 5, 1).scale(13.5),
+      target: FABRIC.RT.vec3(0, 5, 0).scale(13.5),
+    });
+
+  scene.constructNode('CameraManipulator', { targetNode: camera });
+  viewport.setCameraNode(camera);
+
+  var light = scene.constructNode('PointLight', { position: FABRIC.RT.vec3(10, 30, 100).scale(3) });
+
+  var phongMaterial = scene.constructNode('PhongMaterial', {
+    diffuseColor: FABRIC.RT.rgb(0.5, 0.5, 0.5, 1),
+    specularColor: FABRIC.RT.rgb(0.15, 0.15, 0.15, 1),
+    lightNode: light,
+  });
+  
+  var wireMaterial = scene.constructNode('WireframeMaterial', {
+      color: FABRIC.RT.rgb(0.1, 0.1, 0.1, 1)
     });
   
-    // create the scene grid
-  scene.constructNode('Instance', {
-          geometryNode: scene.constructNode('Grid', {
-              size_x: 40.0,
-              size_z: 40.0,
-              sections_x: 20,
-              sections_z: 20 }),
-          materialNode: scene.constructNode('FlatMaterial')
-      });
-
-  var assetNodes = scene.importAssetFile('Models/envelope.dae');
-  
-  var rigNode = assetNodes.polymshCharacterRig;
-  var rigInstanceNode = assetNodes.polymshCharacterInstance;
-
-  var materialNode = scene.constructNode('PhongSkinningMaterial', {
-      lightNode: scene.constructNode('PointLight', { position: FABRIC.RT.vec3(420.0, 1000.0, 600.0) }),
-      diffuseColor: FABRIC.RT.rgba(1.0, 0.0, 0.0, 1.0),
-      numBones: rigNode.getSkeletonNode().getNumBones()
-    });
-  rigInstanceNode.setMaterialNode(materialNode);
-  
-  var skeletonGeometryNode = scene.constructNode("CharacterSkeletonDebug",{
-    characterRigNode:rigNode,
-    boneradius: 0.2
+  // create the alembic content, and fire the load once it is loaded
+  var resourceName = 'face';
+  var assets = scene.importAssetFile('Models/'+resourceName+'.abc', {
+    dependentNode: viewport,
+    onLoadCallback: function(){
+      
+      assets[resourceName].getAnimationController().setTimeRange(FABRIC.RT.vec2(0, 11));
+      
+      // loop over all assets and create an instance
+      for(var name in assets[resourceName].getParsedNodes()) {
+        if(assets[resourceName].getParsedNodes()[name].isTypeOf('Triangles'))
+        {
+          var inst = scene.constructNode('Instance', {
+            transformNode: assets[resourceName].getCorrespondingTransform(name),
+            geometryNode: assets[resourceName].getParsedNodes()[name],
+            materialNode: phongMaterial
+          });
+          inst.setMaterialNode(wireMaterial);
+        }
+      }
+      $('#loadingDialog').dialog('close');
+      viewport.redraw();
+    }
   });
 
-  if (!haveCameraManipulator){
-    scene.constructNode('CameraManipulator', { targetNode: camera });
-    viewport.setCameraNode(camera);
-    haveCameraManipulator = true;
-  }
-
-  $globalTimeSlider.slider('value', 0.0);
-  $globalTimeSlider.bind('slide',
-    function(event, ui) {
-      scene.animation.setTime(ui.value);
-      scene.redrawAllWindows();
-    });
-
-  var keyframeTrackNode = assetNodes.polymshLinearKeyAnimationTrack;
-  $('#curveEditor').button()
+  $('#play').button()
     .click(function() {
-      var debuggerWindow = window.open('../../../SceneGraph/CurveEditor/CurveEditor.html', 'Fabric Curve Editor');
-      debuggerWindow.keyframeTrackNode = keyframeTrackNode;
-      debuggerWindow.scene = scene;
+      var options;
+      if ($(this).text() == 'Play') {
+        $(this).button('option', {
+          label: 'Pause',
+          icons: {
+            primary: 'ui-icon-pause'
+          }
+        });
+        scene.animation.play( function(){
+          assets[resourceName].setSample(parseInt(scene.animation.getTime() * 30.0));
+        });
+      } else {
+        $(this).button('option', {
+          label: 'Play',
+          icons: {
+            primary: 'ui-icon-play'
+          }
+        });
+        scene.animation.pause();
+      }
     });
-    
-
+  $('#step').button()
+    .click(function() {
+      scene.animation.step();
+    });
+  
   $('#loadingDialog').dialog({
     modal: true
   });
@@ -137,12 +161,11 @@ $(document).ready(function() {
       value: (1.0-(countRemaining/count))*100
     });
     if(countRemaining===0){
-      $('#loadingDialog').dialog('close');
+      viewport.redraw();
       var errors = scene.getErrors();
       if (errors.length > 0) {
         throw (errors.toString());
       }
-      viewport.redraw();
       return true;
     }
   });
@@ -154,7 +177,7 @@ $(document).ready(function() {
   </head> 
   <body>
     <div id="loadingDialog" title="Loading...">
-      <h4 id="loadingDesc" style="margin-bottom: 10px"></h4>
+      <h4 id="loadingDesc" style="margin-bottom: 10px">Downloading Alembic File.<br>This may take some time.</h4>
       <div id="loadingProgressBar" class="ui-progressbar-value"></div>
     </div>
     <div id="wrapper">
@@ -170,24 +193,20 @@ $(document).ready(function() {
           <div class="box">
             <h2>INFO</h2>
             <div class="content">
-              Character Skinning.<br>
-              This sample shows the use of FABRIC's character pipeline all the way to skinning.
-              The skeleton as well as the animation data is parsed from a Collada file. The pose
-              is evaluated using the FKHierarchy solver, and finally, the skinning is performed using
-              a GLSL shader on the GPU. Please have a look at the Character Pipeline documentation
-              to learn how this works in detail.
+              Alembic Viewer.<br>
+              The face seen in this sample has been exported from Autodesk Softimage,
+              the geometry uses per vertex normals for very efficient playback streaming the
+              point positions out of the Alembic file.
             </div><!--content-->
           </div><!--box-->
 
                   <div class="box">
                     <h2>CONTROLS</h2>
                     <div class="content">
-                        <div>Sample Index:</div>
-                        <div id='globalTime' style="margin-top:10px;"></div>
-                 <button id="curveEditor" style="margin-top:30px;">Open Curve Editor</button>
+                        <button id="play" style="margin-top:10px;">Play</button>
+                        <button id="step" style="margin-top:10px;">Step</button>
                     </div><!--content-->
                 </div><!--box-->
-
         </div><!--sidebar-->
       </div> <!--editor-->
     </div><!--wrapper-->

@@ -26,15 +26,18 @@ FABRIC.SceneGraph.registerNodeType('Image', {
       createDgNode: false,
       createResourceLoadNode: true,
       createLoadTextureEventHandler: true,
-      url: undefined
+      width: 128,
+      height: 128,
+      color: FABRIC.RT.rgba(0.0,0.0,0.0,0.0),
+      url: undefined,
     });
     
     var imageNode = scene.constructNode('Texture', options);
     if(options.createDgNode){
       var dgnode = imageNode.constructDGNode('DGNode')
       dgnode.addMember('hdr', 'Boolean', options.wantHDR);
-      dgnode.addMember('width', 'Size');
-      dgnode.addMember('height', 'Size');
+      dgnode.addMember('width', 'Size', options.createResourceLoadNode ? undefined : options.width);
+      dgnode.addMember('height', 'Size', options.createResourceLoadNode ? undefined : options.height);
       dgnode.addMember('pixels', (options.wantHDR ? 'Color' : (options.wantRGBA ? 'RGBA' : 'RGB')) + '[]');
   
       imageNode.addMemberInterface(dgnode, 'width');
@@ -65,6 +68,21 @@ FABRIC.SceneGraph.registerNodeType('Image', {
 
       imageNode.pub.isImageLoaded = function() {
         return resourceLoadNode ? resourceLoadNode.pub.isLoaded() : false;
+      };
+    } else {
+      if(options.createDgNode){
+        dgnode.addMember('color', 'RGBA', options.color);
+        dgnode.bindings.append(scene.constructOperator({
+          operatorName: 'initImageFromColor',
+          parameterLayout: [
+            'self.width',
+            'self.height',
+            'self.color',
+            'self.pixels'
+          ],
+          entryFunctionName: 'initImageFromColor',
+          srcFile: 'FABRIC_ROOT/SceneGraph/KL/loadTexture.kl'
+        }));
       };
     }
 

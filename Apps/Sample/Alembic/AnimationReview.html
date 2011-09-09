@@ -206,12 +206,24 @@ $(document).ready(function() {
     // compute the width and height of the plane
     var fovY = viewport.getCameraNode().getFovY();
     var height = 0.15 * Math.abs(center.z) * Math.tan(fovY * 0.5);
-    var aspect = $('#FabricContainer').width() / $('#FabricContainer').height();
+    var widthPixels = $('#FabricContainer').width();
+    var heightPixels = $('#FabricContainer').height();
+    var aspect = widthPixels / heightPixels;
     var width = height * aspect;
     planeXfo.sc.x = width;
     planeXfo.sc.z = height;
 
-    var planeMaterial = scene.constructNode('FlatMaterial', { color: FABRIC.RT.rgba(1.0,0.0,0.0,1.0)});
+    var planeMaterial = scene.constructNode('FlatTextureMaterial', {
+      textureNode: scene.constructNode('Image', {
+        createDgNode: true,
+        createResourceLoadNode: false,
+        width: parseInt(widthPixels / 2),
+        height: parseInt(heightPixels / 2)
+      }),
+      enableOptions: [FABRIC.SceneGraph.OpenGLConstants.GL_BLEND],
+      blendModeSfactor: FABRIC.SceneGraph.OpenGLConstants.GL_SRC_ALPHA,
+      blendModeDfactor: FABRIC.SceneGraph.OpenGLConstants.GL_ONE_MINUS_SRC_ALPHA,
+    });
     
     // now create a plane
     var planeInstance = scene.constructNode('Instance', {
@@ -220,7 +232,7 @@ $(document).ready(function() {
       materialNode: planeMaterial
     });
 
-    scene.redrawAllWindows();
+    viewport.redraw();
   };
   
   // setup all sliders

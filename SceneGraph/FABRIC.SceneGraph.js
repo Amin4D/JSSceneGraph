@@ -938,6 +938,7 @@ FABRIC.SceneGraph.registerNodeType('Viewport', {
         if(scene.getScenePostRedrawEventHandler()){
           fabricwindow.redrawEvent.appendEventHandler(scene.getScenePostRedrawEventHandler());
         }
+        fabricwindow.resize();
         viewportNode.pub.redraw();
         return true;
       }

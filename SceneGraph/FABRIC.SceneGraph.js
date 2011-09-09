@@ -938,6 +938,10 @@ FABRIC.SceneGraph.registerNodeType('Viewport', {
         if(scene.getScenePostRedrawEventHandler()){
           fabricwindow.redrawEvent.appendEventHandler(scene.getScenePostRedrawEventHandler());
         }
+        if(viewPortRaycastEventHandler){
+          // the sceneRaycastEventHandler propogates the event throughtout the scene.
+          viewPortRaycastEventHandler.appendChildEventHandler(scene.getSceneRaycastEventHandler());
+        }
         fabricwindow.resize();
         viewportNode.pub.redraw();
         return true;
@@ -991,10 +995,6 @@ FABRIC.SceneGraph.registerNodeType('Viewport', {
       // The operators us the collected scopes to calculate the ray.
       viewPortRaycastEvent = viewportNode.constructEventNode('RaycastEvent');
       viewPortRaycastEvent.appendEventHandler(viewPortRaycastEventHandler);
-
-      // the sceneRaycastEventHandler propogates the event throughtout the scene.
-      viewPortRaycastEventHandler.appendChildEventHandler(scene.getSceneRaycastEventHandler());
-
     }
 
     var getElementCoords = function(evt) {

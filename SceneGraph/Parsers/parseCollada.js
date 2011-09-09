@@ -1153,8 +1153,8 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
           var instanceNode = scene.constructNode('Instance', {
             name: instanceData.name, 
             transformNode: transformNode,
-            geometryNode: geometryNode,
-            materialNode: materialNode
+            geometryNode: geometryNode /*,
+            materialNode: materialNode */
           });
           assetNodes[instanceData.name] = instanceNode;
         }

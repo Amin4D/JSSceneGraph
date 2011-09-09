@@ -134,7 +134,7 @@ FABRIC.SceneGraph.registerNodeType('AlembicLoadNode', {
         // check this type
         if(type == 'PolyMesh') {
           
-          var trianglesNode = scene.constructNode('Triangles', { uvSets: 1 } );
+          var trianglesNode = scene.constructNode('Triangles', { uvSets: 1, createBoundingBoxNode: true } );
           trianglesNode
           trianglesNode.pub.setAttributeDynamic('positions');
           trianglesNode.pub.setAttributeDynamic('normals');

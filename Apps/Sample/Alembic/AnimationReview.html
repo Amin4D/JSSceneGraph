@@ -74,6 +74,8 @@ $(document).ready(function() {
   var cameraPrimitive = scene.constructNode('CameraPrimitive', { size: 1.2 });
   
   // load the alembic content based on user interaction
+  var resourceLoadNode = undefined;
+  var selectedNode = undefined;
   var loadAlembicAsset = function(url) {
     var assets = scene.importAssetFile(url, {
       dependentNode: viewport,
@@ -86,11 +88,21 @@ $(document).ready(function() {
           break;
         }
         
-        // create the camera
-        var resourceLoadNode = assets[assetName];
+        resourceLoadNode = assets[assetName];
         var parsedNodes = resourceLoadNode.getParsedNodes();
-        
         var objectListHtml = "";
+        
+        // setup the animation time
+        $('#localtime').slider({
+            min: resourceLoadNode.getAnimationController().getTimeRange().x,
+            max: resourceLoadNode.getAnimationController().getTimeRange().y,
+            step: 0.01
+        });
+        $('#planetime').slider({
+            min: resourceLoadNode.getAnimationController().getTimeRange().x,
+            max: resourceLoadNode.getAnimationController().getTimeRange().y,
+            step: 0.01
+        });
         
         // loop over all assets and create an instance
         var parsedCameras = {};
@@ -108,6 +120,8 @@ $(document).ready(function() {
               })
             });
             objectListHtml += "<option value='"+name+"'>"+name.substring(name.lastIndexOf('/')+1,1000)+"</option>"
+            if(!selectedNode)
+              selectedNode = parsedNode;
           }
           else if(parsedNode.isTypeOf('Camera')) {
             
@@ -126,6 +140,7 @@ $(document).ready(function() {
         $('#objectlist').html(objectListHtml).change( function(ui) {
           
           var selectedName = $('#objectlist').attr('value');
+          selectedNode = parsedNode[selectedName];
           for(var name in parsedInstances) {
             var mat = parsedInstances[name].getMaterialNode();
             if(name == selectedName)
@@ -145,6 +160,15 @@ $(document).ready(function() {
   // for now let's load the frog
   loadAlembicAsset('Models/frog.abc');
   
+  // deal with plane generation
+  var planes = {};
+  var createPlane = function() {
+    
+    console.log('asdasdasds');
+    
+  };
+  
+  // setup all sliders
   $('#lightDirection').slider({
       min: 0.0,
       max: 360.0,
@@ -157,6 +181,50 @@ $(document).ready(function() {
         light.setPosition(pos);
         scene.redrawAllWindows();
     });  
+
+  $('#localtime').slider().bind('slide',
+      function(event, ui) {
+        $('#play').button('option', {
+          label: 'Play',
+          icons: {
+            primary: 'ui-icon-play'
+          }
+        });
+        scene.animation.pause();
+        scene.animation.setTime(ui.value);
+        scene.redrawAllWindows();
+    });  
+  $('#planetime').slider().bind('slide',
+      function(event, ui) {
+        $('#play').button('option', {
+          label: 'Play',
+          icons: {
+            primary: 'ui-icon-play'
+          }
+        });
+        scene.animation.pause();
+        scene.animation.setTime(ui.value);
+        $('#localtime').slider('value', ui.value);
+        scene.redrawAllWindows();
+    });  
+  $('#planeblend').slider({
+      min: 0.0,
+      max: 10.0,
+      step: 1.0,
+      value: 5.0
+    }).bind('slide',
+      function(event, ui) {
+        scene.redrawAllWindows();
+    });
+  
+  $('#createplane').button({
+      text: true,
+    })
+    .click(function() {
+      if(!resourceLoadNode)
+        return;
+      createPlane();
+    });
   
   $('#play').button({
       text: true,
@@ -165,6 +233,8 @@ $(document).ready(function() {
       }
     })
     .click(function() {
+      if(!resourceLoadNode)
+        return;
       var options;
       if ($(this).text() == 'Play') {
         $(this).button('option', {
@@ -173,7 +243,10 @@ $(document).ready(function() {
             primary: 'ui-icon-pause'
           }
         });
-        scene.animation.play();
+        var localTime = $('#localtime').slider();
+        scene.animation.play( function() {
+          localTime.slider('value', resourceLoadNode.getAnimationController().getLocalTime());
+        });
       } else {
         $(this).button('option', {
           label: 'Play',
@@ -226,16 +299,27 @@ $(document).ready(function() {
           <div class="box">
             <h2>Scene</h2>
             <div class="content">
-                <div>Light Direction:</div>
                 <div id='lightDirection' style="margin-top:10px;"></div>
-                <button id="play" style="margin-top:10px;">Play</button>
             </div><!--content-->
-          </div><!--box-->
-          <div class="box">
+            <h2>Playback</h2>
+            <div class="content">
+                <button id="play" style="margin-top:10px;">Play</button>
+                <div id='localtime' style="margin-top:10px;"></div>
+            </div><!--content-->
             <h2>Objects</h2>
             <div class="content">
-                <select multi size=5 id='objectlist' style='width: 200px'/>
+                <select multi size=5 id='objectlist' style='width: 200px'>
+                </select>
             </div><!--content-->
+            <h2>Planes</h2>
+            <div class="content">
+                <button id="createplane" style="margin-top:10px;">Create</button>
+                <select multi size=10 id='planelist' style='width: 200px'>
+                </select>
+                <div id='planetime' style="margin-top:10px;"></div>
+                <div id='planeblend' style="margin-top:10px;"></div>
+            </div><!--content-->
+          </div><!--box-->
           </div><!--box-->
         </div><!--sidebar-->
       </div> <!--editor-->

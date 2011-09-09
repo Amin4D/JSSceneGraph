@@ -119,12 +119,10 @@ $(document).ready(function() {
       scene.redrawAllWindows();
     });
 
-  var keyframeTrackNode = assetNodes.polymshLinearKeyAnimationTrack;
+  var keyframeTrackNode = assetNodes.polymshAnimationTrack;
   $('#curveEditor').button()
     .click(function() {
-      var debuggerWindow = window.open('../../../SceneGraph/CurveEditor/CurveEditor.html', 'Fabric Curve Editor');
-      debuggerWindow.keyframeTrackNode = keyframeTrackNode;
-      debuggerWindow.scene = scene;
+      keyframeTrackNode.openCurveEditor();
     });
     
 

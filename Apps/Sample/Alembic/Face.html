@@ -91,6 +91,7 @@ $(document).ready(function() {
 
   var phongMaterial = scene.constructNode('PhongMaterial', {
     diffuseColor: FABRIC.RT.rgb(0.5, 0.5, 0.5, 1),
+    specularColor: FABRIC.RT.rgb(0.15, 0.15, 0.15, 1),
     lightNode: light,
   });
   
@@ -160,6 +161,7 @@ $(document).ready(function() {
       value: (1.0-(countRemaining/count))*100
     });
     if(countRemaining===0){
+      viewport.redraw();
       var errors = scene.getErrors();
       if (errors.length > 0) {
         throw (errors.toString());

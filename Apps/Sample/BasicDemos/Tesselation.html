@@ -47,8 +47,10 @@ $(document).ready(function() {
   var scene = FABRIC.SceneGraph.createScene();
   var viewport = scene.constructNode('Viewport', {
     windowElement: document.getElementById('FabricContainer'),
-    backgroundColor: FABRIC.RT.rgb(0.0, 0.05, 0.15)
   });
+  viewport.setBackgroundTextureImage(scene.constructNode('Image', {
+    url: 'Resources/fabric-demo-gradient.png'
+  }));
   
   
   if(!viewport.getGlewSupported('GL_ARB_tessellation_shader')){

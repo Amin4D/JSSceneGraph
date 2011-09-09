@@ -48,9 +48,8 @@ FABRIC.SceneGraph.registerNodeType('CharacterSkeleton', {
     scene.assignDefaults(options, {
       calcReferenceLocalPose: false,
       calcReferenceGlobalPose: false,
-      calcInvMatricies: true,
-      calcReferencePoseFromInverseBindPose: false
-      });
+      calcInvMatricies: true
+    });
 
     var characterSkeletonNode = scene.constructNode('SceneGraphNode', options);
     var dgnode = characterSkeletonNode.constructDGNode('DGNode');
@@ -116,14 +115,13 @@ FABRIC.SceneGraph.registerNodeType('CharacterSkeleton', {
     characterSkeletonNode.pub.setCount = function(count) {
       dgnode.setCount(count);
     };
-    characterSkeletonNode.pub.addBone = function(boneOptions, sliceid) {
+    characterSkeletonNode.pub.addBone = function(boneOptions, skeletonId) {
       var bones = characterSkeletonNode.pub.getBones(),
         boneMap = {};
       for (var i = 0; i < bones.length; i++) {
         boneMap[bones[i].name] = i;
       }
-
-      // Note: this function was very expensive because of the number of times it accessed the core.
+      
       if (boneOptions.name === undefined || boneMap[boneOptions.name]) {
         throw ('Invalid bone name specified: ' + boneOptions.name);
       }
@@ -157,34 +155,21 @@ FABRIC.SceneGraph.registerNodeType('CharacterSkeleton', {
 
       var bone = new FABRIC.Characters.Bone(boneOptions);
       bones.push(bone);
-      dgnode.setSliceBulkData(sliceid ? sliceid : 0, { bones: bones });
+      dgnode.setData('bones', skeletonId ? skeletonId : 0, bones );
       return bone;
     };
-    characterSkeletonNode.pub.setBones = function(boneOptions, sliceid) {
+    
+    characterSkeletonNode.pub.setBones = function(boneOptions, skeletonId) {
       var bones = [];
       for (var i = 0; i < boneOptions.length; i++) {
         bones.push(new FABRIC.Characters.Bone(boneOptions[i]));
       }
-      dgnode.setSliceBulkData(sliceid ? sliceid : 0, { bones: bones });
+      dgnode.setData('bones', skeletonId ? skeletonId : 0, bones );
     };
-    characterSkeletonNode.pub.setInvMatrices = function(invmatrices) {
-      dgnode.setSliceBulkData(0, { 'invmatrices': invmatrices });
+    
+    characterSkeletonNode.pub.setInvMatrices = function(invmatrices, skeletonId) {
+      dgnode.setData('invmatrices', skeletonId ? skeletonId : 0, invmatrices );
     };
-
-    if (options.calcReferencePoseFromInverseBindPose) {
-      // For skeletons that are built procedurally, or using
-      // our rigging tools, this operator will run every time a
-      // reference pose is modified.
-      dgnode.bindings.append(scene.constructOperator({
-        operatorName: 'calcReferencePoseFromInverseBindPose',
-        srcFile: 'FABRIC_ROOT/SceneGraph/KL/characterSkeleton.kl',
-        entryFunctionName: 'calcReferencePoseFromInverseBindPose',
-        parameterLayout: [
-          'self.bones',
-          'self.invmatrices'
-        ]
-      }));
-    }
 
     if (options.calcReferenceLocalPose) {
       // For skeletons that are built procedurally, or using
@@ -274,6 +259,7 @@ FABRIC.SceneGraph.registerNodeType('CharacterSkeletonDebug', {
           entryFunctionName: 'generateSkeleton',
           parameterLayout: [
             'skeleton.bones',
+            'skeleton.invmatrices',
             'rig.pose',
             'self.positions<>',
             'uniforms.indices',
@@ -340,50 +326,19 @@ FABRIC.SceneGraph.registerNodeType('CharacterVariables', {
     return characterVariablesNode;
   }});
 
-  /*
-// TODO: Come back to this one.
-
-// This node represents a branch in an animation graph
-// Where multiple rig input values are being blended together
-FABRIC.SceneGraph.registerNodeType("NLerpCharacterVariables", {
-  factoryFn: function(options, scene){
-    scene.assignDefaults(options, {
-      });
-    var rigVariablesNode = scene.constructNode("RigVariables");
-    rigVariablesNode.getDGNode().bindings.append(scene.constructOperator(
-      {
-        operatorName:"lerpRigVariablesOp",
-        srcFile:"../../../SceneGraph/KL/lerpRigVariables.kl",
-        entryFunctionName:"lerpRigVariables",
-        parameterLayout:[
-          "self.time",
-          "input1.rigparams",
-          "input2.rigparams",
-          "self.rigparams"
-        ]
-      }));
-    var numInputs = 0;
-    rigVariablesNode.addInput = function(node){
-        if(node.supertype !== "RigVariables"){
-          throw("Incorrect type assignment. Must assign a RigVariables");
-        }
-        rigVariablesNode.getDGNode().addDependency(node.getDGNode(), "input" + numInputs);
-        skeletonNode = node;
-      };
-    return rigVariablesNode;
-  }});
-  */
 
 // These are the values that represent the evaluation
 // algorithm for this character instance.
-//
-//
+// Note: Do we need different node types for CharacterVariables and CharacterConstants?
+// The 'CharacterConstants' adds nothing to the variables. We could generalise them to
+// 'CharacterParameters' and use the same node type for Constants and Variables. 
 FABRIC.SceneGraph.registerNodeType('CharacterConstants', {
   factoryFn: function(options, scene) {
 
     var characterConstantsNode = scene.constructNode('CharacterVariables', options);
     return characterConstantsNode;
   }});
+
 
 // The character rig computes the pose of a character
 FABRIC.SceneGraph.registerNodeType('CharacterRig', {
@@ -541,26 +496,6 @@ FABRIC.SceneGraph.registerNodeType('CharacterRig', {
   }});
 
 
-
-// The character rig computes the pose of a character
-FABRIC.SceneGraph.registerNodeType('FKCharacterRig', {
-  factoryFn: function(options, scene) {
-    scene.assignDefaults(options, {
-      });
-
-
-  }});
-
-// The character rig computes the pose of a character
-FABRIC.SceneGraph.registerNodeType('GlobalCharacterRig', {
-  factoryFn: function(options, scene) {
-    scene.assignDefaults(options, {
-      });
-
-    var globalCharacterRigNode = scene.constructNode('CharacterRig', options);
-    globalCharacterRigNode.pub.addSolver('solveGlobalPose', 'ReferencePoseSolver');
-    return globalCharacterRigNode;
-  }});
 
 FABRIC.SceneGraph.registerNodeType('CharacterRigDebug', {
   factoryFn: function(options, scene) {

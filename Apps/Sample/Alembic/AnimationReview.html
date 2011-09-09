@@ -3,7 +3,7 @@
     Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
     -->
   <head> 
-    <title>FABRIC - Alembic Viewer</title> 
+    <title>FABRIC - Alembic Animation Review Tool</title> 
     
     <meta charset="iso-8859-1"/>
     <link href="../../../themes/default/style.css" rel="stylesheet" type="text/css" />
@@ -30,7 +30,6 @@
     <script type="text/javascript" src="../../../SceneGraph/RT/Euler.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/RT/OGLShaderProgram.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/RT/OGLTexture2D.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/RT/OGLTextureCube.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/RT/OGLBuffer.js" charset="utf-8"></script>
 
     <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.js" charset="utf-8"></script>
@@ -46,89 +45,95 @@
     <script type="text/javascript">
 $(document).ready(function() {
 
-  $('#play').button({
-      text: true,
-      icons: {
-        primary: 'ui-icon-play'
-      }
-    });
-  $('#step').button({
-    text: true,
-    icons: {
-      primary: 'ui-icon-step'
-    }
-  });  
-
-  $('#importModel').button().change(function(e) {
-      // TODO: Enable file importing
-        console.log($(this).val());
-      var assets = scene.importAssetFile($(this).val());
-      for (i in assets) {
-        assets[i].setMaterialNode(redMaterial);
-        drawNode.setGeometryNode(assets[i]);
-      }
-
-      var errors = scene.getErrors();
-      if (errors.length > 0) {
-        throw (errors.toString());
-      }
-    });
-
   var scene = FABRIC.SceneGraph.createScene();
   var viewport = scene.constructNode('Viewport', { windowElement: document.getElementById('FabricContainer') });
 
   // Create a camera to draw the scene from
   var camera = scene.constructNode('TargetCamera', {
-      nearDistance: 1,
-      farDistance: 2000,
-      position: FABRIC.RT.vec3(-.2, 1, 1).scale(18),
-      target: FABRIC.RT.vec3(0, .2, 0).scale(13),
+      position: FABRIC.RT.vec3(20, 20, 20),
+      target: FABRIC.RT.vec3(0, 0, 0),
+      nearDistance: 0.01,
+      farDistance: 1000
     });
-
-  scene.constructNode('CameraManipulator', { targetNode: camera });
   viewport.setCameraNode(camera);
 
-  var light = scene.constructNode('PointLight', { position: FABRIC.RT.vec3(10, 30, 100).scale(3) });
+  var light = scene.constructNode('PointLight', { position: FABRIC.RT.vec3(10000, 10000, 10000) });
 
-  var cubeTextureMap = scene.constructNode('CubeMap', {
-        urls: [
-          '../BasicDemos/Resources/cubemap_opensea/opensea_positive_x.png',
-          '../BasicDemos/Resources/cubemap_opensea/opensea_negative_x.png',
-          '../BasicDemos/Resources/cubemap_opensea/opensea_positive_y.png',
-          '../BasicDemos/Resources/cubemap_opensea/opensea_negative_y.png',
-          '../BasicDemos/Resources/cubemap_opensea/opensea_positive_z.png',
-          '../BasicDemos/Resources/cubemap_opensea/opensea_negative_z.png'
-        ]
+  scene.constructNode("CameraManipulator", { targetNode:camera } );
+
+  scene.constructNode('Instance', {
+          geometryNode: scene.constructNode('Grid', {
+              size_x: 120.0,
+              size_z: 120.0,
+              sections_x: 32,
+              sections_z: 32 }),
+          materialNode: scene.constructNode('FlatMaterial')
       });
   
-  var phongMaterial = scene.constructNode('PhongMaterial', {
-    diffuseColor: FABRIC.RT.rgb(1.0, 0.1, 0.1, 1),
-    lightNode: light,
-  });
+  // load the alembic content based on user interaction
+  var loadAlembicAsset = function(url) {
+    var assets = scene.importAssetFile(url, {
+      dependentNode: viewport,
+      onLoadCallback: function(){
   
-  // create the alembic content, and fire the load once it is loaded
-  var resourceName = 'softbodies';
-  var assets = scene.importAssetFile('Models/'+resourceName+'.abc', {
-    dependentNode: viewport,
-    onLoadCallback: function(){
-      
-      // loop over all assets and create an instance
-      for(var name in assets[resourceName].getParsedNodes()) {
-        if(assets[resourceName].getParsedNodes()[name].isTypeOf('Triangles'))
-        {
-          scene.constructNode('Instance', {
-            transformNode: assets[resourceName].getCorrespondingTransform(name),
-            geometryNode: assets[resourceName].getParsedNodes()[name],
-            materialNode: phongMaterial
-          });
+        // get the first asset name
+        var assetName = undefined;
+        for(var name in assets) {
+          assetName = name;
+          break;
         }
+        
+        // create the camera
+        var resourceLoadNode = assets[assetName];
+        var parsedNodes = resourceLoadNode.getParsedNodes();
+        
+        // loop over all assets and create an instance
+        var parsedCamera = undefined;
+        for(var name in parsedNodes) {
+          if(parsedNodes[name].isTypeOf('Triangles')) {
+            var inst = scene.constructNode('Instance', {
+              transformNode: resourceLoadNode.getCorrespondingTransform(name),
+              geometryNode: parsedNodes[name],
+              materialNode: scene.constructNode('PhongMaterial', {
+                diffuseColor: FABRIC.RT.rgb(0.5, 0.5, 0.5, 1),
+                specularColor: FABRIC.RT.rgb(0.15, 0.15, 0.15, 1),
+                lightNode: light,
+              })
+            });
+          }
+          else if(parsedNodes[name].isTypeOf('Triangles')) {
+            parsedCamera = parsedNodes[name];
+          }
+        }
+        
+        //$('#loadingDialog').dialog('close');
+        viewport.redraw();
       }
-      $('#loadingDialog').dialog('close');
-      viewport.redraw();
-    }
-  });
-
-  $('#play').button()
+    });
+  };
+  
+  // for now let's load the frog
+  loadAlembicAsset('Models/frog.abc');
+  
+  $('#lightDirection').slider({
+      min: 0.0,
+      max: 360.0,
+      step: 0.5
+    }).bind('slide',
+      function(event, ui) {
+        var pos = FABRIC.RT.vec3(10000,10000,10000);
+        var rot = FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(0,1,0),ui.value);
+        pos = rot.rotateVector(pos);
+        light.setPosition(pos);
+        scene.redrawAllWindows();
+    });  
+  
+  $('#play').button({
+      text: true,
+      icons: {
+        primary: 'ui-icon-play'
+      }
+    })
     .click(function() {
       var options;
       if ($(this).text() == 'Play') {
@@ -138,9 +143,7 @@ $(document).ready(function() {
             primary: 'ui-icon-pause'
           }
         });
-        scene.animation.play( function(){
-          assets[resourceName].setSample(parseInt(scene.animation.getTime() * 30.0));
-        });
+        scene.animation.play();
       } else {
         $(this).button('option', {
           label: 'Play',
@@ -151,11 +154,7 @@ $(document).ready(function() {
         scene.animation.pause();
       }
     });
-  $('#step').button()
-    .click(function() {
-      scene.animation.step();
-    });
-  
+
   $('#loadingDialog').dialog({
     modal: true
   });
@@ -165,6 +164,7 @@ $(document).ready(function() {
       value: (1.0-(countRemaining/count))*100
     });
     if(countRemaining===0){
+      $('#loadingDialog').dialog('close');
       viewport.redraw();
       var errors = scene.getErrors();
       if (errors.length > 0) {
@@ -193,24 +193,14 @@ $(document).ready(function() {
           <div id="FabricContainer"></div> 
         </div><!--viewer-->
         <div id="sidebar">
-          
           <div class="box">
-            <h2>INFO</h2>
+            <h2>Scene</h2>
             <div class="content">
-              Alembic Viewer.<br>
-              The tori meshes in this sample have been exported from Autodesk Softimage,
-              where they have been simulated with a physics simulator. This demo shows the
-              performance of several objects been streamed in from the same Alembic file.
+                <div>Light Direction:</div>
+                <div id='lightDirection' style="margin-top:10px;"></div>
+                <button id="play" style="margin-top:10px;">Play</button>
             </div><!--content-->
           </div><!--box-->
-
-                  <div class="box">
-                    <h2>CONTROLS</h2>
-                    <div class="content">
-                        <button id="play" style="margin-top:10px;">Play</button>
-                        <button id="step" style="margin-top:10px;">Step</button>
-                    </div><!--content-->
-                </div><!--box-->
         </div><!--sidebar-->
       </div> <!--editor-->
     </div><!--wrapper-->

@@ -90,8 +90,6 @@ $(document).ready(function() {
     dependentNode: viewport,
     onLoadCallback: function(){
 
-      assets.frog.getAnimationController().setTimeRange(FABRIC.RT.vec2(0, 2));
-
       // create the camera
       var nodes = assets.frog.getParsedNodes();
       viewport.setCameraNode(assets.frog.getParsedNodes()['/Camera/CameraShape']);

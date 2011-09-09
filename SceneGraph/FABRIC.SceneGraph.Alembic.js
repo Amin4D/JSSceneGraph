@@ -247,7 +247,9 @@ FABRIC.SceneGraph.registerNodeType('AlembicLoadNode', {
           console.log("ERROR: UNSUPPORT ALEMBIC OBJECT TYPE: "+type+", skipping "+identifier);
         }
       }
-
+      
+      // setup the timerange
+      animationController.pub.setTimeRange(FABRIC.RT.vec2(0, resourceLoadNode.pub.getNumSamples() / 30.0));
     });
     
     // also add the original on load callback

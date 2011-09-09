@@ -80,7 +80,7 @@ $(document).ready(function() {
         size_z: 40.0,
         sections_x: 20,
         sections_z: 20 }),
-      materialNode: scene.constructNode('FlatMaterial')
+      materialNode: scene.constructNode('FlatMaterial', { color: FABRIC.RT.rgb(0.2, 0.2, 0.2) })
     });
 
   // first create a skeleton

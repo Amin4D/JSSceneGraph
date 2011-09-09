@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<shader>
+  <name>OutlineShader</name>
+  <uniforms>
+    <uniform name="u_materialColor" constant="color" type="Color"/>
+    <uniform name="u_outlineThickness" constant="thickness" type="Scalar" defaultValue="0.5"/>
+    <uniform name="u_modelViewProjectionMatrix" constant="modelViewProjectionMatrix" type="Mat44" owner="instance"/>
+    <uniform name="u_normalMatrix" constant="normalMatrix" type="Mat33" owner="instance"/>
+  </uniforms>
+  <attributes>
+    <attribute name="a_position" binding="positions"/>
+    <attribute name="a_normal" binding="normals"/>
+  </attributes>
+  
+  <openglstateparams>
+    <enableOptions>
+      <option>GL_CULL_FACE</option>
+    </enableOptions>
+    <cullFace>GL_FRONT</cullFace>
+  </openglstateparams>
+  
+  <vertexshader>
+    <source>
+      <![CDATA[
+      
+      uniform mat4 u_modelViewProjectionMatrix;
+      uniform mat3 u_normalMatrix;
+      uniform float u_outlineThickness;
+      attribute vec4 a_position;
+      attribute vec3 a_normal;
+      
+      void main(){
+        vec3 outlinedisp = u_normalMatrix * a_normal;
+        outlinedisp.z = 0.0;
+        if(outlinedisp.x != 0.0 && outlinedisp.y != 0.0){
+          outlinedisp = normalize(outlinedisp) * u_outlineThickness;
+        }
+        gl_Position = u_modelViewProjectionMatrix * a_position + (vec4(outlinedisp, 0.0));
+      }
+
+      ]]>
+    </source>
+  </vertexshader>
+  
+  <fragmentshader>
+    <source>
+      <![CDATA[
+
+      uniform vec4 u_materialColor;
+      
+      void main(){
+        gl_FragColor = u_materialColor;
+      }
+      
+      ]]>
+    </source>
+  </fragmentshader>
+</shader>

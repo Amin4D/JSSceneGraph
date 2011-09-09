@@ -5,8 +5,8 @@
 use Vec3;
 
 operator generateCuboid(
-  io Vec3 positions[],
-  io Vec3 normals[],
+  io Vec3 positions<>,
+  io Vec3 normals<>,
   io Integer indices[],
   io Scalar length,
   io Scalar height,
@@ -20,8 +20,6 @@ operator generateCuboid(
   var Integer ii = 0;
 
   // setup the cuboid with origin at (0,0,0)
-  //  positions.resize( 24 );
-  //  normals.resize( 24 );
   indices.resize(36);
 
   var Vec3 cornerpositions[];

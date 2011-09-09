@@ -49,6 +49,7 @@ FABRIC.SceneGraph = {
     return result;
   },
   registerParser: function(ext, parserFn) {
+    ext = ext.toLocaleLowerCase();
     var makeFileHandle = function(filePath) {
       return filePath.split('/').pop().split('.')[0];
     }
@@ -77,8 +78,7 @@ FABRIC.SceneGraph = {
         preDraw: true,
         postDraw: true,
         constructAnimationInterface: true,
-        fixedTimeStep: true,
-        timeStep: 0.02, // 0.02 seconds per frame = 50 fps
+        timeStep: 1/50, /* 50 fps */
         shadowMaterial:'ShadowMaterial'
       });
     
@@ -558,7 +558,7 @@ FABRIC.SceneGraph = {
       return globalsNode;
     };
     scene.pub.importAssetFile = function(file, options) {
-      var ext = file.split('.').pop();
+      var ext = file.split('.').pop().toLocaleLowerCase();
       if (FABRIC.SceneGraph.assetLoaders[ext]) {
         var assets = FABRIC.SceneGraph.assetLoaders[ext](scene.pub, file, options);
         return assets;
@@ -678,10 +678,6 @@ FABRIC.SceneGraph = {
         var onAdvanceCallback;
         
         var setTime = function(t, timestep, redraw) {
-          
-          if (looping && animationTime > timerange.y){
-            t = timerange.x;
-          }
           animationTime = t;
           globalsNode.setBulkData({ time:[t], timestep:[timestep] } );
           
@@ -692,33 +688,24 @@ FABRIC.SceneGraph = {
             scene.pub.redrawAllWindows();
           }
         }
-        var advanceTime = function() {
-          var currTime = (new Date).getTime();
+        var advanceTime = function(currTime) {
           var deltaTime = (currTime - prevTime)/1000;
-          prevTime = (new Date).getTime();
-          if (sceneOptions.fixedTimeStep) {
-            // In fixed time step mode, the computer will attempt to play back
-            // at exactly the given frame rate. If the frame rate cannot be achieved
-            // it plays as fast as possible.
-            // The time step as used throughout the graph will always be fixed at the
-            // given rate. 
-            var t = animationTime + sceneOptions.timeStep;
-            if(deltaTime < sceneOptions.timeStep){
-              var delay = (sceneOptions.timeStep - deltaTime)*1000;
-              setTimeout(function(){
-                  setTime(t, sceneOptions.timeStep);
-                },
-                delay
-              );
-            }else{
-              setTime(t, sceneOptions.timeStep);
-            }
-          }
-          else {
-            // In this mode, the system plays back at the highest framerate possible.
-            // The time step as used throughout the graph will vary according to the
-            // achieved frame rate. 
-            setTime(animationTime + (deltaTime * playspeed), deltaTime);
+          prevTime = currTime;
+          // The computer will attempt to play back
+          // at exactly the given frame rate. If the frame rate cannot be achieved
+          // it plays as fast as possible.
+          // The time step as used throughout the graph will always be fixed at the
+          // given rate.
+          var t = animationTime + sceneOptions.timeStep;
+          if(deltaTime < sceneOptions.timeStep){
+            var delay = (sceneOptions.timeStep - deltaTime)*1000;
+            setTimeout(function(){
+                setTime(t, sceneOptions.timeStep);
+              },
+              delay
+            );
+          }else{
+            setTime(t, sceneOptions.timeStep);
           }
         }
         /////////////////////////////////////////////////////////
@@ -730,32 +717,11 @@ FABRIC.SceneGraph = {
           getTime:function() {
             return animationTime;
           },
-          setPlaybackSpeed:function(speed) {
-            playspeed = speed;
-          },
-          getPlaybackSpeed:function() {
-            return playspeed;
-          },
           setTimeStep:function(val) {
             sceneOptions.timeStep = val;
           },
           getTimeStep:function() {
             return sceneOptions.timeStep;
-          },
-          setTimeRange:function(val) {
-            if (!val.getType || val.getType() !== 'FABRIC.RT.Vec2') {
-              throw ('Incorrect type assignment. Must assign a FABRIC.RT.Vec2');
-            }
-            timerange = val;
-          },
-          getTimeRange:function() {
-            return timerange;
-          },
-          setLoop:function(loop) {
-            looping = loop;
-          },
-          getLoop:function() {
-            return looping;
           },
           play: function(callback) {
             prevTime = (new Date).getTime();
@@ -868,6 +834,9 @@ FABRIC.SceneGraph.registerNodeType('SceneGraphNode', {
         dgnodes[dgnodename] = dgnode;
         return dgnode;
       },
+      getDGNodes: function() {
+        return dgnodes;
+      },
       constructResourceLoadNode: function(dgnodename) {
         return sceneGraphNode.constructDGNode(dgnodename, true);
       },
@@ -950,23 +919,17 @@ FABRIC.SceneGraph.registerNodeType('Viewport', {
           ]
         }));
 
-    FABRIC.appendOnResolveAsyncTaskCallback(function(label, countRemaining){
-      if(countRemaining===0){
-        fabricwindow = scene.bindViewportToWindow(windowElement, viewportNode);
-        redrawEventHandler.addScope('window', fabricwindow.windowNode);
-        if(scene.getScenePreRedrawEventHandler()){
-          fabricwindow.redrawEvent.appendEventHandler(scene.getScenePreRedrawEventHandler());
-        }
-        fabricwindow.redrawEvent.appendEventHandler(redrawEventHandler);
-        if(scene.getScenePostRedrawEventHandler()){
-          fabricwindow.redrawEvent.appendEventHandler(scene.getScenePostRedrawEventHandler());
-        }
-        if(viewPortRayCastDgNode){
-          viewPortRayCastDgNode.addDependency(fabricwindow.windowNode, 'window');
-        }
-        return true; // remove this event listener. 
-      }
-    });
+
+    var fabricwindow = scene.bindViewportToWindow(windowElement, viewportNode);
+    redrawEventHandler.addScope('window', fabricwindow.windowNode);
+    if(scene.getScenePreRedrawEventHandler()){
+      fabricwindow.redrawEvent.appendEventHandler(scene.getScenePreRedrawEventHandler());
+    }
+    fabricwindow.redrawEvent.appendEventHandler(redrawEventHandler);
+    if(scene.getScenePostRedrawEventHandler()){
+      fabricwindow.redrawEvent.appendEventHandler(scene.getScenePostRedrawEventHandler());
+    }
+    
     var propagationRedrawEventHandler = viewportNode.constructEventHandlerNode('DrawPropagation');
     redrawEventHandler.appendChildEventHandler(propagationRedrawEventHandler);
 
@@ -982,11 +945,12 @@ FABRIC.SceneGraph.registerNodeType('Viewport', {
     var viewPortRaycastEvent, viewPortRaycastEventHandler, viewPortRayCastDgNode;
     if (scene.getSceneRaycastEventHandler() && options.enableRaycasting) {
 
-      viewPortRayCastDgNode = scene.constructDependencyGraphNode(options.name + '_RayCastNode');
+      viewPortRayCastDgNode = viewportNode.constructDGNode('RayCastDgNodeDGNode');
       viewPortRayCastDgNode.addMember('x', 'Integer');
       viewPortRayCastDgNode.addMember('y', 'Integer');
       viewPortRayCastDgNode.addMember('ray', 'Ray');
       viewPortRayCastDgNode.addMember('threshold', 'Scalar', options.rayIntersectionThreshold);
+      viewPortRayCastDgNode.addDependency(fabricwindow.windowNode, 'window');
 
       // this operator calculates the rayOri and rayDir from the scopes collected so far.
       // The scopes should be the window, viewport, camera and projection.
@@ -1038,6 +1002,9 @@ FABRIC.SceneGraph.registerNodeType('Viewport', {
     };
 
     // public interface
+    viewportNode.pub.getOpenGLVersion = fabricwindow.getOpenGLVersion;
+    viewportNode.pub.getGlewSupported = fabricwindow.getGlewSupported;
+    
     viewportNode.addMemberInterface(dgnode, 'backgroundColor', true);
     viewportNode.pub.setCameraNode = function(node) {
       if (!node || !node.isTypeOf('Camera')) {
@@ -1158,8 +1125,17 @@ FABRIC.SceneGraph.registerNodeType('Viewport', {
       var ray = viewPortRayCastDgNode.getData('ray');
       return ray;
     };
-    viewportNode.pub.redraw = function(animating) {
-      fabricwindow.needsRedraw();
+    viewportNode.pub.redraw = function() {
+      if(scene.pub.animation.isPlaying()){
+        fabricwindow.needsRedraw();
+      }else{
+        // If we give the browser a millisecond pause, then the redraw will
+        // occur. Otherwist this message gets lost, causing a blank screen when
+        // demos load. 
+        setTimeout(function(){
+          fabricwindow.needsRedraw();
+        }, 1);
+      }
     };
     viewportNode.pub.writeData = function(sceneSaver, constructionOptions, nodeData) {
       nodeData.camera = sceneSaver.wrapQuotes(cameraNode.name);
@@ -1373,6 +1349,10 @@ FABRIC.SceneGraph.registerNodeType('Viewport', {
         onloadCallbacks.push(callback);
       }
     };
+
+    resourceLoadNode.pub.getDGNode = function() {
+      return dgnode;
+    }
 
     if (options.onLoadCallback) {
       resourceLoadNode.pub.addOnLoadCallback(options.onLoadCallback);

@@ -24,7 +24,7 @@ operator setGridVertexCount(
 }
 
 operator generateGrid(
-  io Vec3 positions[],
+  io Vec3 positions<>,
   io Integer indices[],
   io Scalar sizeX,
   io Scalar sizeY,
@@ -42,7 +42,6 @@ operator generateGrid(
     if (numYsections > 1) numlineSegments += (numXsections * numZsections);
     if (numXsections > 1) numlineSegments += (numYsections * numZsections);
 
-    //  positions.resize( numlineSegments * 2 );
   indices.resize(numlineSegments * 2);
 
   var Integer i, j, k, indexid = 0;

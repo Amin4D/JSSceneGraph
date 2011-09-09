@@ -22,9 +22,9 @@ operator paintVertexColors(
   io Color brushColor,
 
   io Xfo globalXfo,
-  io Vec3 positions[],
-  io Vec3 normals[],
-  io Color vertexColors[]
+  io Vec3 positions<>,
+  io Vec3 normals<>,
+  io Color vertexColors<>
 ) {
   select = true;
   Mat44 modelMatrix = globalXfo;

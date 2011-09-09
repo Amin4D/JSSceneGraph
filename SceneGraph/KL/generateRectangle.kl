@@ -4,12 +4,11 @@
 //
 
 operator generateRectangle(
-  io Vec3 positions[],
+  io Vec3 positions<>,
   io Integer indices[],
   io Scalar length,
   io Scalar width
 ) {
-  //  positions.resize( 8 );
   indices.resize(8);
 
   positions[0].x = length / 2.0;

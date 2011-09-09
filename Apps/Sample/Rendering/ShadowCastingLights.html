@@ -47,15 +47,17 @@ $(document).ready(function() {
 
   // Create the scene.
   var scene = FABRIC.SceneGraph.createScene();
-//  var postProcessEffect = scene.constructNode( "BloomPostProcessEffect" );
 
   var viewport = scene.constructNode('Viewport', {
-    /*postProcessEffect:postProcessEffect,*/
     windowElement: document.getElementById('FabricContainer'),
     enableRaycasting: true,
     backgroundColor: FABRIC.RT.rgb(0.1, 0.1, 0.1)
   });
 
+  viewport.setBackgroundTextureImage(scene.constructNode('Image', {
+    url: '../BasicDemos/Resources/fabric-demo-gradient.png'
+  }));
+  
   // Create a camera to draw the scene from
   var camera = scene.constructNode('TargetCamera', {
     position: FABRIC.RT.vec3(30, 30, 0),
@@ -68,11 +70,11 @@ $(document).ready(function() {
   var spotLightNode = scene.constructNode('SpotLight', {
     position: FABRIC.RT.vec3(10, 20, 5),
     target: FABRIC.RT.vec3(0, 2, -6),
-    coneAngle: 80.0 * FABRIC.RT.degToRad,
+    coneAngle: Math.degToRad(80.0),
     farDistance: 60,
     castShadows: true,
     displayShadowDebug: false,
-    display: false
+    display: true
   });
 
   var lightTrManip = scene.constructNode('3AxisTranslationManipulator', { parentNode: spotLightNode.getTransformNode(), size: 4 });
@@ -86,7 +88,7 @@ $(document).ready(function() {
     diffuseColor: FABRIC.RT.rgb(0.3, 0.9, 0.3),
     lightNode: spotLightNode
   });
-
+  
   scene.constructNode('Instance', {
       transformNode: scene.constructNode('Transform', {
         hierarchical: false,

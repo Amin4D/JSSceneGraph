@@ -1,0 +1,304 @@
+<html xmlns="http://www.w3.org/1999/xhtml"> 
+  <!--
+    Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
+    -->
+  <head> 
+    <title>FABRIC - Alembic Viewer</title> 
+    
+    <meta charset="iso-8859-1"/>
+    <link href="../../../themes/default/style.css" rel="stylesheet" type="text/css" />
+    <link href="../../../themes/default/viewer.css" rel="stylesheet" type="text/css" />
+    
+    <script type="text/javascript" src="../../../ThirdParty/jQuery/jquery-1.4.2.min.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/jQuery/jquery-ui-1.8.5.custom.min.js"></script>
+
+    <link type="text/css" href="../../../ThirdParty/jQuery/css/vader/jquery-ui-1.8.5.custom.css" rel="stylesheet" />
+
+      <script type="text/javascript" src="../../../Core/FABRIC.Wrappers.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../Core/FABRIC.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/Math.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/Vec2.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/Vec3.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/Vec4.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/Mat22.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/Mat33.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/Mat44.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/Quat.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/Xfo.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/RGBA.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/Color.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/Euler.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/OGLShaderProgram.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/OGLTexture2D.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/OGLBuffer.js" charset="utf-8"></script>
+
+    <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Geometry.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Primitives.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Lights.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Materials.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Manipulation.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Kinematics.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Animation.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Alembic.js" charset="utf-8"></script>
+
+    <script type="text/javascript">
+FABRIC.SceneGraph.registerNodeType('ShapeMixer', {
+  factoryFn: function(options, scene) {
+    scene.assignDefaults(options, {
+      target: undefined,
+      shapes: undefined
+    });
+
+    if (!options.target) {
+      throw ('target not specified');
+    }
+    if (!options.shapes) {
+      throw ('shapes not specified');
+    }
+    
+    var targetNode = scene.getPrivateInterface(options.target);
+    if(!targetNode.pub.isTypeOf('Triangles')) {
+      throw('target is not of type Triangles!');
+    }
+    for(var name in options.shapes) {
+      if(!options.shapes[name].isTypeOf('Triangles')) {
+        throw('Shape '+name+' is not of type triangles!');
+      }
+    }
+    
+    targetNode.pub.setAttributeDynamic('positions');
+    
+    var mixerNode = scene.constructNode('SceneGraphNode');
+    var dgnode = mixerNode.constructDGNode('DGNode');
+    var attributesdgnode = targetNode.getAttributesDGNode();
+    
+    // clone the position attribute
+    attributesdgnode.addMember('original_cloned','Boolean',false);
+    attributesdgnode.addMember('original_positions','Vec3');
+
+    attributesdgnode.addDependency(dgnode,'shapeMixer');
+    for(var name in options.shapes) {
+      dgnode.addMember(name, 'Scalar', 0.0);
+      var shape = scene.getPrivateInterface(options.shapes[name]);
+      attributesdgnode.addDependency(shape.getAttributesDGNode(),name);
+    }
+    
+    // now set the operator code!
+    var code = "use Vec3;\n\noperator mixShapes(\n  io Vec3 position,\n  io Vec3 original_position,\n";
+    code += "  io Boolean cloned,\n  in Size index";
+    for(var name in options.shapes) {
+      code += ",\n  io Scalar weight_"+name;
+      code += ",\n  io Vec3 position_"+name+"<>";
+    }
+    code += "\n) {\n";
+    code += "  if(!cloned) {\n";
+    code += "    original_position = position;\n";
+    code += "    cloned = true;\n";
+    code += "  } else {\n";
+    code += "    position = original_position;\n";
+    code += "  }\n";
+    for(var name in options.shapes) {
+      code += "  position += (position_"+name+"[index] - original_position) * weight_"+name+";\n";
+    }
+    code += "}\n"
+    
+    console.log(code);
+    
+    var parameterLayout = [
+      'self.positions',
+      'self.original_positions',
+      'self.original_cloned',
+      'self.index'
+    ];
+    for(var name in options.shapes) {
+      parameterLayout.push('shapeMixer.'+name);
+      parameterLayout.push(name+".positions<>");
+    }
+
+    console.log(parameterLayout);
+
+    attributesdgnode.bindings.append(scene.constructOperator({
+      operatorName: 'mixShapes',
+      srcCode: code,
+      entryFunctionName: 'mixShapes',
+      parameterLayout: parameterLayout
+    }));
+    
+    mixerNode.pub.setShapeWeight = function(name,weight) {
+      dgnode.setData(name,0,weight);
+    }
+    
+    return mixerNode;
+  }});    
+
+
+$(document).ready(function() {
+
+  var shapeNames = [
+    'head_brow_squeeze',
+    'head_browdown',
+    'head_browup',
+    'head_eyelidlow_up',
+    'head_eyelidup_down',
+    'head_eyelidup_up',
+    'head_frown',
+    'head_kiss',
+    'head_smile'];
+  for(var i=0;i<shapeNames.length;i++)
+  {
+    $('#'+shapeNames[i]).slider({
+      min: 0.0,
+      max: 2.0,
+      step: 0.01
+    });
+  }
+
+  var scene = FABRIC.SceneGraph.createScene();
+  var viewport = scene.constructNode('Viewport', { windowElement: document.getElementById('FabricContainer') });
+
+  // Create a camera to draw the scene from
+  var camera = scene.constructNode('TargetCamera', {
+      nearDistance: 1,
+      farDistance: 2000,
+      position: FABRIC.RT.vec3(1, 2, 6),
+      target: FABRIC.RT.vec3(0, 1.3, 0),
+    });
+
+  scene.constructNode('CameraManipulator', { targetNode: camera });
+  viewport.setCameraNode(camera);
+
+  var light = scene.constructNode('PointLight', { position: FABRIC.RT.vec3(10, 30, 100).scale(3) });
+
+  // create the alembic content, and fire the load once it is loaded
+  var resourceName = 'shapes';
+  var assets = scene.importAssetFile('Models/'+resourceName+'.abc', {
+    dependentNode: viewport,
+    onLoadCallback: function(){
+      
+      var shaderColor = {
+        '/head/headShape': FABRIC.RT.rgb(1.0, 0.6, 0.0, 1),
+        '/l_eye/l_eyeShape': FABRIC.RT.rgb(0.0, 0.0, 0.0, 1),
+        '/r_eye/r_eyeShape': FABRIC.RT.rgb(0.0, 0.0, 0.0, 1)
+      };
+      
+      // loop over all assets and create an instance
+      for(var name in shaderColor) {
+        if(assets[resourceName].getParsedNodes()[name].isTypeOf('Triangles'))
+        {
+          var inst = scene.constructNode('Instance', {
+            transformNode: assets[resourceName].getCorrespondingTransform(name),
+            geometryNode: assets[resourceName].getParsedNodes()[name],
+            materialNode: scene.constructNode('PhongMaterial', {
+              diffuseColor: shaderColor[name],
+              specularColor: FABRIC.RT.rgb(0.15, 0.15, 0.15, 1),
+              lightNode: light,
+            })
+          });
+        }
+      }
+      
+      // construct all shapes
+      var shapes = {};
+      for(var i=0;i<shapeNames.length;i++) {
+        var name = shapeNames[i];
+        shapes[name] = assets[resourceName].getParsedNodes()['/'+name+'/'+name+'Shape'];
+      }
+      
+      // construct the shape mixer
+      var mixer = scene.constructNode('ShapeMixer', {
+        target: assets[resourceName].getParsedNodes()['/head/headShape'],
+        shapes: shapes
+      });
+      
+      // setup the slider interaction
+      var setupSlider = function(name) {
+        $('#'+name).slider().bind('slide',
+          function(event, ui) {
+            mixer.setShapeWeight(name,ui.value);
+            scene.redrawAllWindows();
+          });
+      };
+      for(var i=0;i<shapeNames.length;i++)
+        setupSlider(shapeNames[i]);
+
+      $('#loadingDialog').dialog('close');
+      viewport.redraw();
+    }
+  });
+
+  $('#loadingDialog').dialog({
+    modal: true
+  });
+  var count = FABRIC.getAsyncTaskCount();
+  FABRIC.appendOnResolveAsyncTaskCallback(function(label, countRemaining){
+    $('#loadingProgressBar').progressbar({
+      value: (1.0-(countRemaining/count))*100
+    });
+    if(countRemaining===0){
+      viewport.redraw();
+      var errors = scene.getErrors();
+      if (errors.length > 0) {
+        throw (errors.toString());
+      }
+      return true;
+    }
+  });
+  
+});
+
+</script>
+
+  </head> 
+  <body>
+    <div id="loadingDialog" title="Loading...">
+      <h4 id="loadingDesc" style="margin-bottom: 10px">Downloading Alembic File.<br>This may take some time.</h4>
+      <div id="loadingProgressBar" class="ui-progressbar-value"></div>
+    </div>
+    <div id="wrapper">
+      <ul id="nav">
+        <li><a href="#" id="fabric-logo"><img src="../../../themes/default/_img/projects/fabric-logo.png" /></a></li>
+      </ul>
+      <div id="editor">
+        <div id="viewer">
+          <div id="FabricContainer"></div> 
+        </div><!--viewer-->
+        <div id="sidebar">
+          
+          <div class="box">
+            <h2>INFO</h2>
+            <div class="content">
+              Alembic Viewer.<br>
+              The shapes in this sample are imported using Alembic. A shape mixer blends the different faces,
+              which are actually just several meshes.
+            </div><!--content-->
+          </div><!--box-->
+
+                  <div class="box">
+                    <h2>CONTROLS</h2>
+                    <div class="content">
+                        <div>Brows Squeeze:</div>
+                        <div id='head_brow_squeeze' style="margin-top:10px;"></div>
+                        <div>Brows Down:</div>
+                        <div id='head_browdown' style="margin-top:10px;"></div>
+                        <div>Brows Up:</div>
+                        <div id='head_browup' style="margin-top:10px;"></div>
+                        <div>Lower Eyelid Down:</div>
+                        <div id='head_eyelidlow_up' style="margin-top:10px;"></div>
+                        <div>Upper Eyelid Down:</div>
+                        <div id='head_eyelidup_down' style="margin-top:10px;"></div>
+                        <div>Upper Eyelid Up:</div>
+                        <div id='head_eyelidup_up' style="margin-top:10px;"></div>
+                        <div>Frown:</div>
+                        <div id='head_frown' style="margin-top:10px;"></div>
+                        <div>Kiss:</div>
+                        <div id='head_kiss' style="margin-top:10px;"></div>
+                        <div>Smile:</div>
+                        <div id='head_smile' style="margin-top:10px;"></div>
+                    </div><!--content-->
+                </div><!--box-->
+        </div><!--sidebar-->
+      </div> <!--editor-->
+    </div><!--wrapper-->
+  </body> 
+  </html>

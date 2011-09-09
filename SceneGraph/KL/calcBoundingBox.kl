@@ -4,7 +4,7 @@
 //
 
 operator calcBoundingBox(
-  io Vec3 positions[],
+  io Vec3 positions<>,
   io Vec3 bboxmin,
   io Vec3 bboxmax
 ) {

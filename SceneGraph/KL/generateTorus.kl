@@ -23,8 +23,8 @@ operator generateTorus(
   io Integer detail,
 
   io Integer indices[],
-  io Vec3 positions[],
-  io Vec3 normals[]
+  io Vec3 positions<>,
+  io Vec3 normals<>
 ) {
   var Integer slices = (detail >= 0) ? (detail + 3) : 3;
   var Integer loops = (detail >= 0) ? ((detail * 2) + 3) : 3;
@@ -32,8 +32,6 @@ operator generateTorus(
   var Integer nb_vtx = slices * loops;
   var Integer nb_tri = 2 * slices * loops;
 
-  //  positions.resize( nb_vtx );
-  //  normals.resize( nb_vtx );
   indices.resize(nb_tri * 3);
 
   var Integer tid = 0;

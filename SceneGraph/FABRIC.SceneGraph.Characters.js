@@ -6,64 +6,39 @@
 FABRIC.SceneGraph.registerNodeType('CharacterMesh', {
   factoryFn: function(options, scene) {
 
-    options.uvSets = 1;
-    options.tangentsFromUV = 0;
-    options.dynamic = true;
-    options.assignDrawOperator = false;
-
     var characterMeshNode = scene.constructNode('Triangles', options);
-
-    // The CharacterMesh stores aditional enveloping information.
-    // These first to members sotre the values loaded from an asset
-    // file like Collada.
-    characterMeshNode.pub.addUniformValue('boneCountArray', 'Integer[]');
-    characterMeshNode.pub.addUniformValue('boneIdsArray', 'Integer[]');
-    characterMeshNode.pub.addUniformValue('boneWeightsArray', 'Scalar[]');
+    
+    characterMeshNode.pub.setAttributeDynamic('positions');
+    
     characterMeshNode.pub.addVertexAttributeValue('boneIds', 'Vec4', { genVBO:true } );
     characterMeshNode.pub.addVertexAttributeValue('boneWeights', 'Vec4', { genVBO: true });
-
-    // The enveloping shader can only accept bone bindings in Mat33 values.
-    // Here we take the list of bone weights, sort them, and pick the top
-    // 9 weights, and re-normalize.
-    characterMeshNode.getAttributesDGNode().bindings.append(scene.constructOperator({
-      operatorName: 'reduceBoneBindingOp',
-      srcFile: 'FABRIC_ROOT/SceneGraph/KL/reduceBoneBinding.kl',
-      entryFunctionName: 'reduceBoneBinding',
-      parameterLayout: [
-        'uniforms.boneCountArray',
-        'uniforms.boneIdsArray',
-        'uniforms.boneWeightsArray',
-        'self.boneIds[]',
-        'self.boneWeights[]'
-      ]
-    }));
     
     characterMeshNode.getRedrawEventHandler().postDescendBindings.append( scene.constructOperator({
-          operatorName: 'drawCharacterInstance',
-          srcFile: 'FABRIC_ROOT/SceneGraph/KL/drawCharacterInstance.kl',
-          preProcessorDefinitions: {
-            SKINNING_MATRICIES_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('skinningMatrices'),
-            MODELMATRIXINVERSE_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('modelMatrixInverse'),
-            MODELMATRIX_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('modelMatrix'),
-            VIEWMATRIX_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('viewMatrix'),
-            CAMERAMATRIX_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('cameraMatrix'),
-            CAMERAPOS_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('cameraPos'),
-            PROJECTIONMATRIX_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('projectionMatrix'),
-            PROJECTIONMATRIXINV_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('projectionMatrixInv'),
-            NORMALMATRIX_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('normalMatrix'),
-            MODELVIEW_MATRIX_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('modelViewMatrix'),
-            MODELVIEWPROJECTION_MATRIX_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('modelViewProjectionMatrix')
-          },
-          entryFunctionName: 'drawCharacterInstance',
-          parameterLayout: [
-            'shader.shaderProgram',
-            'rig.skinningMatrices',
-            'camera.cameraMat44',
-            'camera.projectionMat44',
-            'self.indicesBuffer',
-            'instance.drawToggle'
-          ]
-        }));
+      operatorName: 'drawCharacterInstance',
+      srcFile: 'FABRIC_ROOT/SceneGraph/KL/drawCharacterInstance.kl',
+      preProcessorDefinitions: {
+        SKINNING_MATRICIES_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('skinningMatrices'),
+        MODELMATRIXINVERSE_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('modelMatrixInverse'),
+        MODELMATRIX_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('modelMatrix'),
+        VIEWMATRIX_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('viewMatrix'),
+        CAMERAMATRIX_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('cameraMatrix'),
+        CAMERAPOS_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('cameraPos'),
+        PROJECTIONMATRIX_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('projectionMatrix'),
+        PROJECTIONMATRIXINV_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('projectionMatrixInv'),
+        NORMALMATRIX_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('normalMatrix'),
+        MODELVIEW_MATRIX_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('modelViewMatrix'),
+        MODELVIEWPROJECTION_MATRIX_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('modelViewProjectionMatrix')
+      },
+      entryFunctionName: 'drawCharacterInstance',
+      parameterLayout: [
+        'shader.shaderProgram',
+        'rig.skinningMatrices',
+        'camera.cameraMat44',
+        'camera.projectionMat44',
+        'self.indicesBuffer',
+        'instance.drawToggle'
+      ]
+    }));
     
     return characterMeshNode;
   }});
@@ -73,9 +48,8 @@ FABRIC.SceneGraph.registerNodeType('CharacterSkeleton', {
     scene.assignDefaults(options, {
       calcReferenceLocalPose: false,
       calcReferenceGlobalPose: false,
-      calcInvMatricies: true,
-      calcReferencePoseFromInverseBindPose: false
-      });
+      calcInvMatricies: true
+    });
 
     var characterSkeletonNode = scene.constructNode('SceneGraphNode', options);
     var dgnode = characterSkeletonNode.constructDGNode('DGNode');
@@ -141,14 +115,13 @@ FABRIC.SceneGraph.registerNodeType('CharacterSkeleton', {
     characterSkeletonNode.pub.setCount = function(count) {
       dgnode.setCount(count);
     };
-    characterSkeletonNode.pub.addBone = function(boneOptions, sliceid) {
+    characterSkeletonNode.pub.addBone = function(boneOptions, skeletonId) {
       var bones = characterSkeletonNode.pub.getBones(),
         boneMap = {};
       for (var i = 0; i < bones.length; i++) {
         boneMap[bones[i].name] = i;
       }
-
-      // Note: this function was very expensive because of the number of times it accessed the core.
+      
       if (boneOptions.name === undefined || boneMap[boneOptions.name]) {
         throw ('Invalid bone name specified: ' + boneOptions.name);
       }
@@ -182,34 +155,21 @@ FABRIC.SceneGraph.registerNodeType('CharacterSkeleton', {
 
       var bone = new FABRIC.Characters.Bone(boneOptions);
       bones.push(bone);
-      dgnode.setSliceBulkData(sliceid ? sliceid : 0, { bones: bones });
+      dgnode.setData('bones', skeletonId ? skeletonId : 0, bones );
       return bone;
     };
-    characterSkeletonNode.pub.setBones = function(boneOptions, sliceid) {
+    
+    characterSkeletonNode.pub.setBones = function(boneOptions, skeletonId) {
       var bones = [];
       for (var i = 0; i < boneOptions.length; i++) {
         bones.push(new FABRIC.Characters.Bone(boneOptions[i]));
       }
-      dgnode.setSliceBulkData(sliceid ? sliceid : 0, { bones: bones });
+      dgnode.setData('bones', skeletonId ? skeletonId : 0, bones );
     };
-    characterSkeletonNode.pub.setInvMatrices = function(invmatrices) {
-      dgnode.setSliceBulkData(0, { 'invmatrices': invmatrices });
+    
+    characterSkeletonNode.pub.setInvMatrices = function(invmatrices, skeletonId) {
+      dgnode.setData('invmatrices', skeletonId ? skeletonId : 0, invmatrices );
     };
-
-    if (options.calcReferencePoseFromInverseBindPose) {
-      // For skeletons that are built procedurally, or using
-      // our rigging tools, this operator will run every time a
-      // reference pose is modified.
-      dgnode.bindings.append(scene.constructOperator({
-        operatorName: 'calcReferencePoseFromInverseBindPose',
-        srcFile: 'FABRIC_ROOT/SceneGraph/KL/characterSkeleton.kl',
-        entryFunctionName: 'calcReferencePoseFromInverseBindPose',
-        parameterLayout: [
-          'self.bones',
-          'self.invmatrices'
-        ]
-      }));
-    }
 
     if (options.calcReferenceLocalPose) {
       // For skeletons that are built procedurally, or using
@@ -281,14 +241,27 @@ FABRIC.SceneGraph.registerNodeType('CharacterSkeletonDebug', {
       characterSkeletonDebug.pub.addUniformValue('offsetpose', 'Xfo', options.offsetpose);
 
       // now append the operator to create the lines
+      
+      // now append the operator to create the lines
+      characterSkeletonDebug.getAttributesDGNode().bindings.append(scene.constructOperator({
+          operatorName: 'setSkeletonVertexCount',
+          srcFile: 'FABRIC_ROOT/SceneGraph/KL/generateSkeleton.kl',
+          entryFunctionName: 'setSkeletonVertexCount',
+          parameterLayout: [
+            'skeleton.bones',
+            'self.newCount'
+          ]
+        }));
+      
       characterSkeletonDebug.getAttributesDGNode().bindings.append(scene.constructOperator({
           operatorName: 'generateSkeletonOp',
           srcFile: 'FABRIC_ROOT/SceneGraph/KL/generateSkeleton.kl',
           entryFunctionName: 'generateSkeleton',
           parameterLayout: [
             'skeleton.bones',
+            'skeleton.invmatrices',
             'rig.pose',
-            'self.positions[]',
+            'self.positions<>',
             'uniforms.indices',
             'uniforms.boneradius',
             'uniforms.offsetpose'
@@ -353,50 +326,19 @@ FABRIC.SceneGraph.registerNodeType('CharacterVariables', {
     return characterVariablesNode;
   }});
 
-  /*
-// TODO: Come back to this one.
-
-// This node represents a branch in an animation graph
-// Where multiple rig input values are being blended together
-FABRIC.SceneGraph.registerNodeType("NLerpCharacterVariables", {
-  factoryFn: function(options, scene){
-    scene.assignDefaults(options, {
-      });
-    var rigVariablesNode = scene.constructNode("RigVariables");
-    rigVariablesNode.getDGNode().bindings.append(scene.constructOperator(
-      {
-        operatorName:"lerpRigVariablesOp",
-        srcFile:"../../../SceneGraph/KL/lerpRigVariables.kl",
-        entryFunctionName:"lerpRigVariables",
-        parameterLayout:[
-          "self.time",
-          "input1.rigparams",
-          "input2.rigparams",
-          "self.rigparams"
-        ]
-      }));
-    var numInputs = 0;
-    rigVariablesNode.addInput = function(node){
-        if(node.supertype !== "RigVariables"){
-          throw("Incorrect type assignment. Must assign a RigVariables");
-        }
-        rigVariablesNode.getDGNode().addDependency(node.getDGNode(), "input" + numInputs);
-        skeletonNode = node;
-      };
-    return rigVariablesNode;
-  }});
-  */
 
 // These are the values that represent the evaluation
 // algorithm for this character instance.
-//
-//
+// Note: Do we need different node types for CharacterVariables and CharacterConstants?
+// The 'CharacterConstants' adds nothing to the variables. We could generalise them to
+// 'CharacterParameters' and use the same node type for Constants and Variables. 
 FABRIC.SceneGraph.registerNodeType('CharacterConstants', {
   factoryFn: function(options, scene) {
 
     var characterConstantsNode = scene.constructNode('CharacterVariables', options);
     return characterConstantsNode;
   }});
+
 
 // The character rig computes the pose of a character
 FABRIC.SceneGraph.registerNodeType('CharacterRig', {
@@ -555,26 +497,6 @@ FABRIC.SceneGraph.registerNodeType('CharacterRig', {
 
 
 
-// The character rig computes the pose of a character
-FABRIC.SceneGraph.registerNodeType('FKCharacterRig', {
-  factoryFn: function(options, scene) {
-    scene.assignDefaults(options, {
-      });
-
-
-  }});
-
-// The character rig computes the pose of a character
-FABRIC.SceneGraph.registerNodeType('GlobalCharacterRig', {
-  factoryFn: function(options, scene) {
-    scene.assignDefaults(options, {
-      });
-
-    var globalCharacterRigNode = scene.constructNode('CharacterRig', options);
-    globalCharacterRigNode.pub.addSolver('solveGlobalPose', 'ReferencePoseSolver');
-    return globalCharacterRigNode;
-  }});
-
 FABRIC.SceneGraph.registerNodeType('CharacterRigDebug', {
   factoryFn: function(options, scene) {
 
@@ -626,7 +548,7 @@ FABRIC.SceneGraph.registerNodeType('CharacterRigDebug', {
           parameterLayout: [
             'uniforms.debugpose',
             'uniforms.offsetpose',
-            'self.positions[]',
+            'self.positions<>',
             'self.vertexColors[]',
             'uniforms.singlecolor'
           ]

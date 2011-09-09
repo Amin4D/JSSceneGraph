@@ -81,11 +81,14 @@ $(document).ready(function() {
   });
 
   var assetNodes = scene.importAssetFile('Models/mocap_01.dae', {
-    constructSkeletonFromHierarchy: 'Biped_Nulls_UpperBody'
+    constructRigFromHierarchy: 'Biped_Nulls_UpperBody'
   });
+  
+  // Get the rig from the list of returned assets.
+  var rig = assetNodes.Biped_Nulls_UpperBodyCharacterRig;
 
   var geometryNode = scene.constructNode('CharacterSkeletonDebug', {
-      characterRigNode: assetNodes.Biped_Nulls_UpperBodyCharacterRig,
+      characterRigNode: rig,
       boneradius: 0.3
     });
 

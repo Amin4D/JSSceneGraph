@@ -753,7 +753,7 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
     return geometryNode;
   }
 
-  var constructSkeletonFromHierarchy = function(sceneData, rootNodeName, controllerName){
+  var constructRigFromHierarchy = function(sceneData, rootNodeName, controllerName){
     if(!controllerName){
       controllerName = rootNodeName;
     }
@@ -1003,7 +1003,7 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
     // the bond ids remapped. 
     
     var rootJointName = jointDataSource.data[0];
-    var skeletonData = constructSkeletonFromHierarchy(sceneData, rootJointName, name);
+    var skeletonData = constructRigFromHierarchy(sceneData, rootJointName, name);
     
     var bones = skeletonData.skeletonNode.getBones();
     
@@ -1166,14 +1166,15 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
         var url = instanceData.instance_controller.url.slice(1);
         var skinData = getSkinNode(sceneData, url, instanceData.name);
         geometryNode = skinData.characterMeshNode;
-        
+        /*
         materialNode = scene.constructNode('PhongSkinningMaterial', {
           lightNode: defaultLight,
           diffuseColor: FABRIC.RT.rgba(1.0, 0.0, 0.0, 1.0),
           numBones: skinData.skeletonData.skeletonNode.getNumBones()
         });
+        */
         if(instanceData.instance_controller.instance_material){
-          // TODO:
+          // TODO: materialNode =
         }
         
         var xfo = FABRIC.RT.xfo();
@@ -1186,7 +1187,7 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
         var characterNode = scene.constructNode('CharacterInstance', {
             name: instanceData.name+'CharacterInstance',
             geometryNode: skinData.characterMeshNode,
-            materialNode: materialNode,
+          /*  materialNode: materialNode, */
             transformNode: transformNode, 
             rigNode: skinData.skeletonData.rigNode
           });
@@ -1207,8 +1208,8 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
     
     
     // The file may contain a hierarchy that can be used to generate a skeleton
-    if (options.constructSkeletonFromHierarchy) {
-      var skeletonNode = constructSkeletonFromHierarchy(sceneData, options.constructSkeletonFromHierarchy);
+    if (options.constructRigFromHierarchy) {
+      var skeletonNode = constructRigFromHierarchy(sceneData, options.constructRigFromHierarchy);
     }
   }
   

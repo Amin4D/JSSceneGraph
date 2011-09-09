@@ -19,15 +19,15 @@ operator loadLight(
 //  report("loadLight");
   Integer location;
 
-  location = shaderProgram.getUniformLocation(LIGHTTYPE_ATTRIBUTE_ID);
+  location = shaderProgram.getUniformLocation(LIGHTTYPE_ATTRIBUTE_ID); // LIGHTTYPE ATTRIBUTE ID
   if(location!=-1){
     shaderProgram.loadIntegerUniform(location, type);
   }
-  location = shaderProgram.getUniformLocation(LIGHTCOLOR_ATTRIBUTE_ID);
+  location = shaderProgram.getUniformLocation(LIGHTCOLOR_ATTRIBUTE_ID); // LIGHTCOLOR ATTRIBUTE ID
   if(location!=-1){
     shaderProgram.loadColorUniform(location, color);
   }
-  location = shaderProgram.getUniformLocation(LIGHTPOS_ATTRIBUTE_ID);
+  location = shaderProgram.getUniformLocation(LIGHTPOS_ATTRIBUTE_ID); // LIGHTPOS ATTRIBUTE ID
   if(location!=-1){
     var Vec4 viewPos = lightMatrix.row3 * cameraMatrix;
     shaderProgram.loadVec4Uniform(location, viewPos);
@@ -40,7 +40,7 @@ operator loadDirectionalLight(
   io Mat44 lightMatrix
 ) {
 //  report("loadDirectionalLight");
-  Integer location = shaderProgram.getUniformLocation(LIGHTDIR_ATTRIBUTE_ID);
+  Integer location = shaderProgram.getUniformLocation(LIGHTDIR_ATTRIBUTE_ID); // LIGHTDIR ATTRIBUTE ID
   if(location!=-1){
     var Vec3 viewDir = Vec3(0.0, 0.0, -1.0) * lightMatrix.upperLeft() * cameraMatrix.upperLeft();
     viewDir = viewDir.unit(); //lightMatrix might have scaling
@@ -57,13 +57,13 @@ operator loadSpotLight(
 //  report("loadSpotLight");
   Integer location;
 
-  location = shaderProgram.getUniformLocation(LIGHTDIR_ATTRIBUTE_ID);
+  location = shaderProgram.getUniformLocation(LIGHTDIR_ATTRIBUTE_ID); // LIGHTDIR ATTRIBUTE ID
   if(location!=-1){
     var Vec3 viewDir = Vec3(0.0, 0.0, -1.0) * lightMatrix.upperLeft() * cameraMatrix.upperLeft();
     viewDir = viewDir.unit(); //lightMatrix might have scaling
     shaderProgram.loadVec3Uniform(location, viewDir);
   }
-  location = shaderProgram.getUniformLocation(LIGHTCOSCUTOFF_ATTRIBUTE_ID);
+  location = shaderProgram.getUniformLocation(LIGHTCOSCUTOFF_ATTRIBUTE_ID); // LIGHTCOSCUTOFF ATTRIBUTE ID
   if(location!=-1){
     shaderProgram.loadScalarUniform(location, cos(coneAngle * 0.5));
   }
@@ -75,7 +75,7 @@ operator loadLightMatrixUniform(
   io Mat44 cameraMatrix
 ) {
 //  report("loadLightMatrixUniform");
-  Integer location = shaderProgram.getUniformLocation(LIGHTVIEWMATRIX_ATTRIBUTE_ID);
+  Integer location = shaderProgram.getUniformLocation(LIGHTVIEWMATRIX_ATTRIBUTE_ID); // LIGHTVIEWMATRIX ATTRIBUTE ID
   if(location!=-1){
     Mat44 lightViewMatrix = cameraMatrix.inverse() * lightShadowMapMatrix;
     shaderProgram.loadMat44Uniform(location, lightViewMatrix);

@@ -193,6 +193,10 @@ $(document).ready(function() {
     });
   viewport.setCameraNode(camera);
 
+  viewport.setBackgroundTextureImage(scene.constructNode('Image', {
+    url: '../BasicDemos/Resources/fabric-demo-gradient.png'
+  }));
+
   var light = scene.constructNode('PointLight', { position: FABRIC.RT.vec3(10000, 10000, 10000) });
 
   scene.constructNode("CameraManipulator", { targetNode:camera } );

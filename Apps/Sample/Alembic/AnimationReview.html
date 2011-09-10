@@ -111,7 +111,7 @@ FABRIC.SceneGraph.registerNodeType('PaintPlaneInstance', {
     
     // compute the width and height of the plane
     var fovY = cameraNode.pub.getFovY();
-    var height = 0.15 * Math.abs(center.z) * Math.tan(fovY * 0.5);
+    var height = 1.95 * Math.abs(center.z) * Math.tan(fovY * 0.5);
     var widthPixels = $('#FabricContainer').width();
     var heightPixels = $('#FabricContainer').height();
     var aspect = widthPixels / heightPixels;
@@ -124,8 +124,41 @@ FABRIC.SceneGraph.registerNodeType('PaintPlaneInstance', {
       createDgNode: true,
       createResourceLoadNode: false,
       width: parseInt(widthPixels * options.resolutionFactor),
-      height: parseInt(heightPixels * options.resolutionFactor)
+      height: parseInt(heightPixels * options.resolutionFactor),
+      forceRefresh: true
     });
+    
+    // create a frame operator to the texture
+    var texturedgnode = textureNode.getDGNode();
+    texturedgnode.addMember('drawFrame','Boolean',true);
+    texturedgnode.addMember('frameColor','RGBA',FABRIC.RT.rgba(255,255,255,255));
+    texturedgnode.bindings.append(scene.constructOperator({
+      operatorName: 'setFramePixels',
+      srcCode:
+        "use RGBA;\n" +
+        "operator setFramePixels(io Boolean drawFrame, io RGBA frameColor, io Size width, io Size height, io RGBA pixels[]) {\n" +
+        "  var RGBA color;\n" + 
+        "  color.r = color.g = color.b = color.a = 0;\n" + 
+        "  if(drawFrame) color = frameColor;\n" +
+        "  var Size topOffset = (height-1) * width;\n" +
+        "  for(var Size i=0;i<height;i++) {\n" + 
+        "    pixels[width * i] = color;\n" +
+        "    pixels[width * i + width -1] = color;\n" +
+        "  };\n" +
+        "  for(var Size i=0;i<width;i++) {\n" + 
+        "    pixels[i] = color;\n" +
+        "    pixels[topOffset + i] = color;\n" +
+        "  };\n" +
+        "}\n",
+      entryFunctionName: 'setFramePixels',
+      parameterLayout: [
+        'self.drawFrame',
+        'self.frameColor',
+        'self.width',
+        'self.height',
+        'self.pixels'
+      ]
+    }));
     
     // create a flat texture material
     var materialNode = scene.constructNode('FlatBlendTextureMaterial', {
@@ -149,6 +182,8 @@ FABRIC.SceneGraph.registerNodeType('PaintPlaneInstance', {
     dgnode.addMember('planeBlend','Scalar',options.planeBlend);
     instanceNode.addMemberInterface(dgnode, 'planeTime', true);
     instanceNode.addMemberInterface(dgnode, 'planeBlend', true);
+    instanceNode.addMemberInterface(texturedgnode, 'drawFrame', true);
+    instanceNode.addMemberInterface(texturedgnode, 'frameColor', true);
     
     // link the material node to the animation controller
     dgnode.addDependency(animationdgnode,'animation');
@@ -339,7 +374,12 @@ $(document).ready(function() {
   
   // deal with plane generation
   var planes = {};
-  var planeGeometry = scene.constructNode('Plane');
+  var planeGeometry = scene.constructNode('Plane', {
+    length: 1.0,
+    width: 1.0,
+    lengthSections: 1,
+    widthSections: 1,
+  });
   var createPlane = function() {
     
     var timeKey = resourceLoadNode.getAnimationController().getLocalTime();
@@ -375,6 +415,12 @@ $(document).ready(function() {
             plane.instance.setPlaneBlend(ui.value);
             viewport.redraw();
         });
+      
+      // set the frame enable or disabled
+      for(var oldKey in planes) {
+        planes[oldKey].instance.setDrawFrame(oldKey == key);
+      }
+      
       switchCamera(plane.camera);
       $("#cameralist option[value='"+plane.camera+"']").attr('selected',true);
     };

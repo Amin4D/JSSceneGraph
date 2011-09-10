@@ -64,7 +64,7 @@ operator generatePlane(
 
       positions[voff].x = x;
       positions[voff].z = z;
-      uvs[voff] = Vec2(1.0 - Scalar(j) / Scalar(widthSections), Scalar(i + 1) / Scalar(lengthSections + 1));
+      uvs[voff] = Vec2(1.0 - Scalar(j) / Scalar(widthSections), Scalar(i) / Scalar(lengthSections));
       voff++;
     }
   }

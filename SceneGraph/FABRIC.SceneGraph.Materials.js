@@ -30,6 +30,7 @@ FABRIC.SceneGraph.registerNodeType('Image', {
       height: 128,
       color: FABRIC.RT.rgba(0.0,0.0,0.0,0.0),
       url: undefined,
+      forceRefresh: false
     });
     
     var imageNode = scene.constructNode('Texture', options);
@@ -91,7 +92,9 @@ FABRIC.SceneGraph.registerNodeType('Image', {
     if (options.createLoadTextureEventHandler) {
       // Construct the handler for loading the image into texture memory.
       var redrawEventHandler = imageNode.constructEventHandlerNode('Redraw');
-      redrawEventHandler.addMember('oglTexture2D', 'OGLTexture2D', FABRIC.RT.oglTexture2D());
+      var oglTexture = FABRIC.RT.oglTexture2D();
+      oglTexture.forceRefresh = options.forceRefresh;
+      redrawEventHandler.addMember('oglTexture2D', 'OGLTexture2D', oglTexture);
       if(options.createDgNode){
         redrawEventHandler.addScope('image', dgnode);
         redrawEventHandler.preDescendBindings.append(scene.constructOperator({

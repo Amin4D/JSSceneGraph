@@ -87,7 +87,7 @@ operator loadAndBindTextureLDR(
 //  report("loadAndBindTextureLDR -> textureUnit:" + textureUnit);
   if(resource.data.size() == 0)
     return;
-  if(oglTexture2D.bufferID == 0){
+  if(oglTexture2D.bufferID == 0 || oglTexture2D.forceRefresh){
     Size width, height;
     RGBA imageLDR[];
     decodeLDRImageData(resource, width, height, imageLDR);
@@ -192,10 +192,7 @@ operator initImageFromColor(
   if(!initiated) {
     pixels.resize(width * height);
     for(var Size i=0;i<pixels.size();i++)
-    {
       pixels[i] = color;
-      pixels[i].r = pixels[i].a = 255 * Scalar(i % width) / Scalar(width);
-    }
     initiated = true;
   }
 }

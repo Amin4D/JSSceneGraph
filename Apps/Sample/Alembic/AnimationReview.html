@@ -241,6 +241,7 @@ $(document).ready(function() {
   
   // load the alembic content based on user interaction
   var selectedNode = undefined;
+  var timeRange = undefined;
   var loadAlembicAsset = function(url) {
     var assets = scene.importAssetFile(url, {
       dependentNode: viewport,
@@ -259,9 +260,10 @@ $(document).ready(function() {
         var cameraListHtml = "<option value='userCamera'>Free Camera</option>";
         
         // setup the animation time
+        timeRange = resourceLoadNode.getAnimationController().getTimeRange();
         $('#localtime').slider({
-            min: resourceLoadNode.getAnimationController().getTimeRange().x,
-            max: resourceLoadNode.getAnimationController().getTimeRange().y,
+            min: timeRange.x,
+            max: timeRange.y,
             step: 0.01
         });
         
@@ -379,6 +381,46 @@ $(document).ready(function() {
     
     viewport.redraw();
   };
+  
+  // setup hotkeys
+  window.onkeydown = function(evt) {
+    var time = scene.animation.getTime() % timeRange.y;
+    if(evt.keyCode == 37 && time > timeRange.x) {
+      time -= 1.0 / 30.0;
+      scene.animation.setTime(time);
+      $('#localtime').slider('value', time);
+      scene.redrawAllWindows();
+    } else if(evt.keyCode == 39 && time < timeRange.y) {
+      time += 1.0 / 30.0;
+      scene.animation.setTime(time);
+      $('#localtime').slider('value', time);
+      scene.redrawAllWindows();
+    } else if(evt.keyCode == 38) {
+      $('#play').button('option', {
+        label: 'Pause',
+        icons: {
+          primary: 'ui-icon-pause'
+        }
+      });
+      var localTime = $('#localtime').slider();
+      scene.animation.play( function() {
+        localTime.slider('value', resourceLoadNode.getAnimationController().getLocalTime());
+      });
+    } else if(evt.keyCode == 40) {
+      $('#play').button('option', {
+        label: 'Play',
+        icons: {
+          primary: 'ui-icon-play'
+        }
+      });
+      scene.animation.pause();
+    } else {
+      console.log(evt.keyCode);
+    }
+    //if(String.fromCharCode(evt.keyCode) == 'P'){
+  };
+  window.onkeyup = function(evt) {
+  }; 
   
   // setup all sliders
   $('#lightDirection').slider({

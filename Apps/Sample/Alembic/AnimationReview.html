@@ -253,7 +253,7 @@ $(document).ready(function() {
 
   var light = scene.constructNode('PointLight', { position: FABRIC.RT.vec3(10000, 10000, 10000) });
 
-  scene.constructNode("CameraManipulator", { targetNode:camera } );
+  var cameraManipulator = scene.constructNode("CameraManipulator", { targetNode:camera } );
 
   scene.constructNode('Instance', {
           geometryNode: scene.constructNode('Grid', {
@@ -388,25 +388,6 @@ $(document).ready(function() {
   });
   var paintPlane = function() {
     
-    var timeKey = resourceLoadNode.getAnimationController().getLocalTime();
-    timeKey = ''+parseInt(timeKey * 30 + 0.5);
-    if(planes[timeKey] != undefined)
-      return;
-    var newPlane = scene.constructNode('PaintPlaneInstance', {
-      cameraNode: viewport.getCameraNode(),
-      planeNode: planeGeometry,
-      trianglesNode: selectedNode.getGeometryNode(),
-      animationControllerNode: resourceLoadNode.getAnimationController(),
-      planeTime: resourceLoadNode.getAnimationController().getLocalTime(),
-      planeBlend: 5.0 / 30.0,
-      resolutionFactor: 0.25
-    });
-    planes[timeKey] = {
-      camera: usedCamera,
-      instance: newPlane,
-      time: resourceLoadNode.getAnimationController().getLocalTime()
-    };
-
     // setup the function to change the active plane    
     var switchPlane = function(key) {
       var plane = planes[key];
@@ -430,20 +411,39 @@ $(document).ready(function() {
       switchCamera(plane.camera);
       $("#cameralist option[value='"+plane.camera+"']").attr('selected',true);
     };
-    
-    // re-create the list html
-    var planeListHtml = "";
-    for(var key in planes) {
-      if(key == timeKey)
-        planeListHtml += "<option selected value='"+key+"'>At time "+planes[key].time+"</option>";
-      else
-        planeListHtml += "<option value='"+key+"'>At time "+planes[key].time+"</option>";
+
+    // check if we need to create a new plane
+    var timeKey = resourceLoadNode.getAnimationController().getLocalTime();
+    timeKey = ''+parseInt(timeKey * 30 + 0.5);
+    if(planes[timeKey] == undefined) {
+      var newPlane = scene.constructNode('PaintPlaneInstance', {
+        cameraNode: viewport.getCameraNode(),
+        planeNode: planeGeometry,
+        trianglesNode: selectedNode.getGeometryNode(),
+        animationControllerNode: resourceLoadNode.getAnimationController(),
+        planeTime: resourceLoadNode.getAnimationController().getLocalTime(),
+        planeBlend: 5.0 / 30.0,
+        resolutionFactor: 0.25
+      });
+      planes[timeKey] = {
+        camera: usedCamera,
+        instance: newPlane,
+        time: resourceLoadNode.getAnimationController().getLocalTime()
+      };
+  
+      // re-create the list html
+      var planeListHtml = "";
+      for(var key in planes) {
+        if(key == timeKey)
+          planeListHtml += "<option selected value='"+key+"'>At time "+planes[key].time+"</option>";
+        else
+          planeListHtml += "<option value='"+key+"'>At time "+planes[key].time+"</option>";
+      }
+      $('#planelist').html(planeListHtml).change( function (ui) {
+        switchPlane($('#planelist').attr('value'));
+      });
     }
-    $('#planelist').html(planeListHtml).change( function (ui) {
-      switchPlane($('#planelist').attr('value'));
-    });
     switchPlane(timeKey);
-    
     viewport.redraw();
   };
   
@@ -481,11 +481,19 @@ $(document).ready(function() {
         }
       });
       scene.animation.pause();
+    } else if(evt.keyCode == 80) { // P
+      cameraManipulator.disable();
+      //paintManipulator.enable();
+      paintPlane();
     } else {
-      //console.log(evt.keyCode);
+      console.log(evt.keyCode);
     }
   };
   window.onkeyup = function(evt) {
+    if(evt.keyCode == 80) { // P
+      //paintManipulator.disable();
+      cameraManipulator.enable();
+    }
   }; 
   
   // setup all sliders

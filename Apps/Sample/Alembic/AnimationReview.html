@@ -229,6 +229,40 @@ FABRIC.SceneGraph.registerNodeType('PaintPlaneInstance', {
     
     // set the material
     instanceNode.pub.setMaterialNode(materialNode.pub);
+    
+    // setup manipulation
+    var windowPos = FABRIC.RT.vec2();
+    var viewport = undefined;
+    var painting = false;
+    var paint = function(evt) {
+      //evt.viewportNode.redraw();
+      if(!painting)
+        return;
+      var mousePos = FABRIC.RT.vec2(evt.offsetX, evt.offsetY);
+      console.log(mousePos.x + " : " + mousePos.y);
+    };
+    var beginpaint = function(evt) {
+      painting = true;
+      paint(evt);
+    };
+    var endpaint = function(evt) {
+      painting = false;
+    };
+    
+    instanceNode.pub.enableManipulation = function(in_viewport) {
+      if(!viewport) {
+        viewport = scene.getPrivateInterface(in_viewport);
+      }
+      viewport.getWindowElement().addEventListener('mousemove', paint, false);
+      viewport.getWindowElement().addEventListener('mousedown', beginpaint, false);
+      viewport.getWindowElement().addEventListener('mouseup', endpaint, false);
+    };
+    instanceNode.pub.disableManipulation = function() {
+      viewport.getWindowElement().removeEventListener('mousemove', paint);
+      viewport.getWindowElement().removeEventListener('mousedown', beginpaint);
+      viewport.getWindowElement().removeEventListener('mouseup', endpaint);
+
+    };
 
     return instanceNode;    
   }});    
@@ -236,7 +270,9 @@ FABRIC.SceneGraph.registerNodeType('PaintPlaneInstance', {
 $(document).ready(function() {
 
   var scene = FABRIC.SceneGraph.createScene();
-  var viewport = scene.constructNode('Viewport', { windowElement: document.getElementById('FabricContainer') });
+  var viewport = scene.constructNode('Viewport', {
+    windowElement: document.getElementById('FabricContainer')
+  });
 
   // Create a camera to draw the scene from
   var camera = scene.constructNode('TargetCamera', {
@@ -386,6 +422,7 @@ $(document).ready(function() {
     lengthSections: 1,
     widthSections: 1,
   });
+  var currentPlane = undefined;
   var paintPlane = function() {
     
     // setup the function to change the active plane    
@@ -393,6 +430,7 @@ $(document).ready(function() {
       var plane = planes[key];
       if(plane == undefined)
         return;
+      currentPlane = plane;
       
       scene.animation.setTime(plane.time);
       $('#localtime').slider('value', plane.time);
@@ -483,15 +521,17 @@ $(document).ready(function() {
       scene.animation.pause();
     } else if(evt.keyCode == 80) { // P
       cameraManipulator.disable();
-      //paintManipulator.enable();
+      if(currentPlane)
+        currentPlane.instance.enableManipulation(viewport);
       paintPlane();
     } else {
-      console.log(evt.keyCode);
+      //console.log(evt.keyCode);
     }
   };
   window.onkeyup = function(evt) {
     if(evt.keyCode == 80) { // P
-      //paintManipulator.disable();
+      if(currentPlane)
+        currentPlane.instance.disableManipulation();
       cameraManipulator.enable();
     }
   }; 
@@ -527,15 +567,6 @@ $(document).ready(function() {
       max: 2.0,
       step: 1.0/30.0,
       value: 5.0/30.0
-    });
-  
-  $('#paintPlane').button({
-      text: true,
-    })
-    .click(function() {
-      if(!resourceLoadNode)
-        return;
-      paintPlane();
     });
   
   $('#switchcamera').button({
@@ -632,7 +663,6 @@ $(document).ready(function() {
             </div><!--content-->
             <!-- <h2>Planes</h2> -->
             <div class="content">
-                <button id="paintPlane" style="margin-top:10px;">Paint</button>
                 <select multi size=3 id='planelist' style='width: 200px'>
                 </select>
                 <div id='planeblend' style="margin-top:10px;"></div>

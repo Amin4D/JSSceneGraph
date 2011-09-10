@@ -87,6 +87,8 @@ FABRIC.SceneGraph.registerNodeType('PaintPlaneInstance', {
     
     // get the corners of the triangles object
     var bbox = trianglesNode.pub.getBoundingBox();
+    var cameraXfo = cameraNode.pub.getTransformNode().getGlobalXfo();
+    /*
     var corners = [];
     corners.push(FABRIC.RT.vec3(bbox.min.x,bbox.min.y,bbox.min.z));
     corners.push(FABRIC.RT.vec3(bbox.max.x,bbox.min.y,bbox.min.z));
@@ -96,7 +98,6 @@ FABRIC.SceneGraph.registerNodeType('PaintPlaneInstance', {
     corners.push(FABRIC.RT.vec3(bbox.max.x,bbox.min.y,bbox.max.z));
     corners.push(FABRIC.RT.vec3(bbox.min.x,bbox.max.y,bbox.max.z));
     corners.push(FABRIC.RT.vec3(bbox.max.x,bbox.max.y,bbox.max.z));
-    var cameraXfo = cameraNode.pub.getTransformNode().getGlobalXfo();
     var minDepth = -10000.0;
     for(var i=0;i<8;i++) {
       corners[i] = cameraXfo.projectInv(FABRIC.RT.xfo({tr: corners[i]})).tr;
@@ -104,6 +105,10 @@ FABRIC.SceneGraph.registerNodeType('PaintPlaneInstance', {
         minDepth = corners[i].z;
     }
     var center = FABRIC.RT.vec3(0,0,minDepth);
+    */
+    var center = bbox.min.add(bbox.max).scale(0.5);
+    center = cameraXfo.projectInv(FABRIC.RT.xfo({tr: center})).tr;
+    center.x = center.y = 0.0;
     var planeXfo = cameraXfo.project(FABRIC.RT.xfo({
       tr: center,
       ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(1,0,0),90)
@@ -163,6 +168,7 @@ FABRIC.SceneGraph.registerNodeType('PaintPlaneInstance', {
     // create a flat texture material
     var materialNode = scene.constructNode('FlatBlendTextureMaterial', {
       textureNode: textureNode.pub,
+      disableOptions: [FABRIC.SceneGraph.OpenGLConstants.GL_DEPTH_TEST],
       enableOptions: [FABRIC.SceneGraph.OpenGLConstants.GL_BLEND],
       blendModeSfactor: FABRIC.SceneGraph.OpenGLConstants.GL_SRC_ALPHA,
       blendModeDfactor: FABRIC.SceneGraph.OpenGLConstants.GL_ONE_MINUS_SRC_ALPHA,

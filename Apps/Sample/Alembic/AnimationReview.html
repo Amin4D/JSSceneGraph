@@ -341,12 +341,13 @@ $(document).ready(function() {
       resolutionFactor: 0.25
     });
     planes[timeKey] = {
+      camera: usedCamera,
       instance: newPlane,
       time: resourceLoadNode.getAnimationController().getLocalTime()
     };
 
     // setup the function to change the active plane    
-    var setActivePlane = function(key) {
+    var switchPlane = function(key) {
       var plane = planes[key];
       if(plane == undefined)
         return;
@@ -359,7 +360,8 @@ $(document).ready(function() {
             plane.instance.setPlaneBlend(ui.value);
             viewport.redraw();
         });
-      viewport.redraw();
+      switchCamera(plane.camera);
+      $("#cameralist option[value='"+plane.camera+"']").attr('selected',true);
     };
     
     // re-create the list html
@@ -371,9 +373,9 @@ $(document).ready(function() {
         planeListHtml += "<option value='"+key+"'>At time "+planes[key].time+"</option>";
     }
     $('#planelist').html(planeListHtml).change( function (ui) {
-      setActivePlane($('#planelist').attr('value'));
+      switchPlane($('#planelist').attr('value'));
     });
-    setActivePlane(timeKey);
+    switchPlane(timeKey);
     
     viewport.redraw();
   };
@@ -500,26 +502,26 @@ $(document).ready(function() {
         </div><!--viewer-->
         <div id="sidebar">
           <div class="box">
-            <h2>Scene</h2>
+            <!--<h2>Scene</h2> -->
             <div class="content">
                 <div id='lightDirection' style="margin-top:10px;"></div>
-                <select multi size=3 id='cameralist' style='width: 200px; margin-top: 10px'>
+                <select multi size=2 id='cameralist' style='width: 200px; margin-top: 10px'>
                   <option value='userCamera'>Free Camera</option>
                 </select>
             </div><!--content-->
-            <h2>Objects</h2>
+            <!--<h2>Objects</h2> -->
             <div class="content">
-                <select multi size=5 id='objectlist' style='width: 200px'>
+                <select multi size=2 id='objectlist' style='width: 200px'>
                 </select>
             </div><!--content-->
-            <h2>Planes</h2>
+            <!-- <h2>Planes</h2> -->
             <div class="content">
                 <button id="createplane" style="margin-top:10px;">Create</button>
-                <select multi size=10 id='planelist' style='width: 200px'>
+                <select multi size=3 id='planelist' style='width: 200px'>
                 </select>
                 <div id='planeblend' style="margin-top:10px;"></div>
             </div><!--content-->
-            <h2>Playback</h2>
+            <!--<h2>Playback</h2> -->
             <div class="content">
                 <button id="play" style="margin-top:10px;">Play</button>
                 <div id='localtime' style="margin-top:10px;"></div>

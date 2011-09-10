@@ -1,0 +1,11 @@
+
+
+use Quat;
+use Xfo;
+
+operator camshaftOp( io Xfo xfo, io Scalar camshaftPhase, io Scalar crankPhase ) 
+{
+  // The camshaft turns at exactly half the speed of the crankshaft
+  camshaftPhase = crankPhase * 0.5;
+  xfo.ori = axisAndAngleToQuat( Vec3( 0.0, 0.0, 1.0 ), -camshaftPhase ); 
+}

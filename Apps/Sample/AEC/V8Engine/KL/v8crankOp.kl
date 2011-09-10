@@ -1,0 +1,9 @@
+
+use Quat;
+use Xfo;
+
+operator crankOp( io Xfo xfo, io Scalar crankPhase, io Scalar engineSpeed, io Scalar timeMS ) 
+{ 
+  crankPhase += engineSpeed * 0.1;
+  xfo.ori = axisAndAngleToQuat( Vec3( 0.0, 0.0, 1.0 ), -crankPhase ); 
+}

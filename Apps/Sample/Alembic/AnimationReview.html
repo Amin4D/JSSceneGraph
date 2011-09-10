@@ -380,7 +380,7 @@ $(document).ready(function() {
     lengthSections: 1,
     widthSections: 1,
   });
-  var createPlane = function() {
+  var paintPlane = function() {
     
     var timeKey = resourceLoadNode.getAnimationController().getLocalTime();
     timeKey = ''+parseInt(timeKey * 30 + 0.5);
@@ -515,13 +515,13 @@ $(document).ready(function() {
       value: 5.0/30.0
     });
   
-  $('#createplane').button({
+  $('#paintPlane').button({
       text: true,
     })
     .click(function() {
       if(!resourceLoadNode)
         return;
-      createPlane();
+      paintPlane();
     });
   
   $('#switchcamera').button({
@@ -618,7 +618,7 @@ $(document).ready(function() {
             </div><!--content-->
             <!-- <h2>Planes</h2> -->
             <div class="content">
-                <button id="createplane" style="margin-top:10px;">Create</button>
+                <button id="paintPlane" style="margin-top:10px;">Paint</button>
                 <select multi size=3 id='planelist' style='width: 200px'>
                 </select>
                 <div id='planeblend' style="margin-top:10px;"></div>

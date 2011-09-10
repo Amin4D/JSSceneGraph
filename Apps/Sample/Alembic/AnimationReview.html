@@ -282,7 +282,7 @@ $(document).ready(function() {
             });
             objectListHtml += "<option value='"+name+"'>"+name.substring(name.lastIndexOf('/')+1,1000)+"</option>"
             if(!selectedNode)
-              selectedNode = parsedNode;
+              selectedNode = parsedInstances[name];
           }
           else if(parsedNode.isTypeOf('Camera')) {
             
@@ -300,7 +300,7 @@ $(document).ready(function() {
         $('#objectlist').html(objectListHtml).change( function(ui) {
           
           var selectedName = $('#objectlist').attr('value');
-          selectedNode = parsedNode[selectedName];
+          selectedNode = parsedInstances[selectedName];
           for(var name in parsedInstances) {
             var mat = parsedInstances[name].getMaterialNode();
             if(name == selectedName)
@@ -336,7 +336,7 @@ $(document).ready(function() {
     var newPlane = scene.constructNode('PaintPlaneInstance', {
       cameraNode: viewport.getCameraNode(),
       planeNode: planeGeometry,
-      trianglesNode: selectedNode,
+      trianglesNode: selectedNode.getGeometryNode(),
       animationControllerNode: resourceLoadNode.getAnimationController(),
       planeTime: resourceLoadNode.getAnimationController().getLocalTime(),
       planeBlend: 5.0 / 30.0,
@@ -387,11 +387,13 @@ $(document).ready(function() {
     var time = scene.animation.getTime() % timeRange.y;
     if(evt.keyCode == 37 && time > timeRange.x) {
       time -= 1.0 / 30.0;
+      scene.animation.pause();
       scene.animation.setTime(time);
       $('#localtime').slider('value', time);
       scene.redrawAllWindows();
     } else if(evt.keyCode == 39 && time < timeRange.y) {
       time += 1.0 / 30.0;
+      scene.animation.pause();
       scene.animation.setTime(time);
       $('#localtime').slider('value', time);
       scene.redrawAllWindows();

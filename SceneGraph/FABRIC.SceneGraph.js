@@ -927,14 +927,26 @@ FABRIC.SceneGraph.registerNodeType('Viewport', {
 
 
     var fabricwindow = scene.bindViewportToWindow(windowElement, viewportNode);
-    redrawEventHandler.addScope('window', fabricwindow.windowNode);
-    if(scene.getScenePreRedrawEventHandler()){
-      fabricwindow.redrawEvent.appendEventHandler(scene.getScenePreRedrawEventHandler());
-    }
-    fabricwindow.redrawEvent.appendEventHandler(redrawEventHandler);
-    if(scene.getScenePostRedrawEventHandler()){
-      fabricwindow.redrawEvent.appendEventHandler(scene.getScenePostRedrawEventHandler());
-    }
+    
+    FABRIC.appendOnResolveAsyncTaskCallback(function(label, countRemaining){
+      if(countRemaining===0){
+        redrawEventHandler.addScope('window', fabricwindow.windowNode);
+        if(scene.getScenePreRedrawEventHandler()){
+          fabricwindow.redrawEvent.appendEventHandler(scene.getScenePreRedrawEventHandler());
+        }
+        fabricwindow.redrawEvent.appendEventHandler(redrawEventHandler);
+        if(scene.getScenePostRedrawEventHandler()){
+          fabricwindow.redrawEvent.appendEventHandler(scene.getScenePostRedrawEventHandler());
+        }
+        if(viewPortRaycastEventHandler){
+          // the sceneRaycastEventHandler propogates the event throughtout the scene.
+          viewPortRaycastEventHandler.appendChildEventHandler(scene.getSceneRaycastEventHandler());
+        }
+        fabricwindow.resize();
+        viewportNode.pub.redraw();
+        return true;
+      }
+    });
     
     var propagationRedrawEventHandler = viewportNode.constructEventHandlerNode('DrawPropagation');
     redrawEventHandler.appendChildEventHandler(propagationRedrawEventHandler);
@@ -983,10 +995,6 @@ FABRIC.SceneGraph.registerNodeType('Viewport', {
       // The operators us the collected scopes to calculate the ray.
       viewPortRaycastEvent = viewportNode.constructEventNode('RaycastEvent');
       viewPortRaycastEvent.appendEventHandler(viewPortRaycastEventHandler);
-
-      // the sceneRaycastEventHandler propogates the event throughtout the scene.
-      viewPortRaycastEventHandler.appendChildEventHandler(scene.getSceneRaycastEventHandler());
-
     }
 
     var getElementCoords = function(evt) {
@@ -1342,7 +1350,13 @@ FABRIC.SceneGraph.registerNodeType('Viewport', {
       onloadCallbacks = [];
 
       if (options.redrawOnLoad) {
-        scene.pub.redrawAllWindows();
+        // PT 09-09-2011 Note: this is a hack to force the redrawing after the resource has
+        // really finished loading. I'm not sure if there is a bug that means
+        // this callback is called early. For the Alpha11 release I am adding this
+        // here, but it needs to be thoroughly understood and possibly removed. 
+        setTimeout(function(){
+          scene.pub.redrawAllWindows();
+        }, 100);
       }
     });
 

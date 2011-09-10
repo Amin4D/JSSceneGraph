@@ -29,6 +29,7 @@
     <script type="text/javascript" src="../../../SceneGraph/RT/Color.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/RT/Euler.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/RT/Ray.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/CollectedPoints.js" charset="utf-8"></script>
     
     <script type="text/javascript" src="../../../SceneGraph/RT/Bone.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/RT/BezierKeyframe.js" charset="utf-8"></script>
@@ -46,13 +47,135 @@
     <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Kinematics.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Characters.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.CharacterSolvers.js" charset="utf-8"></script>
+    
     <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.DebugGeometry.js" charset="utf-8"></script>
     <script type="text/javascript" src="./JS/Muscle.js" charset="utf-8"></script>
 
     
     <script type="text/javascript">
+     
+FABRIC.SceneGraph.registerNodeType('TransformedGeometry', {
+  factoryFn: function(options, scene) {
+    options = scene.assignDefaults(options, {
+        baseGeometryNode: undefined,
+        xfo: FABRIC.RT.xfo()
+      });
+    
+    var transformedGeometry = scene.constructNode('GeometryDataCopy', {
+      name: 'TransformedGeometry',
+      baseGeometryNode:options.baseGeometryNode
+    });
+  
+    transformedGeometry.pub.addVertexAttributeValue('positions', 'Vec3', { genVBO:true } );
+    transformedGeometry.pub.addVertexAttributeValue('normals', 'Vec3', { genVBO:true } );
+    transformedGeometry.pub.addUniformValue('xfo', 'Xfo', options.xfo);
+    transformedGeometry.getAttributesDGNode().bindings.append(
+      scene.constructOperator({
+        operatorName: 'transformMesh',
+        srcCode: '\n\
+use Vec3;\n\
+use Quat;\n\
+use Xfo;\n\
+operator transformMesh(\n\
+  io Xfo xfo,\n\
+  io Vec3 parentspositions<>,\n\
+  io Vec3 parentnormals<>,\n\
+  io Vec3 position,\n\
+  io Vec3 normal,\n\
+  in Size index\n\
+) {\n\
+  position = xfo.transform(parentspositions[index]);\n\
+  normal = xfo.ori.rotateVector(parentnormals[index]);\n\
+}\n\
+        ',
+        entryFunctionName: 'transformMesh',
+        parameterLayout: [
+          'uniforms.xfo',
+          'parentattributes.positions<>',
+          'parentattributes.normals<>',
+          'self.positions',
+          'self.normals',
+          'self.index'
+        ]
+      }));
+    return transformedGeometry;
+  
+  }});
+
+/*
+FABRIC.SceneGraph.registerNodeType('PaintSkinWeightsManipulator', {
+  factoryFn: function(options, scene) {
+    scene.assignDefaults(options, {
+      mode: 0
+      });
     
     
+    var paintSkinWeightsManipulator = scene.constructNode('PaintManipulator', options);
+    var paintableNodes = [];
+    var paintableNodePaintHandlers = [];
+    paintSkinWeightsManipulator.pub.addPaintableNode = function(node) {
+      if (!node.isTypeOf || !node.isTypeOf('Instance')) {
+        throw ('Incorrect type. Must assign a Instance');
+      }
+
+      if (!node.getGeometryNode().isTypeOf('Skin')) {
+        throw ('Incorrect type. Must assign a Skin');
+      }
+
+      var paintInstanceEventHandler,
+        instanceNode = scene.getPrivateInterface(node),
+        geometryNode = scene.getPrivateInterface(instanceNode.pub.getGeometryNode()),
+        transformNode = scene.getPrivateInterface(instanceNode.pub.getTransformNode()),
+        paintOperator;
+
+      paintInstanceEventHandler = paintManipulatorNode.constructEventHandlerNode('Paint' + node.getName());
+      paintInstanceEventHandler.addScope('boundgeometryattributes', geometryNode.getBoundSkin().getAttributesDGNode());
+      paintInstanceEventHandler.addScope('geometryattributes', geometryNode.getAttributesDGNode());
+      paintInstanceEventHandler.addScope('geometryuniforms', geometryNode.getAttributesDGNode());
+      paintInstanceEventHandler.addScope('transform', transformNode.getDGNode());
+      paintInstanceEventHandler.addScope('instance', instanceNode.getDGNode());
+
+      // The selector will return the node bound with the given binding name.
+      var paintingOpDef = {
+          operatorName: 'paintSkinWeights',
+          srcFile: './KL/paintSkinOp.kl',
+          entryFunctionName: 'paintSkinWeights',
+          parameterLayout: [
+            'paintData.cameraMatrix',
+            'paintData.projectionMatrix',
+            'paintData.aspectRatio',
+  
+            'paintData.brushPos',
+            'paintData.brushSize',
+            'paintData.mode',
+  
+            'transform.globalXfo',
+            'geometryattributes.positions[]',
+            'geometryattributes.normals[]',
+            'geometryattributes.vertexColors[]',
+            
+            'boundgeometryattributes.stickWeight[]',
+            'boundgeometryattributes.slideWeight[]',
+            'boundgeometryattributes.bulgeWeight[]'
+          ],
+          async: false
+        };
+      }
+      paintInstanceEventHandler.setSelector('instance', scene.constructOperator(paintingOpDef));
+      paintEventHandler.appendChildEventHandler(paintInstanceEventHandler);
+
+      paintableNodes.push(instanceNode);
+      paintableNodePaintHandlers.push(paintInstanceEventHandler);
+    };
+    
+    var paintEventHandler = vertexColorsPaintManipulator.getPaintEventHandler();
+    paintEventHandler.addMember('mode', 'Integer', options.mode);
+    paintSkinWeightsManipulator.addMemberInterface(paintEventHandler, 'mode', true);
+    
+    return paintSkinWeightsManipulator;
+  }});
+*/
+
 $(document).ready(function() {
   
   $('#play').button({
@@ -74,6 +197,11 @@ $(document).ready(function() {
     backgroundColor: FABRIC.RT.rgb(0.0, 0.05, 0.15),
     enableRaycasting: true
   });
+  
+  viewport.setBackgroundTextureImage(scene.constructNode('Image', {
+    url: '../BasicDemos/Resources/fabric-demo-gradient.png'
+  }));
+  
 
   // Create a camera to draw the scene from
   var camera = scene.constructNode('TargetCamera', {
@@ -82,13 +210,12 @@ $(document).ready(function() {
       position: FABRIC.RT.vec3(0, 5, 10).scale(1.5),
       target: FABRIC.RT.vec3(0, 0, 0)
     });
-
-  scene.constructNode("CameraManipulator", { targetNode:camera } );
-
+  
   viewport.setCameraNode(camera);
-  scene.constructNode("CameraManipulator", { targetNode:camera } );
+  var cameraManipulator = scene.constructNode("CameraManipulator", { targetNode:camera } );
   
-  
+  var light = scene.constructNode('PointLight', { position: FABRIC.RT.vec3(420.0, 1000.0, 600.0) });
+  /*
   // create the scene grid
   scene.constructNode('Instance', {
       geometryNode: scene.constructNode('Grid', {
@@ -98,16 +225,16 @@ $(document).ready(function() {
         sections_z: 20 }),
       materialNode: scene.constructNode('FlatMaterial', { color: FABRIC.RT.rgb(0.4, 0.4, 0.4) })
     });
-  
+  */
   // first create a skeleton
   var skeleton = scene.constructNode('CharacterSkeleton');
 
   skeleton.addBone({name: 'anchorLeft', referencePose: FABRIC.RT.xfo({
-      tr: FABRIC.RT.vec3(-6, 5, 0)
+      tr: FABRIC.RT.vec3(-6, 0, 0)
     }) });
   
   skeleton.addBone({name: 'anchorRight', referencePose: FABRIC.RT.xfo({
-      tr: FABRIC.RT.vec3(6, 5, 0)
+      tr: FABRIC.RT.vec3(6, 0, 0)
     }) });
 
   // create the rig
@@ -115,6 +242,7 @@ $(document).ready(function() {
       skeletonNode: skeleton,
       computeInverseXfos: true
     });
+  
   
   //////////////////////////////////////////////////////////////
   // Manipulators
@@ -144,20 +272,32 @@ $(document).ready(function() {
     parentMemberIndex: skeleton.getBoneIndex('anchorRight'),
     radius: 1.0
   });
-      */
+  /*
   scene.constructNode('CharacterSkeletonDebug', {
       characterRigNode: rig,
       color: FABRIC.RT.rgba(1.0, 1.0, 1.0, 1.0),
       boneradius: 0.25
     });
-  
-  
+  */
+  //////////////////////////////////////////////////////////////
+  //
+  var plane = scene.constructNode('Plane', {
+      length: 8,
+      width: 8,
+      lengthSections: 16,
+      widthSections: 16
+    });
+  var transformedMesh = scene.constructNode('TransformedGeometry', {
+      baseGeometryNode: plane,
+      xfo: FABRIC.RT.xfo({ tr: FABRIC.RT.vec3(0, -0.5, 0.5) })
+    });
+      
   //////////////////////////////////////////////////////////////
   // Muscle System
   
   var muscleSystem = scene.constructNode('MuscleSystem', {
       characterRig: rig,
-      gravity: FABRIC.RT.vec3(0, -9.0, 0)
+      gravity: FABRIC.RT.vec3(0, 0.0, 0)
     });
   
   muscleSystem.addMuscle( {
@@ -166,6 +306,100 @@ $(document).ready(function() {
       })
     });
   
+  var skin = scene.constructNode('MuscleSkinDeformation', {
+      muscleSystem: muscleSystem,
+      baseSkinMesh: transformedMesh
+    });
+  
+  
+  var skinInst = scene.constructNode('Instance', {
+      geometryNode: skin
+    })
+    .setMaterialNode( scene.constructNode('VertexColorMaterial', {
+        diffuseColor: FABRIC.RT.rgb(0.8, 0.5, 0.2),
+        lightNode: light
+      }))
+    .setMaterialNode( scene.constructNode('WireframeMaterial', {
+        color: FABRIC.RT.rgb(0.2, 0.2, 0.2, 1)
+      }));
+
+  var paintManipulator = scene.constructNode('PaintManipulator', {
+      enabled:false
+    });
+  paintManipulator.addPaintableNode(skinInst);
+  
+
+  var onPaintStickFn = function(evt) {
+    if( evt.paintData.points.length == 0 ){
+      return;
+    }
+    var paintData = evt.paintData,
+      vertexData = skin.getBulkAttributeData( paintData.points ),
+      weight,
+      brushSize = paintManipulator.getBrushSize(),
+      modifiedData = [];
+    
+    modifiedData.length = paintData.points.length;
+    for( var i=0; i< paintData.points.length; i++ ){
+      weight = (Math.cos( Math.PI * (paintData.distances[i] / brushSize) ) * 0.5 ) + 0.5;
+      modifiedData[i] = {
+       sliceIndex: paintData.points[i],
+       data: { stickWeight: vertexData[i].stickWeight + ((1.0 - vertexData[i].stickWeight) * weight ) }
+      };
+    }
+    skin.setBulkAttributeData( modifiedData );
+   //  viewport.redraw();
+  };
+  
+  var onPaintSlideFn = function(evt) {
+    if( evt.paintData.points.length == 0 ){
+      return;
+    }
+    var paintData = evt.paintData,
+      vertexData = skin.getBulkAttributeData( paintData.points ),
+      weight,
+      brushSize = paintManipulator.getBrushSize(),
+      modifiedData = [];
+    
+    modifiedData.length = paintData.points.length;
+    for( var i=0; i< paintData.points.length; i++ ){
+      weight = (Math.cos( Math.PI * (paintData.distances[i] / brushSize) ) * 0.5 ) + 0.5;
+      modifiedData[i] = {
+       sliceIndex: paintData.points[i],
+       data: { slideWeight: vertexData[i].slideWeight + ((1.0 - vertexData[i].slideWeight) * weight ) }
+      };
+    }
+    skin.setBulkAttributeData( modifiedData );
+   //  viewport.redraw();
+  };
+  
+    // Switch to stick weight painting when the 'Q' key is pressed
+    // and switch to slide weight painting when the 'W' key is pressed
+  window.onkeydown = function(evt) {
+    if(String.fromCharCode(evt.keyCode) == 'Q'){
+      cameraManipulator.disable();
+      paintManipulator.enable();
+      paintManipulator.addEventListener('onpaint', onPaintStickFn);
+    }
+    else if(String.fromCharCode(evt.keyCode) == 'W'){
+      cameraManipulator.disable();
+      paintManipulator.enable();
+      paintManipulator.addEventListener('onpaint', onPaintSlideFn);
+    }
+  };
+  window.onkeyup = function(evt) {
+    if(String.fromCharCode(evt.keyCode) == 'Q'){
+      cameraManipulator.enable();
+      paintManipulator.disable();
+      paintManipulator.removeEventListener('onpaint', onPaintStickFn);
+    }
+    else if(String.fromCharCode(evt.keyCode) == 'W'){
+      cameraManipulator.enable();
+      paintManipulator.disable();
+      paintManipulator.removeEventListener('onpaint', onPaintSlideFn);
+    }
+  };
+    
   $('#loadingDialog').dialog({
     modal: true
   });

@@ -54,7 +54,7 @@ FABRIC = (function() {
     // Check the currently installed version.
     // TODO: This code will be removed once we get to the end of beta.
     var version = context.build.getPureVersion().split('.');
-    var requiredVersion = [1,0,10];
+    var requiredVersion = [1,0,11];
     var cmpVersions = function (lhs, rhs) {
       if (lhs[0] < rhs[0])
         return -1;
@@ -117,8 +117,8 @@ FABRIC = (function() {
 
       var embedTag = document.createElement('embed');
       embedTag.setAttributeNS(null, 'type', 'application/fabric');
-      embedTag.setAttributeNS(null, 'width', element.offsetWidth);
-      embedTag.setAttributeNS(null, 'height', element.offsetHeight);
+      embedTag.setAttributeNS(null, 'width', 1);
+      embedTag.setAttributeNS(null, 'height', 1);
       embedTag.setAttributeNS(null, 'windowType', '3d');
       embedTag.setAttributeNS(null, 'contextID', this.getContextID());
 
@@ -140,7 +140,10 @@ FABRIC = (function() {
           embedTag.height = element.offsetHeight;
         }
       };
-      onDOMWindowResize();
+      embedTag.width = 1;
+      embedTag.height = 1;
+      // the element will get resized to the correct size
+      // by the client (Viewport) when it is ready
       window.addEventListener('resize', onDOMWindowResize, false);
 
       var result = {
@@ -157,6 +160,7 @@ FABRIC = (function() {
         domElement: embedTag,
         windowNode: context.VP.viewPort.getWindowNode(),
         redrawEvent: context.VP.viewPort.getRedrawEvent(),
+        resize: onDOMWindowResize,
         needsRedraw: function() {
           context.VP.viewPort.needsRedraw();
         },
@@ -198,7 +202,6 @@ FABRIC = (function() {
         var queryOpGlew = context.DG.createOperator('getGlewSupported');
         queryOpGlew.setEntryFunctionName('getGlewSupported');
         queryOpGlew.setSourceCode('use FabricOGL; operator getGlewSupported(io String token, io Boolean supported){\n' +
-          '  report("query: "+token);\n' +
           '  if(token.length() > 0) glewIsSupported(token,supported);\n' +
           '}');
         var queryOpGlewBinding = context.DG.createBinding();

@@ -32,6 +32,7 @@
     <script type="text/javascript" src="../../../SceneGraph/RT/Bone.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/RT/OGLShaderProgram.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/RT/OGLBuffer.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/OGLTexture2D.js" charset="utf-8"></script>
 
     <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Lights.js" charset="utf-8"></script>
@@ -57,6 +58,10 @@ $(document).ready(function() {
     windowElement: document.getElementById('FabricContainer')
   });
 
+  viewport.setBackgroundTextureImage(scene.constructNode('Image', {
+    url: '../BasicDemos/Resources/fabric-demo-gradient.png'
+  }));
+  
   // Create a camera to draw the scene from
   var camera = scene.constructNode('TargetCamera', {
       position: FABRIC.RT.vec3(0, 14, 14),
@@ -76,7 +81,7 @@ $(document).ready(function() {
         size_z: 40.0,
         sections_x: 20,
         sections_z: 20 }),
-      materialNode: scene.constructNode('FlatMaterial', { color: FABRIC.RT.rgb(0.4, 0.4, 0.4) })
+      materialNode: scene.constructNode('FlatMaterial', { color: FABRIC.RT.rgb(0.2, 0.2, 0.2) })
     });
 
   // first create a skeleton

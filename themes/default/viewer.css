@@ -252,3 +252,62 @@
 			border: solid 1px #000;
 		}
 
+
+/* STATUSBAR
+-------------------------------------------------------------------- */
+
+
+/* SIDEBAR
+-------------------------------------------------------------------- */
+#indexpage{
+	position:relative;
+	right:0;
+	top:0;
+	bottom:0;
+	background-color: #222;
+	border-left: solid 1px #111;
+	}
+	#indexpage .box{
+		margin:10px;
+		padding:0;
+	}
+	#indexpage .box h2{
+		padding: 10px 10px 10px 10px;
+		margin: 0 0 0 0;
+		font: bold 15px/100% Arial, Helvetica, sans-serif;
+		letter-spacing: -1px;
+		color: #CCC;
+		background-image:url(_img/box-bg.gif);
+		-moz-border-radius-topleft: 6px;
+		-moz-border-radius-topright: 6px;
+		-webkit-border-top-left-radius: 6px;
+		-webkit-border-top-right-radius: 6px;
+		-moz-box-shadow: rgba(0,0,0, 0.8) 0px 0px 3px;
+		-webkit-box-shadow: rgba(0, 0, 0, 0.8) 0px 0px 3px;
+		border: solid 1px #000;
+		}
+		#indexpage .box .content{
+			padding: 10px;
+			font: normal 13px/100% Arial, Helvetica, sans-serif;
+			color: #999;
+			line-height: 120%;
+			background-color: #111;
+			-moz-border-radius-bottomright: 6px;
+			-moz-border-radius-bottomleft: 6px;
+			-webkit-border-bottom-right-radius: 6px;
+			-webkit-border-bottom-left-radius: 6px;
+			-moz-box-shadow: rgba(0,0,0, 0.8) 0px 0px 3px;
+			-webkit-box-shadow: rgba(0, 0, 0, 0.8) 0px 0px 3px;
+			border: solid 1px #000;
+		}
+
+
+
+.indexPageLI{
+  margin-top:5px;
+}
+.indexPageContent{
+  font: normal 13px/100% Arial, Helvetica, sans-serif;
+  color: #999;
+  line-height: 120%;
+}

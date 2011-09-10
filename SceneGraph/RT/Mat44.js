@@ -90,6 +90,7 @@ FABRIC.RT.mat44 = function(row0, row1, row2, row3) {
                                                           arguments[4], arguments[5], arguments[6], arguments[7],
                                                           arguments[8], arguments[9], arguments[10], arguments[11],
                                                           arguments[12], arguments[13], arguments[14], arguments[15]);
+  throw("Incorrect number of arguments for Mat44 constructor.");
 };
 
 FABRIC.RT.Mat44.prototype = {

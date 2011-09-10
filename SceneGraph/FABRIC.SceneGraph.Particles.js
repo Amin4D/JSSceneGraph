@@ -76,7 +76,7 @@ FABRIC.SceneGraph.registerNodeType('Particles', {
               sections_x: options.x_count + 1,
               sections_z: options.z_count + 1
             }),
-            materialNode: scene.pub.constructNode('FlatMaterial', { color: FABRIC.RT.rgb(0.3, 0.3, 0.3) })
+            materialNode: scene.pub.constructNode('FlatMaterial', { color: FABRIC.RT.rgb(0.2, 0.2, 0.2) })
           });
       }
 

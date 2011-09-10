@@ -581,7 +581,7 @@ FABRIC.SceneGraph.registerNodeType('Instance', {
             preProcessorDefinitions: preProcessorDefinitions,
             parameterLayout: [
               'shader.shaderProgram',
-              'transform.' + transformNodeMember + '[]',
+              'transform.' + transformNodeMember + '<>',
               'self.transformNodeIndex',
               'camera.cameraMat44',
               'camera.projectionMat44'
@@ -692,9 +692,14 @@ FABRIC.SceneGraph.registerNodeType('Instance', {
       materialNodes.push(node);
       return instanceNode.pub;
     };
-    instanceNode.pub.removeMaterialNode = function(node) {
-      node = scene.getPrivateInterface(node);
-      var index = materialNodes.indexOf(node);
+    instanceNode.pub.removeMaterialNode = function(val) {
+      var index = -1;
+      if(typeof val == 'number'){
+        index = val;
+      }else{
+        node = scene.getPrivateInterface(val);
+        index = materialNodes.indexOf(node);
+      }
       if (index === -1) {
         throw (':Material not assigned');
       }

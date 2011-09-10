@@ -12,8 +12,9 @@ operator alembicLoad(
   io Integer archiveID,
   io Integer numSamples
 ) {
-  if(resource.data.dataSize() > 0)
+  if(resource.data.dataSize() > 0) {
     FabricALEMBICDecode(resource.data.data(), resource.data.dataSize(), archiveID, numSamples);
+  }
 }
 
 operator alembicSetSample(
@@ -55,8 +56,9 @@ operator alembicParsePolyMeshCount(
   io String identifier,
   io Size count
 ) {
-  if(count <= 1)
+  if(count <= 1){
     FabricALEMBICParsePolyMeshCount(archiveID,identifier,count);
+  }
 }
 
 operator alembicParsePolyMeshUniforms(
@@ -64,8 +66,9 @@ operator alembicParsePolyMeshUniforms(
   io String identifier,
   io Integer indices[]
 ) {
-  if(indices.size() == 0)
+  if(indices.size() == 0){
     FabricALEMBICParsePolyMeshUniforms(archiveID,identifier,indices);
+  }
 }
 
 operator alembicParsePolyMeshAttributes(
@@ -77,6 +80,7 @@ operator alembicParsePolyMeshAttributes(
   io Boolean uvsLoaded,
   io Vec2 uvs<>
 ) {
-  if(vertices.size() > 0)
+  if(vertices.size() > 0){
     FabricALEMBICParsePolyMeshAttributes(archiveID,identifier,sample,vertices,normals,uvsLoaded,uvs);
+  }
 }

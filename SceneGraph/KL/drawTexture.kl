@@ -58,7 +58,8 @@ function drawTexture(
 
   glUniform1i( smpLocation, textureUnit );
   glPushAttrib(GL_TEXTURE_BIT | GL_ENABLE_BIT | GL_DEPTH_BUFFER_BIT);
-  
+  glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT);
+
   glEnable(GL_TEXTURE_2D);
   glDisable(GL_DEPTH_TEST);
   glDisable(GL_CULL_FACE); 
@@ -117,6 +118,7 @@ function drawTexture(
   glDrawElements(GL_QUADS, idx.size(), GL_UNSIGNED_INT, NULL);
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
+  glPopClientAttrib();
   glPopAttrib();
 
   bufferIDArray[0] = bufferID0; glDeleteBuffers(1, bufferIDArray);

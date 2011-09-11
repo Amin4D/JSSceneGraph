@@ -8,29 +8,24 @@ FABRIC.SceneGraph.registerNodeType('CharacterMesh', {
 
     var characterMeshNode = scene.constructNode('Triangles', options);
     
-    characterMeshNode.pub.setAttributeDynamic('positions');
-    
     characterMeshNode.pub.addVertexAttributeValue('boneIds', 'Vec4', { genVBO:true } );
     characterMeshNode.pub.addVertexAttributeValue('boneWeights', 'Vec4', { genVBO: true });
     
     characterMeshNode.pub.addUniformValue('invmatrices', 'Mat44[]');
     characterMeshNode.pub.addUniformValue('boneMapping', 'Integer[]');
     
-    
-    characterMeshNode.getRedrawEventHandler().postDescendBindings.append( scene.constructOperator({
-      operatorName: 'drawCharacterInstance',
-      srcFile: 'FABRIC_ROOT/SceneGraph/KL/drawCharacterInstance.kl',
+    characterMeshNode.getRedrawEventHandler().preDescendBindings.append( scene.constructOperator({
+      operatorName: 'loadSkinningMatrices',
+      srcFile: 'FABRIC_ROOT/SceneGraph/KL/loadSkinningMatrices.kl',
       preProcessorDefinitions: {
         SKINNING_MATRICIES_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('skinningMatrices')
       },
-      entryFunctionName: 'drawCharacterInstance',
+      entryFunctionName: 'loadSkinningMatrices',
       parameterLayout: [
         'shader.shaderProgram',
         'rig.pose',
         'uniforms.invmatrices',
         'uniforms.boneMapping',
-        'camera.cameraMat44',
-        'camera.projectionMat44',
         'self.indicesBuffer',
         'instance.drawToggle'
       ]

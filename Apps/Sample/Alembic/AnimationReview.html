@@ -31,6 +31,7 @@
     <script type="text/javascript" src="../../../SceneGraph/RT/OGLShaderProgram.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/RT/OGLTexture2D.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/RT/OGLBuffer.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/Ray.js" charset="utf-8"></script>
 
     <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Geometry.js" charset="utf-8"></script>
@@ -46,23 +47,30 @@
 FABRIC.SceneGraph.registerNodeType('PaintPlaneInstance', {
   factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
-      cameraNode: undefined,
+      viewportNode: undefined,
       planeNode: undefined,
       trianglesNode: undefined,
       animationControllerNode: undefined,
       planeTime: 0.0,
       planeBlend: 5.0 / 30.0,
-      resolutionFactor: 0.25
+      resolutionFactor: 0.25,
+      paintColor: FABRIC.RT.rgba(255,0,0,255),
+      paintRadius: 1.0
     });
 
     // check all of our required nodes
-    if (!options.cameraNode) {
-      throw ('cameraNode not specified');
+    if (!options.viewportNode) {
+      throw ('viewportNodenot specified');
     }
-    var cameraNode = scene.getPrivateInterface(options.cameraNode);
+    var viewportNode = scene.getPrivateInterface(options.viewportNode);
+    if(!viewportNode.pub.isTypeOf('Viewport')) {
+      throw('viewportNode is not of type Viewport!');
+    }
+    var cameraNode = scene.getPrivateInterface(viewportNode.pub.getCameraNode());
     if(!cameraNode.pub.isTypeOf('Camera')) {
       throw('cameraNode is not of type Camera!');
     }
+    var cameraTransformNode = scene.getPrivateInterface(cameraNode.pub.getTransformNode());
     if (!options.planeNode) {
       throw ('planeNode not specified');
     }
@@ -85,27 +93,9 @@ FABRIC.SceneGraph.registerNodeType('PaintPlaneInstance', {
       throw('animationControllerNode is not of type AnimationController!');
     }
     
-    // get the corners of the triangles object
+    // get the center of the triangles object
     var bbox = trianglesNode.pub.getBoundingBox();
-    var cameraXfo = cameraNode.pub.getTransformNode().getGlobalXfo();
-    /*
-    var corners = [];
-    corners.push(FABRIC.RT.vec3(bbox.min.x,bbox.min.y,bbox.min.z));
-    corners.push(FABRIC.RT.vec3(bbox.max.x,bbox.min.y,bbox.min.z));
-    corners.push(FABRIC.RT.vec3(bbox.min.x,bbox.max.y,bbox.min.z));
-    corners.push(FABRIC.RT.vec3(bbox.max.x,bbox.max.y,bbox.min.z));
-    corners.push(FABRIC.RT.vec3(bbox.min.x,bbox.min.y,bbox.max.z));
-    corners.push(FABRIC.RT.vec3(bbox.max.x,bbox.min.y,bbox.max.z));
-    corners.push(FABRIC.RT.vec3(bbox.min.x,bbox.max.y,bbox.max.z));
-    corners.push(FABRIC.RT.vec3(bbox.max.x,bbox.max.y,bbox.max.z));
-    var minDepth = -10000.0;
-    for(var i=0;i<8;i++) {
-      corners[i] = cameraXfo.projectInv(FABRIC.RT.xfo({tr: corners[i]})).tr;
-      if(minDepth < corners[i].z)
-        minDepth = corners[i].z;
-    }
-    var center = FABRIC.RT.vec3(0,0,minDepth);
-    */
+    var cameraXfo = cameraTransformNode.pub.getGlobalXfo();
     var center = bbox.min.add(bbox.max).scale(0.5);
     center = cameraXfo.projectInv(FABRIC.RT.xfo({tr: center})).tr;
     center.x = center.y = 0.0;
@@ -123,6 +113,9 @@ FABRIC.SceneGraph.registerNodeType('PaintPlaneInstance', {
     var width = height * aspect;
     planeXfo.sc.x = width;
     planeXfo.sc.z = height;
+    
+    // create a transform node for the plane
+    var transformNode = scene.constructNode('Transform', { globalXfo: planeXfo });
 
     // create a texture to paint onto
     var textureNode = scene.constructNode('Image', {
@@ -132,30 +125,40 @@ FABRIC.SceneGraph.registerNodeType('PaintPlaneInstance', {
       height: parseInt(heightPixels * options.resolutionFactor),
       forceRefresh: true
     });
-    
-    // create a frame operator to the texture
     var texturedgnode = textureNode.getDGNode();
+
+
+    /*
+    // create the paint operator for the texture
+    texturedgnode.addMember('paint','Boolean',false);
+    texturedgnode.addMember('paintColor','RGBA',options.paintColor);
+    texturedgnode.addMember('paintRadius','Scalar',options.paintRadius);
+    texturedgnode.addDependency(transformNode.getDGNode(),'transform');
+    texturedgnode.addDependency(viewportNode.getRayCastDgNodeDGNode(),'viewport');
+    texturedgnode.bindings.append(scene.constructOperator({
+      operatorName: 'paintPixels',
+      entryFunctionName: 'paintPixels',
+      srcFile: 'KL/AnimationReview.kl',
+      parameterLayout: [
+        'self.paint',
+        'self.paintColor',
+        'self.paintRadius',
+        'transform.globalXfo',
+        'viewport.ray',
+        'self.width',
+        'self.height',
+        'self.pixels'
+      ]
+    }));
+    */
+
+    // create a frame operator to the texture
     texturedgnode.addMember('drawFrame','Boolean',true);
     texturedgnode.addMember('frameColor','RGBA',FABRIC.RT.rgba(255,255,255,255));
     texturedgnode.bindings.append(scene.constructOperator({
       operatorName: 'setFramePixels',
-      srcCode:
-        "use RGBA;\n" +
-        "operator setFramePixels(io Boolean drawFrame, io RGBA frameColor, io Size width, io Size height, io RGBA pixels[]) {\n" +
-        "  var RGBA color;\n" + 
-        "  color.r = color.g = color.b = color.a = 0;\n" + 
-        "  if(drawFrame) color = frameColor;\n" +
-        "  var Size topOffset = (height-1) * width;\n" +
-        "  for(var Size i=0;i<height;i++) {\n" + 
-        "    pixels[width * i] = color;\n" +
-        "    pixels[width * i + width -1] = color;\n" +
-        "  };\n" +
-        "  for(var Size i=0;i<width;i++) {\n" + 
-        "    pixels[i] = color;\n" +
-        "    pixels[topOffset + i] = color;\n" +
-        "  };\n" +
-        "}\n",
       entryFunctionName: 'setFramePixels',
+      srcFile: 'KL/AnimationReview.kl',
       parameterLayout: [
         'self.drawFrame',
         'self.frameColor',
@@ -176,7 +179,7 @@ FABRIC.SceneGraph.registerNodeType('PaintPlaneInstance', {
     
     // now create a plane
     var instanceNode = scene.constructNode('Instance', {
-      transformNode: scene.constructNode('Transform', { globalXfo: planeXfo }).pub,
+      transformNode: transformNode.pub,
       geometryNode: planeNode.pub,
     });
 
@@ -190,18 +193,15 @@ FABRIC.SceneGraph.registerNodeType('PaintPlaneInstance', {
     instanceNode.addMemberInterface(dgnode, 'planeBlend', true);
     instanceNode.addMemberInterface(texturedgnode, 'drawFrame', true);
     instanceNode.addMemberInterface(texturedgnode, 'frameColor', true);
+    instanceNode.addMemberInterface(texturedgnode, 'paint', true);
+    instanceNode.addMemberInterface(texturedgnode, 'paintColor', true);
+    instanceNode.addMemberInterface(texturedgnode, 'paintRadius', true);
     
     // link the material node to the animation controller
     dgnode.addDependency(animationdgnode,'animation');
     dgnode.bindings.append(scene.constructOperator({
       operatorName: 'setTextureBlend',
-      srcCode:
-        "operator setTextureBlend(io Scalar colorBlend, io Boolean drawToggle, io Scalar planeTime, io Scalar planeBlend, io Scalar localTime) {\n" +
-        "  colorBlend = abs(planeTime - localTime) / planeBlend;\n" + 
-        "  if(colorBlend > 1.0)colorBlend = 1.0;\n" +
-        "  colorBlend = 1.0 - colorBlend;\n" +
-        "  drawToggle = colorBlend > 0.0;\n" +
-        "}\n",
+      srcFile: 'KL/AnimationReview.kl',
       entryFunctionName: 'setTextureBlend',
       parameterLayout: [
         'self.colorBlend',
@@ -230,39 +230,36 @@ FABRIC.SceneGraph.registerNodeType('PaintPlaneInstance', {
     // set the material
     instanceNode.pub.setMaterialNode(materialNode.pub);
     
+    /*
     // setup manipulation
-    var windowPos = FABRIC.RT.vec2();
-    var viewport = undefined;
     var painting = false;
     var paint = function(evt) {
-      //evt.viewportNode.redraw();
       if(!painting)
         return;
-      var mousePos = FABRIC.RT.vec2(evt.offsetX, evt.offsetY);
-      console.log(mousePos.x + " : " + mousePos.y);
+      instanceNode.pub.setPaint(true);
+      viewportNode.pub.redraw();
     };
     var beginpaint = function(evt) {
       painting = true;
+      // eventually set the paint color
       paint(evt);
     };
     var endpaint = function(evt) {
       painting = false;
     };
     
-    instanceNode.pub.enableManipulation = function(in_viewport) {
-      if(!viewport) {
-        viewport = scene.getPrivateInterface(in_viewport);
-      }
-      viewport.getWindowElement().addEventListener('mousemove', paint, false);
-      viewport.getWindowElement().addEventListener('mousedown', beginpaint, false);
-      viewport.getWindowElement().addEventListener('mouseup', endpaint, false);
+    instanceNode.pub.enableManipulation = function() {
+      viewportNode.getWindowElement().addEventListener('mousemove', paint, false);
+      viewportNode.getWindowElement().addEventListener('mousedown', beginpaint, false);
+      viewportNode.getWindowElement().addEventListener('mouseup', endpaint, false);
     };
     instanceNode.pub.disableManipulation = function() {
-      viewport.getWindowElement().removeEventListener('mousemove', paint);
-      viewport.getWindowElement().removeEventListener('mousedown', beginpaint);
-      viewport.getWindowElement().removeEventListener('mouseup', endpaint);
+      viewportNode.getWindowElement().removeEventListener('mousemove', paint);
+      viewportNode.getWindowElement().removeEventListener('mousedown', beginpaint);
+      viewportNode.getWindowElement().removeEventListener('mouseup', endpaint);
 
     };
+    */
 
     return instanceNode;    
   }});    
@@ -384,6 +381,7 @@ $(document).ready(function() {
             });
 
             cameraListHtml += "<option value='"+name+"'>"+name.substring(name.lastIndexOf('/')+1,1000)+"</option>"
+            
           }
         }
         
@@ -404,6 +402,12 @@ $(document).ready(function() {
         $('#cameralist').html(cameraListHtml).change( function(ui) {
           switchCamera($('#cameralist').attr('value'));
         });
+        
+        // now let's switch the camera
+        for(var name in parsedCameras) {
+          switchCamera(name);
+          break;
+        }
 
         //$('#loadingDialog').dialog('close');
         viewport.redraw();
@@ -449,13 +453,18 @@ $(document).ready(function() {
       switchCamera(plane.camera);
       $("#cameralist option[value='"+plane.camera+"']").attr('selected',true);
     };
+    
+    // only allow to paint from animated cameras
+    if(usedCamera == 'userCamera'){
+      return;
+    }
 
     // check if we need to create a new plane
     var timeKey = resourceLoadNode.getAnimationController().getLocalTime();
     timeKey = ''+parseInt(timeKey * 30 + 0.5);
-    if(planes[timeKey] == undefined) {
+    if(planes[timeKey] == undefined ) {
       var newPlane = scene.constructNode('PaintPlaneInstance', {
-        cameraNode: viewport.getCameraNode(),
+        viewportNode: viewport,
         planeNode: planeGeometry,
         trianglesNode: selectedNode.getGeometryNode(),
         animationControllerNode: resourceLoadNode.getAnimationController(),
@@ -521,8 +530,8 @@ $(document).ready(function() {
       scene.animation.pause();
     } else if(evt.keyCode == 80) { // P
       cameraManipulator.disable();
-      if(currentPlane)
-        currentPlane.instance.enableManipulation(viewport);
+      //if(currentPlane)
+      //  currentPlane.instance.enableManipulation();
       paintPlane();
     } else {
       //console.log(evt.keyCode);
@@ -530,8 +539,8 @@ $(document).ready(function() {
   };
   window.onkeyup = function(evt) {
     if(evt.keyCode == 80) { // P
-      if(currentPlane)
-        currentPlane.instance.disableManipulation();
+      //if(currentPlane)
+      //  currentPlane.instance.disableManipulation();
       cameraManipulator.enable();
     }
   }; 

@@ -160,11 +160,7 @@ FABRIC.SceneGraph.registerNodeType('CharacterSkeleton', {
       }
       dgnode.setData('bones', skeletonId ? skeletonId : 0, bones );
     };
-    /*
-    characterSkeletonNode.pub.setInvMatrices = function(invmatrices, skeletonId) {
-      dgnode.setData('invmatrices', skeletonId ? skeletonId : 0, invmatrices );
-    };
-    */
+
     if (options.calcReferenceLocalPose) {
       // For skeletons that are built procedurally, or using
       // our rigging tools, this operator will run every time a
@@ -340,10 +336,25 @@ FABRIC.SceneGraph.registerNodeType('CharacterRig', {
 
     // extend the public interface
     characterRigNode.addMemberInterface(dgnode, 'pose', true);
+    
+    var setSkeletonNode = function(node) {
+      if (!node.isTypeOf('CharacterSkeleton')) {
+        throw ('Incorrect type assignment. Must assign a CharacterSkeleton');
+      }
+      node = scene.getPrivateInterface(node);
 
+      dgnode.addDependency(node.getDGNode(), 'skeleton');
+      skeletonNode = node;
+
+      // This member will store the computed pose.
+      var referencePose = skeletonNode.pub.getReferencePose();
+      dgnode.addMember('pose', 'Xfo[]', referencePose);
+
+    }
     characterRigNode.pub.getSkeletonNode = function() {
       return scene.getPublicInterface(skeletonNode);
     };
+
     characterRigNode.pub.setVariablesNode = function(node) {
       if (!node || !node.isTypeOf('CharacterVariables')) {
         throw ('Incorrect type assignment. Must assign a CharacterVariables');
@@ -415,41 +426,6 @@ FABRIC.SceneGraph.registerNodeType('CharacterRig', {
       dgnode.setData(name, 0, xfo);
     }
 
-    // Assign the skeleton and initialize the values.
-    var setSkeletonNode = function(node) {
-      if (!node.isTypeOf('CharacterSkeleton')) {
-        throw ('Incorrect type assignment. Must assign a CharacterSkeleton');
-      }
-      node = scene.getPrivateInterface(node);
-
-      dgnode.addDependency(node.getDGNode(), 'skeleton');
-      skeletonNode = node;
-
-      // This member will store the computed pose.
-      var referencePose = skeletonNode.pub.getReferencePose();
-      dgnode.addMember('pose', 'Xfo[]', referencePose);
-
-      /*
-      // offer to create an operator which computes the inverse as a xfo[]
-      characterRigNode.pub.computeInverseXfos = function(){
-        dgnode.addMember('skinningXfos', 'Xfo[]');
-        
-        dgnode.bindings.append(scene.constructOperator({
-            operatorName: 'calcSkinningXfos',
-            srcFile: 'FABRIC_ROOT/SceneGraph/KL/characterRig.kl',
-            entryFunctionName: 'calcSkinningXfos',
-            parameterLayout: ['self.pose', 'skeleton.bones', 'self.skinningXfos']
-          }));
-        
-        // remove the function once more
-        characterRigNode.pub.computeInverseXfos  = function(){};
-      }
-      
-      */
-      if(options.computeInverseXfos){
-        characterRigNode.pub.computeInverseXfos();
-      }
-    }
     setSkeletonNode(options.skeletonNode);
     
     if (options.variablesNode) {

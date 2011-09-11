@@ -947,7 +947,7 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
       });
       
       variablesNode.addMember('localxfos', 'Xfo[]', skeletonNode.getReferenceLocalPose());
-      evaluatorNode.bindNodeMembersToEvaluatorTracks(variablesNode, binding);
+      evaluatorNode.bindNodeMembersToEvaluatorTracks(variablesNode, binding, rigNode.getName());
       rigNode.addSolver('solveColladaPose', 'FKHierarchySolver', { localxfoMemberName: 'localxfos' });
       
       assetNodes[trackNode.getName()] = trackNode;

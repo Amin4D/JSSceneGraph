@@ -8,21 +8,15 @@ use OGLBuffer;
 use OGLShaderProgram;
 use FabricOGL;
 
-operator drawCharacterInstance(
+operator loadSkinningMatrices(
   io OGLShaderProgram shaderProgram,
   io Xfo pose[],
   io Mat44 invMatrices[],
   io Integer boneMapping[],
-  io Mat44 cameraMatrix,
-  io Mat44 projectionMatrix,
   io OGLBuffer indicesBuffer,
   io Boolean drawToggle
 ) {
-  if(!drawToggle)
-    return;
-
-//  report("drawCharacterInstance");
-  Data NULL;
+//  report("loadSkinningMatrices");
   Integer location = shaderProgram.getUniformLocation(SKINNING_MATRICIES_ATTRIBUTE_ID);
   if(location!=-1){
     Mat44 skinningMatrices[];
@@ -33,16 +27,5 @@ operator drawCharacterInstance(
       skinningMatrices[i] = invMatrices[i] * Mat44(pose[boneMapping[i]]);
     }
     shaderProgram.loadMat44UniformArray(location, skinningMatrices);
-    
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indicesBuffer.bufferID);
-    glDrawElements(GL_TRIANGLES, indicesBuffer.elementCount, GL_UNSIGNED_INT, NULL);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-  }
-  else{
-    //report("ERROR: Character Material must use bone matrices.");
-    
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indicesBuffer.bufferID);
-    glDrawElements(GL_TRIANGLES, indicesBuffer.elementCount, GL_UNSIGNED_INT, NULL);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
   }
 }

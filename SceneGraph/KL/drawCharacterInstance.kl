@@ -3,13 +3,16 @@
 //
 
 use Mat44;
+use Xfo;
 use OGLBuffer;
 use OGLShaderProgram;
 use FabricOGL;
 
 operator drawCharacterInstance(
   io OGLShaderProgram shaderProgram,
-  io Mat44 skinningMatrices[],
+  io Xfo pose[],
+  io Mat44 invMatrices[],
+  io Integer boneMapping[],
   io Mat44 cameraMatrix,
   io Mat44 projectionMatrix,
   io OGLBuffer indicesBuffer,
@@ -22,6 +25,13 @@ operator drawCharacterInstance(
   Data NULL;
   Integer location = shaderProgram.getUniformLocation(SKINNING_MATRICIES_ATTRIBUTE_ID);
   if(location!=-1){
+    Mat44 skinningMatrices[];
+    skinningMatrices.resize(invMatrices.size());
+    for (var Integer i = 0; i < invMatrices.size(); i++) {
+      if(boneMapping[i] < 0)
+        continue;
+      skinningMatrices[i] = invMatrices[i] * Mat44(pose[boneMapping[i]]);
+    }
     shaderProgram.loadMat44UniformArray(location, skinningMatrices);
     
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indicesBuffer.bufferID);

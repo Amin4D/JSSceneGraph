@@ -1016,19 +1016,6 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
     var bones = skeletonData.skeletonNode.getBones();
     var boneIds = [];
     var boneWeights = [];
-    var jointRemapping = [];
-    for (var i = 0; i < jointDataSource.data.length; i++) {
-      for (var j = 0; j < bones.length; j++) {
-        if(bones[j].name==jointDataSource.data[i]){
-          jointRemapping[i] = j;
-          break;
-        }
-      }
-      if(j==bones.length){
-        warn("Joints '"+jointDataSource.data[i]+"' not found in skeleton");
-        jointRemapping[i] = 0;
-      }
-    }
     
     var  bubbleSortWeights = function(weights, indices, start, end) {
       if (start != end - 1) {
@@ -1071,7 +1058,7 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
         if(jointid > jointDataSource.data.length){
           throw "ERRROR";
         }
-        boneIdsArray[j] = jointRemapping[jointid];
+        boneIdsArray[j] = jointid;
         boneWeightsArray[j] = vertexWeightsSource.data[jointweightid];
         bid += 2;
       }
@@ -1090,27 +1077,35 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
       processedData.geometryData.boneWeights.push(boneWeights[vid]);
     }
     
-    processedData.constructionOptions.name = geometryData.name;
+    processedData.constructionOptions.name = name;
     var characterMeshNode = scene.constructNode('CharacterMesh', processedData.constructionOptions);
     characterMeshNode.loadGeometryData(processedData.geometryData);
     
     
     /////////////////////////////////////
     // set inverse binding matrices
-    var bindPoseDataSource = controllerData.sources[controllerData.joints.INV_BIND_MATRIX.source.slice(1)];
-    var invmatrices = [];
-    for (var j = 0; j < bones.length; j++) {
-      var meshToSkeletonBoneMapping = jointDataSource.data.indexOf(bones[j].name);
-      if(meshToSkeletonBoneMapping == -1){
-        invmatrices[j] = FABRIC.RT.mat44();
+    var jointRemapping = [];
+    for (var i = 0; i < jointDataSource.data.length; i++) {
+      for (var j = 0; j < bones.length; j++) {
+        if(bones[j].name==jointDataSource.data[i]){
+          jointRemapping[i] = j;
+          break;
+        }
       }
-      else{
-        var bindPoseValues = getSourceData(bindPoseDataSource, meshToSkeletonBoneMapping);
-        var mat = FABRIC.RT.mat44.apply(undefined, bindPoseValues).transpose();
-        invmatrices[j] = controllerData.bind_shape_matrix.mul(mat);
+      if(j==bones.length){
+        warn("Joints '"+jointDataSource.data[i]+"' not found in skeleton");
+        jointRemapping[i] = -1;
       }
     }
-    skeletonData.skeletonNode.setInvMatrices(invmatrices);
+    
+    var bindPoseDataSource = controllerData.sources[controllerData.joints.INV_BIND_MATRIX.source.slice(1)];
+    var invmatrices = [];
+    for (var j = 0; j < jointDataSource.data.length; j++) {
+      var bindPoseValues = getSourceData(bindPoseDataSource, j);
+      var mat = FABRIC.RT.mat44.apply(undefined, bindPoseValues).transpose();
+      invmatrices[j] = controllerData.bind_shape_matrix.mul(mat);
+    }
+    characterMeshNode.setInvMatrices(invmatrices, jointRemapping);
     
  
     assetNodes[geometryData.name] = characterMeshNode;

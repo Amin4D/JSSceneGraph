@@ -79,7 +79,6 @@ FABRIC.SceneGraph = {
         postDraw: true,
         constructAnimationInterface: true,
         timeStep: 1/50, /* 50 fps */
-        shadowMaterial:'ShadowMaterial'
       });
     
     // first let's create the basic scene object
@@ -497,14 +496,6 @@ FABRIC.SceneGraph = {
     };
     scene.getBeginRenderShadowMapEventHandler = function() {
       return beginRenderShadowMap;
-    };
-    scene.getShadowMapMaterial = function() {
-      if (!shadowMapMaterial) {
-        shadowMapMaterial = this.pub.constructNode(sceneOptions.shadowMaterial, {
-          parentEventHandler: beginRenderShadowMap
-        });
-      }
-      return shadowMapMaterial;
     };
     scene.addEventHandlingFunctions = function(obj) {
       // We store a map of arrays of event listener functions.

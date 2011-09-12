@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <shader>
 	<name>ShadowMaterial</name>
+  <prototypeMaterialType>ShadowMapMaterial</prototypeMaterialType>
 
 	<uniforms>
 		<uniform name="u_modelViewProjectionMatrix" constant="modelViewProjectionMatrix" type="Mat44" owner="instance"/>

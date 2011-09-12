@@ -731,6 +731,13 @@ FABRIC.SceneGraph.registerNodeType('PointSpriteMaterial', {
   }});
 
 
+FABRIC.SceneGraph.registerNodeType('ShadowMapMaterial', {
+  factoryFn: function(options, scene) {
+    options.parentEventHandler = scene.getBeginRenderShadowMapEventHandler();
+    var shadowMapMaterial = scene.constructNode('Material', options);
+    return shadowMapMaterial;
+  }});
+
 FABRIC.SceneGraph.registerNodeType('TransparentMaterial', {
   factoryFn: function(options, scene) {
     options.parentEventHandler = scene.getSceneRedrawTransparentObjectsEventHandler();

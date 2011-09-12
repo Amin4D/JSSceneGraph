@@ -748,7 +748,8 @@ var wrapFabricClient = function(fabricClient, logCallback, debugLogCallback) {
 
     DG.createResourceLoadNode = function(name) {
       var parentHandle,
-        onloadCallbacks = [];
+        onloadSuccessCallbacks = [],
+        onloadFailureCallbacks = [];
 
       var node = DG.createNode(name);
 
@@ -757,9 +758,14 @@ var wrapFabricClient = function(fabricClient, logCallback, debugLogCallback) {
       node.handle = function(cmd, arg) {
         var i;
         switch (cmd) {
-          case 'resourceLoaded':
-            for (i = 0; i < onloadCallbacks.length; i++) {
-              onloadCallbacks[i](node.pub);
+          case 'resourceLoadSuccess':
+            for (i = 0; i < onloadSuccessCallbacks.length; i++) {
+              onloadSuccessCallbacks[i](node.pub);
+            }
+            break;
+          case 'resourceLoadFailure':
+            for (i = 0; i < onloadFailureCallbacks.length; i++) {
+              onloadFailureCallbacks[i](node.pub);
             }
             break;
           default:
@@ -767,9 +773,12 @@ var wrapFabricClient = function(fabricClient, logCallback, debugLogCallback) {
         }
       };
 
-      node.pub.addOnLoadCallback = function(callback) {
+      node.pub.addOnLoadSuccessCallback = function(callback) {
         //At this 'core' level we don't try to detect same/different URLs or the fact that is it already loaded
-        onloadCallbacks.push(callback);
+        onloadSuccessCallbacks.push(callback);
+      }
+      node.pub.addOnLoadFailureCallback = function(callback) {
+        onloadFailureCallbacks.push(callback);
       }
       return node;
     };

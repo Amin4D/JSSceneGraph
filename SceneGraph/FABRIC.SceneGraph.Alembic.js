@@ -110,7 +110,7 @@ FABRIC.SceneGraph.registerNodeType('AlembicLoadNode', {
       return parsedNodes[parentIdentifier];
     }
     
-    resourceLoadNode.pub.addOnLoadCallback(function(pub) {
+    resourceLoadNode.pub.addOnLoadSuccessCallback(function(pub) {
 
       // define the getIdentifiers call
       resourceLoadNode.pub.getIdentifiers = function() {
@@ -261,7 +261,7 @@ FABRIC.SceneGraph.registerNodeType('AlembicLoadNode', {
     
     // also add the original on load callback
     if(prevOnLoadCallback != undefined)
-      resourceLoadNode.pub.addOnLoadCallback(prevOnLoadCallback)
+      resourceLoadNode.pub.addOnLoadSuccessCallback(prevOnLoadCallback)
 
     
     return resourceLoadNode;

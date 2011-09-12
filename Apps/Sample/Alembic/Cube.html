@@ -70,7 +70,7 @@ $(document).ready(function() {
   var resourceName = 'cube';
   var assets = scene.importAssetFile('Models/'+resourceName+'.abc', {
     dependentNode: viewport,
-    onLoadCallback: function(){
+    onLoadSuccessCallback: function(){
       
       // loop over all assets and create an instance
       for(var name in assets[resourceName].getParsedNodes()) {

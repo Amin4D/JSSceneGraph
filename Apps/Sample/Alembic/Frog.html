@@ -88,7 +88,7 @@ $(document).ready(function() {
   // create the alembic content, and fire the load once it is loaded
   var assets = scene.importAssetFile('Models/frog.abc', {
     dependentNode: viewport,
-    onLoadCallback: function(){
+    onLoadSuccessCallback: function() {
 
       assets.frog.getAnimationController().setTimeRange(FABRIC.RT.vec2(0, 2));
 

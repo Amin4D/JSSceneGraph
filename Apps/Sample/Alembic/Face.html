@@ -103,7 +103,7 @@ $(document).ready(function() {
   var resourceName = 'face';
   var assets = scene.importAssetFile('Models/'+resourceName+'.abc', {
     dependentNode: viewport,
-    onLoadCallback: function(){
+    onLoadSuccessCallback: function(){
       
       assets[resourceName].getAnimationController().setTimeRange(FABRIC.RT.vec2(0, 11));
       

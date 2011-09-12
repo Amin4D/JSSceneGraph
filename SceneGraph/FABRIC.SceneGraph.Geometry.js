@@ -740,7 +740,8 @@ FABRIC.SceneGraph.registerNodeType('ObjLoadTriangles', {
 
     var resourceLoadNode = scene.constructNode('ResourceLoad', options),
       resourceloaddgnode = resourceLoadNode.getDGLoadNode(),
-      trianglesNode = scene.constructNode('Triangles', options);
+      trianglesNode = scene.constructNode('Triangles', options),
+      emptyBindingsFunction;
 
     trianglesNode.getAttributesDGNode().addDependency(resourceloaddgnode, 'resource');
     trianglesNode.getUniformsDGNode().addDependency(resourceloaddgnode, 'resource');
@@ -787,9 +788,12 @@ FABRIC.SceneGraph.registerNodeType('ObjLoadTriangles', {
       return resourceLoadNode;
     };
 
-    resourceLoadNode.pub.addOnLoadCallback(function() {
+    emptyBindingsFunction = function() {
       trianglesNode.getAttributesDGNode().bindings.empty();
-    });
+    };
+
+    resourceLoadNode.pub.addOnLoadSuccessCallback(emptyBindingsFunction);
+    resourceLoadNode.pub.addOnLoadFailureCallback(emptyBindingsFunction);
 
     return trianglesNode;
   }

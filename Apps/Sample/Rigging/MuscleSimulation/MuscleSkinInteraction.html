@@ -284,8 +284,8 @@ $(document).ready(function() {
   var plane = scene.constructNode('Plane', {
       length: 8,
       width: 8,
-      lengthSections: 16,
-      widthSections: 16
+      lengthSections: 64,
+      widthSections: 64
     });
   var transformedMesh = scene.constructNode('TransformedGeometry', {
       baseGeometryNode: plane,
@@ -303,7 +303,8 @@ $(document).ready(function() {
   muscleSystem.addMuscle( {
     xfo: FABRIC.RT.xfo( {
         tr: FABRIC.RT.vec3( 0, 5, 0)
-      })
+      }),
+    display: false
     });
   
   skin = scene.constructNode('MuscleSkinDeformation', {

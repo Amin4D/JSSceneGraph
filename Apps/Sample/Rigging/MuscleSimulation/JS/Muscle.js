@@ -255,7 +255,7 @@ FABRIC.SceneGraph.registerNodeType('MuscleSystem', {
     //////////////////////////////////////////////////////////
     // Volume Display
     var volumeDisplayNode = scene.constructNode('Cylinder', {
-        radius: 0.5,
+        radius: 1.0,
         height: 1.0,
         sides: options.displacementMapResolution,
         loops: options.displacementMapResolution,

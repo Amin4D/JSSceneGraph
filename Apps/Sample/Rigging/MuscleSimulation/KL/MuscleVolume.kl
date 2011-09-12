@@ -145,12 +145,14 @@ operator generateDisplacementMap(
       
       for (var Integer x = 0; x < displacementMapResolution; x++) {
         v = Scalar(x) / Scalar(displacementMapResolution);
-        Integer quadrant = Integer(floor(u * 4.0));
+        Integer quadrant = Integer(floor(v * 4.0));
         switch(quadrant){
           case 0: val = calcPolarElipse( v, val0, val1 ); break;
           case 1: val = calcPolarElipse( v, val1, val2 ); break;
           case 2: val = calcPolarElipse( v, val2, val3 ); break;
-          case 3: val = calcPolarElipse( v, val3, val0 ); break;
+          case 3:
+          case 4:
+            val = calcPolarElipse( v, val3, val0 ); break;
         }
       //  displacementMap.pixels[idx].r = val;
         displacementMap.setRValue(u, v, val);
@@ -234,7 +236,7 @@ operator deformMuscleVolume(
   Vec3 corepos = evalPiecewiseBSpline( xfos, parentpositions[index].x, t, i );
   Color volumePixel = map.getValue(parentuvs[index].y, parentuvs[index].x);
   
-  Vec3 frameoffsetvec = parentpositions[index] * volumePixel.r * compressionFactor;
+  Vec3 frameoffsetvec = parentpositions[index] * volumePixel.r;// * compressionFactor;
   frameoffsetvec.x = 0.0;
   Quat frame = xfos[i].ori.nlerp( xfos[i+1].ori, t );
   normal = frame.rotateVector( frameoffsetvec );
@@ -655,8 +657,7 @@ function Vec3 positionToMuscleSurfacePosition(
   //////////////////////////////////////////////////////////////////////////////
   Scalar orthoNormalThickness  = displacementMap.getValue( u, 0.5 ).r;
   
- // debugDraw.drawLine(pos, slidePos, Color(1.0,0.0,0.0,1.0) );
-  
+//  debugDraw.drawLine(corePos, slidePos, Color(1.0,0.0,0.0,1.0) );
   
   //////////////////////////////////////////////////////////////////////////////
   // biNormalThickness

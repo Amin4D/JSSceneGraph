@@ -16,45 +16,33 @@ function DisplacementMap.resize(Size size) {
   this.size = size;
 }
 
+function Size DisplacementMap.uvToPixelIndex(Scalar u, Scalar v) {
+  Integer uindex = Integer(u * Scalar(this.size-1));
+  Integer vindex = Integer(v * Scalar(this.size-1));
+  return (vindex * this.size) + uindex;
+}
 
 function DisplacementMap.setValue(Scalar u, Scalar v, Color val) {
-  Integer uindex = Integer(u * Scalar(this.size-1));
-  Integer vindex = Integer(v * Scalar(this.size-1));
-  Integer index = (vindex * this.size) + uindex;
-  this.pixels[index] = val; 
+  this.pixels[this.uvToPixelIndex(u,v)] = val; 
 }
-
 
 function DisplacementMap.setRValue(Scalar u, Scalar v, Scalar val) {
-  Integer uindex = Integer(u * Scalar(this.size-1));
-  Integer vindex = Integer(v * Scalar(this.size-1));
-  Integer index = (vindex * this.size) + uindex;
-  this.pixels[index].r = val; 
-}
-function DisplacementMap.setGValue(Scalar u, Scalar v, Scalar val) {
-  Integer uindex = Integer(u * Scalar(this.size-1));
-  Integer vindex = Integer(v * Scalar(this.size-1));
-  Integer index = (vindex * this.size) + uindex;
-  this.pixels[index].g = val; 
-}
-function DisplacementMap.setBValue(Scalar u, Scalar v, Scalar val) {
-  Integer uindex = Integer(u * Scalar(this.size-1));
-  Integer vindex = Integer(v * Scalar(this.size-1));
-  Integer index = (vindex * this.size) + uindex;
-  this.pixels[index].b = val; 
+  this.pixels[this.uvToPixelIndex(u,v)].r = val; 
 }
 
+function DisplacementMap.setGValue(Scalar u, Scalar v, Scalar val) {
+  this.pixels[this.uvToPixelIndex(u,v)].g = val; 
+}
+
+function DisplacementMap.setBValue(Scalar u, Scalar v, Scalar val) {
+  this.pixels[this.uvToPixelIndex(u,v)].b = val; 
+}
 
 function Color DisplacementMap.getValue(Scalar u, Scalar v) {
-  Integer uindex = Integer(u * Scalar(this.size-1));
-  Integer vindex = Integer(v * Scalar(this.size-1));
-  Integer index = (vindex * this.size) + uindex;
-  return this.pixels[index]; 
+  return this.pixels[this.uvToPixelIndex(u,v)]; 
 }
 
-
-
 function Color DisplacementMap.getValue(Vec2 uv) {
-  return this.getValue(uv.x, uv.y); 
+  return this.pixels[this.uvToPixelIndex(uv.x,uv.y)];
 }
 

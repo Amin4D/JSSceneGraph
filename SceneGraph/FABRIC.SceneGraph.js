@@ -479,6 +479,10 @@ FABRIC.SceneGraph = {
     scene.getSceneRedrawTransparentObjectsEventHandler = function() {
       return beginDrawTransparentObjectsEventHandler;
     };
+    scene.getSceneRedrawOverlayObjectsEventHandler = function() {
+      return beginDrawOverlayObjectsEventHandler;
+    };
+    
     scene.getScenePostRedrawEventHandler = function() {
       return postDrawEventHandler;
     };
@@ -652,12 +656,14 @@ FABRIC.SceneGraph = {
     var beginDrawOpaqueObjectsEventHandler = scene.constructEventHandlerNode('Scene_DrawOpaqueObjects');
     beginDrawEventHandler.appendChildEventHandler(beginDrawOpaqueObjectsEventHandler);
     
-    // Transparent objects are always drawn after opaque objectsf
+    // Transparent objects are always drawn after opaque objects
     var beginDrawTransparentObjectsEventHandler = scene.constructEventHandlerNode('Scene_DrawTransparentObjects');
     beginDrawEventHandler.appendChildEventHandler(beginDrawTransparentObjectsEventHandler);
     
+    // Overlay objects are always drawn after everything else
+    var beginDrawOverlayObjectsEventHandler = scene.constructEventHandlerNode('Scene_DrawOverlaybjects');
+    beginDrawEventHandler.appendChildEventHandler(beginDrawOverlayObjectsEventHandler);
     
-
     ///////////////////////////////////////////////////////////////////
     // Window <-> SceneGraph raycast event handler firewall
     var sceneRaycastEventHandler = scene.constructEventHandlerNode('Scene_raycast');

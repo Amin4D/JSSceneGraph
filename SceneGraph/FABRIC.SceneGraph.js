@@ -452,7 +452,7 @@ FABRIC.SceneGraph = {
           var code = scene.preProcessCode(operatorDef.srcCode, operatorDef.preProcessorDefinitions, includedCodeSections);
           configureOperator(code);
         }else{
-          FABRIC.addAsyncTask(function(){
+          FABRIC.createAsyncTask(function(){
             var code = scene.preProcessCode(operatorDef.srcCode, operatorDef.preProcessorDefinitions, includedCodeSections);
             configureOperator(code);
           });
@@ -939,8 +939,7 @@ FABRIC.SceneGraph.registerNodeType('Viewport', {
           // the sceneRaycastEventHandler propogates the event throughtout the scene.
           viewPortRaycastEventHandler.appendChildEventHandler(scene.getSceneRaycastEventHandler());
         }
-        fabricwindow.resize();
-        viewportNode.pub.redraw();
+        fabricwindow.finalize();
         return true;
       }
     });
@@ -1312,7 +1311,7 @@ FABRIC.SceneGraph.registerNodeType('Viewport', {
     return viewportNode;
   }});
 
-  FABRIC.SceneGraph.registerNodeType('ResourceLoad', {
+FABRIC.SceneGraph.registerNodeType('ResourceLoad', {
   briefDesc: 'The ResourceLoad node implements the loading of a resource from an URL.',
   detailedDesc: 'Based on is \'url\' member, the ResourceLoad node will asynchronously load the associated ' +
                 'resource to its \'resource\' member. Until the data is loaded, resource.dataSize will be zero. ' +
@@ -1321,8 +1320,9 @@ FABRIC.SceneGraph.registerNodeType('Viewport', {
                 'will automatically trigger a redraw. Note that operators can dynamically modify the URL.',
   factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
-      redrawOnLoad: true,
-      onLoadCallback: undefined
+      onLoadCallback: undefined,
+      blockRedrawingTillResourceIsLoaded:true,
+      redrawOnLoad: true
     });
 
     var onloadCallbacks = [];
@@ -1331,8 +1331,13 @@ FABRIC.SceneGraph.registerNodeType('Viewport', {
     var resourceLoadNode = scene.constructNode('SceneGraphNode', options);
     var dgnode = resourceLoadNode.constructResourceLoadNode('DGLoadNode');
 
-    resourceLoadNode.addMemberInterface(dgnode, 'url', true);
+    resourceLoadNode.addMemberInterface(dgnode, 'url');
     resourceLoadNode.addMemberInterface(dgnode, 'resource');
+    
+    var incrementLoadProgressBar;
+    if(options.blockRedrawingTillResourceIsLoaded){
+      incrementLoadProgressBar = FABRIC.addAsyncTask("Loading: "+ options.url);
+    }
 
     dgnode.addOnLoadCallback(function() {
       var i;
@@ -1341,8 +1346,11 @@ FABRIC.SceneGraph.registerNodeType('Viewport', {
         onloadCallbacks[i](resourceLoadNode.pub);
       }
       onloadCallbacks = [];
-
-      if (options.redrawOnLoad) {
+      
+      if(incrementLoadProgressBar){
+        incrementLoadProgressBar();
+      }
+      else if (options.redrawOnLoad) {
         // PT 09-09-2011 Note: this is a hack to force the redrawing after the resource has
         // really finished loading. I'm not sure if there is a bug that means
         // this callback is called early. For the Alpha11 release I am adding this
@@ -1366,11 +1374,14 @@ FABRIC.SceneGraph.registerNodeType('Viewport', {
         onloadCallbacks.push(callback);
       }
     };
-
-    resourceLoadNode.pub.getDGNode = function() {
-      return dgnode;
-    }
-
+    
+    resourceLoadNode.pub.setUrl = function(url, forceLoad) {
+      dgnode.setData('url', 0, url);
+      if(forceLoad!= false){
+        dgnode.evaluate();
+      }
+    };
+    
     if (options.onLoadCallback) {
       resourceLoadNode.pub.addOnLoadCallback(options.onLoadCallback);
     }

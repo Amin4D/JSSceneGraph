@@ -142,10 +142,7 @@ FABRIC = (function() {
       };
       embedTag.width = 1;
       embedTag.height = 1;
-      // the element will get resized to the correct size
-      // by the client (Viewport) when it is ready
-      window.addEventListener('resize', onDOMWindowResize, false);
-
+      
       var result = {
         RT: context.RT,
         RegisteredTypesManager: context.RT,
@@ -160,7 +157,12 @@ FABRIC = (function() {
         domElement: embedTag,
         windowNode: context.VP.viewPort.getWindowNode(),
         redrawEvent: context.VP.viewPort.getRedrawEvent(),
-        resize: onDOMWindowResize,
+        finalize: function(){
+          onDOMWindowResize();
+          // the element will get resized to the correct size
+          // by the client (Viewport) when it is ready
+          window.addEventListener('resize', onDOMWindowResize, false);
+        },
         needsRedraw: function() {
           context.VP.viewPort.needsRedraw();
         },
@@ -278,15 +280,6 @@ FABRIC = (function() {
   
   var asyncTaskCount = 0;
   
-  var addAsyncTask = function(callback){
-    asyncTaskCount++;
-    setTimeout(function(){
-      callback();
-      asyncTaskCount--;
-      fireOnResolveAsyncTaskCallbacks('...');
-    }, 1);
-  }
-  
   var onResolveAsyncTaskCallbacks = [];
   var appendOnResolveAsyncTaskCallback = function(fn) {
     onResolveAsyncTaskCallbacks.push(fn);
@@ -297,6 +290,27 @@ FABRIC = (function() {
         onResolveAsyncTaskCallbacks.splice(i, 1);
         i--;
       }
+    }
+  }
+  
+  // Some tasks can be defined to run asynchronously as part of the load
+  // stage where operators are compiled. This enables delaying of complex tasks,
+  // that would block the drawing to the page till after the first redraw.
+  var createAsyncTask = function(callback){
+    asyncTaskCount++;
+    setTimeout(function(){
+      callback();
+      asyncTaskCount--;
+      fireOnResolveAsyncTaskCallbacks('...');
+    }, 1);
+  }
+  // Tasks can be registered that contribute to the async workload. E.g. resource
+  // loading can be defined to contribute to the intitial loading of the graph. 
+  var addAsyncTask = function(label){
+    asyncTaskCount++;
+    return function(){
+      asyncTaskCount--;
+      fireOnResolveAsyncTaskCallbacks(label);
     }
   }
   var loadResourceURL = function(url, mimeType, callback) {
@@ -310,10 +324,11 @@ FABRIC = (function() {
     }
     url = processURL(url);
     
-    var label = url.split('/').pop().split('.')[0];
     var async = (FABRIC.asyncResourceLoading && callback!==undefined) ? true : false;
+    var onAsyncFinishedCallback;
     if(async){
-      asyncTaskCount++;
+      var label = url.split('/').pop().split('.')[0];
+      onAsyncFinishedCallback = addAsyncTask(label);
     }
     var result = null;
     var xhreq = new XMLHttpRequest();
@@ -322,8 +337,7 @@ FABRIC = (function() {
         if (xhreq.status == 200) {
           if(callback){
             callback(xhreq.responseText);
-            asyncTaskCount--;
-            fireOnResolveAsyncTaskCallbacks(label);
+            onAsyncFinishedCallback();
           }
           else{
             result = xhreq.responseText;
@@ -368,6 +382,7 @@ FABRIC = (function() {
     processURL: processURL,
     loadResourceURL: loadResourceURL,
     asyncResourceLoading: true,
+    createAsyncTask: createAsyncTask,
     addAsyncTask: addAsyncTask,
     getAsyncTaskCount: function(){ return asyncTaskCount; },
     appendOnResolveAsyncTaskCallback: appendOnResolveAsyncTaskCallback,

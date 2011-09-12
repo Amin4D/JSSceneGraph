@@ -8,8 +8,11 @@ use Color;
 use Vec2;
 use Vec3;
 use Xfo;
+use DisplacementMap;
+
 use FabricOGL;
 use DebugGeometry;
+
 
 function Scalar clamp(in Scalar val, in Scalar minval, in Scalar maxval){
   return (val < minval ? minval : (val > maxval ? maxval : val));
@@ -104,17 +107,6 @@ function Ray muscleUVtoRay(
 
 
 
-
-function Color lookupDisplacementMap(
-  in Size displacementMapResolution,
-  in Color displacementMap[],
-  in Vec2 uv
-  ){
-  Integer uindex = Integer(uv.x * Scalar(displacementMapResolution-1));
-  Integer vindex = Integer(uv.y * Scalar(displacementMapResolution-1));
-  return displacementMap[(vindex * displacementMapResolution) + uindex];
-}
-
 operator generateDisplacementMap(
   io Size displacementMapResolution,
   
@@ -122,7 +114,7 @@ operator generateDisplacementMap(
   io BezierKeyframe quadrantCurve1[],
   io BezierKeyframe quadrantCurve2[],
   io BezierKeyframe quadrantCurve3[],
-  io Color displacementMap[],
+  io DisplacementMap displacementMap,
   io Boolean regenerate
   
   /*
@@ -133,7 +125,7 @@ operator generateDisplacementMap(
   */
 ) {
   if (regenerate) {
-    displacementMap.resize(displacementMapResolution * displacementMapResolution);
+    displacementMap.resize(displacementMapResolution);
     Scalar u, v;
     Scalar val0, val1, val2, val3, val;
     Integer keyIndex;
@@ -160,7 +152,8 @@ operator generateDisplacementMap(
           case 2: val = calcPolarElipse( v, val2, val3 ); break;
           case 3: val = calcPolarElipse( v, val3, val0 ); break;
         }
-        displacementMap[idx].r = val;
+      //  displacementMap.pixels[idx].r = val;
+        displacementMap.setRValue(u, v, val);
         /*
         if(false){
           Ray ray = muscleUVtoRay( u, v, initialXfos );
@@ -222,7 +215,7 @@ operator generateSystemDisplacementMap(
 operator deformMuscleVolume(
   io Size muscleIndex,
   io Size displacementMapResolution,
-  io Color displacementMaps<>[],
+  io DisplacementMap displacementMaps<>,
   io Xfo systemxfos<>[],
   io Scalar compressionFactors<>,
   io Vec3 parentpositions<>,
@@ -232,22 +225,14 @@ operator deformMuscleVolume(
   io Vec3 normal,
   in Size index
 ){
-
-  Color displacementMap[] = displacementMaps[muscleIndex];
   Xfo xfos[] = systemxfos[muscleIndex];
   Scalar compressionFactor = compressionFactors[muscleIndex];
-
+  DisplacementMap map = displacementMaps[muscleIndex];
 
   Scalar t;
   Integer i;
   Vec3 corepos = evalPiecewiseBSpline( xfos, parentpositions[index].x, t, i );
-  
-  Color volumePixel = lookupDisplacementMap(
-    displacementMapResolution,
-    displacementMap,
-    parentuvs[index]
-  );
-//  Scalar inflation = mix(coreInflationValues[i], coreInflationValues[i+1], t );
+  Color volumePixel = map.getValue(parentuvs[index].y, parentuvs[index].x);
   
   Vec3 frameoffsetvec = parentpositions[index] * volumePixel.r * compressionFactor;
   frameoffsetvec.x = 0.0;
@@ -584,8 +569,7 @@ function Vec3 positionToMuscleSurfacePosition(
   in Vec3 pos,
   in Vec3 normal,
   in Xfo xfos[],
-  io Size displacementMapResolution,
-  io Color displacementMap[],
+  io DisplacementMap displacementMap,
   io DebugGeometry debugDraw
 ){
   // TODO: parameterise these 2 values. 
@@ -669,7 +653,10 @@ function Vec3 positionToMuscleSurfacePosition(
   Scalar orthoNormalVvalue = (PI - orthoNormalAngle) / TWO_PI;
   
   //////////////////////////////////////////////////////////////////////////////
-  Scalar orthoNormalThickness  = 2.0;//muscle->GetMuscleThickness( u, orthoNormalVvalue );
+  Scalar orthoNormalThickness  = displacementMap.getValue( u, 0.5 ).r;
+  
+ // debugDraw.drawLine(pos, slidePos, Color(1.0,0.0,0.0,1.0) );
+  
   
   //////////////////////////////////////////////////////////////////////////////
   // biNormalThickness
@@ -679,7 +666,7 @@ function Vec3 positionToMuscleSurfacePosition(
   if( bisectingVvalue > 1.0 )  bisectingVvalue -= 1.0;
   if( bisectingVvalue < 0.0 )  bisectingVvalue += 1.0;
     
-  biNormalThickness      = 2.0;//muscle->GetMuscleThickness( u, bisectingVvalue );
+  biNormalThickness      = displacementMap.getValue( u, bisectingVvalue ).r;
   
   //////////////////////////////////////////////////////////////////////////////
   // Modulator
@@ -737,7 +724,7 @@ function Vec3 positionToMuscleSurfacePosition(
     if( tempV > 1.0 )  tempV -= 1.0;
     if( tempV < 0.0 )  tempV += 1.0;
     
-    bnlen2 = sin( angle ) * 2.0;//muscle->GetMuscleThickness( u, tempV );
+    bnlen2 = sin( angle ) * displacementMap.getValue( u, tempV ).r;
     
     
     if(abs(bnlen2) >= abs(biNormalProjLen)){
@@ -759,7 +746,7 @@ function Vec3 positionToMuscleSurfacePosition(
   Scalar angleDelta = vdelta * TWO_PI;
   
   Vec3 posOffsetDir = (biNormal * -sin( angleDelta )) + (orthoNormal * cos( angleDelta ));
-  w = 2.0;//muscle->GetMuscleThickness( u, v ) * modulator;
+  w = displacementMap.getValue( u, v ).r * modulator;
   
   Vec3 slidePos = (corePos + (posOffsetDir * w));
   if(((corePos + (posOffsetDir * w)) - pos).dot(orthoNormal) > 0.0){
@@ -831,8 +818,7 @@ operator calcSkinStickLocations(
 }
 
 operator deformSkin(
-  io Size displacementMapResolution,
-  io Color displacementMaps<>[],
+  io DisplacementMap displacementMaps<>,
   io Xfo simulatedXfos<>[],
   /*
   io Scalar inflationValues<>,
@@ -881,7 +867,7 @@ operator deformSkin(
   for(Integer i=0; i<1; i++){
     if(muscleBindingIds[i] >= 0 && slideWeight > 0.0){
       Integer mid = muscleBindingIds[i];
-      Vec3 slidePos = positionToMuscleSurfacePosition( position, normal, simulatedXfos[mid], displacementMapResolution, displacementMaps[mid], debugDraw);
+      Vec3 slidePos = positionToMuscleSurfacePosition( position, normal, simulatedXfos[mid], displacementMaps[mid], debugDraw);
       slideDelta += (slidePos - position) * slideWeight;
     }
   }

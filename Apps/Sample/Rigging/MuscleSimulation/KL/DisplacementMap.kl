@@ -1,0 +1,60 @@
+
+//
+// Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
+//
+
+use Math;
+use Color;
+
+function DisplacementMap(Color pixels[], Size size) {
+  this.pixels = pixels;
+  this.size = size;
+}
+
+function DisplacementMap.resize(Size size) {
+  this.pixels.resize(size * size);
+  this.size = size;
+}
+
+
+function DisplacementMap.setValue(Scalar u, Scalar v, Color val) {
+  Integer uindex = Integer(u * Scalar(this.size-1));
+  Integer vindex = Integer(v * Scalar(this.size-1));
+  Integer index = (vindex * this.size) + uindex;
+  this.pixels[index] = val; 
+}
+
+
+function DisplacementMap.setRValue(Scalar u, Scalar v, Scalar val) {
+  Integer uindex = Integer(u * Scalar(this.size-1));
+  Integer vindex = Integer(v * Scalar(this.size-1));
+  Integer index = (vindex * this.size) + uindex;
+  this.pixels[index].r = val; 
+}
+function DisplacementMap.setGValue(Scalar u, Scalar v, Scalar val) {
+  Integer uindex = Integer(u * Scalar(this.size-1));
+  Integer vindex = Integer(v * Scalar(this.size-1));
+  Integer index = (vindex * this.size) + uindex;
+  this.pixels[index].g = val; 
+}
+function DisplacementMap.setBValue(Scalar u, Scalar v, Scalar val) {
+  Integer uindex = Integer(u * Scalar(this.size-1));
+  Integer vindex = Integer(v * Scalar(this.size-1));
+  Integer index = (vindex * this.size) + uindex;
+  this.pixels[index].b = val; 
+}
+
+
+function Color DisplacementMap.getValue(Scalar u, Scalar v) {
+  Integer uindex = Integer(u * Scalar(this.size-1));
+  Integer vindex = Integer(v * Scalar(this.size-1));
+  Integer index = (vindex * this.size) + uindex;
+  return this.pixels[index]; 
+}
+
+
+
+function Color DisplacementMap.getValue(Vec2 uv) {
+  return this.getValue(uv.x, uv.y); 
+}
+

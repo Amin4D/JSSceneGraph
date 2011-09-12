@@ -4,6 +4,30 @@ FABRIC.SceneGraph.defineEffectFromFile('MuscleCoreLineShader', './Shaders/Muscle
 FABRIC.SceneGraph.defineEffectFromFile('MuscleVolumeShader', './Shaders/MuscleVolumeShader.xml');
 */
 
+
+
+FABRIC.RT.DisplacementMap = function() {
+  this.pixels = [];
+  this.size = 0;
+};
+
+FABRIC.RT.DisplacementMap.prototype = {
+  
+};
+
+
+FABRIC.appendOnCreateContextCallback(function(context) {
+  context.RegisteredTypesManager.registerType('DisplacementMap', {
+    members: {
+      pixels: 'Color[]',
+      size: 'Size'
+    },
+    constructor: FABRIC.RT.DisplacementMap,
+    kBindings: FABRIC.loadResourceURL('./KL/DisplacementMap.kl')
+  });
+});
+
+
 // These Node definitions are inlined for now, but will
 // be moved to a separate file once they are stabilized. 
 FABRIC.SceneGraph.registerNodeType('MuscleSystem', {
@@ -98,7 +122,7 @@ FABRIC.SceneGraph.registerNodeType('MuscleSystem', {
     initializationdgnode.addMember('quadrantCurve2', 'BezierKeyframe[]', quadrantCurve);
     initializationdgnode.addMember('quadrantCurve3', 'BezierKeyframe[]', quadrantCurve);
     initializationdgnode.addMember('regenerateDisplacementMap', 'Boolean', true);
-    initializationdgnode.addMember('displacementMap', 'Color[]');
+    initializationdgnode.addMember('displacementMap', 'DisplacementMap');
     
     initializationdgnode.bindings.append(scene.constructOperator({
         operatorName: 'generateDisplacementMap',
@@ -378,10 +402,10 @@ FABRIC.SceneGraph.registerNodeType('MuscleSkinDeformation', {
     
     boundSkin.pub.addVertexAttributeValue('muscleBindingIds', 'Integer[4]', [0,-1,-1,-1]);
     boundSkin.pub.addVertexAttributeValue('musclebindingweights', 'Scalar[4]', [1,0,0,0] );
+    boundSkin.pub.addVertexAttributeValue('stickLocations', 'Vec3[4]' );
     boundSkin.pub.addVertexAttributeValue('stickWeight', 'Scalar', { defaultValue:0.0 } );
     boundSkin.pub.addVertexAttributeValue('slideWeight', 'Scalar', { defaultValue:1.0 } );
     boundSkin.pub.addVertexAttributeValue('bulgeWeight', 'Scalar', { defaultValue:0.0 } );
-    boundSkin.pub.addVertexAttributeValue('stickLocations', 'Vec3[4]' );
     boundSkin.getAttributesDGNode().addDependency(muscleSystem.getSystemParamsDGNode(), 'musclesystem');
     boundSkin.getAttributesDGNode().addDependency(muscleSystem.getInitializationDGNode(), 'musclesinitialization');
     var calcSkinStickLocationsOp = scene.constructOperator({
@@ -400,7 +424,7 @@ FABRIC.SceneGraph.registerNodeType('MuscleSkinDeformation', {
         'self.index'
       ]
     });
-    calcSkinStickLocationsOp.getOperator().setMainThreadOnly(true);
+  //  calcSkinStickLocationsOp.getOperator().setMainThreadOnly(true);
     boundSkin.getAttributesDGNode().bindings.append(calcSkinStickLocationsOp);
     
     
@@ -417,7 +441,6 @@ FABRIC.SceneGraph.registerNodeType('MuscleSkinDeformation', {
     deformedSkin.getAttributesDGNode().addDependency(muscleSystem.getInitializationDGNode(), 'musclesinitialization');
     deformedSkin.getAttributesDGNode().addDependency(muscleSystem.getSimulationDGNode(), 'musclessimulation');
     deformedSkin.getAttributesDGNode().addDependency(boundSkin.getAttributesDGNode(), 'boundskin');
-    deformedSkin.getAttributesDGNode().addDependency(boundSkin.getUniformsDGNode(), 'boundskinuniforms');
     
     deformedSkin.getAttributesDGNode().bindings.append(scene.constructOperator({
       operatorName: 'setVertexColorByWeight',
@@ -441,7 +464,6 @@ FABRIC.SceneGraph.registerNodeType('MuscleSkinDeformation', {
         KEYFRAME_EVALUATEDTYPE: 'Scalar'
       },
       parameterLayout: [
-        'musclesystem.displacementMapResolution',
         'musclesinitialization.displacementMap<>',
         'musclessimulation.simulatedXfos<>',
         
@@ -480,6 +502,12 @@ FABRIC.SceneGraph.registerNodeType('MuscleSkinDeformation', {
       boundSkin.pub.setBulkAttributeData( data );
       deformedSkin.pub.reloadVBO('vertexColors');
     };
+    
+    
+    deformedSkin.pub.getAttributes = function( data ){
+      return boundSkin.getAttributesDGNode();
+    };
+    
 
     return deformedSkin;
   }});

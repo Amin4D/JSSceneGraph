@@ -578,7 +578,7 @@ function Vec3 positionToMuscleSurfacePosition(
   Scalar shrinkWrap = 0.0;
   
   Vec3 corePos;
-  Vec3 orthoNormal, biNormal, posToCore, bisectingVector, muscleNormal, posProjectedOntoSlice;
+  Vec3 orthoNormal, biNormal, posToCore, bisectingVector, muscleNormal;
   Quat sliceframe;
   Vec2 uv;
   Scalar u, v, w;
@@ -624,11 +624,10 @@ function Vec3 positionToMuscleSurfacePosition(
   //////////////////////////////////////////////////////////////////////////////
   // 
   Vec3 coreTan = sliceframe.rotateVector(Vec3(1.0, 0.0, 0.0));
-
-  posProjectedOntoSlice = pos + ((pos - corePos).unit() * (pos - corePos).dot(coreTan));
-  posToCore = corePos - posProjectedOntoSlice;
   
-  orthoNormal = normal + (coreTan * normal.dot(coreTan));
+  posToCore = corePos - pos;
+  
+  orthoNormal = normal - (coreTan * normal.dot(coreTan));
   
   // The biNormal is orthogonal to the normal
   biNormal = orthoNormal.cross( coreTan ).unit();
@@ -751,7 +750,8 @@ function Vec3 positionToMuscleSurfacePosition(
   
   Vec3 slidePos = (corePos + (posOffsetDir * w));
   if(((corePos + (posOffsetDir * w)) - pos).dot(orthoNormal) > 0.0){
-//  debugDraw.drawLine(slidePos, corePos, Color(0.0,0.0,1.0,1.0) );
+  //  debugDraw.drawLine(pos, slidePos, Color(0.0,0.0,1.0,1.0) );
+  //  debugDraw.drawLine(pos, pos+orthoNormal, Color(0.0,0.0,1.0,1.0) );
     return slidePos;
   }
   

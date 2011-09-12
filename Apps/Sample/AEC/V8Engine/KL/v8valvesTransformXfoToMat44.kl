@@ -1,0 +1,10 @@
+
+use Quat;
+use Xfo;
+
+operator v8valvesTransformXfoToMat44( io Mat44 mat44, Integer index, io Integer numSlices, io Xfo[] xfo ) 
+{
+//  report( "v8valvesTransformXfoToMat44" );
+
+  mat44 = xfoToMat44( xfo[index] ); 
+}

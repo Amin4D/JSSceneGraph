@@ -8,37 +8,33 @@ FABRIC.SceneGraph.registerNodeType('CharacterMesh', {
 
     var characterMeshNode = scene.constructNode('Triangles', options);
     
-    characterMeshNode.pub.setAttributeDynamic('positions');
-    
     characterMeshNode.pub.addVertexAttributeValue('boneIds', 'Vec4', { genVBO:true } );
     characterMeshNode.pub.addVertexAttributeValue('boneWeights', 'Vec4', { genVBO: true });
     
-    characterMeshNode.getRedrawEventHandler().postDescendBindings.append( scene.constructOperator({
-      operatorName: 'drawCharacterInstance',
-      srcFile: 'FABRIC_ROOT/SceneGraph/KL/drawCharacterInstance.kl',
+    characterMeshNode.pub.addUniformValue('invmatrices', 'Mat44[]');
+    characterMeshNode.pub.addUniformValue('boneMapping', 'Integer[]');
+    
+    characterMeshNode.getRedrawEventHandler().preDescendBindings.append( scene.constructOperator({
+      operatorName: 'loadSkinningMatrices',
+      srcFile: 'FABRIC_ROOT/SceneGraph/KL/loadSkinningMatrices.kl',
       preProcessorDefinitions: {
-        SKINNING_MATRICIES_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('skinningMatrices'),
-        MODELMATRIXINVERSE_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('modelMatrixInverse'),
-        MODELMATRIX_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('modelMatrix'),
-        VIEWMATRIX_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('viewMatrix'),
-        CAMERAMATRIX_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('cameraMatrix'),
-        CAMERAPOS_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('cameraPos'),
-        PROJECTIONMATRIX_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('projectionMatrix'),
-        PROJECTIONMATRIXINV_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('projectionMatrixInv'),
-        NORMALMATRIX_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('normalMatrix'),
-        MODELVIEW_MATRIX_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('modelViewMatrix'),
-        MODELVIEWPROJECTION_MATRIX_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('modelViewProjectionMatrix')
+        SKINNING_MATRICIES_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('skinningMatrices')
       },
-      entryFunctionName: 'drawCharacterInstance',
+      entryFunctionName: 'loadSkinningMatrices',
       parameterLayout: [
         'shader.shaderProgram',
-        'rig.skinningMatrices',
-        'camera.cameraMat44',
-        'camera.projectionMat44',
+        'rig.pose',
+        'uniforms.invmatrices',
+        'uniforms.boneMapping',
         'self.indicesBuffer',
         'instance.drawToggle'
       ]
     }));
+    
+    characterMeshNode.pub.setInvMatrices = function(invmatrices, boneMapping) {
+      characterMeshNode.getUniformsDGNode().setData('invmatrices', 0, invmatrices);
+      characterMeshNode.getUniformsDGNode().setData('boneMapping', 0, boneMapping);
+    };
     
     return characterMeshNode;
   }});
@@ -47,14 +43,12 @@ FABRIC.SceneGraph.registerNodeType('CharacterSkeleton', {
   factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
       calcReferenceLocalPose: false,
-      calcReferenceGlobalPose: false,
-      calcInvMatricies: true
+      calcReferenceGlobalPose: false
     });
 
     var characterSkeletonNode = scene.constructNode('SceneGraphNode', options);
     var dgnode = characterSkeletonNode.constructDGNode('DGNode');
     dgnode.addMember('bones', 'Bone[]');
-    dgnode.addMember('invmatrices', 'Mat44[]');
 
     // extend public interface
     characterSkeletonNode.pub.getBones = function(skeletonId) {
@@ -166,10 +160,6 @@ FABRIC.SceneGraph.registerNodeType('CharacterSkeleton', {
       }
       dgnode.setData('bones', skeletonId ? skeletonId : 0, bones );
     };
-    
-    characterSkeletonNode.pub.setInvMatrices = function(invmatrices, skeletonId) {
-      dgnode.setData('invmatrices', skeletonId ? skeletonId : 0, invmatrices );
-    };
 
     if (options.calcReferenceLocalPose) {
       // For skeletons that are built procedurally, or using
@@ -194,20 +184,6 @@ FABRIC.SceneGraph.registerNodeType('CharacterSkeleton', {
         entryFunctionName: 'calcReferenceGlobalPose',
         parameterLayout: [
           'self.bones'
-        ]
-      }));
-    }
-    if (options.calcInvMatricies) {
-      // For skeletons that are built procedurally, or using
-      // our rigging tools, this operator will run every time a
-      // reference pose is modified.
-      dgnode.bindings.append(scene.constructOperator({
-        operatorName: 'calcInverseBindPose',
-        srcFile: 'FABRIC_ROOT/SceneGraph/KL/characterSkeleton.kl',
-        entryFunctionName: 'calcInverseBindPose',
-        parameterLayout: [
-          'self.bones',
-          'self.invmatrices'
         ]
       }));
     }
@@ -259,7 +235,6 @@ FABRIC.SceneGraph.registerNodeType('CharacterSkeletonDebug', {
           entryFunctionName: 'generateSkeleton',
           parameterLayout: [
             'skeleton.bones',
-            'skeleton.invmatrices',
             'rig.pose',
             'self.positions<>',
             'uniforms.indices',
@@ -361,10 +336,25 @@ FABRIC.SceneGraph.registerNodeType('CharacterRig', {
 
     // extend the public interface
     characterRigNode.addMemberInterface(dgnode, 'pose', true);
+    
+    var setSkeletonNode = function(node) {
+      if (!node.isTypeOf('CharacterSkeleton')) {
+        throw ('Incorrect type assignment. Must assign a CharacterSkeleton');
+      }
+      node = scene.getPrivateInterface(node);
 
+      dgnode.addDependency(node.getDGNode(), 'skeleton');
+      skeletonNode = node;
+
+      // This member will store the computed pose.
+      var referencePose = skeletonNode.pub.getReferencePose();
+      dgnode.addMember('pose', 'Xfo[]', referencePose);
+
+    }
     characterRigNode.pub.getSkeletonNode = function() {
       return scene.getPublicInterface(skeletonNode);
     };
+
     characterRigNode.pub.setVariablesNode = function(node) {
       if (!node || !node.isTypeOf('CharacterVariables')) {
         throw ('Incorrect type assignment. Must assign a CharacterVariables');
@@ -436,47 +426,6 @@ FABRIC.SceneGraph.registerNodeType('CharacterRig', {
       dgnode.setData(name, 0, xfo);
     }
 
-    // Assign the skeleton and initialize the values.
-    var setSkeletonNode = function(node) {
-      if (!node.isTypeOf('CharacterSkeleton')) {
-        throw ('Incorrect type assignment. Must assign a CharacterSkeleton');
-      }
-      node = scene.getPrivateInterface(node);
-
-      dgnode.addDependency(node.getDGNode(), 'skeleton');
-      skeletonNode = node;
-
-      // This member will store the computed pose.
-      var referencePose = skeletonNode.pub.getReferencePose();
-      dgnode.addMember('pose', 'Xfo[]', referencePose);
-      dgnode.addMember('skinningMatrices', 'Mat44[]');
-
-      // create the operators that converts the pose to matrices
-      dgnode.bindings.append(scene.constructOperator({
-          operatorName: 'calcSkinningMatrices',
-          srcFile: 'FABRIC_ROOT/SceneGraph/KL/characterRig.kl',
-          entryFunctionName: 'calcSkinningMatrices',
-          parameterLayout: ['self.pose', 'skeleton.invmatrices', 'self.skinningMatrices']
-        }));
-      
-      // offer to create an operator which computes the inverse as a xfo[]
-      characterRigNode.pub.computeInverseXfos = function(){
-        dgnode.addMember('skinningXfos', 'Xfo[]');
-        
-        dgnode.bindings.append(scene.constructOperator({
-            operatorName: 'calcSkinningXfos',
-            srcFile: 'FABRIC_ROOT/SceneGraph/KL/characterRig.kl',
-            entryFunctionName: 'calcSkinningXfos',
-            parameterLayout: ['self.pose', 'skeleton.bones', 'self.skinningXfos']
-          }));
-        
-        // remove the function once more
-        characterRigNode.pub.computeInverseXfos  = function(){};
-      }
-      if(options.computeInverseXfos){
-        characterRigNode.pub.computeInverseXfos();
-      }
-    }
     setSkeletonNode(options.skeletonNode);
     
     if (options.variablesNode) {
@@ -599,10 +548,6 @@ FABRIC.SceneGraph.registerNodeType('CharacterInstance', {
 
     var characterInstanceNode = scene.constructNode('Instance', options);
     var rigNode;
-
-    // Ensure that a transform node is not assigned.
-    delete options.transformNode;
-    options.constructDefaultTransformNode = false;
 
     // extend public interface
     characterInstanceNode.pub.setRigNode = function(node) {

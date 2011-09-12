@@ -74,7 +74,7 @@ FABRIC.SceneGraph.registerNodeType('Hair', {
     
     var characterMeshNode = scene.getPrivateInterface(options.characterMeshNode);
     var characterRigNode = scene.getPrivateInterface(options.characterRigNode);
-    characterRigNode.pub.computeInverseXfos();
+    var characterSkeletonNode = scene.getPrivateInterface(characterRigNode.pub.getSkeletonNode());
     
     // create a pointnode to prepare the values
     var pointNode = scene.constructNode('Points', {name: options.name+'_Points'} );
@@ -151,12 +151,22 @@ FABRIC.SceneGraph.registerNodeType('Hair', {
       }
       indices.push(indicesOffset++);
     }
-    hairNode.getUniformsDGNode().setData("indices",0,indices);
+    hairNode.getUniformsDGNode().setData("indices", 0, indices);
 
     var hairDGNode = hairNode.getAttributesDGNode();
     hairDGNode.addDependency(pointNode.getAttributesDGNode(),'points');
     hairDGNode.addDependency(scene.getGlobalsNode(), 'globals');
-    hairDGNode.addDependency(characterRigNode.getDGNode(), 'rig');
+    
+    var hairUniformsDGNode = hairNode.getUniformsDGNode();
+    hairUniformsDGNode.addDependency(characterRigNode.getDGNode(), 'rig');
+    hairUniformsDGNode.addDependency(characterSkeletonNode.getDGNode(), 'skeleton');
+    hairUniformsDGNode.addMember('skinningXfos', 'Xfo[]');
+    hairUniformsDGNode.bindings.append(scene.constructOperator({
+        operatorName: 'calcSkinningXfos',
+        srcFile: 'FABRIC_ROOT/SceneGraph/KL/calcSkinningXfos.kl',
+        entryFunctionName: 'calcSkinningXfos',
+        parameterLayout: ['rig.pose', 'skeleton.bones', 'self.skinningXfos']
+      }));
     
     hairDGNode.bindings.append(scene.constructOperator({
       operatorName: 'simulateHair',
@@ -177,7 +187,7 @@ FABRIC.SceneGraph.registerNodeType('Hair', {
         "self.prevnormals",
         "self.vertexColors",
         "globals.time",
-        "rig.skinningXfos"
+        "uniforms.skinningXfos"
       ],
       preProcessorDefinitions: {
         SEGMENT_COUNT: options.segments + 1

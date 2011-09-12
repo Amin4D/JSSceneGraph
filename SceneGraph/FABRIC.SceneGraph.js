@@ -79,7 +79,6 @@ FABRIC.SceneGraph = {
         postDraw: true,
         constructAnimationInterface: true,
         timeStep: 1/50, /* 50 fps */
-        shadowMaterial:'ShadowMaterial'
       });
     
     // first let's create the basic scene object
@@ -479,6 +478,10 @@ FABRIC.SceneGraph = {
     scene.getSceneRedrawTransparentObjectsEventHandler = function() {
       return beginDrawTransparentObjectsEventHandler;
     };
+    scene.getSceneRedrawOverlayObjectsEventHandler = function() {
+      return beginDrawOverlayObjectsEventHandler;
+    };
+    
     scene.getScenePostRedrawEventHandler = function() {
       return postDrawEventHandler;
     };
@@ -493,14 +496,6 @@ FABRIC.SceneGraph = {
     };
     scene.getBeginRenderShadowMapEventHandler = function() {
       return beginRenderShadowMap;
-    };
-    scene.getShadowMapMaterial = function() {
-      if (!shadowMapMaterial) {
-        shadowMapMaterial = this.pub.constructNode(sceneOptions.shadowMaterial, {
-          parentEventHandler: beginRenderShadowMap
-        });
-      }
-      return shadowMapMaterial;
     };
     scene.addEventHandlingFunctions = function(obj) {
       // We store a map of arrays of event listener functions.
@@ -652,12 +647,14 @@ FABRIC.SceneGraph = {
     var beginDrawOpaqueObjectsEventHandler = scene.constructEventHandlerNode('Scene_DrawOpaqueObjects');
     beginDrawEventHandler.appendChildEventHandler(beginDrawOpaqueObjectsEventHandler);
     
-    // Transparent objects are always drawn after opaque objectsf
+    // Transparent objects are always drawn after opaque objects
     var beginDrawTransparentObjectsEventHandler = scene.constructEventHandlerNode('Scene_DrawTransparentObjects');
     beginDrawEventHandler.appendChildEventHandler(beginDrawTransparentObjectsEventHandler);
     
+    // Overlay objects are always drawn after everything else
+    var beginDrawOverlayObjectsEventHandler = scene.constructEventHandlerNode('Scene_DrawOverlaybjects');
+    beginDrawEventHandler.appendChildEventHandler(beginDrawOverlayObjectsEventHandler);
     
-
     ///////////////////////////////////////////////////////////////////
     // Window <-> SceneGraph raycast event handler firewall
     var sceneRaycastEventHandler = scene.constructEventHandlerNode('Scene_raycast');
@@ -938,6 +935,10 @@ FABRIC.SceneGraph.registerNodeType('Viewport', {
         if(scene.getScenePostRedrawEventHandler()){
           fabricwindow.redrawEvent.appendEventHandler(scene.getScenePostRedrawEventHandler());
         }
+        if(viewPortRaycastEventHandler){
+          // the sceneRaycastEventHandler propogates the event throughtout the scene.
+          viewPortRaycastEventHandler.appendChildEventHandler(scene.getSceneRaycastEventHandler());
+        }
         fabricwindow.resize();
         viewportNode.pub.redraw();
         return true;
@@ -991,10 +992,6 @@ FABRIC.SceneGraph.registerNodeType('Viewport', {
       // The operators us the collected scopes to calculate the ray.
       viewPortRaycastEvent = viewportNode.constructEventNode('RaycastEvent');
       viewPortRaycastEvent.appendEventHandler(viewPortRaycastEventHandler);
-
-      // the sceneRaycastEventHandler propogates the event throughtout the scene.
-      viewPortRaycastEventHandler.appendChildEventHandler(scene.getSceneRaycastEventHandler());
-
     }
 
     var getElementCoords = function(evt) {

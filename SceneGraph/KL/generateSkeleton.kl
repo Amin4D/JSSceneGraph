@@ -23,7 +23,6 @@ operator setSkeletonVertexCount(
 
 operator generateSkeleton(
   io Bone bones[],
-  io Mat44 invmatrices[],
   io Xfo pose[],
   io Vec3 positions<>,
   io Integer indices[],
@@ -62,7 +61,6 @@ operator generateSkeleton(
   var Integer offset = 0;
   for (Integer i = 0; i < bones.size(); i++) {
     Xfo xfo = finalPose[i];
-  //  Xfo xfo(invmatrices[i].inverse());
   //  Xfo xfo = bones[i].referencePose;
     
     if (bones[i].length <= 0.0) {

@@ -68,30 +68,20 @@ operator simulateMuscle(
   for(i=0; i<muscle.xfos.size(); i++){
     
     baseXfo = initialXfos[i];
-    //  debugDraw.drawAxis(baseXfo, 10.0, Color(1.0,0.0,0.0,1.0));
     envelopedXfos[i].identity();
     if (pointEnvelopWeights[i].x > 0.0) {
       xfo = baseXfo * skinningXfos[Integer(pointEnvelopeIds.x)];
       xfo.ori.makeClosest(baseXfo.ori);
-    //  xfo = skinningXfos[Integer(pointEnvelopeIds.x)] * baseXfo;
-   //   debugDraw.drawAxis(xfo, 10.0, Color(1.0,0.0,0.0,1.0));
-      debugDraw.drawAxis(skinningXfos[Integer(pointEnvelopeIds.x)], 10.0, Color(1.0,0.0,0.0,1.0));
-    //  envelopedXfos[i].tr += xfo.tr * pointEnvelopWeights[i].x;
-    //  envelopedXfos[i].ori += xfo.ori * pointEnvelopWeights[i].x;
-      envelopedXfos[i] = xfo;
+      envelopedXfos[i].tr += xfo.tr * pointEnvelopWeights[i].x;
+      envelopedXfos[i].ori += xfo.ori * pointEnvelopWeights[i].x;
     }
     if (pointEnvelopWeights[i].y > 0.0) {
       xfo = baseXfo * skinningXfos[Integer(pointEnvelopeIds.y)];
       xfo.ori.makeClosest(baseXfo.ori);
-    //  xfo = skinningXfos[Integer(pointEnvelopeIds.y)] * baseXfo;
-    //  debugDraw.drawAxis(xfo, 10.0, Color(1.0,0.0,0.0,1.0));
-      debugDraw.drawAxis(skinningXfos[Integer(pointEnvelopeIds.y)], 10.0, Color(1.0,0.0,0.0,1.0));
-    //  envelopedXfos[i].tr += xfo.tr * pointEnvelopWeights[i].y;
-    //  envelopedXfos[i].ori += xfo.ori * pointEnvelopWeights[i].y;
-      envelopedXfos[i] = xfo;
+      envelopedXfos[i].tr += xfo.tr * pointEnvelopWeights[i].y;
+      envelopedXfos[i].ori += xfo.ori * pointEnvelopWeights[i].y;
     }
     envelopedXfos[i].ori.normalize();
-    //  debugDraw.drawAxis(envelopedXfos[i], 10.0, Color(1.0,0.0,0.0,1.0));
   }
   
   // Measure the distance from the 2 anchor points of the muscle.
@@ -100,6 +90,7 @@ operator simulateMuscle(
                                initialXfos[0].tr.dist(initialXfos[initialXfos.size()-1].tr);
   Integer keyIndex = 0;
   contractionFactor = evaluateKeyframeAnimationTrack(contractionCurve, contractionFactor, keyIndex);
+  
   
   /////////////////////////////////////////////////
   // Simulation
@@ -156,7 +147,7 @@ operator simulateMuscle(
   for(i=0; i<muscle.xfos.size(); i++){
     pointPositionsPrevUpdate[i] = pointPositionsPrevUpdate_Temp[i];
   }
-  
+
   /////////////////////////////////////////////////
   // Frame Alignement
   // Align the quaternions to the muscle segments
@@ -190,10 +181,8 @@ operator simulateMuscle(
       compression += 1.0;
     }
     compressionFactor += compression;
-    // TODO: Impliment volume preserving formula
-  //  segmentCompressionFactors[i] = 1.0/(compression / 2.0);
     
-  //  debugDraw.drawAxis(muscle.xfos[i], 10.0, Color(1.0,0.0,0.0,1.0));
+    debugDraw.drawAxis(muscle.xfos[i], 10.0, Color(1.0,0.0,0.0,1.0));
   }
   compressionFactor = compressionFactor / Scalar(muscle.xfos.size() * 2.0);
   

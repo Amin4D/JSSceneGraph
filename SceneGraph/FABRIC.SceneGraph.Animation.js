@@ -272,7 +272,7 @@ FABRIC.SceneGraph.registerNodeType('AnimationEvaluator', {
       dgnode.evaluate();
       return dgnode.getData('value');
     };
-    animationEvaluatorNode.pub.bindNodeMembersToEvaluatorTracks = function(targetnode, memberBindings) {
+    animationEvaluatorNode.pub.bindNodeMembersToEvaluatorTracks = function(targetnode, memberBindings, targetName) {
       // Generate a unique operator that binds this animation evaluator to the
       // target node's members.
 
@@ -281,9 +281,16 @@ FABRIC.SceneGraph.registerNodeType('AnimationEvaluator', {
       targetnode.getDGNode().addDependency(dgnode, 'animationevaluator');
 
       var targetNodeMembers = targetnode.getDGNode().getMembers();
-
-      var operatorName = 'bindAnimationTracksTo' + JSON.stringify(memberBindings).replace(/[^a-zA-Z 0-9]+/g, '');
-      var operatorHeaderSrc = '\nuse Vec3, Euler, Quat, RotationOrder; operator ' + operatorName + '(\n\tio ' + evaluatorDatatype + ' curvevalues<>';
+      
+      var operatorName;
+      if(targetName){
+        operatorName = 'bindAnimationTracksTo' + targetName;
+      }
+      else{
+        operatorName = 'bindAnimationTracksTo' + JSON.stringify(memberBindings).replace(/[^a-zA-Z 0-9]+/g, '');
+      }
+      
+      var operatorHeaderSrc = '\nuse Vec3, Euler, Quat, RotationOrder;\n\noperator ' + operatorName + '(\n  io ' + evaluatorDatatype + ' curvevalues<>';
       var operatorArraySrc = {};
       var operatorBodySrc = '';
       var parameterLayout = ['animationevaluator.value<>'];
@@ -337,34 +344,34 @@ FABRIC.SceneGraph.registerNodeType('AnimationEvaluator', {
             break;
           case 'Vec3':
             if (memberBinding[0] >= 0)
-              memberBindingCode += '\t' + memberAccessor + '.x = curvevalues[' + memberBinding[0] + '];\n';
+              memberBindingCode += '  ' + memberAccessor + '.x = curvevalues[' + memberBinding[0] + '];\n';
             if (memberBinding[1] >= 0)
-              memberBindingCode += '\t' + memberAccessor + '.y = curvevalues[' + memberBinding[1] + '];\n';
+              memberBindingCode += '  ' + memberAccessor + '.y = curvevalues[' + memberBinding[1] + '];\n';
             if (memberBinding[2] >= 0)
-              memberBindingCode += '\t' + memberAccessor + '.z = curvevalues[' + memberBinding[2] + '];\n';
+              memberBindingCode += '  ' + memberAccessor + '.z = curvevalues[' + memberBinding[2] + '];\n';
             break;
           case 'Quat':
             if (memberBinding.length === 3) {
               if (!tempVariables['tempVec3']) {
-                tempVariables['tempVec3'] = '\tvar Vec3 tempVec3;\n';
+                tempVariables['tempVec3'] = '  var Vec3 tempVec3;\n';
               }
               if (!tempVariables['tempEuler']) {
-                tempVariables['tempEuler'] = '\tvar Euler tempEuler;\n';
+                tempVariables['tempEuler'] = '  var Euler tempEuler;\n';
               }
               if (memberBinding[0] >= 0)
-                memberBindingCode += '\ttempVec3.x = curvevalues[' + memberBinding[0] + '];\n';
+                memberBindingCode += '  tempVec3.x = curvevalues[' + memberBinding[0] + '];\n';
               else
-                memberBindingCode += '\ttempVec3.x = 0.0;\n';
+                memberBindingCode += '  tempVec3.x = 0.0;\n';
               if (memberBinding[1] >= 0)
-                memberBindingCode += '\ttempVec3.y = curvevalues[' + memberBinding[1] + '];\n';
+                memberBindingCode += '  tempVec3.y = curvevalues[' + memberBinding[1] + '];\n';
               else
-                memberBindingCode += '\ttempVec3.y = 0.0;\n';
+                memberBindingCode += '  tempVec3.y = 0.0;\n';
               if (memberBinding[2] >= 0)
-                memberBindingCode += '\ttempVec3.z = curvevalues[' + memberBinding[2] + '];\n';
+                memberBindingCode += '  tempVec3.z = curvevalues[' + memberBinding[2] + '];\n';
               else
-                memberBindingCode += '\ttempVec3.z = 0.0;\n';
-              memberBindingCode += '\ttempEuler = Euler(tempVec3);\n';
-              memberBindingCode += '\t' + memberAccessor + ' = Quat(tempEuler);\n';
+                memberBindingCode += '  tempVec3.z = 0.0;\n';
+              memberBindingCode += '  tempEuler = Euler(tempVec3);\n';
+              memberBindingCode += '  ' + memberAccessor + ' = Quat(tempEuler);\n';
             }else if (memberBinding.length === 4) {
 
             }
@@ -374,17 +381,17 @@ FABRIC.SceneGraph.registerNodeType('AnimationEvaluator', {
         operatorBodySrc += '\n' + memberBindingCode;
 
         if (parameterLayout.indexOf('self.' + memberName) == -1) {
-          operatorHeaderSrc += ',\n\tio ' + boundMemberType + ' ' + memberName + (isArray ? '[]' : '');
+          operatorHeaderSrc += ',\n  io ' + boundMemberType + ' ' + memberName + (isArray ? '[]' : '');
           parameterLayout.push('self.' + memberName);
         }
       }
 
       // add the array resize code to ensure that they are big enough
-      operatorHeaderSrc += '\n\t){';
+      operatorHeaderSrc += '\n){';
       for (var arrayName in operatorArraySrc) {
-        operatorHeaderSrc += '\n\tif(' + arrayName + '.size() < ' + (operatorArraySrc[arrayName] + 1) + '){';
-        operatorHeaderSrc += '\n\t\t' + arrayName + '.resize(' + (operatorArraySrc[arrayName] + 1) + ');';
-        operatorHeaderSrc += '\n\t}';
+        operatorHeaderSrc += '\n  if(' + arrayName + '.size() < ' + (operatorArraySrc[arrayName] + 1) + '){';
+        operatorHeaderSrc += '\n    ' + arrayName + '.resize(' + (operatorArraySrc[arrayName] + 1) + ');';
+        operatorHeaderSrc += '\n  }';
       }
 
       // add the temporary varibale declaration at the top of the function body.

@@ -92,7 +92,7 @@ $(document).ready(function() {
   // create the alembic content, and fire the load once it is loaded
   var assets = scene.importAssetFile('Models/frog.abc', {
     dependentNode: viewport,
-    onLoadCallback: function(){
+    onLoadSuccessCallback: function() {
 
       // create the camera
       var nodes = assets.frog.getParsedNodes();

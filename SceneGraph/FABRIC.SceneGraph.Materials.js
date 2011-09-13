@@ -483,7 +483,7 @@ FABRIC.SceneGraph.registerNodeType('Material', {
         options.disableOptions.push(FABRIC.SceneGraph.OpenGLConstants.GL_DEPTH_TEST);
       }
       // TODO: add an 'overlay' subtree to the render graph. This tree should render after transparency
-      options.parentEventHandler = scene.getSceneRedrawTransparentObjectsEventHandler();
+      options.parentEventHandler = scene.getSceneRedrawOverlayObjectsEventHandler();
       options.shaderNameDecoration = (options.shaderNameDecoration ? options.shaderNameDecoration : "") + "Overlay";
     }
         
@@ -753,6 +753,13 @@ FABRIC.SceneGraph.registerNodeType('PointSpriteMaterial', {
     return pointSpriteMaterialNode;
   }});
 
+
+FABRIC.SceneGraph.registerNodeType('ShadowMapMaterial', {
+  factoryFn: function(options, scene) {
+    options.parentEventHandler = scene.getBeginRenderShadowMapEventHandler();
+    var shadowMapMaterial = scene.constructNode('Material', options);
+    return shadowMapMaterial;
+  }});
 
 FABRIC.SceneGraph.registerNodeType('TransparentMaterial', {
   factoryFn: function(options, scene) {

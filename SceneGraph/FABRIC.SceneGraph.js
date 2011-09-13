@@ -79,7 +79,6 @@ FABRIC.SceneGraph = {
         postDraw: true,
         constructAnimationInterface: true,
         timeStep: 1/50, /* 50 fps */
-        shadowMaterial:'ShadowMaterial'
       });
     
     // first let's create the basic scene object
@@ -453,7 +452,7 @@ FABRIC.SceneGraph = {
           var code = scene.preProcessCode(operatorDef.srcCode, operatorDef.preProcessorDefinitions, includedCodeSections);
           configureOperator(code);
         }else{
-          FABRIC.addAsyncTask(function(){
+          FABRIC.createAsyncTask(function(){
             var code = scene.preProcessCode(operatorDef.srcCode, operatorDef.preProcessorDefinitions, includedCodeSections);
             configureOperator(code);
           });
@@ -479,6 +478,10 @@ FABRIC.SceneGraph = {
     scene.getSceneRedrawTransparentObjectsEventHandler = function() {
       return beginDrawTransparentObjectsEventHandler;
     };
+    scene.getSceneRedrawOverlayObjectsEventHandler = function() {
+      return beginDrawOverlayObjectsEventHandler;
+    };
+    
     scene.getScenePostRedrawEventHandler = function() {
       return postDrawEventHandler;
     };
@@ -493,14 +496,6 @@ FABRIC.SceneGraph = {
     };
     scene.getBeginRenderShadowMapEventHandler = function() {
       return beginRenderShadowMap;
-    };
-    scene.getShadowMapMaterial = function() {
-      if (!shadowMapMaterial) {
-        shadowMapMaterial = this.pub.constructNode(sceneOptions.shadowMaterial, {
-          parentEventHandler: beginRenderShadowMap
-        });
-      }
-      return shadowMapMaterial;
     };
     scene.addEventHandlingFunctions = function(obj) {
       // We store a map of arrays of event listener functions.
@@ -652,12 +647,14 @@ FABRIC.SceneGraph = {
     var beginDrawOpaqueObjectsEventHandler = scene.constructEventHandlerNode('Scene_DrawOpaqueObjects');
     beginDrawEventHandler.appendChildEventHandler(beginDrawOpaqueObjectsEventHandler);
     
-    // Transparent objects are always drawn after opaque objectsf
+    // Transparent objects are always drawn after opaque objects
     var beginDrawTransparentObjectsEventHandler = scene.constructEventHandlerNode('Scene_DrawTransparentObjects');
     beginDrawEventHandler.appendChildEventHandler(beginDrawTransparentObjectsEventHandler);
     
+    // Overlay objects are always drawn after everything else
+    var beginDrawOverlayObjectsEventHandler = scene.constructEventHandlerNode('Scene_DrawOverlaybjects');
+    beginDrawEventHandler.appendChildEventHandler(beginDrawOverlayObjectsEventHandler);
     
-
     ///////////////////////////////////////////////////////////////////
     // Window <-> SceneGraph raycast event handler firewall
     var sceneRaycastEventHandler = scene.constructEventHandlerNode('Scene_raycast');
@@ -942,8 +939,7 @@ FABRIC.SceneGraph.registerNodeType('Viewport', {
           // the sceneRaycastEventHandler propogates the event throughtout the scene.
           viewPortRaycastEventHandler.appendChildEventHandler(scene.getSceneRaycastEventHandler());
         }
-        fabricwindow.resize();
-        viewportNode.pub.redraw();
+        fabricwindow.finalize();
         return true;
       }
     });
@@ -1319,37 +1315,49 @@ FABRIC.SceneGraph.registerNodeType('Viewport', {
     return viewportNode;
   }});
 
-  FABRIC.SceneGraph.registerNodeType('ResourceLoad', {
+FABRIC.SceneGraph.registerNodeType('ResourceLoad', {
   briefDesc: 'The ResourceLoad node implements the loading of a resource from an URL.',
   detailedDesc: 'Based on is \'url\' member, the ResourceLoad node will asynchronously load the associated ' +
                 'resource to its \'resource\' member. Until the data is loaded, resource.dataSize will be zero. ' +
                 'Once the data is loaded, JS callbacks will be fired; you can register those by calling the ' +
-                '\'addOnLoadCallback\' member function. Unless \'option.redrawOnLoad\' is set to false, the loading ' +
-                'will automatically trigger a redraw. Note that operators can dynamically modify the URL.',
+                '\'addOnLoadSuccessCallback\' and \'addOnLoadFailureCallback\' member function. Unless ' + 
+                '\'option.redrawOnLoad\' is set to false, the loading will automatically trigger a redraw. ' +
+                'Note that operators can dynamically modify the URL.',
   factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
-      redrawOnLoad: true,
-      onLoadCallback: undefined
+      onLoadSuccessCallback: undefined,
+      onLoadFailureCallback: undefined,
+      blockRedrawingTillResourceIsLoaded:true,
+      redrawOnLoad: true
     });
 
-    var onloadCallbacks = [];
+    var onloadSuccessCallbacks = [];
+    var onloadFailureCallbacks = [];
     lastLoadCallbackURL = '';
 
     var resourceLoadNode = scene.constructNode('SceneGraphNode', options);
     var dgnode = resourceLoadNode.constructResourceLoadNode('DGLoadNode');
 
-    resourceLoadNode.addMemberInterface(dgnode, 'url', true);
+    resourceLoadNode.addMemberInterface(dgnode, 'url');
     resourceLoadNode.addMemberInterface(dgnode, 'resource');
+    
+    var incrementLoadProgressBar;
+    if(options.blockRedrawingTillResourceIsLoaded){
+      incrementLoadProgressBar = FABRIC.addAsyncTask("Loading: "+ options.url);
+    }
 
-    dgnode.addOnLoadCallback(function() {
+    var onLoadCallbackFunction = function(callbacks) {
       var i;
       lastLoadCallbackURL = resourceLoadNode.pub.getUrl();
-      for (i = 0; i < onloadCallbacks.length; i++) {
-        onloadCallbacks[i](resourceLoadNode.pub);
+      for (i = 0; i < callbacks.length; i++) {
+        callbacks[i](resourceLoadNode.pub);
       }
-      onloadCallbacks = [];
-
-      if (options.redrawOnLoad) {
+      callbacks.length = 0;
+      
+      if(incrementLoadProgressBar){
+        incrementLoadProgressBar();
+      }
+      else if (options.redrawOnLoad) {
         // PT 09-09-2011 Note: this is a hack to force the redrawing after the resource has
         // really finished loading. I'm not sure if there is a bug that means
         // this callback is called early. For the Alpha11 release I am adding this
@@ -1358,28 +1366,49 @@ FABRIC.SceneGraph.registerNodeType('Viewport', {
           scene.pub.redrawAllWindows();
         }, 100);
       }
-    });
+    }
+
+    var onLoadSuccessCallbackFunction = function() {
+      onLoadCallbackFunction(onloadSuccessCallbacks);
+    }
+    var onLoadFailureCallbackFunction = function() {
+      onLoadCallbackFunction(onloadFailureCallbacks);
+    }
+
+    dgnode.addOnLoadSuccessCallback(onLoadSuccessCallbackFunction);
+    dgnode.addOnLoadFailureCallback(onLoadFailureCallbackFunction);
 
     resourceLoadNode.pub.isLoaded = function() {
       return lastLoadCallbackURL !== '' && lastLoadCallbackURL === resourceLoadNode.pub.getUrl();
     }
 
-    resourceLoadNode.pub.addOnLoadCallback = function(callback) {
+    resourceLoadNode.pub.addOnLoadSuccessCallback = function(callback) {
       //It is possible that a resourceLoadNode actually loads multiple resources in a sequence;
       //make sure the callback is only fired when the 'next' resource is loaded.
       if (resourceLoadNode.pub.isLoaded()) {
-        callback.call(); //Already loaded
+        callback.call(); //Already loaded. Todo: we don't keep track of success/failure state, which is wrong.
       } else {
-        onloadCallbacks.push(callback);
+        onloadSuccessCallbacks.push(callback);
       }
     };
 
-    resourceLoadNode.pub.getDGNode = function() {
-      return dgnode;
+    resourceLoadNode.pub.addOnLoadFailureCallback = function(callback) {
+      onloadFailureCallbacks.push(callback);
+    };
+    
+    resourceLoadNode.pub.setUrl = function(url, forceLoad) {
+      dgnode.setData('url', 0, url);
+      if(forceLoad!= false){
+        dgnode.evaluate();
+      }
+    };
+    
+    if (options.onLoadSuccessCallback) {
+      resourceLoadNode.pub.addOnLoadSuccessCallback(options.onLoadSuccessCallback);
     }
 
-    if (options.onLoadCallback) {
-      resourceLoadNode.pub.addOnLoadCallback(options.onLoadCallback);
+    if (options.onLoadFailureCallback) {
+      resourceLoadNode.pub.addOnLoadFailureCallback(options.onLoadFailureCallback);
     }
 
     if (options.url) {

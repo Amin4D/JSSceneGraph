@@ -861,6 +861,9 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
           
           // now let's reformat the linear data
           var key = FABRIC.Animation.linearKeyframe;
+          if(!key){
+            throw "LinearKeyframe not defined. You must include that file in your project."
+          }
           var keys = [];
           for (var j = 0; j < inputSource.data.length; j++) {
             keys.push(key(inputSource.data[j], outputSource.data[j]));

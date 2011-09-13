@@ -62,6 +62,11 @@ FABRIC.SceneGraph.registerNodeType('MuscleSystem', {
       numRelaxationIterations: 6,
       displacementMapResolution: 32
       });
+  
+    if (!options.characterRig || !options.characterRig.isTypeOf('CharacterRig')) {
+      throw ('Incorrect type. Must assign a CharacterRig');
+    }
+      
     var muscleSystem = scene.constructNode('SceneGraphNode', options ),
       paramsdgnode = muscleSystem.constructDGNode('SystemParamsDGNode')
       initializationdgnode = muscleSystem.constructDGNode('InitializationDGNode'),

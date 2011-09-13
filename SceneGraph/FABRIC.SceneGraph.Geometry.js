@@ -260,6 +260,15 @@ FABRIC.SceneGraph.registerNodeType('GeometryDataCopy', {
     geometryDataCopyNode.pub.getBaseGeometry = function(){
       return baseGeometryNode.pub;
     }
+    
+    var parentTypeOfFn = geometryDataCopyNode.pub.isTypeOf;
+    geometryDataCopyNode.pub.isTypeOf = function(classname) {
+      if (parentTypeOfFn(classname)) {
+        return true;
+      }else {
+        return baseGeometryNode.pub.isTypeOf(classname);
+      }
+    }
     return geometryDataCopyNode;
   }});
 
@@ -646,6 +655,9 @@ FABRIC.SceneGraph.registerNodeType('Instance', {
     instanceNode.pub.setGeometryNode = function(node) {
       if (!node.isTypeOf('Geometry')) {
         throw ('Incorrect type assignment. Must assign a Geometry');
+      }
+      if(geometryNode){
+        redrawEventHandler.removeChildEventHandler(geometryNode.getRedrawEventHandler());
       }
       node = scene.getPrivateInterface(node);
       geometryNode = node;

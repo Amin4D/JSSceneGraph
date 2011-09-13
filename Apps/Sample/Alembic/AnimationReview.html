@@ -332,7 +332,7 @@ $(document).ready(function() {
   var loadAlembicAsset = function(url) {
     var assets = scene.importAssetFile(url, {
       dependentNode: viewport,
-      onLoadCallback: function(){
+      onLoadSuccessCallback: function(){
   
         // get the first asset name
         var assetName = undefined;
@@ -496,6 +496,9 @@ $(document).ready(function() {
   
   // setup hotkeys
   window.onkeydown = function(evt) {
+    if(!timeRange)
+      return;
+    
     var time = scene.animation.getTime() % timeRange.y;
     if(evt.keyCode == 37 && time > timeRange.x) {
       time -= 1.0 / 30.0;

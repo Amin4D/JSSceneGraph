@@ -22,6 +22,7 @@ function Size DisplacementMap.uvToPixelIndex(Scalar u, Scalar v) {
   return (vindex * this.size) + uindex;
 }
 
+
 function DisplacementMap.setValue(Scalar u, Scalar v, Color val) {
   this.pixels[this.uvToPixelIndex(u,v)] = val; 
 }
@@ -38,11 +39,22 @@ function DisplacementMap.setBValue(Scalar u, Scalar v, Scalar val) {
   this.pixels[this.uvToPixelIndex(u,v)].b = val; 
 }
 
+// Use bi-linear interpollation to calculate the resulting pixel value. 
 function Color DisplacementMap.getValue(Scalar u, Scalar v) {
-  return this.pixels[this.uvToPixelIndex(u,v)]; 
+  Scalar u_denorm = u * Scalar(this.size-1);
+  Scalar v_denorm = v * Scalar(this.size-1);
+  
+  Scalar u_fract = u_denorm - floor(u_denorm);
+  Scalar v_fract = v_denorm - floor(v_denorm);
+  Integer uindex = Integer(floor(u_denorm));
+  Integer vindex = Integer(floor(v_denorm));
+  
+  Color val1 = this.pixels[(vindex * this.size) + uindex].lerp(this.pixels[(vindex * this.size) + uindex+1], u_fract);
+  Color val2 = this.pixels[((vindex+1) * this.size) + uindex].lerp(this.pixels[((vindex+1) * this.size) + uindex+1], u_fract);
+  return val1.lerp(val2, v_fract);
 }
 
 function Color DisplacementMap.getValue(Vec2 uv) {
-  return this.pixels[this.uvToPixelIndex(uv.x,uv.y)];
+  return this.getValue(uv.x,uv.y);
 }
 

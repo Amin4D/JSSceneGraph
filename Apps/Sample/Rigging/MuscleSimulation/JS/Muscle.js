@@ -366,7 +366,7 @@ operator rotateMuscleVolume(\n\
         pointEnvelopWeights.push(FABRIC.RT.vec2(envelopWeight, 1.0 - envelopWeight));
         
         var flexibilityWeight = (Math.cos((i/(muscleOptions.numSegments-1) * 2.0 * Math.PI)) * 0.45) + 0.55;
-        flexibilityWeights.push(1.0 - Math.pow(flexibilityWeight, 4));
+        flexibilityWeights.push(1.0 - Math.pow(flexibilityWeight, 3));
         segmentCompressionFactors.push(1.0);
         if(i>0){
           segmentLengths.push(xfos[i].tr.dist(xfos[i-1].tr));
@@ -375,7 +375,7 @@ operator rotateMuscleVolume(\n\
       }
       var key = FABRIC.Animation.bezierKeyframe;
       var contractionCurve = [];
-      contractionCurve.push( key(0.6, 0, null, FABRIC.RT.vec2(0.1, 0)) );
+      contractionCurve.push( key(0.75, 0, null, FABRIC.RT.vec2(0.1, 0)) );
       contractionCurve.push( key(1.0, 1.0, FABRIC.RT.vec2(-0.1, 0), FABRIC.RT.vec2(0.1, 0)));
       contractionCurve.push( key(2.0, 1.0, FABRIC.RT.vec2(-0.1, 0), null));
       

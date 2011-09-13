@@ -62,7 +62,7 @@ operator generateCylinder(
 
       positions[voff] = normals[voff] * radius;
       positions[voff].y = y;
-      uvs[voff] = Vec2(1.0 - Scalar(j) / Scalar(sides), Scalar(i + 1) / Scalar(loops + 1));
+      uvs[voff] = Vec2(1.0 - (Scalar(j) / Scalar(sides)), Scalar(i) / Scalar(nbLoops));
       voff++;
     }
   }

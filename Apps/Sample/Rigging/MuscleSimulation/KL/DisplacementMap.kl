@@ -17,8 +17,14 @@ function DisplacementMap.resize(Size size) {
 }
 
 function Size DisplacementMap.uvToPixelIndex(Scalar u, Scalar v) {
-  Integer uindex = Integer(u * Scalar(this.size-1));
-  Integer vindex = Integer(v * Scalar(this.size-1));
+  Integer uindex = Integer(u * Scalar(this.size));
+  Integer vindex = Integer(v * Scalar(this.size));
+  if(uindex == this.size){
+    uindex = (this.size-1); // CLAMP;
+  }
+  if(vindex == this.size){
+    vindex = 0; // LOOP;
+  }
   return (vindex * this.size) + uindex;
 }
 
@@ -31,12 +37,16 @@ function DisplacementMap.setRValue(Scalar u, Scalar v, Scalar val) {
   this.pixels[this.uvToPixelIndex(u,v)].r = val; 
 }
 
-function DisplacementMap.setGValue(Scalar u, Scalar v, Scalar val) {
-  this.pixels[this.uvToPixelIndex(u,v)].g = val; 
-}
-
-function DisplacementMap.setBValue(Scalar u, Scalar v, Scalar val) {
-  this.pixels[this.uvToPixelIndex(u,v)].b = val; 
+function Color DisplacementMap.getPixel(Integer u, Integer v) {
+  Integer uindex = u;
+  Integer vindex = v;
+  if(uindex == this.size){
+    uindex = (this.size-1); // CLAMP;
+  }
+  if(vindex == this.size){
+    vindex = 0; // LOOP;
+  }
+  return this.pixels[(vindex * this.size) + uindex];
 }
 
 // Use bi-linear interpollation to calculate the resulting pixel value. 
@@ -49,8 +59,8 @@ function Color DisplacementMap.getValue(Scalar u, Scalar v) {
   Integer uindex = Integer(floor(u_denorm));
   Integer vindex = Integer(floor(v_denorm));
   
-  Color val1 = this.pixels[(vindex * this.size) + uindex].lerp(this.pixels[(vindex * this.size) + uindex+1], u_fract);
-  Color val2 = this.pixels[((vindex+1) * this.size) + uindex].lerp(this.pixels[((vindex+1) * this.size) + uindex+1], u_fract);
+  Color val1 = this.getPixel(uindex, vindex  ).lerp(this.getPixel(uindex+1, vindex  ), u_fract);
+  Color val2 = this.getPixel(uindex, vindex+1).lerp(this.getPixel(uindex+1, vindex+1), u_fract);
   return val1.lerp(val2, v_fract);
 }
 

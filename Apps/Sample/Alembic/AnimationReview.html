@@ -160,8 +160,16 @@ FABRIC.SceneGraph.registerNodeType('PaintPlaneInstance', {
     planeXfo.sc.x = width;
     planeXfo.sc.z = height;
     
+    var parentTransformNode = cameraNode.pub.getTransformNode();
+    parentTransform = parentTransformNode.getGlobalXfo();
+    planeXfo = parentTransform.projectInv(planeXfo);
+    
     // create a transform node for the plane
-    var transformNode = scene.constructNode('Transform', { globalXfo: planeXfo });
+    var transformNode = scene.constructNode('Transform', {
+      hierarchical: true,
+      parentTransformNode: parentTransformNode,
+      localXfo: planeXfo
+    });
 
     // create a texture to paint onto
     var textureNode = scene.constructNode('Image', {

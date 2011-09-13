@@ -63,16 +63,14 @@ operator drawRenderTargetToView(
  // report("<<<drawRenderTargetToView");
 }
 
-operator getRGBAFloatPixelsFromRenderTarget(
+operator getRGBAPixelsFromRenderTarget(
   io Boolean toggle,
   io OGLRenderTarget renderTarget,
   io Vec2 pos,
   io Vec2 size,
-  io RGBA pixels[]
+  io Color pixels[]
 ) {
   if(toggle) {
-    report("Querying pixels at position "+pos+" of size "+size+"...");
-    renderTarget.getRGBAFloatPixels(pos,size,pixels);
-    report("Resulting pixels: "+pixels);
+    renderTarget.getRGBAPixels(pos,size,pixels);
   }
 }

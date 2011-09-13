@@ -60,7 +60,7 @@ FABRIC.SceneGraph.registerNodeType('OffscreenViewport', {
       textureDescription = new FABRIC.RT.OGLRenderTargetTextureDesc (
         2,
         new FABRIC.RT.OGLTexture2D (
-          FABRIC.SceneGraph.OpenGLConstants.GL_RGBA16F_ARB,
+          FABRIC.SceneGraph.OpenGLConstants.GL_RGBA16,
           FABRIC.SceneGraph.OpenGLConstants.GL_RGBA,
           FABRIC.SceneGraph.OpenGLConstants.GL_FLOAT)
       );
@@ -109,6 +109,17 @@ FABRIC.SceneGraph.registerNodeType('OffscreenViewport', {
     
     // setup the prebindings in order
     var preBindings = eventHandlerNode.preDescendBindings;
+    preBindings.append(
+      scene.constructOperator({
+          operatorName: 'bindScreenRenderTarget',
+          srcFile: 'FABRIC_ROOT/SceneGraph/KL/renderTarget.kl',
+          entryFunctionName: 'bindScreenRenderTarget',
+          parameterLayout: [
+            'window.width',
+            'window.height',
+            'data.renderTarget'
+          ]
+        }));
     preBindings.append(scene.constructOperator({
       operatorName: 'viewPortBeginRender',
       srcFile: 'FABRIC_ROOT/SceneGraph/KL/viewPortBeginRender.kl',
@@ -133,17 +144,6 @@ FABRIC.SceneGraph.registerNodeType('OffscreenViewport', {
         'camera.orthographic'
       ]
     }));
-    preBindings.append(
-      scene.constructOperator({
-          operatorName: 'bindScreenRenderTarget',
-          srcFile: 'FABRIC_ROOT/SceneGraph/KL/renderTarget.kl',
-          entryFunctionName: 'bindScreenRenderTarget',
-          parameterLayout: [
-            'window.width',
-            'window.height',
-            'data.renderTarget'
-          ]
-        }));
 
     eventHandlerNode.postDescendBindings.insert(
       scene.constructOperator({

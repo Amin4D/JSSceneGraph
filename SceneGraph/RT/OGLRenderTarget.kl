@@ -201,7 +201,7 @@ function OGLRenderTarget.unbind() {
   glBindFramebuffer(GL_FRAMEBUFFER, this.prevFbo);
 }
 
-function OGLRenderTarget.getRGBAFloatPixels(io Vec2 pos, io Vec2 size, io RGBA pixels[]) {
+function OGLRenderTarget.getRGBAPixels(io Vec2 pos, io Vec2 size, io Color pixels[]) {
   if(this.fbo == 0) {
     pixels.resize(0);
     return;

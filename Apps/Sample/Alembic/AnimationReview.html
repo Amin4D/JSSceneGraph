@@ -60,11 +60,11 @@ FABRIC.SceneGraph.registerNodeType('UVViewport', {
     var dgnode = offscreenNode.getDGNode();
     dgnode.addMember('queryToggle','Boolean', false);
     dgnode.addMember('queryPos','Vec2');
-    dgnode.addMember('querySize','Vec2');
-    dgnode.addMember('queryPixels','RGBA[]');
+    dgnode.addMember('querySize','Vec2', FABRIC.RT.vec2(1,1));
+    dgnode.addMember('queryPixels','Color[]');
     dgnode.bindings.append(scene.constructOperator({
-      operatorName: 'getRGBAFloatPixelsFromRenderTarget',
-      entryFunctionName: 'getRGBAFloatPixelsFromRenderTarget',
+      operatorName: 'getRGBAPixelsFromRenderTarget',
+      entryFunctionName: 'getRGBAPixelsFromRenderTarget',
       srcFile: 'FABRIC_ROOT/SceneGraph/KL/renderTarget.kl',
       parameterLayout: [
         'self.queryToggle',
@@ -74,6 +74,10 @@ FABRIC.SceneGraph.registerNodeType('UVViewport', {
         'self.queryPixels',
       ]
     }));
+
+    offscreenNode.addMemberInterface(dgnode, 'queryToggle', true);
+    offscreenNode.addMemberInterface(dgnode, 'queryPos', true);
+    offscreenNode.addMemberInterface(dgnode, 'querySize', true);
     
     return offscreenNode;
   }});
@@ -169,14 +173,13 @@ FABRIC.SceneGraph.registerNodeType('PaintPlaneInstance', {
     });
     var texturedgnode = textureNode.getDGNode();
 
-
-    /*
     // create the paint operator for the texture
-    texturedgnode.addMember('paint','Boolean',false);
+    texturedgnode.setCount(1);
+    texturedgnode.addMember('paint','Integer',0);
     texturedgnode.addMember('paintColor','RGBA',options.paintColor);
     texturedgnode.addMember('paintRadius','Scalar',options.paintRadius);
-    texturedgnode.addDependency(transformNode.getDGNode(),'transform');
-    texturedgnode.addDependency(viewportNode.getRayCastDgNodeDGNode(),'viewport');
+    texturedgnode.addMember('UVs','Color[]',[]);
+    texturedgnode.addDependency(uvViewportNode.getDGNode(),'uvviewport');
     texturedgnode.bindings.append(scene.constructOperator({
       operatorName: 'paintPixels',
       entryFunctionName: 'paintPixels',
@@ -185,14 +188,13 @@ FABRIC.SceneGraph.registerNodeType('PaintPlaneInstance', {
         'self.paint',
         'self.paintColor',
         'self.paintRadius',
-        'transform.globalXfo',
-        'viewport.ray',
         'self.width',
         'self.height',
-        'self.pixels'
+        'self.pixels',
+        'uvviewport.queryPixels',
+        'self.UVs'
       ]
     }));
-    */
 
     // create a frame operator to the texture
     texturedgnode.addMember('drawFrame','Boolean',true);
@@ -235,9 +237,10 @@ FABRIC.SceneGraph.registerNodeType('PaintPlaneInstance', {
     instanceNode.addMemberInterface(dgnode, 'planeBlend', true);
     instanceNode.addMemberInterface(texturedgnode, 'drawFrame', true);
     instanceNode.addMemberInterface(texturedgnode, 'frameColor', true);
-    //instanceNode.addMemberInterface(texturedgnode, 'paint', true);
-    //instanceNode.addMemberInterface(texturedgnode, 'paintColor', true);
-    //instanceNode.addMemberInterface(texturedgnode, 'paintRadius', true);
+    instanceNode.addMemberInterface(texturedgnode, 'paint', true);
+    instanceNode.addMemberInterface(texturedgnode, 'paintColor', true);
+    instanceNode.addMemberInterface(texturedgnode, 'paintRadius', true);
+    instanceNode.addMemberInterface(texturedgnode, 'UVs', true);
     
     // link the material node to the animation controller
     dgnode.addDependency(animationdgnode,'animation');
@@ -274,38 +277,54 @@ FABRIC.SceneGraph.registerNodeType('PaintPlaneInstance', {
     
     // setup manipulation
     var painting = false;
+    var height = 0;
     var paint = function(evt) {
-      if(!painting)
+      if(!painting) {
         return;
-      //instanceNode.pub.setPaint(true);
-      //viewportNode.pub.redraw();
+      }
+      uvViewportNode.pub.setQueryPos(FABRIC.RT.vec2(evt.offsetX, height - 1 - evt.offsetY));
+      viewportNode.pub.redraw();
     };
     var beginpaint = function(evt) {
+      instanceNode.pub.setPaint(1);
+      uvViewportNode.pub.setQueryToggle(true);
       painting = true;
-      // eventually set the paint color
       paint(evt);
     };
     var endpaint = function(evt) {
       painting = false;
+      instanceNode.pub.setPaint(0);
+      uvViewportNode.pub.setQueryToggle(false);
+      viewportNode.pub.redraw();
     };
     
+    var enabledManip = false;
     instanceNode.pub.enableManipulation = function() {
+      if(enabledManip)
+        return;
+
+      height = viewportNode.getFabricWindowObject().windowNode.getData('height',0);
       // setup the flat material for drawing
       instanceNode.pub.setMaterialNode( uvViewportNode.pub.getFlatUVMaterial() );
       uvViewportNode.pub.redraw();
 
       // setup all of the event listeners
-      viewportNode.getWindowElement().addEventListener('mousemove', paint, false);
       viewportNode.getWindowElement().addEventListener('mousedown', beginpaint, false);
       viewportNode.getWindowElement().addEventListener('mouseup', endpaint, false);
+      viewportNode.getWindowElement().addEventListener('mousemove', paint, false);
+      enabledManip = true;
     };
     instanceNode.pub.disableManipulation = function() {
+      if(!enabledManip)
+        return;
+
       // remove the flat uv material for drawing
       instanceNode.pub.removeMaterialNode( uvViewportNode.pub.getFlatUVMaterial() );
-      viewportNode.getWindowElement().removeEventListener('mousemove', paint);
-      viewportNode.getWindowElement().removeEventListener('mousedown', beginpaint);
-      viewportNode.getWindowElement().removeEventListener('mouseup', endpaint);
 
+      viewportNode.getWindowElement().removeEventListener('mousemove', paint);
+      viewportNode.getWindowElement().removeEventListener('mouseup', endpaint);
+      viewportNode.getWindowElement().removeEventListener('mousedown', beginpaint);
+      enabledManip = false;
     };
 
     return instanceNode;    
@@ -315,7 +334,8 @@ $(document).ready(function() {
 
   var scene = FABRIC.SceneGraph.createScene();
   var viewport = scene.constructNode('Viewport', {
-    windowElement: document.getElementById('FabricContainer')
+    windowElement: document.getElementById('FabricContainer'),
+    backgroundColor: FABRIC.RT.color(0.0, 0.0, 0.0, 0.0),
   });
 
   // Create a camera to draw the scene from
@@ -366,11 +386,13 @@ $(document).ready(function() {
     
     if(cameraName == "userCamera") {
       viewport.setCameraNode(camera);
+      uvViewport.setCameraNode(camera);
       for(var name in parsedCameras) {
         parsedCameras[name].setDrawToggle(true);
       }
     } else {
       viewport.setCameraNode(resourceLoadNode.getParsedNodes()[cameraName]);
+      uvViewport.setCameraNode(resourceLoadNode.getParsedNodes()[cameraName]);
       for(var name in parsedCameras) {
         parsedCameras[name].setDrawToggle(false);
       }
@@ -479,6 +501,7 @@ $(document).ready(function() {
     widthSections: 1,
   });
   var currentPlane = undefined;
+  var currentKey = undefined;
   var paintPlane = function() {
     
     // setup the function to change the active plane    
@@ -487,6 +510,7 @@ $(document).ready(function() {
       if(plane == undefined)
         return;
       currentPlane = plane;
+      currentKey = key;
       
       scene.animation.setTime(plane.time);
       $('#localtime').slider('value', plane.time);
@@ -514,6 +538,10 @@ $(document).ready(function() {
     // check if we need to create a new plane
     var timeKey = resourceLoadNode.getAnimationController().getLocalTime();
     timeKey = ''+parseInt(timeKey * 30 + 0.5);
+    
+    if(currentKey == timeKey)
+      return;
+    
     if(planes[timeKey] == undefined ) {
       var newPlane = scene.constructNode('PaintPlaneInstance', {
         viewportNode: viewport,
@@ -523,7 +551,7 @@ $(document).ready(function() {
         animationControllerNode: resourceLoadNode.getAnimationController(),
         planeTime: resourceLoadNode.getAnimationController().getLocalTime(),
         planeBlend: 5.0 / 30.0,
-        resolutionFactor: 0.25
+        resolutionFactor: 0.1
       });
       planes[timeKey] = {
         camera: usedCamera,
@@ -586,9 +614,9 @@ $(document).ready(function() {
       scene.animation.pause();
     } else if(evt.keyCode == 80) { // P
       cameraManipulator.disable();
+      paintPlane();
       if(currentPlane)
         currentPlane.instance.enableManipulation();
-      paintPlane();
     }
   };
   window.onkeyup = function(evt) {

@@ -17,9 +17,9 @@ operator setVertexColorByWeight(
   io Color vertexColor,
   in Size index
 ){
-  vertexColor.r = 0.5 + (0.5 * stickWeights[index]);
-  vertexColor.g = 0.5 + (0.5 * slideWeights[index]);
-  vertexColor.b = 0.5 + (0.5 * bulgeWeights[index]);
+  vertexColor.r = 0.3 + (0.7 * stickWeights[index]);
+  vertexColor.g = 0.3 + (0.7 * slideWeights[index]);
+  vertexColor.b = 0.3 + (0.7 * bulgeWeights[index]);
 }
 
 

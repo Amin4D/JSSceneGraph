@@ -860,16 +860,17 @@ operator deformSkin(
     }
   }
   position += slideDelta;
-  /*
+  
   // Bulging
-  Vec3 bulgeDelta;
-  for(Integer i=0; i<4; i++){
-    if(muscleBindingIds[i] >= 0 && muscleBindingWeights[i] > 0.0){
-      bulgeDelta += normal * (muscleBindingWeights[i] * bulgeWeight);
+  Vec3 bulgeDelta(0.0,0.0,0.0);
+  for(Integer i=0; i<1; i++){
+    if(muscleBindingIds[i] >= 0 && bulgeWeight > 0.0){
+      Integer mid = muscleBindingIds[i];
+      bulgeDelta -= normal * ((1.0 - muscles[mid].contraction) * bulgeWeight);
     }
   }
   position += bulgeDelta;
-  */
+  
 }
 
 

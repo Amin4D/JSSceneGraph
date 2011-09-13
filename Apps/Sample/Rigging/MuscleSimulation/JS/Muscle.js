@@ -411,6 +411,7 @@ FABRIC.SceneGraph.registerNodeType('MuscleSkinDeformation', {
       baseGeometryNode:options.baseSkinMesh
     });
     
+    boundSkin.pub.addUniformValue('reload', 'Boolean', false );
     boundSkin.pub.addVertexAttributeValue('muscleBindingIds', 'Integer[4]', [0,-1,-1,-1]);
     boundSkin.pub.addVertexAttributeValue('musclebindingweights', 'Scalar[4]', [1,0,0,0] );
     boundSkin.pub.addVertexAttributeValue('stickLocations', 'Vec3[4]' );
@@ -504,6 +505,12 @@ FABRIC.SceneGraph.registerNodeType('MuscleSkinDeformation', {
       return boundSkin;
     };
     
+    deformedSkin.reload = function(){
+      boundSkin.getUniformsDGNode().setData('reload', 0, true);
+      deformedSkin.pub.reloadVBO('vertexColors');
+    };
+    
+    /*
     deformedSkin.pub.getBulkAttributeData = function( indices ){
       return boundSkin.pub.getBulkAttributeData( indices );
     };
@@ -512,13 +519,8 @@ FABRIC.SceneGraph.registerNodeType('MuscleSkinDeformation', {
       boundSkin.pub.setBulkAttributeData( data );
       deformedSkin.pub.reloadVBO('vertexColors');
     };
+    */
     
-    
-    deformedSkin.pub.getAttributes = function( data ){
-      return boundSkin.getAttributesDGNode();
-    };
-    
-
     return deformedSkin;
   }});
   
@@ -588,8 +590,9 @@ FABRIC.SceneGraph.registerNodeType('PaintSkinWeightsManipulator', {
     
     paintSkinWeightsManipulator.pub.addEventListener('onpaint', function(evt) {
       for(var i=0;i<paintableNodes.length; i++){
-        paintableNodes[i].pub.reloadVBO('vertexColors');
+        paintableNodes[i].reload();
       }
+      evt.viewportNode.redraw();
     });
     
     var paintEventHandler = paintSkinWeightsManipulator.getPaintEventHandler();

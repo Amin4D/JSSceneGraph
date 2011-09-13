@@ -182,7 +182,7 @@ operator simulateMuscle(
     }
     compressionFactor += compression;
     
-    debugDraw.drawAxis(muscle.xfos[i], 10.0, Color(1.0,0.0,0.0,1.0));
+  //  debugDraw.drawAxis(muscle.xfos[i], 10.0, Color(1.0,0.0,0.0,1.0));
   }
   compressionFactor = compressionFactor / Scalar(muscle.xfos.size() * 2.0);
   

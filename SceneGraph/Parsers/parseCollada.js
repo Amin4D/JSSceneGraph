@@ -804,8 +804,7 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
     var skeletonNode = scene.constructNode('CharacterSkeleton', {
       name:controllerName+"Skeleton",
       calcReferenceLocalPose: false,
-      calcReferenceGlobalPose: false,
-      calcInvMatricies: false
+      calcReferenceGlobalPose: false
     });
     skeletonNode.setBones(bones);
     

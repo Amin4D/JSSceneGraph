@@ -84,8 +84,8 @@ $(document).ready(function() {
   var camera = scene.constructNode('TargetCamera', {
       nearDistance: 0.1,
       farDistance: 500,
-      position: FABRIC.RT.vec3(0, 5, 10).scale(1.5),
-      target: FABRIC.RT.vec3(0, 0, 0)
+      position: FABRIC.RT.vec3(0, 15, 15),
+      target: FABRIC.RT.vec3(0, 5, 0)
     });
 
   scene.constructNode("CameraManipulator", { targetNode:camera } );
@@ -93,7 +93,6 @@ $(document).ready(function() {
   viewport.setCameraNode(camera);
   scene.constructNode("CameraManipulator", { targetNode:camera } );
   
-  /*
   // create the scene grid
   scene.constructNode('Instance', {
       geometryNode: scene.constructNode('Grid', {
@@ -101,19 +100,18 @@ $(document).ready(function() {
         size_z: 40.0,
         sections_x: 20,
         sections_z: 20 }),
-      materialNode: scene.constructNode('FlatMaterial', { color: FABRIC.RT.rgb(0.4, 0.4, 0.4) })
+      materialNode: scene.constructNode('FlatMaterial', { color: FABRIC.RT.rgb(0.2, 0.2, 0.2) })
     });
-  */
   
   // first create a skeleton
   var skeleton = scene.constructNode('CharacterSkeleton');
 
   skeleton.addBone({name: 'anchorLeft', referencePose: FABRIC.RT.xfo({
-      tr: FABRIC.RT.vec3(-6, 0, 0)
+      tr: FABRIC.RT.vec3(-6, 5, 0)
     }) });
   
   skeleton.addBone({name: 'anchorRight', referencePose: FABRIC.RT.xfo({
-      tr: FABRIC.RT.vec3(6, 0.1, 0)
+      tr: FABRIC.RT.vec3(6, 5, 0)
     }) });
 
   // create the rig

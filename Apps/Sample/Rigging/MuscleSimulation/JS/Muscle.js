@@ -94,17 +94,16 @@ FABRIC.SceneGraph.registerNodeType('MuscleSystem', {
     
     /////////////////////////////////////////////////////////
     // Configure the muscle default values. 
-    var pointXfos = [],
+    var xfos = [],
       segmentLengths = [],
       pointEnvelopWeights = [],
       segmentCompressionFactors = [],
       flexibilityWeights = [],
       contractionWeights = [],
-      simulationWeights= [],
-      pointPositions = [];
+      simulationWeights= [];
       
     for(i = 0; i < muscleDefaults.numSegments; i++){
-      pointXfos.push(FABRIC.RT.xfo( {
+      xfos.push(FABRIC.RT.xfo( {
         tr: FABRIC.RT.vec3( ((i/(muscleDefaults.numSegments-1)) - 0.5) * muscleDefaults.length, 0,0)
       }));
       var envelopWeight = (Math.cos((i/(muscleDefaults.numSegments-1)) * Math.PI) + 1) * 0.5;
@@ -112,16 +111,14 @@ FABRIC.SceneGraph.registerNodeType('MuscleSystem', {
       
       var flexibilityWeight = (Math.cos((i/(muscleDefaults.numSegments-1) * 2.0 * Math.PI)) * 0.45) + 0.55;
       flexibilityWeights.push(1.0 - Math.pow(flexibilityWeight, 4));
-      pointPositions.push(pointXfos[i].tr);
       segmentCompressionFactors.push(1.0);
       if(i>0){
-        segmentLengths.push(pointXfos[i].tr.dist(pointXfos[i-1].tr));
+        segmentLengths.push(xfos[i].tr.dist(xfos[i-1].tr));
         contractionWeights.push((flexibilityWeights[i]+flexibilityWeights[i-1]) * 0.5 );
       }
     }
     
-    initializationdgnode.addMember('initialXfos', 'Xfo[]', pointXfos); /* Xfos deformed by the skeleton */
-    initializationdgnode.addMember('xfo', 'Xfo', muscleDefaults.xfo); /* Xfos deformed by the skeleton */
+    initializationdgnode.addMember('initialXfos', 'Xfo[]', xfos); /* Xfos deformed by the skeleton */
     initializationdgnode.addMember('segmentLengths', 'Scalar[]', segmentLengths);
       
     initializationdgnode.addMember('pointEnvelopeIds', 'Vec2', muscleDefaults.pointEnvelopeIds);
@@ -217,17 +214,17 @@ FABRIC.SceneGraph.registerNodeType('MuscleSystem', {
       }));
     
     simulationdgnode.addMember('initialized', 'Boolean', false);
-    simulationdgnode.addMember('envelopedXfos', 'Xfo[]', pointXfos); /* Xfos deformed by the skeleton */
-    simulationdgnode.addMember('muscle', 'Muscle', new FABRIC.RT.Muscle({ xfos: pointXfos }));
+    simulationdgnode.addMember('envelopedXfos', 'Xfo[]', xfos); /* Xfos deformed by the skeleton */
+    simulationdgnode.addMember('muscle', 'Muscle', new FABRIC.RT.Muscle({ xfos: xfos }));
     
-    simulationdgnode.addMember('pointPositionsPrevUpdate', 'Vec3[]', pointPositions);
-    simulationdgnode.addMember('pointPositionsPrevUpdate_Temp', 'Vec3[]', pointPositions);
+    simulationdgnode.addMember('pointPositionsPrevUpdate', 'Vec3[]');
+    simulationdgnode.addMember('pointPositionsPrevUpdate_Temp', 'Vec3[]');
     
     simulationdgnode.addMember('debugDraw', 'DebugGeometry' );
     
     simulationdgnode.bindings.append(scene.constructOperator({
         operatorName: 'simulateMuscle',
-        srcFile: './KL/Muscle.kl',
+        srcFile: './KL/MuscleSimulation.kl',
         entryFunctionName: 'simulateMuscle',
         preProcessorDefinitions: {
           KEYFRAMETYPE:  'BezierKeyframe',
@@ -235,7 +232,6 @@ FABRIC.SceneGraph.registerNodeType('MuscleSystem', {
         },
         parameterLayout: [
           'initializationdgnode.initialXfos<>',
-          'initializationdgnode.xfo<>',
           'initializationdgnode.segmentLengths<>',
           'initializationdgnode.pointEnvelopeIds<>',
           'initializationdgnode.pointEnvelopWeights<>',
@@ -261,13 +257,10 @@ FABRIC.SceneGraph.registerNodeType('MuscleSystem', {
         ]
       }));
     
-    
-    
     var debugGeometryDraw = scene.constructNode('DebugGeometryDraw', {
         dgnode: simulationdgnode,
         debugGemetryMemberName: 'debugDraw'
     });
-
     
     //////////////////////////////////////////////////////////
     // Volume Display
@@ -307,18 +300,18 @@ operator rotateMuscleVolume(\n\
     }
     
     muscleSystem.getLength = function(index){
-      var pointXfos = initializationdgnode.getData('initialXfos');
-      return pointXfos[0].tr.dist(pointXfos[pointXfos.length-1].tr);
+      var xfos = initializationdgnode.getData('initialXfos');
+      return xfos[0].tr.dist(xfos[xfos.length-1].tr);
     }
     muscleSystem.setLength = function(index, length){
-      var pointXfos = initializationdgnode.getData('initialXfos');
+      var xfos = initializationdgnode.getData('initialXfos');
       // Scale all the Xfos away from the center of the muscle.
-      var scale = length / pointXfos[0].tr.dist(pointXfos[pointXfos.length-1].tr);
-      var center = pointXfos[0].tr.lerp(pointXfos[pointXfos.length-1].tr, 0.5);
+      var scale = length / xfos[0].tr.dist(xfos[xfos.length-1].tr);
+      var center = xfos[0].tr.lerp(xfos[xfos.length-1].tr, 0.5);
       for(i = 0; i < muscleDefaults.numSegments; i++){
-        pointXfos[i].tr = pointXfos[i].tr.subtract(center).scale(scale).add(center);
+        xfos[i].tr = xfos[i].tr.subtract(center).scale(scale).add(center);
       }
-      initializationdgnode.setData('initialXfos', 0, pointXfos);
+      initializationdgnode.setData('initialXfos', index, xfos);
     }
     
     var coreDisplayLinesNodes = [],
@@ -373,8 +366,13 @@ operator rotateMuscleVolume(\n\
     muscleSystem.pub.addMuscle = function(muscleOptions){
       muscleOptions = scene.assignDefaults(muscleOptions, {
         display: true,
+        xfo: FABRIC.RT.xfo(),
         diffuseColor: FABRIC.RT.rgba(0.8, 0.0, 0.0, 0.5),
-        ambientColor: FABRIC.RT.rgba(0.1, 0.1, 0.1, 0.2)
+        ambientColor: FABRIC.RT.rgba(0.1, 0.1, 0.1, 0.2),
+        numSegments: 3,
+        length: 10,
+        radius: 1.5,
+        pointEnvelopeIds: FABRIC.RT.vec2(0,1)
       });
           
       muscleOptions = scene.assignDefaults(muscleOptions, muscleDefaults);
@@ -392,6 +390,55 @@ operator rotateMuscleVolume(\n\
           simulationdgnode.setData(i, mid, muscleOptions[i]);
         }
       }
+      
+      ///////////////////////////////////////
+      // Configure the muscle params
+      var xfos = [],
+        segmentLengths = [],
+        pointEnvelopWeights = [],
+        segmentCompressionFactors = [],
+        flexibilityWeights = [],
+        contractionWeights = [],
+        simulationWeights= [];
+        
+      for(i = 0; i < muscleOptions.numSegments; i++){
+        xfos.push(
+          muscleOptions.xfo.multiply( FABRIC.RT.xfo({
+            tr: FABRIC.RT.vec3( ((i/(muscleOptions.numSegments-1)) - 0.5) * muscleOptions.length, 0,0)
+          }))
+        );
+        var envelopWeight = (Math.cos((i/(muscleOptions.numSegments-1)) * Math.PI) + 1) * 0.5;
+        pointEnvelopWeights.push(FABRIC.RT.vec2(envelopWeight, 1.0 - envelopWeight));
+        
+        var flexibilityWeight = (Math.cos((i/(muscleOptions.numSegments-1) * 2.0 * Math.PI)) * 0.45) + 0.55;
+        flexibilityWeights.push(1.0 - Math.pow(flexibilityWeight, 4));
+        segmentCompressionFactors.push(1.0);
+        if(i>0){
+          segmentLengths.push(xfos[i].tr.dist(xfos[i-1].tr));
+          contractionWeights.push((flexibilityWeights[i]+flexibilityWeights[i-1]) * 0.5 );
+        }
+      }
+        
+      initializationdgnode.setData('initialXfos', mid, xfos); /* Xfos deformed by the skeleton */
+      initializationdgnode.setData('segmentLengths', mid, segmentLengths);
+        
+      initializationdgnode.setData('pointEnvelopeIds', mid, muscleOptions.pointEnvelopeIds);
+      initializationdgnode.setData('pointEnvelopWeights', mid, pointEnvelopWeights);
+      initializationdgnode.setData('flexibilityWeights', mid, flexibilityWeights);
+      initializationdgnode.setData('simulationWeights', mid, simulationWeights);
+      
+        
+      // Displacement Map
+      var quadrantCurve = [];
+      quadrantCurve.push( key(0.0, muscleOptions.radius * 0.2, null, FABRIC.RT.vec2(0.2, 0)) );
+      quadrantCurve.push( key(0.5, muscleOptions.radius, FABRIC.RT.vec2(-0.2, 0), FABRIC.RT.vec2(0.2, 0)));
+      quadrantCurve.push( key(1.0, muscleOptions.radius * 0.2, FABRIC.RT.vec2(-0.2, 0), null));
+      initializationdgnode.setData('quadrantCurve0', mid, quadrantCurve);
+      initializationdgnode.setData('quadrantCurve1', mid, quadrantCurve);
+      initializationdgnode.setData('quadrantCurve2', mid, quadrantCurve);
+      initializationdgnode.setData('quadrantCurve3', mid, quadrantCurve);
+      
+      
       if(muscleOptions.display){
         muscleSystem.display(mid, muscleOptions);
       }

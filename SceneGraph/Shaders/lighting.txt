@@ -39,7 +39,7 @@ vec4 phong_shading(
   in float shininess,
   in vec4 ambientColor
 ){
-  vec4 final_color = vec4( 0, 0, 0, 1 );
+  vec4 final_color = vec4( 0, 0, 0, 0 );
   final_color += ambientColor * lightColor;
 
   if( lightType == 0 ){      // Point Light

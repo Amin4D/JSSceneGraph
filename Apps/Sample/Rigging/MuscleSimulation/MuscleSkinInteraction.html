@@ -102,80 +102,6 @@ operator transformMesh(\n\
   
   }});
 
-/*
-FABRIC.SceneGraph.registerNodeType('PaintSkinWeightsManipulator', {
-  factoryFn: function(options, scene) {
-    scene.assignDefaults(options, {
-      mode: 0
-      });
-    
-    
-    var paintSkinWeightsManipulator = scene.constructNode('PaintManipulator', options);
-    var paintableNodes = [];
-    var paintableNodePaintHandlers = [];
-    paintSkinWeightsManipulator.pub.addPaintableNode = function(node) {
-      if (!node.isTypeOf || !node.isTypeOf('Instance')) {
-        throw ('Incorrect type. Must assign a Instance');
-      }
-
-      if (!node.getGeometryNode().isTypeOf('Skin')) {
-        throw ('Incorrect type. Must assign a Skin');
-      }
-
-      var paintInstanceEventHandler,
-        instanceNode = scene.getPrivateInterface(node),
-        geometryNode = scene.getPrivateInterface(instanceNode.pub.getGeometryNode()),
-        transformNode = scene.getPrivateInterface(instanceNode.pub.getTransformNode()),
-        paintOperator;
-
-      paintInstanceEventHandler = paintManipulatorNode.constructEventHandlerNode('Paint' + node.getName());
-      paintInstanceEventHandler.addScope('boundgeometryattributes', geometryNode.getBoundSkin().getAttributesDGNode());
-      paintInstanceEventHandler.addScope('geometryattributes', geometryNode.getAttributesDGNode());
-      paintInstanceEventHandler.addScope('geometryuniforms', geometryNode.getAttributesDGNode());
-      paintInstanceEventHandler.addScope('transform', transformNode.getDGNode());
-      paintInstanceEventHandler.addScope('instance', instanceNode.getDGNode());
-
-      // The selector will return the node bound with the given binding name.
-      var paintingOpDef = {
-          operatorName: 'paintSkinWeights',
-          srcFile: './KL/paintSkinOp.kl',
-          entryFunctionName: 'paintSkinWeights',
-          parameterLayout: [
-            'paintData.cameraMatrix',
-            'paintData.projectionMatrix',
-            'paintData.aspectRatio',
-  
-            'paintData.brushPos',
-            'paintData.brushSize',
-            'paintData.mode',
-  
-            'transform.globalXfo',
-            'geometryattributes.positions[]',
-            'geometryattributes.normals[]',
-            'geometryattributes.vertexColors[]',
-            
-            'boundgeometryattributes.stickWeight[]',
-            'boundgeometryattributes.slideWeight[]',
-            'boundgeometryattributes.bulgeWeight[]'
-          ],
-          async: false
-        };
-      }
-      paintInstanceEventHandler.setSelector('instance', scene.constructOperator(paintingOpDef));
-      paintEventHandler.appendChildEventHandler(paintInstanceEventHandler);
-
-      paintableNodes.push(instanceNode);
-      paintableNodePaintHandlers.push(paintInstanceEventHandler);
-    };
-    
-    var paintEventHandler = vertexColorsPaintManipulator.getPaintEventHandler();
-    paintEventHandler.addMember('mode', 'Integer', options.mode);
-    paintSkinWeightsManipulator.addMemberInterface(paintEventHandler, 'mode', true);
-    
-    return paintSkinWeightsManipulator;
-  }});
-*/
-
 $(document).ready(function() {
   
   $('#play').button({
@@ -297,14 +223,14 @@ $(document).ready(function() {
   
   var muscleSystem = scene.constructNode('MuscleSystem', {
       characterRig: rig,
-      gravity: FABRIC.RT.vec3(0, 0.0, 0)
+      gravity: FABRIC.RT.vec3(0, -9.8, 0)
     });
   
   muscleSystem.addMuscle( {
     xfo: FABRIC.RT.xfo( {
         tr: FABRIC.RT.vec3( 0, 5, 0)
       }),
-    display: false
+    display: true
     });
   
   skin = scene.constructNode('MuscleSkinDeformation', {
@@ -323,7 +249,48 @@ $(document).ready(function() {
     .setMaterialNode( scene.constructNode('WireframeMaterial', {
         color: FABRIC.RT.rgb(0.2, 0.2, 0.2, 1)
       }));
-
+         
+    
+  var paintManipulator = scene.constructNode('PaintSkinWeightsManipulator', {
+      enabled:false
+    });
+  paintManipulator.addPaintableNode(skinInst);
+  
+  window.onkeydown = function(evt) {
+    switch(String.fromCharCode(evt.keyCode)){
+    case 'Q':{
+        cameraManipulator.disable();
+        paintManipulator.setMode(0);
+        paintManipulator.enable();
+        break;
+      }
+    case 'W':{
+        cameraManipulator.disable();
+        paintManipulator.setMode(1);
+        paintManipulator.enable();
+        break;
+      }
+    case 'E':{
+        cameraManipulator.disable();
+        paintManipulator.setMode(2);
+        paintManipulator.enable();
+        break;
+      }
+    }
+  };
+  window.onkeyup = function(evt) {
+    switch(String.fromCharCode(evt.keyCode)){
+    case 'Q':
+    case 'W':
+    case 'E':{
+        cameraManipulator.enable();
+        paintManipulator.disable();
+        break;
+      }
+    }
+  }
+    
+/*
   var paintManipulator = scene.constructNode('PaintManipulator', {
       enabled:false
     });
@@ -386,7 +353,7 @@ $(document).ready(function() {
       paintManipulator.removeEventListener('onpaint', onPaintSlideFn);
     }
   };
-    
+ */
   $('#loadingDialog').dialog({
     modal: true
   });

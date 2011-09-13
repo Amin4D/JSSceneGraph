@@ -154,7 +154,6 @@ operator generateDisplacementMap(
           case 4:
             val = calcPolarElipse( v, val3, val0 ); break;
         }
-      //  displacementMap.pixels[idx].r = val;
         displacementMap.setRValue(u, v, val);
         /*
         if(false){
@@ -200,7 +199,6 @@ operator generateSystemDisplacementMap(
     Integer size_x = displacementMapResolution * displacementMaps.size();
     Integer size_y = displacementMapResolution;
     
-
     var Size buffers[];
     buffers.push(Size(bufferID));
     glGenTextures(1, buffers);
@@ -236,7 +234,7 @@ operator deformMuscleVolume(
   Vec3 corepos = evalPiecewiseBSpline( xfos, parentpositions[index].x, t, i );
   Color volumePixel = map.getValue(parentuvs[index].y, parentuvs[index].x);
   
-  Vec3 frameoffsetvec = parentpositions[index] * volumePixel.r;// * compressionFactor;
+  Vec3 frameoffsetvec = parentpositions[index] * volumePixel.r * compressionFactor;
   frameoffsetvec.x = 0.0;
   Quat frame = xfos[i].ori.nlerp( xfos[i+1].ori, t );
   normal = frame.rotateVector( frameoffsetvec );
@@ -821,9 +819,8 @@ operator calcSkinStickLocations(
 operator deformSkin(
   io DisplacementMap displacementMaps<>,
   io Xfo simulatedXfos<>[],
-  /*
-  io Scalar inflationValues<>,
-  */
+  io Scalar compressionFactors<>,
+
   io Vec3 parentpositions<>,
   io Vec3 parentnormals<>,
   io Vec3 position,

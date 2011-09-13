@@ -189,7 +189,9 @@ operator simulateMuscle(
     
     debugDraw.drawAxis(simulatedXfos[i], 2.0, Color(1.0,0.0,0.0,1.0));
   }
-  compressionFactor = 1.0/(compressionFactor / Scalar(simulatedXfos.size() * 2.0));
+  compressionFactor = compressionFactor / Scalar(simulatedXfos.size() * 2.0);
+  
+  compressionFactor = 1.0/(compressionFactor * compressionFactor);
   
   /*
   cvPositions.row0.set(simulatedXfos[0].tr.x, simulatedXfos[0].tr.y, simulatedXfos[0].tr.z, segmentCompressionFactors[0]);

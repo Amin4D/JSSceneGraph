@@ -28,6 +28,29 @@ FABRIC.appendOnCreateContextCallback(function(context) {
 });
 
 
+FABRIC.RT.Muscle = function() {
+  this.map = new FABRIC.RT.DisplacementMap();
+  this.simulatedXfos = [];
+  this.contraction = 1.0;
+};
+
+FABRIC.RT.Muscle.prototype = {
+  
+};
+
+
+FABRIC.appendOnCreateContextCallback(function(context) {
+  context.RegisteredTypesManager.registerType('Muscle', {
+    members: {
+      map: 'DisplacementMap',
+      simulatedXfos: 'Xfo[]',
+      contraction: 'Scalar'
+    },
+    constructor: FABRIC.RT.Muscle
+  });
+});
+
+
 // These Node definitions are inlined for now, but will
 // be moved to a separate file once they are stabilized. 
 FABRIC.SceneGraph.registerNodeType('MuscleSystem', {
@@ -114,9 +137,9 @@ FABRIC.SceneGraph.registerNodeType('MuscleSystem', {
     // Displacement Map
     
     var quadrantCurve = [];
-    quadrantCurve.push( key(0.0, 0.5, null, FABRIC.RT.vec2(0.2, 0)) );
-    quadrantCurve.push( key(0.5, 2.0, FABRIC.RT.vec2(-0.2, 0), FABRIC.RT.vec2(0.2, 0)));
-    quadrantCurve.push( key(1.0, 0.5, FABRIC.RT.vec2(-0.2, 0), null));
+    quadrantCurve.push( key(0.0, 0.25, null, FABRIC.RT.vec2(0.2, 0)) );
+    quadrantCurve.push( key(0.5, 1.0, FABRIC.RT.vec2(-0.2, 0), FABRIC.RT.vec2(0.2, 0)));
+    quadrantCurve.push( key(1.0, 0.25, FABRIC.RT.vec2(-0.2, 0), null));
     initializationdgnode.addMember('quadrantCurve0', 'BezierKeyframe[]', quadrantCurve);
     initializationdgnode.addMember('quadrantCurve1', 'BezierKeyframe[]', quadrantCurve);
     initializationdgnode.addMember('quadrantCurve2', 'BezierKeyframe[]', quadrantCurve);
@@ -345,7 +368,9 @@ operator rotateMuscleVolume(\n\
       var inst = scene.constructNode('Instance', {
         geometryNode: deformedVolume.pub,
         materialNode: scene.constructNode('PhongMaterial', {
+          prototypeMaterialType: "TransparentMaterial",
           diffuseColor: FABRIC.RT.rgba(0.8, 0.0, 0.0, 0.5),
+          ambientColor: FABRIC.RT.rgba(0.1, 0.1, 0.1, 0.2),
           lightNode: scene.constructNode('PointLight', { position: FABRIC.RT.vec3(420.0, 1000.0, 600.0) }).pub
         }).pub
       });
@@ -404,7 +429,7 @@ FABRIC.SceneGraph.registerNodeType('MuscleSkinDeformation', {
     boundSkin.pub.addVertexAttributeValue('musclebindingweights', 'Scalar[4]', [1,0,0,0] );
     boundSkin.pub.addVertexAttributeValue('stickLocations', 'Vec3[4]' );
     boundSkin.pub.addVertexAttributeValue('stickWeight', 'Scalar', { defaultValue:0.0 } );
-    boundSkin.pub.addVertexAttributeValue('slideWeight', 'Scalar', { defaultValue:1.0 } );
+    boundSkin.pub.addVertexAttributeValue('slideWeight', 'Scalar', { defaultValue:0.0 } );
     boundSkin.pub.addVertexAttributeValue('bulgeWeight', 'Scalar', { defaultValue:0.0 } );
     boundSkin.getAttributesDGNode().addDependency(muscleSystem.getSystemParamsDGNode(), 'musclesystem');
     boundSkin.getAttributesDGNode().addDependency(muscleSystem.getInitializationDGNode(), 'musclesinitialization');
@@ -435,7 +460,7 @@ FABRIC.SceneGraph.registerNodeType('MuscleSkinDeformation', {
     
     deformedSkin.pub.addVertexAttributeValue('positions', 'Vec3', { genVBO:true, dynamic:true } );
     deformedSkin.pub.addVertexAttributeValue('normals', 'Vec3', { genVBO:true, dynamic:true } );
-    deformedSkin.pub.addVertexAttributeValue('vertexColors', 'Color', { genVBO:true });
+    deformedSkin.pub.addVertexAttributeValue('vertexColors', 'Color', { genVBO:true, dynamic:true });
     deformedSkin.pub.addVertexAttributeValue('debugDraw', 'DebugGeometry' );
     deformedSkin.getAttributesDGNode().addDependency(muscleSystem.getSystemParamsDGNode(), 'musclesystem');
     deformedSkin.getAttributesDGNode().addDependency(muscleSystem.getInitializationDGNode(), 'musclesinitialization');
@@ -466,6 +491,7 @@ FABRIC.SceneGraph.registerNodeType('MuscleSkinDeformation', {
       parameterLayout: [
         'musclesinitialization.displacementMap<>',
         'musclessimulation.simulatedXfos<>',
+        'musclessimulation.compressionFactor<>',
         
         'parentattributes.positions<>',
         'parentattributes.normals<>',
@@ -512,3 +538,80 @@ FABRIC.SceneGraph.registerNodeType('MuscleSkinDeformation', {
     return deformedSkin;
   }});
   
+
+
+FABRIC.SceneGraph.registerNodeType('PaintSkinWeightsManipulator', {
+  factoryFn: function(options, scene) {
+    scene.assignDefaults(options, {
+      mode: 0
+      });
+    
+    var paintSkinWeightsManipulator = scene.constructNode('PaintManipulator', options);
+    var paintableNodes = [];
+    var paintableNodePaintHandlers = [];
+    paintSkinWeightsManipulator.pub.addPaintableNode = function(node) {
+      if (!node.isTypeOf || !node.isTypeOf('Instance')) {
+        throw ('Incorrect type. Must assign a Instance');
+      }
+
+      if (!node.getGeometryNode().pub.isTypeOf('MuscleSkinDeformation')) {
+        throw ('Incorrect type. Must assign a MuscleSkinDeformation');
+      }
+
+      var paintInstanceEventHandler,
+        instanceNode = scene.getPrivateInterface(node),
+        geometryNode = scene.getPrivateInterface(instanceNode.pub.getGeometryNode()),
+        transformNode = scene.getPrivateInterface(instanceNode.pub.getTransformNode()),
+        paintOperator;
+
+      paintInstanceEventHandler = paintSkinWeightsManipulator.constructEventHandlerNode('Paint' + node.getName());
+      paintInstanceEventHandler.addScope('boundgeometryattributes', geometryNode.getBoundSkin().getAttributesDGNode());
+      paintInstanceEventHandler.addScope('geometryattributes', geometryNode.getAttributesDGNode());
+      paintInstanceEventHandler.addScope('geometryuniforms', geometryNode.getUniformsDGNode());
+      paintInstanceEventHandler.addScope('transform', transformNode.getDGNode());
+      paintInstanceEventHandler.addScope('instance', instanceNode.getDGNode());
+
+      // The selector will return the node bound with the given binding name.
+      var paintingOpDef = {
+          operatorName: 'paintSkinWeights',
+          srcFile: './KL/paintSkinOp.kl',
+          entryFunctionName: 'paintSkinWeights',
+          parameterLayout: [
+            'paintData.cameraMatrix',
+            'paintData.projectionMatrix',
+            'paintData.aspectRatio',
+  
+            'paintData.brushPos',
+            'paintData.brushSize',
+            'paintData.mode',
+  
+            'transform.globalXfo',
+            'geometryattributes.positions<>',
+            'geometryattributes.normals<>',
+            
+            'boundgeometryattributes.stickWeight<>',
+            'boundgeometryattributes.slideWeight<>',
+            'boundgeometryattributes.bulgeWeight<>'
+          ],
+          async: false
+        };
+      paintInstanceEventHandler.setSelector('instance', scene.constructOperator(paintingOpDef));
+      paintEventHandler.appendChildEventHandler(paintInstanceEventHandler);
+
+      paintableNodes.push(geometryNode);
+      paintableNodePaintHandlers.push(paintInstanceEventHandler);
+    };
+    
+    paintSkinWeightsManipulator.pub.addEventListener('onpaint', function(evt) {
+      for(var i=0;i<paintableNodes.length; i++){
+        paintableNodes[i].pub.reloadVBO('vertexColors');
+      }
+    });
+    
+    var paintEventHandler = paintSkinWeightsManipulator.getPaintEventHandler();
+    paintEventHandler.addMember('mode', 'Integer', options.mode);
+    paintSkinWeightsManipulator.addMemberInterface(paintEventHandler, 'mode', true);
+    
+    return paintSkinWeightsManipulator;
+  }});
+

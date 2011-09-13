@@ -740,6 +740,13 @@ FABRIC.SceneGraph.registerNodeType('ShadowMapMaterial', {
 
 FABRIC.SceneGraph.registerNodeType('TransparentMaterial', {
   factoryFn: function(options, scene) {
+    
+    scene.assignDefaults(options, {
+        enableOptions: [FABRIC.SceneGraph.OpenGLConstants.GL_BLEND],
+        blendModeSfactor:FABRIC.SceneGraph.OpenGLConstants.GL_SRC_ALPHA,
+        blendModeDfactor:FABRIC.SceneGraph.OpenGLConstants.GL_ONE_MINUS_SRC_ALPHA
+      });
+    
     options.parentEventHandler = scene.getSceneRedrawTransparentObjectsEventHandler();
     var transparentMaterial = scene.constructNode('Material', options);
     return transparentMaterial;

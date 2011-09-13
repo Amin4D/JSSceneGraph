@@ -13,10 +13,12 @@ function OGLTexture2D.configure(
   io Integer textureUnit
 ) {
   if(nbPixels > 0){
-    var Size buffers[];
-    buffers.resize(1);
-    glGenTextures(1, buffers);
-    this.bufferID = buffers[0];
+    if(this.bufferID == 0){
+      var Size buffers[];
+      buffers.resize(1);
+      glGenTextures(1, buffers);
+      this.bufferID = buffers[0];
+    }
     glActiveTexture(GL_TEXTURE0 + textureUnit);
     glBindTexture(GL_TEXTURE_2D, this.bufferID);
     
@@ -48,7 +50,7 @@ function OGLTexture2D.bindImageLDR(
   io RGBA bitmap[],
   io Integer textureUnit
 ) {
-  if (this.bufferID == 0) {
+  if (this.bufferID == 0 || this.forceRefresh) {
     this.configure(width, height, bitmap.data(), bitmap.size(), GL_RGBA, textureUnit);
   }
   this.bind(textureUnit);
@@ -61,7 +63,7 @@ function OGLTexture2D.bindImageHDR(
   io Color bitmap[],
   io Integer textureUnit
 ) {
-  if (this.bufferID == 0) {
+  if (this.bufferID == 0 || this.forceRefresh) {
     this.configure(width, height, bitmap.data(), bitmap.size(), GL_RGBA16F_ARB, textureUnit);
   }
   this.bind(textureUnit);

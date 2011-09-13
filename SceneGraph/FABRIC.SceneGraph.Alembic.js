@@ -38,8 +38,10 @@ FABRIC.SceneGraph.registerNodeType('AlembicLoadNode', {
     resourceloaddgnode.addMember('archiveID', 'Integer',-1);
     resourceloaddgnode.addMember('identifiers', 'String[]');
     resourceloaddgnode.addMember('sample', 'Integer', 0);
+    resourceloaddgnode.addMember('numSamples', 'Integer', 0);
     
     resourceLoadNode.addMemberInterface(resourceloaddgnode, 'sample', true);
+    resourceLoadNode.addMemberInterface(resourceloaddgnode, 'numSamples', false);
     
     // create an animation controller for the sample
     var animationController = scene.constructNode('AnimationController');
@@ -65,25 +67,14 @@ FABRIC.SceneGraph.registerNodeType('AlembicLoadNode', {
       parameterLayout: [
         'self.url', //For debugging only
         'self.resource',
-        'self.archiveID'
+        'self.archiveID',
+        'self.numSamples'
       ],
       entryFunctionName: 'alembicLoad',
       srcFile: 'FABRIC_ROOT/SceneGraph/KL/loadAlembic.kl',
       async: false
     }));
 
-    resourceloaddgnode.bindings.append(scene.constructOperator({
-      operatorName: 'alembicLoad',
-      parameterLayout: [
-        'self.url', //For debugging only
-        'self.resource',
-        'self.archiveID'
-      ],
-      entryFunctionName: 'alembicLoad',
-      srcFile: 'FABRIC_ROOT/SceneGraph/KL/loadAlembic.kl',
-      async: false
-    }));
-    
     resourceloaddgnode.bindings.append(scene.constructOperator({
       operatorName: 'alembicGetIdentifiers',
       parameterLayout: [
@@ -143,7 +134,7 @@ FABRIC.SceneGraph.registerNodeType('AlembicLoadNode', {
         // check this type
         if(type == 'PolyMesh') {
           
-          var trianglesNode = scene.constructNode('Triangles', { uvSets: 1 } );
+          var trianglesNode = scene.constructNode('Triangles', { uvSets: 1, createBoundingBoxNode: true } );
           trianglesNode
           trianglesNode.pub.setAttributeDynamic('positions');
           trianglesNode.pub.setAttributeDynamic('normals');
@@ -256,7 +247,9 @@ FABRIC.SceneGraph.registerNodeType('AlembicLoadNode', {
           console.log("ERROR: UNSUPPORT ALEMBIC OBJECT TYPE: "+type+", skipping "+identifier);
         }
       }
-
+      
+      // setup the timerange
+      animationController.pub.setTimeRange(FABRIC.RT.vec2(0, resourceLoadNode.pub.getNumSamples() / 30.0));
     });
     
     // also add the original on load callback

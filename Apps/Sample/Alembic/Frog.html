@@ -76,6 +76,10 @@ $(document).ready(function() {
   var scene = FABRIC.SceneGraph.createScene();
   var viewport = scene.constructNode('Viewport', { windowElement: document.getElementById('FabricContainer') });
 
+  viewport.setBackgroundTextureImage(scene.constructNode('Image', {
+    url: '../BasicDemos/Resources/fabric-demo-gradient.png'
+  }));
+
   scene.constructNode('Instance', {
           geometryNode: scene.constructNode('Grid', {
               size_x: 120.0,
@@ -89,8 +93,6 @@ $(document).ready(function() {
   var assets = scene.importAssetFile('Models/frog.abc', {
     dependentNode: viewport,
     onLoadSuccessCallback: function() {
-
-      assets.frog.getAnimationController().setTimeRange(FABRIC.RT.vec2(0, 2));
 
       // create the camera
       var nodes = assets.frog.getParsedNodes();

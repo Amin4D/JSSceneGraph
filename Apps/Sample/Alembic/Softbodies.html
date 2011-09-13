@@ -88,6 +88,10 @@ $(document).ready(function() {
   scene.constructNode('CameraManipulator', { targetNode: camera });
   viewport.setCameraNode(camera);
 
+  viewport.setBackgroundTextureImage(scene.constructNode('Image', {
+    url: '../BasicDemos/Resources/fabric-demo-gradient.png'
+  }));
+
   var light = scene.constructNode('PointLight', { position: FABRIC.RT.vec3(10, 30, 100).scale(3) });
 
   var cubeTextureMap = scene.constructNode('CubeMap', {
@@ -112,8 +116,6 @@ $(document).ready(function() {
     dependentNode: viewport,
     onLoadSuccessCallback: function(){
       
-      assets[resourceName].getAnimationController().setTimeRange(FABRIC.RT.vec2(0, 10));
-
       // loop over all assets and create an instance
       for(var name in assets[resourceName].getParsedNodes()) {
         if(assets[resourceName].getParsedNodes()[name].isTypeOf('Triangles'))

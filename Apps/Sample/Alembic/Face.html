@@ -105,8 +105,6 @@ $(document).ready(function() {
     dependentNode: viewport,
     onLoadSuccessCallback: function(){
       
-      assets[resourceName].getAnimationController().setTimeRange(FABRIC.RT.vec2(0, 11));
-      
       // loop over all assets and create an instance
       for(var name in assets[resourceName].getParsedNodes()) {
         if(assets[resourceName].getParsedNodes()[name].isTypeOf('Triangles'))

@@ -320,7 +320,7 @@ operator rotateMuscleVolume(\n\
       coreDisplayPointsNodes = [],
       volumeDisplayNodes = [];
     
-    muscleSystem.display = function(index){
+    muscleSystem.display = function(index, muscleOptions){
       
       var deformedVolume = scene.constructNode('GeometryDataCopy', {
         baseGeometryNode:volumeDisplayNode.pub
@@ -355,8 +355,8 @@ operator rotateMuscleVolume(\n\
         geometryNode: deformedVolume.pub,
         materialNode: scene.constructNode('PhongMaterial', {
           prototypeMaterialType: "TransparentMaterial",
-          diffuseColor: FABRIC.RT.rgba(0.8, 0.0, 0.0, 0.5),
-          ambientColor: FABRIC.RT.rgba(0.1, 0.1, 0.1, 0.2),
+          diffuseColor: muscleOptions.diffuseColor,
+          ambientColor: muscleOptions.ambientColor,
           lightNode: scene.constructNode('PointLight', { position: FABRIC.RT.vec3(420.0, 1000.0, 600.0) }).pub
         }).pub
       });
@@ -365,9 +365,11 @@ operator rotateMuscleVolume(\n\
     }
     
     
-    muscleSystem.pub.addMuscle = function( muscleOptions ){
+    muscleSystem.pub.addMuscle = function(muscleOptions){
       muscleOptions = scene.assignDefaults(muscleOptions, {
-        display: true
+        display: true,
+        diffuseColor: FABRIC.RT.rgba(0.8, 0.0, 0.0, 0.5),
+        ambientColor: FABRIC.RT.rgba(0.1, 0.1, 0.1, 0.2)
       });
           
       muscleOptions = scene.assignDefaults(muscleOptions, muscleDefaults);
@@ -386,7 +388,7 @@ operator rotateMuscleVolume(\n\
         }
       }
       if(muscleOptions.display){
-        muscleSystem.display(mid);
+        muscleSystem.display(mid, muscleOptions);
       }
     }
     

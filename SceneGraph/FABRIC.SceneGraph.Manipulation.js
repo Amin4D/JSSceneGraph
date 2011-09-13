@@ -216,6 +216,9 @@ FABRIC.SceneGraph.registerNodeType('PaintManipulator', {
     
     paintEventHandler.addMember('brushSize', 'Scalar', options.brushSize);
     paintManipulatorNode.addMemberInterface(paintEventHandler, 'brushSize', true);
+    paintManipulatorNode.pub.setBrushColor = function(clr){
+      brushMaterial.pub.setColor(clr);
+    }
 
     paintEventHandler.setScopeName('paintData');
 

@@ -260,18 +260,21 @@ $(document).ready(function() {
     switch(String.fromCharCode(evt.keyCode)){
     case 'Q':{
         cameraManipulator.disable();
+        paintManipulator.setBrushColor(FABRIC.RT.rgb(0.6, 0, 0));
         paintManipulator.setMode(0);
         paintManipulator.enable();
         break;
       }
     case 'W':{
         cameraManipulator.disable();
+        paintManipulator.setBrushColor(FABRIC.RT.rgb(0, 0.6, 0));
         paintManipulator.setMode(1);
         paintManipulator.enable();
         break;
       }
     case 'E':{
         cameraManipulator.disable();
+        paintManipulator.setBrushColor(FABRIC.RT.rgb(0, 0, 0.6));
         paintManipulator.setMode(2);
         paintManipulator.enable();
         break;
@@ -289,71 +292,8 @@ $(document).ready(function() {
       }
     }
   }
-    
-/*
-  var paintManipulator = scene.constructNode('PaintManipulator', {
-      enabled:false
-    });
-  paintManipulator.addPaintableNode(skinInst);
-  
-  var modifyData = function(evt, memberName){
-    if( evt.paintData.points.length == 0 ){
-      return;
-    }
-    var paintData = evt.paintData,
-      vertexData = skin.getBulkAttributeData( paintData.points ),
-      brushSize = paintManipulator.getBrushSize(),
-      weight, val,
-      modifiedData = [];
-    
-    modifiedData.length = paintData.points.length;
-    for( var i=0; i< paintData.points.length; i++ ){
-      weight = (Math.cos( Math.PI * (paintData.distances[i] / brushSize) ) * 0.5 ) + 0.5;
-      val = vertexData[i][memberName] + ((1.0 - vertexData[i][memberName]) * weight );
-      modifiedData[i] = {
-       sliceIndex: paintData.points[i],
-       data: { }
-      };
-      modifiedData[i].data[memberName] = val;
-    }
-    skin.setBulkAttributeData( modifiedData );
-  }
-
-  var onPaintStickFn = function(evt) {
-    modifyData(evt, 'stickWeight');
-  };
-  
-  var onPaintSlideFn = function(evt) {
-    modifyData(evt, 'slideWeight');
-  };
-  
-    // Switch to stick weight painting when the 'Q' key is pressed
-    // and switch to slide weight painting when the 'W' key is pressed
-  window.onkeydown = function(evt) {
-    if(String.fromCharCode(evt.keyCode) == 'Q'){
-      cameraManipulator.disable();
-      paintManipulator.enable();
-      paintManipulator.addEventListener('onpaint', onPaintStickFn);
-    }
-    else if(String.fromCharCode(evt.keyCode) == 'W'){
-      cameraManipulator.disable();
-      paintManipulator.enable();
-      paintManipulator.addEventListener('onpaint', onPaintSlideFn);
-    }
-  };
-  window.onkeyup = function(evt) {
-    if(String.fromCharCode(evt.keyCode) == 'Q'){
-      cameraManipulator.enable();
-      paintManipulator.disable();
-      paintManipulator.removeEventListener('onpaint', onPaintStickFn);
-    }
-    else if(String.fromCharCode(evt.keyCode) == 'W'){
-      cameraManipulator.enable();
-      paintManipulator.disable();
-      paintManipulator.removeEventListener('onpaint', onPaintSlideFn);
-    }
-  };
- */
+   
+   
   $('#loadingDialog').dialog({
     modal: true
   });

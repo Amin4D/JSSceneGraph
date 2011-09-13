@@ -47,7 +47,7 @@ FABRIC.SceneGraph.registerNodeType('OffscreenViewport', {
     
     // create the offscreennode
     var offscreenNode = scene.constructNode('SceneGraphNode', {name: eventName});
-    var dgnode = offscreenNode.constructDGNode('DataDGNode');
+    var dgnode = offscreenNode.constructDGNode('DGNode');
     
     // create the event and handler
     var eventNode = scene.constructEventNode(eventName);
@@ -62,7 +62,7 @@ FABRIC.SceneGraph.registerNodeType('OffscreenViewport', {
         new FABRIC.RT.OGLTexture2D (
           FABRIC.SceneGraph.OpenGLConstants.GL_RGBA16F_ARB,
           FABRIC.SceneGraph.OpenGLConstants.GL_RGBA,
-          FABRIC.SceneGraph.OpenGLConstants.GL_UNSIGNED_BYTE)
+          FABRIC.SceneGraph.OpenGLConstants.GL_FLOAT)
       );
     }
     dgnode.addMember('renderTarget', 'OGLRenderTarget',FABRIC.RT.oglPostProcessingRenderTarget(0,0,[textureDescription]));

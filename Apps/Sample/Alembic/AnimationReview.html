@@ -46,11 +46,43 @@
     <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Rendering.js" charset="utf-8"></script>
 
     <script type="text/javascript">
+FABRIC.SceneGraph.registerNodeType('UVViewport', {
+  factoryFn: function(options, scene) {
+    scene.assignDefaults(options, {
+      eventName: 'UVDraw'
+    });
+    
+    // create the offscreennode and the uv material
+    var offscreenNode = scene.constructNode('OffscreenViewport', options);
+    offscreenNode.pub.constructMaterial('FlatUVMaterial');
+    
+    // create the member to be able to query
+    var dgnode = offscreenNode.getDGNode();
+    dgnode.addMember('queryToggle','Boolean', false);
+    dgnode.addMember('queryPos','Vec2');
+    dgnode.addMember('querySize','Vec2');
+    dgnode.addMember('queryPixels','RGBA[]');
+    dgnode.bindings.append(scene.constructOperator({
+      operatorName: 'getRGBAFloatPixelsFromRenderTarget',
+      entryFunctionName: 'getRGBAFloatPixelsFromRenderTarget',
+      srcFile: 'FABRIC_ROOT/SceneGraph/KL/renderTarget.kl',
+      parameterLayout: [
+        'self.queryToggle',
+        'self.renderTarget',
+        'self.queryPos',
+        'self.querySize',
+        'self.queryPixels',
+      ]
+    }));
+    
+    return offscreenNode;
+  }});
+
 FABRIC.SceneGraph.registerNodeType('PaintPlaneInstance', {
   factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
       viewportNode: undefined,
-      offscreenViewportNode: undefined,
+      uvViewportNode: undefined,
       planeNode: undefined,
       trianglesNode: undefined,
       animationControllerNode: undefined,
@@ -69,12 +101,12 @@ FABRIC.SceneGraph.registerNodeType('PaintPlaneInstance', {
     if(!viewportNode.pub.isTypeOf('Viewport')) {
       throw('viewportNode is not of type Viewport!');
     }
-    if (!options.offscreenViewportNode) {
-      throw ('offscreenViewportNode not specified');
+    if (!options.uvViewportNode) {
+      throw ('uvViewportNode not specified');
     }
-    var offscreenViewportNode = scene.getPrivateInterface(options.offscreenViewportNode);
-    if(!offscreenViewportNode.pub.isTypeOf('OffscreenViewport')) {
-      throw('offscreenViewportNode is not of type OffscreenViewport!');
+    var uvViewportNode = scene.getPrivateInterface(options.uvViewportNode);
+    if(!uvViewportNode.pub.isTypeOf('UVViewport')) {
+      throw('uvViewportNode is not of type UVViewport!');
     }
     var cameraNode = scene.getPrivateInterface(viewportNode.pub.getCameraNode());
     if(!cameraNode.pub.isTypeOf('Camera')) {
@@ -259,8 +291,8 @@ FABRIC.SceneGraph.registerNodeType('PaintPlaneInstance', {
     
     instanceNode.pub.enableManipulation = function() {
       // setup the flat material for drawing
-      instanceNode.pub.setMaterialNode( offscreenViewportNode.pub.getFlatUVMaterial() );
-      offscreenViewportNode.pub.redraw();
+      instanceNode.pub.setMaterialNode( uvViewportNode.pub.getFlatUVMaterial() );
+      uvViewportNode.pub.redraw();
 
       // setup all of the event listeners
       viewportNode.getWindowElement().addEventListener('mousemove', paint, false);
@@ -269,7 +301,7 @@ FABRIC.SceneGraph.registerNodeType('PaintPlaneInstance', {
     };
     instanceNode.pub.disableManipulation = function() {
       // remove the flat uv material for drawing
-      instanceNode.pub.removeMaterialNode( offscreenViewportNode.pub.getFlatUVMaterial() );
+      instanceNode.pub.removeMaterialNode( uvViewportNode.pub.getFlatUVMaterial() );
       viewportNode.getWindowElement().removeEventListener('mousemove', paint);
       viewportNode.getWindowElement().removeEventListener('mousedown', beginpaint);
       viewportNode.getWindowElement().removeEventListener('mouseup', endpaint);
@@ -300,11 +332,9 @@ $(document).ready(function() {
   }));
   
   // create an offscreen viewport to draw the UVs to
-  var offscreenViewport = scene.constructNode('OffscreenViewport', {
-    mainViewportNode: viewport,
-    eventName: 'UVDraw'
+  var uvViewport = scene.constructNode('UVViewport', {
+    mainViewportNode: viewport
   });
-  offscreenViewport.constructMaterial('FlatUVMaterial');
 
   var light = scene.constructNode('PointLight', { position: FABRIC.RT.vec3(10000, 10000, 10000) });
 
@@ -487,7 +517,7 @@ $(document).ready(function() {
     if(planes[timeKey] == undefined ) {
       var newPlane = scene.constructNode('PaintPlaneInstance', {
         viewportNode: viewport,
-        offscreenViewportNode: offscreenViewport,
+        uvViewportNode: uvViewport,
         planeNode: planeGeometry,
         trianglesNode: selectedNode.getGeometryNode(),
         animationControllerNode: resourceLoadNode.getAnimationController(),

@@ -31,6 +31,7 @@
     <script type="text/javascript" src="../../../SceneGraph/RT/OGLShaderProgram.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/RT/OGLTexture2D.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/RT/OGLBuffer.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/OGLRenderTarget.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/RT/Ray.js" charset="utf-8"></script>
 
     <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.js" charset="utf-8"></script>
@@ -42,12 +43,14 @@
     <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Kinematics.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Animation.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Alembic.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Rendering.js" charset="utf-8"></script>
 
     <script type="text/javascript">
 FABRIC.SceneGraph.registerNodeType('PaintPlaneInstance', {
   factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
       viewportNode: undefined,
+      offscreenViewportNode: undefined,
       planeNode: undefined,
       trianglesNode: undefined,
       animationControllerNode: undefined,
@@ -60,11 +63,18 @@ FABRIC.SceneGraph.registerNodeType('PaintPlaneInstance', {
 
     // check all of our required nodes
     if (!options.viewportNode) {
-      throw ('viewportNodenot specified');
+      throw ('viewportNode not specified');
     }
     var viewportNode = scene.getPrivateInterface(options.viewportNode);
     if(!viewportNode.pub.isTypeOf('Viewport')) {
       throw('viewportNode is not of type Viewport!');
+    }
+    if (!options.offscreenViewportNode) {
+      throw ('offscreenViewportNode not specified');
+    }
+    var offscreenViewportNode = scene.getPrivateInterface(options.offscreenViewportNode);
+    if(!offscreenViewportNode.pub.isTypeOf('OffscreenViewport')) {
+      throw('offscreenViewportNode is not of type OffscreenViewport!');
     }
     var cameraNode = scene.getPrivateInterface(viewportNode.pub.getCameraNode());
     if(!cameraNode.pub.isTypeOf('Camera')) {
@@ -193,9 +203,9 @@ FABRIC.SceneGraph.registerNodeType('PaintPlaneInstance', {
     instanceNode.addMemberInterface(dgnode, 'planeBlend', true);
     instanceNode.addMemberInterface(texturedgnode, 'drawFrame', true);
     instanceNode.addMemberInterface(texturedgnode, 'frameColor', true);
-    instanceNode.addMemberInterface(texturedgnode, 'paint', true);
-    instanceNode.addMemberInterface(texturedgnode, 'paintColor', true);
-    instanceNode.addMemberInterface(texturedgnode, 'paintRadius', true);
+    //instanceNode.addMemberInterface(texturedgnode, 'paint', true);
+    //instanceNode.addMemberInterface(texturedgnode, 'paintColor', true);
+    //instanceNode.addMemberInterface(texturedgnode, 'paintRadius', true);
     
     // link the material node to the animation controller
     dgnode.addDependency(animationdgnode,'animation');
@@ -230,14 +240,13 @@ FABRIC.SceneGraph.registerNodeType('PaintPlaneInstance', {
     // set the material
     instanceNode.pub.setMaterialNode(materialNode.pub);
     
-    /*
     // setup manipulation
     var painting = false;
     var paint = function(evt) {
       if(!painting)
         return;
-      instanceNode.pub.setPaint(true);
-      viewportNode.pub.redraw();
+      //instanceNode.pub.setPaint(true);
+      //viewportNode.pub.redraw();
     };
     var beginpaint = function(evt) {
       painting = true;
@@ -249,17 +258,23 @@ FABRIC.SceneGraph.registerNodeType('PaintPlaneInstance', {
     };
     
     instanceNode.pub.enableManipulation = function() {
+      // setup the flat material for drawing
+      instanceNode.pub.setMaterialNode( offscreenViewportNode.pub.getFlatUVMaterial() );
+      offscreenViewportNode.pub.redraw();
+
+      // setup all of the event listeners
       viewportNode.getWindowElement().addEventListener('mousemove', paint, false);
       viewportNode.getWindowElement().addEventListener('mousedown', beginpaint, false);
       viewportNode.getWindowElement().addEventListener('mouseup', endpaint, false);
     };
     instanceNode.pub.disableManipulation = function() {
+      // remove the flat uv material for drawing
+      instanceNode.pub.removeMaterialNode( offscreenViewportNode.pub.getFlatUVMaterial() );
       viewportNode.getWindowElement().removeEventListener('mousemove', paint);
       viewportNode.getWindowElement().removeEventListener('mousedown', beginpaint);
       viewportNode.getWindowElement().removeEventListener('mouseup', endpaint);
 
     };
-    */
 
     return instanceNode;    
   }});    
@@ -273,16 +288,23 @@ $(document).ready(function() {
 
   // Create a camera to draw the scene from
   var camera = scene.constructNode('TargetCamera', {
-      position: FABRIC.RT.vec3(20, 20, 20),
-      target: FABRIC.RT.vec3(0, 0, 0),
-      nearDistance: 0.01,
-      farDistance: 1000
-    });
+    position: FABRIC.RT.vec3(20, 20, 20),
+    target: FABRIC.RT.vec3(0, 0, 0),
+    nearDistance: 0.01,
+    farDistance: 1000
+  });
   viewport.setCameraNode(camera);
-
+  
   viewport.setBackgroundTextureImage(scene.constructNode('Image', {
     url: '../BasicDemos/Resources/fabric-demo-gradient.png'
   }));
+  
+  // create an offscreen viewport to draw the UVs to
+  var offscreenViewport = scene.constructNode('OffscreenViewport', {
+    mainViewportNode: viewport,
+    eventName: 'UVDraw'
+  });
+  offscreenViewport.constructMaterial('FlatUVMaterial');
 
   var light = scene.constructNode('PointLight', { position: FABRIC.RT.vec3(10000, 10000, 10000) });
 
@@ -465,6 +487,7 @@ $(document).ready(function() {
     if(planes[timeKey] == undefined ) {
       var newPlane = scene.constructNode('PaintPlaneInstance', {
         viewportNode: viewport,
+        offscreenViewportNode: offscreenViewport,
         planeNode: planeGeometry,
         trianglesNode: selectedNode.getGeometryNode(),
         animationControllerNode: resourceLoadNode.getAnimationController(),
@@ -533,17 +556,15 @@ $(document).ready(function() {
       scene.animation.pause();
     } else if(evt.keyCode == 80) { // P
       cameraManipulator.disable();
-      //if(currentPlane)
-      //  currentPlane.instance.enableManipulation();
+      if(currentPlane)
+        currentPlane.instance.enableManipulation();
       paintPlane();
-    } else {
-      //console.log(evt.keyCode);
     }
   };
   window.onkeyup = function(evt) {
     if(evt.keyCode == 80) { // P
-      //if(currentPlane)
-      //  currentPlane.instance.disableManipulation();
+      if(currentPlane)
+        currentPlane.instance.disableManipulation();
       cameraManipulator.enable();
     }
   }; 

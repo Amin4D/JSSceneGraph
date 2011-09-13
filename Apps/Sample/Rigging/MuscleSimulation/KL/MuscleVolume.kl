@@ -214,10 +214,8 @@ operator generateSystemDisplacementMap(
 
 operator deformMuscleVolume(
   io Size muscleIndex,
-  io Size displacementMapResolution,
-  io DisplacementMap displacementMaps<>,
-  io Xfo systemxfos<>[],
-  io Scalar compressionFactors<>,
+  io Muscle muscles<>,
+  
   io Vec3 parentpositions<>,
   io Vec3 parentnormals<>,
   io Vec2 parentuvs<>,
@@ -225,18 +223,14 @@ operator deformMuscleVolume(
   io Vec3 normal,
   in Size index
 ){
-  Xfo xfos[] = systemxfos[muscleIndex];
-  Scalar compressionFactor = compressionFactors[muscleIndex];
-  DisplacementMap map = displacementMaps[muscleIndex];
-
   Scalar t;
   Integer i;
-  Vec3 corepos = evalPiecewiseBSpline( xfos, parentpositions[index].x, t, i );
-  Color volumePixel = map.getValue(parentuvs[index].y, parentuvs[index].x);
+  Vec3 corepos = evalPiecewiseBSpline( muscles[muscleIndex].xfos, parentpositions[index].x, t, i );
+  Color volumePixel = muscles[muscleIndex].displacementMap.getValue(parentuvs[index].y, parentuvs[index].x);
   
-  Vec3 frameoffsetvec = parentpositions[index] * volumePixel.r * compressionFactor;
+  Vec3 frameoffsetvec = parentpositions[index] * volumePixel.r * muscles[muscleIndex].contraction;
   frameoffsetvec.x = 0.0;
-  Quat frame = xfos[i].ori.nlerp( xfos[i+1].ori, t );
+  Quat frame = muscles[muscleIndex].xfos[i].ori.nlerp( muscles[muscleIndex].xfos[i+1].ori, t );
   normal = frame.rotateVector( frameoffsetvec );
   position = corepos + normal;
   normal.setUnit();
@@ -525,41 +519,40 @@ function Boolean positionToMuscleUV(
 // this function returns the new global position.
 function Vec3 uvwToMusclePosition(
   in Vec3 uvw,
-  in Xfo xfos[]
+  io Muscle muscle,
 ){
   Vec3 offset;
   if( uvw.x < 0.0 )
   {
-    offset = xfos[ 0 ].ori.rotateVector( uvw );
+    offset = muscle.xfos[ 0 ].ori.rotateVector( uvw );
   //  offset *= muscle->m_scale;
     // NOTE: We may see artifacts here doue to the fact that the inflation is not applied, 
     // and yet it is in the code block below. 
-    return xfos[ 0 ].tr + offset;
+    return muscle.xfos[ 0 ].tr + offset;
   }
   else if ( uvw.x > 1.0 )
   {
-    offset = xfos[ xfos.size()-1 ].ori.rotateVector( Vec3( uvw.x - 1.0, uvw.y, uvw.z ) );
+    offset = muscle.xfos[ muscle.xfos.size()-1 ].ori.rotateVector( Vec3( uvw.x - 1.0, uvw.y, uvw.z ) );
   //  offset *= muscle->m_scale;
     // NOTE: We may see artifacts here doue to the fact that the inlation is not applied, 
     // and yet it is in the code block below. 
-    return xfos[ xfos.size()-1 ].tr + offset;
+    return muscle.xfos[ muscle.xfos.size()-1 ].tr + offset;
   }
   else
   {
     Scalar t;
     Integer i;
-    Vec3 pos = evalPiecewiseBSpline( xfos, uvw.x, t, i );
+    Vec3 pos = evalPiecewiseBSpline( muscle.xfos, uvw.x, t, i );
     
-
     // Due to the fact that nlerp exibits a slight ease in and ease out on the rotations
     // I think it is a better slution to interpollating segments. 
     // The one exception would be several segments in arow that were evenly twisted. 
-    Quat pointframe = xfos[ i ].ori.nlerp( xfos[ i + 1 ].ori, t );
+    Quat pointframe = muscle.xfos[ i ].ori.nlerp( muscle.xfos[ i + 1 ].ori, t );
 
     offset = pointframe.rotateVector( Vec3( 0.0, cos( uvw.y - PI ), sin( uvw.y - PI ) ) );
     
-  //  return (offset * (uvw.z /* muscle->m_scale * muscle->GetMuscleBulge( uvw[0], uvw.y )*/)) + pos;
-    return (offset *  (uvw.z)) + pos;
+    return (offset * (uvw.z * muscle.contraction)) + pos;
+  //  return (offset * (uvw.z)) + pos;
   }
 }
 
@@ -568,8 +561,7 @@ function Vec3 uvwToMusclePosition(
 function Vec3 positionToMuscleSurfacePosition(
   in Vec3 pos,
   in Vec3 normal,
-  in Xfo xfos[],
-  io DisplacementMap displacementMap,
+  io Muscle muscle,
   io DebugGeometry debugDraw
 ){
   // TODO: parameterise these 2 values. 
@@ -582,19 +574,19 @@ function Vec3 positionToMuscleSurfacePosition(
   Scalar u, v, w;
   Scalar endOffset = 0.0;// If a point is off the end of the muscle, this value will be < 0.0, || > 1.0;
 
-  if(positionToMuscleUV( pos, xfos, uv, corePos, posToCore ) ){
+  if(positionToMuscleUV( pos, muscle.xfos, uv, corePos, posToCore ) ){
     u = uv.x;
   
     // Now evaluate the spline to get the actual position of the muscle core
     Scalar t;
     Integer segmentid;
-    corePos = evalPiecewiseBSpline(xfos, u, t, segmentid);  
+    corePos = evalPiecewiseBSpline(muscle.xfos, u, t, segmentid);  
     
-    sliceframe = xfos[segmentid].ori.nlerp(xfos[segmentid + 1].ori, t);
+    sliceframe = muscle.xfos[segmentid].ori.nlerp(muscle.xfos[segmentid + 1].ori, t);
   }
   else{
-    Vec3 endPoint = xfos[ 0 ].tr;
-    Quat endFrame = xfos[ 0 ].ori;
+    Vec3 endPoint = muscle.xfos[ 0 ].tr;
+    Quat endFrame = muscle.xfos[ 0 ].ori;
       
     posToCore = pos - endPoint;
     endOffset = posToCore.dot( endFrame.getXaxis( ) );
@@ -604,8 +596,8 @@ function Vec3 positionToMuscleSurfacePosition(
       u = 0.0;
     }
     else{
-      endPoint = xfos[ xfos.size()-1 ].tr;
-      endFrame = xfos[ xfos.size()-1 ].ori;
+      endPoint = muscle.xfos[ muscle.xfos.size()-1 ].tr;
+      endFrame = muscle.xfos[ muscle.xfos.size()-1 ].ori;
       posToCore = pos - endPoint;
       endOffset = posToCore.dot( endFrame.getXaxis( ) );
       if( endOffset >= -0.001 ){
@@ -652,7 +644,7 @@ function Vec3 positionToMuscleSurfacePosition(
   Scalar orthoNormalVvalue = (PI - orthoNormalAngle) / TWO_PI;
   
   //////////////////////////////////////////////////////////////////////////////
-  Scalar orthoNormalThickness  = displacementMap.getValue( u, 0.5 ).r;
+  Scalar orthoNormalThickness  = muscle.displacementMap.getValue( u, 0.5 ).r * muscle.contraction;
   
 //  debugDraw.drawLine(corePos, slidePos, Color(1.0,0.0,0.0,1.0) );
   
@@ -664,7 +656,7 @@ function Vec3 positionToMuscleSurfacePosition(
   if( bisectingVvalue > 1.0 )  bisectingVvalue -= 1.0;
   if( bisectingVvalue < 0.0 )  bisectingVvalue += 1.0;
     
-  biNormalThickness      = displacementMap.getValue( u, bisectingVvalue ).r;
+  biNormalThickness      = muscle.displacementMap.getValue( u, bisectingVvalue ).r * muscle.contraction;
   
   //////////////////////////////////////////////////////////////////////////////
   // Modulator
@@ -722,7 +714,7 @@ function Vec3 positionToMuscleSurfacePosition(
     if( tempV > 1.0 )  tempV -= 1.0;
     if( tempV < 0.0 )  tempV += 1.0;
     
-    bnlen2 = sin( angle ) * displacementMap.getValue( u, tempV ).r;
+    bnlen2 = sin( angle ) * (muscle.displacementMap.getValue( u, tempV ).r  * muscle.contraction);
     
     
     if(abs(bnlen2) >= abs(biNormalProjLen)){
@@ -744,7 +736,7 @@ function Vec3 positionToMuscleSurfacePosition(
   Scalar angleDelta = vdelta * TWO_PI;
   
   Vec3 posOffsetDir = (biNormal * -sin( angleDelta )) + (orthoNormal * cos( angleDelta ));
-  w = displacementMap.getValue( u, v ).r * modulator;
+  w = muscle.displacementMap.getValue( u, v ).r * muscle.contraction * modulator;
   
   Vec3 slidePos = (corePos + (posOffsetDir * w));
   if(((corePos + (posOffsetDir * w)) - pos).dot(orthoNormal) > 0.0){
@@ -817,9 +809,7 @@ operator calcSkinStickLocations(
 }
 
 operator deformSkin(
-  io DisplacementMap displacementMaps<>,
-  io Xfo simulatedXfos<>[],
-  io Scalar compressionFactors<>,
+  io Muscle muscles<>,
 
   io Vec3 parentpositions<>,
   io Vec3 parentnormals<>,
@@ -854,7 +844,7 @@ operator deformSkin(
   for(Integer i=0; i<1; i++){
     if(muscleBindingIds[i] >= 0 && stickWeight > 0.0){
       Integer mid = muscleBindingIds[i];
-      Vec3 stickPos = uvwToMusclePosition(sticklocations[i], simulatedXfos[mid]);
+      Vec3 stickPos = uvwToMusclePosition(sticklocations[i], muscles[mid]);
       stickDelta += (stickPos - position) * stickWeight;
     }
   }
@@ -865,7 +855,7 @@ operator deformSkin(
   for(Integer i=0; i<1; i++){
     if(muscleBindingIds[i] >= 0 && slideWeight > 0.0){
       Integer mid = muscleBindingIds[i];
-      Vec3 slidePos = positionToMuscleSurfacePosition( position, normal, simulatedXfos[mid], displacementMaps[mid], debugDraw);
+      Vec3 slidePos = positionToMuscleSurfacePosition( position, normal, muscles[mid], debugDraw);
       slideDelta += (slidePos - position) * slideWeight;
     }
   }

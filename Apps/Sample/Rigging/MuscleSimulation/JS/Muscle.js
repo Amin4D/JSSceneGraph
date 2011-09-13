@@ -28,9 +28,9 @@ FABRIC.appendOnCreateContextCallback(function(context) {
 });
 
 
-FABRIC.RT.Muscle = function() {
-  this.map = new FABRIC.RT.DisplacementMap();
-  this.simulatedXfos = [];
+FABRIC.RT.Muscle = function( options ) {
+  this.displacementMap = new FABRIC.RT.DisplacementMap();
+  this.xfos = (options && options.xfos) ? options.xfos : [];
   this.contraction = 1.0;
 };
 
@@ -42,8 +42,8 @@ FABRIC.RT.Muscle.prototype = {
 FABRIC.appendOnCreateContextCallback(function(context) {
   context.RegisteredTypesManager.registerType('Muscle', {
     members: {
-      map: 'DisplacementMap',
-      simulatedXfos: 'Xfo[]',
+      displacementMap: 'DisplacementMap',
+      xfos: 'Xfo[]',
       contraction: 'Scalar'
     },
     constructor: FABRIC.RT.Muscle
@@ -213,18 +213,10 @@ FABRIC.SceneGraph.registerNodeType('MuscleSystem', {
     
     simulationdgnode.addMember('initialized', 'Boolean', false);
     simulationdgnode.addMember('envelopedXfos', 'Xfo[]', pointXfos); /* Xfos deformed by the skeleton */
-    simulationdgnode.addMember('simulatedXfos', 'Xfo[]', pointXfos); /* Xfos simulated and used to drive the skin deformation */
-    simulationdgnode.addMember('compressionFactor', 'Scalar', 1.0);
-    simulationdgnode.addMember('segmentCompressionFactors', 'Scalar[]', segmentCompressionFactors);
-    
-    // Note, to be able to upload data to the GPU, the data must be uploaded in one call,
-    // and therefore must be laid out in contigous memory.
-    simulationdgnode.addMember('cvPositions', 'Mat44');
-    simulationdgnode.addMember('cvFrames', 'Mat44');
+    simulationdgnode.addMember('muscle', 'Muscle', new FABRIC.RT.Muscle({ xfos: pointXfos }));
     
     simulationdgnode.addMember('pointPositionsPrevUpdate', 'Vec3[]', pointPositions);
     simulationdgnode.addMember('pointPositionsPrevUpdate_Temp', 'Vec3[]', pointPositions);
-    
     
     simulationdgnode.addMember('debugDraw', 'DebugGeometry' );
     
@@ -245,16 +237,13 @@ FABRIC.SceneGraph.registerNodeType('MuscleSystem', {
           'initializationdgnode.flexibilityWeights<>',
           'initializationdgnode.contractionCurve<>',
           'initializationdgnode.contractionWeights<>',
+          'initializationdgnode.displacementMap<>',
           
           'self.index',
           'self.initialized',
           'self.envelopedXfos',
-          'self.simulatedXfos',
-          'self.compressionFactor',
-          'self.segmentCompressionFactors',
-          'self.cvPositions',
-          'self.cvFrames',
-  
+          'self.muscle',
+          
           'self.pointPositionsPrevUpdate',
           'self.pointPositionsPrevUpdate_Temp',
           
@@ -352,10 +341,7 @@ operator rotateMuscleVolume(\n\
         },
         parameterLayout: [
           'uniforms.muscleIndex',
-          'musclesystem.displacementMapResolution',
-          'initializationdgnode.displacementMap<>',
-          'simulationdgnode.simulatedXfos<>',
-          'simulationdgnode.compressionFactor<>',
+          'simulationdgnode.muscle<>',
           'parentattributes.positions<>',
           'parentattributes.normals<>',
           'parentattributes.uvs0<>',
@@ -489,9 +475,7 @@ FABRIC.SceneGraph.registerNodeType('MuscleSkinDeformation', {
         KEYFRAME_EVALUATEDTYPE: 'Scalar'
       },
       parameterLayout: [
-        'musclesinitialization.displacementMap<>',
-        'musclessimulation.simulatedXfos<>',
-        'musclessimulation.compressionFactor<>',
+        'musclessimulation.muscle<>',
         
         'parentattributes.positions<>',
         'parentattributes.normals<>',

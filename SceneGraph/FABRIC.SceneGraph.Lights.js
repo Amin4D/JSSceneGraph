@@ -150,6 +150,13 @@ FABRIC.SceneGraph.registerNodeType('PointLight', {
     options.globalXfo = FABRIC.RT.xfo({ tr: options.position });
     var pointLightNode = scene.constructNode('Light', options);
     var dgnode = pointLightNode.getDGNode();
+    
+    pointLightNode.pub.getPosition = function() {
+      return pointLightNode.pub.getTransformNode().getGlobalXfo().tr;
+    }
+    pointLightNode.pub.setPosition = function(v) {
+      pointLightNode.pub.getTransformNode().setGlobalXfo(FABRIC.RT.xfo({ tr: v }));
+    }
 
     if (options.display === true) {
       //Ideally we should merge all these line segments together... or have a meta-geometry generator in kl (able to create circles, lines, etc)?

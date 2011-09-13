@@ -9,10 +9,11 @@ use FabricALEMBIC;
 operator alembicLoad(
   io String url,
   io FabricResource resource,
-  io Integer archiveID
+  io Integer archiveID,
+  io Integer numSamples
 ) {
-  if(resource.data.dataSize() > 0){
-    FabricALEMBICDecode(resource.data.data(), resource.data.dataSize(), archiveID);
+  if(resource.data.dataSize() > 0) {
+    FabricALEMBICDecode(resource.data.data(), resource.data.dataSize(), archiveID, numSamples);
   }
 }
 

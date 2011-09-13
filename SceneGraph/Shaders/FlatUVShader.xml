@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<shader>
+  <name>FlatUVMaterial</name>
+  
+  <uniforms>
+    <uniform name="u_modelViewProjectionMatrix" constant="modelViewProjectionMatrix" type="Mat44" owner="instance"/>
+  </uniforms>
+  
+  <attributes>
+    <attribute name="a_position" binding="positions"/>
+    <attribute name="a_texCoord" binding="uvs0"/>
+  </attributes>
+  
+  <vertexshader>
+    <source>
+      uniform mat4 u_modelViewProjectionMatrix;
+      
+      attribute vec4 a_position;
+      attribute vec2 a_texCoord;
+      
+      void main()
+      {
+        gl_TexCoord[0].xy = a_texCoord;
+        gl_Position =  u_modelViewProjectionMatrix * a_position;
+      }
+    </source>
+  </vertexshader>
+  
+  <fragmentshader>
+    <source>
+      void main()
+      {
+        gl_FragColor.xy = gl_TexCoord[0].st;
+      }
+    </source>
+  </fragmentshader>
+</shader>

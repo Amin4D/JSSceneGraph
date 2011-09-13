@@ -48,6 +48,10 @@ $(document).ready(function() {
   var scene = FABRIC.SceneGraph.createScene();
   var viewport = scene.constructNode('Viewport', { windowElement: document.getElementById('FabricContainer') });
 
+  viewport.setBackgroundTextureImage(scene.constructNode('Image', {
+    url: '../BasicDemos/Resources/fabric-demo-gradient.png'
+  }));
+
   // Create a camera to draw the scene from
   var camera = scene.constructNode('TargetCamera', {
       nearDistance: 1,
@@ -70,7 +74,7 @@ $(document).ready(function() {
   var resourceName = 'cube';
   var assets = scene.importAssetFile('Models/'+resourceName+'.abc', {
     dependentNode: viewport,
-    onLoadCallback: function(){
+    onLoadSuccessCallback: function(){
       
       // loop over all assets and create an instance
       for(var name in assets[resourceName].getParsedNodes()) {

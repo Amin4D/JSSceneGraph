@@ -48,7 +48,8 @@ FABRIC = (function() {
     //embedTag.style.display = 'none';
     document.body.appendChild(embedTag);
     
-    var context = embedTag.wrapFabricClient(embedTag, function(s) { console.log(s); } );
+    var wrapFabricClient = eval(embedTag.wrapFabricClientJSSource);
+    var context = wrapFabricClient(embedTag, function(s) { console.log(s); } );
     
     ///////////////////////////////////////////////////////////
     // Check the currently installed version.

@@ -11,8 +11,10 @@
     
     <script type="text/javascript" src="../../../ThirdParty/jQuery/jquery-1.4.2.min.js"></script>
     <script type="text/javascript" src="../../../ThirdParty/jQuery/jquery-ui-1.8.5.custom.min.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/jQuery/colorpicker/js/colorpicker.js"></script>
 
     <link type="text/css" href="../../../ThirdParty/jQuery/css/vader/jquery-ui-1.8.5.custom.css" rel="stylesheet" />
+    <link href="../../../ThirdParty/jQuery/colorpicker/css/colorpicker.css" rel="stylesheet" type="text/css" />
 
       <script type="text/javascript" src="../../../Core/FABRIC.Wrappers.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../Core/FABRIC.js" charset="utf-8"></script>
@@ -88,13 +90,13 @@ FABRIC.SceneGraph.registerNodeType('PaintPlaneInstance', {
       viewportNode: undefined,
       uvViewportNode: undefined,
       planeNode: undefined,
-      trianglesNode: undefined,
       animationControllerNode: undefined,
       planeTime: 0.0,
       planeBlend: 5.0 / 30.0,
       resolutionFactor: 0.25,
-      paintColor: FABRIC.RT.rgba(255,0,0,255),
-      paintRadius: 1.0
+      paintColor: FABRIC.RT.rgba(255,0,0,30),
+      paintRadius: 1,
+      planeDistance: 10.0
     });
 
     // check all of our required nodes
@@ -124,13 +126,6 @@ FABRIC.SceneGraph.registerNodeType('PaintPlaneInstance', {
     if(!planeNode.pub.isTypeOf('Plane')) {
       throw('planeNode is not of type Plane!');
     }
-    if (!options.trianglesNode) {
-      throw ('trianglesNode not specified');
-    }
-    var trianglesNode = scene.getPrivateInterface(options.trianglesNode);
-    if(!trianglesNode.pub.isTypeOf('Triangles')) {
-      throw('trianglesNode is not of type Triangles!');
-    }
     if (!options.animationControllerNode) {
       throw ('animationControllerNode not specified');
     }
@@ -140,11 +135,8 @@ FABRIC.SceneGraph.registerNodeType('PaintPlaneInstance', {
     }
     
     // get the center of the triangles object
-    var bbox = trianglesNode.pub.getBoundingBox();
     var cameraXfo = cameraTransformNode.pub.getGlobalXfo();
-    var center = bbox.min.add(bbox.max).scale(0.5);
-    center = cameraXfo.projectInv(FABRIC.RT.xfo({tr: center})).tr;
-    center.x = center.y = 0.0;
+    var center = FABRIC.RT.vec3(0,0,-options.planeDistance);
     var planeXfo = cameraXfo.project(FABRIC.RT.xfo({
       tr: center,
       ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(1,0,0),90)
@@ -184,6 +176,7 @@ FABRIC.SceneGraph.registerNodeType('PaintPlaneInstance', {
     // create the paint operator for the texture
     texturedgnode.setCount(1);
     texturedgnode.addMember('paint','Integer',0);
+    texturedgnode.addMember('paintErase','Boolean',false);
     texturedgnode.addMember('paintColor','RGBA',options.paintColor);
     texturedgnode.addMember('paintRadius','Scalar',options.paintRadius);
     texturedgnode.addMember('UVs','Color[]',[]);
@@ -194,6 +187,7 @@ FABRIC.SceneGraph.registerNodeType('PaintPlaneInstance', {
       srcFile: 'KL/AnimationReview.kl',
       parameterLayout: [
         'self.paint',
+        'self.paintErase',
         'self.paintColor',
         'self.paintRadius',
         'self.width',
@@ -246,6 +240,7 @@ FABRIC.SceneGraph.registerNodeType('PaintPlaneInstance', {
     instanceNode.addMemberInterface(texturedgnode, 'drawFrame', true);
     instanceNode.addMemberInterface(texturedgnode, 'frameColor', true);
     instanceNode.addMemberInterface(texturedgnode, 'paint', true);
+    instanceNode.addMemberInterface(texturedgnode, 'paintErase', true);
     instanceNode.addMemberInterface(texturedgnode, 'paintColor', true);
     instanceNode.addMemberInterface(texturedgnode, 'paintRadius', true);
     instanceNode.addMemberInterface(texturedgnode, 'UVs', true);
@@ -297,6 +292,7 @@ FABRIC.SceneGraph.registerNodeType('PaintPlaneInstance', {
       instanceNode.pub.setPaint(1);
       uvViewportNode.pub.setQueryToggle(true);
       painting = true;
+      instanceNode.pub.setPaintErase(evt.button == 2);
       paint(evt);
     };
     var endpaint = function(evt) {
@@ -377,15 +373,23 @@ $(document).ready(function() {
           materialNode: scene.constructNode('FlatMaterial')
       });
   
+  // create a material and primitive to draw the other cameras  
   var cameraMaterial = scene.constructNode('FlatMaterial', { color: FABRIC.RT.rgb(0.0, 0.0, 1.0, 1) });
   var cameraPrimitive = scene.constructNode('CameraPrimitive', { size: 1.2 });
+  
+  // create a material for all alembic content
+  var phongMaterial = scene.constructNode('PhongMaterial', {
+    diffuseColor: FABRIC.RT.rgb(0.5, 0.5, 0.5, 1),
+    specularColor: FABRIC.RT.rgb(0.15, 0.15, 0.15, 1),
+    lightNode: light,
+  });
 
   // hook for the alembic content
   var resourceLoadNode = undefined;
   var parsedCameras = {};
   var parsedInstances = {};
 
-  // deal with camera switchting
+  // deal with camera switching
   var usedCamera = "userCamera";
   var switchCamera = function(cameraName) {
     if(cameraName == usedCamera)
@@ -409,7 +413,6 @@ $(document).ready(function() {
   };
   
   // load the alembic content based on user interaction
-  var selectedNode = undefined;
   var timeRange = undefined;
   var loadAlembicAsset = function(url) {
     var assets = scene.importAssetFile(url, {
@@ -425,7 +428,8 @@ $(document).ready(function() {
         
         resourceLoadNode = assets[assetName];
         var parsedNodes = resourceLoadNode.getParsedNodes();
-        var objectListHtml = "";
+
+        // setup html for the object and camera list        
         var cameraListHtml = "<option value='userCamera'>Free Camera</option>";
         
         // setup the animation time
@@ -443,15 +447,8 @@ $(document).ready(function() {
             parsedInstances[name] = scene.constructNode('Instance', {
               transformNode: resourceLoadNode.getCorrespondingTransform(name),
               geometryNode: parsedNode,
-              materialNode: scene.constructNode('PhongMaterial', {
-                diffuseColor: FABRIC.RT.rgb(0.5, 0.5, 0.5, 1),
-                specularColor: FABRIC.RT.rgb(0.15, 0.15, 0.15, 1),
-                lightNode: light,
-              })
+              materialNode: phongMaterial
             });
-            objectListHtml += "<option value='"+name+"'>"+name.substring(name.lastIndexOf('/')+1,1000)+"</option>"
-            if(!selectedNode)
-              selectedNode = parsedInstances[name];
           }
           else if(parsedNode.isTypeOf('Camera')) {
             
@@ -462,25 +459,13 @@ $(document).ready(function() {
               materialNode: cameraMaterial
             });
 
+            // add the camera as an option to the list
             cameraListHtml += "<option value='"+name+"'>"+name.substring(name.lastIndexOf('/')+1,1000)+"</option>"
             
           }
         }
         
-        $('#objectlist').html(objectListHtml).change( function(ui) {
-          
-          var selectedName = $('#objectlist').attr('value');
-          selectedNode = parsedInstances[selectedName];
-          for(var name in parsedInstances) {
-            var mat = parsedInstances[name].getMaterialNode();
-            if(name == selectedName)
-              mat.setDiffuseColor(FABRIC.RT.rgb(0.85, 0.85, 0.85, 1));
-            else
-              mat.setDiffuseColor(FABRIC.RT.rgb(0.5, 0.5, 0.5, 1));
-          }
-          viewport.redraw();
-        });
-        
+        // attach an on-select event to the camera list 
         $('#cameralist').html(cameraListHtml).change( function(ui) {
           switchCamera($('#cameralist').attr('value'));
         });
@@ -555,11 +540,10 @@ $(document).ready(function() {
         viewportNode: viewport,
         uvViewportNode: uvViewport,
         planeNode: planeGeometry,
-        trianglesNode: selectedNode.getGeometryNode(),
         animationControllerNode: resourceLoadNode.getAnimationController(),
         planeTime: resourceLoadNode.getAnimationController().getLocalTime(),
         planeBlend: 5.0 / 30.0,
-        resolutionFactor: 0.1
+        resolutionFactor: 0.2
       });
       planes[timeKey] = {
         camera: usedCamera,
@@ -589,19 +573,19 @@ $(document).ready(function() {
       return;
     
     var time = scene.animation.getTime() % timeRange.y;
-    if(evt.keyCode == 37 && time > timeRange.x) {
+    if(evt.keyCode == 37 && time > timeRange.x) { // left arrow
       time -= 1.0 / 30.0;
       scene.animation.pause();
       scene.animation.setTime(time);
       $('#localtime').slider('value', time);
       scene.redrawAllWindows();
-    } else if(evt.keyCode == 39 && time < timeRange.y) {
+    } else if(evt.keyCode == 39 && time < timeRange.y) { // right arrow
       time += 1.0 / 30.0;
       scene.animation.pause();
       scene.animation.setTime(time);
       $('#localtime').slider('value', time);
       scene.redrawAllWindows();
-    } else if(evt.keyCode == 38) {
+    } else if(evt.keyCode == 38) { // up arrow
       $('#play').button('option', {
         label: 'Pause',
         icons: {
@@ -612,7 +596,7 @@ $(document).ready(function() {
       scene.animation.play( function() {
         localTime.slider('value', resourceLoadNode.getAnimationController().getLocalTime());
       });
-    } else if(evt.keyCode == 40) {
+    } else if(evt.keyCode == 40) { // down arrow
       $('#play').button('option', {
         label: 'Play',
         icons: {
@@ -635,7 +619,7 @@ $(document).ready(function() {
     }
   }; 
   
-  // setup all sliders
+  // create a slider for the light direction
   $('#lightDirection').slider({
       min: 0.0,
       max: 360.0,
@@ -668,15 +652,6 @@ $(document).ready(function() {
       value: 5.0/30.0
     });
   
-  $('#switchcamera').button({
-      text: true,
-    })
-    .click(function() {
-      if(!resourceLoadNode)
-        return;
-      switchCamera();
-    });
-
   $('#play').button({
       text: true,
       icons: {
@@ -707,6 +682,49 @@ $(document).ready(function() {
         });
         scene.animation.pause();
       }
+    });
+
+  $('#brushColor').ColorPicker({
+      flat: true,
+      color: { r: 255, g: 0, b: 0} ,
+      onChange: function(hsb, hex, rgb) {
+        for(var name in planes) {
+          var color = planes[name].instance.getPaintColor();
+          color.r = rgb.r;
+          color.g = rgb.g;
+          color.b = rgb.b;
+          planes[name].instance.setPaintColor(color);
+        }
+        scene.redrawAllWindows();
+      }
+    });
+  $('#brushOpacity').slider({
+      min: 1.0,
+      max: 60.0,
+      step: 1.0,
+      value: 30.0
+    }).bind('slide',
+      function(event, ui) {
+        for(var name in planes) {
+          var color = planes[name].instance.getPaintColor();
+          color.a = ui.value;
+          planes[name].instance.setPaintColor(color);
+        }
+        scene.redrawAllWindows();
+    });  
+  $('#brushRadius').slider({
+      min: 0.5,
+      max: 5.0,
+      step: 0.01,
+      value: 1.5
+    }).bind('slide',
+      function(event, ui) {
+        for(var name in planes) {
+          planes[name].instance.setPaintRadius(ui.value);
+        }
+        scene.redrawAllWindows();
+    });  
+  $('#planeblend').slider({
     });
 
   $('#loadingDialog').dialog({
@@ -751,20 +769,18 @@ $(document).ready(function() {
             <h2>Scene</h2>
             <div class="content">
                 <div id='lightDirection' style="margin-top:10px;"></div>
-                <select multi size=2 id='cameralist' style='width: 200px; margin-top: 10px'>
+                <select multi size=3 id='cameralist' style='width: 200px; margin-top: 10px'>
                   <option value='userCamera'>Free Camera</option>
-                </select>
-            </div><!--content-->
-            <h2>Objects</h2>
-            <div class="content">
-                <select multi size=2 id='objectlist' style='width: 200px'>
                 </select>
             </div><!--content-->
             <h2>Planes</h2>
             <div class="content">
-                <select multi size=3 id='planelist' style='width: 200px'>
+                <select multi size=10 id='planelist' style='width: 200px'>
                 </select>
                 <div id='planeblend' style="margin-top:10px;"></div>
+                 <p id="brushColor"></p>
+                <div id='brushOpacity' style="margin-top:10px;"></div>
+                <div id='brushRadius' style="margin-top:10px;"></div>
             </div><!--content-->
             <h2>Playback</h2>
             <div class="content">

@@ -708,6 +708,18 @@ $(document).ready(function() {
         }
         scene.redrawAllWindows();
     });  
+  $('#brushRadius').slider({
+      min: 0.5,
+      max: 5.0,
+      step: 0.01,
+      value: 1.5
+    }).bind('slide',
+      function(event, ui) {
+        for(var name in planes) {
+          planes[name].instance.setPaintRadius(ui.value);
+        }
+        scene.redrawAllWindows();
+    });  
   $('#planeblend').slider({
     });
 
@@ -764,6 +776,7 @@ $(document).ready(function() {
                 <div id='planeblend' style="margin-top:10px;"></div>
                  <p id="brushColor"></p>
                 <div id='brushOpacity' style="margin-top:10px;"></div>
+                <div id='brushRadius' style="margin-top:10px;"></div>
             </div><!--content-->
             <h2>Playback</h2>
             <div class="content">

@@ -11,8 +11,10 @@
     
     <script type="text/javascript" src="../../../ThirdParty/jQuery/jquery-1.4.2.min.js"></script>
     <script type="text/javascript" src="../../../ThirdParty/jQuery/jquery-ui-1.8.5.custom.min.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/jQuery/colorpicker/js/colorpicker.js"></script>
 
     <link type="text/css" href="../../../ThirdParty/jQuery/css/vader/jquery-ui-1.8.5.custom.css" rel="stylesheet" />
+    <link href="../../../ThirdParty/jQuery/colorpicker/css/colorpicker.css" rel="stylesheet" type="text/css" />
 
       <script type="text/javascript" src="../../../Core/FABRIC.Wrappers.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../Core/FABRIC.js" charset="utf-8"></script>
@@ -678,6 +680,37 @@ $(document).ready(function() {
       }
     });
 
+  $('#brushColor').ColorPicker({
+      flat: true,
+      color: { r: 255, g: 0, b: 0} ,
+      onChange: function(hsb, hex, rgb) {
+        for(var name in planes) {
+          var color = planes[name].instance.getPaintColor();
+          color.r = rgb.r;
+          color.g = rgb.g;
+          color.b = rgb.b;
+          planes[name].instance.setPaintColor(color);
+        }
+        scene.redrawAllWindows();
+      }
+    });
+  $('#brushOpacity').slider({
+      min: 1.0,
+      max: 60.0,
+      step: 1.0,
+      value: 30.0
+    }).bind('slide',
+      function(event, ui) {
+        for(var name in planes) {
+          var color = planes[name].instance.getPaintColor();
+          color.a = ui.value;
+          planes[name].instance.setPaintColor(color);
+        }
+        scene.redrawAllWindows();
+    });  
+  $('#planeblend').slider({
+    });
+
   $('#loadingDialog').dialog({
     modal: true
   });
@@ -729,6 +762,8 @@ $(document).ready(function() {
                 <select multi size=3 id='planelist' style='width: 200px'>
                 </select>
                 <div id='planeblend' style="margin-top:10px;"></div>
+                 <p id="brushColor"></p>
+                <div id='brushOpacity' style="margin-top:10px;"></div>
             </div><!--content-->
             <h2>Playback</h2>
             <div class="content">

@@ -157,7 +157,14 @@ FABRIC = (function() {
         domElement: embedTag,
         windowNode: context.VP.viewPort.getWindowNode(),
         redrawEvent: context.VP.viewPort.getRedrawEvent(),
-        finalize: function(){
+        hide: function(){
+          embedTag.width = 1;
+          embedTag.height = 1;
+          // the element will get resized to the correct size
+          // by the client (Viewport) when it is ready
+          window.removeEventListener('resize', onDOMWindowResize, false);
+        },
+        show: function(){
           onDOMWindowResize();
           // the element will get resized to the correct size
           // by the client (Viewport) when it is ready

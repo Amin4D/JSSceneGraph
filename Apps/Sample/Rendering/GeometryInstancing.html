@@ -14,7 +14,6 @@
 
     <link type="text/css" href="../../../ThirdParty/jQuery/css/vader/jquery-ui-1.8.5.custom.css" rel="stylesheet" />
 
-      <script type="text/javascript" src="../../../Core/FABRIC.Wrappers.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../Core/FABRIC.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/RT/Math.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/RT/Vec2.js" charset="utf-8"></script>
@@ -112,11 +111,6 @@ $(document).ready(function() {
     url: '../BasicDemos/Resources/fabric-demo-gradient.png'
   }));
   
-  if(!viewport.getGlewSupported('GL_EXT_draw_instanced')){
-    alert("This demo requires OpenGL 3.2 features such as 'GL_EXT_draw_instanced' to run.\n\nIt appears that your graphics card does not support geometry instancing.");
-    throw("This demo requires OpenGL 3.2 features such as 'GL_EXT_draw_instanced' to run.\n\nIt appears that your graphics card does not support geometry instancing.");
-  }
-
   // Create a camera to draw the scene from
   camera = scene.constructNode('TargetCamera', {
       nearDistance: 10,
@@ -198,6 +192,10 @@ $(document).ready(function() {
         throw (errors.toString());
       }
       viewport.redraw();
+      if(!viewport.getGlewSupported('GL_EXT_draw_instanced')){
+        alert("This demo requires OpenGL 3.2 features such as 'GL_EXT_draw_instanced' to run.\n\nIt appears that your graphics card does not support geometry instancing.");
+        throw("This demo requires OpenGL 3.2 features such as 'GL_EXT_draw_instanced' to run.\n\nIt appears that your graphics card does not support geometry instancing.");
+      }
       return true;
     }
   });

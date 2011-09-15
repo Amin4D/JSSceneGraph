@@ -54,8 +54,6 @@ $(document).ready(function() {
     url: 'Resources/fabric-demo-gradient.png'
   }));
   
-  var geometryShadersSupported = viewport.getGlewSupported('GL_EXT_geometry_shader4');
-
   // Create a camera to draw the scene from
   var camera = scene.constructNode('TargetCamera', {
       position: FABRIC.RT.vec3(40, 70, 100),
@@ -133,24 +131,19 @@ $(document).ready(function() {
     });
 
   // Normal Geometry Shader
-  if(geometryShadersSupported){
-    // The Normal Material uses geometry shaders to generate
-    // lines from the polygon mesh. This material will not render
-    // on machines that do not support geometry shaders.
-    scene.constructNode('Instance', {
-        transformNode: scene.constructNode('Transform', {
-          hierarchical: false,
-          globalXfo: FABRIC.RT.xfo({ tr: FABRIC.RT.vec3(30, 0, 0) })
-        }),
-        geometryNode: sphere,
-        materialNode: scene.constructNode('NormalMaterial', {
-            color: FABRIC.RT.rgb(0.8, .8, 0.8, 1)
-          })
-      });
-  }else{
-    console.log("This material requires OpenGL 3.1 features such as 'GL_EXT_geometry_shader4' to run.");
-  }
-
+  // The Normal Material uses geometry shaders to generate
+  // lines from the polygon mesh. This material will not render
+  // on machines that do not support geometry shaders.
+  scene.constructNode('Instance', {
+      transformNode: scene.constructNode('Transform', {
+        hierarchical: false,
+        globalXfo: FABRIC.RT.xfo({ tr: FABRIC.RT.vec3(30, 0, 0) })
+      }),
+      geometryNode: sphere,
+      materialNode: scene.constructNode('NormalMaterial', {
+          color: FABRIC.RT.rgb(0.8, .8, 0.8, 1)
+        })
+    });
   
   // Transparency Shader
   var cubeTextureMap = scene.constructNode('CubeMap', {
@@ -193,6 +186,11 @@ $(document).ready(function() {
       if (errors.length > 0) {
         throw (errors.toString());
       }
+      
+      if(!viewport.getGlewSupported('GL_EXT_geometry_shader4')){
+        console.log("the shader that is drawping the normals will not display on this machine, because it does not support geometry shaders");
+      }
+  
       viewport.redraw();
       return true;
     }

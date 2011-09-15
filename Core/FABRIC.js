@@ -8,32 +8,28 @@ FABRIC = (function() {
   // we keep an array of context ids,
   // so we can open the debugger with one
   var contextIDs = [];
-  var bindContextToEmbedTag = function(embedTag) {
-    var result = wrapFabricClient(embedTag, function(s) { console.log(s); } /*, function(s){console.debug(s);}*/);
-
-    /*
-    {
-      contextID: embedTag.contextID,
-      jsonExec: function (jsonEncodedCommands) {
-        return embedTag.jsonExec(jsonEncodedCommands);
-      },
-      setJSONNotifyCallback: function (jsonNotifyCallback) {
-        embedTag.setJSONNotifyCallback(jsonNotifyCallback);
-      },
-      RegisteredTypesManager: embedTag.RegisteredTypesManager,
-      DependencyGraph: embedTag.DependencyGraph,
-      DG: embedTag.DependencyGraph,
-      FrontEnds: embedTag.FrontEnds,
-      IO: embedTag.IO,
-      ThirdParty: embedTag.ThirdParty,
-                        Plugins: embedTag.Plugins,
-    };
-    */
-
-    return result;
-  };
+  
+  var createDownloadPrompt = function( div ){
+    var iframeTag = document.createElement('iframe');
+    iframeTag.setAttributeNS(null, 'src', 'http://demos.fabric-engine.com/Fabric/Core/pluginInstall.html');
+    iframeTag.setAttributeNS(null, 'style', 'position:absolute; left:10px; right:10px; top:10px; bottom:10px; z-index:10');
+    iframeTag.setAttributeNS(null, 'width', '98%');
+    iframeTag.setAttributeNS(null, 'height', '98%');
+    document.body.appendChild(iframeTag);
+  }
 
   var createContext = function(options) {
+    
+    // Check to see if the plugin is loaded.
+    if(!navigator.mimeTypes["application/fabric"]){
+      createDownloadPrompt();
+      throw("Fabric not installed");
+    }else if(!navigator.mimeTypes["application/fabric"].enabledPlugin){
+      alert("Fabric plugin not enabled");
+      throw("Fabric plugin not enabled");
+    }
+    
+    
     if (!options)
       options = {};
 
@@ -51,8 +47,46 @@ FABRIC = (function() {
     // if you do so then Chrome disables the plugin.
     //embedTag.style.display = 'none';
     document.body.appendChild(embedTag);
-
-    var context = bindContextToEmbedTag(embedTag);
+    
+    var context = embedTag.wrapFabricClient(embedTag, function(s) { console.log(s); } );
+    
+    ///////////////////////////////////////////////////////////
+    // Check the currently installed version.
+    // TODO: This code will be removed once we get to the end of beta.
+    var version = context.build.getPureVersion().split('.');
+    var requiredVersion = [1,0,11];
+    var cmpVersions = function (lhs, rhs) {
+      if (lhs[0] < rhs[0])
+        return -1;
+      else if (lhs[0] == rhs[0]) {
+        if (lhs[1] < rhs[1])
+          return -1;
+        else if (lhs[1] == rhs[1]) {
+          if (lhs[2] < rhs[2])
+            return -1;
+          else if (lhs[2] == rhs[2])
+            return 0;
+          else return 1;
+        }
+        else return 1;
+      }
+      else return 1;
+    };
+    var outOfDateMessage =
+      "The version of Fabric that you have installed is out of date.\n" +
+      "Please install the updated plugin";
+    if (cmpVersions(version, requiredVersion) < 0) {
+      alert(outOfDateMessage);
+      createDownloadPrompt();
+      throw(outOfDateMessage);
+    }
+    
+    if(context.build.isExpired()){
+      var expiredMessage = "Fabric(Alpha) plugin has expired. Please install the lastest version";
+      alert(expiredMessage);
+      createDownloadPrompt();
+      throw(expiredMessage);
+    }
     
     FABRIC.displayDebugger = function(ctx) {
       if(!ctx) ctx = context;
@@ -83,8 +117,8 @@ FABRIC = (function() {
 
       var embedTag = document.createElement('embed');
       embedTag.setAttributeNS(null, 'type', 'application/fabric');
-      embedTag.setAttributeNS(null, 'width', element.offsetWidth);
-      embedTag.setAttributeNS(null, 'height', element.offsetHeight);
+      embedTag.setAttributeNS(null, 'width', 1);
+      embedTag.setAttributeNS(null, 'height', 1);
       embedTag.setAttributeNS(null, 'windowType', '3d');
       embedTag.setAttributeNS(null, 'contextID', this.getContextID());
 
@@ -106,9 +140,9 @@ FABRIC = (function() {
           embedTag.height = element.offsetHeight;
         }
       };
-      onDOMWindowResize();
-      window.addEventListener('resize', onDOMWindowResize, false);
-
+      embedTag.width = 1;
+      embedTag.height = 1;
+      
       var result = {
         RT: context.RT,
         RegisteredTypesManager: context.RT,
@@ -117,9 +151,25 @@ FABRIC = (function() {
         getContextID: function() {
           return context.getContextID();
         },
+        getLicenses: function() {
+          return context.getLicenses();
+        },
         domElement: embedTag,
         windowNode: context.VP.viewPort.getWindowNode(),
         redrawEvent: context.VP.viewPort.getRedrawEvent(),
+        hide: function(){
+          embedTag.width = 1;
+          embedTag.height = 1;
+          // the element will get resized to the correct size
+          // by the client (Viewport) when it is ready
+          window.removeEventListener('resize', onDOMWindowResize, false);
+        },
+        show: function(){
+          onDOMWindowResize();
+          // the element will get resized to the correct size
+          // by the client (Viewport) when it is ready
+          window.addEventListener('resize', onDOMWindowResize, false);
+        },
         needsRedraw: function() {
           context.VP.viewPort.needsRedraw();
         },
@@ -133,12 +183,72 @@ FABRIC = (function() {
           context.VP.viewPort.addPopUpMenuItem(name, desc, callback);
         }
       };
-      result.__defineGetter__('fps', function() {
-        return context.VP.viewPort.getFPS();
-      });
+
+  
+      var queryDGNode;
+      var openGLVersion = undefined;
+      var glewSupported = {};
+      var constructGLEWQueryNode = function(){
+        // create the query nodes
+        queryDGNode = context.DG.createNode('OpenGLQuery');
+        queryDGNode.addMember('version', 'String', '');
+        queryDGNode.addMember('token', 'String', '');
+        queryDGNode.addMember('supported', 'Boolean', false);
+        queryDGNode.addDependency(result.windowNode,'window');
+        
+        // operator to query the open gl version
+        var queryOpVersion = context.DG.createOperator('getOpenGLVersion');
+        queryOpVersion.setEntryFunctionName('getOpenGLVersion');
+        queryOpVersion.setSourceCode('use FabricOGL; operator getOpenGLVersion(io String version){\n' +
+          '  glGetVersion(version);\n' +
+          '}');
+        var queryOpVersionBinding = context.DG.createBinding();
+        queryOpVersionBinding.setOperator(queryOpVersion);
+        queryOpVersionBinding.setParameterLayout(['self.version']);
+        queryDGNode.bindings.append(queryOpVersionBinding);
+        
+        // operator to query the support glew features
+        var queryOpGlew = context.DG.createOperator('getGlewSupported');
+        queryOpGlew.setEntryFunctionName('getGlewSupported');
+        queryOpGlew.setSourceCode('use FabricOGL; operator getGlewSupported(io String token, io Boolean supported){\n' +
+          '  if(token.length() > 0) glewIsSupported(token,supported);\n' +
+          '}');
+        var queryOpGlewBinding = context.DG.createBinding();
+        queryOpGlewBinding.setOperator(queryOpGlew);
+        queryOpGlewBinding.setParameterLayout(['self.token','self.supported']);
+        queryDGNode.bindings.append(queryOpGlewBinding);
+      }
+      
+      result.getOpenGLVersion = function() {
+        if(!queryDGNode){
+          constructGLEWQueryNode();
+        }
+        // if we already know it, skip it
+        if( openGLVersion == undefined) {
+          // force an eval
+          queryDGNode.evaluate();
+          openGLVersion = queryDGNode.getData('version',0);
+        }
+        return openGLVersion;
+      }
+      result.getGlewSupported = function(token) {
+        if(!queryDGNode){
+          constructGLEWQueryNode();
+        }
+        // if we already know it, skip it
+        if( glewSupported[token] == undefined) {
+          // force an eval
+          queryDGNode.setData('token',0,token);
+          queryDGNode.evaluate();
+          glewSupported[token] = queryDGNode.getData('supported',0);
+        }
+        return glewSupported[token];
+      }
+    
       return result;
     };
-
+    
+    
     return context;
   };
 
@@ -174,28 +284,75 @@ FABRIC = (function() {
     }
     return url;
   };
-
-  var loadResourceURL = function(url, mimeType) {
+  
+  var asyncTaskCount = 0;
+  
+  var onResolveAsyncTaskCallbacks = [];
+  var appendOnResolveAsyncTaskCallback = function(fn) {
+    onResolveAsyncTaskCallbacks.push(fn);
+  };
+  var fireOnResolveAsyncTaskCallbacks = function(label){
+    for (i=0; i<onResolveAsyncTaskCallbacks.length; i++){
+      if(onResolveAsyncTaskCallbacks[i].call(undefined, label, asyncTaskCount)){
+        onResolveAsyncTaskCallbacks.splice(i, 1);
+        i--;
+      }
+    }
+  }
+  
+  // Some tasks can be defined to run asynchronously as part of the load
+  // stage where operators are compiled. This enables delaying of complex tasks,
+  // that would block the drawing to the page till after the first redraw.
+  var createAsyncTask = function(callback){
+    asyncTaskCount++;
+    setTimeout(function(){
+      callback();
+      asyncTaskCount--;
+      fireOnResolveAsyncTaskCallbacks('...');
+    }, 1);
+  }
+  // Tasks can be registered that contribute to the async workload. E.g. resource
+  // loading can be defined to contribute to the intitial loading of the graph. 
+  var addAsyncTask = function(label){
+    asyncTaskCount++;
+    return function(){
+      asyncTaskCount--;
+      fireOnResolveAsyncTaskCallbacks(label);
+    }
+  }
+  var loadResourceURL = function(url, mimeType, callback) {
     if (!url) {
       throw 'missing URL';
     }
-
+    
     if(document.location.href.split('/')[0] === 'file:'){
       alert('Fabric demos must be loaded from localhost.\nNot directly from the file system.\n\ne.g. "http://localhost/Fabric/Apps/Sample/BasicDemos/Flocking.html"');
       thorow('Fabric demos must be loaded from localhost.\nNot directly from the file system.\n\ne.g. "http://localhost/Fabric/Apps/Sample/BasicDemos/Flocking.html"');
     }
     url = processURL(url);
-
+    
+    var async = (FABRIC.asyncResourceLoading && callback!==undefined) ? true : false;
+    var onAsyncFinishedCallback;
+    if(async){
+      var label = url.split('/').pop().split('.')[0];
+      onAsyncFinishedCallback = addAsyncTask(label);
+    }
     var result = null;
     var xhreq = new XMLHttpRequest();
     xhreq.onreadystatechange = function() {
       if (xhreq.readyState == 4) {
         if (xhreq.status == 200) {
-          result = xhreq.responseText;
+          if(callback){
+            callback(xhreq.responseText);
+            onAsyncFinishedCallback();
+          }
+          else{
+            result = xhreq.responseText;
+          }
         }
       }
     };
-    xhreq.open('GET', url, false);
+    xhreq.open('GET', url, async);
     xhreq.overrideMimeType(mimeType ? mimeType : 'text/plain');
     xhreq.send(null);
     return result;
@@ -231,6 +388,11 @@ FABRIC = (function() {
     appendOnCreateContextCallback: appendOnCreateContextCallback,
     processURL: processURL,
     loadResourceURL: loadResourceURL,
+    asyncResourceLoading: true,
+    createAsyncTask: createAsyncTask,
+    addAsyncTask: addAsyncTask,
+    getAsyncTaskCount: function(){ return asyncTaskCount; },
+    appendOnResolveAsyncTaskCallback: appendOnResolveAsyncTaskCallback,
     convertImageURLToDataURL: convertImageURLToDataURL
   };
 })();

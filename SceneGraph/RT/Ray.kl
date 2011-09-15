@@ -1,0 +1,184 @@
+
+//
+// Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
+//
+
+function Ray(Vec3 start, Vec3 direction) {
+  this.start = start;
+  this.direction = direction;
+}
+
+function Ray.set(Vec3 start, Vec3 direction) {
+  this.start = start;
+  this.direction = direction;
+}
+
+function Scalar Ray.distanceToPoint(Vec3 point) {
+  Vec3 v, w;
+  Scalar c1, c2;
+  Scalar rayT, dist;
+
+  w = point - this.start;
+  c1 = w.dot(this.direction);
+  c2 = v.dot(this.direction);
+  rayT = c1 / c2;
+
+  if (rayT >= 0.0) {
+    Vec3 pointOnRay = this.start + (rayT * this.direction);
+    return pointOnRay.dist(point);
+  }
+  else {
+    return this.start.dist(point);
+  }
+}
+
+function Boolean Ray.intersectLineSegment(
+  Vec3 lineP0,
+  Vec3 lineP1,
+  io Scalar dist,
+  io Scalar rayParam,
+  io Scalar segmentParam,
+) {
+  Vec3 rayP1;
+  rayP1 = this.start + this.direction;
+
+  dist = distanceFromLineToLine(
+    this.start, rayP1,
+    lineP0, lineP1,
+    rayParam, segmentParam
+  );
+  
+  if (rayParam >= 0.0){
+    if (segmentParam >= 0.0 && segmentParam <= 1.0) {
+      return true;
+    }
+    if (segmentParam < 0.0) {
+      dist = this.distanceToPoint(lineP0);
+      segmentParam = 0.0;
+      return true;
+    }
+    if (segmentParam > 1.0) {
+      dist = this.distanceToPoint(lineP1);
+      segmentParam = 1.0;
+      return true;
+    }
+  }
+  return false;
+}
+
+function Vec2 Ray.intersectLine(Vec3 lineP0, Vec3 lineP1) {
+  Vec3 rayP1;
+  rayP1 = this.start + this.direction;
+
+  var Scalar rayT, lineT, dist;
+  dist = distanceFromLineToLine(
+    this.start, rayP1,
+    lineP0, lineP1,
+    rayT, lineT
+  );
+  return Vec2(rayT, lineT);
+}
+
+function Boolean Ray.intersectTriangle(
+  Boolean cull,
+  Vec3 v0,
+  Vec3 v1,
+  Vec3 v2,
+  io Vec3 point,
+  io Scalar dist,
+  io Scalar u,
+  io Scalar v
+) {
+  var Vec3 e1 = v1 - v0;
+  var Vec3 e2 = v2 - v0;
+  var Vec3 pvec = this.direction.cross(e2);
+  var Scalar det = e1.dot(pvec);
+
+  if (cull) {
+    if (det < 0.00001) {
+      return false;
+    }
+    var Vec3 tvec = this.start - v0;
+    u = tvec.dot(pvec);
+    if (u < 0.0 || u > det) {
+      return false;
+    }
+    var Vec3 qvec = tvec.cross(e1);
+    v = this.direction.dot(qvec);
+    if (v < 0.0 || (u + v) > det) {
+      return false;
+    }
+    var Scalar inv_det = 1.0 / det;
+    dist = e2.dot(qvec) * inv_det;
+    u *= inv_det;
+    v *= inv_det;
+  }
+  else {
+    if (det > - 0.00001 && det < 0.00001) {
+      return false;
+    }
+    var Scalar inv_det = 1.0 / det;
+    var Vec3 tvec = this.start - v0;
+    u = tvec.dot(pvec) * inv_det;
+    if (u < 0.0 || u > 1.0) {
+      return false;
+    }
+    var Vec3 qvec = tvec.cross(e1);
+    v = this.direction.dot(qvec) * inv_det;
+    if (v < 0.0 || (u + v) > 1.0) {
+      return false;
+    }
+    dist = e2.dot(qvec) * inv_det;
+  }
+  point = this.start + (this.direction * dist);
+  return true;
+}
+
+function Boolean intersectBBoxEdge(
+  Ray ray,
+  Vec3 bboxCenter,
+  io Vec3 e1,
+  io Vec3 e2
+) {
+  var Vec2 p = ray.intersectLine(e1, e2);
+  if (p.y < 0.0 || p.y > 1.0) {
+    return false;
+  }
+  var Vec3 rayPoint = ray.start + (ray.direction * p.x);
+  var Vec3 edgeP = e1.lerp(e2, p.y);
+  return ((rayPoint - edgeP).dot(rayPoint - bboxCenter) < 0.0);
+}
+
+// Note: This intersection test should be performed in object space,
+// removing the need for all the matrix > vector multiplications
+function Boolean Ray.intersectBoundingBox(
+  Vec3 bboxmin,
+  Vec3 bboxmax
+) {
+  var Vec3 bboxCenter = (bboxmin + bboxmax) * 0.5;
+
+  var Vec3 b1 = Vec3(bboxmin.x, bboxmin.y, bboxmin.z);
+  var Vec3 b2 = Vec3(bboxmin.x, bboxmax.y, bboxmin.z);
+  var Vec3 b3 = Vec3(bboxmin.x, bboxmax.y, bboxmax.z);
+  var Vec3 b4 = Vec3(bboxmin.x, bboxmin.y, bboxmax.z);
+
+  var Vec3 t1 = Vec3(bboxmax.x, bboxmin.y, bboxmin.z);
+  var Vec3 t2 = Vec3(bboxmax.x, bboxmax.y, bboxmin.z);
+  var Vec3 t3 = Vec3(bboxmax.x, bboxmax.y, bboxmax.z);
+  var Vec3 t4 = Vec3(bboxmax.x, bboxmin.y, bboxmax.z);
+
+  return (intersectBBoxEdge(this, bboxCenter, b1, t1)
+    || intersectBBoxEdge(this, bboxCenter, b2, t2)
+    || intersectBBoxEdge(this, bboxCenter, b3, t3)
+    || intersectBBoxEdge(this, bboxCenter, b4, t4)
+
+    || intersectBBoxEdge(this, bboxCenter, b1, b2)
+    || intersectBBoxEdge(this, bboxCenter, b2, b3)
+    || intersectBBoxEdge(this, bboxCenter, b3, b4)
+    || intersectBBoxEdge(this, bboxCenter, b4, b1)
+
+    || intersectBBoxEdge(this, bboxCenter, t1, t2)
+    || intersectBBoxEdge(this, bboxCenter, t2, t3)
+    || intersectBBoxEdge(this, bboxCenter, t3, t4)
+  || intersectBBoxEdge(this, bboxCenter, t4, t1));
+}

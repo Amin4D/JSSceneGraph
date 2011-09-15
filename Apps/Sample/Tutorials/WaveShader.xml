@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<shader>
+	<name>WaveMaterial</name>
+	<uniforms>
+    <uniform name="u_materialColor" constant="color" type="Color"/>
+    <uniform name="u_frequency" constant="frequency" type="Scalar" defaultValue="1.0"/>
+    <uniform name="u_amplitude" constant="amplitude" type="Scalar" defaultValue="3.0"/>
+		<uniform name="u_modelViewProjectionMatrix" constant="modelViewProjectionMatrix" type="Mat44" owner="instance"/>
+		<uniform name="u_modelViewMatrix" constant="modelViewMatrix" type="Mat44" owner="instance"/>
+		<uniform name="u_normalMatrix" constant="normalMatrix" type="Mat33" owner="instance"/>
+	</uniforms>
+	<attributes>
+		<attribute name="a_position" binding="positions"/>
+		<attribute name="a_normal" binding="normals"/>
+	</attributes>
+	<vertexshader>
+		<source>
+
+			uniform mat4 u_modelViewProjectionMatrix;
+			uniform mat4 u_modelViewMatrix;
+			uniform mat3 u_normalMatrix;
+      uniform float u_frequency;
+      uniform float u_amplitude;
+			
+			attribute vec4 a_position;
+			attribute vec3 a_normal;
+
+			varying vec3 normal;
+			varying vec3 viewDir;
+
+			void main(){
+
+				viewDir = -vec3(u_modelViewMatrix * a_position);
+
+        // compute the wave factor        
+        vec4 xz_position = vec4(a_position.x,0.0,a_position.z,0.0);
+        float waveFactor = sin(length(xz_position) * u_frequency);
+
+        // deform the position
+        vec4 wavePosition = a_position + vec4(0.0,1.0,0.0,0.0) * waveFactor * u_amplitude;
+				gl_Position = u_modelViewProjectionMatrix * wavePosition;
+        
+        // deform the normal
+        normal = u_normalMatrix * (a_normal + vec3(0.0,1.0,0.0) * waveFactor * clamp(u_amplitude * 0.5,0.0,1.0));
+			}
+
+		</source>
+	</vertexshader>
+	
+	<fragmentshader>
+		<source>
+      
+      uniform vec4 u_materialColor;
+
+			varying vec3 normal;
+			varying vec3 viewDir;
+
+			void main(){
+        vec3 N = normalize(normal);
+        vec3 V = normalize(viewDir);
+        
+				gl_FragColor = u_materialColor * abs(dot(N,V));
+			}
+
+		</source>
+	</fragmentshader>
+</shader>

@@ -1,0 +1,69 @@
+
+//
+// Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
+//
+
+function RotationOrder(in Integer order) {
+  if (order < 0 || order > 5) {
+    report('Invalid rotation order: ' + order);
+    this.setXYZ();
+  }
+  else
+    this.order = order;
+}
+
+/*
+// It would be most excellent to be able to override String casts.
+function String( in RotationOrder o )
+{
+     if( o.order = 0 ) return "xyz";
+  else if( o.order = 1 ) return "yzx";
+  else if( o.order = 2 ) return "zxy";
+  else if( o.order = 3 ) return "xzy";
+  else if( o.order = 4 ) return "zyx";
+  else if( o.order = 5 ) return "yxz";
+  else return "<unknown>";
+}
+*/
+
+function Boolean RotationOrder.isXYZ() {
+  return this.order == 0;
+}
+function Boolean RotationOrder.isYZX() {
+  return this.order == 1;
+}
+function Boolean RotationOrder.isZXY() {
+  return this.order == 2;
+}
+function Boolean RotationOrder.isXZY() {
+  return this.order == 3;
+}
+function Boolean RotationOrder.isZYX() {
+  return this.order == 4;
+}
+function Boolean RotationOrder.isYXZ() {
+  return this.order == 5;
+}
+
+function Boolean RotationOrder.isReversed() {
+  return this.isXZY() || this.isZYX() || this.isYXZ();
+}
+
+function RotationOrder.setXYZ() {
+  this.order = 0;
+}
+function RotationOrder.setYZX() {
+  this.order = 1;
+}
+function RotationOrder.setZXY() {
+  this.order = 2;
+}
+function RotationOrder.setXZY() {
+  this.order = 3;
+}
+function RotationOrder.setZYX() {
+  this.order = 4;
+}
+function RotationOrder.setYXZ() {
+  this.order = 5;
+}

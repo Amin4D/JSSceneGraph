@@ -1,0 +1,71 @@
+
+//
+// Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
+//
+
+function Color(Scalar r, Scalar g, Scalar b, Scalar a) {
+  this.r = r;
+  this.g = g;
+  this.b = b;
+  this.a = a;
+}
+
+function Color + (Color a, Color b) {
+  return Color(a.r + b.r, a.g + b.g, a.b + b.b, a.a + b.a);
+}
+
+function Color. += (Color other) {
+  this = this + other;
+}
+
+function Color - (Color a, Color b) {
+  return Color(a.r - b.r, a.g - b.g, a.b - b.b, a.a - b.a);
+}
+
+function Color. -= (Color other) {
+  this = this - other;
+}
+
+function Color * (Scalar a, Color b) {
+  return Color(a * b.r, a * b.g, a * b.b, a * b.a);
+}
+
+function Color * (Color a, Scalar b) {
+  return Color(a.r * b, a.g * b, a.b * b, a.a * b);
+}
+
+function Color * (Color a, Color b) {
+  return Color(a.r * b.r, a.g * b.g, a.b * b.b, a.a * b.a);
+}
+
+function Color. *= (Scalar other) {
+  this = this * other;
+}
+
+function Color. *= (Color other) {
+  this = this * other;
+}
+
+function Color / (Color a, Color b) {
+  return Color(a.r / b.r, a.g / b.g, a.b / b.b, a.a / b.a);
+}
+
+function Color / (Scalar a, Color b) {
+  return Color(a / b.r, a / b.g, a / b.b, a / b.a);
+}
+
+function Color / (Color a, Scalar b) {
+  return Color(a.r / b, a.g / b, a.b / b, a.a / b);
+}
+
+function Color. /= (Scalar other) {
+  this = this / other;
+}
+
+function Color. /= (Color other) {
+  this = this / other;
+}
+
+function Color Color.lerp(in Color other, in Scalar t) {
+  return this + ((other - this) * t);
+}

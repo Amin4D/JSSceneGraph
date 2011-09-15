@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<shader>
+	<name>ShadowMaterial</name>
+  <prototypeMaterialType>ShadowMapMaterial</prototypeMaterialType>
+
+	<uniforms>
+		<uniform name="u_modelViewProjectionMatrix" constant="modelViewProjectionMatrix" type="Mat44" owner="instance"/>
+		<uniform name="u_normalMatrix" constant="normalMatrix" type="Mat33" owner="instance"/>
+	</uniforms>
+
+	<attributes>
+		<attribute name="a_position" binding="positions"/>
+		<attribute name="a_normal" binding="normals"/>
+	</attributes>
+
+	<vertexshader>
+		<source>
+
+			<![CDATA[
+			uniform mat4 u_modelViewProjectionMatrix;
+			uniform mat3 u_normalMatrix;
+
+			attribute vec4 a_position;
+			attribute vec3 a_normal;
+
+			varying vec3 normal;
+
+			void main()
+			{
+				gl_Position = u_modelViewProjectionMatrix * a_position;
+				normal = u_normalMatrix * a_normal;
+			}
+
+
+			]]>
+		</source>
+		</vertexshader>
+
+		<fragmentshader>
+		<source>
+			<![CDATA[
+
+			varying vec3 normal;
+
+			void main()
+			{
+				vec3 n = normal * 0.5 + 0.5;
+				gl_FragColor.xyz = n;
+			}
+			
+			]]>
+		</source>
+	</fragmentshader>
+</shader>

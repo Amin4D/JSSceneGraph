@@ -1,0 +1,57 @@
+//
+// Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
+//
+
+use RayIntersection;
+use Ray;
+use Vec2;
+use Vec3;
+use Xfo;
+use Mat44;
+
+// PT - Note: This intersection test should be performed in object space,
+// removing the need for all the matrix > vector multiplications.
+// I tried converting it to object space, but I wasn't getting the correct
+// collisions anymore, so I reverted it.
+operator rayIntersectTriangles(
+  io Boolean select,
+  io RayIntersection intersection,
+  io Ray ray,
+  io Xfo globalXfo,
+  io Vec3 positions<>,
+  io Integer indices[],
+  io Vec3 bboxmin,
+  io Vec3 bboxmax
+) {
+  Mat44 globalMat44 = Mat44(globalXfo);
+  Mat44 invGlobalMat44 = globalMat44.inverse();
+  Ray objRay;
+  objRay.start = ray.start * invGlobalMat44;
+  invGlobalMat44.row3.x = 0.0;
+  invGlobalMat44.row3.y = 0.0;
+  invGlobalMat44.row3.z = 0.0;
+  objRay.direction = ray.direction * invGlobalMat44;
+
+  if (!objRay.intersectBoundingBox(bboxmin, bboxmax)) {
+    return;
+  }
+
+  intersection.distance = 1.0e20;
+
+  for (var Integer i = 0; i < indices.size(); i += 3) {
+    var Vec3 v0 = positions[indices[i + 0]];
+    var Vec3 v1 = positions[indices[i + 1]];
+    var Vec3 v2 = positions[indices[i + 2]];
+    var Vec3 point;
+    var Scalar dist, u, v;
+
+    if (objRay.intersectTriangle(true, v0, v1, v2, point, dist, u, v)) {
+      select = true;
+      if (dist < intersection.distance) {
+        intersection.point = point * globalMat44;
+        intersection.distance = dist;
+        intersection.elementid = i;
+      }
+    }
+  }
+}

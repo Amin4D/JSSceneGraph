@@ -1,0 +1,11 @@
+
+//
+// Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
+//
+
+function RGBA(Byte r, Byte g, Byte b, Byte a) {
+  this.r = r;
+  this.g = g;
+  this.b = b;
+  this.a = a;
+}

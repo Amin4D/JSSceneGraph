@@ -1,0 +1,35 @@
+
+//
+// Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
+//
+
+function Euler(in Vec3 angles) {
+  this.x = angles.x;
+  this.y = angles.y;
+  this.z = angles.z;
+  this.ro.setXYZ();
+}
+
+function Euler(in Vec3 angles, in RotationOrder order) {
+  this.x = angles.x;
+  this.y = angles.y;
+  this.z = angles.z;
+  this.ro = order;
+}
+
+function Vec3 Euler.getAngles() {
+  return Vec3(this.x, this.y, this.z);
+}
+
+// Euler <-> Quaternion/Mat33 conversion
+
+function Euler(in Quat q, in RotationOrder ro) {
+  this.ro = ro;
+
+  var Scalar nq = q.normSq();
+  var Scalar s = (nq > 0.0) ? (2.0 / nq) : 0.0;
+  var Scalar xs = q.v.x * s, ys = q.v.y * s, zs = q.v.z * s;
+  var Scalar wx = q.w * xs, wy = q.w * ys, wz = q.w * zs;
+  var Scalar xx = q.v.x * xs, xy = q.v.x * ys, xz = q.v.x * zs;
+  var Scalar yy = q.v.y * xs, yz = q.v.y * ys, zz = q.v.z * zs;
+}

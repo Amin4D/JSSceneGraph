@@ -1,0 +1,10 @@
+
+//
+// Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
+//
+use Xfo;
+
+operator calcGlobalXfo(io Xfo localXfo, io Xfo parentGlobalXfo, io Xfo globalXfo) {
+  //report( "calcGlobalXfo\n" );
+  globalXfo = localXfo * parentGlobalXfo;
+}

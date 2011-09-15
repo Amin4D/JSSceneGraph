@@ -16,34 +16,36 @@
     <script type="text/javascript" src="../../../ThirdParty/jQuery/colorpicker/js/colorpicker.js"></script>
     <link href="../../../ThirdParty/jQuery/colorpicker/css/colorpicker.css" rel="stylesheet" type="text/css" />
 
-      <script type="text/javascript" src="../../../Core/FABRIC.Wrappers.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../Core/FABRIC.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Math.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/RGBA.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Vec2.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Vec3.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Vec4.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Mat22.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Mat33.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Mat44.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Quat.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Xfo.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Color.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Ray.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/CollectedPoints.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/RGBA.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/RT/Euler.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/Math.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/RGBA.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/Vec2.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/Vec3.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/Vec4.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/Mat22.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/Mat33.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/Mat44.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/Quat.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/Xfo.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/Color.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/Ray.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/CollectedPoints.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/RGBA.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/Euler.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/OGLShaderProgram.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/OGLBuffer.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/OGLTexture2D.js" charset="utf-8"></script>
     
 
-    <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Geometry.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Primitives.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Lights.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Materials.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Manipulation.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Particles.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/FABRIC.SceneGraph.Kinematics.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Resources/Parsers/parseOBJ.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Geometry.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Primitives.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Lights.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Materials.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Manipulation.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Particles.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Kinematics.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Parsers/parseOBJ.js" charset="utf-8"></script>
     
     <style type="text/css">
     
@@ -58,6 +60,45 @@
   </style>
     
     <script type="text/javascript">
+    
+    
+FABRIC.SceneGraph.registerNodeType('PaintVertexColorsManipulator', {
+  factoryFn: function(options, scene) {
+    scene.assignDefaults(options, {
+      brushColor: FABRIC.RT.rgb(0.8, 0.0, 0.0)
+      });
+    
+    options.paintingOpDef = {
+          operatorName: 'paintVertexColors',
+          srcFile: 'KL/paintOp.kl',
+          entryFunctionName: 'paintVertexColors',
+          parameterLayout: [
+            'paintData.cameraMatrix',
+            'paintData.projectionMatrix',
+            'paintData.aspectRatio',
+
+            'paintData.brushPos',
+            'paintData.brushSize',
+            'paintData.brushColor',
+
+            'transform.globalXfo',
+            'geometryattributes.positions<>',
+            'geometryattributes.normals<>',
+            'geometryattributes.vertexColors<>'
+          ],
+          async: false
+        };
+    
+    var vertexColorsPaintManipulator = scene.constructNode('PaintManipulator', options);
+    
+    var paintEventHandler = vertexColorsPaintManipulator.getPaintEventHandler();
+    paintEventHandler.addMember('brushColor', 'Color', options.brushColor);
+    vertexColorsPaintManipulator.addMemberInterface(paintEventHandler, 'brushColor', true);
+    
+    return vertexColorsPaintManipulator;
+  }});
+
+
 $(document).ready(function() {
     $('#play').button({
       text: true,
@@ -78,6 +119,10 @@ $(document).ready(function() {
     windowElement: document.getElementById('FabricContainer'),
     backgroundColor: FABRIC.RT.rgb(0.3, 0.5, 0.7)
   });
+  
+  viewport.setBackgroundTextureImage(scene.constructNode('Image', {
+    url: 'Resources/fabric-demo-gradient.png'
+  }));
 
   // Create a camera to draw the scene from
   camera = scene.constructNode('TargetCamera', {
@@ -98,7 +143,7 @@ $(document).ready(function() {
   var assets = scene.importAssetFile('Models/bunny.obj');
   geometry = assets['bunny'];
 
-  geometry.addVertexAttributeValue('vertexColors', 'Color', FABRIC.RT.rgb(0.0, 0.6, 0.0));
+  geometry.addVertexAttributeValue('vertexColors', 'Color', { defaultValue:FABRIC.RT.rgb(0.0, 0.6, 0.0), genVBO:true });
 
   var instanceNode = scene.constructNode('Instance', { geometryNode: geometry, materialNode: material });
 
@@ -106,43 +151,20 @@ $(document).ready(function() {
   /////////////////////////////////////////////////
   // Set up the painting manipulator
   var brushSize = 0.1;
-  var paintManipulator = scene.constructNode('PaintManipulator', {
+  var brushColor = FABRIC.RT.rgb(0.8, 0.0, 0.0);
+  var paintManipulator = scene.constructNode('PaintVertexColorsManipulator', {
       brushSize: brushSize,
-      enabled:false
-      });
+      enabled:false,
+      brushColor: brushColor
+    });
   paintManipulator.addPaintableNode(instanceNode);
-  var onBeginPaintFn = function(evt) {
-    brushSize = paintManipulator.brushSize;
-  };
 
   var onPaintFn = function(evt) {
-  /*  if( evt.paintData.points.length == 0 ){
+    if( evt.paintData.points.length == 0 ){
       return;
     }
-    var paintData = evt.paintData,
-      attributesDGNode = geometry.getAttributesDGNode(),
-      vertexData = attributesDGNode.getSlicesBulkData( paintData.points ),
-      weight,
-      vertexId,
-      modifiedData = [];
-    // Note: Peter, it would be cool if getSlicesBulkData mirrored setSlicesBulkData
-    // so that we could pull->modifiy->set. Currently we ahve to construct a whole new
-    // data structure to set. maybe setSlicesBulkData could take an array of indices
-    // and an array of data.
-    modifiedData.length = paintData.points.length;
-    for( var i=0; i< paintData.points.length; i++ ){
-      weight = (Math.cos( Math.PI * (paintData.distances[i] / brushSize) ) * 0.5 ) + 0.5;
-      modifiedData[i] = {
-          sliceIndex: paintData.points[i],
-          data: { vertexColors:vertexData[i].vertexColors.interpTowards( brushColor, weight ) }
-        };
-    }
-    attributesDGNode.setSlicesBulkData( modifiedData );
-  */ geometry.reloadVBO('vertexColors');
-  //  viewport.redraw();
+    geometry.reloadVBO('vertexColors');
   };
-
-  paintManipulator.addEventListener('onbeginpaint', onBeginPaintFn);
   paintManipulator.addEventListener('onpaint', onPaintFn);
   
   // Switch to painting when the 'P' key is pressed
@@ -159,31 +181,44 @@ $(document).ready(function() {
       }
     };
 
-  var errors = scene.getErrors();
-  if (errors.length > 0) {
-    throw (errors.toString());
-  }
-  else {
-    var brushColor = FABRIC.RT.rgb(0.8, 0.0, 0.0);
-    paintManipulator.setBrushColor(brushColor);
-    $('#brushColor').ColorPicker({
-        flat: true,
-        color: { r: brushColor.r * 255, g: brushColor.g * 255, b: brushColor.b * 255} ,
-        onChange: function(hsb, hex, rgb) {
-          paintManipulator.setBrushColor(FABRIC.RT.rgb255(rgb.r, rgb.g, rgb.b));
-        }
-      });
+  $('#brushColor').ColorPicker({
+      flat: true,
+      color: { r: brushColor.r * 255, g: brushColor.g * 255, b: brushColor.b * 255} ,
+      onChange: function(hsb, hex, rgb) {
+      //  paintManipulator.setBrushColor(FABRIC.RT.rgb255(rgb.r, rgb.g, rgb.b));
+        paintManipulator.setBrushColor( FABRIC.RT.rgb255(rgb.r, rgb.g, rgb.b));
+      }
+    });
 
-    console.log(scene.getTimerProfiles());
-    console.log('Done');
-  }
-
+  $('#loadingDialog').dialog({
+    modal: true
+  });
+  var count = FABRIC.getAsyncTaskCount();
+  FABRIC.appendOnResolveAsyncTaskCallback(function(label, countRemaining){
+    $('#loadingProgressBar').progressbar({
+      value: (1.0-(countRemaining/count))*100
+    });
+    if(countRemaining===0){
+      $('#loadingDialog').dialog('close');
+      var errors = scene.getErrors();
+      if (errors.length > 0) {
+        throw (errors.toString());
+      }
+      viewport.redraw();
+      return true;
+    }
+  });
+  
 });
 
 </script>
 
   </head> 
   <body>
+    <div id="loadingDialog" title="Loading...">
+      <h4 id="loadingDesc" style="margin-bottom: 10px"></h4>
+      <div id="loadingProgressBar" class="ui-progressbar-value"></div>
+    </div>
     <div id="wrapper">
       <ul id="nav">
         <li><a href="#" id="fabric-logo"><img src="../../../themes/default/_img/projects/fabric-logo.png" /></a></li>

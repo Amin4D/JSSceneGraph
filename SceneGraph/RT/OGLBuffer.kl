@@ -1,0 +1,51 @@
+//
+// Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
+//
+
+use FabricOGL;
+
+function OGLBuffer.genBuffer(
+  Data bufferData,
+  Size bufferSize,
+  Size bufferDataElementCount
+) {
+  if (this.bufferID <= 0 || bufferDataElementCount != this.elementCount || this.bufferUsage == GL_DYNAMIC_DRAW || this.reload) {
+    if (this.bufferID != 0 && (bufferDataElementCount != this.elementCount || this.reload)) {
+      var Size bufferIDs[];
+      bufferIDs.push(Size(this.bufferID));
+      glDeleteBuffers(1, bufferIDs);
+      this.bufferID = 0;
+    }
+    if (bufferSize > 0) {
+      if (this.bufferID == 0) {
+        var Size buffers[];
+        buffers.push(Size(0));
+        glGenBuffers(1, buffers);
+        this.bufferID = Integer(buffers[0]);
+      }
+      // Now fill the buffer with the data
+      glBindBuffer(this.bufferType, this.bufferID);
+      glBufferData(this.bufferType, bufferSize, bufferData, this.bufferUsage);
+      glBindBuffer(this.bufferType, 0);
+      this.elementCount = bufferDataElementCount;
+    }
+    this.reload = false;
+  }
+}
+
+function OGLBuffer.bindBuffer(
+  Integer bufferLocation
+) {
+  if (this.bufferID > 0) {
+    var Data NULL;
+    glBindBuffer(this.bufferType, this.bufferID);
+    if (bufferLocation != - 1) {
+      glEnableVertexAttribArray(bufferLocation);
+      glVertexAttribPointer(bufferLocation, this.numBufferElementComponents, this.bufferElementComponentType, GL_FALSE, this.elementDataSize, NULL);
+    }
+    else {
+      report('Invalid shader attribute location for VBO.');
+    }
+    glBindBuffer(this.bufferType, 0);
+  }
+}

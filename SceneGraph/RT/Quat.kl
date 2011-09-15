@@ -1,0 +1,288 @@
+//
+// Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
+//
+
+use RotationOrder;
+
+function Quat() {
+  this.v = Vec3(0.0, 0.0, 0.0);
+  this.w = 1.0;
+}
+
+function Quat.identity() {
+  this.v = Vec3(0.0, 0.0, 0.0);
+  this.w = 1.0;
+}
+
+function Quat(in Scalar w, in Vec3 v) {
+  this.v = v;
+  this.w = w;
+}
+
+function Quat(in Euler e) {
+  var Scalar ti, tj, tk;
+  ti = e.x * 0.5;
+  tj = e.ro.isReversed() ? - e.y * 0.5 : e.y * 0.5;
+  tk = e.z * 0.5;
+  var Scalar ci = cos(ti), cj = cos(tj), ck = cos(tk);
+  var Scalar si = sin(ti), sj = sin(tj), sk = sin(tk);
+  var Scalar cc = ci * ck, cs = ci * sk, sc = si * ck, ss = si * sk;
+  var Scalar ai, aj, ak;
+  ai = cj * sc - sj * cs;
+  aj = cj * ss + sj * cc;
+  ak = cj * cs - sj * sc;
+
+  if (e.ro.isReversed()) {
+    aj = - aj;
+  }
+  this.w = cj * cc + sj * ss;
+
+  if (e.ro.isXYZ()) {
+    this.v.x = ai; this.v.y = aj; this.v.z = ak;
+  }
+  else if (e.ro.isYZX()) {
+    this.v.x = aj; this.v.y = ak; this.v.z = ai;
+  }
+  else if (e.ro.isZXY()) {
+    this.v.x = ak; this.v.y = ai; this.v.z = aj;
+  }
+  else if (e.ro.isXZY()) {
+    this.v.x = ai; this.v.y = ak; this.v.z = aj;
+  }
+  else if (e.ro.isZYX()) {
+    this.v.x = ak; this.v.y = aj; this.v.z = ai;
+  }
+  else if (e.ro.isYXZ()) {
+    this.v.x = aj; this.v.y = ai; this.v.z = ak;
+  }
+}
+
+function Quat + (in Quat a, in Quat b) {
+  return Quat(a.w + b.w, a.v + b.v);
+}
+
+function Quat - (in Quat a, in Quat b) {
+  return Quat(a.w - b.w, a.v - b.v);
+}
+
+function Quat * (in Quat a, in Quat b) {
+  return Quat(a.w * b.w - a.v.dot(b.v), a.v.cross(b.v) + (a.w * b.v) + (a.v * b.w));
+}
+
+function Quat * (in Scalar a, in Quat b) {
+  return Quat(a * b.w, a * b.v);
+}
+
+function Quat * (in Quat a, in Scalar b) {
+  return Quat(a.w * b, a.v * b);
+}
+
+function Quat / (in Quat a, in Quat b) {
+  return Quat(a.w * b.w + a.v.dot(b.v), (a.v * b.w) - (a.w * b.v) - a.v.cross(b.v));
+}
+
+function Scalar Quat.normSq() {
+  return this.w * this.w + this.v.normSq();
+}
+
+function Scalar Quat.norm() {
+  return sqrt(this.normSq());
+}
+
+function Quat Quat.unit() {
+  var Scalar l = this.norm();
+  return Quat(this.w / l, this.v / l);
+}
+
+function Quat.setUnit() {
+  this = this.unit();
+}
+
+function Quat.normalize() {
+  this = this.unit();
+}
+
+function Quat Quat.conjugate() {
+  return Quat(this.w, this.v.neg());
+}
+
+function Quat Quat.inv() {
+  return this.unit().conjugate();
+}
+
+function Scalar Quat.dot(in Quat other) {
+  return this.w * other.w + this.v.dot(other.v);
+}
+
+function Quat.makeClosest(in Quat other) {
+  if(this.dot(other) < 0.0){
+    this = Quat(-this.w, this.v.neg());;
+  }
+}
+
+
+// Note: a and b should be unit Quaternions
+function Quat slerp(in Quat a, in Quat b, in Scalar t) {
+  var Quat r;
+
+  var Scalar cosHalfTheta = a.dot(b);
+
+  if (abs(cosHalfTheta) < 1.0) {
+    var Scalar halfTheta = acos(cosHalfTheta);
+    var Scalar sinHalfTheta = sqrt(1.0 - cosHalfTheta * cosHalfTheta);
+
+    if (abs(sinHalfTheta) < 0.00001) {
+      r = Quat((a.w + b.w) * 0.5, (a.v + b.v) * 0.5);
+    }
+    else {
+      var Scalar rA = sin((1 - t) * halfTheta) / sinHalfTheta;
+      var Scalar rB = sin(t * halfTheta) / sinHalfTheta;
+
+      r = Quat(a.w * rA + b.w * rB, a.v * rA + b.v * rB);
+    }
+  }
+  else {
+    // They're the same
+    r = a;
+  }
+
+  return r.unit();
+}
+
+function Quat axisAndAngleToQuat(in Vec3 axis, in Scalar angle) {
+  var Scalar halfAngle = angle / 2.0;
+  return Quat(cos(halfAngle), sin(halfAngle) * axis.unit());
+}
+
+// NB. Function taken from the 'Game Programming Gems' article 'The Shortest Arc Quat' by Stan Melax
+// NB. Both vectors must be normalized.
+function Quat makeQuatFrom2Vectors(in Vec3 vec1, in Vec3 vec2) {
+  Quat q;
+  Scalar val = vec1.dot(vec2) + 1.0;
+  if (val <= 0.001) {
+    // the vectors pointed in opposite directions.
+    // creating the quaterion is impossible
+    return q;
+  }
+  val = sqrt(val * 2.0);
+  q.v = vec1.cross(vec2);
+  q.v /= val;
+  q.w = val / 2.0;
+  return q;
+}
+
+// Method for obtaining axes directly from a quaternion
+function Vec3 Quat.getXaxis() {
+  Vec3 temp;
+  Scalar xy = this.v.x * this.v.y; Scalar xz = this.v.x * this.v.z;
+  Scalar yy = this.v.y * this.v.y; Scalar yw = this.v.y * this.w;
+  Scalar zz = this.v.z * this.v.z; Scalar zw = this.v.z * this.w;
+
+  temp.x = 1.0 - 2.0 * (zz + yy);
+  temp.y = 2.0 * (xy + zw);
+  temp.z = 2.0 * (xz - yw);
+  return temp;
+}
+
+function Vec3 Quat.getYaxis() {
+  Vec3 temp;
+  Scalar xx = this.v.x * this.v.x; Scalar xy = this.v.x * this.v.y; Scalar xw = this.v.x * this.w;
+  Scalar yz = this.v.y * this.v.z;
+  Scalar zz = this.v.z * this.v.z; Scalar zw = this.v.z * this.w;
+
+  temp.x = 2.0 * (xy - zw);
+  temp.y = 1.0 - 2.0 * (zz + xx);
+  temp.z = 2.0 * (yz + xw);
+  return temp;
+}
+
+function Vec3 Quat.getZaxis() {
+  Vec3 temp;
+  Scalar xx = this.v.x * this.v.x; Scalar xz = this.v.x * this.v.z; Scalar xw = this.v.x * this.w;
+
+  Scalar yy = this.v.y * this.v.y; Scalar yz = this.v.y * this.v.z; Scalar yw = this.v.y * this.w;
+
+  temp.x = 2.0 * (yw + xz);
+  temp.y = 2.0 * (yz - xw);
+  temp.z = 1.0 - 2.0 * (yy + xx);
+  return temp;
+}
+
+function Mat33 Quat.makeMatrix() {
+  Mat33 temp;
+
+  Scalar xx = this.v.x * this.v.x; Scalar xy = this.v.x * this.v.y; Scalar xz = this.v.x * this.v.z; Scalar xw = this.v.x * this.w;
+  Scalar yy = this.v.y * this.v.y; Scalar yz = this.v.y * this.v.z; Scalar yw = this.v.y * this.w;
+  Scalar zz = this.v.z * this.v.z; Scalar zw = this.v.z * this.w;
+
+  temp.row0.x = 1.0 - 2.0 * (zz + yy);
+  temp.row1.x = 2.0 * (xy + zw);
+  temp.row2.x = 2.0 * (xz - yw);
+
+  temp.row0.y = 2.0 * (xy - zw);
+  temp.row1.y = 1.0 - 2.0 * (zz + xx);
+  temp.row2.y = 2.0 * (yz + xw);
+
+  temp.row0.z = 2.0 * (yw + xz);
+  temp.row1.z = 2.0 * (yz - xw);
+  temp.row2.z = 1.0 - 2.0 * (yy + xx);
+
+  return temp;
+}
+
+function Vec3 Quat.transform(in Vec3 v) {
+  var Quat vq = Quat(0.0, v);
+  var Quat pq = this * vq * this.conjugate();
+  return pq.v;
+}
+
+// TODO: Remove the function above. 'transform' is too ambiguous,
+// and inconsistent with our JS library.
+function Vec3 Quat.rotateVector(in Vec3 v) {
+  var Quat vq = Quat(0.0, v);
+  var Quat pq = this * vq * this.conjugate();
+  return pq.v;
+}
+
+function Quat(in Mat33 mat) {
+  var Scalar trace = mat.row0.x + mat.row1.y + mat.row2.z;
+  if (trace > 0) {
+    var Scalar s = 0.5 / sqrt(trace + 1.0);
+    this.w = 0.25 / s;
+    this.v.x = (mat.row2.y - mat.row1.z) * s;
+    this.v.y = (mat.row0.z - mat.row2.x) * s;
+    this.v.z = (mat.row1.x - mat.row0.y) * s;
+  }else {
+    if (mat.row0.x > mat.row1.y && mat.row0.x > mat.row2.z) {
+      var Scalar s = 2.0 * sqrt(1.0 + mat.row0.x - mat.row1.y - mat.row2.z);
+      this.w = (mat.row2.y - mat.row1.z) / s;
+      this.v.x = 0.25 * s;
+      this.v.y = (mat.row0.y + mat.row1.x) / s;
+      this.v.z = (mat.row0.z + mat.row2.x) / s;
+    }else if (mat.row1.y > mat.row2.z) {
+      var Scalar s = 2.0 * sqrt(1.0 + mat.row1.y - mat.row0.x - mat.row2.z);
+      this.w = (mat.row0.z - mat.row2.x) / s;
+      this.v.x = (mat.row0.y + mat.row1.x) / s;
+      this.v.y = 0.25 * s;
+      this.v.z = (mat.row1.z + mat.row2.y) / s;
+    }else {
+      var Scalar s = 2.0 * sqrt(1.0 + mat.row2.z - mat.row0.x - mat.row1.y);
+      this.w = (mat.row1.x - mat.row0.y) / s;
+      this.v.x = (mat.row0.z + mat.row2.x) / s;
+      this.v.y = (mat.row1.z + mat.row2.y) / s;
+      this.v.z = 0.25 * s;
+    }
+  }
+  this.setUnit();
+}
+
+
+
+function Quat Quat.nlerp(in Quat other, in Scalar t) {
+  Quat q;
+  q.v = this.v.lerp(other.v, t);
+  q.w = this.w + ((other.w - this.w) * t);
+  return q.unit();
+}
+
+

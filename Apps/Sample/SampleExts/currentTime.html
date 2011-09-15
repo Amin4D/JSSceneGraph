@@ -4,7 +4,6 @@
   <head>
     <title>Fabric Plugin Example</title>
     <script type="text/javascript" src="../../../ThirdParty/jQuery/jquery-1.4.2.min.js"></script>
-    <script type="text/javascript" src="../../../Core/FABRIC.Wrappers.js"></script>
     <script type="text/javascript" src="../../../Core/FABRIC.js"></script>
   </head>
   <body style='height: 100%'>
@@ -18,7 +17,7 @@ $(document).ready(function() {
   
   var op = FABRIC.DG.createOperator( "getCurrentTimeString" );
   op.setEntryFunctionName( "entry" );
-  op.setSourceCode( "operator entry( io String result ) { currentTimeString( result ); }" );
+  op.setSourceCode( "use TimeSample; operator entry( io String result ) { currentTimeString( result ); }" );
   
   var binding = FABRIC.DG.createBinding();
   binding.setOperator( op );

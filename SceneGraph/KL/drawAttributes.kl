@@ -1,0 +1,13 @@
+
+//
+// Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
+//
+
+operator disableZBuffer() {
+  glPushAttrib(GL_DEPTH_BUFFER_BIT);
+  glDisable(GL_DEPTH_TEST);
+}
+
+operator popAttribs() {
+  glPopAttrib();
+}

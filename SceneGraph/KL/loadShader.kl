@@ -1,0 +1,19 @@
+//
+// Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
+//
+
+use OGLShaderProgram;
+
+operator loadShader(
+  io OGLShaderProgram shaderProgram
+) {
+//  report("loadShader:" + shaderProgram.name);
+  shaderProgram.loadShader();
+}
+
+operator unloadShader(
+  io OGLShaderProgram shaderProgram
+) {
+//  report("loadShader:" + shaderProgram.name);
+  shaderProgram.unloadShader();
+}

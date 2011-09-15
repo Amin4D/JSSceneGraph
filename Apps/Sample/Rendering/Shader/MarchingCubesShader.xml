@@ -3,9 +3,9 @@
   <name>MarchingCubesMaterial</name>
   
   <uniforms>
-    <uniform name="u_lightPosition" constant="lightPosition" owner="light"/>
-    <uniform name="u_materialColor" constant="color"/>
-    <uniform name="u_modelViewProjectionMatrix" constant="modelViewProjectionMatrix"  owner="instance"/>
+    <uniform name="u_lightPosition" constant="lightPosition"  type="Vec3" owner="light"/>
+    <uniform name="u_materialColor" constant="color" type="Color" />
+    <uniform name="u_modelViewProjectionMatrix" constant="modelViewProjectionMatrix"  type="Mat44"  owner="instance"/>
   </uniforms>
   
   <attributes>

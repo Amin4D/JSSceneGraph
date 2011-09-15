@@ -3,6 +3,9 @@
 // Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
 //
 
+use FabricOGL;
+use OGLShaderProgram;
+use Vec3;
 
 function Scalar rand(io Integer seed) {
   seed = 1664525 * seed + 1013904223;
@@ -11,7 +14,7 @@ function Scalar rand(io Integer seed) {
 
 
 operator marchingCubesInit(
-  io Integer programObject,
+  io OGLShaderProgram shaderProgram,
   io Size edgeTableTex,
   io Size triTableTex,
   io Size dataFieldTex[3],
@@ -24,7 +27,7 @@ operator marchingCubesInit(
   io Integer curData,
   
   io Integer edgeTable[],
-  io Integer triTable[][],
+  io Integer triTable[],
   io Boolean initialized
 ) {
   if(initialized){
@@ -88,7 +91,7 @@ operator marchingCubesInit(
   //Store the volume data to polygonise
   Size dataFieldTexArray[];
   dataFieldTexArray.resize(1);
-  glGenTextures(3, dataFieldTexArray);
+  glGenTextures(1, dataFieldTexArray);
   dataFieldTex[0] = dataFieldTexArray[0];
   //  dataFieldTex[1] = dataFieldTexArray[1];
   //  dataFieldTex[2] = dataFieldTexArray[2];
@@ -170,30 +173,30 @@ operator marchingCubesInit(
   glEnable(GL_TEXTURE_3D);
   glBindTexture(GL_TEXTURE_3D, dataFieldTex[curData]);
     
-    report("programObject:" + programObject);
+    report("programObject:" + shaderProgram.programId);
     
     String uniformName;
   ////Samplers assignment///;
-  uniformName = "dataFieldTex";   glUniform1i(glGetUniformLocation(programObject, uniformName), 0);
-  uniformName = "edgeTableTex";   glUniform1i(glGetUniformLocation(programObject, uniformName), 1); 
-    uniformName = "triTableTex";   glUniform1i(glGetUniformLocation(programObject, uniformName), 2);
+  uniformName = "dataFieldTex";   glUniform1i(glGetUniformLocation(shaderProgram.programId, uniformName), 0);
+  uniformName = "edgeTableTex";   glUniform1i(glGetUniformLocation(shaderProgram.programId, uniformName), 1); 
+    uniformName = "triTableTex";   glUniform1i(glGetUniformLocation(shaderProgram.programId, uniformName), 2);
     
 
   ////Uniforms parameters////
   //Initial isolevel
-  uniformName = "isolevel";   glUniform1f(glGetUniformLocation(programObject, uniformName), isolevel); 
+  uniformName = "isolevel";   glUniform1f(glGetUniformLocation(shaderProgram.programId, uniformName), isolevel); 
   //Step in data 3D texture for gradient computation (lighting)
-  uniformName = "dataStep";   glUniform3f(glGetUniformLocation(programObject, uniformName), 1.0/dataSize.x, 1.0/dataSize.y, 1.0/dataSize.z); 
+  uniformName = "dataStep";   glUniform3f(glGetUniformLocation(shaderProgram.programId, uniformName), 1.0/dataSize.x, 1.0/dataSize.y, 1.0/dataSize.z); 
 
   //Decal for each vertex in a marching cube
-  uniformName = "vertDecals[0]";   glUniform3f(glGetUniformLocation(programObject, uniformName), 0.0, 0.0, 0.0); 
-  uniformName = "vertDecals[1]";   glUniform3f(glGetUniformLocation(programObject, uniformName), cubeStep.x, 0.0, 0.0); 
-  uniformName = "vertDecals[2]";   glUniform3f(glGetUniformLocation(programObject, uniformName), cubeStep.x, cubeStep.y, 0.0); 
-  uniformName = "vertDecals[3]";   glUniform3f(glGetUniformLocation(programObject, uniformName), 0.0, cubeStep.y, 0.0); 
-  uniformName = "vertDecals[4]";   glUniform3f(glGetUniformLocation(programObject, uniformName), 0.0, 0.0, cubeStep.z); 
-  uniformName = "vertDecals[5]";   glUniform3f(glGetUniformLocation(programObject, uniformName), cubeStep.x, 0.0, cubeStep.z); 
-  uniformName = "vertDecals[6]";   glUniform3f(glGetUniformLocation(programObject, uniformName), cubeStep.x, cubeStep.y, cubeStep.z); 
-  uniformName = "vertDecals[7]";   glUniform3f(glGetUniformLocation(programObject, uniformName), 0.0, cubeStep.y, cubeStep.z); 
+  uniformName = "vertDecals[0]";   glUniform3f(glGetUniformLocation(shaderProgram.programId, uniformName), 0.0, 0.0, 0.0); 
+  uniformName = "vertDecals[1]";   glUniform3f(glGetUniformLocation(shaderProgram.programId, uniformName), cubeStep.x, 0.0, 0.0); 
+  uniformName = "vertDecals[2]";   glUniform3f(glGetUniformLocation(shaderProgram.programId, uniformName), cubeStep.x, cubeStep.y, 0.0); 
+  uniformName = "vertDecals[3]";   glUniform3f(glGetUniformLocation(shaderProgram.programId, uniformName), 0.0, cubeStep.y, 0.0); 
+  uniformName = "vertDecals[4]";   glUniform3f(glGetUniformLocation(shaderProgram.programId, uniformName), 0.0, 0.0, cubeStep.z); 
+  uniformName = "vertDecals[5]";   glUniform3f(glGetUniformLocation(shaderProgram.programId, uniformName), cubeStep.x, 0.0, cubeStep.z); 
+  uniformName = "vertDecals[6]";   glUniform3f(glGetUniformLocation(shaderProgram.programId, uniformName), cubeStep.x, cubeStep.y, cubeStep.z); 
+  uniformName = "vertDecals[7]";   glUniform3f(glGetUniformLocation(shaderProgram.programId, uniformName), 0.0, cubeStep.y, cubeStep.z); 
 
   initialized = true;
 }

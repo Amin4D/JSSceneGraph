@@ -615,13 +615,13 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
   
   //////////////////////////////////////////////////////////////////////////////
   // SceneGraph Construction
-  
+  /*
   var defaultLight = scene.constructNode('PointLight', { position: FABRIC.RT.vec3(420.0, 1000.0, 600.0) });
   var defaultMaterial = scene.constructNode('PhongMaterial', {
       diffuseColor: FABRIC.RT.rgb(0.8, 0, 0, 1),
       lightNode: defaultLight
     });
-  
+  */
   // This method returns an array of values from the given source data. 
   var getSourceData = function(source, id){
     var accessor = source.technique.accessor;
@@ -1135,7 +1135,7 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
   var constructScene = function(sceneData){
     
     var constructInstance = function(instanceData, parentTransformNode){
-      var geometryNode, materialNode = defaultMaterial;
+      var geometryNode;//, materialNode = defaultMaterial;
       if(instanceData.instance_geometry){
         var url = instanceData.instance_geometry.url.slice(1);
         geometryNode = getGeometryNode(url);
@@ -1153,7 +1153,7 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
           transformNodeOptions.globalXfo = instanceData.xfo;
         }
         var transformNode = scene.constructNode('Transform', transformNodeOptions );
-        if(geometryNode && materialNode){
+        if(geometryNode/* && materialNode*/){
           var instanceNode = scene.constructNode('Instance', {
             name: instanceData.name, 
             transformNode: transformNode,

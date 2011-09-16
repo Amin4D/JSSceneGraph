@@ -939,7 +939,13 @@ FABRIC.SceneGraph.registerNodeType('Viewport', {
           // the sceneRaycastEventHandler propogates the event throughtout the scene.
           viewPortRaycastEventHandler.appendChildEventHandler(scene.getSceneRaycastEventHandler());
         }
-        fabricwindow.finalize();
+        
+        // These functions cannot be called during the initial construction of the
+        // graph because they rely on an OpenGL context being set up, and this occurs
+        // during the 1st redraw.
+        viewportNode.pub.getOpenGLVersion = fabricwindow.getOpenGLVersion;
+        viewportNode.pub.getGlewSupported = fabricwindow.getGlewSupported;
+        fabricwindow.show();
         return true;
       }
     });
@@ -1012,8 +1018,6 @@ FABRIC.SceneGraph.registerNodeType('Viewport', {
     };
 
     // public interface
-    viewportNode.pub.getOpenGLVersion = fabricwindow.getOpenGLVersion;
-    viewportNode.pub.getGlewSupported = fabricwindow.getGlewSupported;
     
     viewportNode.addMemberInterface(dgnode, 'backgroundColor', true);
     viewportNode.pub.setCameraNode = function(node) {

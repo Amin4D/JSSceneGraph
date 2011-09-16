@@ -75,6 +75,10 @@ $(document).ready(function() {
   var scene = FABRIC.SceneGraph.createScene();
   var viewport = scene.constructNode('Viewport', { windowElement: document.getElementById('FabricContainer') });
 
+  viewport.setBackgroundTextureImage(scene.constructNode('Image', {
+    url: '../BasicDemos/Resources/fabric-demo-gradient.png'
+  }));
+
   // Create a camera to draw the scene from
   var camera = scene.constructNode('TargetCamera', {
       nearDistance: 1,

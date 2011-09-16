@@ -894,7 +894,8 @@ FABRIC.SceneGraph.registerNodeType('Viewport', {
         mouseMoveEvents: true,
         backgroundColor: FABRIC.RT.rgb(0.5, 0.5, 0.5),
         postProcessEffect: undefined,
-        rayIntersectionThreshold: 0.2
+        rayIntersectionThreshold: 0.2,
+        polygonMode: -1
       });
 
     if (!options.windowElement) {
@@ -908,6 +909,7 @@ FABRIC.SceneGraph.registerNodeType('Viewport', {
       redrawEventHandler = viewportNode.constructEventHandlerNode('Redraw');
       
     dgnode.addMember('backgroundColor', 'Color', options.backgroundColor);
+    dgnode.addMember('polygonMode', 'Integer', options.polygonMode);
 
     redrawEventHandler.addScope('viewPort', dgnode);
 
@@ -918,7 +920,8 @@ FABRIC.SceneGraph.registerNodeType('Viewport', {
           parameterLayout: [
             'window.width',
             'window.height',
-            'viewPort.backgroundColor'
+            'viewPort.backgroundColor',
+            'viewPort.polygonMode'
           ]
         }));
 

@@ -138,6 +138,7 @@ FABRIC.SceneGraph.registerNodeType('Flock', {
     flockNode.pub.addVertexAttributeValue('neighborIndices', 'Integer[]');
     flockNode.pub.addVertexAttributeValue('neighborDistances', 'Scalar[]');
     
+    flockNode.pub.addVertexAttributeValue('initialized', 'Boolean', false );
     flockNode.pub.addVertexAttributeValue('debugDraw', 'DebugGeometry' );
     flockNode.pub.addUniformValue('displayDebugging', 'Boolean', options.displayDebugging, true );
     
@@ -147,6 +148,7 @@ FABRIC.SceneGraph.registerNodeType('Flock', {
       entryFunctionName: 'simulateFlock',
       parameterLayout: [
         'self.index',
+        'self.initialized',
 
         'self.positions',
         'self.velocities',

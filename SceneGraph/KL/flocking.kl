@@ -3,6 +3,7 @@
 // Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
 //
 
+use FabricMath;
 use Vec3;
 use Quat;
 use Xfo;
@@ -12,6 +13,7 @@ use DebugGeometry;
 
 operator simulateFlock(
   in Size index,
+  io Boolean initialized,
   io Vec3 position,
   io Vec3 velocity,
   io Vec3 goal,
@@ -32,6 +34,28 @@ operator simulateFlock(
   io Boolean displayDebugging
 ) {
   var Integer i;
+  
+  if(!initialized){
+    
+    position.set(
+      (mathRandomScalar(index,index + 1) - 0.5) * hashtable.cellsize * (Scalar(hashtable.x_count)-0.5),
+      0.0,
+      (mathRandomScalar(index,index + 2) - 0.5) * hashtable.cellsize * (Scalar(hashtable.z_count)-0.5)
+    );
+    goal.set(
+      (mathRandomScalar(index,index + 3) - 0.5) * hashtable.cellsize * (Scalar(hashtable.x_count)-0.5),
+      0.0,
+      (mathRandomScalar(index,index + 4) - 0.5) * hashtable.cellsize * (Scalar(hashtable.z_count)-0.5)
+    );
+    initialized = true;
+      
+    if(displayDebugging){
+      debugDraw.drawCircle(Xfo(position, Quat()), neighborInfluenceRange, Color(1.0, 0.25, 0.25, 1.0));
+    }
+    return;
+  }
+  
+  
   // We start with our previous frame position, and simulate using the pevious
   // frame data to calculate the new current frame data. This happens in parallal
   // across many particles at once.

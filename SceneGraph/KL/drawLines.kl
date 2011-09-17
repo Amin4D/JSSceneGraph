@@ -33,7 +33,7 @@ operator drawLineStrip(
   if(shaderProgram.debug){
     report("drawLineStrip:"+shaderProgram.name);
   }
-  if (drawToggle) {
+  if (drawToggle && shaderProgram.programId != 0) {
     shaderProgram.preDraw();
     
     var Data NULL;

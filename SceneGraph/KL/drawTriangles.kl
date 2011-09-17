@@ -15,7 +15,7 @@ operator drawTriangles(
   if(shaderProgram.debug){
     report("drawTriangles:"+shaderProgram.name);
   }
-  if (drawToggle) {
+  if (drawToggle && shaderProgram.programId != 0) {
     shaderProgram.preDraw();
     
     var Data NULL;

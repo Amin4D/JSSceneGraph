@@ -95,7 +95,12 @@ $(document).ready(function() {
       break;
     case 'massive':
       cameraPos = FABRIC.RT.vec3(20, 30, -40).scale(10);
-      numAgents = 160000;
+      numAgents = 100000;
+      gridSize = 400;
+      break;
+    case 'insane':
+      cameraPos = FABRIC.RT.vec3(20, 30, -40).scale(10);
+      numAgents = 2000000;
       gridSize = 800;
       break;
   }
@@ -149,34 +154,9 @@ $(document).ready(function() {
       geometryNode: flockNode,
       materialNode: flockMaterial
     });
-
-  var particlePositions = [];
-  var particleGoals = [];
-  var particleVelocities = [];
-  for (i = 0; i < numAgents; i++) {
-    particlePositions.push(FABRIC.RT.vec3(
-      (Math.random() - 0.5) * gridSize * 0.95,
-      0.0,
-      (Math.random() - 0.5) * gridSize * 0.95
-    ));
-    particleGoals.push(FABRIC.RT.vec3(
-      (Math.random() - 0.5) * gridSize * 0.95,
-      0.0,
-      (Math.random() - 0.5) * gridSize * 0.95
-    ));
-  //  particleGoals.push( FABRIC.RT.vec3( 0.0, 0.0, 0.0 ) );
-    particleVelocities.push(FABRIC.RT.vec3(
-      Math.random() - 0.5,
-      0.0,
-      Math.random() - 0.5
-    ).scale(0.02));
-  }
-  flockNode.loadGeometryData({
-    positions: particlePositions,
-    goals: particleGoals,
-    velocities: particleVelocities
-  });
-
+  flockNode.setVertexCount(numAgents);
+  
+  
   /////////////////////////////////////////////////
   // Set up the painting of the ground plane.
 /*  var groundMaterial = scene.constructNode("VertexColorMaterial", {
@@ -314,6 +294,7 @@ $(document).ready(function() {
                 <option value="medium">Medium:2000
                 <option value="huge">Huge:10000
                 <option value="massive">Massive:100000
+                <option value="insane">Insane:1000000
               </select>
               </br>
               <input type="checkbox" id="displayDebugging" style="margin-top:10px;"/><label for="displayDebugging">Display Debugging:</label>

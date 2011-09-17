@@ -127,7 +127,8 @@ FABRIC.SceneGraph.registerNodeType('OffscreenViewport', {
       parameterLayout: [
         'window.width',
         'window.height',
-        'viewPort.backgroundColor'
+        'viewPort.backgroundColor',
+        'viewPort.polygonMode'
       ]
     }));
     preBindings.append(scene.constructOperator({

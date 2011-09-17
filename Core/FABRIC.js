@@ -54,7 +54,7 @@ FABRIC = (function() {
     // Check the currently installed version.
     // TODO: This code will be removed once we get to the end of beta.
     var version = context.build.getPureVersion().split('.');
-    var requiredVersion = [1,0,11];
+    var requiredVersion = [1,0,12];
     var cmpVersions = function (lhs, rhs) {
       if (lhs[0] < rhs[0])
         return -1;
@@ -157,7 +157,14 @@ FABRIC = (function() {
         domElement: embedTag,
         windowNode: context.VP.viewPort.getWindowNode(),
         redrawEvent: context.VP.viewPort.getRedrawEvent(),
-        finalize: function(){
+        hide: function(){
+          embedTag.width = 1;
+          embedTag.height = 1;
+          // the element will get resized to the correct size
+          // by the client (Viewport) when it is ready
+          window.removeEventListener('resize', onDOMWindowResize, false);
+        },
+        show: function(){
           onDOMWindowResize();
           // the element will get resized to the correct size
           // by the client (Viewport) when it is ready

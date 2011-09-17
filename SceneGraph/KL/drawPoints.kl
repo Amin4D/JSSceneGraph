@@ -43,7 +43,7 @@ operator drawPoints(
   if(shaderProgram.debug){
     report("drawPoints:"+shaderProgram.name);
   }
-  if (drawToggle) {
+  if (drawToggle && shaderProgram.programId != 0) {
     shaderProgram.preDraw();
     glDrawArrays(GL_POINTS, 0, shaderProgram.attributesElementCount);
   }

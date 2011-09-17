@@ -224,7 +224,7 @@ $(document).ready(function() {
   
   var crankTransformNode = scene.constructNode('CrankshaftTransform');
   
-  var crankshaftMesh = loadObjFile('Assets/crankshaft.obj');
+  var crankshaftMesh = loadObjFile('Models/crankshaft.obj');
 
   var crankshaftDrawNode = scene.constructNode('Instance', {
       name: 'CrankShaft',
@@ -240,7 +240,7 @@ $(document).ready(function() {
       crankTransformNode:crankTransformNode
     });
 
-  var camshaftMesh = loadObjFile('Assets/camshaft.obj');
+  var camshaftMesh = loadObjFile('Models/camshaft.obj');
 
   var camDrawNode = scene.constructNode('Instance', {
       name: 'CamShaft',
@@ -253,8 +253,8 @@ $(document).ready(function() {
   /////////////////////////////////////////////////
   // Pistons
 
-  var pistonMesh = loadObjFile('Assets/Piston1.obj');
-  var conrodMesh = loadObjFile('Assets/Conrod1.obj');
+  var pistonMesh = loadObjFile('Models/Piston1.obj');
+  var conrodMesh = loadObjFile('Models/Conrod1.obj');
 
   /////////////////////////////////////////////////
   // Piston Transforms
@@ -317,7 +317,7 @@ $(document).ready(function() {
   var camDrawNode = scene.constructNode("DrawNode();
   camDrawNode.setTransformNode( camTransformNode );
 
-  var assets = scene.importAssetFile( "Assets/IntakeValve.obj" );
+  var assets = scene.importAssetFile( "Models/IntakeValve.obj" );
   for( i in assets ){
     assets[i].setMaterialNode( blueMaterial );
     camDrawNode.setGeometryNode( assets[i] );

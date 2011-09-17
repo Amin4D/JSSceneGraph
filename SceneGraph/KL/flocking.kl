@@ -3,13 +3,11 @@
 // Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
 //
 
-
-#include 'FABRIC_ROOT/SceneGraph/KL/spatialHashTable.kl'
-
 use Vec3;
 use Quat;
 use Xfo;
 use Color;
+use HashTable;
 use DebugGeometry;
 
 operator simulateParticles(
@@ -43,12 +41,9 @@ operator simulateParticles(
   ///////////////////////////////////////////////
   // Broad Phase Interaction Detection
   // This function gathers all the points fomr the current cell, and neighboring cells.
-  getNeighboringIndices(
-    position,
+  hashtable.getNeighboringIndices(
     cellindex,
     cellcoords,
-    previousframe_positions,
-    hashtable,
     neighborIndices
   );
   

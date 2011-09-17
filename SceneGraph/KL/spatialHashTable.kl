@@ -62,6 +62,8 @@ function addCellParticlesToNeighborsArray(
   }
 }
 
+///////////////////////////////////////////////
+// Broad Phase Interaction Detection
 // This function returns all the neighbors from the current particles cell,
 // and the neighboring cells.
 function getNeighboringIndices(
@@ -73,9 +75,7 @@ function getNeighboringIndices(
   io HashTable hashtable,
   io Integer neighbors[]
 ) {
-  Integer bufferSize = neighbors.size();
-  ///////////////////////////////////////////////
-  // Broad Phase Interaction Detection
+
   neighbors.resize(hashtable.cells[cellindex].size);
   for (var Integer i = 0; i < hashtable.cells[cellindex].size; i++) {
     neighbors[i] = hashtable.cells[cellindex][i];

@@ -51,7 +51,8 @@ FABRIC.SceneGraph.registerNodeType('Particles', {
     }
 
     if (options.createSpatialHashTable) {
-      var spatialHashDGNode = particlesNode.constructDGNode('SpatialHashDGNode');
+      particlesNode.pub.addUniformValue('hashtable', 'HashTable',
+        FABRIC.Simulation.hashTable(options.cellsize, options.x_count, options.y_count, options.z_count));
       var neighborInfluenceRange = options.cellsize / 2.0;
       particlesNode.pub.addVertexAttributeValue('neighborinfluencerange', 'Scalar', { defaultValue:neighborInfluenceRange });
       particlesNode.pub.addVertexAttributeValue('cellindices', 'Integer', { defaultValue:-1 });
@@ -61,10 +62,6 @@ FABRIC.SceneGraph.registerNodeType('Particles', {
       particlesNode.pub.addVertexAttributeValue('previousframe_velocities', 'Vec3');
       particlesNode.pub.addVertexAttributeValue('previousframe_orientations', 'Vec3');
 
-      spatialHashDGNode.addMember('hashtable', 'HashTable',
-        FABRIC.Simulation.hashTable(options.cellsize, options.x_count, options.y_count, options.z_count));
-
-      particlesNode.getAttributesDGNode().addDependency(spatialHashDGNode, 'hashtable');
 
       // Display the Grid
       if (options.displayGrid)
@@ -83,14 +80,13 @@ FABRIC.SceneGraph.registerNodeType('Particles', {
       // Calculate our cell index based on the back buffer data.
       particlesNode.getAttributesDGNode().bindings.append(scene.constructOperator({
         operatorName: 'calcCellIndex',
-        srcFile: 'FABRIC_ROOT/SceneGraph/KL/spatialHashTable.kl',
+        srcFile: 'FABRIC_ROOT/SceneGraph/KL/particles.kl',
         entryFunctionName: 'calcCellIndex',
         parameterLayout: [
-          'self.index',
           'self.positions',
           'self.cellcoords',
           'self.cellindices',
-          'hashtable.hashtable'
+          'uniforms.hashtable'
         ]
       }));
 
@@ -98,7 +94,7 @@ FABRIC.SceneGraph.registerNodeType('Particles', {
       // and we will calculate the front buffer this update.
       particlesNode.getAttributesDGNode().bindings.append(scene.constructOperator({
         operatorName: 'copyCurrentFrameDataToPrevFrameData',
-        srcFile: 'FABRIC_ROOT/SceneGraph/KL/spatialHashTable.kl',
+        srcFile: 'FABRIC_ROOT/SceneGraph/KL/particles.kl',
         entryFunctionName: 'copyCurrentFrameDataToPrevFrameData',
         parameterLayout: [
           'self.positions',
@@ -114,10 +110,10 @@ FABRIC.SceneGraph.registerNodeType('Particles', {
       // is single threaded and should be the last to execute.
       particlesNode.getAttributesDGNode().bindings.append(scene.constructOperator({
         operatorName: 'populateHashTable',
-        srcFile: 'FABRIC_ROOT/SceneGraph/KL/spatialHashTable.kl',
+        srcFile: 'FABRIC_ROOT/SceneGraph/KL/particles.kl',
         entryFunctionName: 'populateHashTable',
         parameterLayout: [
-          'hashtable.hashtable',
+          'uniforms.hashtable',
           'self.cellindices<>'
         ]
       }));
@@ -148,7 +144,7 @@ FABRIC.SceneGraph.registerNodeType('Flock', {
     flockNode.getAttributesDGNode().bindings.append(scene.constructOperator({
       operatorName: 'simulateParticles',
       srcFile: 'FABRIC_ROOT/SceneGraph/KL/flocking.kl',
-      entryFunctionName: 'simulateParticles',
+      entryFunctionName: 'simulateFlock',
       parameterLayout: [
         'self.index',
 
@@ -162,7 +158,7 @@ FABRIC.SceneGraph.registerNodeType('Flock', {
         'self.previousframe_velocities<>',
 
         'self.neighborinfluencerange',
-        'hashtable.hashtable',
+        'uniforms.hashtable',
 
         'globals.timestep',
 

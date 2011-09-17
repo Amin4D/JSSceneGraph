@@ -10,7 +10,7 @@ use Color;
 use HashTable;
 use DebugGeometry;
 
-operator simulateParticles(
+operator simulateFlock(
   in Size index,
   io Vec3 position,
   io Vec3 velocity,
@@ -136,22 +136,9 @@ operator simulateParticles(
   velocity.y = 0.0;
   position = position + velocity; // / timestep);
   position.y = 0.0;
-
-  ////////////////////////////////////////////////
-  // Clamp the particle within the bounds of the hash grid
-  if (position.x > (hashtable.x_count * hashtable.cellsize * 0.475)) {
-    position.x = hashtable.x_count * hashtable.cellsize * 0.475;
-  }
-  if (position.x < (hashtable.x_count * - hashtable.cellsize * 0.475)) {
-    position.x = hashtable.x_count * - hashtable.cellsize * 0.475;
-  }
-  if (position.z > (hashtable.z_count * hashtable.cellsize * 0.475)) {
-    position.z = hashtable.z_count * hashtable.cellsize * 0.475;
-  }
-  if (position.z < (hashtable.z_count * - hashtable.cellsize * 0.475)) {
-    position.z = hashtable.z_count * - hashtable.cellsize * 0.475;
-  }
   
+  // Clamp the particle within the bounds of the hash grid
+  hashtable.clampPosition(position);
   
   if(displayDebugging){
     for (i = 0; i < neighborIndices.size; i++) {

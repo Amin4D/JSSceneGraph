@@ -4,7 +4,7 @@
 
 use FabricOGL;
 
-operator viewPortBeginRender(io Integer width, io Integer height, io Color backgroundColor) {
+operator viewPortBeginRender(io Integer width, io Integer height, io Color backgroundColor, io Integer polygonMode) {
   //  report( "viewPortBeginRender:"+backgroundColor+" width:"+width+" height:"+height );
   glViewport(0, 0, width, height);
   glClearColor(backgroundColor.r, backgroundColor.g, backgroundColor.b, backgroundColor.a);
@@ -13,4 +13,9 @@ operator viewPortBeginRender(io Integer width, io Integer height, io Color backg
   glEnable(GL_DEPTH_TEST);
   glEnable(GL_CULL_FACE);
   glCullFace(GL_BACK);
+  
+  // eventually draw polygon as lines
+  if(polygonMode != -1) {
+    glPolygonMode(GL_FRONT_AND_BACK, polygonMode);
+  }
 }

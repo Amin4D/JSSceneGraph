@@ -1,0 +1,44 @@
+//
+// Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
+//
+
+use Vec3;
+use HashTable;
+
+operator calcCellIndex(
+  io Vec3 position,
+  io Vec3 cellcoords,
+  io Integer cellindex,
+  io HashTable hashtable
+) {
+  // determine the cell that this particle belongs to.
+  cellindex = hashtable.calcCellIndex(position, cellcoords);
+}
+
+operator populateHashTable(
+  io HashTable hashtable,
+  io Integer particleCellIndices<>
+) {
+  // Reset the hash table, and re-accumulate the ids.
+  Size numCells = hashtable.x_count * hashtable.y_count * hashtable.z_count;
+  hashtable.cells.resize(numCells);
+  for (var Index i = 0; i < numCells; ++ i)
+    hashtable.cells[i].resize(0);
+
+  for (var Integer i = 0; i < particleCellIndices.size; i++) {
+    var Integer cellIndex = particleCellIndices[i];
+    hashtable.cells[cellIndex].push(i);
+  }
+}
+
+operator copyCurrentFrameDataToPrevFrameData(
+  io Vec3 position,
+  io Vec3 velocity,
+  io Vec3 previousframe_position,
+  io Vec3 previousframe_velocity
+) {
+  previousframe_position = position;
+  previousframe_velocity = velocity;
+}
+
+

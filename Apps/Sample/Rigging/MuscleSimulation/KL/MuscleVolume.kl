@@ -795,7 +795,7 @@ operator calcSkinStickLocations(
   in Size index,
   io DebugGeometry debugDraw
 ){
-//  report("calcSkinStickLocations<<<" );
+  report("calcSkinStickLocations<<<" );
   Vec3 position = positions[index] * bindShapeMatrix;
 //  debugDraw.drawPoint(position, Color(0.0, 1.0, 0.0, 1.0) );
 
@@ -859,44 +859,48 @@ operator calcSkinStickLocations(
     }
     muscleIds.push(i);
   }
-  
-  Scalar total = 0.0;
-  for(Integer i=0; i<muscleWeights.size(); i++){
-    total += muscleWeights[i];
+  if(muscleIds.size() == 1){
+    muscleBindingIds[0] = muscleIds[0];
+    muscleBindingWeights[0] = muscleWeights[0];
   }
-  if(total > 0.0){
-    // sort the weights from highest to lowest.
-    bubbleSort(muscleWeights, muscleIds, 0, muscleIds.size());
-  
-    debugDraw.drawLine(position, closestCorePos, Color(1.0,0.0,0.0,1.0) );
-    
-    // cap the num weights to 2 and normalize.
-    muscleWeights.resize(2);
-    muscleIds.resize(2);
-    total = 0.0;
+  else{
+    Scalar total = 0.0;
     for(Integer i=0; i<muscleWeights.size(); i++){
       total += muscleWeights[i];
     }
-    for(Integer i=0; i<muscleWeights.size(); i++){
-      muscleWeights[i] /= total;
-    }
+    if(total > 0.0){
+      // sort the weights from highest to lowest.
+      bubbleSort(muscleWeights, muscleIds, 0, muscleIds.size());
     
-    for(Integer i=0; i<muscleIds.size(); i++){
-      muscleBindingIds[i] = muscleIds[i];
-      muscleBindingWeights[i] = muscleWeights[i];
+      debugDraw.drawLine(position, closestCorePos, Color(1.0,0.0,0.0,1.0) );
+      
+      // cap the num weights to 2 and normalize.
+      muscleWeights.resize(2);
+      muscleIds.resize(2);
+      total = 0.0;
+      for(Integer i=0; i<muscleWeights.size(); i++){
+        total += muscleWeights[i];
+      }
+      for(Integer i=0; i<muscleWeights.size(); i++){
+        muscleWeights[i] /= total;
+      }
+      
+      for(Integer i=0; i<muscleIds.size(); i++){
+        muscleBindingIds[i] = muscleIds[i];
+        muscleBindingWeights[i] = muscleWeights[i];
+      }
     }
   }
-
   
   Vec3 stickDelta;
-  for(Integer i=0; i<1; i++){
-    if(muscleBindingIds[i] >= 0 && muscleWeights[i] > 0.0){
+  for(Integer i=0; i<4; i++){
+    if(muscleBindingIds[i] >= 0 && muscleBindingWeights[i] > 0.0){
       Integer mid = muscleBindingIds[i];
       sticklocations[i] = positionToMuscleUVW(position, muscles[mid].initialXfos);
     }
   }
   
-//  report("calcSkinStickLocations>>>" );
+ // report("calcSkinStickLocations>>>" );
 }
 
 operator deformSkin(

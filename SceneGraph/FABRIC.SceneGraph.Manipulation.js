@@ -257,11 +257,33 @@ FABRIC.SceneGraph.registerNodeType('PaintManipulator', {
     }
     scene.pub.addEventListener('mousewheel', resizePaintBrushFn);
 
+    var getOffset = function( el ) {
+      var _x = 0;
+      var _y = 0;
+      while( el && !isNaN( el.offsetLeft ) && !isNaN( el.offsetTop ) ) {
+          _x += el.offsetLeft - el.scrollLeft;
+          _y += el.offsetTop - el.scrollTop;
+          el = el.offsetParent;
+      }
+      return { top: _y, left: _x };
+    }
+    var getMousePos = function(evt) {
+      if (evt.offsetX) {
+        return FABRIC.RT.vec2(evt.offsetX, evt.offsetY);
+      }
+      else if (evt.pageY) {
+        var eloffset = getOffset(evt.target);
+        return FABRIC.RT.vec2(evt.pageX-eloffset.left, evt.pageY-eloffset.top);
+      }
+      throw("Unsupported Browser");
+    }
+
     var moveBrush = function(evt) {
+      var mousepos = getMousePos(evt);
       width = parseInt(evt.target.width, 10);
       height = parseInt(evt.target.height, 10);
       aspectRatio = width / height;
-      brushPos = FABRIC.RT.vec3(((evt.offsetX / width) - 0.5) * 2.0, ((evt.offsetY / height) - 0.5) * -2.0, 0);
+      brushPos = FABRIC.RT.vec3(((mousepos.x / width) - 0.5) * 2.0, ((mousepos.y / height) - 0.5) * -2.0, 0);
 
       brushShapeTransform.pub.setGlobalXfo(FABRIC.RT.xfo({
           tr: brushPos,

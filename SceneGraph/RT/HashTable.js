@@ -47,6 +47,7 @@ FABRIC.appendOnCreateContextCallback(function(context) {
     members: {
       cells: 'Integer[][]', cellsize: 'Scalar', x_count: 'Integer', y_count: 'Integer', z_count: 'Integer'
     },
-    constructor: FABRIC.Simulation.HashTable
+    constructor: FABRIC.Simulation.HashTable,
+    kBindings: FABRIC.loadResourceURL('FABRIC_ROOT/SceneGraph/RT/HashTable.kl')
   });
 });

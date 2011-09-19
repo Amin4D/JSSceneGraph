@@ -237,6 +237,9 @@ FABRIC.appendOnCreateContextCallback(function(context) {
       x: 'Scalar', y: 'Scalar'
     },
     constructor: FABRIC.RT.Vec2,
-    kBindings: FABRIC.loadResourceURL('FABRIC_ROOT/SceneGraph/RT/Vec2.kl')
+    klBindings: {
+      filename: 'Vec2.kl',
+      sourceCode: FABRIC.loadResourceURL('FABRIC_ROOT/SceneGraph/RT/Vec2.kl')
+    }
   });
 });

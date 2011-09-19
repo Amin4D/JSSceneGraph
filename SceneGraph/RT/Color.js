@@ -360,6 +360,9 @@ FABRIC.appendOnCreateContextCallback(function(context) {
       r: 'Scalar', g: 'Scalar', b: 'Scalar', a: 'Scalar'
     },
     constructor: FABRIC.RT.Color,
-    kBindings: FABRIC.loadResourceURL('FABRIC_ROOT/SceneGraph/RT/Color.kl')
+    klBindings: {
+      filename: 'Color.kl',
+      sourceCode: FABRIC.loadResourceURL('FABRIC_ROOT/SceneGraph/RT/Color.kl')
+    }
   });
 });

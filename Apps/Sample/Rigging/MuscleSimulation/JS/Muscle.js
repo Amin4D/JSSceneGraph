@@ -29,6 +29,7 @@ FABRIC.appendOnCreateContextCallback(function(context) {
 
 
 FABRIC.RT.Muscle = function( options ) {
+  this.color = (options && options.color) ? options.color : FABRIC.RT.rgb(1.0, 0, 0);
   this.displacementMap = new FABRIC.RT.DisplacementMap();
   this.initialXfos = (options && options.initialXfos) ? options.initialXfos : [];
   this.segmentLengths = (options && options.segmentLengths) ? options.segmentLengths : [];
@@ -51,6 +52,7 @@ FABRIC.RT.Muscle.prototype = {
 FABRIC.appendOnCreateContextCallback(function(context) {
   context.RegisteredTypesManager.registerType('Muscle', {
     members: {
+      color: 'Color',
       displacementMap: 'DisplacementMap',
       initialXfos: 'Xfo[]',
       segmentLengths: 'Scalar[]',
@@ -325,7 +327,7 @@ operator rotateMuscleVolume(\n\
     
     muscleSystem.pub.addMuscle = function(muscleOptions){
       muscleOptions = scene.assignDefaults(muscleOptions, {
-        display: true,
+        color: true,
         xfo: FABRIC.RT.xfo(),
         diffuseColor: FABRIC.RT.rgba(0.8, 0.0, 0.0, 0.5),
         ambientColor: FABRIC.RT.rgba(0.1, 0.1, 0.1, 0.2),
@@ -384,6 +386,7 @@ operator rotateMuscleVolume(\n\
       contractionCurve.push( key(2.0, 1.0, FABRIC.RT.vec2(-0.1, 0), null));
       
       initializationdgnode.setData('muscle', mid, new FABRIC.RT.Muscle({
+        color: muscleOptions.diffuseColor,
         initialXfos: xfos,
         segmentLengths: segmentLengths,
           
@@ -419,27 +422,37 @@ FABRIC.SceneGraph.registerNodeType('MuscleSkinDeformation', {
   factoryFn: function(options, scene) {
     options = scene.assignDefaults(options, {
       muscleSystem: undefined,
-      baseSkinMesh: undefined
+      baseMesh: undefined
     });
-    if(!options.baseSkinMesh){
-      throw "A base mesh must be provided";
+    if(!options.baseMesh){
+      throw "A skinned mesh must be provided";
+    }
+    
+    var skinnedMesh,  baseMesh, usingSkinnedMesh = false;
+    if(options.baseMesh.isTypeOf("CPUSkinnedCharacterMesh")){
+      skinnedMesh = scene.getPrivateInterface(options.baseMesh);
+      baseMesh = scene.getPrivateInterface(skinnedMesh.pub.getBaseGeometry());
+      usingSkinnedMesh = true;
+    }
+    else{
+      skinnedMesh = baseMesh = scene.getPrivateInterface(options.baseMesh);
     }
     var muscleSystem = scene.getPrivateInterface(options.muscleSystem);
   
     var boundSkin = scene.constructNode('GeometryDataCopy', {
       name: 'BoundSkin',
-      baseGeometryNode:options.baseSkinMesh
+      baseGeometryNode:baseMesh.pub
     });
     
-    var baseBaseSkinMesh = scene.getPrivateInterface(options.baseSkinMesh.getBaseGeometry());
-    boundSkin.getAttributesDGNode().addDependency(baseBaseSkinMesh.getUniformsDGNode(), 'baseBaseSkinMesh');
-    
+    if(!usingSkinnedMesh){
+      boundSkin.pub.addUniformValue('bindShapeMatrix', 'Mat44' );
+    }
     boundSkin.pub.addUniformValue('reload', 'Boolean', false );
     boundSkin.pub.addVertexAttributeValue('muscleBindingIds', 'Integer[4]', [0,-1,-1,-1]);
     boundSkin.pub.addVertexAttributeValue('muscleBindingWeights', 'Scalar[4]', [1,0,0,0] );
     boundSkin.pub.addVertexAttributeValue('stickLocations', 'Vec3[4]' );
-    boundSkin.pub.addVertexAttributeValue('stickWeight', 'Scalar', { defaultValue:0.0 } );
-    boundSkin.pub.addVertexAttributeValue('slideWeight', 'Scalar', { defaultValue:1.0 } );
+    boundSkin.pub.addVertexAttributeValue('stickWeight', 'Scalar', { defaultValue:1.0 } );
+    boundSkin.pub.addVertexAttributeValue('slideWeight', 'Scalar', { defaultValue:0.0 } );
     boundSkin.pub.addVertexAttributeValue('bulgeWeight', 'Scalar', { defaultValue:0.0 } );
     boundSkin.pub.addVertexAttributeValue('debugDraw', 'DebugGeometry' );
     boundSkin.getAttributesDGNode().addDependency(muscleSystem.getSystemParamsDGNode(), 'musclesystem');
@@ -455,7 +468,7 @@ FABRIC.SceneGraph.registerNodeType('MuscleSkinDeformation', {
       parameterLayout: [
         'musclesinitialization.muscle<>',
         'parentattributes.positions<>',
-        'baseBaseSkinMesh.bindShapeMatrix',
+        (usingSkinnedMesh ? 'parentuniforms' : 'uniforms') + '.bindShapeMatrix',
         
         'self.muscleBindingIds',
         'self.muscleBindingWeights',
@@ -470,7 +483,7 @@ FABRIC.SceneGraph.registerNodeType('MuscleSkinDeformation', {
     
     var deformedSkin = scene.constructNode('GeometryDataCopy', {
       name: 'DeformedSkin',
-      baseGeometryNode:options.baseSkinMesh
+      baseGeometryNode:skinnedMesh.pub
     });
     
     deformedSkin.pub.addVertexAttributeValue('positions', 'Vec3', { genVBO:true, dynamic:true } );

@@ -799,6 +799,10 @@ operator calcSkinStickLocations(
   Vec3 position = positions[index] * bindShapeMatrix;
 //  debugDraw.drawPoint(position, Color(0.0, 1.0, 0.0, 1.0) );
 
+  for(Integer i=0; i<4; i++){
+    muscleBindingIds[i] = -1;
+  }
+
   Scalar muscleWeights[];
   Integer muscleIds[];
   Scalar closestCore = -1.0;
@@ -872,7 +876,7 @@ operator calcSkinStickLocations(
       // sort the weights from highest to lowest.
       bubbleSort(muscleWeights, muscleIds, 0, muscleIds.size());
     
-      debugDraw.drawLine(position, closestCorePos, Color(1.0,0.0,0.0,1.0) );
+    //  debugDraw.drawLine(position, closestCorePos, Color(1.0,0.0,0.0,1.0) );
       
       // cap the num weights to 2 and normalize.
       muscleWeights.resize(2);
@@ -940,11 +944,11 @@ operator deformSkin(
     if(muscleBindingIds[i] >= 0 && stickWeight > 0.0){
       Integer mid = muscleBindingIds[i];
       Vec3 stickPos = uvwToMusclePosition(sticklocations[i], muscles[mid]);
-      stickDelta += (stickPos - position) * stickWeight;
+      stickDelta += (stickPos - position) * (stickWeight * muscleBindingWeights[i]);
     }
   }
   position += stickDelta;
-  
+  /*
   // Sliding
   Vec3 slideDelta(0.0,0.0,0.0);
   for(Integer i=0; i<1; i++){
@@ -965,7 +969,7 @@ operator deformSkin(
     }
   }
   position += bulgeDelta;
-  
+  */
 }
 
 

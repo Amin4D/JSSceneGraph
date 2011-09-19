@@ -151,6 +151,7 @@ $(document).ready(function() {
     });
   
   muscleSystem.addMuscle( {
+    diffuseColor: FABRIC.RT.rgba(0.0, 0.8, 0.0, 1.0),
     xfo: FABRIC.RT.xfo( {
       tr: FABRIC.RT.vec3(11, 70, 0),
       ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(0, 0, 1), 68)
@@ -185,7 +186,7 @@ $(document).ready(function() {
   
   skin = scene.constructNode('MuscleSkinDeformation', {
       muscleSystem: muscleSystem,
-      baseSkinMesh: cpuSkinnedCharacterMesh
+      baseMesh: cpuSkinnedCharacterMesh
     });
   
   
@@ -199,6 +200,9 @@ $(document).ready(function() {
           position: FABRIC.RT.vec3(420.0, 1000.0, 600.0)
         })
       }))
+    .setMaterialNode( scene.constructNode('WireframeMaterial', {
+        color: FABRIC.RT.rgb(0.2, 0.2, 0.2, 1)
+      }));
   
   $('#loadingDialog').dialog({
     modal: true

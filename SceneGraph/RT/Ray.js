@@ -156,7 +156,10 @@ FABRIC.appendOnCreateContextCallback(function(context) {
       start: 'Vec3', direction: 'Vec3'
     },
     constructor: FABRIC.RT.Ray,
-    kBindings: FABRIC.loadResourceURL('FABRIC_ROOT/SceneGraph/RT/Ray.kl')
+    klBindings: {
+      filename: 'Ray.kl',
+      sourceCode: FABRIC.loadResourceURL('FABRIC_ROOT/SceneGraph/RT/Ray.kl')
+    }
   });
 });
 

@@ -167,17 +167,20 @@ $(document).ready(function() {
   };
   paintManipulator.addEventListener('onpaint', onPaintFn);
   
-  // Switch to painting when the 'P' key is pressed
+  // Switch to painting when the shiftKey key is pressed
+  var painting = false;
   window.onkeydown = function(evt) {
-      if(String.fromCharCode(evt.keyCode) == 'P'){
+      if(evt.shiftKey){
         cameraManipulator.disable();
         paintManipulator.enable();
+        painting = true;
       }
     };
   window.onkeyup = function(evt) {
-      if(String.fromCharCode(evt.keyCode) == 'P'){
+      if(painting){
         cameraManipulator.enable();
         paintManipulator.disable();
+        painting = false;
       }
     };
 
@@ -237,7 +240,7 @@ $(document).ready(function() {
               With ray casting, we return the intersection data back to JavaScript, whereas with painting,
               we return all points within range of the brush. Any data in the scene can be modified,
               and in this example, we simply modify the vertex colors.<br><br>
-              Hold 'P' to go into paint mode.<br>
+              Hold the shiftKey down to go into paint mode.<br>
               Use the mouse wheel while in 'Paint' mode to resize the brush.
             </div><!--content-->
           </div><!--box-->

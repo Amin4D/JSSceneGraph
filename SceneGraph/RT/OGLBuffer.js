@@ -47,7 +47,10 @@ FABRIC.appendOnCreateContextCallback(function(context) {
       bufferElementComponentType: 'Integer'
     },
     constructor: FABRIC.RT.OGLBuffer,
-    kBindings: FABRIC.loadResourceURL('FABRIC_ROOT/SceneGraph/RT/OGLBuffer.kl')
+    klBindings: {
+      filename: 'OGLBuffer.kl',
+      sourceCode: FABRIC.loadResourceURL('FABRIC_ROOT/SceneGraph/RT/OGLBuffer.kl')
+    }
   });
 });
 

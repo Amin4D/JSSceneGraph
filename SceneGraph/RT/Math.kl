@@ -9,11 +9,33 @@ const Scalar HALF_PI = 1.5707963267948966;
 const Scalar RAD_TO_DEG = 57.29577951308232;
 const Scalar DEG_TO_RAD = 0.017453292519943295;
 
-function Scalar Math.clamp(in Scalar val, in Scalar minval, in Scalar maxval){
+function Scalar clamp(in Scalar val, in Scalar minval, in Scalar maxval){
   return (val < minval ? minval : (val > maxval ? maxval : val));
 }
 
-function Scalar Math.lerp(in Scalar val1, in Scalar val2, in Scalar t){
+function Scalar lerp(in Scalar val1, in Scalar val2, in Scalar t){
   return val1 + ((val2 - val1) * t);
 }
 
+function bubbleSort(
+  io Scalar values[],
+  io Integer indices[],
+  in Integer start,
+  in Integer end
+) {
+  if (start != end - 1) {
+    for (Integer i = start; i < end; i++) {
+      for (Integer j = i + 1; j < end; j++) {
+        if (values[i] < values[j]) {
+          // swap them!
+          Scalar tmpScalar = values[i];
+          Integer tmpIndex = indices[i];
+          values[i] = values[j];
+          indices[i] = indices[j];
+          values[j] = tmpScalar;
+          indices[j] = tmpIndex;
+        }
+      }
+    }
+  }
+}

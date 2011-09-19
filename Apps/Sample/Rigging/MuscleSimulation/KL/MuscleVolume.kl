@@ -14,14 +14,6 @@ use FabricOGL;
 use DebugGeometry;
 
 
-function Scalar clamp(in Scalar val, in Scalar minval, in Scalar maxval){
-  return (val < minval ? minval : (val > maxval ? maxval : val));
-}
-
-function Scalar lerp(in Scalar val1, in Scalar val2, in Scalar t){
-  return val1 + ((val2 - val1) * t);
-}
-
 
 function Scalar calcPolarElipse(
   in Scalar theta,
@@ -114,7 +106,7 @@ operator generateDisplacementMap(
   io BezierKeyframe quadrantCurve1[],
   io BezierKeyframe quadrantCurve2[],
   io BezierKeyframe quadrantCurve3[],
-  io DisplacementMap displacementMap,
+  io Muscle muscle,
   io Boolean regenerate
   
   /*
@@ -124,8 +116,9 @@ operator generateDisplacementMap(
   io TriangleMesh boundingMesh
   */
 ) {
+//  report("generateDisplacementMap<<<");
   if (regenerate) {
-    displacementMap.resize(displacementMapResolution);
+    muscle.displacementMap.resize(displacementMapResolution);
     Scalar u, v;
     Scalar val0, val1, val2, val3, val;
     Integer keyIndex;
@@ -154,14 +147,14 @@ operator generateDisplacementMap(
           case 4:
             val = calcPolarElipse( v, val3, val0 ); break;
         }
-        displacementMap.setRValue(u, v, val);
+        muscle.displacementMap.setRValue(u, v, val);
         /*
         if(false){
           Ray ray = muscleUVtoRay( u, v, initialXfos );
           // Fire the ray into the mesh, and get the distance to the mesh surface
           RayIntersection intersection;
           if( boundingMesh.intersectRay( ray, intersection ) ){
-            displacementMap[idx] = intersection.distance;
+            muscle.displacementMap[idx] = intersection.distance;
           }
         }
         */
@@ -169,6 +162,7 @@ operator generateDisplacementMap(
       }
     }
   }
+//  report("generateDisplacementMap>>>");
 }
 
 
@@ -436,7 +430,7 @@ function Boolean testCoplanarity(
 
 
 function Boolean positionToMuscleUV(
-  in Vec3 pos,
+  in Vec3 position,
   in Xfo xfos[],
   io Vec2 outUV,
   io Vec3 outCorePos,
@@ -479,11 +473,11 @@ function Boolean positionToMuscleUV(
     v3 = p6 - p3;
     
     Scalar outFraction;
-    if( testCoplanarity( pos, p1, p2, p3, Vec3(0.0, 0.0, 0.0), v1, v2, v3, outFraction ) ){
+    if( testCoplanarity( position, p1, p2, p3, Vec3(0.0, 0.0, 0.0), v1, v2, v3, outFraction ) ){
       ///////////////////////////////////////////
       // To calculate the v value, we need to reference the linear segments only
       outCorePos = p1.lerp( p4, outFraction );
-      outCoreDir = pos - outCorePos;
+      outCoreDir = position - outCorePos;
       outUV.x = ( Scalar(i) + outFraction ) / Scalar( xfos.size() - 1 );
       
       dist = outCoreDir.length();
@@ -542,7 +536,7 @@ function Vec3 uvwToMusclePosition(
   {
     Scalar t;
     Integer i;
-    Vec3 pos = evalPiecewiseBSpline( muscle.xfos, uvw.x, t, i );
+    Vec3 position = evalPiecewiseBSpline( muscle.xfos, uvw.x, t, i );
     
     // Due to the fact that nlerp exibits a slight ease in and ease out on the rotations
     // I think it is a better slution to interpollating segments. 
@@ -551,18 +545,18 @@ function Vec3 uvwToMusclePosition(
 
     offset = pointframe.rotateVector( Vec3( 0.0, cos( uvw.y - PI ), sin( uvw.y - PI ) ) );
     
-    return (offset * (uvw.z * muscle.contraction)) + pos;
-  //  return (offset * (uvw.z)) + pos;
+    return (offset * (uvw.z * muscle.contraction)) + position;
+  //  return (offset * (uvw.z)) + position;
   }
 }
 
 
 
 function Vec3 positionToMuscleSurfacePosition(
-  in Vec3 pos,
+  in Vec3 position,
   in Vec3 normal,
-  io Muscle muscle,
-  io DebugGeometry debugDraw
+  in Muscle muscle,
+  in DebugGeometry debugDraw
 ){
   // TODO: parameterise these 2 values. 
   Scalar shrinkWrap = 0.0;
@@ -574,7 +568,7 @@ function Vec3 positionToMuscleSurfacePosition(
   Scalar u, v, w;
   Scalar endOffset = 0.0;// If a point is off the end of the muscle, this value will be < 0.0, || > 1.0;
 
-  if(positionToMuscleUV( pos, muscle.xfos, uv, corePos, posToCore ) ){
+  if(positionToMuscleUV( position, muscle.xfos, uv, corePos, posToCore ) ){
     u = uv.x;
   
     // Now evaluate the spline to get the actual position of the muscle core
@@ -588,7 +582,7 @@ function Vec3 positionToMuscleSurfacePosition(
     Vec3 endPoint = muscle.xfos[ 0 ].tr;
     Quat endFrame = muscle.xfos[ 0 ].ori;
       
-    posToCore = pos - endPoint;
+    posToCore = position - endPoint;
     endOffset = posToCore.dot( endFrame.getXaxis( ) );
     if( endOffset <= 0.001 ){
       corePos = endPoint;
@@ -598,7 +592,7 @@ function Vec3 positionToMuscleSurfacePosition(
     else{
       endPoint = muscle.xfos[ muscle.xfos.size()-1 ].tr;
       endFrame = muscle.xfos[ muscle.xfos.size()-1 ].ori;
-      posToCore = pos - endPoint;
+      posToCore = position - endPoint;
       endOffset = posToCore.dot( endFrame.getXaxis( ) );
       if( endOffset >= -0.001 ){
         corePos = endPoint;
@@ -606,7 +600,7 @@ function Vec3 positionToMuscleSurfacePosition(
         u = 1.0;
       }
       else{
-        return pos;
+        return position;
       }
     }
   }
@@ -615,7 +609,7 @@ function Vec3 positionToMuscleSurfacePosition(
   // 
   Vec3 coreTan = sliceframe.rotateVector(Vec3(1.0, 0.0, 0.0));
   
-  posToCore = corePos - pos;
+  posToCore = corePos - position;
   
   orthoNormal = normal - (coreTan * normal.dot(coreTan));
   
@@ -684,11 +678,11 @@ function Vec3 positionToMuscleSurfacePosition(
       // the point is below the surface.
       Scalar weight = (abs(biNormalProjLen) - orthoNormalThickness) / depthBelowMuscleCore;
       if( weight <= 1.0 ){ 
-      //  debugDraw.addPoint(pos, Color(1.0,1.0,0.5,1.0));
-        return (orthoNormal.unit() * depthBelowMuscleCore * (1.0 - sin(acos(1.0-weight)))) + pos;
+      //  debugDraw.addPoint(position, Color(1.0,1.0,0.5,1.0));
+        return (orthoNormal.unit() * depthBelowMuscleCore * (1.0 - sin(acos(1.0-weight)))) + position;
       }
     }
-    return pos;
+    return position;
   }
   
   
@@ -725,7 +719,7 @@ function Vec3 positionToMuscleSurfacePosition(
     bnlen1 = bnlen2;
   }
   if(i > numSamples){
-    return pos;
+    return position;
   }
   Scalar fract = (abs(biNormalProjLen) - bnlen1)/(bnlen2 - bnlen1);
   Scalar vdelta =  lerp(vdelta1, vdelta2, fract);
@@ -739,37 +733,37 @@ function Vec3 positionToMuscleSurfacePosition(
   w = muscle.displacementMap.getValue( u, v ).r * muscle.contraction * modulator;
   
   Vec3 slidePos = (corePos + (posOffsetDir * w));
-  if(((corePos + (posOffsetDir * w)) - pos).dot(orthoNormal) > 0.0){
-  //  debugDraw.drawLine(pos, slidePos, Color(0.0,0.0,1.0,1.0) );
-  //  debugDraw.drawLine(pos, pos+orthoNormal, Color(0.0,0.0,1.0,1.0) );
+  if(((corePos + (posOffsetDir * w)) - position).dot(orthoNormal) > 0.0){
+  //  debugDraw.drawLine(position, slidePos, Color(0.0,0.0,1.0,1.0) );
+  //  debugDraw.drawLine(position, position+orthoNormal, Color(0.0,0.0,1.0,1.0) );
     return slidePos;
   }
   
-  return pos;
+  return position;
 }
 
 
 
 
 function Vec3 positionToMuscleUVW(
-  in Vec3 pos,
+  in Vec3 position,
   in Xfo xfos[]
 ){
   Vec3 corePos, coreDir;
   Vec2 uv;
   
-  if( positionToMuscleUV( pos, xfos, uv, corePos, coreDir ) ){
+  if( positionToMuscleUV( position, xfos, uv, corePos, coreDir ) ){
     // Now evaluate the spline to get the actual position of the muscle core
     Integer i;
     Scalar t;
     corePos = evalPiecewiseBSpline( xfos, uv.x, t, i );
     return Vec3(uv.x,
                 uv.y,
-                ( corePos - pos ).length());
+                ( corePos - position ).length());
   }
   else
   {
-    coreDir = pos - xfos[ 0 ].tr;
+    coreDir = position - xfos[ 0 ].tr;
     if( coreDir.dot( xfos[ 0 ].ori.getXaxis() ) < 0.0 ){
       Quat endFrame = xfos[ 0 ].ori;
       return Vec3( coreDir.dot( endFrame.getXaxis() ),
@@ -777,7 +771,7 @@ function Vec3 positionToMuscleUVW(
                    coreDir.dot( endFrame.getZaxis() ));
     }
 
-    coreDir = pos - xfos[ xfos.size()-1 ].tr;
+    coreDir = position - xfos[ xfos.size()-1 ].tr;
     if( coreDir.dot( xfos[ xfos.size()-1 ].ori.getXaxis( ) ) > 0.0 ){      
       Quat endFrame = xfos[ xfos.size()-1 ].ori;
       return Vec3(1.0 + ( coreDir.dot( endFrame.getXaxis( ) )  ),
@@ -791,21 +785,118 @@ function Vec3 positionToMuscleUVW(
 
 
 operator calcSkinStickLocations(
-  io Xfo initialXfos<>[],
-  io Vec3 parentpositions<>,
-
+  io Muscle muscles<>,
+  io Vec3 positions<>,
+  io Mat44 bindShapeMatrix,
+  
   io Integer muscleBindingIds[4],
+  io Scalar muscleBindingWeights[4],
   io Vec3 sticklocations[4],
-  in Size index
+  in Size index,
+  io DebugGeometry debugDraw
 ){
-//  report("calcSkinStickLocations pos:"+parentpositions[index] );
-  Vec3 stickDelta;
-  for(Integer i=0; i<1; i++){
-    if(muscleBindingIds[i] >= 0){
-      Integer mid = muscleBindingIds[i];
-      sticklocations[i] = positionToMuscleUVW(parentpositions[index], initialXfos[mid]);
+//  report("calcSkinStickLocations<<<" );
+  Vec3 position = positions[index] * bindShapeMatrix;
+//  debugDraw.drawPoint(position, Color(0.0, 1.0, 0.0, 1.0) );
+
+  Scalar muscleWeights[];
+  Integer muscleIds[];
+  Scalar closestCore = -1.0;
+  Vec3 closestCorePos;
+  for(Integer i=0; i<muscles.size(); i++){
+    Scalar dist = 9999.0;
+    Vec3 corePos, coreDir, posToCore;
+    Vec2 uv;
+    if(positionToMuscleUV(position, muscles[i].initialXfos, uv, corePos, coreDir)){
+      // Now evaluate the spline to get the actual position of the muscle core
+      Scalar t;
+      Integer segmentid;
+      corePos = evalPiecewiseBSpline(muscles[i].initialXfos, uv.x, t, segmentid);
+      
+      uv.y /= TWO_PI;
+    }
+    else{
+      continue;
+          /*
+      Vec3 endPoint = muscles[i].initialXfos[ 0 ].tr;
+      Quat endFrame = muscles[i].initialXfos[ 0 ].ori;
+      
+      posToCore = position - endPoint;
+      Scalar endOffset = posToCore.dot( endFrame.getXaxis( ) );
+      if( endOffset <= 0.001 ){
+        uv.x = 0.0;
+        uv.y = 0.5;
+        corePos = endPoint;
+      }
+      else{
+        corePos = muscles[i].initialXfos[ muscles[i].initialXfos.size()-1 ].tr;
+        endFrame = muscles[i].initialXfos[ muscles[i].initialXfos.size()-1 ].ori;
+        posToCore = position - endPoint;
+        endOffset = posToCore.dot( endFrame.getXaxis( ) );
+        if( endOffset >= -0.001 ){
+          uv.x = 1.0;
+          uv.y = 0.5;
+          corePos = endPoint;
+        }
+        else{
+          continue;
+        }
+      }
+      */
+    }
+    dist = position.dist(corePos);
+    if(closestCore < 0.0 || dist < closestCore){
+      closestCorePos = corePos;
+      closestCore = dist;
+    }
+    Scalar w = muscles[i].displacementMap.getValue( uv ).r;
+  
+    if(dist < w){
+      muscleWeights.push(1.0);
+    }
+    else{
+      muscleWeights.push(1.0 - clamp((dist - w)/(w * 2.0), 0.0, 1.0));
+    }
+    muscleIds.push(i);
+  }
+  
+  Scalar total = 0.0;
+  for(Integer i=0; i<muscleWeights.size(); i++){
+    total += muscleWeights[i];
+  }
+  if(total > 0.0){
+    // sort the weights from highest to lowest.
+    bubbleSort(muscleWeights, muscleIds, 0, muscleIds.size());
+  
+    debugDraw.drawLine(position, closestCorePos, Color(1.0,0.0,0.0,1.0) );
+    
+    // cap the num weights to 2 and normalize.
+    muscleWeights.resize(2);
+    muscleIds.resize(2);
+    total = 0.0;
+    for(Integer i=0; i<muscleWeights.size(); i++){
+      total += muscleWeights[i];
+    }
+    for(Integer i=0; i<muscleWeights.size(); i++){
+      muscleWeights[i] /= total;
+    }
+    
+    for(Integer i=0; i<muscleIds.size(); i++){
+      muscleBindingIds[i] = muscleIds[i];
+      muscleBindingWeights[i] = muscleWeights[i];
     }
   }
+
+  
+  Vec3 stickDelta;
+  for(Integer i=0; i<1; i++){
+    if(muscleBindingIds[i] >= 0 && muscleWeights[i] > 0.0){
+      Integer mid = muscleBindingIds[i];
+      sticklocations[i] = positionToMuscleUVW(position, muscles[mid].initialXfos);
+    }
+  }
+  
+//  report("calcSkinStickLocations>>>" );
 }
 
 operator deformSkin(
@@ -825,7 +916,7 @@ operator deformSkin(
   in Size index,
   io DebugGeometry debugDraw
 ){
-//  report("deformSkin:"+index);
+// report("deformSkin:"+index);
 
   position = parentpositions[index];
   normal = parentnormals[index];

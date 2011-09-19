@@ -5,51 +5,78 @@
 use Vec3;
 use Vec4;
 use Mat44;
+use Xfo;
 
 operator skinOp
 (
   in Size index,
-  io Vec3 position,
-  io Vec3 normal,
-  io Vec4 tangent,
+  io Vec3 positions<>,
+  io Vec3 normals<>,/*
+  io Vec4 tangents<>,*/
   io Mat44 bindMatrix,
-  io Mat44 bindPose[],
-  io Mat44 pose[],
-  io Integer skinIDs[],
-  io Scalar skinWeights[],
+  
+  io Mat44 invMatrices[],
+  io Xfo pose[],
+  
+  io Vec4 boneIds<>,
+  io Vec4 skinWeights<>,
+  io Integer boneMapping[],
+  
   io Vec3 deformed_position,
-  io Vec3 deformed_normal,
-  io Vec4 deformed_tangent,
+  io Vec3 deformed_normal,/*
+  io Vec4 deformed_tangent*/
 ) {
   // sanity check
-  if (skinIDs.size() != skinWeights.size())
+  if (boneIds.size() != skinWeights.size())
     return;
+    
+//  report("skinOp<<<");
+    
+  Mat44 skinningMatrices[];
+  skinningMatrices.resize(invMatrices.size());
+  for (var Integer i = 0; i < invMatrices.size(); i++) {
+    if(boneMapping[i] < 0)
+      continue;
+    skinningMatrices[i] = bindMatrix * invMatrices[i] * Mat44(pose[boneMapping[i]]);
+  }
+  
+  Vec3 position = positions[index];
+  Vec3 normal = normals[index];
+//  Vec4 tangent = tangents[index];
 
   // add the normal to the position
   normal += position;
-  var Vec3 tangent3(tangent.x, tangent.y, tangent.z);
-  tangent3 += position;
+//  var Vec3 tangent3(tangent.x, tangent.y, tangent.z);
+//  tangent3 += position;
 
   var Vec3 resultPos(0.0, 0.0, 0.0);
   var Vec3 resultNormal(0.0, 0.0, 0.0);
-  var Vec3 resultTangent(0.0, 0.0, 0.0);
+//  var Vec3 resultTangent(0.0, 0.0, 0.0);
+  
+  
 
-  for (var Integer i = 0; i < skinIDs.size(); i++) {
+  for (var Integer i = 0; i < 4; i++) {
     // the bindPose is already inversed
-    if (skinWeights[i] > 0.001) {
-      resultPos += (position * bindPose[skinIDs[i]] * pose[skinIDs[i]]) * skinWeights[i];
-      resultNormal += (normal * bindPose[skinIDs[i]] * pose[skinIDs[i]]) * skinWeights[i];
-      resultTangent += (tangent3 * bindPose[skinIDs[i]] * pose[skinIDs[i]]) * skinWeights[i];
+    Scalar weight = skinWeights[index].getElem(i);
+    if (weight > 0.001) {
+      Integer id = Integer(boneIds[index].getElem(i));
+      resultPos += (position * skinningMatrices[id]) * weight;
+      resultNormal += (normal * skinningMatrices[id]) * weight;
+   //   resultTangent += (tangent3 * skinningMatrices[id]) * weight;
     }
   }
 
   // take care of the bindMatrix
-  deformed_position = resultPos * bindMatrix;
-  deformed_normal = resultNormal * bindMatrix;
+  deformed_position = resultPos;
+  deformed_normal = resultNormal;
   deformed_normal -= deformed_position;
+  /*
   tangent3 = resultTangent * bindMatrix;
   tangent3 -= position;
   deformed_tangent.x = tangent3.x;
   deformed_tangent.y = tangent3.y;
   deformed_tangent.z = tangent3.z;
+  deformed_tangent.t = tangent.t;
+  */
+//  report("skinOp>>>");
 }

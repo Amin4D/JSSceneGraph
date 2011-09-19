@@ -30,6 +30,15 @@ FABRIC.appendOnCreateContextCallback(function(context) {
 
 FABRIC.RT.Muscle = function( options ) {
   this.displacementMap = new FABRIC.RT.DisplacementMap();
+  this.initialXfos = (options && options.initialXfos) ? options.initialXfos : [];
+  this.segmentLengths = (options && options.segmentLengths) ? options.segmentLengths : [];
+  this.pointEnvelopeIds = (options && options.pointEnvelopeIds) ? options.pointEnvelopeIds : FABRIC.RT.vec2();
+  this.pointEnvelopWeights = (options && options.pointEnvelopWeights) ? options.pointEnvelopWeights : [];
+  this.flexibilityWeights = (options && options.flexibilityWeights) ? options.flexibilityWeights : [];
+  this.simulationWeights = (options && options.simulationWeights) ? options.simulationWeights : [];
+  this.contractionCurve = (options && options.contractionCurve) ? options.contractionCurve : [];
+  this.contractionWeights = (options && options.contractionWeights) ? options.contractionWeights : [];
+  
   this.xfos = (options && options.xfos) ? options.xfos : [];
   this.contraction = 1.0;
 };
@@ -43,6 +52,17 @@ FABRIC.appendOnCreateContextCallback(function(context) {
   context.RegisteredTypesManager.registerType('Muscle', {
     members: {
       displacementMap: 'DisplacementMap',
+      initialXfos: 'Xfo[]',
+      segmentLengths: 'Scalar[]',
+      
+      pointEnvelopeIds: 'Vec2',
+      pointEnvelopWeights: 'Vec2[]',
+      flexibilityWeights: 'Scalar[]',
+      simulationWeights: 'Scalar[]',
+    
+      contractionCurve: 'BezierKeyframe[]',
+      contractionWeights: 'Scalar[]',
+      
       xfos: 'Xfo[]',
       contraction: 'Scalar'
     },
@@ -85,16 +105,7 @@ FABRIC.SceneGraph.registerNodeType('MuscleSystem', {
     
     /////////////////////////////////////////////////////////
     // Configure the muscle members
-    initializationdgnode.addMember('initialXfos', 'Xfo[]');/* Xfos deformed by the skeleton */
-    initializationdgnode.addMember('segmentLengths', 'Scalar[]');
-      
-    initializationdgnode.addMember('pointEnvelopeIds', 'Vec2');
-    initializationdgnode.addMember('pointEnvelopWeights', 'Vec2[]');
-    initializationdgnode.addMember('flexibilityWeights', 'Scalar[]');
-    initializationdgnode.addMember('simulationWeights', 'Scalar[]');
-    
-    initializationdgnode.addMember('contractionCurve', 'BezierKeyframe[]');
-    initializationdgnode.addMember('contractionWeights', 'Scalar[]');
+    initializationdgnode.addMember('muscle', 'Muscle', new FABRIC.RT.Muscle());
     
     ////////////////////////////////////////////////////////////////////////////
     // Displacement Map
@@ -103,7 +114,7 @@ FABRIC.SceneGraph.registerNodeType('MuscleSystem', {
     initializationdgnode.addMember('quadrantCurve2', 'BezierKeyframe[]');
     initializationdgnode.addMember('quadrantCurve3', 'BezierKeyframe[]');
     initializationdgnode.addMember('regenerateDisplacementMap', 'Boolean', true);
-    initializationdgnode.addMember('displacementMap', 'DisplacementMap');
+  //  initializationdgnode.addMember('displacementMap', 'DisplacementMap');
     
     initializationdgnode.bindings.append(scene.constructOperator({
         operatorName: 'generateDisplacementMap',
@@ -120,7 +131,7 @@ FABRIC.SceneGraph.registerNodeType('MuscleSystem', {
           'self.quadrantCurve1',
           'self.quadrantCurve2',
           'self.quadrantCurve3',
-          'self.displacementMap',
+          'self.muscle',
           'self.regenerateDisplacementMap'
 
           /*
@@ -187,14 +198,7 @@ FABRIC.SceneGraph.registerNodeType('MuscleSystem', {
           KEYFRAME_EVALUATEDTYPE: 'Scalar'
         },
         parameterLayout: [
-          'initializationdgnode.initialXfos<>',
-          'initializationdgnode.segmentLengths<>',
-          'initializationdgnode.pointEnvelopeIds<>',
-          'initializationdgnode.pointEnvelopWeights<>',
-          'initializationdgnode.flexibilityWeights<>',
-          'initializationdgnode.contractionCurve<>',
-          'initializationdgnode.contractionWeights<>',
-          'initializationdgnode.displacementMap<>',
+          'initializationdgnode.muscle<>',
           
           'self.index',
           'self.initialized',
@@ -379,15 +383,17 @@ operator rotateMuscleVolume(\n\
       contractionCurve.push( key(1.0, 1.0, FABRIC.RT.vec2(-0.1, 0), FABRIC.RT.vec2(0.1, 0)));
       contractionCurve.push( key(2.0, 1.0, FABRIC.RT.vec2(-0.1, 0), null));
       
-      initializationdgnode.setData('initialXfos', mid, xfos); /* Xfos deformed by the skeleton */
-      initializationdgnode.setData('segmentLengths', mid, segmentLengths);
-        
-      initializationdgnode.setData('pointEnvelopeIds', mid, muscleOptions.pointEnvelopeIds);
-      initializationdgnode.setData('pointEnvelopWeights', mid, pointEnvelopWeights);
-      initializationdgnode.setData('flexibilityWeights', mid, flexibilityWeights);
-      initializationdgnode.setData('simulationWeights', mid, simulationWeights);
-      initializationdgnode.setData('contractionWeights', mid, contractionWeights);
-      initializationdgnode.setData('contractionCurve', mid, contractionCurve);
+      initializationdgnode.setData('muscle', mid, new FABRIC.RT.Muscle({
+        initialXfos: xfos,
+        segmentLengths: segmentLengths,
+          
+        pointEnvelopeIds: muscleOptions.pointEnvelopeIds,
+        pointEnvelopWeights: pointEnvelopWeights,
+        flexibilityWeights: flexibilityWeights,
+        simulationWeights: simulationWeights,
+        contractionWeights: contractionWeights,
+        contractionCurve: contractionCurve
+      }));
       
       // Displacement Map
       var quadrantCurve = [];
@@ -425,13 +431,17 @@ FABRIC.SceneGraph.registerNodeType('MuscleSkinDeformation', {
       baseGeometryNode:options.baseSkinMesh
     });
     
+    var baseBaseSkinMesh = scene.getPrivateInterface(options.baseSkinMesh.getBaseGeometry());
+    boundSkin.getAttributesDGNode().addDependency(baseBaseSkinMesh.getUniformsDGNode(), 'baseBaseSkinMesh');
+    
     boundSkin.pub.addUniformValue('reload', 'Boolean', false );
     boundSkin.pub.addVertexAttributeValue('muscleBindingIds', 'Integer[4]', [0,-1,-1,-1]);
-    boundSkin.pub.addVertexAttributeValue('musclebindingweights', 'Scalar[4]', [1,0,0,0] );
+    boundSkin.pub.addVertexAttributeValue('muscleBindingWeights', 'Scalar[4]', [1,0,0,0] );
     boundSkin.pub.addVertexAttributeValue('stickLocations', 'Vec3[4]' );
     boundSkin.pub.addVertexAttributeValue('stickWeight', 'Scalar', { defaultValue:0.0 } );
-    boundSkin.pub.addVertexAttributeValue('slideWeight', 'Scalar', { defaultValue:0.0 } );
+    boundSkin.pub.addVertexAttributeValue('slideWeight', 'Scalar', { defaultValue:1.0 } );
     boundSkin.pub.addVertexAttributeValue('bulgeWeight', 'Scalar', { defaultValue:0.0 } );
+    boundSkin.pub.addVertexAttributeValue('debugDraw', 'DebugGeometry' );
     boundSkin.getAttributesDGNode().addDependency(muscleSystem.getSystemParamsDGNode(), 'musclesystem');
     boundSkin.getAttributesDGNode().addDependency(muscleSystem.getInitializationDGNode(), 'musclesinitialization');
     var calcSkinStickLocationsOp = scene.constructOperator({
@@ -443,11 +453,15 @@ FABRIC.SceneGraph.registerNodeType('MuscleSkinDeformation', {
         KEYFRAME_EVALUATEDTYPE: 'Scalar'
       },
       parameterLayout: [
-        'musclesinitialization.initialXfos<>',
+        'musclesinitialization.muscle<>',
         'parentattributes.positions<>',
+        'baseBaseSkinMesh.bindShapeMatrix',
+        
         'self.muscleBindingIds',
+        'self.muscleBindingWeights',
         'self.stickLocations',
-        'self.index'
+        'self.index',
+        'self.debugDraw'
       ]
     });
   //  calcSkinStickLocationsOp.getOperator().setMainThreadOnly(true);
@@ -497,7 +511,7 @@ FABRIC.SceneGraph.registerNodeType('MuscleSkinDeformation', {
         'self.positions',
         'self.normals',
         'boundskin.muscleBindingIds<>',
-        'boundskin.musclebindingweights<>',
+        'boundskin.muscleBindingWeights<>',
         'boundskin.stickWeight<>',
         'boundskin.stickLocations<>',
         'boundskin.slideWeight<>',
@@ -511,7 +525,7 @@ FABRIC.SceneGraph.registerNodeType('MuscleSkinDeformation', {
     deformedSkin.getAttributesDGNode().bindings.append(deformSkinOp);
     
     var debugGeometryDraw = scene.constructNode('DebugGeometryDraw', {
-        dgnode: deformedSkin.getAttributesDGNode(),
+        dgnode: boundSkin.getAttributesDGNode(),
         debugGemetryMemberName: 'debugDraw'
     });
     

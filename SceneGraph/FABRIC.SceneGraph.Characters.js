@@ -11,10 +11,30 @@ FABRIC.SceneGraph.registerNodeType('CharacterMesh', {
     characterMeshNode.pub.addVertexAttributeValue('boneIds', 'Vec4', { genVBO:true } );
     characterMeshNode.pub.addVertexAttributeValue('boneWeights', 'Vec4', { genVBO: true });
     
+    characterMeshNode.pub.addUniformValue('bindShapeMatrix', 'Mat44');
     characterMeshNode.pub.addUniformValue('invmatrices', 'Mat44[]');
     characterMeshNode.pub.addUniformValue('boneMapping', 'Integer[]');
     
-    characterMeshNode.getRedrawEventHandler().preDescendBindings.append( scene.constructOperator({
+    var uniforms = characterMeshNode.getUniformsDGNode();
+    characterMeshNode.pub.setBindShapeMatrix = function(bindShapeMatrix) {
+      uniforms.setData('bindShapeMatrix', 0, bindShapeMatrix);
+    };
+    characterMeshNode.pub.setInvMatrices = function(invmatrices, boneMapping) {
+      uniforms.setData('invmatrices', 0, invmatrices);
+      uniforms.setData('boneMapping', 0, boneMapping);
+    };
+    
+    return characterMeshNode;
+  }});
+
+
+
+FABRIC.SceneGraph.registerNodeType('GPUSkinnedCharacterMesh', {
+  factoryFn: function(options, scene) {
+
+    var deformedSkin = scene.constructNode('CharacterMesh', options);
+    
+    deformedSkin.getRedrawEventHandler().preDescendBindings.append( scene.constructOperator({
       operatorName: 'loadSkinningMatrices',
       srcFile: 'FABRIC_ROOT/SceneGraph/KL/loadSkinningMatrices.kl',
       preProcessorDefinitions: {
@@ -31,12 +51,72 @@ FABRIC.SceneGraph.registerNodeType('CharacterMesh', {
       ]
     }));
     
-    characterMeshNode.pub.setInvMatrices = function(invmatrices, boneMapping) {
-      characterMeshNode.getUniformsDGNode().setData('invmatrices', 0, invmatrices);
-      characterMeshNode.getUniformsDGNode().setData('boneMapping', 0, boneMapping);
-    };
+    return deformedSkin;
+  }});
+
+FABRIC.SceneGraph.registerNodeType('CPUSkinnedCharacterMesh', {
+  factoryFn: function(options, scene) {
+    scene.assignDefaults(options, {
+      baseSkinMesh: undefined,
+      characterRigNode: undefined
+    });
     
-    return characterMeshNode;
+    if(!options.baseSkinMesh){
+      throw "A base mesh must be provided";
+    }
+    if (!options.baseSkinMesh.isTypeOf('CharacterMesh')) {
+      throw ('Incorrect type assignment. Must assign a CharacterMesh');
+    }
+    var deformedSkin = scene.constructNode('GeometryDataCopy', {
+      name: 'CPUSkinned' + options.baseSkinMesh.getName(),
+      baseGeometryNode:options.baseSkinMesh
+    });
+    
+    deformedSkin.pub.addVertexAttributeValue('positions', 'Vec3', { genVBO:true, dynamic:true } );
+    deformedSkin.pub.addVertexAttributeValue('normals', 'Vec3', { genVBO:true, dynamic:true } );
+  //  deformedSkin.pub.addVertexAttributeValue('tangents', 'Vec3', { genVBO:true, dynamic:true } );
+      
+    var rigNode, skeletonNode;
+    // extend public interface
+    deformedSkin.pub.setRigNode = function(node) {
+      rigNode = scene.getPrivateInterface(node);
+      skeletonNode = scene.getPrivateInterface(rigNode.pub.getSkeletonNode());
+      deformedSkin.getAttributesDGNode().addDependency(rigNode.getDGNode(), 'rig');
+      deformedSkin.getAttributesDGNode().addDependency(skeletonNode.getDGNode(), 'skeleton');
+    };
+    deformedSkin.pub.getRigNode = function() {
+      return scene.getPublicInterface(rigNode);
+    };
+
+    if (options.characterRigNode) {
+      deformedSkin.pub.setRigNode(options.characterRigNode);
+    }
+    
+    deformedSkin.getAttributesDGNode().bindings.append(scene.constructOperator({
+      operatorName: 'skinOp',
+      srcFile: 'FABRIC_ROOT/SceneGraph/KL/skinOp.kl',
+      entryFunctionName: 'skinOp',
+      parameterLayout: [
+        'self.index',
+        'parentattributes.positions<>',
+        'parentattributes.normals<>',/*
+        'parentattributes.tangents<>',*/
+        'parentuniforms.bindShapeMatrix',
+        
+        'parentuniforms.invmatrices',
+        'rig.pose',
+        
+        'parentattributes.boneIds<>',
+        'parentattributes.boneWeights<>',
+        'parentuniforms.boneMapping',
+        
+        'self.positions',
+        'self.normals'/*,
+        'self.tangents<>'*/
+      ]
+    }));
+        
+    return deformedSkin;
   }});
 
 FABRIC.SceneGraph.registerNodeType('CharacterSkeleton', {

@@ -126,3 +126,14 @@ function Vec4 Vec4.min(in Vec4 other) {
 function Vec4 Vec4.lerp(in Vec4 other, in Scalar t) {
   return this + ((other - this) * t);
 }
+
+function Scalar Vec4.getElem(in Integer i) {
+  switch(i){
+  case 0: return this.x;
+  case 1: return this.y;
+  case 2: return this.z;
+  case 3: return this.t;
+  }
+  report("ERROR in Vec4.getElem:"+i);
+  return 0.0;
+}

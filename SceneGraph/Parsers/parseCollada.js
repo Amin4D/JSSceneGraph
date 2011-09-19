@@ -6,6 +6,7 @@
 FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
   
   if(!options.constructMaterialNodes) options.constructMaterialNodes = false;
+  if(!options.constructInstanceNodes) options.constructInstanceNodes = true;
 
   var assetNodes = {};
   var warn = function( warningText ){
@@ -1105,8 +1106,9 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
     for (var j = 0; j < jointDataSource.data.length; j++) {
       var bindPoseValues = getSourceData(bindPoseDataSource, j);
       var mat = FABRIC.RT.mat44.apply(undefined, bindPoseValues).transpose();
-      invmatrices[j] = controllerData.bind_shape_matrix.mul(mat);
+      invmatrices[j] = mat;//controllerData.bind_shape_matrix.mul(mat);
     }
+    characterMeshNode.setBindShapeMatrix(controllerData.bind_shape_matrix);
     characterMeshNode.setInvMatrices(invmatrices, jointRemapping);
     
  
@@ -1188,14 +1190,16 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
           globalXfo: xfo
         });
         */
+        /*
         var characterNode = scene.constructNode('CharacterInstance', {
             name: instanceData.name+'CharacterInstance',
             geometryNode: controllerNodes.characterMeshNode,
           /*  materialNode: materialNode, 
-            transformNode: transformNode, */
+            transformNode: transformNode, * /
             rigNode: controllerNodes.skeletonData.rigNode
           });
         assetNodes[characterNode.getName()] = characterNode;
+          */
       }
       
       for(var i=0; i<instanceData.children.length; i++){

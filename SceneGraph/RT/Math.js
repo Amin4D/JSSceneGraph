@@ -53,6 +53,25 @@ FABRIC.RT.fromString = function(str) {
 FABRIC.RT.Math = function() {
 }
 
+
+FABRIC.RT.Math.bubbleSort = function(values, indices, start, end) {
+  if (start != end - 1) {
+    for (var i = start; i < end; i++) {
+      for (var j = i + 1; j < end; j++) {
+        if (values[i] < values[j]) {
+          // swap them!
+          var tmpScalar = values[i];
+          var tmpIndex = indices[i];
+          values[i] = values[j];
+          indices[i] = indices[j];
+          values[j] = tmpScalar;
+          indices[j] = tmpIndex;
+        }
+      }
+    }
+  }
+}
+
 FABRIC.appendOnCreateContextCallback(function(context) {
   context.RegisteredTypesManager.registerType('Math', {
     members: {

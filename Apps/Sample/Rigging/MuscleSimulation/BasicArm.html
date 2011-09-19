@@ -14,7 +14,6 @@
 
     <link type="text/css" href="../../../../ThirdParty/jQuery/css/vader/jquery-ui-1.8.5.custom.css" rel="stylesheet" />
 
-    <script type="text/javascript" src="../../../../Core/FABRIC.Wrappers.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../../Core/FABRIC.js" charset="utf-8"></script>
 
     <script type="text/javascript" src="../../../../SceneGraph/RT/Math.js" charset="utf-8"></script>
@@ -121,13 +120,22 @@ $(document).ready(function() {
   var bones = skeletonNode.getBones();
   bones[2].length = 0.0;
   skeletonNode.setBones(bones);
+  
+  
+  
+  var cpuSkinnedCharacterMesh = scene.constructNode('CPUSkinnedCharacterMesh', {
+      baseSkinMesh: characterMeshNode,
+      characterRigNode: rigNode
+    });
 
-  var materialNode = scene.constructNode('PhongSkinningMaterial', {
+  /*
+  var materialNode = scene.constructNode('PhongMaterial', {
       lightNode: scene.constructNode('PointLight', { position: FABRIC.RT.vec3(420.0, 1000.0, 600.0) }),
       diffuseColor: FABRIC.RT.rgba(1.0, 0.75, 0.5, 1.0),
       numBones: rigNode.getSkeletonNode().getNumBones()
     });
   rigInstanceNode.setMaterialNode(materialNode);
+  */
   
   var skeletonGeometryNode = scene.constructNode("CharacterSkeletonDebug",{
     characterRigNode:rigNode,
@@ -177,24 +185,20 @@ $(document).ready(function() {
   
   skin = scene.constructNode('MuscleSkinDeformation', {
       muscleSystem: muscleSystem,
-      baseSkinMesh: characterMeshNode
+      baseSkinMesh: cpuSkinnedCharacterMesh
     });
   
   
-  rigInstanceNode.setGeometryNode(skin);
-  /*
+
   var skinInst = scene.constructNode('Instance', {
       geometryNode: skin
     })
-    .setMaterialNode( scene.constructNode('VertexColorMaterial', {
+    .setMaterialNode( scene.constructNode('PhongMaterial', {
         diffuseColor: FABRIC.RT.rgb(0.8, 0.5, 0.2),
-        lightNode: light
+        lightNode: scene.constructNode('PointLight', {
+          position: FABRIC.RT.vec3(420.0, 1000.0, 600.0)
+        })
       }))
-    .setMaterialNode( scene.constructNode('WireframeMaterial', {
-        color: FABRIC.RT.rgb(0.2, 0.2, 0.2, 1)
-      }));
-         
-  */
   
   $('#loadingDialog').dialog({
     modal: true

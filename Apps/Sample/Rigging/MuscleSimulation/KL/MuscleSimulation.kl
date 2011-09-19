@@ -8,14 +8,7 @@ use Color;
 use DebugGeometry;
 
 operator simulateMuscle(
-  io Xfo allinitialXfos<>[], /* inital Transforsm  */
-  io Scalar allsegmentLengths<>[],
-  io Vec2 allpointEnvelopeIds<>,
-  io Vec2 allpointEnvelopWeights<>[],
-  io Scalar allflexibilityWeights<>[], /* weights determining how much the muscle is simulated. */
-  io BezierKeyframe allcontractionCurve<>[],
-  io Scalar allcontractionWeights<>[], /* weights determining how much the segments will contract. */
-  io DisplacementMap displacementMaps<>,
+  io Muscle initmuscles<>,
   
   in Size index,
   io Boolean initialized,
@@ -34,27 +27,19 @@ operator simulateMuscle(
 //  report("simulateMuscle>>>:"+index);
   Integer i, j;
   
-  Xfo initialXfos[] = allinitialXfos[index];
-  Scalar segmentLengths[] = allsegmentLengths[index];
-  Vec2 pointEnvelopeIds = allpointEnvelopeIds[index];
-  Vec2 pointEnvelopWeights[] = allpointEnvelopWeights[index];
-  Scalar flexibilityWeights[] = allflexibilityWeights[index];
-  BezierKeyframe contractionCurve[] = allcontractionCurve[index];
-  Scalar contractionWeights[] = allcontractionWeights[index];
-  
   debugDraw.reset();
   
-  
   if(!initialized || pointPositionsPrevUpdate.size() != muscle.xfos.size()){
-    envelopedXfos.resize(initialXfos.size());
-    pointPositionsPrevUpdate.resize(initialXfos.size());
-    pointPositionsPrevUpdate_Temp.resize(initialXfos.size());
-    muscle.xfos.resize(initialXfos.size());
-    for(i=0; i<initialXfos.size(); i++){
-      muscle.xfos[i] = initialXfos[i];
-      pointPositionsPrevUpdate[i] = initialXfos[i].tr;
+    muscle = initmuscles[index];
+  
+    muscle.xfos.resize(muscle.initialXfos.size());
+    envelopedXfos.resize(muscle.initialXfos.size());
+    pointPositionsPrevUpdate.resize(muscle.initialXfos.size());
+    pointPositionsPrevUpdate_Temp.resize(muscle.initialXfos.size());
+    for(i=0; i < muscle.initialXfos.size(); i++){
+      muscle.xfos[i] = muscle.initialXfos[i];
+      pointPositionsPrevUpdate[i] = muscle.initialXfos[i].tr;
     }
-    muscle.displacementMap = displacementMaps[index];
     initialized = false;
   }
   
@@ -67,19 +52,19 @@ operator simulateMuscle(
   Scalar boneweight;
   for(i=0; i<muscle.xfos.size(); i++){
     
-    baseXfo = initialXfos[i];
+    baseXfo = muscle.initialXfos[i];
     envelopedXfos[i].identity();
-    if (pointEnvelopWeights[i].x > 0.0) {
-      xfo = baseXfo * skinningXfos[Integer(pointEnvelopeIds.x)];
+    if (muscle.pointEnvelopWeights[i].x > 0.0) {
+      xfo = baseXfo * skinningXfos[Integer(muscle.pointEnvelopeIds.x)];
       xfo.ori.makeClosest(baseXfo.ori);
-      envelopedXfos[i].tr += xfo.tr * pointEnvelopWeights[i].x;
-      envelopedXfos[i].ori += xfo.ori * pointEnvelopWeights[i].x;
+      envelopedXfos[i].tr += xfo.tr * muscle.pointEnvelopWeights[i].x;
+      envelopedXfos[i].ori += xfo.ori * muscle.pointEnvelopWeights[i].x;
     }
-    if (pointEnvelopWeights[i].y > 0.0) {
-      xfo = baseXfo * skinningXfos[Integer(pointEnvelopeIds.y)];
+    if (muscle.pointEnvelopWeights[i].y > 0.0) {
+      xfo = baseXfo * skinningXfos[Integer(muscle.pointEnvelopeIds.y)];
       xfo.ori.makeClosest(baseXfo.ori);
-      envelopedXfos[i].tr += xfo.tr * pointEnvelopWeights[i].y;
-      envelopedXfos[i].ori += xfo.ori * pointEnvelopWeights[i].y;
+      envelopedXfos[i].tr += xfo.tr * muscle.pointEnvelopWeights[i].y;
+      envelopedXfos[i].ori += xfo.ori * muscle.pointEnvelopWeights[i].y;
     }
     envelopedXfos[i].ori.normalize();
   }
@@ -87,15 +72,15 @@ operator simulateMuscle(
   // Measure the distance from the 2 anchor points of the muscle.
   // Use this to look up the curve and calculate the current contraction of the muscle
   Scalar contractionFactor = envelopedXfos[0].tr.dist(envelopedXfos[envelopedXfos.size()-1].tr) /
-                               initialXfos[0].tr.dist(initialXfos[initialXfos.size()-1].tr);
+                               muscle.initialXfos[0].tr.dist(muscle.initialXfos[muscle.initialXfos.size()-1].tr);
   Integer keyIndex = 0;
-  contractionFactor = evaluateKeyframeAnimationTrack(contractionCurve, contractionFactor, keyIndex);
+  contractionFactor = evaluateKeyframeAnimationTrack(muscle.contractionCurve, contractionFactor, keyIndex);
   
   
   /////////////////////////////////////////////////
   // Simulation
   if(!initialized){
-    for(i=0; i<initialXfos.size(); i++){
+    for(i=0; i < muscle.xfos.size(); i++){
       muscle.xfos[i] = envelopedXfos[i];
     }
     initialized = true;
@@ -112,8 +97,8 @@ operator simulateMuscle(
       // When under contraction, we remove gravity.
       // Its a bit of a hack to exagerate the strength of the contraction
       muscle.xfos[i].tr += gravityDisp + (muscle.xfos[i].tr - pointPositionsPrevUpdate[i]);
-      muscle.xfos[i].tr = envelopedXfos[i].tr.lerp(muscle.xfos[i].tr, flexibilityWeights[i]);
-      muscle.xfos[i].ori = envelopedXfos[i].ori.nlerp(muscle.xfos[i].ori, flexibilityWeights[i]);
+      muscle.xfos[i].tr = envelopedXfos[i].tr.lerp(muscle.xfos[i].tr, muscle.flexibilityWeights[i]);
+      muscle.xfos[i].ori = envelopedXfos[i].ori.nlerp(muscle.xfos[i].ori, muscle.flexibilityWeights[i]);
     }
   }
   
@@ -126,21 +111,21 @@ operator simulateMuscle(
     for( i=0; i<muscle.xfos.size(); i++){
       delta.setNull();
       if(i>0){
-        segmentContraction = 1.0 + ((contractionFactor - 1.0) * contractionWeights[i-1]);
+        segmentContraction = 1.0 + ((contractionFactor - 1.0) * muscle.contractionWeights[i-1]);
         Vec3 segmentPrev = (muscle.xfos[i-1].tr - muscle.xfos[i].tr);
         Scalar segmentLength = segmentPrev.length();
-        delta += segmentPrev * ((segmentLength - (segmentLengths[i-1] * segmentContraction)) / segmentLength);
+        delta += segmentPrev * ((segmentLength - (muscle.segmentLengths[i-1] * segmentContraction)) / segmentLength);
       }
       if(i<muscle.xfos.size()-1){
-        segmentContraction = 1.0 + ((contractionFactor - 1.0) * contractionWeights[i]);
+        segmentContraction = 1.0 + ((contractionFactor - 1.0) * muscle.contractionWeights[i]);
         Vec3 segmentNext = (muscle.xfos[i+1].tr - muscle.xfos[i].tr);
         Scalar segmentLength = segmentNext.length();
-        delta += segmentNext * ((segmentLength - (segmentLengths[i] * segmentContraction)) / segmentLength);
+        delta += segmentNext * ((segmentLength - (muscle.segmentLengths[i] * segmentContraction)) / segmentLength);
       }
       deltas[i] = delta;
     }
     for( i=0; i<muscle.xfos.size(); i++){
-      muscle.xfos[i].tr += deltas[i] * (flexibilityWeights[i] * 0.45);// The 0.45 stabilizes the simulation.;
+      muscle.xfos[i].tr += deltas[i] * (muscle.flexibilityWeights[i] * 0.45);// The 0.45 stabilizes the simulation.;
     }
   }
   
@@ -171,12 +156,12 @@ operator simulateMuscle(
   for(i=0; i<muscle.xfos.size(); i++){
     Scalar compression = 0.0;
     if(i>0){
-      compression += (muscle.xfos[i].tr.dist(muscle.xfos[i-1].tr) / segmentLengths[i-1]);
+      compression += (muscle.xfos[i].tr.dist(muscle.xfos[i-1].tr) / muscle.segmentLengths[i-1]);
     }else{
       compression += 1.0;
     }
     if(i<muscle.xfos.size()-1){
-      compression += (muscle.xfos[i].tr.dist(muscle.xfos[i+1].tr) / segmentLengths[i]);
+      compression += (muscle.xfos[i].tr.dist(muscle.xfos[i+1].tr) / muscle.segmentLengths[i]);
     }else{
       compression += 1.0;
     }

@@ -1009,10 +1009,14 @@ FABRIC.SceneGraph.registerNodeType('Viewport', {
 
     var getElementCoords = function(evt) {
       if (evt.offsetX) {
-        return FABRIC.RT.vec2(evt.offsetX, evt.offsetY);
+        // Webkit
+        var browserZoom = fabricwindow.windowNode.getData('width') / evt.target.clientWidth;
+        return FABRIC.RT.vec2(Math.floor(evt.offsetX*browserZoom), Math.floor(evt.offsetY*browserZoom));
       }
       else if (evt.layerX) {
-        return FABRIC.RT.vec2(evt.layerX, evt.layerY);
+        // Firefox
+        var browserZoom = evt.target.clientWidth / fabricwindow.windowNode.getData('width');
+        return FABRIC.RT.vec2(Math.floor(evt.layerX/browserZoom), Math.floor(evt.layerY/browserZoom));
       }
       throw("Unsupported Browser");
     }

@@ -170,13 +170,18 @@ FABRIC.SceneGraph = {
       var fabricwindow = context.createWindow(element, options);
       // [pzion 20110326] Add a context menu item for any windows
       // in the context that pops up a Fabric debugger for the context
-      fabricwindow.addPopUpMenuItem(
-        'display-core-debugger',
-        'Fabric debugger...',
-        function(arg) {
-          scene.pub.displayDebugger();
-        }
-      );
+      // Note: PT 19-09-11
+      // This feature has only been working on OsX, and so we are diabling
+      // it for the Fabric beta to ensure the developer experience is clear
+      // and consistent across platforms. Developers on OsX, feel free to
+      // uncomment this code :)
+    //  fabricwindow.addPopUpMenuItem(
+    //    'display-core-debugger',
+    //    'Fabric debugger...',
+    //    function(arg) {
+    //      scene.pub.displayDebugger();
+    //    }
+    //  );
       viewports.push(viewPort);
       return fabricwindow;
     };

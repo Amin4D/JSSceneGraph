@@ -1334,7 +1334,7 @@ FABRIC.SceneGraph.registerNodeType('GaussianBlurPostProcessEffect', {
 
       screenGrabNode.pub.saveAs = function() {
         try {
-          screenGrabEventHandler.putResourceToUserFile('resource', { defaultFilename: 'fabricScreenGrab', title: 'Save Screen Grab Image As...' });
+          screenGrabEventHandler.putResourceToUserFile('resource', 'Save Screen Grab Image As...', undefined, 'fabricScreenGrab');
         }
         catch (e) { }
       };

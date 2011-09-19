@@ -148,6 +148,7 @@ FABRIC = (function() {
         RegisteredTypesManager: context.RT,
         DG: context.DG,
         DependencyGraph: context.DG,
+        IO: context.IO,
         getContextID: function() {
           return context.getContextID();
         },

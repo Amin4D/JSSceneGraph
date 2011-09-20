@@ -64,13 +64,16 @@ $(document).ready(function() {
     }
   });
   
-  var flockParams;
   try{
-    flockParams = document.cookie ? JSON.parse(document.cookie) : { sceneSize:'medium', displayDebugging: true };
+    if(localStorage && localStorage.getItem("flockParams")){
+      flockParams = JSON.parse(localStorage.getItem("flockParams"));
+    }
+    else{
+      throw "no flockparams";
+    }
   }catch(e){
     flockParams = { sceneSize:'medium', displayDebugging: true };
   }
- // var flockParams = { sceneSize:'medium', displayDebugging: true };
         
   $("#numAgents").val(flockParams.sceneSize);
   $("#displayDebugging").attr('checked', flockParams.displayDebugging);
@@ -111,7 +114,7 @@ $(document).ready(function() {
   }
   
   var storeFlockParams = function(){
-    document.cookie=JSON.stringify(flockParams);
+    localStorage.setItem("flockParams", JSON.stringify(flockParams));
   }
 
   // Create the scene.

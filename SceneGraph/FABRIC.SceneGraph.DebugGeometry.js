@@ -25,7 +25,10 @@ FABRIC.appendOnCreateContextCallback(function(context) {
       linesIndices: 'Integer[]'
     },
     constructor: FABRIC.RT.DebugGeometry,
-    kBindings: FABRIC.loadResourceURL('FABRIC_ROOT/SceneGraph/RT/DebugGeometry.kl')
+    klBindings: {
+      filename: 'DebugGeometry.kl',
+      sourceCode: FABRIC.loadResourceURL('FABRIC_ROOT/SceneGraph/RT/DebugGeometry.kl')
+    }
   });
 });
 

@@ -77,7 +77,10 @@ FABRIC.appendOnCreateContextCallback(function(context) {
     members: {
     },
     constructor: FABRIC.RT.Math,
-    kBindings: FABRIC.loadResourceURL('FABRIC_ROOT/SceneGraph/RT/Math.kl')
+    klBindings: {
+      filename: 'Math.kl',
+      sourceCode: FABRIC.loadResourceURL('FABRIC_ROOT/SceneGraph/RT/Math.kl')
+    }
   });
 });
 

@@ -267,6 +267,9 @@ FABRIC.appendOnCreateContextCallback(function(context) {
       row3: 'Vec4'
     },
     constructor: FABRIC.RT.Mat44,
-    kBindings: FABRIC.loadResourceURL('FABRIC_ROOT/SceneGraph/RT/Mat44.kl')
+    klBindings: {
+      filename: 'Mat44.kl',
+      sourceCode: FABRIC.loadResourceURL('FABRIC_ROOT/SceneGraph/RT/Mat44.kl')
+    }
   });
 });

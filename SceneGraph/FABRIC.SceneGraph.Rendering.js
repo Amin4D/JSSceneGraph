@@ -50,8 +50,8 @@ FABRIC.SceneGraph.registerNodeType('OffscreenViewport', {
     var dgnode = offscreenNode.constructDGNode('DGNode');
     
     // create the event and handler
-    var eventNode = scene.constructEventNode(eventName);
-    var eventHandlerNode = scene.constructEventHandlerNode(eventName+'_Handler');
+    var eventNode = offscreenNode.constructEventNode(eventName);
+    var eventHandlerNode = offscreenNode.constructEventHandlerNode('Redraw');
     eventNode.appendEventHandler(eventHandlerNode);
     
     // create the render target
@@ -65,7 +65,7 @@ FABRIC.SceneGraph.registerNodeType('OffscreenViewport', {
           FABRIC.SceneGraph.OpenGLConstants.GL_FLOAT)
       );
     }
-    dgnode.addMember('renderTarget', 'OGLRenderTarget',FABRIC.RT.oglPostProcessingRenderTarget(0,0,[textureDescription]));
+    dgnode.addMember('renderTarget', 'OGLRenderTarget', FABRIC.RT.oglRenderTarget(0,0,[textureDescription]));
     
     // extend the public interface
     offscreenNode.pub.getEventName = function() {
@@ -120,17 +120,7 @@ FABRIC.SceneGraph.registerNodeType('OffscreenViewport', {
             'data.renderTarget'
           ]
         }));
-    preBindings.append(scene.constructOperator({
-      operatorName: 'viewPortBeginRender',
-      srcFile: 'FABRIC_ROOT/SceneGraph/KL/viewPortBeginRender.kl',
-      entryFunctionName: 'viewPortBeginRender',
-      parameterLayout: [
-        'window.width',
-        'window.height',
-        'viewPort.backgroundColor',
-        'viewPort.polygonMode'
-      ]
-    }));
+    
     preBindings.append(scene.constructOperator({
       operatorName: 'UpdateCameraProjection',
       srcFile: 'FABRIC_ROOT/SceneGraph/KL/updateCameraProjection.kl',

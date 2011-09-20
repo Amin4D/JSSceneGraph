@@ -332,7 +332,7 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('FKChainSolver',
               parentMember: (i > 0 ? name + 'globalXfos' : 'pose'),
               parentMemberIndex: (i > 0 ? i - 1 : bones[boneIDs.bones[i]].parent),
               localXfo: FABRIC.RT.xfo({
-                ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(0, 0, 1), Math.degToRad(-90))
+                ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(0, 0, 1), -Math.HALF_PI)
               }),
               color: FABRIC.RT.rgb(0, .5, 0),
               radius: (options.twistManipulatorRadius ?

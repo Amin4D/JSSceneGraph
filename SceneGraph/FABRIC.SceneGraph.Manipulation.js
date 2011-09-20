@@ -227,7 +227,7 @@ FABRIC.SceneGraph.registerNodeType('PaintManipulator', {
     
     var brushMaterial = scene.constructNode('FlatScreenSpaceMaterial', { color: FABRIC.RT.rgb(0.8, 0, 0) });
     var brushShapeTransform = scene.constructNode('Transform', { hierarchical: false, globalXfo: FABRIC.RT.xfo({
-        ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(1, 0, 0), Math.degToRad(90)),
+        ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(1, 0, 0), Math.HALF_PI),
         sc: FABRIC.RT.vec3(0, 0, 0)
       }) });
     var brushInstance = scene.constructNode('Instance', {
@@ -287,7 +287,7 @@ FABRIC.SceneGraph.registerNodeType('PaintManipulator', {
 
       brushShapeTransform.pub.setGlobalXfo(FABRIC.RT.xfo({
           tr: brushPos,
-          ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(1, 0, 0), Math.degToRad(90)),
+          ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(1, 0, 0), Math.HALF_PI),
           sc: FABRIC.RT.vec3(options.brushSize / aspectRatio, options.brushSize, options.brushSize)
         }));
     }
@@ -806,7 +806,7 @@ FABRIC.SceneGraph.registerNodeType('3AxisRotationManipulator', {
     var xaxisGizmoNode = scene.pub.constructNode('RotationManipulator', scene.assignDefaults(options, {
         name: name + 'XAxis',
         color: FABRIC.RT.rgb(0.8, 0, 0, 1),
-        localXfo: new FABRIC.RT.Xfo({ ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(0, 0, 1), -Math.degToRad(90)) }),
+        localXfo: new FABRIC.RT.Xfo({ ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(0, 0, 1), -Math.HALF_PI) }),
         geometryNode: circle
       }, true));
     var yaxisGizmoNode = scene.pub.constructNode('RotationManipulator', scene.assignDefaults(options, {
@@ -818,7 +818,7 @@ FABRIC.SceneGraph.registerNodeType('3AxisRotationManipulator', {
     var zaxisGizmoNode = scene.pub.constructNode('RotationManipulator', scene.assignDefaults(options, {
         name: name + 'ZAxis',
         color: FABRIC.RT.rgb(0, 0, 0.8, 1),
-        localXfo: new FABRIC.RT.Xfo({ ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(1, 0, 0), Math.degToRad(90)) }),
+        localXfo: new FABRIC.RT.Xfo({ ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(1, 0, 0), Math.HALF_PI) }),
         geometryNode: circle
       }, true));
 
@@ -964,7 +964,7 @@ FABRIC.SceneGraph.registerNodeType('3AxisTranslationManipulator', {
         name: name + '_XAxis',
         color: FABRIC.RT.rgb(0.8, 0, 0, 1),
         localXfo: new FABRIC.RT.Xfo({
-          ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(0, 0, 1), -Math.degToRad(90))
+          ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(0, 0, 1), -Math.HALF_PI)
         }),
         geometryNode: lineVector
       }, true));
@@ -972,7 +972,7 @@ FABRIC.SceneGraph.registerNodeType('3AxisTranslationManipulator', {
         name: name + '_XAxisArrowHead',
         color: FABRIC.RT.rgb(0.8, 0, 0, 1),
         localXfo: FABRIC.RT.xfo({
-          ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(0, 0, 1), -Math.degToRad(90)),
+          ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(0, 0, 1), -Math.HALF_PI),
           tr: FABRIC.RT.vec3(options.size, 0, 0)
         }),
         geometryNode: arrowHead
@@ -997,7 +997,7 @@ FABRIC.SceneGraph.registerNodeType('3AxisTranslationManipulator', {
         name: name + '_ZAxis',
         color: FABRIC.RT.rgb(0, 0, 0.8),
         localXfo: new FABRIC.RT.Xfo({
-          ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(1, 0, 0), Math.degToRad(90))
+          ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(1, 0, 0), Math.HALF_PI)
         }),
         geometryNode: lineVector
       }, true));
@@ -1005,7 +1005,7 @@ FABRIC.SceneGraph.registerNodeType('3AxisTranslationManipulator', {
         name: name + '_ZAxisArrowHead',
         color: FABRIC.RT.rgb(0, 0, 0.8),
         localXfo: FABRIC.RT.xfo({
-          ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(1, 0, 0), Math.degToRad(90)),
+          ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(1, 0, 0), Math.HALF_PI),
           tr: FABRIC.RT.vec3(0, 0, options.size)
         }),
         geometryNode: arrowHead
@@ -1023,7 +1023,7 @@ FABRIC.SceneGraph.registerNodeType('3AxisTranslationManipulator', {
         name: name + '_YZPlane',
         color: FABRIC.RT.rgb(0.8, 0, 0, 1),
         localXfo: new FABRIC.RT.Xfo({
-          ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(0, 0, 1), Math.degToRad(90))
+          ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(0, 0, 1), Math.HALF_PI)
         }),
         geometryNode: drawTriangle
       }, true));
@@ -1037,7 +1037,7 @@ FABRIC.SceneGraph.registerNodeType('3AxisTranslationManipulator', {
         name: name + '_XYPlane',
         color: FABRIC.RT.rgb(0, 0, 0.8, 1),
         localXfo: new FABRIC.RT.Xfo({
-          ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(1, 0, 0), -Math.degToRad(90))
+          ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(1, 0, 0), -Math.HALF_PI)
         }),
         geometryNode: drawTriangle
       }, true));
@@ -1104,10 +1104,10 @@ FABRIC.SceneGraph.registerNodeType('PivotRotationManipulator', {
       angle = vec1.getAngleTo(vec2);
 
       if (evt.shiftKey) {
-        angle = Math.round(angle / 5.0) * 5.0;
+        angle = Math.round(angle / Math.degToRad(5.0)) * Math.degToRad(5.0);
       }
 
-      movement = vec2.subtract(vec1).unit().scale(Math.sin(Math.degToRad(angle * 0.5)) * options.radius * 2.0);
+      movement = vec2.subtract(vec1).unit().scale(Math.sin(angle * 0.5) * options.radius * 2.0);
       if (vec1.cross(vec2).dot(normal) < 0) {
         angle = -angle;
         movement.negate();
@@ -1215,7 +1215,7 @@ FABRIC.SceneGraph.registerNodeType('BoneManipulator', {
         angle = angle2;
       }
       if (evt.shiftKey) {
-        angle = Math.round(angle / 5.0) * 5.0;
+        angle = Math.round(angle / Math.degToRad(5.0)) * Math.degToRad(5.0);
       }
       if (vec1.cross(vec2).dot(normal) < 0) {
         angle = -angle;

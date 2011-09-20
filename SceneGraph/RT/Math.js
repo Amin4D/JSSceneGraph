@@ -8,6 +8,10 @@
  */
 FABRIC.RT = FABRIC.RT ? FABRIC.RT : {};
 
+Math.TWO_PI = Math.PI * 2.0;
+Math.HALF_PI = Math.PI / 2.0;
+Math.QUATER_PI = Math.PI / 4.0;
+
 /**
  * The precision of the math module.
  */

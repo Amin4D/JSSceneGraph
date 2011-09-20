@@ -68,8 +68,8 @@ FABRIC.RT.quat = function(x, y, z, w) {
  * @param {number} degrees The rotation around the axis in degrees.
  * @return {object} The converted quaternion object.
  */
-FABRIC.RT.Quat.makeFromAxisAndAngle = function(vec, degrees) {
-  var halfAngle = (degrees * Math.PI / 180.0) / 2.0;
+FABRIC.RT.Quat.makeFromAxisAndAngle = function(vec, radians) {
+  var halfAngle = radians / 2.0;
 
   var q = new FABRIC.RT.Quat();
   q.w = Math.cos(halfAngle);

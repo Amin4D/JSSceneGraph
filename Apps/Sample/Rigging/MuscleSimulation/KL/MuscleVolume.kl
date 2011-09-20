@@ -545,8 +545,8 @@ function Vec3 uvwToMusclePosition(
 
     offset = pointframe.rotateVector( Vec3( 0.0, cos( uvw.y - PI ), sin( uvw.y - PI ) ) );
     
-    return (offset * (uvw.z * muscle.contraction)) + position;
-  //  return (offset * (uvw.z)) + position;
+  //  return (offset * (uvw.z * muscle.contraction)) + position;
+    return (offset * (uvw.z)) + position;
   }
 }
 

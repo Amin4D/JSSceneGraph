@@ -201,6 +201,29 @@ function OGLRenderTarget.unbind() {
   glBindFramebuffer(GL_FRAMEBUFFER, this.prevFbo);
 }
 
+
+function OGLRenderTarget.getAllRGBAPixels(io Color pixels[]) {
+  if(this.fbo == 0) {
+    pixels.resize(0);
+    return;
+  }
+  pixels.resize(Size(this.width * this.height));
+
+  Integer prevFbos[];
+  prevFbos.resize(1);
+  glGetIntegerv(GL_FRAMEBUFFER_BINDING, prevFbos);
+  Integer prevFbo = prevFbos[0];
+  
+  if(prevFbo != this.fbo){
+    glBindFramebuffer(GL_FRAMEBUFFER, this.fbo);
+  }
+  glReadPixels(0, 0, this.width, this.height, GL_RGBA,  GL_FLOAT,  pixels.data());
+  if(prevFbo != this.fbo){
+    glBindFramebuffer(GL_FRAMEBUFFER, prevFbo);
+  }
+}
+
+
 function OGLRenderTarget.getRGBAPixels(io Vec2 pos, io Vec2 size, io Color pixels[]) {
   if(this.fbo == 0) {
     pixels.resize(0);
@@ -211,9 +234,14 @@ function OGLRenderTarget.getRGBAPixels(io Vec2 pos, io Vec2 size, io Color pixel
   Integer prevFbos[];
   prevFbos.resize(1);
   glGetIntegerv(GL_FRAMEBUFFER_BINDING, prevFbos);
-  this.prevFbo = prevFbos[0];
+  Integer prevFbo = prevFbos[0];
   
-  glBindFramebuffer(GL_FRAMEBUFFER, this.fbo);
-  glReadPixels(pos.x, pos.y, size.x, size.y, GL_RGBA,  GL_FLOAT,  pixels.data());
-  glBindFramebuffer(GL_FRAMEBUFFER, this.prevFbo);
+  if(prevFbo != this.fbo){
+    glBindFramebuffer(GL_FRAMEBUFFER, this.fbo);
+  }
+  glReadPixels(pos.x, pos.y, size.x, size.y, GL_RGBA, GL_FLOAT,  pixels.data());
+
+  if(prevFbo != this.fbo){
+    glBindFramebuffer(GL_FRAMEBUFFER, prevFbo);
+  }
 }

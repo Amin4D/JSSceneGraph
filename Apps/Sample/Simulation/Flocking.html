@@ -64,7 +64,12 @@ $(document).ready(function() {
     }
   });
   
-  var flockParams = document.cookie ? JSON.parse(document.cookie) : { sceneSize:'medium', displayDebugging: true };
+  var flockParams;
+  try{
+    flockParams = document.cookie ? JSON.parse(document.cookie) : { sceneSize:'medium', displayDebugging: true };
+  }catch(e){
+    flockParams = { sceneSize:'medium', displayDebugging: true };
+  }
  // var flockParams = { sceneSize:'medium', displayDebugging: true };
         
   $("#numAgents").val(flockParams.sceneSize);

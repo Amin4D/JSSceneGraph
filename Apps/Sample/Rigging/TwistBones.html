@@ -66,8 +66,7 @@ $(document).ready(function() {
       target: FABRIC.RT.vec3(0, 6, 0),
       roll: 0,
       nearDistance: 0.001,
-      farDistance: 20000,
-      fovY: 60.0
+      farDistance: 20000
   });
   scene.constructNode('CameraManipulator', { targetNode: camera });
   viewport.setCameraNode(camera);

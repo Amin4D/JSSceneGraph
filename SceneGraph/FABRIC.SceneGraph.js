@@ -1442,7 +1442,7 @@ FABRIC.SceneGraph.registerNodeType('Camera', {
     scene.assignDefaults(options, {
         nearDistance: 5,
         farDistance: 1000,
-        fovY: 60,
+        fovY: Math.degToRad(60),
         focalDistance: 160,
         orthographic: false,
         transformNode: 'Transform'
@@ -1456,7 +1456,7 @@ FABRIC.SceneGraph.registerNodeType('Camera', {
       
     dgnode.addMember('nearDistance', 'Scalar', options.nearDistance);
     dgnode.addMember('farDistance', 'Scalar', options.farDistance);
-    dgnode.addMember('fovY', 'Scalar', Math.degToRad(options.fovY));
+    dgnode.addMember('fovY', 'Scalar', options.fovY);
     dgnode.addMember('focalDistance', 'Scalar', options.focalDistance);
     dgnode.addMember('cameraMat44', 'Mat44');
     dgnode.addMember('orthographic', 'Boolean', options.orthographic);

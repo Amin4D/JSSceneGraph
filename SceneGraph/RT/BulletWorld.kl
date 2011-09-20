@@ -1,0 +1,51 @@
+//
+// Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
+//
+use FabricBULLET;
+
+function BulletWorld.create(io Boolean result) {
+  if(!this.pointer) {
+    FabricBULLET_World_Create(this.pointer);
+    FabricBULLET_World_SetGravity(this.pointer,this.gravity);
+    result = true;
+  }
+  else
+    result = false;
+}
+
+function BulletWorld.delete() {
+  FabricBULLET_World_Delete(this.pointer);
+  FabricBULLET_World_SetGravity(this.pointer,this.gravity);
+}
+
+function BulletWorld.step(io Scalar timeStep) {
+  if(timeStep > 0)
+    FabricBULLET_World_Step(this.pointer,this.step,this.substeps,timeStep);
+}
+
+function BulletWorld.reset() {
+  FabricBULLET_World_Reset(this.pointer,this.step);
+}
+
+function BulletWorld.getGravity(io Vec3 gravity) {
+  gravity = this.gravity;
+}
+
+function BulletWorld.setGravity(io Vec3 gravity) {
+  this.gravity = gravity;
+  FabricBULLET_World_SetGravity(this.pointer,this.gravity);
+}
+
+function BulletWorld.addRigidBody(io BulletRigidBody body) {
+  if(!body.inworld) {
+    FabricBULLET_World_AddRigidBody(this.pointer,body.pointer);
+    body.inworld = true;
+  }
+}
+
+function BulletWorld.removeRigidBody(io BulletRigidBody body) {
+  if(body.inworld) {
+    FabricBULLET_World_RemoveRigidBody(this.pointer,body.pointer);
+    body.inworld = false;
+  }
+}

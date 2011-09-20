@@ -1,0 +1,45 @@
+//
+// Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
+//
+
+use Vec3;
+use Xfo;
+use BulletShape;
+use BulletRigidBody;
+use BulletWorld;
+
+operator createBulletWorld(
+  io BulletWorld world
+){
+  Boolean result;
+  world.create(result);  
+}
+
+operator stepBulletWorld(
+  io BulletWorld world,
+  io Scalar prevTime,
+  io Scalar time,
+){
+  Scalar steppedTime = time - prevTime;
+  world.step(steppedTime);
+  prevTime = time;
+}
+
+operator createBulletRigidBody(
+  io BulletWorld world,
+  io BulletRigidBody body,
+){
+  Boolean result;
+  body.create(result);
+  if(result) {
+    world.addRigidBody(body);  
+  }
+}
+
+operator getBulletRigidBodyTransform(
+  io BulletRigidBody body,
+  io Xfo transform
+){
+  body.getTransform(transform);
+}
+

@@ -5,6 +5,9 @@
 
 
 FABRIC.SceneGraph.registerNodeType('Texture', {
+  briefDesc: 'The Texture node is an Image node which can be used for texturing of a 3D object.',
+  detailedDesc: 'The Texture node is an Image node which can be used for texturing of a 3D object.',
+  parentNodeDesc: 'SceneGraphNode',
   factoryFn: function(options, scene) {
     var textureNode = scene.constructNode('SceneGraphNode', options);
     return textureNode;
@@ -19,6 +22,19 @@ FABRIC.SceneGraph.registerNodeType('Image', {
                 'If \'options.createResourceLoadNode\', an URL-based image loader will be incorporated, and currently supports ' +
                 '.png, .tga, .exr and .hdr image formats. If \'options.createLoadTextureEventHandler\', an OpenGL texture ' +
                 'will be created from the image.',
+  parentNodeDesc: 'Texture',
+  optionsDesc: {
+    wantHDR: 'Set to true this flags enables the Image node to use float values instead if bytes.',
+    wantRGBA: 'Set to true this flag enables the Image node to store the A channel.',
+    createDgNode: 'If this is set to true the Image node will contain a dgnode to store the pixel data.',
+    createResourceLoadNode: 'Set to true this flag will enable the Image node to load a texture off a resource load node.',
+    createLoadTextureEventHandler: 'If the image uses a ResouceLoadNode and this flag is set, it will create an EventHandler for the Image being loaded.',
+    width: 'The width of the empty Image',
+    height: 'The height of the empty Image',
+    color: 'The standard color for the empty Image',
+    url: 'The URL to load the Image from',
+    forceRefresh: 'If this is set, the Image will always be re-loaded onto the GPU. This is useful for animated Images.'
+  },
   factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
       wantHDR: false,
@@ -134,8 +150,13 @@ FABRIC.SceneGraph.registerNodeType('Image', {
   }});
 
 FABRIC.SceneGraph.registerNodeType('CubeMap', {
-  briefDesc: '...',
-  detailedDesc: '...',
+  briefDesc: 'The CubeMap node contains 6 Image nodes which can be used to texture with cubic mapping. ',
+  detailedDesc: 'The CubeMap node contains 6 Image nodes which can be used to texture with cubic mapping. ' +
+                'This means it requires six images to be aligned in a cubic fashion.',
+  parentNodeDesc: 'Texture',
+  optionsDesc: {
+    urls: 'An array of six URLs to the six images to load.',
+  },
   factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
       urls: []
@@ -176,6 +197,13 @@ FABRIC.SceneGraph.registerNodeType('CubeMap', {
   }});
 
 FABRIC.SceneGraph.registerNodeType('Video', {
+  briefDesc: 'The Video node is an Image node that changes over time.',
+  detailedDesc: 'The Video node uses the ffmpeg extension to load animated video footage into an Image node. ' +
+                'For that the image content is repeatedly copied onto the GPU.',
+  parentNodeDesc: 'Image',
+  optionsDesc: {
+    localFileName: 'The Video node currently only supports a local filename, not an URL.',
+  },
   factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
         localFileName: ''
@@ -279,6 +307,13 @@ FABRIC.SceneGraph.registerNodeType('Video', {
   }});
 
 FABRIC.SceneGraph.registerNodeType('PointSpriteTexture', {
+  briefDesc: 'The PointSpriteTexture is an Image node that can be used to texture a point using a sprite.',
+  detailedDesc: 'The PointSpriteTexture is an Image node that can be used to texture a point using a sprite. ' +
+                'You can specify the resolution of the sprite.',
+  parentNodeDesc: 'Texture',
+  optionsDesc: {
+    spriteResolution: 'The resolution of the sprite texture.',
+  },
   factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
         spriteResolution: 32
@@ -327,6 +362,11 @@ FABRIC.SceneGraph.getShaderParamID = ( function(){
 
 
 FABRIC.SceneGraph.registerNodeType('Shader', {
+  briefDesc: 'The Shader node is used to load a GLSL shader onto the GPU.',
+  detailedDesc: 'The Shader node is used to load a GLSL shader onto the GPU. ' +
+                'It provides access to the uniforms of the GLSL shader. Shaders node are re-used to ensure ' +
+                'maximum performance as well as low memory use.',
+  parentNodeDesc: 'SceneGraphNode',
   factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
         parentEventHandler: scene.getSceneRedrawOpaqueObjectsEventHandler(),
@@ -465,6 +505,16 @@ FABRIC.SceneGraph.registerNodeType('Shader', {
 
 
 FABRIC.SceneGraph.registerNodeType('Material', {
+  briefDesc: 'The Material node is the base node for all Materials.',
+  detailedDesc: 'The Material node is the base node for all Materials. It should not be used directly, ' +
+                'rather through other Material presets such as \'FlatMaterial\' for example.',
+  parentNodeDesc: 'SceneGraphNode',
+  optionsDesc: {
+    separateShaderNode: 'If set to true, this will allow to create a separate shader node for optimizing performance.',
+    shaderNode: 'If specified, use the given shaderNode instead of creating a new one.',
+    storeUniformsInDGNode: 'If set to true, the uniforms of the shader will be stored in a separate uniforms dgnode.',
+    assignUniformsOnPostDescend: 'If set to true the uniforms will be assigned on the post descend of the event handler.'
+  },
   factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
         separateShaderNode: true,
@@ -676,6 +726,13 @@ FABRIC.SceneGraph.registerNodeType('Material', {
 
 
 FABRIC.SceneGraph.registerNodeType('PointMaterial', {
+  briefDesc: 'The PointMaterial node is a prototype for materials for points.',
+  detailedDesc: 'The PointMaterial node is a prototype for materials for points. It introduces a new ' +
+                'uniform, the pointSize, which can be used to draw points.',
+  parentNodeDesc: 'Material',
+  optionsDesc: {
+    pointSize: 'The size of the drawn points.'
+  },
   factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
         pointSize: 3.0
@@ -706,6 +763,14 @@ FABRIC.SceneGraph.registerNodeType('PointMaterial', {
 
 
 FABRIC.SceneGraph.registerNodeType('PointSpriteMaterial', {
+  briefDesc: 'The PointSpriteMaterial allows to draw sprites for each point in a Points node.',
+  detailedDesc: 'The PointSpriteMaterial allows to draw sprites for each point in a Points node. This ' +
+                'works both for shaders using positions as vec4 as well as vec3.',
+  parentNodeDesc: 'Material',
+  optionsDesc: {
+    pointSize: 'The size of the drawn points.',
+    positionsVec4: 'If set to true, the shader\'s positions attribute is expected to be vec4, otherwise vec3.'
+  },
   factoryFn: function(options, scene) {
 
     scene.assignDefaults(options, {
@@ -758,6 +823,9 @@ FABRIC.SceneGraph.registerNodeType('PointSpriteMaterial', {
 
 
 FABRIC.SceneGraph.registerNodeType('ShadowMapMaterial', {
+  briefDesc: 'The ShadowMapMaterial allows to draw a shadow.',
+  detailedDesc: 'The ShadowMapMaterial allows to draw a shadow. This is used when working with shadow maps.',
+  parentNodeDesc: 'Material',
   factoryFn: function(options, scene) {
     options.parentEventHandler = scene.getBeginRenderShadowMapEventHandler();
     var shadowMapMaterial = scene.constructNode('Material', options);
@@ -765,6 +833,10 @@ FABRIC.SceneGraph.registerNodeType('ShadowMapMaterial', {
   }});
 
 FABRIC.SceneGraph.registerNodeType('TransparentMaterial', {
+  briefDesc: 'The TransparentMaterial is a protoype for all transparent materials.',
+  detailedDesc: 'The TransparentMaterial is a protoype for all transparent materials. It uses a different redraw event handler' +
+                ' to ensure that the transparent objects are drawn last.',
+  parentNodeDesc: 'Material',
   factoryFn: function(options, scene) {
     options.parentEventHandler = scene.getSceneRedrawTransparentObjectsEventHandler();
     var transparentMaterial = scene.constructNode('Material', options);
@@ -773,9 +845,22 @@ FABRIC.SceneGraph.registerNodeType('TransparentMaterial', {
 
 
 FABRIC.SceneGraph.registerNodeType('PostProcessEffect', {
+  briefDesc: 'The PostProcessEffect node allows to compute an effect after the drawing of the viewport.',
+  detailedDesc: 'The PostProcessEffect node allows to compute an effect after the drawing of the viewport. It utilizes a GLSL shader which operates ' +
+                'on the framebuffer of the main viewport.',
+  parentNodeDesc: 'Material',
+  optionsDesc: {
+    fragmentShader: 'The fragment shader to use for the post effect.',
+    vertexShader: 'The optional vertex shader to use for the post effect.',
+    shaderAttributes: 'The attributes of the shader to use.',
+    shaderUniforms: 'The uniforms of the shader to the use.',
+    renderTarget: 'The render target to use for this post process effect. By default this is a new rendertarget.'
+  },
   factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
         fragmentShader: undefined,
+        vertexShader: undefined,
+        shaderAttributes: undefined,
         shaderUniforms: undefined,
         parentEventHandler: false,
         separateShaderNode: false,
@@ -1251,6 +1336,9 @@ FABRIC.SceneGraph.defineEffectFromFile('OutlineShader', 'FABRIC_ROOT/SceneGraph/
 
 
 FABRIC.SceneGraph.registerNodeType('BloomPostProcessEffect', {
+  briefDesc: 'The BloomPostProcessEffect node draws a bloom effect after the viewport has been drawn.',
+  detailedDesc: 'The BloomPostProcessEffect node draws a bloom effect after the viewport has been drawn.',
+  parentNodeDesc: 'PostProcessEffect',
   factoryFn: function(options, scene) {
     options.fragmentShader = FABRIC.loadResourceURL('FABRIC_ROOT/SceneGraph/Shaders/BloomPixelShader.glsl');
 
@@ -1260,6 +1348,9 @@ FABRIC.SceneGraph.registerNodeType('BloomPostProcessEffect', {
 
 
 FABRIC.SceneGraph.registerNodeType('FilmicTonemapperPostProcessEffect', {
+  briefDesc: 'The FilmicTonemapperPostProcessEffect node draws a filmic tone mapping effect after the viewport has been drawn.',
+  detailedDesc: 'The FilmicTonemapperPostProcessEffect node draws a filmic tone mapping effect after the viewport has been drawn.',
+  parentNodeDesc: 'PostProcessEffect',
   factoryFn: function(options, scene) {
     options.fragmentShader = FABRIC.loadResourceURL('FABRIC_ROOT/SceneGraph/Shaders/FilmicTonemapper.glsl');
 
@@ -1269,6 +1360,9 @@ FABRIC.SceneGraph.registerNodeType('FilmicTonemapperPostProcessEffect', {
 
 
 FABRIC.SceneGraph.registerNodeType('EdgeDetectionPostProcessEffect', {
+  briefDesc: 'The EdgeDetectionPostProcessEffect node draws an edge detection filter effect after the viewport has been drawn.',
+  detailedDesc: 'The EdgeDetectionPostProcessEffect node draws a edge detection filter effect after the viewport has been drawn.',
+  parentNodeDesc: 'PostProcessEffect',
   factoryFn: function(options, scene) {
     options.fragmentShader = FABRIC.loadResourceURL('FABRIC_ROOT/SceneGraph/Shaders/EdgeDetectionPixelShader.glsl');
 
@@ -1284,6 +1378,9 @@ FABRIC.SceneGraph.registerNodeType('EdgeDetectionPostProcessEffect', {
 
 
 FABRIC.SceneGraph.registerNodeType('GaussianBlurPostProcessEffect', {
+  briefDesc: 'The GaussianBlurPostProcessEffect node draws a gaussian blur effect after the viewport has been drawn.',
+  detailedDesc: 'The GaussianBlurPostProcessEffect node draws a gaussian blur effect after the viewport has been drawn.',
+  parentNodeDesc: 'PostProcessEffect',
   factoryFn: function(options, scene) {
     options.fragmentShader = FABRIC.loadResourceURL('FABRIC_ROOT/SceneGraph/Shaders/GaussianBlurFragmentShader.glsl');
 
@@ -1295,54 +1392,57 @@ FABRIC.SceneGraph.registerNodeType('GaussianBlurPostProcessEffect', {
     return edgeDetectionEffect;
   }});
 
-  FABRIC.SceneGraph.registerNodeType('ScreenGrab', {
-    factoryFn: function(options, scene) {
-      //TO refine: right now this node is grabbing a screenshot constantly!
-      //We should include a way to 'mute' and 'unmute' it. The problem
-      //is how to know when it is filled with content; an event should be sent. Can
-      //we do this without modifying the core?
-      var screenGrabNode = scene.constructNode('SceneGraphNode', options),
-      screenGrabEventHandler;
+FABRIC.SceneGraph.registerNodeType('ScreenGrab', {
+  briefDesc: 'The ScreenGrab node stores the viewport to an Image node.',
+  detailedDesc: 'The ScreenGrab node stores the viewport to an Image node by encoding PNG using a ResourceLoadNode. ',
+  parentNodeDesc: 'SceneGraphNode',
+  factoryFn: function(options, scene) {
+    //TO refine: right now this node is grabbing a screenshot constantly!
+    //We should include a way to 'mute' and 'unmute' it. The problem
+    //is how to know when it is filled with content; an event should be sent. Can
+    //we do this without modifying the core?
+    var screenGrabNode = scene.constructNode('SceneGraphNode', options),
+    screenGrabEventHandler;
 
-      screenGrabEventHandler = screenGrabNode.constructEventHandlerNode('ScreenGrab');
-      screenGrabEventHandler.addMember('width', 'Size');
-      screenGrabEventHandler.addMember('heigth', 'Size');
-      screenGrabEventHandler.addMember('pixels', 'RGBA[]');
-      screenGrabEventHandler.addMember('resource', 'FabricResource');
+    screenGrabEventHandler = screenGrabNode.constructEventHandlerNode('ScreenGrab');
+    screenGrabEventHandler.addMember('width', 'Size');
+    screenGrabEventHandler.addMember('heigth', 'Size');
+    screenGrabEventHandler.addMember('pixels', 'RGBA[]');
+    screenGrabEventHandler.addMember('resource', 'FabricResource');
 
-      screenGrabEventHandler.postDescendBindings.append(scene.constructOperator({
-        operatorName: 'grabViewport',
-        srcFile: 'FABRIC_ROOT/SceneGraph/KL/grabViewport.kl',
-        entryFunctionName: 'grabViewport',
-        parameterLayout: [
-              'self.width',
-              'self.heigth',
-              'self.pixels'
-            ]
-      }));
+    screenGrabEventHandler.postDescendBindings.append(scene.constructOperator({
+      operatorName: 'grabViewport',
+      srcFile: 'FABRIC_ROOT/SceneGraph/KL/grabViewport.kl',
+      entryFunctionName: 'grabViewport',
+      parameterLayout: [
+            'self.width',
+            'self.heigth',
+            'self.pixels'
+          ]
+    }));
 
-      scene.getScenePostRedrawEventHandler().appendChildEventHandler(screenGrabEventHandler);
+    scene.getScenePostRedrawEventHandler().appendChildEventHandler(screenGrabEventHandler);
 
-      screenGrabEventHandler.postDescendBindings.append(scene.constructOperator({
-        operatorName: 'encodeImage',
-        srcFile: 'FABRIC_ROOT/SceneGraph/KL/encodeImage.kl',
-        entryFunctionName: 'encodeImageLDR',
-        parameterLayout: [
-              'self.width',
-              'self.heigth',
-              'self.pixels',
-              'self.resource'
-            ]
-      }));
+    screenGrabEventHandler.postDescendBindings.append(scene.constructOperator({
+      operatorName: 'encodeImage',
+      srcFile: 'FABRIC_ROOT/SceneGraph/KL/encodeImage.kl',
+      entryFunctionName: 'encodeImageLDR',
+      parameterLayout: [
+            'self.width',
+            'self.heigth',
+            'self.pixels',
+            'self.resource'
+          ]
+    }));
 
-      screenGrabNode.pub.saveAs = function() {
-        try {
+    screenGrabNode.pub.saveAs = function() {
+      try {
           screenGrabEventHandler.putResourceToUserFile('resource', 'Save Screen Grab Image As...', undefined, 'fabricScreenGrab');
-        }
-        catch (e) { }
-      };
+      }
+      catch (e) { }
+    };
 
-      return screenGrabNode;
-    }
-  });
+    return screenGrabNode;
+  }
+});
 

@@ -63,6 +63,13 @@ operator drawRenderTargetToView(
  // report("<<<drawRenderTargetToView");
 }
 
+operator getAllRGBAPixelsFromRenderTarget(
+  io OGLRenderTarget renderTarget,
+  io Color pixels[]
+) {
+  renderTarget.getAllRGBAPixels(pixels);
+}
+
 operator getRGBAPixelsFromRenderTarget(
   io Boolean toggle,
   io OGLRenderTarget renderTarget,

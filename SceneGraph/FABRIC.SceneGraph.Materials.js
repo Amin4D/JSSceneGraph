@@ -26,6 +26,7 @@ FABRIC.SceneGraph.registerNodeType('Image', {
       createDgNode: false,
       createResourceLoadNode: true,
       createLoadTextureEventHandler: true,
+      initImage: true,
       width: 128,
       height: 128,
       color: FABRIC.RT.rgba(0.0,0.0,0.0,0.0),
@@ -71,7 +72,7 @@ FABRIC.SceneGraph.registerNodeType('Image', {
         return resourceLoadNode ? resourceLoadNode.pub.isLoaded() : false;
       };
     } else {
-      if(options.createDgNode){
+      if(options.createDgNode && options.initImage){
         dgnode.addMember('color', 'RGBA', options.color);
         dgnode.addMember('initiated', 'Boolean', false);
         dgnode.bindings.append(scene.constructOperator({
@@ -183,6 +184,8 @@ FABRIC.SceneGraph.registerNodeType('Video', {
     // ensure to use the right settings for video
     options.createResourceLoadNode = false;
     options.createLoadTextureEventHandler = false;
+    options.createDgNode = true;
+    options.initImage = false;
     options.wantHDR = false;
     options.wantRGBA = false;
 
@@ -229,7 +232,7 @@ FABRIC.SceneGraph.registerNodeType('Video', {
       entryFunctionName: 'videoSeekTime',
       parameterLayout: [
         'self.stream',
-        'globals.ms'
+        'globals.time'
       ]
     }));
 

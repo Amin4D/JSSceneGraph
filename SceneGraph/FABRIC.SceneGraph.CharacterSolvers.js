@@ -414,7 +414,7 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('RootBoneSolver',
         solver.constructManipulator(name + 'Twist', 'RotationManipulator', {
             parentNode: variablesNode.pub,
             parentMember: name + 'rootXfo',
-            localXfo: FABRIC.RT.xfo({ ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(0, 0, 1), Math.degToRad(90)) }),
+            localXfo: FABRIC.RT.xfo({ ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(0, 0, 1), Math.HALF_PI) }),
             color: FABRIC.RT.rgb(0, .5, 0),
             radius: size
           });
@@ -640,7 +640,7 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('SpineSolver',
               parentNode: rigNode.pub,
               parentMember: 'pose',
               parentMemberIndex: skeletonNode.getParentId(baseVertebreIndex),
-              localXfo: FABRIC.RT.xfo({ ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(0, 0, 1), Math.degToRad(90)) }),
+              localXfo: FABRIC.RT.xfo({ ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(0, 0, 1), Math.HALF_PI) }),
               color: FABRIC.RT.rgb(0, .5, 0),
               radius: size
             });
@@ -676,7 +676,7 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('SpineSolver',
             parentNode: rigNode.pub,
             parentMember: 'pose',
             parentMemberIndex: skeletonNode.getParentId(baseVertebreIndex),
-            localXfo: FABRIC.RT.xfo({ ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(0, 0, 1), Math.degToRad(90)) }),
+            localXfo: FABRIC.RT.xfo({ ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(0, 0, 1), Math.HALF_PI) }),
             color: FABRIC.RT.rgb(0, .5, 0),
             radius: size
           });
@@ -1086,7 +1086,7 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('ArmSolver',
         solver.constructManipulator(name + 'WristTwistRotation', 'RotationManipulator', {
             parentNode: variablesNode.pub,
             parentMember: name + 'handControlXfo',
-            localXfo: FABRIC.RT.xfo({ ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(0, 0, 1), Math.degToRad(90)) }),
+            localXfo: FABRIC.RT.xfo({ ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(0, 0, 1), Math.HALF_PI) }),
             color: FABRIC.RT.rgb(0, .5, 0),
             radius: size
           });

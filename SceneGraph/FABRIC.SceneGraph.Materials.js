@@ -1437,7 +1437,7 @@ FABRIC.SceneGraph.registerNodeType('ScreenGrab', {
 
     screenGrabNode.pub.saveAs = function() {
       try {
-        screenGrabEventHandler.writeResourceToUserFile("resource", "fabricScreenGrab");
+          screenGrabEventHandler.putResourceToUserFile('resource', 'Save Screen Grab Image As...', undefined, 'fabricScreenGrab');
       }
       catch (e) { }
     };

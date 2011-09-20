@@ -92,8 +92,8 @@ FABRIC.SceneGraph.registerNodeType('Hair', {
     pointNode.pub.addVertexAttributeValue('boneWeights', 'Vec4');
 
     var pointDGNode = pointNode.getAttributesDGNode();
-    pointDGNode.addDependency(characterMeshNode.getAttributesDGNode(),'meshattributes');
-    pointDGNode.addDependency(characterMeshNode.getUniformsDGNode(),'meshuniforms');
+    pointDGNode.setDependency(characterMeshNode.getAttributesDGNode(),'meshattributes');
+    pointDGNode.setDependency(characterMeshNode.getUniformsDGNode(),'meshuniforms');
     
     pointDGNode.bindings.append(scene.constructOperator({
       operatorName: 'initHair',
@@ -153,12 +153,12 @@ FABRIC.SceneGraph.registerNodeType('Hair', {
     hairNode.getUniformsDGNode().setData("indices", 0, indices);
 
     var hairDGNode = hairNode.getAttributesDGNode();
-    hairDGNode.addDependency(pointNode.getAttributesDGNode(),'points');
-    hairDGNode.addDependency(scene.getGlobalsNode(), 'globals');
+    hairDGNode.setDependency(pointNode.getAttributesDGNode(),'points');
+    hairDGNode.setDependency(scene.getGlobalsNode(), 'globals');
     
     var hairUniformsDGNode = hairNode.getUniformsDGNode();
-    hairUniformsDGNode.addDependency(characterRigNode.getDGNode(), 'rig');
-    hairUniformsDGNode.addDependency(characterSkeletonNode.getDGNode(), 'skeleton');
+    hairUniformsDGNode.setDependency(characterRigNode.getDGNode(), 'rig');
+    hairUniformsDGNode.setDependency(characterSkeletonNode.getDGNode(), 'skeleton');
     hairUniformsDGNode.addMember('skinningXfos', 'Xfo[]');
     hairUniformsDGNode.bindings.append(scene.constructOperator({
         operatorName: 'calcSkinningXfos',

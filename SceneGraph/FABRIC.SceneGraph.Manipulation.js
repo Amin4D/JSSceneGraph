@@ -483,8 +483,8 @@ FABRIC.SceneGraph.registerNodeType('Manipulator', {
       transformDGNode.setData('localXfo', 0, val);
     };
 
-    transformDGNode.addDependency(parentNode.getDGNode(), 'parent');
-    transformDGNode.addDependency(targetNode.getDGNode(), 'target');
+    transformDGNode.setDependency(parentNode.getDGNode(), 'parent');
+    transformDGNode.setDependency(targetNode.getDGNode(), 'target');
     transformDGNode.addMember('parentMemberIndex', 'Integer',
       parentMemberIndex == undefined ? -1 : parseInt(parentMemberIndex));
     transformDGNode.addMember('targetMemberIndex', 'Integer',

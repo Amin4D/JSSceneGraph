@@ -99,7 +99,7 @@ FABRIC.SceneGraph.registerNodeType('Light', {
         throw (message);
       }
       transformNode = node;
-      dgnode.addDependency(transformNode.getDGNode(), 'transform');
+      dgnode.setDependency(transformNode.getDGNode(), 'transform');
 
       dgnode.bindings.append(scene.constructOperator({
         operatorName: 'loadLightXfo',

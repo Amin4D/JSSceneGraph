@@ -32,13 +32,13 @@ FABRIC.SceneGraph.registerNodeType('Geometry', {
       redrawEventHandler.addScope('attributes', attributesdgnode);
     }
 
-    attributesdgnode.addDependency(uniformsdgnode, 'uniforms');
+    attributesdgnode.setDependency(uniformsdgnode, 'uniforms');
     
     if (options.createBoundingBoxNode) {
       bboxdgnode = geometryNode.constructDGNode('BoundingBoxDGNode');
       bboxdgnode.addMember('min', 'Vec3');
       bboxdgnode.addMember('max', 'Vec3');
-      bboxdgnode.addDependency(attributesdgnode, 'attributes');
+      bboxdgnode.setDependency(attributesdgnode, 'attributes');
       bboxdgnode.bindings.append(scene.constructOperator({
         operatorName: 'calcBoundingBox',
         srcFile: 'FABRIC_ROOT/SceneGraph/KL/calcBoundingBox.kl',
@@ -230,13 +230,13 @@ FABRIC.SceneGraph.registerNodeType('GeometryDataCopy', {
     options.createDrawOperator = false;
     var geometryDataCopyNode = scene.constructNode('Geometry', options);
     
-    geometryDataCopyNode.getUniformsDGNode().addDependency(baseGeometryNode.getUniformsDGNode(), 'parentuniforms');
-    geometryDataCopyNode.getUniformsDGNode().addDependency(baseGeometryNode.getAttributesDGNode(), 'parentattributes');
-    geometryDataCopyNode.getAttributesDGNode().addDependency(baseGeometryNode.getUniformsDGNode(), 'parentuniforms');
-    geometryDataCopyNode.getAttributesDGNode().addDependency(baseGeometryNode.getAttributesDGNode(), 'parentattributes');
+    geometryDataCopyNode.getUniformsDGNode().setDependency(baseGeometryNode.getUniformsDGNode(), 'parentuniforms');
+    geometryDataCopyNode.getUniformsDGNode().setDependency(baseGeometryNode.getAttributesDGNode(), 'parentattributes');
+    geometryDataCopyNode.getAttributesDGNode().setDependency(baseGeometryNode.getUniformsDGNode(), 'parentuniforms');
+    geometryDataCopyNode.getAttributesDGNode().setDependency(baseGeometryNode.getAttributesDGNode(), 'parentattributes');
     if(baseGeometryNode.getBoundingBoxDGNode){
-      geometryDataCopyNode.getUniformsDGNode().addDependency(baseGeometryNode.getBoundingBoxDGNode(), 'parentboundingbox');
-      geometryDataCopyNode.getAttributesDGNode().addDependency(baseGeometryNode.getBoundingBoxDGNode(), 'parentboundingbox');
+      geometryDataCopyNode.getUniformsDGNode().setDependency(baseGeometryNode.getBoundingBoxDGNode(), 'parentboundingbox');
+      geometryDataCopyNode.getAttributesDGNode().setDependency(baseGeometryNode.getBoundingBoxDGNode(), 'parentboundingbox');
     }
 
     // The data copy must always have the same count on the attributes node,
@@ -744,8 +744,8 @@ FABRIC.SceneGraph.registerNodeType('ObjLoadTriangles', {
       trianglesNode = scene.constructNode('Triangles', options),
       emptyBindingsFunction;
 
-    trianglesNode.getAttributesDGNode().addDependency(resourceloaddgnode, 'resource');
-    trianglesNode.getUniformsDGNode().addDependency(resourceloaddgnode, 'resource');
+    trianglesNode.getAttributesDGNode().setDependency(resourceloaddgnode, 'resource');
+    trianglesNode.getUniformsDGNode().setDependency(resourceloaddgnode, 'resource');
     trianglesNode.pub.addUniformValue('reload', 'Boolean', true);
     trianglesNode.pub.addUniformValue('handle', 'Data');
 

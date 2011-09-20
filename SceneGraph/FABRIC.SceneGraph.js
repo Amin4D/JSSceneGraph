@@ -978,7 +978,7 @@ FABRIC.SceneGraph.registerNodeType('Viewport', {
       viewPortRayCastDgNode.addMember('y', 'Integer');
       viewPortRayCastDgNode.addMember('ray', 'Ray');
       viewPortRayCastDgNode.addMember('threshold', 'Scalar', options.rayIntersectionThreshold);
-      viewPortRayCastDgNode.addDependency(fabricwindow.windowNode, 'window');
+      viewPortRayCastDgNode.setDependency(fabricwindow.windowNode, 'window');
 
       // this operator calculates the rayOri and rayDir from the scopes collected so far.
       // The scopes should be the window, viewport, camera and projection.
@@ -1043,7 +1043,7 @@ FABRIC.SceneGraph.registerNodeType('Viewport', {
       cameraNode = scene.getPrivateInterface(node);
       propagationRedrawEventHandler.appendChildEventHandler(cameraNode.getRedrawEventHandler());
       if (viewPortRayCastDgNode) {
-        viewPortRayCastDgNode.addDependency(cameraNode.getDGNode(), 'camera');
+        viewPortRayCastDgNode.setDependency(cameraNode.getDGNode(), 'camera');
       }
     };
     viewportNode.pub.getCameraNode = function() {
@@ -1500,7 +1500,7 @@ FABRIC.SceneGraph.registerNodeType('Camera', {
         throw (message);
       }
       transformNode = node;
-      dgnode.addDependency(transformNode.getDGNode(), 'transform');
+      dgnode.setDependency(transformNode.getDGNode(), 'transform');
 
       dgnode.bindings.append(scene.constructOperator({
         operatorName: 'loadXfo',

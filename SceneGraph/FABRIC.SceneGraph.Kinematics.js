@@ -70,7 +70,7 @@ FABRIC.SceneGraph.registerNodeType('Transform', {
           throw ('Incorrect type assignment. Must assign a Transform');
         }
         parentTransformNode = scene.getPrivateInterface(node);
-        dgnode.addDependency(parentTransformNode.getDGNode(), 'parent');
+        dgnode.setDependency(parentTransformNode.getDGNode(), 'parent');
         if (reciprocate !== false && node.addChild) {
           node.addChild(this, false);
         }

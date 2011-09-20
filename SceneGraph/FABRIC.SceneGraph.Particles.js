@@ -67,7 +67,7 @@ FABRIC.SceneGraph.registerNodeType('Particles', {
 
     if (options.animated) {
       // This will force a re-evaluation of this node when time changes.
-      particlesNode.getAttributesDGNode().addDependency(scene.getGlobalsNode(), 'globals');
+      particlesNode.getAttributesDGNode().setDependency(scene.getGlobalsNode(), 'globals');
     }
 
     if (options.createSpatialHashTable) {

@@ -69,7 +69,7 @@ factoryFn: function(options, scene) {
     var dgnode = swirleyMovementTransform.getDGNode();
     dgnode.addMember('baseXfo', 'Xfo', options.baseXfo);
     dgnode.addMember('id', 'Integer', options.objId);
-    dgnode.addDependency(scene.getGlobalsNode(), 'globals');
+    dgnode.setDependency(scene.getGlobalsNode(), 'globals');
     
     var op = scene.constructOperator({
       operatorName: 'swirleyMovementOp',

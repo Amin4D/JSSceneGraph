@@ -231,8 +231,8 @@ FABRIC.SceneGraph.registerNodeType('CharacterSkeletonDebug', {
       rigNode = scene.getPrivateInterface(node);
       var skeletonNode = scene.getPrivateInterface(rigNode.pub.getSkeletonNode());
 
-      characterSkeletonDebug.getAttributesDGNode().addDependency(rigNode.getDGNode(), 'rig');
-      characterSkeletonDebug.getAttributesDGNode().addDependency(skeletonNode.getDGNode(), 'skeleton');
+      characterSkeletonDebug.getAttributesDGNode().setDependency(rigNode.getDGNode(), 'rig');
+      characterSkeletonDebug.getAttributesDGNode().setDependency(skeletonNode.getDGNode(), 'skeleton');
       characterSkeletonDebug.pub.addUniformValue('boneradius', 'Scalar', options.boneradius);
       characterSkeletonDebug.pub.addUniformValue('offsetpose', 'Xfo', options.offsetpose);
 
@@ -381,7 +381,7 @@ FABRIC.SceneGraph.registerNodeType('CharacterRig', {
       }
       node = scene.getPrivateInterface(node);
 
-      dgnode.addDependency(node.getDGNode(), 'skeleton');
+      dgnode.setDependency(node.getDGNode(), 'skeleton');
       skeletonNode = node;
 
       // This member will store the computed pose.
@@ -398,7 +398,7 @@ FABRIC.SceneGraph.registerNodeType('CharacterRig', {
         throw ('Incorrect type assignment. Must assign a CharacterVariables');
       }
       node = scene.getPrivateInterface(node);
-      dgnode.addDependency(node.getDGNode(), 'variables');
+      dgnode.setDependency(node.getDGNode(), 'variables');
       variablesNode = node;
     };
     characterRigNode.pub.getVariablesNode = function() {
@@ -409,7 +409,7 @@ FABRIC.SceneGraph.registerNodeType('CharacterRig', {
         throw ('Incorrect type assignment. Must assign a CharacterConstants');
       }
       node = scene.getPrivateInterface(node);
-      dgnode.addDependency(node.getDGNode(), 'constants');
+      dgnode.setDependency(node.getDGNode(), 'constants');
       constantsNode = node;
     };
     characterRigNode.pub.getConstantsNode = function() {
@@ -510,9 +510,9 @@ FABRIC.SceneGraph.registerNodeType('CharacterRigDebug', {
       rigNode = scene.getPrivateInterface(node);
 
       characterRigDebugNode.pub.addVertexAttributeValue('vertexColors', 'Color', { genVBO:true } );
-      characterRigDebugNode.getUniformsDGNode().addDependency(rigNode.getDGNode(), 'rig');
-      characterRigDebugNode.getUniformsDGNode().addDependency(rigNode.getConstantsNode().getDGNode(), 'constants');
-      characterRigDebugNode.getUniformsDGNode().addDependency(rigNode.getVariablesNode().getDGNode(), 'variables');
+      characterRigDebugNode.getUniformsDGNode().setDependency(rigNode.getDGNode(), 'rig');
+      characterRigDebugNode.getUniformsDGNode().setDependency(rigNode.getConstantsNode().getDGNode(), 'constants');
+      characterRigDebugNode.getUniformsDGNode().setDependency(rigNode.getVariablesNode().getDGNode(), 'variables');
       characterRigDebugNode.pub.addUniformValue('debugpose', 'Xfo[]');
       characterRigDebugNode.pub.addUniformValue('singlecolor', 'Color', options.color);
       characterRigDebugNode.pub.addUniformValue('offsetpose', 'Xfo', options.offsetpose);

@@ -36,7 +36,7 @@ FABRIC.SceneGraph.registerNodeType('AlembicLoadNode', {
     if(options.dependentNode != undefined) {
       var priv = scene.getPrivateInterface(options.dependentNode);
       for(var dgnodeName in priv.getDGNodes()) {
-        priv.getDGNodes()[dgnodeName].addDependency(resourceloaddgnode,options.url);
+        priv.getDGNodes()[dgnodeName].setDependency(resourceloaddgnode,options.url);
       }
     }
 
@@ -54,7 +54,7 @@ FABRIC.SceneGraph.registerNodeType('AlembicLoadNode', {
       return animationController.pub;
     };
     var animationControllerDGNode = animationController.getDGNode();
-    resourceloaddgnode.addDependency(animationControllerDGNode,'controller');
+    resourceloaddgnode.setDependency(animationControllerDGNode,'controller');
 
     resourceloaddgnode.bindings.append(scene.constructOperator({
       operatorName: 'alembicSetSample',
@@ -150,9 +150,9 @@ FABRIC.SceneGraph.registerNodeType('AlembicLoadNode', {
           var uniformsdgnode = trianglesNode.getUniformsDGNode();
           uniformsdgnode.addMember('identifier','String',identifier);
           uniformsdgnode.addMember('uvsLoaded','Boolean',false);
-          uniformsdgnode.addDependency(resourceloaddgnode,'alembic');
+          uniformsdgnode.setDependency(resourceloaddgnode,'alembic');
           var attributesdgnode = trianglesNode.getAttributesDGNode();
-          attributesdgnode.addDependency(resourceloaddgnode,'alembic');
+          attributesdgnode.setDependency(resourceloaddgnode,'alembic');
           
           // setup the parse operators
           uniformsdgnode.bindings.append(scene.constructOperator({
@@ -206,7 +206,7 @@ FABRIC.SceneGraph.registerNodeType('AlembicLoadNode', {
           parsedNodes[identifier] = cameraNode.pub;
 
           var dgnode = cameraNode.getDGNode();
-          dgnode.addDependency(resourceloaddgnode,'alembic');
+          dgnode.setDependency(resourceloaddgnode,'alembic');
           dgnode.addMember('identifier','String',identifier);
           
           // setup the parse operators
@@ -232,7 +232,7 @@ FABRIC.SceneGraph.registerNodeType('AlembicLoadNode', {
           // have the transform be driven by the parser
           var dgnode = transformNode.getDGNode();
           dgnode.addMember('identifier','String',identifier);
-          dgnode.addDependency(resourceloaddgnode,'alembic');
+          dgnode.setDependency(resourceloaddgnode,'alembic');
 
           // create the parser operator
           dgnode.bindings.append(scene.constructOperator({

@@ -55,8 +55,8 @@ $(document).ready(function() {
   dgnodeInteract.setCount(1);
   
   // create dependencies between the nodes
-  dgnode2.addDependency(dgnode1, 'otherNode');
-  dgnode2.addDependency(dgnodeInteract, 'interaction');
+  dgnode2.setDependency(dgnode1, 'otherNode');
+  dgnode2.setDependency(dgnodeInteract, 'interaction');
   
   // create three operators, one to initiate the data, one to add, and one to mul
   var operatorInit = context.DependencyGraph.createOperator("initiate");

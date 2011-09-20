@@ -93,11 +93,11 @@ FABRIC.SceneGraph.registerNodeType('ShapeMixer', {
     attributesdgnode.addMember('original_cloned','Boolean',false);
     attributesdgnode.addMember('original_positions','Vec3');
 
-    attributesdgnode.addDependency(dgnode,'shapeMixer');
+    attributesdgnode.setDependency(dgnode,'shapeMixer');
     for(var name in options.shapes) {
       dgnode.addMember(name, 'Scalar', 0.0);
       var shape = scene.getPrivateInterface(options.shapes[name]);
-      attributesdgnode.addDependency(shape.getAttributesDGNode(),name);
+      attributesdgnode.setDependency(shape.getAttributesDGNode(),name);
     }
     
     // now set the operator code!

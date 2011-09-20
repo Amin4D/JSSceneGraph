@@ -66,7 +66,7 @@ FABRIC.SceneGraph.registerNodeType('Image', {
       var resourceLoadNode = scene.constructNode('ResourceLoad', options);
       var resourceloaddgnode = resourceLoadNode.getDGLoadNode();
       if(options.createDgNode){
-        dgnode.addDependency(resourceloaddgnode, 'resource');
+        dgnode.setDependency(resourceloaddgnode, 'resource');
         dgnode.bindings.append(scene.constructOperator({
           operatorName: (options.wantHDR ? 'loadImageHDR' : 'loadImageLDR'),
           parameterLayout: [
@@ -238,7 +238,7 @@ FABRIC.SceneGraph.registerNodeType('Video', {
     videoNode.addMemberInterface(dgnode, 'loop');
 
     // make it dependent on the scene time
-    dgnode.addDependency(scene.getGlobalsNode(), 'globals');
+    dgnode.setDependency(scene.getGlobalsNode(), 'globals');
 
     dgnode.bindings.append(scene.constructOperator({
       operatorName: 'videoLoadInfo',

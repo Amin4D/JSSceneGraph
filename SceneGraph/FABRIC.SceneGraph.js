@@ -889,6 +889,19 @@ FABRIC.SceneGraph.registerNodeType('Viewport', {
                 'which is connected to an embed element inside the DOM. The most important parameter of '+
                 'the ViewPort node\'s options is the windowElement, the ID of the HTML element to append '+
                 'the viewport to.',
+  parentNodeDesc: 'SceneGraphNode',
+  optionsDesc: {
+    windowElement: 'The HTML element to attach the viewport to.',
+    cameraNode: 'The cameraNode to use for this viewport',
+    enableMouseEvents: 'Set to true this ensures to create the mouse down, up and move events.',
+    enableRaycasting: 'Set to true this enables raycasting for selection of 3D objects.',
+    mouseUpEvents: 'Set to true this enables the mouse up event',
+    mouseMoveEvents: 'Set to true this enables the mouse move event',
+    backgroundColor: 'The background color of the viewport used for glClearColor',
+    postProcessEffect: 'An optional PostProcessEffect node to be used after drawing the viewport, undefined if None.',
+    rayIntersectionThreshold: 'The treshold of raycast intersections, typicall below 1.0',
+    polygonMode: 'The mode for polygon drawing. This can be used with GL_LINE for example to draw everything as lines, -1 for default.'
+  },
   factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
         windowElement: undefined,
@@ -1338,6 +1351,13 @@ FABRIC.SceneGraph.registerNodeType('ResourceLoad', {
                 '\'addOnLoadSuccessCallback\' and \'addOnLoadFailureCallback\' member function. Unless ' + 
                 '\'option.redrawOnLoad\' is set to false, the loading will automatically trigger a redraw. ' +
                 'Note that operators can dynamically modify the URL.',
+  parentNodeDesc: 'SceneGraphNode',
+  optionsDesc: {
+    onLoadSuccessCallback: 'A callback that will be fired once the resource has loaded successfully.',
+    onLoadFailureCallback: 'A callback that will be fired if the resource cannot load.',
+    blockRedrawingTillResourceIsLoaded: 'If set to true redrawing will be blocked until the resource is loaded.',
+    redrawOnLoad: 'If set to true, the viewport will fire a redraw once the resource has been loaded.'
+  },
   factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
       onLoadSuccessCallback: undefined,
@@ -1437,6 +1457,15 @@ FABRIC.SceneGraph.registerNodeType('Camera', {
   briefDesc: 'The Camera node implements an OpenGL camera for the ViewPort node.',
   detailedDesc: 'The Camera node uses a redraw event handler to draw the camera projection to '+
                 'the OpenGL canvas.',
+  parentNodeDesc: 'SceneGraphNode',
+  optionsDesc: {
+    nearDistance: 'The near clipping distance for the camera.',
+    farDistance: 'The far clipping distance for the camera.',
+    fovY: 'The vertical (Y) field of view angle for this camera.',
+    focalDistance: 'The focal distance for the camera.',
+    orthographic: 'Set to true the camera is rendered in orthographic more, otherwise perspective mode is used.',
+    transformNode: 'The type of transformNode to use, typically \'Transform\''
+  },
   factoryFn: function(options, scene) {
 
     scene.assignDefaults(options, {
@@ -1533,6 +1562,11 @@ FABRIC.SceneGraph.registerNodeType('Camera', {
 FABRIC.SceneGraph.registerNodeType('FreeCamera', {
   briefDesc: 'The FreeCamera node implements an OpenGL camera in a free roaming mode.',
   detailedDesc: 'The FreeCamera node uses the Camera node to implement a free roaming camera without a target point.',
+  parentNodeDesc: 'Camera',
+  optionsDesc: {
+    position: 'The position of the free camera (Vec3).',
+    orientation: 'The orientation of the free camera (Quaternion).',
+  },
   factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
         position: FABRIC.RT.vec3(1, 0, 0),
@@ -1553,6 +1587,10 @@ FABRIC.SceneGraph.registerNodeType('FreeCamera', {
 FABRIC.SceneGraph.registerNodeType('TargetCamera', {
   briefDesc: 'The TargetCamera node implements an OpenGL camera in using a target point',
   detailedDesc: 'The TargetCamera node uses the Camera node to implement a camera with a target point, similar to the GLUT lookat camera.',
+  parentNodeDesc: 'Camera',
+  optionsDesc: {
+    target: 'The target point of the target camera (Vec3).',
+  },
   factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
         target: FABRIC.RT.vec3(0, 0, 0)

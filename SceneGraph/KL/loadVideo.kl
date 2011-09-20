@@ -3,6 +3,9 @@
 // Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
 //
 
+use FabricOGL;
+use FabricVIDEO;
+
 operator videoLoadInfo(
   io String filename,
   io Size stream,

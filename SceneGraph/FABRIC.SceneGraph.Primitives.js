@@ -42,8 +42,8 @@ FABRIC.SceneGraph.registerNodeType('LineVector', {
 
 
 FABRIC.SceneGraph.registerNodeType('Cross', {
-  briefDesc: 'A Cross drawn using 2 line segments.',
-  detailedDesc: 'A Cross drawn using 2 line segments.',
+  briefDesc: 'A Cross drawn using 3 line segments.',
+  detailedDesc: 'A Cross drawn using 3 line segments, one along the X, Y and Z axis.',
   parentNodeDesc: 'Lines',
   optionsDesc: {
     size: 'The size of the cross.'
@@ -74,11 +74,11 @@ FABRIC.SceneGraph.registerNodeType('Cross', {
 
 FABRIC.SceneGraph.registerNodeType('Rectangle', {
   briefDesc: 'A Rectangle drawn using 4 line segments.',
-  detailedDesc: 'A Rectangle drawn using 4 line segments.',
+  detailedDesc: 'A Rectangle drawn using 4 line segments, which lies on the XZ plane.',
   parentNodeDesc: 'Lines',
   optionsDesc: {
-    length: 'The length of the cross along the X axis.',
-    width: 'The length of the cross along the Z axis.'
+    length: 'The length of the rectangle along the X axis.',
+    width: 'The length of the rectangle along the Z axis.'
   },
   factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
@@ -111,7 +111,7 @@ FABRIC.SceneGraph.registerNodeType('Rectangle', {
 FABRIC.SceneGraph.registerNodeType('BoundingBox', {
   briefDesc: 'The BoundingBox primitive draws a Cuboid according to corner positions.',
   detailedDesc: 'The BoundingBox primitive draws a Cuboid according to corner positions.' +
-                'The corner positions define an axis aligned bounding box in the coordinate space it is specified. ',
+                'The corner positions define an axis aligned bounding box in the coordinate space it is specified in.',
   parentNodeDesc: 'Lines',
   optionsDesc: {
     bboxmin: 'The min values of the Bounding Box. e.g. -X, -Y, -Z',
@@ -147,7 +147,7 @@ FABRIC.SceneGraph.registerNodeType('BoundingBox', {
 
 FABRIC.SceneGraph.registerNodeType('Grid', {
   briefDesc: 'The Grid primitive draws a grid of lines.',
-  detailedDesc: 'The Grid primitive draws a grid of lines.',
+  detailedDesc: 'The Grid primitive draws a grid of lines. The sections per axis as well as the size along each axis can be specified.',
   parentNodeDesc: 'Lines',
   optionsDesc: {
     size_x: 'The size of the grid in the X axis',
@@ -247,7 +247,8 @@ FABRIC.SceneGraph.registerNodeType('Axes', {
 
 FABRIC.SceneGraph.registerNodeType('CameraPrimitive', {
   briefDesc: 'The camera primitive draws a box with a cone up front.',
-  detailedDesc: 'The camera primitive draws a box with a cone up front.',
+  detailedDesc: 'The camera primitive draws a box with a cone up front. This can be used to visualize cameras when working with ' +
+                'multiple cameras.',
   parentNodeDesc: 'Lines',
   optionsDesc: {
     size: 'The size of the camera primitive draw.'
@@ -284,7 +285,7 @@ FABRIC.SceneGraph.registerNodeType('CameraPrimitive', {
 
 FABRIC.SceneGraph.registerNodeType('Circle', {
   briefDesc: 'The Circle primitive draws a circle or arc using line segments.',
-  detailedDesc: 'The Circle primitive draws a circle or arc using line segments.',
+  detailedDesc: 'The Circle primitive draws a circle or arc using line segments. The number of segments can be specified, as well as the radius.',
   parentNodeDesc: 'Lines',
   optionsDesc: {
     radius: 'The radius of the draw circle',

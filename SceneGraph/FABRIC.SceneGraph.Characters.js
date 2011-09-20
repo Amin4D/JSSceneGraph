@@ -4,6 +4,11 @@
 //
 
 FABRIC.SceneGraph.registerNodeType('CharacterMesh', {
+  briefDesc: 'The CharacterMesh node represents a deformable Triangles node.',
+  detailedDesc: 'The CharacterMesh node represents a deformable Triangles node. It is typically deformed through a GLSL skinning operator, driven by a CharacterRig node.',
+  parentNodeDesc: 'Triangles',
+  optionsDesc: {
+  },
   factoryFn: function(options, scene) {
 
     var characterMeshNode = scene.constructNode('Triangles', options);
@@ -40,6 +45,13 @@ FABRIC.SceneGraph.registerNodeType('CharacterMesh', {
   }});
 
 FABRIC.SceneGraph.registerNodeType('CharacterSkeleton', {
+  briefDesc: 'The CharacterSkeleton node represents a collection of bones forming a skeleton.',
+  detailedDesc: 'The CharacterSkeleton node represents a collection of bones forming a skeleton. It defines the rest pose of a character, as well as all related settings.',
+  parentNodeDesc: 'SceneGraphNode',
+  optionsDesc: {
+    calcReferenceLocalPose: 'Set to true, this will enable to computation of the local reference pose based on the global one.',
+    calcReferenceGlobalPose: 'Set to true, this will enable to computation of the global reference pose based on the local one.'
+  },
   factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
       calcReferenceLocalPose: false,
@@ -192,6 +204,14 @@ FABRIC.SceneGraph.registerNodeType('CharacterSkeleton', {
   }});
 
 FABRIC.SceneGraph.registerNodeType('CharacterSkeletonDebug', {
+  briefDesc: 'The CharacterSkeletonDebug node is a debug node used to draw a CharacterSkeletonNode on screen.',
+  detailedDesc: 'The CharacterSkeletonDebug node is a debug node used to draw a CharacterSkeletonNode on screen. It generates a collection of line segments for each bone in the skeleton.',
+  parentNodeDesc: 'Lines',
+  optionsDesc: {
+    boneradius: 'The radius of the bones to use for drawing.',
+    color: 'The color of the lines to use for drawing.',
+    drawOverlayed: 'Set to true, this will enable overlayed drawing for the CharacterSkeletonDebug node.'
+  },
   factoryFn: function(options, scene) {
 
     scene.assignDefaults(options, {
@@ -270,6 +290,11 @@ FABRIC.SceneGraph.registerNodeType('CharacterSkeletonDebug', {
 
 
 FABRIC.SceneGraph.registerNodeType('CharacterVariables', {
+  briefDesc: 'The CharacterVariables node is a collection of all parameters used for a pose computation.',
+  detailedDesc: 'The CharacterVariables node is a collection of all parameters used for a pose computation. The members in this node are typically changing over time, for example they are based on FCurve animation.',
+  parentNodeDesc: 'SceneGraphNode',
+  optionsDesc: {
+  },
   factoryFn: function(options, scene) {
 
     var characterVariablesNode = scene.constructNode('SceneGraphNode', options);
@@ -308,6 +333,11 @@ FABRIC.SceneGraph.registerNodeType('CharacterVariables', {
 // The 'CharacterConstants' adds nothing to the variables. We could generalise them to
 // 'CharacterParameters' and use the same node type for Constants and Variables. 
 FABRIC.SceneGraph.registerNodeType('CharacterConstants', {
+  briefDesc: 'The CharacterConstants node is similar to a CharacterVariables node, but values don\'t change over time.',
+  detailedDesc: 'The CharacterConstants node is similar to a CharacterVariables node, but values don\'t change over time.',
+  parentNodeDesc: 'CharacterVariables',
+  optionsDesc: {
+  },
   factoryFn: function(options, scene) {
 
     var characterConstantsNode = scene.constructNode('CharacterVariables', options);
@@ -317,6 +347,14 @@ FABRIC.SceneGraph.registerNodeType('CharacterConstants', {
 
 // The character rig computes the pose of a character
 FABRIC.SceneGraph.registerNodeType('CharacterRig', {
+  briefDesc: 'The CharacterRig node is used to compute the pose of a character.',
+  detailedDesc: 'The CharacterRig node is used to compute the pose of a character. It utilizes the CharacterSkeleton as well as the CharacterVariables node, ' +
+                'together with a series of operators, called CharacterSolvers, to compute the global pose of the character.',
+  parentNodeDesc: 'SceneGraphNode',
+  optionsDesc: {
+    skeletonNode: 'The skeletonNode to use for this CharacterRig',
+    computeInverseXfos: 'Determines if the inverse transforms should be computes based on the CharacterSkeleton\'s reference pose.'
+  },
   factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
         skeletonNode: undefined,
@@ -447,6 +485,11 @@ FABRIC.SceneGraph.registerNodeType('CharacterRig', {
 
 
 FABRIC.SceneGraph.registerNodeType('CharacterRigDebug', {
+  briefDesc: 'The CharacterRigDebug node is used to draw debug information of a CharacterRig on screen.',
+  detailedDesc: 'The CharacterRigDebug node is used to draw debug information of a CharacterRig on screen.',
+  parentNodeDesc: 'Points',
+  optionsDesc: {
+  },
   factoryFn: function(options, scene) {
 
     scene.assignDefaults(options, {
@@ -542,6 +585,11 @@ FABRIC.SceneGraph.registerNodeType('CharacterRigDebug', {
 
 // The character instance draws a deformed mesh on screen.
 FABRIC.SceneGraph.registerNodeType('CharacterInstance', {
+  briefDesc: 'The CharacterInstance node is used to draw a deformed CharacterMesh on screen.',
+  detailedDesc: 'The CharacterInstance node is used to draw a deformed CharacterMesh on screen. It utilizes the CharacterRig as well as the CharacterMesh, and applies skinning / deformation through the use of GLSL.',
+  parentNodeDesc: 'Instance',
+  optionsDesc: {
+  },
   factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
       });

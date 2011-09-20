@@ -732,6 +732,12 @@ FABRIC.SceneGraph.registerNodeType('Instance', {
 });
 
 FABRIC.SceneGraph.registerNodeType('ObjLoadTriangles', {
+  briefDesc: 'The ObjLoadTriangles node is a resource load node able to load OBJ files.',
+  detailedDesc: 'The ObjLoadTriangles node is a resource load node able to load OBJ files. It utilizes a C++ based extension to load OBJ files in a very fast fashion.',
+  parentNodeDesc: 'ResourceLoad',
+  optionsDesc: {
+    removeParsersOnLoad: 'If set to true, the parser operator will be removed after parsing.'
+  },
   factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
       removeParsersOnLoad: false

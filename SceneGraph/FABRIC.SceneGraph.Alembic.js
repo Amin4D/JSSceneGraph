@@ -13,6 +13,11 @@ FABRIC.SceneGraph.registerParser('abc', function(scene, assetUrl, options) {
 });
 
 FABRIC.SceneGraph.registerNodeType('AlembicLoadNode', {
+  briefDesc: 'The AlembicLoadNode node is a ResourceLoad node able to parse Alembic.IO files.',
+  detailedDesc: 'The AlembicLoadNode node is a ResourceLoad node able to parse Alembic.IO files. It utilizes a C++ based extension and generated parsed nodes such as Triangles or Camera nodes.',
+  parentNodeDesc: 'ResourceLoad',
+  optionsDesc: {
+  },
   factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
       removeParsersOnLoad: false,

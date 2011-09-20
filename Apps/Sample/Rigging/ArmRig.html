@@ -87,28 +87,28 @@ $(document).ready(function() {
   skeletonNode.addBone({name: 'root'});
 
   var xfo = FABRIC.RT.xfo({
-      ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(0, 1, 0), -105),
+      ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(0, 1, 0), Math.degToRad(-105)),
       tr: FABRIC.RT.vec3(0, 11, 0)
     });
   skeletonNode.addBone({name: 'clavicleBone', referencePose: xfo, length: 2, parent: 'root'});
 
   var xfo = FABRIC.RT.xfo({
-      ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(0, 1, 0), -105)
-        .multiply(FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(1, 0, 0), 70)),
+      ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(0, 1, 0), Math.degToRad(-105))
+        .multiply(FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(1, 0, 0), Math.degToRad(70))),
       tr: xfo.tr.add(xfo.ori.rotateVector(FABRIC.RT.vec3(2, 0, 0)))
     });
   skeletonNode.addBone({name: 'upperarmBone', referencePose: xfo, length: 5, parent: 'clavicleBone'});
 
   xfo = FABRIC.RT.xfo({
-      ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(0, 1, 0), -40)
-        .multiply(FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(1, 0, 0), 70)),
+      ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(0, 1, 0), Math.degToRad(-40))
+        .multiply(FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(1, 0, 0), Math.degToRad(70))),
       tr: xfo.tr.add(xfo.ori.rotateVector(FABRIC.RT.vec3(5, 0, 0)))
     });
   skeletonNode.addBone({name: 'forearmBone', referencePose: xfo, length: 4, parent: 'upperarmBone' });
 
   xfo = FABRIC.RT.xfo({
-      ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(0, 1, 0), -50)
-        .multiply(FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(1, 0, 0), 80)),
+      ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(0, 1, 0), Math.degToRad(-50))
+        .multiply(FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(1, 0, 0), Math.degToRad(80))),
       tr: xfo.tr.add(xfo.ori.rotateVector(FABRIC.RT.vec3(4, 0, 0)))
     });
   skeletonNode.addBone({name: 'wristBone', referencePose: xfo, length: 1.5, parent: 'forearmBone' });

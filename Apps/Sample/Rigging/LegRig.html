@@ -88,19 +88,19 @@ $(document).ready(function() {
   skeletonNode.addBone({name: 'root'});
 
   var xfo = FABRIC.RT.xfo({
-      ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(0, 0, 1), -75),
+      ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(0, 0, 1), Math.degToRad(-75)),
         tr: FABRIC.RT.vec3(0, 11, 0)
     });
   skeletonNode.addBone({name: 'thighBone', referencePose: xfo, length: 6, parent: 'root'});
 
   xfo = FABRIC.RT.xfo({
-      ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(0, 0, 1), -115),
+      ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(0, 0, 1), Math.degToRad(-115)),
       tr: xfo.tr.add(xfo.ori.rotateVector(FABRIC.RT.vec3(6, 0, 0)))
     });
   skeletonNode.addBone({name: 'calfBone', referencePose: xfo, length: 5, parent: 'thighBone' });
 
   xfo = FABRIC.RT.xfo({
-      ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(0, 0, 1), -20),
+      ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(0, 0, 1), Math.degToRad(-20)),
       tr: xfo.tr.add(xfo.ori.rotateVector(FABRIC.RT.vec3(5, 0, 0)))
     });
   skeletonNode.addBone({name: 'ankleBone', referencePose: xfo, length: 1.5, parent: 'calfBone' });

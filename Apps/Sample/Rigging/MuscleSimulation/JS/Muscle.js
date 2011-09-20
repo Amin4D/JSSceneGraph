@@ -18,8 +18,10 @@ FABRIC.SceneGraph.registerNodeType('MuscleSystem', {
     var muscleSystem = scene.constructNode('SceneGraphNode', options ),
       paramsdgnode = muscleSystem.constructDGNode('SystemParamsDGNode')
       initializationdgnode = muscleSystem.constructDGNode('InitializationDGNode'),
+      simulationuniformsdgnode = muscleSystem.constructDGNode('SimulationUniformsDGNode'),
       simulationdgnode = muscleSystem.constructDGNode('SimulationDGNode'),
-      characterRig = scene.getPrivateInterface(options.characterRig),
+      characterRigNode = scene.getPrivateInterface(options.characterRig),
+      characterSkeletonNode = scene.getPrivateInterface(characterRigNode.pub.getSkeletonNode());
       i;
       
     paramsdgnode.addMember('gravity', 'Vec3', options.gravity);
@@ -36,25 +38,7 @@ FABRIC.SceneGraph.registerNodeType('MuscleSystem', {
     
     initializationdgnode.setCount(0);
     initializationdgnode.addDependency( paramsdgnode, 'musclesystem');
-    simulationdgnode.addDependency( paramsdgnode, 'musclesystem');
-    simulationdgnode.addDependency( initializationdgnode, 'initializationdgnode');
     
-    simulationdgnode.addDependency( characterRig.getDGNode(), 'characterRig');
-    simulationdgnode.addDependency( scene.getGlobalsNode(), 'globals');
-    
-    simulationdgnode.bindings.append(
-      scene.constructOperator({
-        operatorName: 'matchCount',
-        srcCode: '\n'+
-        'operator matchCount(Size parentCount, io Size selfCount) {\n' +
-        '  selfCount = parentCount;\n' +
-        '}',
-        entryFunctionName: 'matchCount',
-        parameterLayout: [
-          'initializationdgnode.count',
-          'self.newCount'
-        ]
-      }));
     
     /////////////////////////////////////////////////////////
     // Configure the muscle default values. 
@@ -147,6 +131,39 @@ FABRIC.SceneGraph.registerNodeType('MuscleSystem', {
     
     ////////////////////////////////////////////////////////////////////////////
     // Configure the node that will be used to calculate the simulation.
+    simulationuniformsdgnode.addDependency(characterRigNode.getDGNode(), 'rig');
+    simulationuniformsdgnode.addDependency(characterSkeletonNode.getDGNode(), 'skeleton');
+    
+    simulationuniformsdgnode.addMember('skinningXfos', 'Xfo[]');
+    simulationuniformsdgnode.bindings.append(scene.constructOperator({
+        operatorName: 'calcSkinningXfos',
+        srcFile: 'FABRIC_ROOT/SceneGraph/KL/calcSkinningXfos.kl',
+        entryFunctionName: 'calcSkinningXfos',
+        parameterLayout: ['rig.pose', 'skeleton.bones', 'self.skinningXfos']
+      }));
+    
+    ////////////////////////////////////////////////////////////////////////////
+    // Configure the node that will be used to calculate the simulation
+    simulationdgnode.addDependency( paramsdgnode, 'musclesystem');
+    simulationdgnode.addDependency( simulationuniformsdgnode, 'uniforms');
+    simulationdgnode.addDependency( initializationdgnode, 'initializationdgnode');
+    
+    simulationdgnode.addDependency( scene.getGlobalsNode(), 'globals');
+    
+    simulationdgnode.bindings.append(
+      scene.constructOperator({
+        operatorName: 'matchCount',
+        srcCode: '\n'+
+        'operator matchCount(Size parentCount, io Size selfCount) {\n' +
+        '  selfCount = parentCount;\n' +
+        '}',
+        entryFunctionName: 'matchCount',
+        parameterLayout: [
+          'initializationdgnode.count',
+          'self.newCount'
+        ]
+      }));
+    
     simulationdgnode.addMember('initialized', 'Boolean', false);
     simulationdgnode.addMember('envelopedXfos', 'Xfo[]', pointXfos); /* Xfos deformed by the skeleton */
     simulationdgnode.addMember('simulatedXfos', 'Xfo[]', pointXfos); /* Xfos simulated and used to drive the skin deformation */
@@ -198,7 +215,7 @@ FABRIC.SceneGraph.registerNodeType('MuscleSystem', {
           'musclesystem.gravity',
           
           'globals.timestep',
-          'characterRig.skinningXfos',
+          'uniforms.skinningXfos',
           'self.debugDraw'
         ]
       }));

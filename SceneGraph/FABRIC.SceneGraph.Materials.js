@@ -26,15 +26,20 @@ FABRIC.SceneGraph.registerNodeType('Image', {
       createDgNode: false,
       createResourceLoadNode: true,
       createLoadTextureEventHandler: true,
-      url: undefined
+      initImage: true,
+      width: 128,
+      height: 128,
+      color: FABRIC.RT.rgba(0.0,0.0,0.0,0.0),
+      url: undefined,
+      forceRefresh: false
     });
     
     var imageNode = scene.constructNode('Texture', options);
     if(options.createDgNode){
       var dgnode = imageNode.constructDGNode('DGNode')
       dgnode.addMember('hdr', 'Boolean', options.wantHDR);
-      dgnode.addMember('width', 'Size');
-      dgnode.addMember('height', 'Size');
+      dgnode.addMember('width', 'Size', options.createResourceLoadNode ? undefined : options.width);
+      dgnode.addMember('height', 'Size', options.createResourceLoadNode ? undefined : options.height);
       dgnode.addMember('pixels', (options.wantHDR ? 'Color' : (options.wantRGBA ? 'RGBA' : 'RGB')) + '[]');
   
       imageNode.addMemberInterface(dgnode, 'width');
@@ -66,12 +71,31 @@ FABRIC.SceneGraph.registerNodeType('Image', {
       imageNode.pub.isImageLoaded = function() {
         return resourceLoadNode ? resourceLoadNode.pub.isLoaded() : false;
       };
+    } else {
+      if(options.createDgNode && options.initImage){
+        dgnode.addMember('color', 'RGBA', options.color);
+        dgnode.addMember('initiated', 'Boolean', false);
+        dgnode.bindings.append(scene.constructOperator({
+          operatorName: 'initImageFromColor',
+          parameterLayout: [
+            'self.width',
+            'self.height',
+            'self.color',
+            'self.pixels',
+            'self.initiated'
+          ],
+          entryFunctionName: 'initImageFromColor',
+          srcFile: 'FABRIC_ROOT/SceneGraph/KL/loadTexture.kl'
+        }));
+      };
     }
 
     if (options.createLoadTextureEventHandler) {
       // Construct the handler for loading the image into texture memory.
       var redrawEventHandler = imageNode.constructEventHandlerNode('Redraw');
-      redrawEventHandler.addMember('oglTexture2D', 'OGLTexture2D', FABRIC.RT.oglTexture2D());
+      var oglTexture = FABRIC.RT.oglTexture2D();
+      oglTexture.forceRefresh = options.forceRefresh;
+      redrawEventHandler.addMember('oglTexture2D', 'OGLTexture2D', oglTexture);
       if(options.createDgNode){
         redrawEventHandler.addScope('image', dgnode);
         redrawEventHandler.preDescendBindings.append(scene.constructOperator({
@@ -160,6 +184,8 @@ FABRIC.SceneGraph.registerNodeType('Video', {
     // ensure to use the right settings for video
     options.createResourceLoadNode = false;
     options.createLoadTextureEventHandler = false;
+    options.createDgNode = true;
+    options.initImage = false;
     options.wantHDR = false;
     options.wantRGBA = false;
 
@@ -206,7 +232,7 @@ FABRIC.SceneGraph.registerNodeType('Video', {
       entryFunctionName: 'videoSeekTime',
       parameterLayout: [
         'self.stream',
-        'globals.ms'
+        'globals.time'
       ]
     }));
 
@@ -460,7 +486,7 @@ FABRIC.SceneGraph.registerNodeType('Material', {
         options.disableOptions.push(FABRIC.SceneGraph.OpenGLConstants.GL_DEPTH_TEST);
       }
       // TODO: add an 'overlay' subtree to the render graph. This tree should render after transparency
-      options.parentEventHandler = scene.getSceneRedrawTransparentObjectsEventHandler();
+      options.parentEventHandler = scene.getSceneRedrawOverlayObjectsEventHandler();
       options.shaderNameDecoration = (options.shaderNameDecoration ? options.shaderNameDecoration : "") + "Overlay";
     }
         
@@ -730,6 +756,13 @@ FABRIC.SceneGraph.registerNodeType('PointSpriteMaterial', {
     return pointSpriteMaterialNode;
   }});
 
+
+FABRIC.SceneGraph.registerNodeType('ShadowMapMaterial', {
+  factoryFn: function(options, scene) {
+    options.parentEventHandler = scene.getBeginRenderShadowMapEventHandler();
+    var shadowMapMaterial = scene.constructNode('Material', options);
+    return shadowMapMaterial;
+  }});
 
 FABRIC.SceneGraph.registerNodeType('TransparentMaterial', {
   factoryFn: function(options, scene) {
@@ -1193,7 +1226,10 @@ FABRIC.SceneGraph.defineEffectFromFile('PhongMaterial', 'FABRIC_ROOT/SceneGraph/
 FABRIC.SceneGraph.defineEffectFromFile('ShadowMaterial', 'FABRIC_ROOT/SceneGraph/Shaders/ShadowMapShader.xml');
 
 FABRIC.SceneGraph.defineEffectFromFile('FlatTextureMaterial', 'FABRIC_ROOT/SceneGraph/Shaders/FlatTextureShader.xml');
+FABRIC.SceneGraph.defineEffectFromFile('FlatUVMaterial', 'FABRIC_ROOT/SceneGraph/Shaders/FlatUVShader.xml');
+FABRIC.SceneGraph.defineEffectFromFile('FlatBlendTextureMaterial', 'FABRIC_ROOT/SceneGraph/Shaders/FlatBlendTextureShader.xml');
 FABRIC.SceneGraph.defineEffectFromFile('PhongTextureMaterial', 'FABRIC_ROOT/SceneGraph/Shaders/PhongTextureShader.xml');
+FABRIC.SceneGraph.defineEffectFromFile('PhongTextureSimpleMaterial', 'FABRIC_ROOT/SceneGraph/Shaders/PhongTextureShaderSimple.xml');
 FABRIC.SceneGraph.defineEffectFromFile('PhongBumpReflectMaterial', 'FABRIC_ROOT/SceneGraph/Shaders/PhongBumpReflectShader.xml');
 FABRIC.SceneGraph.defineEffectFromFile('PhongSkinningMaterial', 'FABRIC_ROOT/SceneGraph/Shaders/PhongSkinningShader.xml');
 
@@ -1210,6 +1246,8 @@ FABRIC.SceneGraph.defineEffectFromFile('HairMaterial', 'FABRIC_ROOT/SceneGraph/S
 FABRIC.SceneGraph.defineEffectFromFile('PhongReflectMaterial', 'FABRIC_ROOT/SceneGraph/Shaders/PhongReflectShader.xml');
 FABRIC.SceneGraph.defineEffectFromFile('GlassMaterial', 'FABRIC_ROOT/SceneGraph/Shaders/GlassShader.xml');
 FABRIC.SceneGraph.defineEffectFromFile('WireframeMaterial', 'FABRIC_ROOT/SceneGraph/Shaders/WireframeShader.xml');
+
+FABRIC.SceneGraph.defineEffectFromFile('OutlineShader', 'FABRIC_ROOT/SceneGraph/Shaders/OutlineShader.xml');
 
 
 FABRIC.SceneGraph.registerNodeType('BloomPostProcessEffect', {

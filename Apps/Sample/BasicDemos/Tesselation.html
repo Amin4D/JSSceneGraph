@@ -14,7 +14,6 @@
 
     <link type="text/css" href="../../../ThirdParty/jQuery/css/vader/jquery-ui-1.8.5.custom.css" rel="stylesheet" />
 
-    <script type="text/javascript" src="../../../Core/FABRIC.Wrappers.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../Core/FABRIC.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/RT/Math.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/RT/Vec2.js" charset="utf-8"></script>
@@ -47,16 +46,12 @@ $(document).ready(function() {
   var scene = FABRIC.SceneGraph.createScene();
   var viewport = scene.constructNode('Viewport', {
     windowElement: document.getElementById('FabricContainer'),
-    backgroundColor: FABRIC.RT.rgb(0.0, 0.05, 0.15)
   });
   
+  viewport.setBackgroundTextureImage(scene.constructNode('Image', {
+    url: 'Resources/fabric-demo-gradient.png'
+  }));
   
-  if(!viewport.getGlewSupported('GL_ARB_tessellation_shader')){
-    alert("This demo requires OpenGL 4.0 features such as 'GL_ARB_tessellation_shader' to run.");
-    throw("This demo requires OpenGL 4.0 features such as 'GL_ARB_tessellation_shader' to run.");
-  }
-  
-
   // Create a camera to draw the scene from
   var camera = scene.constructNode('TargetCamera', {
       nearDistance: 0.1,
@@ -69,7 +64,7 @@ $(document).ready(function() {
   viewport.setCameraNode(camera);
 
   var light = scene.constructNode('PointLight', { position: FABRIC.RT.vec3(420.0, 1000.0, 600.0) });
-  var triangles = scene.importAssetFile('Models/bricks.dae')['sphere'];
+  var assetNodes = scene.importAssetFile('Models/bricks.dae');
   
   var depthTexture = scene.constructNode('Image', { url: 'Resources/bricks_depth.png' });
   
@@ -81,14 +76,8 @@ $(document).ready(function() {
       depthTextureNode: depthTexture
     });
 
-  scene.constructNode('Instance', {
-      transformNode: scene.constructNode('Transform', {
-          hierarchical: false
-        }),
-      geometryNode: triangles,
-      materialNode: tesselationMaterial
-    });
-
+  assetNodes.sphere.setMaterialNode(tesselationMaterial);
+  
   $('#tesselationlevel')
   .slider({
       min: 1.0,
@@ -132,6 +121,10 @@ $(document).ready(function() {
         throw (errors.toString());
       }
       viewport.redraw();
+      if(!viewport.getGlewSupported('GL_ARB_tessellation_shader')){
+        alert("This demo requires OpenGL 4.0 features such as 'GL_ARB_tessellation_shader' to run.\n\nIt appears that your graphics card does not support tesselation shaders.");
+        throw("This demo requires OpenGL 4.0 features such as 'GL_ARB_tessellation_shader' to run.\n\nIt appears that your graphics card does not support tesselation shaders.");
+      }
       return true;
     }
   });

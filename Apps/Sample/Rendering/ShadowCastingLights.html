@@ -47,15 +47,17 @@ $(document).ready(function() {
 
   // Create the scene.
   var scene = FABRIC.SceneGraph.createScene();
-//  var postProcessEffect = scene.constructNode( "BloomPostProcessEffect" );
 
   var viewport = scene.constructNode('Viewport', {
-    /*postProcessEffect:postProcessEffect,*/
     windowElement: document.getElementById('FabricContainer'),
     enableRaycasting: true,
     backgroundColor: FABRIC.RT.rgb(0.1, 0.1, 0.1)
   });
 
+  viewport.setBackgroundTextureImage(scene.constructNode('Image', {
+    url: '../BasicDemos/Resources/fabric-demo-gradient.png'
+  }));
+  
   // Create a camera to draw the scene from
   var camera = scene.constructNode('TargetCamera', {
     position: FABRIC.RT.vec3(30, 30, 0),
@@ -78,6 +80,7 @@ $(document).ready(function() {
   var lightTrManip = scene.constructNode('3AxisTranslationManipulator', { parentNode: spotLightNode.getTransformNode(), size: 4 });
   var lightOriManip = scene.constructNode('3AxisRotationManipulator', { parentNode: spotLightNode.getTransformNode(), radius: 3 });
 
+  var shadowMapMaterial = scene.constructNode('ShadowMaterial');
   var bluePhongMaterial = scene.constructNode('PhongMaterial', {
     diffuseColor: FABRIC.RT.rgb(0, 0, 0.8),
     lightNode: spotLightNode
@@ -93,9 +96,9 @@ $(document).ready(function() {
         globalXfo: FABRIC.RT.xfo({ tr: FABRIC.RT.vec3(0, 3.8, -16) })
       }),
       geometryNode: scene.constructNode('Teapot', { size: 4 }),
-      materialNode: bluePhongMaterial,
-      enableShadowCasting: true
-    });
+    })
+  .setMaterialNode(shadowMapMaterial)
+  .setMaterialNode(bluePhongMaterial);
 
   scene.constructNode('Instance', {
       transformNode: scene.constructNode('Transform', {
@@ -106,19 +109,19 @@ $(document).ready(function() {
         length: 4,
         width: 4,
         height: 16
-      }),
-      materialNode: bluePhongMaterial,
-      enableShadowCasting: true
-    });
+      })
+    })
+  .setMaterialNode(shadowMapMaterial)
+  .setMaterialNode(bluePhongMaterial);
 
   scene.constructNode('Instance', {
       transformNode: scene.constructNode('Transform', {
         hierarchical: false,
         globalXfo: FABRIC.RT.xfo({ tr: FABRIC.RT.vec3(-10, 0, -10) })
       }),
-      geometryNode: scene.constructNode('Plane', { length: 50, width: 50, doubleSided: false }),
-      materialNode: greenPhongMaterial
-    });
+      geometryNode: scene.constructNode('Plane', { length: 50, width: 50, doubleSided: false })
+    })
+  .setMaterialNode(greenPhongMaterial);
 
   $('#loadingDialog').dialog({
     modal: true

@@ -48,13 +48,13 @@ FABRIC = (function() {
     //embedTag.style.display = 'none';
     document.body.appendChild(embedTag);
     
-    var context = wrapFabricClient(embedTag, function(s) { console.log(s); } );
+    var context = embedTag.wrapFabricClient(embedTag, function(s) { console.log(s); } );
     
     ///////////////////////////////////////////////////////////
     // Check the currently installed version.
     // TODO: This code will be removed once we get to the end of beta.
     var version = context.build.getPureVersion().split('.');
-    var requiredVersion = [1,0,10];
+    var requiredVersion = [1,0,12];
     var cmpVersions = function (lhs, rhs) {
       if (lhs[0] < rhs[0])
         return -1;
@@ -117,8 +117,8 @@ FABRIC = (function() {
 
       var embedTag = document.createElement('embed');
       embedTag.setAttributeNS(null, 'type', 'application/fabric');
-      embedTag.setAttributeNS(null, 'width', element.offsetWidth);
-      embedTag.setAttributeNS(null, 'height', element.offsetHeight);
+      embedTag.setAttributeNS(null, 'width', 1);
+      embedTag.setAttributeNS(null, 'height', 1);
       embedTag.setAttributeNS(null, 'windowType', '3d');
       embedTag.setAttributeNS(null, 'contextID', this.getContextID());
 
@@ -140,9 +140,9 @@ FABRIC = (function() {
           embedTag.height = element.offsetHeight;
         }
       };
-      onDOMWindowResize();
-      window.addEventListener('resize', onDOMWindowResize, false);
-
+      embedTag.width = 1;
+      embedTag.height = 1;
+      
       var result = {
         RT: context.RT,
         RegisteredTypesManager: context.RT,
@@ -157,6 +157,19 @@ FABRIC = (function() {
         domElement: embedTag,
         windowNode: context.VP.viewPort.getWindowNode(),
         redrawEvent: context.VP.viewPort.getRedrawEvent(),
+        hide: function(){
+          embedTag.width = 1;
+          embedTag.height = 1;
+          // the element will get resized to the correct size
+          // by the client (Viewport) when it is ready
+          window.removeEventListener('resize', onDOMWindowResize, false);
+        },
+        show: function(){
+          onDOMWindowResize();
+          // the element will get resized to the correct size
+          // by the client (Viewport) when it is ready
+          window.addEventListener('resize', onDOMWindowResize, false);
+        },
         needsRedraw: function() {
           context.VP.viewPort.needsRedraw();
         },
@@ -198,7 +211,6 @@ FABRIC = (function() {
         var queryOpGlew = context.DG.createOperator('getGlewSupported');
         queryOpGlew.setEntryFunctionName('getGlewSupported');
         queryOpGlew.setSourceCode('use FabricOGL; operator getGlewSupported(io String token, io Boolean supported){\n' +
-          '  report("query: "+token);\n' +
           '  if(token.length() > 0) glewIsSupported(token,supported);\n' +
           '}');
         var queryOpGlewBinding = context.DG.createBinding();
@@ -275,15 +287,6 @@ FABRIC = (function() {
   
   var asyncTaskCount = 0;
   
-  var addAsyncTask = function(callback){
-    asyncTaskCount++;
-    setTimeout(function(){
-      callback();
-      asyncTaskCount--;
-      fireOnResolveAsyncTaskCallbacks('...');
-    }, 1);
-  }
-  
   var onResolveAsyncTaskCallbacks = [];
   var appendOnResolveAsyncTaskCallback = function(fn) {
     onResolveAsyncTaskCallbacks.push(fn);
@@ -294,6 +297,27 @@ FABRIC = (function() {
         onResolveAsyncTaskCallbacks.splice(i, 1);
         i--;
       }
+    }
+  }
+  
+  // Some tasks can be defined to run asynchronously as part of the load
+  // stage where operators are compiled. This enables delaying of complex tasks,
+  // that would block the drawing to the page till after the first redraw.
+  var createAsyncTask = function(callback){
+    asyncTaskCount++;
+    setTimeout(function(){
+      callback();
+      asyncTaskCount--;
+      fireOnResolveAsyncTaskCallbacks('...');
+    }, 1);
+  }
+  // Tasks can be registered that contribute to the async workload. E.g. resource
+  // loading can be defined to contribute to the intitial loading of the graph. 
+  var addAsyncTask = function(label){
+    asyncTaskCount++;
+    return function(){
+      asyncTaskCount--;
+      fireOnResolveAsyncTaskCallbacks(label);
     }
   }
   var loadResourceURL = function(url, mimeType, callback) {
@@ -307,10 +331,11 @@ FABRIC = (function() {
     }
     url = processURL(url);
     
-    var label = url.split('/').pop().split('.')[0];
     var async = (FABRIC.asyncResourceLoading && callback!==undefined) ? true : false;
+    var onAsyncFinishedCallback;
     if(async){
-      asyncTaskCount++;
+      var label = url.split('/').pop().split('.')[0];
+      onAsyncFinishedCallback = addAsyncTask(label);
     }
     var result = null;
     var xhreq = new XMLHttpRequest();
@@ -319,8 +344,7 @@ FABRIC = (function() {
         if (xhreq.status == 200) {
           if(callback){
             callback(xhreq.responseText);
-            asyncTaskCount--;
-            fireOnResolveAsyncTaskCallbacks(label);
+            onAsyncFinishedCallback();
           }
           else{
             result = xhreq.responseText;
@@ -365,6 +389,7 @@ FABRIC = (function() {
     processURL: processURL,
     loadResourceURL: loadResourceURL,
     asyncResourceLoading: true,
+    createAsyncTask: createAsyncTask,
     addAsyncTask: addAsyncTask,
     getAsyncTaskCount: function(){ return asyncTaskCount; },
     appendOnResolveAsyncTaskCallback: appendOnResolveAsyncTaskCallback,

@@ -53,11 +53,11 @@ function Integer OGLShaderProgram.createAndCompileShader(OGLShaderSource shaders
     glGetShaderInfoLog(shaderID, bufferTotalSize, bufferSize, infoLog);
     report(infoLog);
   }
-  else if (!compiled) {
+  else if (compiled[0] == 0) {
     report('<Unknown reason>');
   }
-
-  if (!compiled) {
+  
+  if (compiled[0] == 0) {
     glDeleteShader(shaderID);
     return 0;
   }
@@ -73,14 +73,14 @@ function OGLShaderProgram.logShaderParameters() {
   for (i = 0; i < this.uniformValues.size(); i++) {
     this.uniformValues[i].location = glGetUniformLocation(this.programId, this.uniformValues[i].name);
     if (this.uniformValues[i].location == - 1) {
-      report('ERROR: ' + this.name + ': Attribute does not exist in the shader code: ' + this.uniformValues[i].name);
+      report('WARNING: ' + this.name + ': Attribute does not exist in the shader code: ' + this.uniformValues[i].name);
     }
   }
 
   for (i = 0; i < this.attributeValues.size(); i++) {
     this.attributeValues[i].location = glGetAttribLocation(this.programId, this.attributeValues[i].name);
     if (this.attributeValues[i].location == - 1) {
-      report('ERROR: ' + this.name + ': Attribute does not exist in the shader code: ' + this.attributeValues[i].name);
+      report('WARNING: ' + this.name + ': Attribute does not exist in the shader code: ' + this.attributeValues[i].name);
     }
   }
   if(!this.debug){
@@ -159,8 +159,9 @@ function OGLShaderProgram.createProgramFromShaders() {
   var Integer shaderIDs[];
   for (var Size i = 0; i < this.shaderSources.size(); i++) {
     var Integer shaderID = this.createAndCompileShader(this.shaderSources[i]);
-    if (shaderID == 0)
+    if (shaderID == 0){
       break;
+    }
     shaderIDs.push(shaderID);
   }
 
@@ -234,27 +235,29 @@ function OGLShaderProgram.loadShader() {
     report("loadShader " + this.name );
     fglSetDebuggingEnabled( true );
   }
-  if (!this.programId) {
+  if(this.programId == 0) {
     this.createProgramFromShaders();
   }
-  glUseProgram(this.programId);
-  if(this.disableOptions.size() > 0 || this.enableOptions.size() > 0){
-    glPushAttrib(GL_ENABLE_BIT);
-    for(Integer i=0; i<this.enableOptions.size(); i++){
-      glEnable(this.enableOptions[i]);
-      if(this.enableOptions[i]==GL_BLEND && this.blendModeSfactor!=0 && this.blendModeDfactor!=0){
-        glBlendFunc(this.blendModeSfactor, this.blendModeDfactor);
+  if(this.programId != 0){
+    glUseProgram(this.programId);
+    if(this.disableOptions.size() > 0 || this.enableOptions.size() > 0){
+      glPushAttrib(GL_ENABLE_BIT);
+      for(Integer i=0; i<this.enableOptions.size(); i++){
+        glEnable(this.enableOptions[i]);
+        if(this.enableOptions[i]==GL_BLEND && this.blendModeSfactor!=0 && this.blendModeDfactor!=0){
+          glBlendFunc(this.blendModeSfactor, this.blendModeDfactor);
+        }
+      }
+      for(Integer i=0; i<this.disableOptions.size(); i++){
+        glDisable(this.disableOptions[i]);
+      }
+      // The culling value can only be modified if the draw options are also modified.
+      if(this.cullFace!=0){
+        glCullFace(this.cullFace);
       }
     }
-    for(Integer i=0; i<this.disableOptions.size(); i++){
-      glDisable(this.disableOptions[i]);
-    }
-    // The culling value can only be modified if the draw options are also modified.
-    if(this.cullFace!=0){
-      glCullFace(this.cullFace);
-    }
+    this.loadedAttributes.resize(0);
   }
-  this.loadedAttributes.resize(0);
 }
 
 function OGLShaderProgram.unloadShader() {
@@ -278,9 +281,11 @@ function OGLShaderProgram.unloadShader() {
 function Integer OGLShaderProgram.getUniformLocation(
   Integer uniformId
 ) {
-  for (Integer i = 0; i < this.uniformValues.size(); i++) {
-    if (this.uniformValues[i].id == uniformId) {
-      return this.uniformValues[i].location;
+  if(this.programId != 0){
+    for (Integer i = 0; i < this.uniformValues.size(); i++) {
+      if (this.uniformValues[i].id == uniformId) {
+        return this.uniformValues[i].location;
+      }
     }
   }
   return -1;

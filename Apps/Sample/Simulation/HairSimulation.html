@@ -14,7 +14,6 @@
 
     <link type="text/css" href="../../../ThirdParty/jQuery/css/vader/jquery-ui-1.8.5.custom.css" rel="stylesheet" />
 
-      <script type="text/javascript" src="../../../Core/FABRIC.Wrappers.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../Core/FABRIC.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/RT/Math.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/RT/Vec2.js" charset="utf-8"></script>
@@ -34,6 +33,7 @@
     <script type="text/javascript" src="../../../SceneGraph/RT/Bone.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/RT/OGLShaderProgram.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/RT/OGLBuffer.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/OGLTexture2D.js" charset="utf-8"></script>
 
     <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Geometry.js" charset="utf-8"></script>
@@ -73,7 +73,7 @@ FABRIC.SceneGraph.registerNodeType('Hair', {
     
     var characterMeshNode = scene.getPrivateInterface(options.characterMeshNode);
     var characterRigNode = scene.getPrivateInterface(options.characterRigNode);
-    characterRigNode.pub.computeInverseXfos();
+    var characterSkeletonNode = scene.getPrivateInterface(characterRigNode.pub.getSkeletonNode());
     
     // create a pointnode to prepare the values
     var pointNode = scene.constructNode('Points', {name: options.name+'_Points'} );
@@ -150,12 +150,22 @@ FABRIC.SceneGraph.registerNodeType('Hair', {
       }
       indices.push(indicesOffset++);
     }
-    hairNode.getUniformsDGNode().setData("indices",0,indices);
+    hairNode.getUniformsDGNode().setData("indices", 0, indices);
 
     var hairDGNode = hairNode.getAttributesDGNode();
     hairDGNode.addDependency(pointNode.getAttributesDGNode(),'points');
     hairDGNode.addDependency(scene.getGlobalsNode(), 'globals');
-    hairDGNode.addDependency(characterRigNode.getDGNode(), 'rig');
+    
+    var hairUniformsDGNode = hairNode.getUniformsDGNode();
+    hairUniformsDGNode.addDependency(characterRigNode.getDGNode(), 'rig');
+    hairUniformsDGNode.addDependency(characterSkeletonNode.getDGNode(), 'skeleton');
+    hairUniformsDGNode.addMember('skinningXfos', 'Xfo[]');
+    hairUniformsDGNode.bindings.append(scene.constructOperator({
+        operatorName: 'calcSkinningXfos',
+        srcFile: 'FABRIC_ROOT/SceneGraph/KL/calcSkinningXfos.kl',
+        entryFunctionName: 'calcSkinningXfos',
+        parameterLayout: ['rig.pose', 'skeleton.bones', 'self.skinningXfos']
+      }));
     
     hairDGNode.bindings.append(scene.constructOperator({
       operatorName: 'simulateHair',
@@ -176,7 +186,7 @@ FABRIC.SceneGraph.registerNodeType('Hair', {
         "self.prevnormals",
         "self.vertexColors",
         "globals.time",
-        "rig.skinningXfos"
+        "uniforms.skinningXfos"
       ],
       preProcessorDefinitions: {
         SEGMENT_COUNT: options.segments + 1
@@ -222,6 +232,10 @@ $(document).ready(function() {
     enableRaycasting: false,
     windowElement: document.getElementById('FabricContainer')
   });
+  
+  viewport.setBackgroundTextureImage(scene.constructNode('Image', {
+    url: '../BasicDemos/Resources/fabric-demo-gradient.png'
+  }));
 
   // Create a camera to draw the scene from
   var camera = scene.constructNode('TargetCamera', {
@@ -248,18 +262,21 @@ $(document).ready(function() {
 
   // T - character
   var assetNodes = scene.importAssetFile('../BasicDemos/Models/envelope.dae', { bindToGlobalTime: true });
-  var skinMaterial = scene.constructNode('PhongSkinningMaterial', {
-      lightNode: light,
-      diffuseColor: FABRIC.RT.rgba(0.0, 0.25, 1.0, 1.0),
-      numBones: assetNodes.polymshCharacterSkeleton.getNumBones()
-    });
-  assetNodes.polymshInstance.setMaterialNode(skinMaterial);
-  var animationController = assetNodes.polymshAnimationController;
   
-  animationController.setTimeRange(FABRIC.RT.vec2(0, 5));
+  var rigNode = assetNodes.polymshCharacterRig;
+  var rigInstanceNode = assetNodes.polymshCharacterInstance;
+
+  var materialNode = scene.constructNode('PhongSkinningMaterial', {
+      lightNode: scene.constructNode('PointLight', { position: FABRIC.RT.vec3(420.0, 1000.0, 600.0) }),
+      diffuseColor: FABRIC.RT.rgba(0.3, 0.45, 1.0, 1.0),
+      numBones: rigNode.getSkeletonNode().getNumBones()
+    });
+  rigInstanceNode.setMaterialNode(materialNode);
+
+  assetNodes.polymshController.setTimeRange(FABRIC.RT.vec2(0, 5));
 
   var hairGeometry = scene.constructNode('Hair', {
-      characterMeshNode: assetNodes.polymsh,
+      characterMeshNode: assetNodes.geometries_0,
       characterRigNode: assetNodes.polymshCharacterRig,
       segments: 5,
       length: FABRIC.RT.vec2(0.5,1),

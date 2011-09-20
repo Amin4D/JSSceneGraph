@@ -1,0 +1,86 @@
+//
+// Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
+//
+
+use Vec3;
+use Xfo;
+use FabricALEMBIC;
+
+operator alembicLoad(
+  io String url,
+  io FabricResource resource,
+  io Integer archiveID,
+  io Integer numSamples
+) {
+  if(resource.data.dataSize() > 0) {
+    FabricALEMBICDecode(resource.data.data(), resource.data.dataSize(), archiveID, numSamples);
+  }
+}
+
+operator alembicSetSample(
+  io Scalar time,
+  io Integer sample
+) {
+  sample = Integer(time * 30.0);
+}
+
+operator alembicGetIdentifiers(
+  io Integer archiveID,
+  io String identifiers[]
+) {
+  FabricALEMBICGetIdentifiers(archiveID,identifiers);
+}
+
+operator alembicParseXform(
+  io Integer archiveID,
+  io String identifier,
+  io Integer sample,
+  io Xfo transform
+) {
+  FabricALEMBICParseXform(archiveID,identifier,sample,transform);
+}
+
+operator alembicParseCamera(
+  io Integer archiveID,
+  io String identifier,
+  io Integer sample,
+  io Scalar near,
+  io Scalar far,
+  io Scalar fovY
+) {
+  FabricALEMBICParseCamera(archiveID,identifier,sample,near,far,fovY);
+}
+
+operator alembicParsePolyMeshCount(
+  io Integer archiveID,
+  io String identifier,
+  io Size count
+) {
+  if(count <= 1){
+    FabricALEMBICParsePolyMeshCount(archiveID,identifier,count);
+  }
+}
+
+operator alembicParsePolyMeshUniforms(
+  io Integer archiveID,
+  io String identifier,
+  io Integer indices[]
+) {
+  if(indices.size() == 0){
+    FabricALEMBICParsePolyMeshUniforms(archiveID,identifier,indices);
+  }
+}
+
+operator alembicParsePolyMeshAttributes(
+  io Integer archiveID,
+  io String identifier,
+  io Integer sample,
+  io Vec3 vertices<>,
+  io Vec3 normals<>,
+  io Boolean uvsLoaded,
+  io Vec2 uvs<>
+) {
+  if(vertices.size() > 0){
+    FabricALEMBICParsePolyMeshAttributes(archiveID,identifier,sample,vertices,normals,uvsLoaded,uvs);
+  }
+}

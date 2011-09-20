@@ -44,12 +44,15 @@
     <script type="text/javascript">
     
     
-$(document).ready(function() { var scene = FABRIC.SceneGraph.createScene();
+$(document).ready(function() {
+  
+  var scene = FABRIC.SceneGraph.createScene();
+  
   var viewport = scene.constructNode('Viewport', {
     enableRaycasting: false,
     windowElement: document.getElementById('FabricContainer')
   });
-
+  
   // Create a camera to draw the scene from
   var camera = scene.constructNode('TargetCamera', {
       position: FABRIC.RT.vec3(30, 50, 100),

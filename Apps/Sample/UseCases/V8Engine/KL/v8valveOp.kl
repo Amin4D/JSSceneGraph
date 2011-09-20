@@ -1,0 +1,72 @@
+
+use Vec3;
+use Quat;
+use Xfo;
+
+operator valveOp( 
+  io Xfo initialValveLifterXfo, io Xfo valveLifterXfo, 
+  io Xfo initialRockerXfo, io Xfo rockerXfo, 
+  io Xfo initialValveXfo, io Xfo valveXfo,  
+  io Xfo initialPushrodXfo, io Xfo pushrodXfo, 
+  io Scalar valveLifterAngle, 
+  io Scalar valveAngle, 
+  io Scalar phaseOffset,
+  io Scalar camshaftPhase ) 
+{ 
+  var Scalar fortyFiveDegress = 0.785398163;
+  var Scalar pi = 3.14159265;
+  var Scalar piOver2 = 1.57079633;
+  var Scalar twopi = pi * 2.0;
+  var Scalar threepi = pi * 3.0;
+  var Scalar liftDist = 7.0;
+  var Scalar degToRad = pi/180.0;
+  
+  var Scalar phase = camshaftPhase + phaseOffset;
+
+  var Integer turns = phase/twopi;
+  phase = ( phase - (turns * twopi) ) * 2.0;
+
+  var Scalar lift = 0;
+  if( phase < pi || phase > threepi ){
+    var Scalar peakSeparation = 0.3;
+    var Scalar peak = cos(-peakSeparation ) + cos( peakSeparation );
+    lift = (( cos( phase-peakSeparation )+cos( phase+peakSeparation ) + peak ) / (2.0*peak) ) * liftDist;
+  }
+  
+  ///////////////////////////////////
+  // Valve Lifters
+  
+  valveLifterXfo = initialValveLifterXfo;
+  valveLifterXfo.tr = valveLifterXfo.tr + Vec3( sin(valveLifterAngle) * (lift-1.5), cos(valveLifterAngle) * (lift-1.5), 0);
+
+  valveXfo = initialValveXfo;  
+  valveXfo.tr = valveXfo.tr + Vec3( sin(valveLifterAngle) * (lift*1.5), cos(valveLifterAngle) * (lift*1.5), 0);
+
+  Quat rock = axisAndAngleToQuat( Vec3(0,0,1), lift * 0.03 );
+  rockerXfo = initialRockerXfo;  
+  rockerXfo.ori *= rock;
+
+  ///////////////////////////////////
+  // Valves
+  var Scalar valveLiftMultiplier = -1.1;
+  valveXfo = initialValveXfo;  
+  valveXfo.tr = valveXfo.tr + Vec3( sin(valveAngle* degToRad) * ((lift* valveLiftMultiplier)+1), cos(valveAngle*degToRad) * ((lift*valveLiftMultiplier)+1), 0);
+
+
+  ///////////////////////////////////
+  // Pushrod
+  var Scalar rockerPushrodOffsetDist = 25;
+  var Vec3 rockerPushrodOffset( sin(-valveLifterAngle) * (rockerPushrodOffsetDist), cos(-valveLifterAngle) * (rockerPushrodOffsetDist), 0);
+  var Vec3 rockerPushrodOffsetRocked = rock.rotateVector( rockerPushrodOffset );
+  pushrodXfo = initialPushrodXfo; 
+  pushrodXfo.tr = pushrodXfo.tr + (rockerPushrodOffset - rockerPushrodOffsetRocked);
+
+  var Scalar lifterLength = 60;
+  var Vec3 v1, v2(0,-1,0);
+  v1 = (valveLifterXfo.tr + Vec3( sin(valveLifterAngle) * lifterLength, cos(valveLifterAngle) * lifterLength, 0)) - pushrodXfo.tr;
+  var Vec3 axis = crossProd(v1,v2).normalize();
+  var Scalar angle = acos(dotProd(v1,v2));
+// I screwed up the agle somehow so just hard coded it for now. 
+  pushrodXfo.ori = axisAndAngleToQuat( axis, 0.7 );
+
+}

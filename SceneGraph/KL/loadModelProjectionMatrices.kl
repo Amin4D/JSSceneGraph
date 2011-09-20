@@ -77,7 +77,7 @@ operator loadModelProjectionMatrices(
 }
 operator loadIndexedModelProjectionMatrices(
   io OGLShaderProgram shaderProgram,
-  io Xfo modelXfos[],
+  io Xfo modelXfos<>,
   io Size modelXfoIndex,
   io Mat44 cameraMatrix,
   io Mat44 projectionMatrix

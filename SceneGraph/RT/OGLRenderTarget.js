@@ -67,7 +67,10 @@ FABRIC.appendOnCreateContextCallback(function(context) {
       clearColor: 'Color'
     },
     constructor: FABRIC.RT.OGLRenderTarget,
-    kBindings: FABRIC.loadResourceURL('FABRIC_ROOT/SceneGraph/RT/OGLRenderTarget.kl')
+    klBindings: {
+      filename: 'OGLRenderTarget.kl',
+      sourceCode: FABRIC.loadResourceURL('FABRIC_ROOT/SceneGraph/RT/OGLRenderTarget.kl')
+    }
   });
 });
 

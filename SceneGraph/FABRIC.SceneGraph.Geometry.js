@@ -194,6 +194,7 @@ FABRIC.SceneGraph.registerNodeType('Geometry', {
       if(!bboxdgnode){
         throw("Goemetry does not support a Bounding Box");
       }
+      bboxdgnode.evaluate();
       return {
         min: bboxdgnode.getData('min'),
         max: bboxdgnode.getData('max')
@@ -580,7 +581,7 @@ FABRIC.SceneGraph.registerNodeType('Instance', {
             preProcessorDefinitions: preProcessorDefinitions,
             parameterLayout: [
               'shader.shaderProgram',
-              'transform.' + transformNodeMember + '[]',
+              'transform.' + transformNodeMember + '<>',
               'self.transformNodeIndex',
               'camera.cameraMat44',
               'camera.projectionMat44'
@@ -691,33 +692,20 @@ FABRIC.SceneGraph.registerNodeType('Instance', {
       materialNodes.push(node);
       return instanceNode.pub;
     };
-    instanceNode.pub.removeMaterialNode = function(node) {
-      node = scene.getPrivateInterface(node);
-      var index = materialNodes.indexOf(node);
+    instanceNode.pub.removeMaterialNode = function(val) {
+      var index = -1;
+      if(typeof val == 'number'){
+        index = val;
+      }else{
+        node = scene.getPrivateInterface(val);
+        index = materialNodes.indexOf(node);
+      }
       if (index === -1) {
         throw (':Material not assigned');
       }
       materialNodes[index].getRedrawEventHandler().removeChildEventHandler(redrawEventHandler);
       materialNodes.splice(index, 1);
       return instanceNode.pub;
-    };
-
-    // custom getter and setter for castShadows
-    instanceNode.pub.getIsShadowCasting = function() {
-      return materialNodes.indexOf(scene.getShadowMapMaterial()) != -1;
-    };
-    instanceNode.pub.setIsShadowCasting = function(val) {
-      if (val) {
-        if (options.shadowMappingMaterial) {
-          instanceNode.pub.setMaterialNode(scene.pub.constructNode(options.shadowMappingMaterial));
-        }
-        else {
-          instanceNode.pub.setMaterialNode(scene.getShadowMapMaterial());
-        }
-      }
-      else {
-        instanceNode.pub.removeMaterialNode(scene.getShadowMapMaterial());
-      }
     };
 
     // Mouse events are fired on Instance nodes.
@@ -740,70 +728,74 @@ FABRIC.SceneGraph.registerNodeType('Instance', {
       instanceNode.pub.setIsShadowCasting(true);
     }
     return instanceNode;
-  }});
+  }
+});
 
-  FABRIC.SceneGraph.registerNodeType('ObjLoadTriangles', {
-    factoryFn: function(options, scene) {
-      scene.assignDefaults(options, {
-        removeParsersOnLoad: false
-      });
+FABRIC.SceneGraph.registerNodeType('ObjLoadTriangles', {
+  factoryFn: function(options, scene) {
+    scene.assignDefaults(options, {
+      removeParsersOnLoad: false
+    });
 
-      options.uvSets = 1; //To refine... what if there is no UV set??
+    options.uvSets = 1; //To refine... what if there is no UV set??
 
-      var resourceLoadNode = scene.constructNode('ResourceLoad', options),
-        resourceloaddgnode = resourceLoadNode.getDGLoadNode(),
-        trianglesNode = scene.constructNode('Triangles', options);
+    var resourceLoadNode = scene.constructNode('ResourceLoad', options),
+      resourceloaddgnode = resourceLoadNode.getDGLoadNode(),
+      trianglesNode = scene.constructNode('Triangles', options),
+      emptyBindingsFunction;
 
-      trianglesNode.getAttributesDGNode().addDependency(resourceloaddgnode, 'resource');
-      trianglesNode.getUniformsDGNode().addDependency(resourceloaddgnode, 'resource');
-      trianglesNode.pub.addUniformValue('reload', 'Boolean', true);
-      trianglesNode.pub.addUniformValue('handle', 'Data');
+    trianglesNode.getAttributesDGNode().addDependency(resourceloaddgnode, 'resource');
+    trianglesNode.getUniformsDGNode().addDependency(resourceloaddgnode, 'resource');
+    trianglesNode.pub.addUniformValue('reload', 'Boolean', true);
+    trianglesNode.pub.addUniformValue('handle', 'Data');
 
-      trianglesNode.setGeneratorOps([
-        scene.constructOperator({
-          operatorName: 'parseObjAndSetVertexCount',
-          srcFile: 'FABRIC_ROOT/SceneGraph/KL/loadObj.kl',
-          entryFunctionName: 'parseObjAndSetVertexCount',
-          parameterLayout: [
-            'resource.resource',
-            'uniforms.handle',
-            'uniforms.reload',
-            'self.newCount'
-          ]
-        }),
-        scene.constructOperator({
-          operatorName: 'setObjGeom',
-          srcFile: 'FABRIC_ROOT/SceneGraph/KL/loadObj.kl',
-          entryFunctionName: 'setObjGeom',
-          parameterLayout: [
-            'uniforms.handle',
-            'uniforms.indices',
-            'self.positions<>',
-            'self.normals<>',
-            'self.uvs0<>',
-            'uniforms.reload'
-          ]
-        }),
-        scene.constructOperator({
-          operatorName: 'freeObjParsedData',
-          srcFile: 'FABRIC_ROOT/SceneGraph/KL/loadObj.kl',
-          entryFunctionName: 'freeObjParsedData',
-          parameterLayout: [
-            'uniforms.handle'
-          ]
-        })
-      ]);
-      /////////////////////////////////////////////////////////////////////
+    trianglesNode.setGeneratorOps([
+      scene.constructOperator({
+        operatorName: 'parseObjAndSetVertexCount',
+        srcFile: 'FABRIC_ROOT/SceneGraph/KL/loadObj.kl',
+        entryFunctionName: 'parseObjAndSetVertexCount',
+        parameterLayout: [
+          'resource.resource',
+          'uniforms.handle',
+          'uniforms.reload',
+          'self.newCount'
+        ]
+      }),
+      scene.constructOperator({
+        operatorName: 'setObjGeom',
+        srcFile: 'FABRIC_ROOT/SceneGraph/KL/loadObj.kl',
+        entryFunctionName: 'setObjGeom',
+        parameterLayout: [
+          'uniforms.handle',
+          'uniforms.indices',
+          'self.positions<>',
+          'self.normals<>',
+          'self.uvs0<>',
+          'uniforms.reload'
+        ]
+      }),
+      scene.constructOperator({
+        operatorName: 'freeObjParsedData',
+        srcFile: 'FABRIC_ROOT/SceneGraph/KL/loadObj.kl',
+        entryFunctionName: 'freeObjParsedData',
+        parameterLayout: [
+          'uniforms.handle'
+        ]
+      })
+    ]);
+    /////////////////////////////////////////////////////////////////////
 
-      trianglesNode.pub.getResourceLoadNode = function() {
-        return resourceLoadNode;
-      };
+    trianglesNode.pub.getResourceLoadNode = function() {
+      return resourceLoadNode;
+    };
 
-      resourceLoadNode.pub.addOnLoadCallback(function() {
-        trianglesNode.getAttributesDGNode().bindings.empty();
-      });
+    emptyBindingsFunction = function() {
+      trianglesNode.getAttributesDGNode().bindings.empty();
+    };
 
-      return trianglesNode;
-    }
-  });
+    resourceLoadNode.pub.addOnLoadSuccessCallback(emptyBindingsFunction);
+    resourceLoadNode.pub.addOnLoadFailureCallback(emptyBindingsFunction);
 
+    return trianglesNode;
+  }
+});

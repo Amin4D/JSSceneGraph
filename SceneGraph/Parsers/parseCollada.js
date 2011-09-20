@@ -4,8 +4,13 @@
 //
 
 FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
+  
+  if(!options.constructMaterialNodes) options.constructMaterialNodes = false;
 
   var assetNodes = {};
+  var warn = function( warningText ){
+  //  console.warn(warningText);
+  }
   
   //////////////////////////////////////////////////////////////////////////////
   // Collada File Parsing Functions
@@ -35,7 +40,7 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
           });
           break;
         default:
-          console.warn("Warning in parseAccessor: Unhandled node '" +child.nodeName + "'");
+          warn("Warning in parseAccessor: Unhandled node '" +child.nodeName + "'");
       }
       child = child.nextElementSibling;
     }
@@ -51,7 +56,7 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
           technique_common.accessor = parseAccessor(child);
           break;
         default:
-          console.warn("Warning in parseTechniqueCommon: Unhandled node '" +child.nodeName + "'");
+          warn("Warning in parseTechniqueCommon: Unhandled node '" +child.nodeName + "'");
       }
       child = child.nextElementSibling;
     }
@@ -106,7 +111,7 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
           source.technique = parseTechniqueCommon(child);
           break;
         default:
-          console.warn("Warning in parseSource: Unhandled node '" +child.nodeName + "'");
+          warn("Warning in parseSource: Unhandled node '" +child.nodeName + "'");
       }
       child = child.nextElementSibling;
     }
@@ -136,7 +141,7 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
           inputs[child.getAttribute('semantic')] = parseInput(child);
           break;
         default:
-          console.warn("Warning in parseLibaryGeometries: Unhandled node '" +child.nodeName + "'");
+          warn("Warning in parseLibaryGeometries: Unhandled node '" +child.nodeName + "'");
       }
       child = child.nextElementSibling;
     }
@@ -163,7 +168,7 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
           }
           break;
         default:
-          console.warn("Warning in parseAnimation: Unhandled node '" +child.nodeName + "'");
+          warn("Warning in parseAnimation: Unhandled node '" +child.nodeName + "'");
       }
       child = child.nextElementSibling;
     }
@@ -196,7 +201,7 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
           libraryAnimations.animations[child.getAttribute('id')] = parseAnimation(child, libraryAnimations.channelMap);
           break;
         default:
-          console.warn("Warning in parseLibaryGeometries: Unhandled node '" +child.nodeName + "'");
+          warn("Warning in parseLibaryGeometries: Unhandled node '" +child.nodeName + "'");
       }
       child = child.nextElementSibling;
     }
@@ -224,7 +229,7 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
           }
           break;
         default:
-          console.warn("Warning in parsePolygons: Unhandled node '" +child.nodeName + "'");
+          warn("Warning in parsePolygons: Unhandled node '" +child.nodeName + "'");
       }
       child = child.nextElementSibling;
     }
@@ -255,7 +260,7 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
           mesh.triangles.push(parsePolygons(child));
           break;
         default:
-          console.warn("Warning in parseMesh: Unhandled node '" + child.nodeName + "'");
+          warn("Warning in parseMesh: Unhandled node '" + child.nodeName + "'");
       }
       child = child.nextElementSibling;
     }
@@ -273,7 +278,7 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
           geometry.mesh = parseMesh(child);
           break;
         default:
-          console.warn("Warning in parseGeometry: Unhandled node '" + child.nodeName + "'");
+          warn("Warning in parseGeometry: Unhandled node '" + child.nodeName + "'");
       }
       child = child.nextElementSibling;
     }
@@ -289,7 +294,7 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
           libraryGeometries[child.getAttribute('id')] = parseGeometry(child);
           break;
         default:
-          console.warn("Warning in parseLibaryGeometries: Unhandled node '" +child.nodeName + "'");
+          warn("Warning in parseLibaryGeometries: Unhandled node '" +child.nodeName + "'");
       }
       child = child.nextElementSibling;
     }
@@ -326,7 +331,7 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
           }
           break;
         default:
-          console.warn("Warning in parseVertexWeights: Unhandled node '" +child.nodeName + "'");
+          warn("Warning in parseVertexWeights: Unhandled node '" +child.nodeName + "'");
       }
       child = child.nextElementSibling;
     }
@@ -342,7 +347,7 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
           joints[child.getAttribute('semantic')] = parseInput(child);
           break;
         default:
-          console.warn("Warning in parseJoints: Unhandled node '" +child.nodeName + "'");
+          warn("Warning in parseJoints: Unhandled node '" +child.nodeName + "'");
       }
       child = child.nextElementSibling;
     }
@@ -367,7 +372,7 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
             }
           }
           var matrix44 = FABRIC.RT.mat44.apply(undefined, float_array);
-          skin.bind_matrix = matrix44.transpose();
+          skin.bind_shape_matrix = matrix44.transpose();
           break;
         case 'source':
           skin.sources[child.getAttribute('id')] = parseSource(child);
@@ -379,7 +384,7 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
           skin.joints = parseJoints(child);
           break;
         default:
-          console.warn("Warning in parseSkin: Unhandled node '" +child.nodeName + "'");
+          warn("Warning in parseSkin: Unhandled node '" +child.nodeName + "'");
       }
       child = child.nextElementSibling;
     }
@@ -395,7 +400,7 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
           controller.skin = parseSkin(child);
           break;
         default:
-          console.warn("Warning in parseController: Unhandled node '" +child.nodeName + "'");
+          warn("Warning in parseController: Unhandled node '" +child.nodeName + "'");
       }
       child = child.nextElementSibling;
     }
@@ -411,7 +416,7 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
           libraryControllers[child.getAttribute('id')] = parseController(child);
           break;
         default:
-          console.warn("Warning in parseLibaryControllers: Unhandled node '" +child.nodeName + "'");
+          warn("Warning in parseLibaryControllers: Unhandled node '" +child.nodeName + "'");
       }
       child = child.nextElementSibling;
     }
@@ -426,7 +431,7 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
     while(child){
       switch (child.nodeName) {
         default:
-          console.warn("Warning in parseInstanceGeometry: Unhandled node '" +child.nodeName + "'");
+          warn("Warning in parseInstanceGeometry: Unhandled node '" +child.nodeName + "'");
       }
       child = child.nextElementSibling;
     }
@@ -441,7 +446,7 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
     while(child){
       switch (child.nodeName) {
         default:
-          console.warn("Warning in parseInstanceController: Unhandled node '" +child.nodeName + "'");
+          warn("Warning in parseInstanceController: Unhandled node '" +child.nodeName + "'");
       }
       child = child.nextElementSibling;
     }
@@ -466,7 +471,8 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
         case 'translate': {
           var sid = child.getAttribute('sid');
           var str = child.textContent.split(new RegExp("\\s+"));
-          nodeData.xfo.tr.set(parseFloat(str[0]), parseFloat(str[1]), parseFloat(str[2]));
+          var tr = FABRIC.RT.vec3(parseFloat(str[0]), parseFloat(str[1]), parseFloat(str[2]));
+          nodeData.xfo = nodeData.xfo.multiply(FABRIC.RT.xfo({tr:tr}));
           break;
         }
         case 'rotate': {
@@ -478,17 +484,14 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
                       parseFloat(str[1]),
                       parseFloat(str[2])),
                     parseFloat(str[3]));
-          if(sid.slice(0, sid.length-1) == 'jointOrient'){
-            nodeData.xfo.multiply(FABRIC.RT.xfo({ori:q}));
-          }else{
-            nodeData.xfo.ori.preMultiplyInPlace(q);
-          }
+          nodeData.xfo = nodeData.xfo.multiply(FABRIC.RT.xfo({ori:q}));
           break;
         }
         case 'scale': {
           var sid = child.getAttribute('sid');
           var str = child.textContent.split(new RegExp("\\s+"));
-          nodeData.xfo.sc.set(parseFloat(str[0]), parseFloat(str[1]), parseFloat(str[2]));
+          var sc = FABRIC.RT.vec3(parseFloat(str[0]), parseFloat(str[1]), parseFloat(str[2]));
+          nodeData.xfo = nodeData.xfo.multiply(FABRIC.RT.xfo({sc:sc}));
           break;
         }
         case 'instance_geometry':
@@ -501,7 +504,7 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
           nodeData.children.push(parseNode(child, nodeLibrary, id));
           break;
         default:
-          console.warn("Warning in parseNode: Unhandled node '" +child.nodeName + "'");
+          warn("Warning in parseNode: Unhandled node '" +child.nodeName + "'");
       }
       child = child.nextElementSibling;
     }
@@ -521,7 +524,7 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
           scene.nodes.push(parseNode(child, scene.nodeLibrary));
           break;
         default:
-          console.warn("Warning in parseVisualScene: Unhandled node '" +child.nodeName + "'");
+          warn("Warning in parseVisualScene: Unhandled node '" +child.nodeName + "'");
       }
       child = child.nextElementSibling;
     }
@@ -537,7 +540,7 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
           scenes[child.getAttribute('id')] = parseVisualScene(child);
           break;
         default:
-          console.warn("Warning in parseLibraryVisualScenes: Unhandled node '" +child.nodeName + "'");
+          warn("Warning in parseLibraryVisualScenes: Unhandled node '" +child.nodeName + "'");
       }
       child = child.nextElementSibling;
     }
@@ -553,7 +556,7 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
           scene.url = child.getAttribute('url');
           break;
         default:
-          console.warn("Warning in parseScene: Unhandled node '" +child.nodeName + "'");
+          warn("Warning in parseScene: Unhandled node '" +child.nodeName + "'");
       }
       child = child.nextElementSibling;
     }
@@ -592,7 +595,7 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
           colladaData.scene = parseScene(child);
           break;
         default:
-          console.warn("Warning in parseColladaBase: Unhandled node '" +child.nodeName + "'");
+          warn("Warning in parseColladaBase: Unhandled node '" +child.nodeName + "'");
       }
       child = child.nextElementSibling;
     }
@@ -612,13 +615,13 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
   
   //////////////////////////////////////////////////////////////////////////////
   // SceneGraph Construction
-  
+  /*
   var defaultLight = scene.constructNode('PointLight', { position: FABRIC.RT.vec3(420.0, 1000.0, 600.0) });
   var defaultMaterial = scene.constructNode('PhongMaterial', {
       diffuseColor: FABRIC.RT.rgb(0.8, 0, 0, 1),
       lightNode: defaultLight
     });
-  
+  */
   // This method returns an array of values from the given source data. 
   var getSourceData = function(source, id){
     var accessor = source.technique.accessor;
@@ -629,6 +632,7 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
   var processGeometryData = function(meshData, trianglesData){
     var numTriangles = trianglesData.count;
     var attrcount = 0;
+    var numUVsets = 0;
     var meshTriangleSourceData = {};
     var processedData = {
       constructionOptions: {},
@@ -656,18 +660,15 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
           processedData.geometryData.normals = [];
           break;
         case 'TEXCOORD':
-          var uvset = 'uvs' + input.set;
+          var uvset = 'uvs' + numUVsets;
           meshTriangleSourceData[uvset] = {
             source: meshData.sources[sourceName],
             constructorFn: FABRIC.RT.vec2
           };
           processedData.geometryData[uvset] = [];
-          if(!processedData.constructionOptions.uvSets){
-            processedData.constructionOptions.uvSets = 1;
-          }else{
-            processedData.constructionOptions.uvSets++;
-          }
-          processedData.constructionOptions.tangentsFromUV = processedData.constructionOptions.uvSets-1;
+          processedData.constructionOptions.tangentsFromUV = numUVsets;
+          numUVsets++;
+          processedData.constructionOptions.uvSets = numUVsets;
           break;
         default:
           throw "Error: unhandled semantic '" + semantic +"'";
@@ -752,9 +753,14 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
     return geometryNode;
   }
 
-  var constructSkeletonFromHierarchy = function(sceneData, rootNodeName, skeletonName){
-    if(!skeletonName){
-      skeletonName = rootNodeName;
+  var libraryRigs = {};
+  var constructRigFromHierarchy = function(sceneData, rootNodeName, controllerName){
+    if(!controllerName){
+      controllerName = rootNodeName;
+    }
+    
+    if(libraryRigs[rootNodeName]){
+      return libraryRigs[rootNodeName];
     }
     
     // recurse on the hierarchy
@@ -795,179 +801,187 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
       bones[i].radius = bones[i].length * 0.1;
     }
     
-    
     var skeletonNode = scene.constructNode('CharacterSkeleton', {
-      name:skeletonName,
+      name:controllerName+"Skeleton",
       calcReferenceLocalPose: false,
       calcReferenceGlobalPose: false,
-      calcInvMatricies: false,
-      calcReferencePoseFromInverseBindPose: false
+      calcInvMatricies: false
     });
     skeletonNode.setBones(bones);
     
-    
     ///////////////////////////////
     // Rig Variables node
-    
-    // fill in all of the tracks...
-    var tracks = {
-      name: [],
-      color: [],
-      keys: []
-    };
-    var binding = {};
-    for (var i = 0; i < bones.length; i++) {
-      var channels = colladaData.libraryAnimations.channelMap[bones[i].name];
-      
-      if (!channels)
-        continue;
-      
-      for (var channelName in channels) {
-        var animation = channels[channelName];
-        var sampler = animation.sampler;
-        
-        if (!sampler.INPUT || !sampler.OUTPUT || !sampler.INTERPOLATION)
-          throw "Animation Channel must provide 'INPUT', 'OUTPUT', and 'INTERPOLATION' sources";
-        
-        // allright - now we need to create the data
-        // let's check the first element of the INTERPOLATION semantic
-        var inputSource = animation.sources[sampler.INPUT.source.slice(1)];
-        var outputSource = animation.sources[sampler.OUTPUT.source.slice(1)];
-        var interpolationSource = animation.sources[sampler.INTERPOLATION.source.slice(1)];
-        
-        
-        // ensure to convert ANGLE to RADIANS
-        if (channelName.substr(channelName.lastIndexOf('.') + 1) == 'ANGLE') {
-          for (var j = 0; j < outputSource.data.length; j++){
-            outputSource.data[j] = Math.degToRad( outputSource.data[j] );
-          }
-        }
-        
-        // now let's reformat the linear data
-        var key = FABRIC.Animation.linearKeyframe;
-        var keys = [];
-        for (var j = 0; j < inputSource.data.length; j++) {
-          keys.push(key(inputSource.data[j], outputSource.data[j]));
-        }
-        
-        // remap the target names
-        switch(channelName){
-        case 'rotation_x.ANGLE':
-        case 'rotateX.ANGLE':
-          channelName = 'ori.x';
-          break;
-        case 'rotation_y.ANGLE':
-        case 'rotateY.ANGLE':
-          channelName = 'ori.y';
-          break;
-        case 'rotation_z.ANGLE':
-        case 'rotateZ.ANGLE':
-          channelName = 'ori.z';
-          break;
-        case 'translation.X':
-        case 'translate.X':
-          channelName = 'tr.x';
-          break;
-        case 'translation.Y':
-        case 'translate.Y':
-          channelName = 'tr.y';
-          break;
-        case 'translation.Z':
-        case 'translate.Z':
-          channelName = 'tr.z';
-          break;
-        case 'scale.X':
-          channelName = 'sc.x';
-          break;
-        case 'scale.Y':
-          channelName = 'sc.y';
-          break;
-        case 'scale.Z':
-          channelName = 'sc.z';
-          break;
-        }
-        
-        var trackid = tracks.keys.length;
-        tracks.keys.push(keys);
-        tracks.name.push(bones[i].name+'.'+channelName);
-      //  binding['localxfos[' + i + '].' + channelName] = [i];
- 
-        var target = 'localxfos[' + i + '].' + channelName.split('.')[0];
-       
-        if (!binding[target]) {
-          binding[target] = [-1, -1, -1];
-        }
-        switch (channelName.split('.')[1]) {
-        case 'x':
-          binding[target][0] = trackid;
-          tracks.color.push(FABRIC.RT.rgb(1, 0, 0));
-          break;
-         case 'y':
-          binding[target][1] = trackid;
-          tracks.color.push(FABRIC.RT.rgb(0, 1, 0));
-          break;
-         case 'z':
-          binding[target][2] = trackid;
-          tracks.color.push(FABRIC.RT.rgb(0, 0, 1));
-          break;
-        }
-      }
-    }
-
-    // create the base animation nodes
-    var controllerNode = scene.constructNode('AnimationController', {
-      name: skeletonName+'Controller'
-    } );
-    var trackNode = scene.constructNode('LinearKeyAnimationTrack', {
-      name: skeletonName+'AnimationTrack'
-    });
-    trackNode.setTrackCount(tracks.name.length);
-    trackNode.setTracksData(tracks);
+     
     
     var variablesNode = scene.constructNode('CharacterVariables', {
-      name: skeletonName+'Variables'
+      name: controllerName+'Variables'
     });
-    variablesNode.addMember('localxfos', 'Xfo[]', skeletonNode.getReferenceLocalPose());
-
-    // create the evaluator node
-    var evaluatorNode = scene.constructNode('AnimationEvaluator', {
-      name: skeletonName+'Evaluator',
-      animationControllerNode: controllerNode,
-      animationTrackNode: trackNode
-    });
-    evaluatorNode.bindNodeMembersToEvaluatorTracks(variablesNode, binding);
-    
     
     var rigNode = scene.constructNode('CharacterRig', {
-        name: skeletonName+'CharacterRig',
+        name: controllerName+'CharacterRig',
         skeletonNode: skeletonNode,
         variablesNode: variablesNode
       });
-
-    rigNode.addSolver('solveColladaPose', 'FKHierarchySolver', { localxfoMemberName: 'localxfos' });
-
+    
+      
+    if(colladaData.libraryAnimations){
+      // fill in all of the tracks...
+      var tracks = {
+        name: [],
+        color: [],
+        keys: []
+      };
+      var binding = {};
+      for (var i = 0; i < bones.length; i++) {
+        var channels = colladaData.libraryAnimations.channelMap[bones[i].name];
+        
+        if (!channels)
+          continue;
+        
+        for (var channelName in channels) {
+          var animation = channels[channelName];
+          var sampler = animation.sampler;
+          
+          if (!sampler.INPUT || !sampler.OUTPUT || !sampler.INTERPOLATION)
+            throw "Animation Channel must provide 'INPUT', 'OUTPUT', and 'INTERPOLATION' sources";
+          
+          // allright - now we need to create the data
+          // let's check the first element of the INTERPOLATION semantic
+          var inputSource = animation.sources[sampler.INPUT.source.slice(1)];
+          var outputSource = animation.sources[sampler.OUTPUT.source.slice(1)];
+          var interpolationSource = animation.sources[sampler.INTERPOLATION.source.slice(1)];
+          
+          
+          // ensure to convert ANGLE to RADIANS
+          if (channelName.substr(channelName.lastIndexOf('.') + 1) == 'ANGLE') {
+            for (var j = 0; j < outputSource.data.length; j++){
+              outputSource.data[j] = Math.degToRad( outputSource.data[j] );
+            }
+          }
+          
+          // now let's reformat the linear data
+          var key = FABRIC.Animation.linearKeyframe;
+          var keys = [];
+          for (var j = 0; j < inputSource.data.length; j++) {
+            keys.push(key(inputSource.data[j], outputSource.data[j]));
+          }
+          
+          // remap the target names
+          switch(channelName){
+          case 'rotation_x.ANGLE':
+          case 'rotateX.ANGLE':
+            channelName = 'ori.x';
+            break;
+          case 'rotation_y.ANGLE':
+          case 'rotateY.ANGLE':
+            channelName = 'ori.y';
+            break;
+          case 'rotation_z.ANGLE':
+          case 'rotateZ.ANGLE':
+            channelName = 'ori.z';
+            break;
+          case 'translation.X':
+          case 'translate.X':
+            channelName = 'tr.x';
+            break;
+          case 'translation.Y':
+          case 'translate.Y':
+            channelName = 'tr.y';
+            break;
+          case 'translation.Z':
+          case 'translate.Z':
+            channelName = 'tr.z';
+            break;
+          case 'scale.X':
+            channelName = 'sc.x';
+            break;
+          case 'scale.Y':
+            channelName = 'sc.y';
+            break;
+          case 'scale.Z':
+            channelName = 'sc.z';
+            break;
+          }
+          
+          var trackid = tracks.keys.length;
+          tracks.keys.push(keys);
+          tracks.name.push(bones[i].name+'.'+channelName);
+   
+          var target = 'localxfos[' + i + '].' + channelName.split('.')[0];
+         
+          if (!binding[target]) {
+            binding[target] = [-1, -1, -1];
+          }
+          switch (channelName.split('.')[1]) {
+          case 'x':
+            binding[target][0] = trackid;
+            tracks.color.push(FABRIC.RT.rgb(1, 0, 0));
+            break;
+           case 'y':
+            binding[target][1] = trackid;
+            tracks.color.push(FABRIC.RT.rgb(0, 1, 0));
+            break;
+           case 'z':
+            binding[target][2] = trackid;
+            tracks.color.push(FABRIC.RT.rgb(0, 0, 1));
+            break;
+          }
+        }
+      }
+  
+      // create the base animation nodes
+      var controllerNode = scene.constructNode('AnimationController', {
+        name: controllerName+'Controller'
+      } );
+      var trackNode = scene.constructNode('LinearKeyAnimationTrack', {
+        name: controllerName+'AnimationTrack'
+      });
+      trackNode.setTrackCount(tracks.name.length);
+      trackNode.setTracksData(tracks);
+  
+      // create the evaluator node
+      var evaluatorNode = scene.constructNode('AnimationEvaluator', {
+        name: controllerName+'Evaluator',
+        animationControllerNode: controllerNode,
+        animationTrackNode: trackNode
+      });
+      
+      variablesNode.addMember('localxfos', 'Xfo[]', skeletonNode.getReferenceLocalPose());
+      evaluatorNode.bindNodeMembersToEvaluatorTracks(variablesNode, binding, rigNode.getName());
+      rigNode.addSolver('solveColladaPose', 'FKHierarchySolver', { localxfoMemberName: 'localxfos' });
+      
+      assetNodes[trackNode.getName()] = trackNode;
+      assetNodes[evaluatorNode.getName()] = evaluatorNode;
+      assetNodes[controllerNode.getName()] = controllerNode;
+    }
+    
     // Store the created scene graph nodes in the returned asset map.
     assetNodes[variablesNode.getName()] = variablesNode;
-    assetNodes[evaluatorNode.getName()] = evaluatorNode;
-    assetNodes[controllerNode.getName()] = controllerNode;
-    assetNodes[trackNode.getName()] = trackNode;
     assetNodes[skeletonNode.getName()] = skeletonNode;
     assetNodes[rigNode.getName()] = rigNode;
-
-    return {
+    
+    var rigData = {
       skeletonNode: skeletonNode,
-      variablesNode: variablesNode,
-      controllerNode: controllerNode,
-      trackNode: trackNode,
-      evaluatorNode: evaluatorNode,
       rigNode: rigNode
     };
+    
+    libraryRigs[rootNodeName] = rigData;
+    return rigData;
   }
 
     
-  var constructSkin = function(sceneData, skinData){
+  var libraryControllers = {};
+  var constructController = function(sceneData, url, name){
+    
+    // Lazy construction of geometries
+    if(libraryControllers[url]){
+      return libraryControllers[skinid];
+    }
+    
+    var controllerData = colladaData.libraryControllers[url].skin;
+    
     // Get the geometry data that this skin mesh is based on
-    var geometryData = colladaData.libraryGeometries[skinData.source.slice(1)];
+    var geometryData = colladaData.libraryGeometries[controllerData.source.slice(1)];
     
     var sourceMeshArray = geometryData.mesh.triangles ? geometryData.mesh.triangles : geometryData.mesh.polygons;
     if(!sourceMeshArray){
@@ -981,13 +995,28 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
     
     var processedData = processGeometryData(geometryData.mesh, meshData);
     
-    // Vertex Weights
-    var vertexWeightsSource = skinData.sources[skinData.vertex_weights.inputs.WEIGHT.source.slice(1)];
-    var jointDataSource = skinData.sources[skinData.vertex_weights.inputs.JOINT.source.slice(1)];
+    ////////////////////////////////////////////////////////////////////////////
+    // Construct the Rig
+    var jointDataSource = controllerData.sources[controllerData.vertex_weights.inputs.JOINT.source.slice(1)];
     
+    // Look up through the hierarchy and find the actual root.
+    var joint =  sceneData.nodeLibrary[jointDataSource.data[0]];
+    while(joint.parentId && joint.parentId != "Scene_Root"){
+      joint = sceneData.nodeLibrary[joint.parentId];
+    }
+    var skeletonData = constructRigFromHierarchy(sceneData, joint.name, name);
+    
+    ////////////////////////////////////////////////////////////////////////////
+    // Set up the vertex weights.
+    // In fabric we store the bind skinning wieghts and indices in 2 vec4 values
+    // per vertex, and this is primarily so we can use the GPU for enveloping.
+    // Here must convert the source data, which can have any number of bone influences
+    // per vertex, down to 4. 
+    var vertexWeightsSource = controllerData.sources[controllerData.vertex_weights.inputs.WEIGHT.source.slice(1)];
+    var bones = skeletonData.skeletonNode.getBones();
     var boneIds = [];
     var boneWeights = [];
-     
+    
     var  bubbleSortWeights = function(weights, indices, start, end) {
       if (start != end - 1) {
         for (var i = start; i < end; i++) {
@@ -1017,16 +1046,20 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
       if (data.length === 3) return new FABRIC.RT.Vec4(data[0], data[1], data[2], 0);
       return new FABRIC.RT.Vec4(data[0], data[1], data[2], data[3]);
     };
+    
     var bid = 0;
-    for (var i = 0; i < skinData.vertex_weights.vcounts.length; i++) {
+    for (var i = 0; i < controllerData.vertex_weights.vcounts.length; i++) {
       var boneIdsArray = [];
       var boneWeightsArray = [];
-      var numbindings = skinData.vertex_weights.vcounts[i];
+      var numbindings = controllerData.vertex_weights.vcounts[i];
       for (var j = 0; j < numbindings; j++) {
-        var jointid = skinData.vertex_weights.indices[bid];
-        var jointweightid = skinData.vertex_weights.indices[bid+1];
-        boneIdsArray.push(jointid);
-        boneWeightsArray.push(vertexWeightsSource.data[jointweightid]);
+        var jointid = controllerData.vertex_weights.indices[bid];
+        var jointweightid = controllerData.vertex_weights.indices[bid+1];
+        if(jointid > jointDataSource.data.length){
+          throw "ERRROR";
+        }
+        boneIdsArray[j] = jointid;
+        boneWeightsArray[j] = vertexWeightsSource.data[jointweightid];
         bid += 2;
       }
       bubbleSortWeights(boneWeightsArray, boneIdsArray, 0, numbindings);
@@ -1044,41 +1077,47 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
       processedData.geometryData.boneWeights.push(boneWeights[vid]);
     }
     
-    processedData.constructionOptions.name = geometryData.name;
+    processedData.constructionOptions.name = name;
     var characterMeshNode = scene.constructNode('CharacterMesh', processedData.constructionOptions);
     characterMeshNode.loadGeometryData(processedData.geometryData);
     
     
     /////////////////////////////////////
-    // Contruct the skeleton and animation systems
-    var jointDataSource = skinData.sources[skinData.joints.JOINT.source.slice(1)];
-    var bindPoseDataSource = skinData.sources[skinData.joints.INV_BIND_MATRIX.source.slice(1)];
-    var rootJointName = jointDataSource.data[0];
     // set inverse binding matrices
-    var invmatrices = [];
+    var jointRemapping = [];
     for (var i = 0; i < jointDataSource.data.length; i++) {
-      var jointName = getSourceData(jointDataSource, i);
-      var bindPoseValues = getSourceData(bindPoseDataSource, i);
-      var mat = FABRIC.RT.mat44.apply(undefined, bindPoseValues).transpose();
-      invmatrices.push(skinData.bind_matrix.mul(mat));
+      for (var j = 0; j < bones.length; j++) {
+        if(bones[j].name==jointDataSource.data[i]){
+          jointRemapping[i] = j;
+          break;
+        }
+      }
+      if(j==bones.length){
+        warn("Joints '"+jointDataSource.data[i]+"' not found in skeleton");
+        jointRemapping[i] = -1;
+      }
     }
-    // Note1: The root of the hierarchy may not be the first listed bone. There may be more than
-    // one hierarchy deforming this mesh. Pass in an array of nodes, and construct the skleton node from that list.
-    // in the case that we want to build a hierarchy based on a root bone, provide a function that walks the subtree
-    // and generates a list, and then pass that in.
-    // Note2: In some scenes, there will be missing bones that exist in the hierarchy, but not in the
-    // enveloping/skinning data because they were not used in skinning. These need to be added to the skeleton and
-    // the bond ids remapped. 
     
-    var skeletonData = constructSkeletonFromHierarchy(sceneData, rootJointName, geometryData.name+"Skeleton");
-    skeletonData.skeletonNode.setInvMatrices(invmatrices);
+    var bindPoseDataSource = controllerData.sources[controllerData.joints.INV_BIND_MATRIX.source.slice(1)];
+    var invmatrices = [];
+    for (var j = 0; j < jointDataSource.data.length; j++) {
+      var bindPoseValues = getSourceData(bindPoseDataSource, j);
+      var mat = FABRIC.RT.mat44.apply(undefined, bindPoseValues).transpose();
+      invmatrices[j] = controllerData.bind_shape_matrix.mul(mat);
+    }
+    characterMeshNode.setInvMatrices(invmatrices, jointRemapping);
     
+ 
     assetNodes[geometryData.name] = characterMeshNode;
-    return {
+    
+    var controllerNodes = {
       characterMeshNode:characterMeshNode,
       skeletonData: skeletonData,
-      skinData: skinData
+      controllerData: controllerData
     }
+    
+    libraryControllers[url] = controllerNodes;
+    return controllerNodes;
   }
   
   // Construct the Geometries.
@@ -1091,20 +1130,12 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
     return libraryGeometries[geomid];
   }
   
-  var librarySkins = {};
-  var getSkinNode = function(sceneData, skinid){
-    // Lazy construction of geometries
-    if(!librarySkins[skinid]){
-      librarySkins[skinid] = constructSkin(sceneData, colladaData.libraryControllers[skinid].skin);
-    }
-    return librarySkins[skinid];
-  }
   
   // Construct the Scene
   var constructScene = function(sceneData){
     
     var constructInstance = function(instanceData, parentTransformNode){
-      var geometryNode, materialNode = defaultMaterial;
+      var geometryNode;//, materialNode = defaultMaterial;
       if(instanceData.instance_geometry){
         var url = instanceData.instance_geometry.url.slice(1);
         geometryNode = getGeometryNode(url);
@@ -1122,12 +1153,12 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
           transformNodeOptions.globalXfo = instanceData.xfo;
         }
         var transformNode = scene.constructNode('Transform', transformNodeOptions );
-        if(geometryNode && materialNode){
+        if(geometryNode/* && materialNode*/){
           var instanceNode = scene.constructNode('Instance', {
             name: instanceData.name, 
             transformNode: transformNode,
-            geometryNode: geometryNode,
-            materialNode: materialNode
+            geometryNode: geometryNode /*,
+            materialNode: materialNode */
           });
           assetNodes[instanceData.name] = instanceNode;
         }
@@ -1135,31 +1166,32 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
       }
       else if(instanceData.instance_controller){
         var url = instanceData.instance_controller.url.slice(1);
-        var skinData = getSkinNode(sceneData, url);
-        geometryNode = skinData.characterMeshNode;
-        
+        var controllerNodes = constructController(sceneData, url, instanceData.name);
+        geometryNode = controllerNodes.characterMeshNode;
+        /*
         materialNode = scene.constructNode('PhongSkinningMaterial', {
           lightNode: defaultLight,
           diffuseColor: FABRIC.RT.rgba(1.0, 0.0, 0.0, 1.0),
-          numBones: skinData.skeletonData.skeletonNode.getNumBones()
+          numBones: controllerNodes.skeletonData.skeletonNode.getNumBones()
         });
+        */
         if(instanceData.instance_controller.instance_material){
-          // TODO:
+          // TODO: materialNode =
         }
-        
+        /*
         var xfo = FABRIC.RT.xfo();
-        xfo.setFromMat44(skinData.skinData.bind_matrix);
+        xfo.setFromMat44(controllerNodes.controllerNodes.bind_shape_matrix);
         var transformNode = scene.constructNode('Transform', {
           hierarchical: false,
           globalXfo: xfo
         });
-        
+        */
         var characterNode = scene.constructNode('CharacterInstance', {
-            name: url+'CharacterInstance',
-            geometryNode: skinData.characterMeshNode,
-            materialNode: materialNode,
-            transformNode: transformNode, 
-            rigNode: skinData.skeletonData.rigNode
+            name: instanceData.name+'CharacterInstance',
+            geometryNode: controllerNodes.characterMeshNode,
+          /*  materialNode: materialNode, 
+            transformNode: transformNode, */
+            rigNode: controllerNodes.skeletonData.rigNode
           });
         assetNodes[characterNode.getName()] = characterNode;
       }
@@ -1178,14 +1210,13 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
     
     
     // The file may contain a hierarchy that can be used to generate a skeleton
-    if (options.constructSkeletonFromHierarchy) {
-      var skeletonNode = constructSkeletonFromHierarchy(sceneData, options.constructSkeletonFromHierarchy);
+    if (options.constructRigFromHierarchy) {
+      var skeletonNode = constructRigFromHierarchy(sceneData, options.constructRigFromHierarchy);
     }
   }
   
   if(colladaData.scene){
     constructScene(colladaData.libraryVisualScenes[colladaData.scene.url.slice(1)]);
-    
   }
   
 

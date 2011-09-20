@@ -148,6 +148,9 @@ FABRIC.appendOnCreateContextCallback(function(context) {
       r: 'Byte', g: 'Byte', b: 'Byte', a: 'Byte'
     },
     constructor: FABRIC.RT.RGBA,
-    kBindings: FABRIC.loadResourceURL('FABRIC_ROOT/SceneGraph/RT/RGBA.kl')
+    klBindings: {
+      filename: 'RGBA.kl',
+      sourceCode: FABRIC.loadResourceURL('FABRIC_ROOT/SceneGraph/RT/RGBA.kl')
+    }
   });
 });

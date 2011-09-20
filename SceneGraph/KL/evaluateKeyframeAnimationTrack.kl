@@ -46,7 +46,7 @@ operator evaluateKeyframeAnimationTracks(
 }
 
 operator evaluateCurve(
-  io KEYFRAMETYPE tracks[][],
+  io KEYFRAMETYPE tracks<>[],
   io Integer trackIndex,
   io Vec2 timeRange,
   Size index,

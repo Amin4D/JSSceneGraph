@@ -8,6 +8,8 @@ use OGLRenderTarget;
 use OGLShaderProgram;
 use OGLTexture2D;
 use FabricOGL;
+use Vec2;
+use RGBA;
 
 operator bindRenderTarget(
   io OGLRenderTarget renderTarget
@@ -61,3 +63,21 @@ operator drawRenderTargetToView(
  // report("<<<drawRenderTargetToView");
 }
 
+operator getAllRGBAPixelsFromRenderTarget(
+  io OGLRenderTarget renderTarget,
+  io Color pixels[]
+) {
+  renderTarget.getAllRGBAPixels(pixels);
+}
+
+operator getRGBAPixelsFromRenderTarget(
+  io Boolean toggle,
+  io OGLRenderTarget renderTarget,
+  io Vec2 pos,
+  io Vec2 size,
+  io Color pixels[]
+) {
+  if(toggle) {
+    renderTarget.getRGBAPixels(pos,size,pixels);
+  }
+}

@@ -14,7 +14,6 @@
 
     <link type="text/css" href="../../../ThirdParty/jQuery/css/vader/jquery-ui-1.8.5.custom.css" rel="stylesheet" />
 
-      <script type="text/javascript" src="../../../Core/FABRIC.Wrappers.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../Core/FABRIC.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/RT/Math.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/RT/Vec2.js" charset="utf-8"></script>
@@ -59,11 +58,15 @@ $(document).ready(function() {
   $('#curveEditor').button();
 
   // Create the scene.
-   scene = FABRIC.SceneGraph.createScene();
+  var scene = FABRIC.SceneGraph.createScene();
   var viewport = scene.constructNode('Viewport', {
     enableRaycasting: true,
     windowElement: document.getElementById('FabricContainer')
   });
+  
+  viewport.setBackgroundTextureImage(scene.constructNode('Image', {
+    url: 'Resources/fabric-demo-gradient.png'
+  }));
 
   // Create a camera to draw the scene from
   var haveCameraManipulator = false;
@@ -86,10 +89,19 @@ $(document).ready(function() {
       });
 
   var assetNodes = scene.importAssetFile('Models/envelope.dae');
+  
+  var rigNode = assetNodes.polymshCharacterRig;
+  var rigInstanceNode = assetNodes.polymshCharacterInstance;
 
-
+  var materialNode = scene.constructNode('PhongSkinningMaterial', {
+      lightNode: scene.constructNode('PointLight', { position: FABRIC.RT.vec3(420.0, 1000.0, 600.0) }),
+      diffuseColor: FABRIC.RT.rgba(1.0, 0.0, 0.0, 1.0),
+      numBones: rigNode.getSkeletonNode().getNumBones()
+    });
+  rigInstanceNode.setMaterialNode(materialNode);
+  
   var skeletonGeometryNode = scene.constructNode("CharacterSkeletonDebug",{
-    characterRigNode:assetNodes.geometries_0SkeletonCharacterRig,
+    characterRigNode:rigNode,
     boneradius: 0.2
   });
 
@@ -106,12 +118,10 @@ $(document).ready(function() {
       scene.redrawAllWindows();
     });
 
-  var keyframeTrackNode = assetNodes.polymshLinearKeyAnimationTrack;
+  var keyframeTrackNode = assetNodes.polymshAnimationTrack;
   $('#curveEditor').button()
     .click(function() {
-      var debuggerWindow = window.open('../../../SceneGraph/CurveEditor/CurveEditor.html', 'Fabric Curve Editor');
-      debuggerWindow.keyframeTrackNode = keyframeTrackNode;
-      debuggerWindow.scene = scene;
+      keyframeTrackNode.openCurveEditor();
     });
     
 
@@ -169,7 +179,7 @@ $(document).ready(function() {
                   <div class="box">
                     <h2>CONTROLS</h2>
                     <div class="content">
-                        <div>Global Time:</div>
+                        <div>Sample Index:</div>
                         <div id='globalTime' style="margin-top:10px;"></div>
                  <button id="curveEditor" style="margin-top:30px;">Open Curve Editor</button>
                     </div><!--content-->

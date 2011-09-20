@@ -1,0 +1,41 @@
+
+
+use Quat;
+use Xfo;
+
+
+operator cylinderOp( 
+  io Xfo conrodxfo, io Xfo pistonxfo, 
+  io Scalar cylinderAngle, io Scalar phaseOffset, 
+  io Scalar axialShift, io Scalar crankPhase ) 
+{ 
+//  report( "cylinderOp");
+
+  var Scalar fortyFiveDegress = 0.785398163;
+  var Scalar pi = 3.14159265;
+  var Scalar piOver2 = 1.57079633;
+
+  var Scalar phase = crankPhase + phaseOffset;
+  // The following 2 numbers are guesses
+  var Scalar conrodLength = 147.0;
+  var Scalar crankArmLength = 48.0;
+  var Vec3 conrodOffset( sin(cylinderAngle), cos(cylinderAngle), 0.0);
+
+  // Law of Sines
+  var Scalar AD = (cos( phase ) * crankArmLength);
+  var Scalar CD = (sin( phase ) * crankArmLength);
+
+  var Scalar pistonHeight = AD  + sqrt( (conrodLength* conrodLength) - (CD*CD) );
+
+  var Vec3 pistonPosition = (conrodOffset * pistonHeight);
+  pistonPosition.z = axialShift;
+
+  pistonxfo.tr = pistonPosition;
+  pistonxfo.ori = axisAndAngleToQuat( Vec3( 0.0, 0.0, 1.0 ), -cylinderAngle );
+
+  conrodxfo.tr = pistonPosition;
+
+  var Scalar conrodAngle = 1.57079633 - acos( sin( phase ) * crankArmLength / conrodLength );
+
+  conrodxfo.ori = axisAndAngleToQuat( Vec3( 0.0, 0.0, 1.0 ), -(cylinderAngle - conrodAngle) );
+}

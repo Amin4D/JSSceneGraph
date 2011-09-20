@@ -11,7 +11,6 @@ function decodeLDRImageData(
   io Size imageHeight,
   io RGBA imageLDR[]
 ) {
-report "JCG Texture size " + resource.data.size();
   if(resource.data.size() == 0)
     return;
   String ext = resource.extension ? resource.extension : resource.mimeType;
@@ -88,7 +87,7 @@ operator loadAndBindTextureLDR(
 //  report("loadAndBindTextureLDR -> textureUnit:" + textureUnit);
   if(resource.data.size() == 0)
     return;
-  if(oglTexture2D.bufferID == 0){
+  if(oglTexture2D.bufferID == 0 || oglTexture2D.forceRefresh){
     Size width, height;
     RGBA imageLDR[];
     decodeLDRImageData(resource, width, height, imageLDR);
@@ -180,5 +179,20 @@ operator createErrorTexture(
   else {
     glActiveTexture(GL_TEXTURE0 + textureUnit);
     glBindTexture(GL_TEXTURE_2D, bufferID);
+  }
+}
+
+operator initImageFromColor(
+  io Size width,
+  io Size height,
+  io RGBA color,
+  io RGBA pixels[],
+  io Boolean initiated
+) {
+  if(!initiated) {
+    pixels.resize(width * height);
+    for(var Size i=0;i<pixels.size();i++)
+      pixels[i] = color;
+    initiated = true;
   }
 }

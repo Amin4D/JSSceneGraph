@@ -14,7 +14,6 @@
 
     <link type="text/css" href="../../../ThirdParty/jQuery/css/vader/jquery-ui-1.8.5.custom.css" rel="stylesheet" />
 
-      <script type="text/javascript" src="../../../Core/FABRIC.Wrappers.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../Core/FABRIC.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/RT/Math.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/RT/Vec2.js" charset="utf-8"></script>
@@ -32,6 +31,7 @@
     <script type="text/javascript" src="../../../SceneGraph/RT/CollectedPoints.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/RT/OGLShaderProgram.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/RT/OGLBuffer.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/OGLTexture2D.js" charset="utf-8"></script>
     
     <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Geometry.js" charset="utf-8"></script>
@@ -56,6 +56,10 @@ $(document).ready(function() {
       windowElement: document.getElementById('FabricContainer'),
       cameraNode: camera
     });
+  
+  viewport.setBackgroundTextureImage(scene.constructNode('Image', {
+    url: 'Resources/fabric-demo-gradient.png'
+  }));
 
   scene.constructNode('CameraManipulator', { targetNode: camera });
 
@@ -65,6 +69,12 @@ $(document).ready(function() {
       scene.constructNode('PhongMaterial', { diffuseColor: FABRIC.RT.rgb(0, 0.8, 0, 1), lightNode: light }),
       scene.constructNode('PhongMaterial', { diffuseColor: FABRIC.RT.rgb(0, 0, 0.8, 1), lightNode: light })
     ];
+  
+  var outlineMaterial = scene.constructNode('OutlineShader', {
+    color: FABRIC.RT.rgb(0.8, 0.8, 0.8, 1),
+    thickness: 0.3
+  })
+  
 
   var objId = 0;
   var scale = 7.0;
@@ -109,13 +119,17 @@ $(document).ready(function() {
   var mouseUpEventsText = document.getElementById('mouseUpEventsText').childNodes[0];
 
   scene.addEventListener('mouseover_geom', function(evt) {
+      evt.targetNode.setMaterialNode( outlineMaterial );
       mouseOverEventsText.data = 'Mouse Over:' + evt.targetNode.getName();
+      viewport.redraw();
     });
   scene.addEventListener('mousemove_geom', function(evt) {
       mouseMoveEventsText.data = 'Mouse Move:' + evt.targetNode.getName();
     });
   scene.addEventListener('mouseout_geom', function(evt) {
+      evt.targetNode.removeMaterialNode( outlineMaterial );
       mouseOutEventsText.data = 'Mouse Out:' + evt.targetNode.getName();
+      viewport.redraw();
     });
   scene.addEventListener('mousedown_geom', function(evt) {
       mouseDownEventsText.data = 'Mouse Down:' + evt.targetNode.getName();
@@ -175,15 +189,15 @@ $(document).ready(function() {
           </div><!--box-->
 
           <div class="box">
-                    <h2>EVENTS</h2>
+            <h2>EVENTS</h2>
             <div class="content">
-                      <p id="mouseOverEventsText">Mouse Over:
-                      <p id="mouseOutEventsText">Mouse Out:
-                      <p id="mouseMoveEventsText">Mouse Move:
-                      <p id="mouseDownEventsText">Mouse Down:
-                      <p id="mouseUpEventsText">Mouse Up:
-                    </div>
-                </div><!--box-->
+              <p id="mouseOverEventsText">Mouse Over:</p>
+              <p id="mouseOutEventsText">Mouse Out:</p>
+              <p id="mouseMoveEventsText">Mouse Move:</p>
+              <p id="mouseDownEventsText">Mouse Down:</p>
+              <p id="mouseUpEventsText">Mouse Up:</p>
+            </div>
+          </div><!--box-->
             
         </div><!--sidebar-->
       </div> <!--editor-->

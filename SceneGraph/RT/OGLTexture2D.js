@@ -14,6 +14,7 @@ FABRIC.RT.OGLTexture2D = function(glInternalFormat, glFormat, glType) {
   this.glType = glType ? glType : 0;
   this.bufferID = 0;
   this.nbPixels = 0;
+  this.forceRefresh = false;
 };
 
 FABRIC.RT.oglTexture2D = function(){
@@ -34,10 +35,13 @@ FABRIC.RT.oglDepthBuffer2D = function(){
 FABRIC.appendOnCreateContextCallback(function(context) {
   context.RegisteredTypesManager.registerType('OGLTexture2D', {
     members: {
-     glInternalFormat: 'Size', glFormat: 'Size', glType: 'Size', bufferID: 'Size', nbPixels: 'Size'
+     glInternalFormat: 'Size', glFormat: 'Size', glType: 'Size', bufferID: 'Size', nbPixels: 'Size', forceRefresh: 'Boolean'
     },
     constructor: FABRIC.RT.OGLTexture2D,
-    kBindings: FABRIC.loadResourceURL('FABRIC_ROOT/SceneGraph/RT/OGLTexture2D.kl')
+    klBindings: {
+      filename: 'OGLTexture2D.kl',
+      sourceCode: FABRIC.loadResourceURL('FABRIC_ROOT/SceneGraph/RT/OGLTexture2D.kl')
+    }
   });
 });
 

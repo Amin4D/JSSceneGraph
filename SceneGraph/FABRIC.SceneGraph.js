@@ -79,7 +79,6 @@ FABRIC.SceneGraph = {
         postDraw: true,
         constructAnimationInterface: true,
         timeStep: 1/50, /* 50 fps */
-        shadowMaterial:'ShadowMaterial'
       });
     
     // first let's create the basic scene object
@@ -171,13 +170,18 @@ FABRIC.SceneGraph = {
       var fabricwindow = context.createWindow(element, options);
       // [pzion 20110326] Add a context menu item for any windows
       // in the context that pops up a Fabric debugger for the context
-      fabricwindow.addPopUpMenuItem(
-        'display-core-debugger',
-        'Fabric debugger...',
-        function(arg) {
-          scene.pub.displayDebugger();
-        }
-      );
+      // Note: PT 19-09-11
+      // This feature has only been working on OsX, and so we are diabling
+      // it for the Fabric beta to ensure the developer experience is clear
+      // and consistent across platforms. Developers on OsX, feel free to
+      // uncomment this code :)
+    //  fabricwindow.addPopUpMenuItem(
+    //    'display-core-debugger',
+    //    'Fabric debugger...',
+    //    function(arg) {
+    //      scene.pub.displayDebugger();
+    //    }
+    //  );
       viewports.push(viewPort);
       return fabricwindow;
     };
@@ -453,7 +457,7 @@ FABRIC.SceneGraph = {
           var code = scene.preProcessCode(operatorDef.srcCode, operatorDef.preProcessorDefinitions, includedCodeSections);
           configureOperator(code);
         }else{
-          FABRIC.addAsyncTask(function(){
+          FABRIC.createAsyncTask(function(){
             var code = scene.preProcessCode(operatorDef.srcCode, operatorDef.preProcessorDefinitions, includedCodeSections);
             configureOperator(code);
           });
@@ -479,6 +483,10 @@ FABRIC.SceneGraph = {
     scene.getSceneRedrawTransparentObjectsEventHandler = function() {
       return beginDrawTransparentObjectsEventHandler;
     };
+    scene.getSceneRedrawOverlayObjectsEventHandler = function() {
+      return beginDrawOverlayObjectsEventHandler;
+    };
+    
     scene.getScenePostRedrawEventHandler = function() {
       return postDrawEventHandler;
     };
@@ -493,14 +501,6 @@ FABRIC.SceneGraph = {
     };
     scene.getBeginRenderShadowMapEventHandler = function() {
       return beginRenderShadowMap;
-    };
-    scene.getShadowMapMaterial = function() {
-      if (!shadowMapMaterial) {
-        shadowMapMaterial = this.pub.constructNode(sceneOptions.shadowMaterial, {
-          parentEventHandler: beginRenderShadowMap
-        });
-      }
-      return shadowMapMaterial;
     };
     scene.addEventHandlingFunctions = function(obj) {
       // We store a map of arrays of event listener functions.
@@ -652,12 +652,14 @@ FABRIC.SceneGraph = {
     var beginDrawOpaqueObjectsEventHandler = scene.constructEventHandlerNode('Scene_DrawOpaqueObjects');
     beginDrawEventHandler.appendChildEventHandler(beginDrawOpaqueObjectsEventHandler);
     
-    // Transparent objects are always drawn after opaque objectsf
+    // Transparent objects are always drawn after opaque objects
     var beginDrawTransparentObjectsEventHandler = scene.constructEventHandlerNode('Scene_DrawTransparentObjects');
     beginDrawEventHandler.appendChildEventHandler(beginDrawTransparentObjectsEventHandler);
     
+    // Overlay objects are always drawn after everything else
+    var beginDrawOverlayObjectsEventHandler = scene.constructEventHandlerNode('Scene_DrawOverlaybjects');
+    beginDrawEventHandler.appendChildEventHandler(beginDrawOverlayObjectsEventHandler);
     
-
     ///////////////////////////////////////////////////////////////////
     // Window <-> SceneGraph raycast event handler firewall
     var sceneRaycastEventHandler = scene.constructEventHandlerNode('Scene_raycast');
@@ -840,6 +842,9 @@ FABRIC.SceneGraph.registerNodeType('SceneGraphNode', {
         dgnodes[dgnodename] = dgnode;
         return dgnode;
       },
+      getDGNodes: function() {
+        return dgnodes;
+      },
       constructResourceLoadNode: function(dgnodename) {
         return sceneGraphNode.constructDGNode(dgnodename, true);
       },
@@ -894,20 +899,22 @@ FABRIC.SceneGraph.registerNodeType('Viewport', {
         mouseMoveEvents: true,
         backgroundColor: FABRIC.RT.rgb(0.5, 0.5, 0.5),
         postProcessEffect: undefined,
-        rayIntersectionThreshold: 0.2
+        rayIntersectionThreshold: 0.2,
+        polygonMode: -1
       });
 
     if (!options.windowElement) {
       throw ('Must provide a window to this constructor');
     }
 
-    var cameraNode, fabricwindow;
+    var cameraNode = undefined, fabricwindow;
     var windowElement = options.windowElement;
     var viewportNode = scene.constructNode('SceneGraphNode', options),
       dgnode = viewportNode.constructDGNode('DGNode'),
       redrawEventHandler = viewportNode.constructEventHandlerNode('Redraw');
       
     dgnode.addMember('backgroundColor', 'Color', options.backgroundColor);
+    dgnode.addMember('polygonMode', 'Integer', options.polygonMode);
 
     redrawEventHandler.addScope('viewPort', dgnode);
 
@@ -918,20 +925,38 @@ FABRIC.SceneGraph.registerNodeType('Viewport', {
           parameterLayout: [
             'window.width',
             'window.height',
-            'viewPort.backgroundColor'
+            'viewPort.backgroundColor',
+            'viewPort.polygonMode'
           ]
         }));
 
 
     var fabricwindow = scene.bindViewportToWindow(windowElement, viewportNode);
-    redrawEventHandler.addScope('window', fabricwindow.windowNode);
-    if(scene.getScenePreRedrawEventHandler()){
-      fabricwindow.redrawEvent.appendEventHandler(scene.getScenePreRedrawEventHandler());
-    }
-    fabricwindow.redrawEvent.appendEventHandler(redrawEventHandler);
-    if(scene.getScenePostRedrawEventHandler()){
-      fabricwindow.redrawEvent.appendEventHandler(scene.getScenePostRedrawEventHandler());
-    }
+    
+    FABRIC.appendOnResolveAsyncTaskCallback(function(label, countRemaining){
+      if(countRemaining===0){
+        redrawEventHandler.addScope('window', fabricwindow.windowNode);
+        if(scene.getScenePreRedrawEventHandler()){
+          fabricwindow.redrawEvent.appendEventHandler(scene.getScenePreRedrawEventHandler());
+        }
+        fabricwindow.redrawEvent.appendEventHandler(redrawEventHandler);
+        if(scene.getScenePostRedrawEventHandler()){
+          fabricwindow.redrawEvent.appendEventHandler(scene.getScenePostRedrawEventHandler());
+        }
+        if(viewPortRaycastEventHandler){
+          // the sceneRaycastEventHandler propogates the event throughtout the scene.
+          viewPortRaycastEventHandler.appendChildEventHandler(scene.getSceneRaycastEventHandler());
+        }
+        
+        // These functions cannot be called during the initial construction of the
+        // graph because they rely on an OpenGL context being set up, and this occurs
+        // during the 1st redraw.
+        viewportNode.pub.getOpenGLVersion = fabricwindow.getOpenGLVersion;
+        viewportNode.pub.getGlewSupported = fabricwindow.getGlewSupported;
+        fabricwindow.show();
+        return true;
+      }
+    });
     
     var propagationRedrawEventHandler = viewportNode.constructEventHandlerNode('DrawPropagation');
     redrawEventHandler.appendChildEventHandler(propagationRedrawEventHandler);
@@ -980,18 +1005,17 @@ FABRIC.SceneGraph.registerNodeType('Viewport', {
       // The operators us the collected scopes to calculate the ray.
       viewPortRaycastEvent = viewportNode.constructEventNode('RaycastEvent');
       viewPortRaycastEvent.appendEventHandler(viewPortRaycastEventHandler);
-
-      // the sceneRaycastEventHandler propogates the event throughtout the scene.
-      viewPortRaycastEventHandler.appendChildEventHandler(scene.getSceneRaycastEventHandler());
-
     }
 
     var getElementCoords = function(evt) {
+      var browserZoom = fabricwindow.windowNode.getData('width') / evt.target.clientWidth;
       if (evt.offsetX) {
-        return FABRIC.RT.vec2(evt.offsetX, evt.offsetY);
+        // Webkit
+        return FABRIC.RT.vec2(Math.floor(evt.offsetX*browserZoom), Math.floor(evt.offsetY*browserZoom));
       }
       else if (evt.layerX) {
-        return FABRIC.RT.vec2(evt.layerX, evt.layerY);
+        // Firefox
+        return FABRIC.RT.vec2(Math.floor(evt.layerX*browserZoom), Math.floor(evt.layerY*browserZoom));
       }
       throw("Unsupported Browser");
     }
@@ -1005,13 +1029,15 @@ FABRIC.SceneGraph.registerNodeType('Viewport', {
     };
 
     // public interface
-    viewportNode.pub.getOpenGLVersion = fabricwindow.getOpenGLVersion;
-    viewportNode.pub.getGlewSupported = fabricwindow.getGlewSupported;
     
     viewportNode.addMemberInterface(dgnode, 'backgroundColor', true);
     viewportNode.pub.setCameraNode = function(node) {
       if (!node || !node.isTypeOf('Camera')) {
         throw ('Incorrect type assignment. Must assign a Camera');
+      }
+      // remove the child event handler first
+      if(cameraNode != undefined) {
+        propagationRedrawEventHandler.removeChildEventHandler(cameraNode.getRedrawEventHandler());
       }
       cameraNode = scene.getPrivateInterface(node);
       propagationRedrawEventHandler.appendChildEventHandler(cameraNode.getRedrawEventHandler());
@@ -1304,61 +1330,100 @@ FABRIC.SceneGraph.registerNodeType('Viewport', {
     return viewportNode;
   }});
 
-  FABRIC.SceneGraph.registerNodeType('ResourceLoad', {
+FABRIC.SceneGraph.registerNodeType('ResourceLoad', {
   briefDesc: 'The ResourceLoad node implements the loading of a resource from an URL.',
   detailedDesc: 'Based on is \'url\' member, the ResourceLoad node will asynchronously load the associated ' +
                 'resource to its \'resource\' member. Until the data is loaded, resource.dataSize will be zero. ' +
                 'Once the data is loaded, JS callbacks will be fired; you can register those by calling the ' +
-                '\'addOnLoadCallback\' member function. Unless \'option.redrawOnLoad\' is set to false, the loading ' +
-                'will automatically trigger a redraw. Note that operators can dynamically modify the URL.',
+                '\'addOnLoadSuccessCallback\' and \'addOnLoadFailureCallback\' member function. Unless ' + 
+                '\'option.redrawOnLoad\' is set to false, the loading will automatically trigger a redraw. ' +
+                'Note that operators can dynamically modify the URL.',
   factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
-      redrawOnLoad: true,
-      onLoadCallback: undefined
+      onLoadSuccessCallback: undefined,
+      onLoadFailureCallback: undefined,
+      blockRedrawingTillResourceIsLoaded:true,
+      redrawOnLoad: true
     });
 
-    var onloadCallbacks = [];
+    var onloadSuccessCallbacks = [];
+    var onloadFailureCallbacks = [];
     lastLoadCallbackURL = '';
 
     var resourceLoadNode = scene.constructNode('SceneGraphNode', options);
     var dgnode = resourceLoadNode.constructResourceLoadNode('DGLoadNode');
 
-    resourceLoadNode.addMemberInterface(dgnode, 'url', true);
+    resourceLoadNode.addMemberInterface(dgnode, 'url');
     resourceLoadNode.addMemberInterface(dgnode, 'resource');
+    
+    var incrementLoadProgressBar;
+    if(options.blockRedrawingTillResourceIsLoaded){
+      incrementLoadProgressBar = FABRIC.addAsyncTask("Loading: "+ options.url);
+    }
 
-    dgnode.addOnLoadCallback(function() {
+    var onLoadCallbackFunction = function(callbacks) {
       var i;
       lastLoadCallbackURL = resourceLoadNode.pub.getUrl();
-      for (i = 0; i < onloadCallbacks.length; i++) {
-        onloadCallbacks[i](resourceLoadNode.pub);
+      for (i = 0; i < callbacks.length; i++) {
+        callbacks[i](resourceLoadNode.pub);
       }
-      onloadCallbacks = [];
+      callbacks.length = 0;
+      
+      if(incrementLoadProgressBar){
+        incrementLoadProgressBar();
+      }
+      else if (options.redrawOnLoad) {
+        // PT 09-09-2011 Note: this is a hack to force the redrawing after the resource has
+        // really finished loading. I'm not sure if there is a bug that means
+        // this callback is called early. For the Alpha11 release I am adding this
+        // here, but it needs to be thoroughly understood and possibly removed. 
+        setTimeout(function(){
+          scene.pub.redrawAllWindows();
+        }, 100);
+      }
+    }
 
-      if (options.redrawOnLoad) {
-        scene.pub.redrawAllWindows();
-      }
-    });
+    var onLoadSuccessCallbackFunction = function() {
+      onLoadCallbackFunction(onloadSuccessCallbacks);
+    }
+    var onLoadFailureCallbackFunction = function() {
+      onLoadCallbackFunction(onloadFailureCallbacks);
+    }
+
+    dgnode.addOnLoadSuccessCallback(onLoadSuccessCallbackFunction);
+    dgnode.addOnLoadFailureCallback(onLoadFailureCallbackFunction);
 
     resourceLoadNode.pub.isLoaded = function() {
       return lastLoadCallbackURL !== '' && lastLoadCallbackURL === resourceLoadNode.pub.getUrl();
     }
 
-    resourceLoadNode.pub.addOnLoadCallback = function(callback) {
+    resourceLoadNode.pub.addOnLoadSuccessCallback = function(callback) {
       //It is possible that a resourceLoadNode actually loads multiple resources in a sequence;
       //make sure the callback is only fired when the 'next' resource is loaded.
       if (resourceLoadNode.pub.isLoaded()) {
-        callback.call(); //Already loaded
+        callback.call(); //Already loaded. Todo: we don't keep track of success/failure state, which is wrong.
       } else {
-        onloadCallbacks.push(callback);
+        onloadSuccessCallbacks.push(callback);
       }
     };
 
-    resourceLoadNode.pub.getDGNode = function() {
-      return dgnode;
+    resourceLoadNode.pub.addOnLoadFailureCallback = function(callback) {
+      onloadFailureCallbacks.push(callback);
+    };
+    
+    resourceLoadNode.pub.setUrl = function(url, forceLoad) {
+      dgnode.setData('url', 0, url);
+      if(forceLoad!= false){
+        dgnode.evaluate();
+      }
+    };
+    
+    if (options.onLoadSuccessCallback) {
+      resourceLoadNode.pub.addOnLoadSuccessCallback(options.onLoadSuccessCallback);
     }
 
-    if (options.onLoadCallback) {
-      resourceLoadNode.pub.addOnLoadCallback(options.onLoadCallback);
+    if (options.onLoadFailureCallback) {
+      resourceLoadNode.pub.addOnLoadFailureCallback(options.onLoadFailureCallback);
     }
 
     if (options.url) {

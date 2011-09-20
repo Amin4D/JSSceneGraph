@@ -4,7 +4,11 @@
 
 use Mat44, Xfo;
 
-operator calcSkinningXfos(io Xfo pose[], io Bone bones[], io Xfo xfos[]) {
+operator calcSkinningXfos(
+  io Xfo pose[],
+  io Bone bones[],
+  io Xfo xfos[]
+){
   if (bones.size() != pose.size()) {
     report("Error in calcSkinningXfos: bones.size() != pose.size() ");
     return;

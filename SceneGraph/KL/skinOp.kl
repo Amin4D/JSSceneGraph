@@ -13,11 +13,8 @@ operator skinOp
   io Vec3 positions<>,
   io Vec3 normals<>,/*
   io Vec4 tangents<>,*/
-  io Mat44 bindMatrix,
   
-  io Mat44 invMatrices[],
-  io Xfo pose[],
-  
+  io Mat44 skinningMatrices[],
   io Vec4 boneIds<>,
   io Vec4 skinWeights<>,
   io Integer boneMapping[],
@@ -31,14 +28,6 @@ operator skinOp
     return;
     
 //  report("skinOp<<<");
-    
-  Mat44 skinningMatrices[];
-  skinningMatrices.resize(invMatrices.size());
-  for (var Integer i = 0; i < invMatrices.size(); i++) {
-    if(boneMapping[i] < 0)
-      continue;
-    skinningMatrices[i] = bindMatrix * invMatrices[i] * Mat44(pose[boneMapping[i]]);
-  }
   
   Vec3 position = positions[index];
   Vec3 normal = normals[index];

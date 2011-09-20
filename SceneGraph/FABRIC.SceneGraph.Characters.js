@@ -81,6 +81,7 @@ FABRIC.SceneGraph.registerNodeType('CPUSkinnedCharacterMesh', {
     deformedSkin.pub.setRigNode = function(node) {
       rigNode = scene.getPrivateInterface(node);
       skeletonNode = scene.getPrivateInterface(rigNode.pub.getSkeletonNode());
+      deformedSkin.getUniformsDGNode().addDependency(rigNode.getDGNode(), 'rig');
       deformedSkin.getAttributesDGNode().addDependency(rigNode.getDGNode(), 'rig');
       deformedSkin.getAttributesDGNode().addDependency(skeletonNode.getDGNode(), 'skeleton');
     };
@@ -92,6 +93,20 @@ FABRIC.SceneGraph.registerNodeType('CPUSkinnedCharacterMesh', {
       deformedSkin.pub.setRigNode(options.characterRigNode);
     }
     
+    deformedSkin.pub.addUniformValue('skinningMatrices', 'Mat44[]');
+    deformedSkin.getUniformsDGNode().bindings.append( scene.constructOperator({
+      operatorName: 'calcSkinningMatrices',
+      srcFile: 'FABRIC_ROOT/SceneGraph/KL/calcSkinningMatrices.kl',
+      entryFunctionName: 'calcSkinningMatrices',
+      parameterLayout: [
+        'parentuniforms.bindShapeMatrix',
+        'parentuniforms.invmatrices',
+        'parentuniforms.boneMapping',
+        'rig.pose',
+        'self.skinningMatrices'
+      ]
+    }));
+    
     deformedSkin.getAttributesDGNode().bindings.append(scene.constructOperator({
       operatorName: 'skinOp',
       srcFile: 'FABRIC_ROOT/SceneGraph/KL/skinOp.kl',
@@ -101,11 +116,8 @@ FABRIC.SceneGraph.registerNodeType('CPUSkinnedCharacterMesh', {
         'parentattributes.positions<>',
         'parentattributes.normals<>',/*
         'parentattributes.tangents<>',*/
-        'parentuniforms.bindShapeMatrix',
         
-        'parentuniforms.invmatrices',
-        'rig.pose',
-        
+        'uniforms.skinningMatrices',
         'parentattributes.boneIds<>',
         'parentattributes.boneWeights<>',
         'parentuniforms.boneMapping',

@@ -795,7 +795,7 @@ operator calcSkinStickLocations(
   in Size index,
   io DebugGeometry debugDraw
 ){
-  report("calcSkinStickLocations<<<" );
+//  report("calcSkinStickLocations<<<" );
   Vec3 position = positions[index] * bindShapeMatrix;
 //  debugDraw.drawPoint(position, Color(0.0, 1.0, 0.0, 1.0) );
 
@@ -866,6 +866,7 @@ operator calcSkinStickLocations(
   if(muscleIds.size() == 1){
     muscleBindingIds[0] = muscleIds[0];
     muscleBindingWeights[0] = muscleWeights[0];
+    debugDraw.drawPoint(position, muscles[muscleIds[0]].color );
   }
   else{
     Scalar total = 0.0;
@@ -885,14 +886,19 @@ operator calcSkinStickLocations(
       for(Integer i=0; i<muscleWeights.size(); i++){
         total += muscleWeights[i];
       }
-      for(Integer i=0; i<muscleWeights.size(); i++){
-        muscleWeights[i] /= total;
+      if(total > 1.0){
+        for(Integer i=0; i<muscleWeights.size(); i++){
+          muscleWeights[i] /= total;
+        }
       }
-      
+      Color color;
       for(Integer i=0; i<muscleIds.size(); i++){
         muscleBindingIds[i] = muscleIds[i];
         muscleBindingWeights[i] = muscleWeights[i];
+        color += (muscles[muscleIds[i]].color * muscleWeights[i]);
       }
+      
+      debugDraw.drawPoint(position, color);
     }
   }
   

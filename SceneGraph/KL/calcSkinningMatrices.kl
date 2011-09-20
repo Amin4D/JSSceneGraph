@@ -1,0 +1,21 @@
+//
+// Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
+//
+
+use Mat44, Xfo;
+
+operator calcSkinningMatrices(
+  io Mat44 bindMatrix,
+  io Mat44 invMatrices[],
+  io Integer boneMapping[],
+  io Xfo pose[],
+  io Mat44 skinningMatrices[]
+) {
+//  report("calcSkinningMatrices");
+  skinningMatrices.resize(invMatrices.size());
+  for (var Integer i = 0; i < invMatrices.size(); i++) {
+    if(boneMapping[i] < 0)
+      continue;
+    skinningMatrices[i] = bindMatrix * invMatrices[i] * Mat44(pose[boneMapping[i]]);
+  }
+}

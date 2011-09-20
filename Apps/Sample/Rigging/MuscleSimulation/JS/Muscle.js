@@ -23,7 +23,10 @@ FABRIC.appendOnCreateContextCallback(function(context) {
       size: 'Size'
     },
     constructor: FABRIC.RT.DisplacementMap,
-    kBindings: FABRIC.loadResourceURL('./KL/DisplacementMap.kl')
+    klBindings: {
+      filename: 'DisplacementMap.kl',
+      sourceCode: FABRIC.loadResourceURL('./KL/DisplacementMap.kl')
+    }
   });
 });
 
@@ -157,7 +160,11 @@ FABRIC.SceneGraph.registerNodeType('MuscleSystem', {
         operatorName: 'calcSkinningXfos',
         srcFile: 'FABRIC_ROOT/SceneGraph/KL/calcSkinningXfos.kl',
         entryFunctionName: 'calcSkinningXfos',
-        parameterLayout: ['rig.pose', 'skeleton.bones', 'self.skinningXfos']
+        parameterLayout: [
+          'rig.pose',
+          'skeleton.bones',
+          'self.skinningXfos'
+        ]
       }));
     
     ////////////////////////////////////////////////////////////////////////////

@@ -3,6 +3,8 @@
 // Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
 //
 
+use Math;
+
 function Ray(Vec3 start, Vec3 direction) {
   this.start = start;
   this.direction = direction;

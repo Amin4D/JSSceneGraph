@@ -56,8 +56,8 @@ FABRIC.RT.Vec2.prototype = {
   // Returns true if the vector is equal to the argument
   eql: function(v) {
     return FABRIC.RT.isVec2(v) &&
-      (Math.abs(this.x - v.x) < FABRIC.RT.precision) &&
-      (Math.abs(this.y - v.y) < FABRIC.RT.precision);
+      (Math.abs(this.x - v.x) < Math.PRECISION) &&
+      (Math.abs(this.y - v.y) < Math.PRECISION);
   },
 
   scale: function(s) {

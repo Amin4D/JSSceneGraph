@@ -2,7 +2,7 @@
 // Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
 //
 
-use RotationOrder;
+use Math, RotationOrder;
 
 function Quat() {
   this.v = Vec3(0.0, 0.0, 0.0);

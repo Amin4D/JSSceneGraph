@@ -2,7 +2,7 @@
 // Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
 //
 
-use Vec4;
+use Math, Vec4;
 
 function Mat44(
   Scalar _00, Scalar _01, Scalar _02, Scalar _03,

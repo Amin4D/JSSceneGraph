@@ -567,6 +567,7 @@ FABRIC.SceneGraph = {
         throw ('Missing Resource Loader for :' + ext);
       }
     };
+    scene.pub.IO = context.IO;
     scene.pub.redrawAllWindows = function() {
       for (var i=0; i<viewports.length; i++) {
         viewports[i].pub.redraw();
@@ -1437,7 +1438,11 @@ FABRIC.SceneGraph.registerNodeType('ResourceLoad', {
         dgnode.evaluate();
       }
     };
-    
+
+    resourceLoadNode.pub.getDGLoadNode = function() {
+      return dgnode;
+    };
+
     if (options.onLoadSuccessCallback) {
       resourceLoadNode.pub.addOnLoadSuccessCallback(options.onLoadSuccessCallback);
     }

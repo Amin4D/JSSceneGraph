@@ -1355,6 +1355,7 @@ FABRIC.SceneGraph.registerNodeType('ResourceLoad', {
   parentNodeDesc: 'SceneGraphNode',
   optionsDesc: {
     onLoadSuccessCallback: 'A callback that will be fired once the resource has loaded successfully.',
+    onLoadProgressCallback: 'A callback that will be fired after some load progress.',
     onLoadFailureCallback: 'A callback that will be fired if the resource cannot load.',
     blockRedrawingTillResourceIsLoaded: 'If set to true redrawing will be blocked until the resource is loaded.',
     redrawOnLoad: 'If set to true, the viewport will fire a redraw once the resource has been loaded.'
@@ -1362,12 +1363,14 @@ FABRIC.SceneGraph.registerNodeType('ResourceLoad', {
   factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
       onLoadSuccessCallback: undefined,
+      onLoadProgressCallback: undefined,
       onLoadFailureCallback: undefined,
       blockRedrawingTillResourceIsLoaded:true,
       redrawOnLoad: true
     });
 
     var onloadSuccessCallbacks = [];
+    var onloadProgressCallbacks = [];
     var onloadFailureCallbacks = [];
     lastLoadCallbackURL = '';
 
@@ -1377,21 +1380,21 @@ FABRIC.SceneGraph.registerNodeType('ResourceLoad', {
     resourceLoadNode.addMemberInterface(dgnode, 'url');
     resourceLoadNode.addMemberInterface(dgnode, 'resource');
     
+    var remainingTaskWeight = 1.0;
     var incrementLoadProgressBar;
     if(options.blockRedrawingTillResourceIsLoaded){
-      incrementLoadProgressBar = FABRIC.addAsyncTask("Loading: "+ options.url);
+      incrementLoadProgressBar = FABRIC.addAsyncTask("Loading: "+ options.url, remainingTaskWeight);
     }
 
     var onLoadCallbackFunction = function(callbacks) {
       var i;
-      lastLoadCallbackURL = resourceLoadNode.pub.getUrl();
       for (i = 0; i < callbacks.length; i++) {
         callbacks[i](resourceLoadNode.pub);
       }
       callbacks.length = 0;
       
       if(incrementLoadProgressBar){
-        incrementLoadProgressBar();
+        incrementLoadProgressBar(true, -remainingTaskWeight);
       }
       else if (options.redrawOnLoad) {
         // PT 09-09-2011 Note: this is a hack to force the redrawing after the resource has
@@ -1404,14 +1407,26 @@ FABRIC.SceneGraph.registerNodeType('ResourceLoad', {
       }
     }
 
-    var onLoadSuccessCallbackFunction = function() {
+    var onLoadSuccessCallbackFunction = function(node) {
       onLoadCallbackFunction(onloadSuccessCallbacks);
     }
-    var onLoadFailureCallbackFunction = function() {
+    var onLoadProgressCallbackFunction = function(node, progress) {
+      prevRemainingTaskWeight = remainingTaskWeight;
+      //TaskWeight = 1 + size/100KB
+      remainingTaskWeight = 1.0 + (progress.total - progress.received) / 100000;
+      incrementLoadProgressBar(false, remainingTaskWeight-prevRemainingTaskWeight);
+
+      var i;
+      for (i = 0; i < onloadProgressCallbacks.length; i++) {
+        callbacks[i](resourceLoadNode.pub, progress);
+      }
+    }
+    var onLoadFailureCallbackFunction = function(node) {
       onLoadCallbackFunction(onloadFailureCallbacks);
     }
 
     dgnode.addOnLoadSuccessCallback(onLoadSuccessCallbackFunction);
+    dgnode.addOnLoadProgressCallback(onLoadProgressCallbackFunction);
     dgnode.addOnLoadFailureCallback(onLoadFailureCallbackFunction);
 
     resourceLoadNode.pub.isLoaded = function() {
@@ -1445,6 +1460,10 @@ FABRIC.SceneGraph.registerNodeType('ResourceLoad', {
 
     if (options.onLoadSuccessCallback) {
       resourceLoadNode.pub.addOnLoadSuccessCallback(options.onLoadSuccessCallback);
+    }
+
+    if (options.onLoadProgressCallback) {
+      resourceLoadNode.pub.addOnLoadProgressCallback(options.onLoadProgressCallback);
     }
 
     if (options.onLoadFailureCallback) {

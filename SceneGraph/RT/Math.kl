@@ -6,8 +6,9 @@
 const Scalar PI = 3.141592653589793;
 const Scalar TWO_PI = 6.283185307179586;
 const Scalar HALF_PI = 1.5707963267948966;
-const Scalar RAD_TO_DEG = 57.29577951308232;
-const Scalar DEG_TO_RAD = 0.017453292519943295;
+const Scalar DEG_TO_RAD = 57.29577951308232;
+const Scalar RAD_TO_DEG = 0.017453292519943295;
+const Scalar PRECISION = 10e-30;
 
 function Scalar Math.clamp(in Scalar val, in Scalar minval, in Scalar maxval){
   return (val < minval ? minval : (val > maxval ? maxval : val));

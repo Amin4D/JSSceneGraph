@@ -3,6 +3,8 @@
 // Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
 //
 
+use Math;
+
 function Ray(Vec3 start, Vec3 direction) {
   this.start = start;
   this.direction = direction;
@@ -95,7 +97,7 @@ function Boolean Ray.intersectTriangle(
   var Scalar det = e1.dot(pvec);
 
   if (cull) {
-    if (det < 0.00001) {
+    if (det < PRECISION) {
       return false;
     }
     var Vec3 tvec = this.start - v0;
@@ -114,7 +116,7 @@ function Boolean Ray.intersectTriangle(
     v *= inv_det;
   }
   else {
-    if (det > - 0.00001 && det < 0.00001) {
+    if (abs(det) < PRECISION) {
       return false;
     }
     var Scalar inv_det = 1.0 / det;

@@ -386,6 +386,7 @@ FABRIC.SceneGraph = {
       }
       
       var operator = context.DG.createOperator(uid);
+      var filename;
       operatorStore[uid] = operator;
       
       ///////////////////////////////////////////////////
@@ -400,7 +401,7 @@ FABRIC.SceneGraph = {
   
         descDiags = function(fullCode, diags) {
           var fullCodeLines = fullCode.split('\n');
-          var desc = 'Error compiling operator: ' + operatorDef.operatorName + '\n';
+          var desc = 'Error compiling operator: ' + operatorDef.operatorName + ' in '+filename+'\n';
           if (operatorDef.srcFile) desc += 'File:' + operatorDef.srcFile + '\n';
           for (var i = 0; i < diags.length; ++i) {
             if (i == 16) {
@@ -424,7 +425,7 @@ FABRIC.SceneGraph = {
   
         operator.setEntryFunctionName(operatorDef.entryFunctionName);
         try {
-          operator.setSourceCode(code);
+          operator.setSourceCode(filename, code);
         }
         catch (e) {
           var message = 'Error compiling operator: ' + operatorDef.operatorName + '\n';
@@ -438,7 +439,8 @@ FABRIC.SceneGraph = {
         }
       }
 
-      if (!operatorDef.srcCode) {
+      if (operatorDef.srcFile) {
+        filename = operatorDef.srcFile.split('/').pop();
         if(operatorDef.async === false){
           var code = FABRIC.loadResourceURL(operatorDef.srcFile, 'text/plain');
           code = scene.preProcessCode(code, operatorDef.preProcessorDefinitions, includedCodeSections);
@@ -450,7 +452,8 @@ FABRIC.SceneGraph = {
           });
         }
       }
-      else{
+      else if (operatorDef.srcCode) {
+        filename = operatorDef.operatorName;
         // Fake an asynchronous operator construction so that we don't block waiting
         // for the operator compilation.
         if(operatorDef.async === false){
@@ -462,6 +465,8 @@ FABRIC.SceneGraph = {
             configureOperator(code);
           });
         }
+      }else{
+        throw "Invalid operator definition. Either a source file must be specified, or source code.";
       }
       return constructBinding(operator);
     };
@@ -1476,7 +1481,7 @@ FABRIC.SceneGraph.registerNodeType('Camera', {
     scene.assignDefaults(options, {
         nearDistance: 5,
         farDistance: 1000,
-        fovY: 60,
+        fovY: Math.degToRad(60),
         focalDistance: 160,
         orthographic: false,
         transformNode: 'Transform'
@@ -1490,7 +1495,7 @@ FABRIC.SceneGraph.registerNodeType('Camera', {
       
     dgnode.addMember('nearDistance', 'Scalar', options.nearDistance);
     dgnode.addMember('farDistance', 'Scalar', options.farDistance);
-    dgnode.addMember('fovY', 'Scalar', Math.degToRad(options.fovY));
+    dgnode.addMember('fovY', 'Scalar', options.fovY);
     dgnode.addMember('focalDistance', 'Scalar', options.focalDistance);
     dgnode.addMember('cameraMat44', 'Mat44');
     dgnode.addMember('orthographic', 'Boolean', options.orthographic);

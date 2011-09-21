@@ -154,7 +154,7 @@ $(document).ready(function() {
         (Math.random() - 0.5) * gridSize * 0.95,
         -2.5/scl,
         (Math.random() - 0.5) * gridSize * 0.95),
-      ori:FABRIC.RT.Quat.makeFromAxisAndAngle( FABRIC.RT.vec3(0,1,0), (Math.random() - 0.5) * 360.0 ), /* TODO: Transtion the whole math libary to radians. */
+      ori:FABRIC.RT.Quat.makeFromAxisAndAngle( FABRIC.RT.vec3(0,1,0), (Math.random() - 0.5) * Math.TWO_PI ), /* TODO: Transtion the whole math libary to radians. */
       sc: FABRIC.RT.vec3(scl, scl, scl)
     }).makeMat44()
     );
@@ -179,7 +179,7 @@ $(document).ready(function() {
         (Math.random() - 0.5) * gridSize * 0.95,
         -7,
         (Math.random() - 0.5) * gridSize * 0.95),
-      ori:FABRIC.RT.Quat.makeFromAxisAndAngle( FABRIC.RT.vec3(0,1,0), (Math.random() - 0.5) * 360.0 ),
+      ori:FABRIC.RT.Quat.makeFromAxisAndAngle( FABRIC.RT.vec3(0,1,0), (Math.random() - 0.5) * Math.TWO_PI ),
       sc: FABRIC.RT.vec3(scl, scl, scl)
     }).makeMat44()
     );

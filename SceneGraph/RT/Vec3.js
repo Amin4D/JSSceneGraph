@@ -63,9 +63,9 @@ FABRIC.RT.Vec3.prototype = {
   // Returns true if the vector is equal to the argument
   eql: function(v) {
     return (FABRIC.RT.isVec3(v) &&
-      (Math.abs(this.x - v.x) < FABRIC.RT.precision) &&
-      (Math.abs(this.y - v.y) < FABRIC.RT.precision) &&
-      (Math.abs(this.z - v.z) < FABRIC.RT.precision));
+      (Math.abs(this.x - v.x) < Math.PRECISION) &&
+      (Math.abs(this.y - v.y) < Math.PRECISION) &&
+      (Math.abs(this.z - v.z) < Math.PRECISION));
   },
 
   scale: function(s) {
@@ -180,7 +180,7 @@ FABRIC.RT.Vec3.prototype = {
 
   getAngleTo: function(v) {
     var acosAngle = this.unit().dot(v.unit());
-    return Math.radToDeg(Math.acos(Math.min(Math.max(acosAngle,-1.0), 1.0)));
+    return Math.acos(Math.min(Math.max(acosAngle,-1.0), 1.0));
   },
   dist: function(other) {
     return this.subtract(other).length();
@@ -326,7 +326,7 @@ FABRIC.RT.Vec3.rayIntersectPlane = function(
   D = planeNormal.dot(rayDirection);
   N = - planeNormal.dot(w);
 
-  if (Math.abs(D) < 0.0001) {
+  if (Math.abs(D) < Math.PRECISION) {
     // segment is parallel to plane
     if (N === 0)// segment lies in plane
       return - 1;

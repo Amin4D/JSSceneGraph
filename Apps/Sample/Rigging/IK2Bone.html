@@ -83,8 +83,7 @@ $(document).ready(function() {
       target: FABRIC.RT.vec3(0, 12, 0),
       roll: 0,
       nearDistance: 0.001,
-      farDistance: 20000,
-      fovY: 60.0
+      farDistance: 20000
   });
   var haveCameraManipulator = false;
 
@@ -105,13 +104,13 @@ $(document).ready(function() {
   skeletonNode.addBone({name: 'root'});
 
   var xfo = FABRIC.RT.xfo({
-      ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(0, 0, 1), -45),
+      ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(0, 0, 1), Math.degToRad(-45)),
       tr: FABRIC.RT.vec3(0, 20, 0)
     });
   skeletonNode.addBone({name: 'firstBone', referencePose: xfo, length: 6, parent: 'root'});
 
   xfo = FABRIC.RT.xfo({
-      ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(0, 0, 1), -145),
+      ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(0, 0, 1), Math.degToRad(-145)),
       tr: xfo.tr.add(xfo.ori.rotateVector(FABRIC.RT.vec3(6, 0, 0)))
     });
   skeletonNode.addBone({name: 'secondBone', referencePose: xfo, length: 4, parent: 'firstBone' });

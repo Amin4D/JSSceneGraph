@@ -566,7 +566,8 @@ FABRIC.SceneGraph.registerNodeType('Material', {
           blendModeSfactor: options.blendModeSfactor,
           blendModeDfactor: options.blendModeDfactor,
           parentEventHandler: options.parentEventHandler,
-          assignUniformsOnPostDescend: options.assignUniformsOnPostDescend
+          assignUniformsOnPostDescend: options.assignUniformsOnPostDescend,
+          debug: options.debug
         });
       }
       

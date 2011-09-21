@@ -100,7 +100,10 @@ FABRIC.SceneGraph.registerNodeType('BulletWorldNode', {
         throw('You need to specify a body when calling addRigidBody!');
       if(shapeName == undefined)
         throw('You need to specify a shapeName when calling addRigidBody!');
-      rbddgnode.addMember(bodyName, 'BulletRigidBody', body);
+        
+      // check if we are dealing with an array
+      var isArray = body.constructor.toString().indexOf("Array") != -1;
+      rbddgnode.addMember(bodyName, 'BulletRigidBody[]', isArray ? body : [body]);
 
       // create rigid body operator
       rbddgnode.bindings.append(scene.constructOperator({
@@ -195,10 +198,15 @@ FABRIC.SceneGraph.registerNodeType('BulletRigidBodyTransform', {
     var dgnode = rigidBodyTransformNode.getDGNode();
     dgnode.setDependency(rbddgnode,'bodies');
     
+    // check if we are using multiple rigid bodies
+    if(options.rigidBody.constructor.toString().indexOf("Array") != -1)
+      dgnode.setCount(options.rigidBody.length)
+    
     // create the query transform op
     dgnode.bindings.append(scene.constructOperator({
       operatorName: 'getBulletRigidBodyTransform',
       parameterLayout: [
+        'self.index',
         'bodies.'+bodyName,
         'self.globalXfo'
       ],

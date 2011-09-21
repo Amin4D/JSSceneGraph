@@ -40,19 +40,22 @@ operator createBulletShape(
 operator createBulletRigidBody(
   io BulletWorld world,
   io BulletShape shape,
-  io BulletRigidBody body
+  io BulletRigidBody body[]
 ){
   Boolean result;
-  body.create(shape,result);
-  if(result) {
-    world.addRigidBody(body);  
+  for(Size i=0;i<body.size();i++) {
+    body[i].create(shape,result);
+    if(result) {
+      world.addRigidBody(body[i]);  
+    }
   }
 }
 
 operator getBulletRigidBodyTransform(
-  io BulletRigidBody body,
+  in Size index,
+  io BulletRigidBody body[],
   io Xfo transform
 ){
-  body.getTransform(transform);
+  body[index].getTransform(transform);
 }
 

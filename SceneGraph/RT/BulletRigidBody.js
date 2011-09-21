@@ -7,8 +7,6 @@ FABRIC.RT.BulletRigidBody = function(options) {
   if(options == undefined)
     options = {};
   this.pointer = null;
-  this.inworld = false;
-  this.shape = options.shape ? options.shape : new FABRIC.RT.BulletShape();
   this.transform = options.transform != undefined ? options.transform: FABRIC.RT.xfo();
   this.mass = options.mass != undefined ? options.mass: 1.0;
   this.friction = options.friction != undefined ? options.friction: 0.9;
@@ -22,8 +20,6 @@ FABRIC.appendOnCreateContextCallback(function(context) {
   context.RegisteredTypesManager.registerType('BulletRigidBody', {
     members: {
       pointer: 'Data',
-      inworld: 'Boolean',
-      shape: 'BulletShape',
       transform: 'Xfo',
       mass: 'Scalar',
       friction: 'Scalar',

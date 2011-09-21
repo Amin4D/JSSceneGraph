@@ -37,15 +37,9 @@ function BulletWorld.setGravity(io Vec3 gravity) {
 }
 
 function BulletWorld.addRigidBody(io BulletRigidBody body) {
-  if(!body.inworld) {
-    FabricBULLET_World_AddRigidBody(this.pointer,body.pointer);
-    body.inworld = true;
-  }
+  FabricBULLET_World_AddRigidBody(this.pointer,body.pointer);
 }
 
 function BulletWorld.removeRigidBody(io BulletRigidBody body) {
-  if(body.inworld) {
-    FabricBULLET_World_RemoveRigidBody(this.pointer,body.pointer);
-    body.inworld = false;
-  }
+  FabricBULLET_World_RemoveRigidBody(this.pointer,body.pointer);
 }

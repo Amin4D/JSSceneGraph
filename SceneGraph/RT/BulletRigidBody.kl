@@ -4,15 +4,17 @@
 //
 use FabricBULLET;
 
-function BulletRigidBody.create(io Boolean result) {
-  if(!this.pointer) {
-    this.shape.create(result);
-    if(result) {
-      FabricBULLET_RigidBody_Create(this.pointer,this.shape.pointer,this.transform,this.mass,this.friction,this.restitution);
-    }
-  }
-  else
+function BulletRigidBody.create(io BulletShape shape, io Boolean result) {
+  if(this.pointer) {
     result = false;
+    return;
+  }
+  if(!shape.pointer) {
+    result = false;
+    return;
+  }
+  FabricBULLET_RigidBody_Create(this.pointer,shape.pointer,this.transform,this.mass,this.friction,this.restitution);
+  result = true;
 }
 
 function BulletRigidBody.delete() {

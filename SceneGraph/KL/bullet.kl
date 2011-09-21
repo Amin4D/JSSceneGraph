@@ -21,16 +21,29 @@ operator stepBulletWorld(
   io Scalar time,
 ){
   Scalar steppedTime = time - prevTime;
-  world.step(steppedTime);
-  prevTime = time;
+  if(time == 0.0 && prevTime > 0.0) {
+    world.reset();
+    prevTime = 0.0;
+  } else {
+    world.step(steppedTime);
+    prevTime = time - steppedTime;
+  }
+}
+
+operator createBulletShape(
+  io BulletShape shape
+){
+  Boolean result;
+  shape.create(result);
 }
 
 operator createBulletRigidBody(
   io BulletWorld world,
-  io BulletRigidBody body,
+  io BulletShape shape,
+  io BulletRigidBody body
 ){
   Boolean result;
-  body.create(result);
+  body.create(shape,result);
   if(result) {
     world.addRigidBody(body);  
   }

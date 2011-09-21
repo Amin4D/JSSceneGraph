@@ -67,6 +67,9 @@ $(document).ready(function() {
       primary: 'ui-icon-step'
     }
   });
+  $('#reset').button({
+    text: true,
+  });
   
   var scene = FABRIC.SceneGraph.createScene();
   var viewport = scene.constructNode('Viewport', {
@@ -80,7 +83,7 @@ $(document).ready(function() {
 
   // Create a camera to draw the scene from
   var camera = scene.constructNode('TargetCamera', {
-      position: FABRIC.RT.vec3(0, 10, 12).scale(0.5),
+      position: FABRIC.RT.vec3(0, 3, 12).scale(2),
       target: FABRIC.RT.vec3(0, 0, 0),
       nearDistance: 0.1,
       farDistance: 200
@@ -98,6 +101,9 @@ $(document).ready(function() {
   // create a simulation world
   var bulletWorldNode = scene.constructNode('BulletWorldNode');
   
+  // add a box shape
+  bulletWorldNode.addShape('box',new FABRIC.RT.BulletShape.createBox());
+  
   // create a cube to draw it
   var cuboidNode = scene.constructNode('Cuboid', {
     length: 2.0,
@@ -106,12 +112,12 @@ $(document).ready(function() {
   });
   
   // create a transform using a box!
-  for(var i=3;i<1000;i++) {
+  for(var i=3;i<50;i++) {
     scene.constructNode('Instance', {
       transformNode: scene.constructNode('BulletRigidBodyTransform', {
         bulletWorldNode: bulletWorldNode,
+        shapeName: 'box',
         rigidBody: new FABRIC.RT.BulletRigidBody({
-          shape: new FABRIC.RT.BulletShape.createBox(),
           transform: FABRIC.RT.xfo({
             tr: FABRIC.RT.vec3(0,i,0),
             ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(1,1,0),30),
@@ -138,7 +144,6 @@ $(document).ready(function() {
       if (errors.length > 0) {
         throw (errors.toString());
       }
-      
 
       $('#play').button()
         .click(function() {
@@ -165,6 +170,19 @@ $(document).ready(function() {
       $('#step').button()
         .click(function() {
           scene.animation.step();
+        });
+
+      $('#reset').button()
+        .click(function() {
+          $('#play').button('option', {
+            label: 'Play',
+            icons: {
+              primary: 'ui-icon-play'
+            }
+          });
+          scene.animation.pause();
+          scene.animation.setTime(0);
+          viewport.redraw();
         });
         
     //  scene.animation.play();
@@ -204,6 +222,7 @@ $(document).ready(function() {
             <div class="content">
               <button id="play" style="margin-top:10px;">Play</button>
               <button id="step" style="margin-top:10px;">Step</button>
+              <button id="reset" style="margin-top:10px;">Reset</button>
             </div><!--content-->
           </div><!--box-->
           

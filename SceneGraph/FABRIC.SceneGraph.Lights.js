@@ -52,7 +52,7 @@ FABRIC.SceneGraph.registerNodeType('Light', {
     lightNode.getRedrawEventHandler = function() {
       // This call will replace the 'getRedrawEventHandler' with an accessor.
       redrawEventHandler = lightNode.constructEventHandlerNode('Redraw');
-      redrawEventHandler.addScope('light', dgnode);
+      redrawEventHandler.setScope('light', dgnode);
 
       redrawEventHandler.preDescendBindings.append(scene.constructOperator({
         operatorName: 'loadLight',
@@ -99,7 +99,7 @@ FABRIC.SceneGraph.registerNodeType('Light', {
         throw (message);
       }
       transformNode = node;
-      dgnode.addDependency(transformNode.getDGNode(), 'transform');
+      dgnode.setDependency(transformNode.getDGNode(), 'transform');
 
       dgnode.bindings.append(scene.constructOperator({
         operatorName: 'loadLightXfo',
@@ -176,7 +176,7 @@ FABRIC.SceneGraph.registerNodeType('PointLight', {
         transformNode: scene.pub.constructNode('Transform', {
           hierarchical: true,
           parentTransformNode: pointLightNode.pub.getTransformNode(),
-          localXfo: FABRIC.RT.xfo({ ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.Vec3.xAxis, 90) })
+          localXfo: FABRIC.RT.xfo({ ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.Vec3.xAxis, Math.HALF_PI) })
         }),
         geometryNode: circleNode,
         materialNode: materialNode
@@ -186,7 +186,7 @@ FABRIC.SceneGraph.registerNodeType('PointLight', {
         transformNode: scene.pub.constructNode('Transform', {
           hierarchical: true,
           parentTransformNode: pointLightNode.pub.getTransformNode(),
-          localXfo: FABRIC.RT.xfo({ ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.Vec3.zAxis, 90) })
+          localXfo: FABRIC.RT.xfo({ ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.Vec3.zAxis, Math.HALF_PI) })
         }),
         geometryNode: circleNode,
         materialNode: materialNode
@@ -267,7 +267,7 @@ FABRIC.SceneGraph.registerNodeType('DirectionalLight', {
         transformNode: scene.pub.constructNode('Transform', {
           hierarchical: true,
           parentTransformNode: directionalLightNode.pub.getTransformNode(),
-          localXfo: FABRIC.RT.xfo({ ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.Vec3.xAxis, 90) })
+          localXfo: FABRIC.RT.xfo({ ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.Vec3.xAxis, Math.HALF_PI) })
         }),
         geometryNode: circleNode,
         materialNode: materialNode
@@ -277,7 +277,7 @@ FABRIC.SceneGraph.registerNodeType('DirectionalLight', {
         transformNode: scene.pub.constructNode('Transform', {
           hierarchical: true,
           parentTransformNode: directionalLightNode.pub.getTransformNode(),
-          localXfo: FABRIC.RT.xfo({ ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.Vec3.xAxis, 90), tr: FABRIC.RT.vec3(0, 0, -options.displaySize) })
+          localXfo: FABRIC.RT.xfo({ ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.Vec3.xAxis, Math.HALF_PI), tr: FABRIC.RT.vec3(0, 0, -options.displaySize) })
         }),
         geometryNode: circleNode,
         materialNode: materialNode
@@ -287,7 +287,7 @@ FABRIC.SceneGraph.registerNodeType('DirectionalLight', {
         transformNode: scene.pub.constructNode('Transform', {
           hierarchical: true,
           parentTransformNode: directionalLightNode.pub.getTransformNode(),
-          localXfo: FABRIC.RT.xfo({ ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.Vec3.xAxis, 90), tr: FABRIC.RT.vec3(0, 0, -options.displaySize*0.8) })
+          localXfo: FABRIC.RT.xfo({ ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.Vec3.xAxis, Math.HALF_PI), tr: FABRIC.RT.vec3(0, 0, -options.displaySize*0.8) })
         }),
         geometryNode: circleNode,
         materialNode: materialNode
@@ -436,8 +436,8 @@ FABRIC.SceneGraph.registerNodeType('SpotLight', {
           ]
         }));
 
-      shadowRenderEventHandler.addScope('light', dgnode);
-      shadowRenderEventHandler.addScope('camera', dgnode);
+      shadowRenderEventHandler.setScope('light', dgnode);
+      shadowRenderEventHandler.setScope('camera', dgnode);
 
      
       shadowRenderEventHandler.preDescendBindings.append(scene.constructOperator({
@@ -462,7 +462,7 @@ FABRIC.SceneGraph.registerNodeType('SpotLight', {
         var shadowDebugRenderEventHandler = spotLightNode.constructEventHandlerNode('renderDebugQuad');
         shadowDebugRenderEventHandler.addMember('program', 'Integer');
         scene.getScenePostRedrawEventHandler().appendChildEventHandler(shadowDebugRenderEventHandler);
-        shadowDebugRenderEventHandler.addScope('light', dgnode);
+        shadowDebugRenderEventHandler.setScope('light', dgnode);
         shadowDebugRenderEventHandler.preDescendBindings.append(
           scene.constructOperator({
               operatorName:"debugShadowMapBuffer",
@@ -508,7 +508,7 @@ FABRIC.SceneGraph.registerNodeType('SpotLight', {
           hierarchical: true,
           parentTransformNode: spotLightNode.pub.getTransformNode(),
           localXfo: FABRIC.RT.xfo({
-            ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.Vec3.xAxis, 90),
+            ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.Vec3.xAxis, Math.HALF_PI),
             tr: FABRIC.RT.vec3(0, 0, -coneDist)
           })
         }),

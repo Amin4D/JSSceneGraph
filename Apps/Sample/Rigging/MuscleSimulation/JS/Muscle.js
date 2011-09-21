@@ -106,7 +106,7 @@ FABRIC.SceneGraph.registerNodeType('MuscleSystem', {
     paramsdgnode.addMember('displacementMapResolution', 'Size', options.displacementMapResolution);
     
     initializationdgnode.setCount(0);
-    initializationdgnode.addDependency( paramsdgnode, 'musclesystem');
+    initializationdgnode.setDependency( paramsdgnode, 'musclesystem');
     
     /////////////////////////////////////////////////////////
     // Configure the muscle members
@@ -152,8 +152,8 @@ FABRIC.SceneGraph.registerNodeType('MuscleSystem', {
     
     ////////////////////////////////////////////////////////////////////////////
     // Configure the node that will be used to calculate the simulation.
-    simulationuniformsdgnode.addDependency(characterRigNode.getDGNode(), 'rig');
-    simulationuniformsdgnode.addDependency(characterSkeletonNode.getDGNode(), 'skeleton');
+    simulationuniformsdgnode.setDependency(characterRigNode.getDGNode(), 'rig');
+    simulationuniformsdgnode.setDependency(characterSkeletonNode.getDGNode(), 'skeleton');
     
     simulationuniformsdgnode.addMember('skinningXfos', 'Xfo[]');
     simulationuniformsdgnode.bindings.append(scene.constructOperator({
@@ -169,11 +169,11 @@ FABRIC.SceneGraph.registerNodeType('MuscleSystem', {
     
     ////////////////////////////////////////////////////////////////////////////
     // Configure the node that will be used to calculate the simulation
-    simulationdgnode.addDependency( paramsdgnode, 'musclesystem');
-    simulationdgnode.addDependency( simulationuniformsdgnode, 'uniforms');
-    simulationdgnode.addDependency( initializationdgnode, 'initializationdgnode');
+    simulationdgnode.setDependency( paramsdgnode, 'musclesystem');
+    simulationdgnode.setDependency( simulationuniformsdgnode, 'uniforms');
+    simulationdgnode.setDependency( initializationdgnode, 'initializationdgnode');
     
-    simulationdgnode.addDependency( scene.getGlobalsNode(), 'globals');
+    simulationdgnode.setDependency( scene.getGlobalsNode(), 'globals');
     
     simulationdgnode.bindings.append(
       scene.constructOperator({
@@ -246,12 +246,12 @@ FABRIC.SceneGraph.registerNodeType('MuscleSystem', {
       scene.constructOperator({
         operatorName: 'rotateMuscleVolume',
         srcCode: '\n\
+use Math;\n\
 use Quat;\n\
 use Vec3;\n\
 operator rotateMuscleVolume(\n\
   io Vec3 position\n\
 ) {\n\
-  Scalar PI = 3.141592653589793238462643383279;\n\
   position = axisAndAngleToQuat(Vec3(0.0,0.0,1.0), PI*-0.5).rotateVector(position);\n\
 }\n\
         ',
@@ -295,9 +295,9 @@ operator rotateMuscleVolume(\n\
       deformedVolume.pub.addVertexAttributeValue('positions', 'Vec3', { genVBO:true, dynamic:true } );
       deformedVolume.pub.addVertexAttributeValue('normals', 'Vec3', { genVBO:true, dynamic:true } );
       deformedVolume.pub.addUniformValue('muscleIndex', 'Size', index );
-      deformedVolume.getAttributesDGNode().addDependency(paramsdgnode, 'musclesystem');
-      deformedVolume.getAttributesDGNode().addDependency(initializationdgnode, 'initializationdgnode');
-      deformedVolume.getAttributesDGNode().addDependency(simulationdgnode, 'simulationdgnode');
+      deformedVolume.getAttributesDGNode().setDependency(paramsdgnode, 'musclesystem');
+      deformedVolume.getAttributesDGNode().setDependency(initializationdgnode, 'initializationdgnode');
+      deformedVolume.getAttributesDGNode().setDependency(simulationdgnode, 'simulationdgnode');
       deformedVolume.getAttributesDGNode().bindings.append(scene.constructOperator({
         operatorName: 'deformMuscleVolume',
         srcFile: './KL/MuscleVolume.kl',
@@ -462,8 +462,9 @@ FABRIC.SceneGraph.registerNodeType('MuscleSkinDeformation', {
     boundSkin.pub.addVertexAttributeValue('slideWeight', 'Scalar', { defaultValue:0.0 } );
     boundSkin.pub.addVertexAttributeValue('bulgeWeight', 'Scalar', { defaultValue:0.0 } );
     boundSkin.pub.addVertexAttributeValue('debugDraw', 'DebugGeometry' );
-    boundSkin.getAttributesDGNode().addDependency(muscleSystem.getSystemParamsDGNode(), 'musclesystem');
-    boundSkin.getAttributesDGNode().addDependency(muscleSystem.getInitializationDGNode(), 'musclesinitialization');
+    boundSkin.getAttributesDGNode().setDependency(muscleSystem.getSystemParamsDGNode(), 'musclesystem');
+    boundSkin.getAttributesDGNode().setDependency(muscleSystem.getInitializationDGNode(), 'musclesinitialization');
+
     var calcSkinStickLocationsOp = scene.constructOperator({
       operatorName: 'calcSkinStickLocations',
       srcFile: './KL/MuscleVolume.kl',
@@ -497,10 +498,11 @@ FABRIC.SceneGraph.registerNodeType('MuscleSkinDeformation', {
     deformedSkin.pub.addVertexAttributeValue('normals', 'Vec3', { genVBO:true, dynamic:true } );
     deformedSkin.pub.addVertexAttributeValue('vertexColors', 'Color', { genVBO:true, dynamic:true });
     deformedSkin.pub.addVertexAttributeValue('debugDraw', 'DebugGeometry' );
-    deformedSkin.getAttributesDGNode().addDependency(muscleSystem.getSystemParamsDGNode(), 'musclesystem');
-    deformedSkin.getAttributesDGNode().addDependency(muscleSystem.getInitializationDGNode(), 'musclesinitialization');
-    deformedSkin.getAttributesDGNode().addDependency(muscleSystem.getSimulationDGNode(), 'musclessimulation');
-    deformedSkin.getAttributesDGNode().addDependency(boundSkin.getAttributesDGNode(), 'boundskin');
+    deformedSkin.getAttributesDGNode().setDependency(muscleSystem.getSystemParamsDGNode(), 'musclesystem');
+    deformedSkin.getAttributesDGNode().setDependency(muscleSystem.getInitializationDGNode(), 'musclesinitialization');
+    deformedSkin.getAttributesDGNode().setDependency(muscleSystem.getSimulationDGNode(), 'musclessimulation');
+    deformedSkin.getAttributesDGNode().setDependency(boundSkin.getAttributesDGNode(), 'boundskin');
+
     
     deformedSkin.getAttributesDGNode().bindings.append(scene.constructOperator({
       operatorName: 'setVertexColorByWeight',
@@ -599,11 +601,11 @@ FABRIC.SceneGraph.registerNodeType('PaintSkinWeightsManipulator', {
         paintOperator;
 
       paintInstanceEventHandler = paintSkinWeightsManipulator.constructEventHandlerNode('Paint' + node.getName());
-      paintInstanceEventHandler.addScope('boundgeometryattributes', geometryNode.getBoundSkin().getAttributesDGNode());
-      paintInstanceEventHandler.addScope('geometryattributes', geometryNode.getAttributesDGNode());
-      paintInstanceEventHandler.addScope('geometryuniforms', geometryNode.getUniformsDGNode());
-      paintInstanceEventHandler.addScope('transform', transformNode.getDGNode());
-      paintInstanceEventHandler.addScope('instance', instanceNode.getDGNode());
+      paintInstanceEventHandler.setScope('boundgeometryattributes', geometryNode.getBoundSkin().getAttributesDGNode());
+      paintInstanceEventHandler.setScope('geometryattributes', geometryNode.getAttributesDGNode());
+      paintInstanceEventHandler.setScope('geometryuniforms', geometryNode.getUniformsDGNode());
+      paintInstanceEventHandler.setScope('transform', transformNode.getDGNode());
+      paintInstanceEventHandler.setScope('instance', instanceNode.getDGNode());
 
       // The selector will return the node bound with the given binding name.
       var paintingOpDef = {

@@ -386,6 +386,7 @@ FABRIC.SceneGraph = {
       }
       
       var operator = context.DG.createOperator(uid);
+      var filename;
       operatorStore[uid] = operator;
       
       ///////////////////////////////////////////////////
@@ -400,7 +401,7 @@ FABRIC.SceneGraph = {
   
         descDiags = function(fullCode, diags) {
           var fullCodeLines = fullCode.split('\n');
-          var desc = 'Error compiling operator: ' + operatorDef.operatorName + '\n';
+          var desc = 'Error compiling operator: ' + operatorDef.operatorName + ' in '+filename+'\n';
           if (operatorDef.srcFile) desc += 'File:' + operatorDef.srcFile + '\n';
           for (var i = 0; i < diags.length; ++i) {
             if (i == 16) {
@@ -424,7 +425,7 @@ FABRIC.SceneGraph = {
   
         operator.setEntryFunctionName(operatorDef.entryFunctionName);
         try {
-          operator.setSourceCode(code);
+          operator.setSourceCode(filename, code);
         }
         catch (e) {
           var message = 'Error compiling operator: ' + operatorDef.operatorName + '\n';
@@ -438,7 +439,8 @@ FABRIC.SceneGraph = {
         }
       }
 
-      if (!operatorDef.srcCode) {
+      if (operatorDef.srcFile) {
+        filename = operatorDef.srcFile.split('/').pop();
         if(operatorDef.async === false){
           var code = FABRIC.loadResourceURL(operatorDef.srcFile, 'text/plain');
           code = scene.preProcessCode(code, operatorDef.preProcessorDefinitions, includedCodeSections);
@@ -450,7 +452,8 @@ FABRIC.SceneGraph = {
           });
         }
       }
-      else{
+      else if (operatorDef.srcCode) {
+        filename = operatorDef.operatorName;
         // Fake an asynchronous operator construction so that we don't block waiting
         // for the operator compilation.
         if(operatorDef.async === false){
@@ -462,6 +465,8 @@ FABRIC.SceneGraph = {
             configureOperator(code);
           });
         }
+      }else{
+        throw "Invalid operator definition. Either a source file must be specified, or source code.";
       }
       return constructBinding(operator);
     };
@@ -567,6 +572,7 @@ FABRIC.SceneGraph = {
         throw ('Missing Resource Loader for :' + ext);
       }
     };
+    scene.pub.IO = context.IO;
     scene.pub.redrawAllWindows = function() {
       for (var i=0; i<viewports.length; i++) {
         viewports[i].pub.redraw();
@@ -889,6 +895,19 @@ FABRIC.SceneGraph.registerNodeType('Viewport', {
                 'which is connected to an embed element inside the DOM. The most important parameter of '+
                 'the ViewPort node\'s options is the windowElement, the ID of the HTML element to append '+
                 'the viewport to.',
+  parentNodeDesc: 'SceneGraphNode',
+  optionsDesc: {
+    windowElement: 'The HTML element to attach the viewport to.',
+    cameraNode: 'The cameraNode to use for this viewport',
+    enableMouseEvents: 'Set to true this ensures to create the mouse down, up and move events.',
+    enableRaycasting: 'Set to true this enables raycasting for selection of 3D objects.',
+    mouseUpEvents: 'Set to true this enables the mouse up event',
+    mouseMoveEvents: 'Set to true this enables the mouse move event',
+    backgroundColor: 'The background color of the viewport used for glClearColor',
+    postProcessEffect: 'An optional PostProcessEffect node to be used after drawing the viewport, undefined if None.',
+    rayIntersectionThreshold: 'The treshold of raycast intersections, typicall below 1.0',
+    polygonMode: 'The mode for polygon drawing. This can be used with GL_LINE for example to draw everything as lines, -1 for default.'
+  },
   factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
         windowElement: undefined,
@@ -916,7 +935,7 @@ FABRIC.SceneGraph.registerNodeType('Viewport', {
     dgnode.addMember('backgroundColor', 'Color', options.backgroundColor);
     dgnode.addMember('polygonMode', 'Integer', options.polygonMode);
 
-    redrawEventHandler.addScope('viewPort', dgnode);
+    redrawEventHandler.setScope('viewPort', dgnode);
 
     redrawEventHandler.preDescendBindings.append(scene.constructOperator({
           operatorName: 'viewPortBeginRender',
@@ -935,7 +954,7 @@ FABRIC.SceneGraph.registerNodeType('Viewport', {
     
     FABRIC.appendOnResolveAsyncTaskCallback(function(label, countRemaining){
       if(countRemaining===0){
-        redrawEventHandler.addScope('window', fabricwindow.windowNode);
+        redrawEventHandler.setScope('window', fabricwindow.windowNode);
         if(scene.getScenePreRedrawEventHandler()){
           fabricwindow.redrawEvent.appendEventHandler(scene.getScenePreRedrawEventHandler());
         }
@@ -978,7 +997,7 @@ FABRIC.SceneGraph.registerNodeType('Viewport', {
       viewPortRayCastDgNode.addMember('y', 'Integer');
       viewPortRayCastDgNode.addMember('ray', 'Ray');
       viewPortRayCastDgNode.addMember('threshold', 'Scalar', options.rayIntersectionThreshold);
-      viewPortRayCastDgNode.addDependency(fabricwindow.windowNode, 'window');
+      viewPortRayCastDgNode.setDependency(fabricwindow.windowNode, 'window');
 
       // this operator calculates the rayOri and rayDir from the scopes collected so far.
       // The scopes should be the window, viewport, camera and projection.
@@ -998,7 +1017,7 @@ FABRIC.SceneGraph.registerNodeType('Viewport', {
       }));
 
       viewPortRaycastEventHandler = viewportNode.constructEventHandlerNode('Raycast');
-      viewPortRaycastEventHandler.addScope('raycastData', viewPortRayCastDgNode);
+      viewPortRaycastEventHandler.setScope('raycastData', viewPortRayCastDgNode);
 
       // Raycast events are fired from the viewport. As the event
       // propagates down the tree it collects scopes and fires operators.
@@ -1042,7 +1061,7 @@ FABRIC.SceneGraph.registerNodeType('Viewport', {
       cameraNode = scene.getPrivateInterface(node);
       propagationRedrawEventHandler.appendChildEventHandler(cameraNode.getRedrawEventHandler());
       if (viewPortRayCastDgNode) {
-        viewPortRayCastDgNode.addDependency(cameraNode.getDGNode(), 'camera');
+        viewPortRayCastDgNode.setDependency(cameraNode.getDGNode(), 'camera');
       }
     };
     viewportNode.pub.getCameraNode = function() {
@@ -1338,6 +1357,13 @@ FABRIC.SceneGraph.registerNodeType('ResourceLoad', {
                 '\'addOnLoadSuccessCallback\' and \'addOnLoadFailureCallback\' member function. Unless ' + 
                 '\'option.redrawOnLoad\' is set to false, the loading will automatically trigger a redraw. ' +
                 'Note that operators can dynamically modify the URL.',
+  parentNodeDesc: 'SceneGraphNode',
+  optionsDesc: {
+    onLoadSuccessCallback: 'A callback that will be fired once the resource has loaded successfully.',
+    onLoadFailureCallback: 'A callback that will be fired if the resource cannot load.',
+    blockRedrawingTillResourceIsLoaded: 'If set to true redrawing will be blocked until the resource is loaded.',
+    redrawOnLoad: 'If set to true, the viewport will fire a redraw once the resource has been loaded.'
+  },
   factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
       onLoadSuccessCallback: undefined,
@@ -1417,7 +1443,11 @@ FABRIC.SceneGraph.registerNodeType('ResourceLoad', {
         dgnode.evaluate();
       }
     };
-    
+
+    resourceLoadNode.pub.getDGLoadNode = function() {
+      return dgnode;
+    };
+
     if (options.onLoadSuccessCallback) {
       resourceLoadNode.pub.addOnLoadSuccessCallback(options.onLoadSuccessCallback);
     }
@@ -1437,12 +1467,21 @@ FABRIC.SceneGraph.registerNodeType('Camera', {
   briefDesc: 'The Camera node implements an OpenGL camera for the ViewPort node.',
   detailedDesc: 'The Camera node uses a redraw event handler to draw the camera projection to '+
                 'the OpenGL canvas.',
+  parentNodeDesc: 'SceneGraphNode',
+  optionsDesc: {
+    nearDistance: 'The near clipping distance for the camera.',
+    farDistance: 'The far clipping distance for the camera.',
+    fovY: 'The vertical (Y) field of view angle for this camera.',
+    focalDistance: 'The focal distance for the camera.',
+    orthographic: 'Set to true the camera is rendered in orthographic more, otherwise perspective mode is used.',
+    transformNode: 'The type of transformNode to use, typically \'Transform\''
+  },
   factoryFn: function(options, scene) {
 
     scene.assignDefaults(options, {
         nearDistance: 5,
         farDistance: 1000,
-        fovY: 60,
+        fovY: Math.degToRad(60),
         focalDistance: 160,
         orthographic: false,
         transformNode: 'Transform'
@@ -1456,13 +1495,13 @@ FABRIC.SceneGraph.registerNodeType('Camera', {
       
     dgnode.addMember('nearDistance', 'Scalar', options.nearDistance);
     dgnode.addMember('farDistance', 'Scalar', options.farDistance);
-    dgnode.addMember('fovY', 'Scalar', Math.degToRad(options.fovY));
+    dgnode.addMember('fovY', 'Scalar', options.fovY);
     dgnode.addMember('focalDistance', 'Scalar', options.focalDistance);
     dgnode.addMember('cameraMat44', 'Mat44');
     dgnode.addMember('orthographic', 'Boolean', options.orthographic);
     dgnode.addMember('projectionMat44', 'Mat44');
 
-    redrawEventHandler.addScope('camera', dgnode);
+    redrawEventHandler.setScope('camera', dgnode);
 
     redrawEventHandler.preDescendBindings.append(scene.constructOperator({
       operatorName: 'UpdateCameraProjection',
@@ -1499,7 +1538,7 @@ FABRIC.SceneGraph.registerNodeType('Camera', {
         throw (message);
       }
       transformNode = node;
-      dgnode.addDependency(transformNode.getDGNode(), 'transform');
+      dgnode.setDependency(transformNode.getDGNode(), 'transform');
 
       dgnode.bindings.append(scene.constructOperator({
         operatorName: 'loadXfo',
@@ -1533,6 +1572,11 @@ FABRIC.SceneGraph.registerNodeType('Camera', {
 FABRIC.SceneGraph.registerNodeType('FreeCamera', {
   briefDesc: 'The FreeCamera node implements an OpenGL camera in a free roaming mode.',
   detailedDesc: 'The FreeCamera node uses the Camera node to implement a free roaming camera without a target point.',
+  parentNodeDesc: 'Camera',
+  optionsDesc: {
+    position: 'The position of the free camera (Vec3).',
+    orientation: 'The orientation of the free camera (Quaternion).',
+  },
   factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
         position: FABRIC.RT.vec3(1, 0, 0),
@@ -1553,6 +1597,10 @@ FABRIC.SceneGraph.registerNodeType('FreeCamera', {
 FABRIC.SceneGraph.registerNodeType('TargetCamera', {
   briefDesc: 'The TargetCamera node implements an OpenGL camera in using a target point',
   detailedDesc: 'The TargetCamera node uses the Camera node to implement a camera with a target point, similar to the GLUT lookat camera.',
+  parentNodeDesc: 'Camera',
+  optionsDesc: {
+    target: 'The target point of the target camera (Vec3).',
+  },
   factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
         target: FABRIC.RT.vec3(0, 0, 0)

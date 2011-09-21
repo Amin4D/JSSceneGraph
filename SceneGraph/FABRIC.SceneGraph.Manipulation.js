@@ -21,7 +21,7 @@ FABRIC.SceneGraph.registerNodeType('CameraManipulator', {
     scene.assignDefaults(options, {
         mouseWheelZoomRate: 0.3,
         mouseDragZoomRate:0.001,
-        orbitRate: 0.25,
+        orbitRate: 0.005,
         enabled: true
       });
 
@@ -230,7 +230,7 @@ FABRIC.SceneGraph.registerNodeType('PaintManipulator', {
     
     var brushMaterial = scene.constructNode('FlatScreenSpaceMaterial', { color: FABRIC.RT.rgb(0.8, 0, 0) });
     var brushShapeTransform = scene.constructNode('Transform', { hierarchical: false, globalXfo: FABRIC.RT.xfo({
-        ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(1, 0, 0), 90),
+        ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(1, 0, 0), Math.HALF_PI),
         sc: FABRIC.RT.vec3(0, 0, 0)
       }) });
     var brushInstance = scene.constructNode('Instance', {
@@ -290,7 +290,7 @@ FABRIC.SceneGraph.registerNodeType('PaintManipulator', {
 
       brushShapeTransform.pub.setGlobalXfo(FABRIC.RT.xfo({
           tr: brushPos,
-          ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(1, 0, 0), 90),
+          ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(1, 0, 0), Math.HALF_PI),
           sc: FABRIC.RT.vec3(options.brushSize / aspectRatio, options.brushSize, options.brushSize)
         }));
     }
@@ -354,10 +354,10 @@ FABRIC.SceneGraph.registerNodeType('PaintManipulator', {
         paintOperator;
 
       paintInstanceEventHandler = paintManipulatorNode.constructEventHandlerNode('Paint' + node.getName());
-      paintInstanceEventHandler.addScope('geometryattributes', geometryNode.getAttributesDGNode());
-      paintInstanceEventHandler.addScope('geometryuniforms', geometryNode.getAttributesDGNode());
-      paintInstanceEventHandler.addScope('transform', transformNode.getDGNode());
-      paintInstanceEventHandler.addScope('instance', instanceNode.getDGNode());
+      paintInstanceEventHandler.setScope('geometryattributes', geometryNode.getAttributesDGNode());
+      paintInstanceEventHandler.setScope('geometryuniforms', geometryNode.getAttributesDGNode());
+      paintInstanceEventHandler.setScope('transform', transformNode.getDGNode());
+      paintInstanceEventHandler.setScope('instance', instanceNode.getDGNode());
 
       // The selector will return the node bound with the given binding name.
       var paintingOpDef = options.paintingOpDef;
@@ -408,6 +408,21 @@ FABRIC.SceneGraph.registerNodeType('PaintManipulator', {
 
 
 FABRIC.SceneGraph.registerNodeType('Manipulator', {
+  briefDesc: 'The Manipulator is a basic tool for controling 3D objects.',
+  detailedDesc: 'The Manipulator is a basic tool for controling 3D objects. ' +
+                'The manipulation is implmented per Manipulator type.',
+  parentNodeDesc: 'SceneGraphNode',
+  optionsDesc: {
+    targetNode: 'The node to be manipulated.',
+    targetMember: 'The member on the targetNode to be manipulated',
+    targetMemberIndex: 'The index of the member\'s element on the targetNode to be manipulated (undefined if not an array)',
+    parentNode: 'The parent space for this Manipulator',
+    parentMember: 'The member of the parent space of for this Manipulator (xfo member)',
+    parentMemberIndex: 'The index of the member\'s element for the parent space of this Manipulator (undefinde if not an array)',
+    color: 'The color to use for this Manipulator',
+    highlightcolor: 'The highlight color to use for this manipulator.',
+    localXfo: 'The local offset to use for this Manipulator.'
+  },
   manipulating: false,
   factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
@@ -486,8 +501,8 @@ FABRIC.SceneGraph.registerNodeType('Manipulator', {
       transformDGNode.setData('localXfo', 0, val);
     };
 
-    transformDGNode.addDependency(parentNode.getDGNode(), 'parent');
-    transformDGNode.addDependency(targetNode.getDGNode(), 'target');
+    transformDGNode.setDependency(parentNode.getDGNode(), 'parent');
+    transformDGNode.setDependency(targetNode.getDGNode(), 'target');
     transformDGNode.addMember('parentMemberIndex', 'Integer',
       parentMemberIndex == undefined ? -1 : parseInt(parentMemberIndex));
     transformDGNode.addMember('targetMemberIndex', 'Integer',
@@ -706,16 +721,16 @@ FABRIC.SceneGraph.registerNodeType('Manipulator', {
         deltaY = vec.getAngleTo(localY),
         deltaZ = vec.getAngleTo(localZ);
 
-      if (deltaX > 90.0) {
-        deltaX = 180 - deltaX;
+      if (deltaX > Math.HALF_PI) {
+        deltaX = Math.PI - deltaX;
         localX.negateInPlace();
       }
-      if (deltaY > 90.0) {
-        deltaY = 180 - deltaY;
+      if (deltaY > Math.HALF_PI) {
+        deltaY = Math.PI - deltaY;
         localY.negateInPlace();
       }
-      if (deltaZ > 90.0) {
-        deltaZ = 180 - deltaZ;
+      if (deltaZ > Math.HALF_PI) {
+        deltaZ = Math.PI - deltaZ;
         localZ.negateInPlace();
       }
       if (deltaX < deltaY && deltaX < deltaZ) {
@@ -732,6 +747,15 @@ FABRIC.SceneGraph.registerNodeType('Manipulator', {
 
 
 FABRIC.SceneGraph.registerNodeType('RotationManipulator', {
+  briefDesc: 'The RotationManipulator is a manipulator for 3D rotation.',
+  detailedDesc: 'The RotationManipulator is a manipulator for 3D rotation. ' +
+                'It is visualized using a Circle primitive node.',
+  parentNodeDesc: 'Manipulator',
+  optionsDesc: {
+    rotateRate: 'The amount of rotation per mouse move unit.',
+    radius: 'The radius of the rotation Manipulator.',
+    name: 'The name of the Manipulator node.'
+  },
   factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
         rotateRate: 0.35,
@@ -790,10 +814,17 @@ FABRIC.SceneGraph.registerNodeType('RotationManipulator', {
 
 
 FABRIC.SceneGraph.registerNodeType('3AxisRotationManipulator', {
+  briefDesc: 'The 3AxisRotationManipulator is a manipulator for 3D rotation along 3 axes.',
+  detailedDesc: 'The 3AxisRotationManipulator is a manipulator for 3D rotation along 3 axes.',
+  parentNodeDesc: 'Manipulator',
+  optionsDesc: {
+    xaxis: 'If set to true, we will have a RotationManipulator along the X axis.',
+    yaxis: 'If set to true, we will have a RotationManipulator along the Y axis.',
+    zaxis: 'If set to true, we will have a RotationManipulator along the Z axis.',
+  },
   factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
-        trackRate: 0.1,
-        orbitRate: 0.25,
+        rotateRate: 0.1,
         radius: 15,
         xaxis: true,
         yaxis: true,
@@ -809,7 +840,7 @@ FABRIC.SceneGraph.registerNodeType('3AxisRotationManipulator', {
     var xaxisGizmoNode = scene.pub.constructNode('RotationManipulator', scene.assignDefaults(options, {
         name: name + 'XAxis',
         color: FABRIC.RT.rgb(0.8, 0, 0, 1),
-        localXfo: new FABRIC.RT.Xfo({ ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(0, 0, 1), -90) }),
+        localXfo: new FABRIC.RT.Xfo({ ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(0, 0, 1), -Math.HALF_PI) }),
         geometryNode: circle
       }, true));
     var yaxisGizmoNode = scene.pub.constructNode('RotationManipulator', scene.assignDefaults(options, {
@@ -821,7 +852,7 @@ FABRIC.SceneGraph.registerNodeType('3AxisRotationManipulator', {
     var zaxisGizmoNode = scene.pub.constructNode('RotationManipulator', scene.assignDefaults(options, {
         name: name + 'ZAxis',
         color: FABRIC.RT.rgb(0, 0, 0.8, 1),
-        localXfo: new FABRIC.RT.Xfo({ ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(1, 0, 0), 90) }),
+        localXfo: new FABRIC.RT.Xfo({ ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(1, 0, 0), Math.HALF_PI) }),
         geometryNode: circle
       }, true));
 
@@ -829,6 +860,13 @@ FABRIC.SceneGraph.registerNodeType('3AxisRotationManipulator', {
   }});
 
 FABRIC.SceneGraph.registerNodeType('LinearTranslationManipulator', {
+  briefDesc: 'The LinearTranslationManipulator is a manipulator for linear translation.',
+  detailedDesc: 'The LinearTranslationManipulator is a manipulator for linear translation. It is drawn as an arrow in 3D.',
+  parentNodeDesc: 'Manipulator',
+  optionsDesc: {
+    size: 'The size of the linear translation Manipulator.',
+    name: 'The name of the linear translation Manipulator.',
+  },
   factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
         size: 20,
@@ -866,6 +904,13 @@ FABRIC.SceneGraph.registerNodeType('LinearTranslationManipulator', {
 
 
 FABRIC.SceneGraph.registerNodeType('PlanarTranslationManipulator', {
+  briefDesc: 'The PlanarTranslationManipulator is a manipulator for planar translation.',
+  detailedDesc: 'The PlanarTranslationManipulator is a manipulator for planar translation. It is drawn as a plane.',
+  parentNodeDesc: 'Manipulator',
+  optionsDesc: {
+    size: 'The size of the planar translation Manipulator.',
+    name: 'The name of the planar translation Manipulator.',
+  },
   factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
         size: 15,
@@ -910,6 +955,13 @@ FABRIC.SceneGraph.registerNodeType('PlanarTranslationManipulator', {
   }});
 
 FABRIC.SceneGraph.registerNodeType('ScreenTranslationManipulator', {
+  briefDesc: 'The ScreenTranslationManipulator is a manipulator for translation in screen space.',
+  detailedDesc: 'The ScreenTranslationManipulator is a manipulator for translation in screen space.',
+  optionsDesc: {
+    radius: 'The size of the screen space translation Manipulator.',
+    name: 'The name of the screen space translation Manipulator.',
+    drawOverLayed: 'If set to true the Manipulator will be drawn overlayed.'
+  },
   factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
         radius: 0.5,
@@ -950,6 +1002,14 @@ FABRIC.SceneGraph.registerNodeType('ScreenTranslationManipulator', {
   }});
 
 FABRIC.SceneGraph.registerNodeType('3AxisTranslationManipulator', {
+  briefDesc: 'The 3AxisTranslationManipulator is a manipulator for linear and planar translation along 3 axes.',
+  detailedDesc: 'The 3AxisTranslationManipulator is a manipulator for linear and planar translation along 3 axes. It uses three linear as well as three planar translation Manipulators.',
+  parentNodeDesc: 'Manipulator',
+  optionsDesc: {
+    trackRate: 'The rate of translation in relation to mouse move units.',
+    size: 'The size of the linear and planar primitives of the Manipulator',
+    name: 'The name of the 3 axis translation Manipulator.',
+  },
   factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
         trackRate: 0.1,
@@ -967,7 +1027,7 @@ FABRIC.SceneGraph.registerNodeType('3AxisTranslationManipulator', {
         name: name + '_XAxis',
         color: FABRIC.RT.rgb(0.8, 0, 0, 1),
         localXfo: new FABRIC.RT.Xfo({
-          ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(0, 0, 1), -90)
+          ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(0, 0, 1), -Math.HALF_PI)
         }),
         geometryNode: lineVector
       }, true));
@@ -975,7 +1035,7 @@ FABRIC.SceneGraph.registerNodeType('3AxisTranslationManipulator', {
         name: name + '_XAxisArrowHead',
         color: FABRIC.RT.rgb(0.8, 0, 0, 1),
         localXfo: FABRIC.RT.xfo({
-          ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(0, 0, 1), -90),
+          ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(0, 0, 1), -Math.HALF_PI),
           tr: FABRIC.RT.vec3(options.size, 0, 0)
         }),
         geometryNode: arrowHead
@@ -1000,7 +1060,7 @@ FABRIC.SceneGraph.registerNodeType('3AxisTranslationManipulator', {
         name: name + '_ZAxis',
         color: FABRIC.RT.rgb(0, 0, 0.8),
         localXfo: new FABRIC.RT.Xfo({
-          ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(1, 0, 0), 90)
+          ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(1, 0, 0), Math.HALF_PI)
         }),
         geometryNode: lineVector
       }, true));
@@ -1008,7 +1068,7 @@ FABRIC.SceneGraph.registerNodeType('3AxisTranslationManipulator', {
         name: name + '_ZAxisArrowHead',
         color: FABRIC.RT.rgb(0, 0, 0.8),
         localXfo: FABRIC.RT.xfo({
-          ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(1, 0, 0), 90),
+          ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(1, 0, 0), Math.HALF_PI),
           tr: FABRIC.RT.vec3(0, 0, options.size)
         }),
         geometryNode: arrowHead
@@ -1026,7 +1086,7 @@ FABRIC.SceneGraph.registerNodeType('3AxisTranslationManipulator', {
         name: name + '_YZPlane',
         color: FABRIC.RT.rgb(0.8, 0, 0, 1),
         localXfo: new FABRIC.RT.Xfo({
-          ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(0, 0, 1), 90)
+          ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(0, 0, 1), Math.HALF_PI)
         }),
         geometryNode: drawTriangle
       }, true));
@@ -1040,7 +1100,7 @@ FABRIC.SceneGraph.registerNodeType('3AxisTranslationManipulator', {
         name: name + '_XYPlane',
         color: FABRIC.RT.rgb(0, 0, 0.8, 1),
         localXfo: new FABRIC.RT.Xfo({
-          ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(1, 0, 0), -90)
+          ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(1, 0, 0), -Math.HALF_PI)
         }),
         geometryNode: drawTriangle
       }, true));
@@ -1050,6 +1110,14 @@ FABRIC.SceneGraph.registerNodeType('3AxisTranslationManipulator', {
 
 
 FABRIC.SceneGraph.registerNodeType('PivotRotationManipulator', {
+  briefDesc: 'The PivotRotationManipulator is a manipulator for rotation based on a 3D pivot.',
+  detailedDesc: 'The PivotRotationManipulator is a manipulator for rotation based on a 3D pivot. It is drawn as a circle.',
+  parentNodeDesc: 'Manipulator',
+  optionsDesc: {
+    rotateRate: 'The rate of rotation in relation to mouse move units.',
+    radius: 'The radius of the circle primitive of the Manipulator',
+    name: 'The name of the pivot rotation Manipulator.',
+  },
   factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
         rotateRate: 0.35,
@@ -1107,10 +1175,10 @@ FABRIC.SceneGraph.registerNodeType('PivotRotationManipulator', {
       angle = vec1.getAngleTo(vec2);
 
       if (evt.shiftKey) {
-        angle = Math.round(angle / 5.0) * 5.0;
+        angle = Math.round(angle / Math.degToRad(5.0)) * Math.degToRad(5.0);
       }
 
-      movement = vec2.subtract(vec1).unit().scale(Math.sin(Math.degToRad(angle * 0.5)) * options.radius * 2.0);
+      movement = vec2.subtract(vec1).unit().scale(Math.sin(angle * 0.5) * options.radius * 2.0);
       if (vec1.cross(vec2).dot(normal) < 0) {
         angle = -angle;
         movement.negate();
@@ -1130,10 +1198,17 @@ FABRIC.SceneGraph.registerNodeType('PivotRotationManipulator', {
     return manipulatorNode;
   }});
 
-
-
-
 FABRIC.SceneGraph.registerNodeType('BoneManipulator', {
+  briefDesc: 'The BoneManipulator is a manipulator for the rotation of Bone primitive.',
+  detailedDesc: 'The BoneManipulator is a manipulator for the rotation of Bone primitive.',
+  parentNodeDesc: 'Manipulator',
+  optionsDesc: {
+    name: 'The name of the BoneManipulator',
+    parentManipulator: 'The parent bone Manipulator. None if undefined.',
+    childManipulator: 'The child bone Manipulator. None if undefined.',
+    length: 'The length of the bone Manipulator',
+    boneVector: 'The directino of the bone\'s alignment. Typically along the X axis.'
+  },
   factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
         name: 'BoneManipulator',
@@ -1218,7 +1293,7 @@ FABRIC.SceneGraph.registerNodeType('BoneManipulator', {
         angle = angle2;
       }
       if (evt.shiftKey) {
-        angle = Math.round(angle / 5.0) * 5.0;
+        angle = Math.round(angle / Math.degToRad(5.0)) * Math.degToRad(5.0);
       }
       if (vec1.cross(vec2).dot(normal) < 0) {
         angle = -angle;

@@ -8,10 +8,14 @@
  */
 FABRIC.RT = FABRIC.RT ? FABRIC.RT : {};
 
+Math.TWO_PI = Math.PI * 2.0;
+Math.HALF_PI = Math.PI / 2.0;
+Math.QUATER_PI = Math.PI / 4.0;
+
 /**
  * The precision of the math module.
  */
-FABRIC.RT.precision = 1e-5;
+Math.PRECISION = 10e-30
 /**
  * The factor to project radians to degrees.
  */

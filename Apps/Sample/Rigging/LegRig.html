@@ -46,6 +46,23 @@
     
     <script type="text/javascript" src="../../../SceneGraph/Parsers/parseCollada.js" charset="utf-8"></script>
     
+<script type="text/javascript">
+
+ var _gaq = _gaq || [];
+ _gaq.push(['_setAccount', 'UA-25833362-1']);
+ _gaq.push(['_trackPageview']);
+
+ (function() {
+   var ga = document.createElement('script'); ga.type =
+'text/javascript'; ga.async = true;
+   ga.src = ('https:' == document.location.protocol ? 'https://ssl' :
+'http://www') + '.google-analytics.com/ga.js';
+   var s = document.getElementsByTagName('script')[0];
+s.parentNode.insertBefore(ga, s);
+ })();
+
+</script>
+
     <script type="text/javascript">
 $(document).ready(function() {
 
@@ -68,8 +85,7 @@ $(document).ready(function() {
       target: FABRIC.RT.vec3(0, 6, 0),
       roll: 0,
       nearDistance: 0.001,
-      farDistance: 20000,
-      fovY: 60.0
+      farDistance: 20000
   });
   scene.constructNode('CameraManipulator', { targetNode: camera });
   viewport.setCameraNode(camera);
@@ -89,19 +105,19 @@ $(document).ready(function() {
   skeletonNode.addBone({name: 'root'});
 
   var xfo = FABRIC.RT.xfo({
-      ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(0, 0, 1), -75),
+      ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(0, 0, 1), Math.degToRad(-75)),
         tr: FABRIC.RT.vec3(0, 11, 0)
     });
   skeletonNode.addBone({name: 'thighBone', referencePose: xfo, length: 6, parent: 'root'});
 
   xfo = FABRIC.RT.xfo({
-      ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(0, 0, 1), -115),
+      ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(0, 0, 1), Math.degToRad(-115)),
       tr: xfo.tr.add(xfo.ori.rotateVector(FABRIC.RT.vec3(6, 0, 0)))
     });
   skeletonNode.addBone({name: 'calfBone', referencePose: xfo, length: 5, parent: 'thighBone' });
 
   xfo = FABRIC.RT.xfo({
-      ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(0, 0, 1), -20),
+      ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(0, 0, 1), Math.degToRad(-20)),
       tr: xfo.tr.add(xfo.ori.rotateVector(FABRIC.RT.vec3(5, 0, 0)))
     });
   skeletonNode.addBone({name: 'ankleBone', referencePose: xfo, length: 1.5, parent: 'calfBone' });

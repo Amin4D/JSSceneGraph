@@ -197,7 +197,7 @@ FABRIC.SceneGraph.registerNodeType('AnimationController', {
     // global time. Often the time context for an animation
     // is computed, or simulated based on scene events.
     if(options.bindToGlobalTime) {
-      dgnode.addDependency(scene.getGlobalsNode(), 'globals');
+      dgnode.setDependency(scene.getGlobalsNode(), 'globals');
       
       // This operator might simulate the platback local time by incrementing
       // it each frame by a rate specified by the playbackRate parameter.
@@ -250,7 +250,7 @@ FABRIC.SceneGraph.registerNodeType('AnimationEvaluator', {
         throw ('Incorrect type assignment. Must assign a AnimationController');
       }
       node = scene.getPrivateInterface(node);
-      dgnode.addDependency(node.getDGNode(), 'controller');
+      dgnode.setDependency(node.getDGNode(), 'controller');
       animationControllerNode = node;
     };
     animationEvaluatorNode.pub.setAnimationTrackNode = function(node) {
@@ -260,7 +260,7 @@ FABRIC.SceneGraph.registerNodeType('AnimationEvaluator', {
       node = scene.getPrivateInterface(node);
       animationTrackNode = node;
       evaluatorDatatype = animationTrackNode.pub.getValueType();
-      dgnode.addDependency(animationTrackNode.getDGNode(), 'animationtrack');
+      dgnode.setDependency(animationTrackNode.getDGNode(), 'animationtrack');
       dgnode.setCount(animationTrackNode.pub.getTrackCount());
       dgnode.bindings.append(animationTrackNode.getInterpolatorOperator());
     };
@@ -278,7 +278,7 @@ FABRIC.SceneGraph.registerNodeType('AnimationEvaluator', {
 
       var registeredTypes = scene.getRegisteredTypesManager().getRegisteredTypes();
       targetnode = scene.getPrivateInterface(targetnode);
-      targetnode.getDGNode().addDependency(dgnode, 'animationevaluator');
+      targetnode.getDGNode().setDependency(dgnode, 'animationevaluator');
 
       var targetNodeMembers = targetnode.getDGNode().getMembers();
       
@@ -461,7 +461,7 @@ FABRIC.SceneGraph.registerNodeType('TrackDisplay', {
     dgnode.addMember('time', 'Scalar', 0);
     dgnode.addMember('value', options.animationTrackNode.getValueType(), 0);
     dgnode.addMember('keyid', 'Integer', 0);
-    dgnode.addDependency(parametersdgnode, 'parameters');
+    dgnode.setDependency(parametersdgnode, 'parameters');
 
     dgnode.setCount(options.segmentCount);
 
@@ -474,7 +474,7 @@ FABRIC.SceneGraph.registerNodeType('TrackDisplay', {
       }
       animationTrackNode = scene.getPrivateInterface(node);
       evaluatorDatatype = animationTrackNode.pub.getValueType();
-      dgnode.addDependency(animationTrackNode.getDGNode(), 'animationtrack');
+      dgnode.setDependency(animationTrackNode.getDGNode(), 'animationtrack');
 
       parametersdgnode.setData('trackIndex', options.trackIndex ? options.trackIndex : 0);
 

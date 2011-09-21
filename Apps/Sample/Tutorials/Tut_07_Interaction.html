@@ -14,6 +14,23 @@
 
 <script type="text/javascript">
 
+ var _gaq = _gaq || [];
+ _gaq.push(['_setAccount', 'UA-25833362-1']);
+ _gaq.push(['_trackPageview']);
+
+ (function() {
+   var ga = document.createElement('script'); ga.type =
+'text/javascript'; ga.async = true;
+   ga.src = ('https:' == document.location.protocol ? 'https://ssl' :
+'http://www') + '.google-analytics.com/ga.js';
+   var s = document.getElementsByTagName('script')[0];
+s.parentNode.insertBefore(ga, s);
+ })();
+
+</script>
+
+<script type="text/javascript">
+
 $(document).ready(function() {
   
   // create a context and store it
@@ -38,8 +55,8 @@ $(document).ready(function() {
   dgnodeInteract.setCount(1);
   
   // create dependencies between the nodes
-  dgnode2.addDependency(dgnode1, 'otherNode');
-  dgnode2.addDependency(dgnodeInteract, 'interaction');
+  dgnode2.setDependency(dgnode1, 'otherNode');
+  dgnode2.setDependency(dgnodeInteract, 'interaction');
   
   // create three operators, one to initiate the data, one to add, and one to mul
   var operatorInit = context.DependencyGraph.createOperator("initiate");

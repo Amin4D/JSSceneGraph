@@ -25,7 +25,10 @@ FABRIC.appendOnCreateContextCallback(function(context) {
       linesIndices: 'Integer[]'
     },
     constructor: FABRIC.RT.DebugGeometry,
-    kBindings: FABRIC.loadResourceURL('FABRIC_ROOT/SceneGraph/RT/DebugGeometry.kl')
+    klBindings: {
+      filename: 'DebugGeometry.kl',
+      sourceCode: FABRIC.loadResourceURL('FABRIC_ROOT/SceneGraph/RT/DebugGeometry.kl')
+    }
   });
 });
 
@@ -53,7 +56,7 @@ FABRIC.SceneGraph.registerNodeType('DebugGeometryDraw', {
       redrawEventHandler = debugGeometryDraw.constructEventHandlerNode('Redraw');
       
       
-    redrawEventHandler.addScope('debuggeometrynode', options.dgnode);
+    redrawEventHandler.setScope('debuggeometrynode', options.dgnode);
       
     var registeredTypes = scene.getContext().RegisteredTypesManager.getRegisteredTypes();
     

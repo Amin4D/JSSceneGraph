@@ -28,17 +28,17 @@ FABRIC.SceneGraph.registerNodeType('Geometry', {
       
     if(options.drawable){
       redrawEventHandler = geometryNode.constructEventHandlerNode('Redraw');
-      redrawEventHandler.addScope('uniforms', uniformsdgnode);
-      redrawEventHandler.addScope('attributes', attributesdgnode);
+      redrawEventHandler.setScope('uniforms', uniformsdgnode);
+      redrawEventHandler.setScope('attributes', attributesdgnode);
     }
 
-    attributesdgnode.addDependency(uniformsdgnode, 'uniforms');
+    attributesdgnode.setDependency(uniformsdgnode, 'uniforms');
     
     if (options.createBoundingBoxNode) {
       bboxdgnode = geometryNode.constructDGNode('BoundingBoxDGNode');
       bboxdgnode.addMember('min', 'Vec3');
       bboxdgnode.addMember('max', 'Vec3');
-      bboxdgnode.addDependency(attributesdgnode, 'attributes');
+      bboxdgnode.setDependency(attributesdgnode, 'attributes');
       bboxdgnode.bindings.append(scene.constructOperator({
         operatorName: 'calcBoundingBox',
         srcFile: 'FABRIC_ROOT/SceneGraph/KL/calcBoundingBox.kl',
@@ -230,13 +230,13 @@ FABRIC.SceneGraph.registerNodeType('GeometryDataCopy', {
     options.createDrawOperator = false;
     var geometryDataCopyNode = scene.constructNode('Geometry', options);
     
-    geometryDataCopyNode.getUniformsDGNode().addDependency(baseGeometryNode.getUniformsDGNode(), 'parentuniforms');
-    geometryDataCopyNode.getUniformsDGNode().addDependency(baseGeometryNode.getAttributesDGNode(), 'parentattributes');
-    geometryDataCopyNode.getAttributesDGNode().addDependency(baseGeometryNode.getUniformsDGNode(), 'parentuniforms');
-    geometryDataCopyNode.getAttributesDGNode().addDependency(baseGeometryNode.getAttributesDGNode(), 'parentattributes');
+    geometryDataCopyNode.getUniformsDGNode().setDependency(baseGeometryNode.getUniformsDGNode(), 'parentuniforms');
+    geometryDataCopyNode.getUniformsDGNode().setDependency(baseGeometryNode.getAttributesDGNode(), 'parentattributes');
+    geometryDataCopyNode.getAttributesDGNode().setDependency(baseGeometryNode.getUniformsDGNode(), 'parentuniforms');
+    geometryDataCopyNode.getAttributesDGNode().setDependency(baseGeometryNode.getAttributesDGNode(), 'parentattributes');
     if(baseGeometryNode.getBoundingBoxDGNode){
-      geometryDataCopyNode.getUniformsDGNode().addDependency(baseGeometryNode.getBoundingBoxDGNode(), 'parentboundingbox');
-      geometryDataCopyNode.getAttributesDGNode().addDependency(baseGeometryNode.getBoundingBoxDGNode(), 'parentboundingbox');
+      geometryDataCopyNode.getUniformsDGNode().setDependency(baseGeometryNode.getBoundingBoxDGNode(), 'parentboundingbox');
+      geometryDataCopyNode.getAttributesDGNode().setDependency(baseGeometryNode.getBoundingBoxDGNode(), 'parentboundingbox');
     }
 
     // The data copy must always have the same count on the attributes node,
@@ -543,10 +543,10 @@ FABRIC.SceneGraph.registerNodeType('Instance', {
     dgnode.addMember('drawToggle', 'Boolean', options.enableDrawing);
     instanceNode.addMemberInterface(dgnode, 'drawToggle', true);
     
-    redrawEventHandler.addScope('instance', dgnode);
+    redrawEventHandler.setScope('instance', dgnode);
 
     var bindToSceneGraph = function() {
-      redrawEventHandler.addScope('transform', transformNode.getDGNode());
+      redrawEventHandler.setScope('transform', transformNode.getDGNode());
       var preProcessorDefinitions = {
               MODELMATRIX_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('modelMatrix'),
               MODELMATRIXINVERSE_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('modelMatrixInverse'),
@@ -596,11 +596,11 @@ FABRIC.SceneGraph.registerNodeType('Instance', {
       ) {
         var raycastOperator = geometryNode.getRayIntersectionOperator(transformNodeMember);
         raycastEventHandler = instanceNode.constructEventHandlerNode('Raycast');
-        raycastEventHandler.addScope('geometry_uniforms', geometryNode.getUniformsDGNode());
-        raycastEventHandler.addScope('geometry_attributes', geometryNode.getAttributesDGNode());
-        raycastEventHandler.addScope('boundingbox', geometryNode.getBoundingBoxDGNode());
-        raycastEventHandler.addScope('transform', transformNode.getDGNode());
-        raycastEventHandler.addScope('instance', dgnode);
+        raycastEventHandler.setScope('geometry_uniforms', geometryNode.getUniformsDGNode());
+        raycastEventHandler.setScope('geometry_attributes', geometryNode.getAttributesDGNode());
+        raycastEventHandler.setScope('boundingbox', geometryNode.getBoundingBoxDGNode());
+        raycastEventHandler.setScope('transform', transformNode.getDGNode());
+        raycastEventHandler.setScope('instance', dgnode);
         // The selector will return the node bound with the given binding name.
         raycastEventHandler.setSelector('instance', raycastOperator);
 
@@ -732,6 +732,12 @@ FABRIC.SceneGraph.registerNodeType('Instance', {
 });
 
 FABRIC.SceneGraph.registerNodeType('ObjLoadTriangles', {
+  briefDesc: 'The ObjLoadTriangles node is a resource load node able to load OBJ files.',
+  detailedDesc: 'The ObjLoadTriangles node is a resource load node able to load OBJ files. It utilizes a C++ based extension to load OBJ files in a very fast fashion.',
+  parentNodeDesc: 'ResourceLoad',
+  optionsDesc: {
+    removeParsersOnLoad: 'If set to true, the parser operator will be removed after parsing.'
+  },
   factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
       removeParsersOnLoad: false
@@ -744,8 +750,8 @@ FABRIC.SceneGraph.registerNodeType('ObjLoadTriangles', {
       trianglesNode = scene.constructNode('Triangles', options),
       emptyBindingsFunction;
 
-    trianglesNode.getAttributesDGNode().addDependency(resourceloaddgnode, 'resource');
-    trianglesNode.getUniformsDGNode().addDependency(resourceloaddgnode, 'resource');
+    trianglesNode.getAttributesDGNode().setDependency(resourceloaddgnode, 'resource');
+    trianglesNode.getUniformsDGNode().setDependency(resourceloaddgnode, 'resource');
     trianglesNode.pub.addUniformValue('reload', 'Boolean', true);
     trianglesNode.pub.addUniformValue('handle', 'Data');
 

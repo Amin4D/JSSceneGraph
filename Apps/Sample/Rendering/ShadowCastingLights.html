@@ -14,7 +14,6 @@
 
     <link type="text/css" href="../../../ThirdParty/jQuery/css/vader/jquery-ui-1.8.5.custom.css" rel="stylesheet" />
 
-    <script type="text/javascript" src="../../../Core/FABRIC.Wrappers.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../Core/FABRIC.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/RT/Math.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/RT/Vec2.js" charset="utf-8"></script>
@@ -143,12 +142,11 @@ $(document).ready(function() {
   $('#loadingDialog').dialog({
     modal: true
   });
-  var count = FABRIC.getAsyncTaskCount();
-  FABRIC.appendOnResolveAsyncTaskCallback(function(label, countRemaining){
+  FABRIC.appendOnResolveAsyncTaskCallback(function(label, nbRemaining, doneWeight, totalWeight) {
     $('#loadingProgressBar').progressbar({
-      value: (1.0-(countRemaining/count))*100
+      value: (1.0-(doneWeight/totalWeight))*100
     });
-    if(countRemaining===0){
+    if (nbRemaining===0) {
       $('#loadingDialog').dialog('close');
       var errors = scene.getErrors();
       if (errors.length > 0) {

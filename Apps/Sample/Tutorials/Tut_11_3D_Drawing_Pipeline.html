@@ -11,7 +11,6 @@
 
     <script type="text/javascript" src="../../../ThirdParty/jQuery/jquery-1.4.2.min.js"></script>
 
-    <script type="text/javascript" src="../../../Core/FABRIC.Wrappers.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../Core/FABRIC.js" charset="utf-8"></script>
 
     <script type="text/javascript" src="../../../SceneGraph/RT/Math.js" charset="utf-8"></script>
@@ -106,9 +105,8 @@ $(document).ready(function() {
     });
 
   // Wait for all the operators to be compiled. 
-  var count = FABRIC.getAsyncTaskCount();
-  FABRIC.appendOnResolveAsyncTaskCallback(function(label, countRemaining){
-    if(countRemaining===0){
+  FABRIC.appendOnResolveAsyncTaskCallback(function(label, nbRemaining, doneWeight, totalWeight) {
+    if (nbRemaining===0) {
       var errors = scene.getErrors();
       if (errors.length > 0) {
         throw (errors.toString());

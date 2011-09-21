@@ -248,7 +248,6 @@ use Vec3;\n\
 operator rotateMuscleVolume(\n\
   io Vec3 position\n\
 ) {\n\
-  Scalar PI = 3.141592653589793238462643383279;\n\
   position = axisAndAngleToQuat(Vec3(0.0,0.0,1.0), PI*-0.5).rotateVector(position);\n\
 }\n\
         ',

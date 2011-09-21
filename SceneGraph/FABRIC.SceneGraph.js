@@ -930,7 +930,7 @@ FABRIC.SceneGraph.registerNodeType('Viewport', {
     dgnode.addMember('backgroundColor', 'Color', options.backgroundColor);
     dgnode.addMember('polygonMode', 'Integer', options.polygonMode);
 
-    redrawEventHandler.addScope('viewPort', dgnode);
+    redrawEventHandler.setScope('viewPort', dgnode);
 
     redrawEventHandler.preDescendBindings.append(scene.constructOperator({
           operatorName: 'viewPortBeginRender',
@@ -949,7 +949,7 @@ FABRIC.SceneGraph.registerNodeType('Viewport', {
     
     FABRIC.appendOnResolveAsyncTaskCallback(function(label, countRemaining){
       if(countRemaining===0){
-        redrawEventHandler.addScope('window', fabricwindow.windowNode);
+        redrawEventHandler.setScope('window', fabricwindow.windowNode);
         if(scene.getScenePreRedrawEventHandler()){
           fabricwindow.redrawEvent.appendEventHandler(scene.getScenePreRedrawEventHandler());
         }
@@ -1012,7 +1012,7 @@ FABRIC.SceneGraph.registerNodeType('Viewport', {
       }));
 
       viewPortRaycastEventHandler = viewportNode.constructEventHandlerNode('Raycast');
-      viewPortRaycastEventHandler.addScope('raycastData', viewPortRayCastDgNode);
+      viewPortRaycastEventHandler.setScope('raycastData', viewPortRayCastDgNode);
 
       // Raycast events are fired from the viewport. As the event
       // propagates down the tree it collects scopes and fires operators.
@@ -1496,7 +1496,7 @@ FABRIC.SceneGraph.registerNodeType('Camera', {
     dgnode.addMember('orthographic', 'Boolean', options.orthographic);
     dgnode.addMember('projectionMat44', 'Mat44');
 
-    redrawEventHandler.addScope('camera', dgnode);
+    redrawEventHandler.setScope('camera', dgnode);
 
     redrawEventHandler.preDescendBindings.append(scene.constructOperator({
       operatorName: 'UpdateCameraProjection',

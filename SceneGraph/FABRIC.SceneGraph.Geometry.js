@@ -28,8 +28,8 @@ FABRIC.SceneGraph.registerNodeType('Geometry', {
       
     if(options.drawable){
       redrawEventHandler = geometryNode.constructEventHandlerNode('Redraw');
-      redrawEventHandler.addScope('uniforms', uniformsdgnode);
-      redrawEventHandler.addScope('attributes', attributesdgnode);
+      redrawEventHandler.setScope('uniforms', uniformsdgnode);
+      redrawEventHandler.setScope('attributes', attributesdgnode);
     }
 
     attributesdgnode.setDependency(uniformsdgnode, 'uniforms');
@@ -543,10 +543,10 @@ FABRIC.SceneGraph.registerNodeType('Instance', {
     dgnode.addMember('drawToggle', 'Boolean', options.enableDrawing);
     instanceNode.addMemberInterface(dgnode, 'drawToggle', true);
     
-    redrawEventHandler.addScope('instance', dgnode);
+    redrawEventHandler.setScope('instance', dgnode);
 
     var bindToSceneGraph = function() {
-      redrawEventHandler.addScope('transform', transformNode.getDGNode());
+      redrawEventHandler.setScope('transform', transformNode.getDGNode());
       var preProcessorDefinitions = {
               MODELMATRIX_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('modelMatrix'),
               MODELMATRIXINVERSE_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('modelMatrixInverse'),
@@ -596,11 +596,11 @@ FABRIC.SceneGraph.registerNodeType('Instance', {
       ) {
         var raycastOperator = geometryNode.getRayIntersectionOperator(transformNodeMember);
         raycastEventHandler = instanceNode.constructEventHandlerNode('Raycast');
-        raycastEventHandler.addScope('geometry_uniforms', geometryNode.getUniformsDGNode());
-        raycastEventHandler.addScope('geometry_attributes', geometryNode.getAttributesDGNode());
-        raycastEventHandler.addScope('boundingbox', geometryNode.getBoundingBoxDGNode());
-        raycastEventHandler.addScope('transform', transformNode.getDGNode());
-        raycastEventHandler.addScope('instance', dgnode);
+        raycastEventHandler.setScope('geometry_uniforms', geometryNode.getUniformsDGNode());
+        raycastEventHandler.setScope('geometry_attributes', geometryNode.getAttributesDGNode());
+        raycastEventHandler.setScope('boundingbox', geometryNode.getBoundingBoxDGNode());
+        raycastEventHandler.setScope('transform', transformNode.getDGNode());
+        raycastEventHandler.setScope('instance', dgnode);
         // The selector will return the node bound with the given binding name.
         raycastEventHandler.setSelector('instance', raycastOperator);
 

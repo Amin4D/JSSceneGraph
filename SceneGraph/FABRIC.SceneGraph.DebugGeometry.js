@@ -56,7 +56,7 @@ FABRIC.SceneGraph.registerNodeType('DebugGeometryDraw', {
       redrawEventHandler = debugGeometryDraw.constructEventHandlerNode('Redraw');
       
       
-    redrawEventHandler.addScope('debuggeometrynode', options.dgnode);
+    redrawEventHandler.setScope('debuggeometrynode', options.dgnode);
       
     var registeredTypes = scene.getContext().RegisteredTypesManager.getRegisteredTypes();
     

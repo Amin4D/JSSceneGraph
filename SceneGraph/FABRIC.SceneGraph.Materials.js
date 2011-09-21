@@ -113,7 +113,7 @@ FABRIC.SceneGraph.registerNodeType('Image', {
       oglTexture.forceRefresh = options.forceRefresh;
       redrawEventHandler.addMember('oglTexture2D', 'OGLTexture2D', oglTexture);
       if(options.createDgNode){
-        redrawEventHandler.addScope('image', dgnode);
+        redrawEventHandler.setScope('image', dgnode);
         redrawEventHandler.preDescendBindings.append(scene.constructOperator({
           operatorName: 'bindTextureLDR',
           srcFile: 'FABRIC_ROOT/SceneGraph/KL/loadTexture.kl',
@@ -128,7 +128,7 @@ FABRIC.SceneGraph.registerNodeType('Image', {
         }));
       }
       else if(options.createResourceLoadNode){
-        redrawEventHandler.addScope('resource', resourceloaddgnode);
+        redrawEventHandler.setScope('resource', resourceloaddgnode);
         redrawEventHandler.preDescendBindings.append(scene.constructOperator({
           operatorName: 'loadAndBindTextureLDR',
           srcFile: 'FABRIC_ROOT/SceneGraph/KL/loadTexture.kl',
@@ -169,7 +169,7 @@ FABRIC.SceneGraph.registerNodeType('CubeMap', {
     var createTextureLoaderNode = function(url, faceId){
       var resourceLoadNode = scene.constructNode('ResourceLoad', { url: url });
       var resourceloaddgnode = resourceLoadNode.getDGLoadNode();
-      redrawEventHandler.addScope('resource'+faceId, resourceloaddgnode);
+      redrawEventHandler.setScope('resource'+faceId, resourceloaddgnode);
     }
     createTextureLoaderNode(options.urls[0], 0);
     createTextureLoaderNode(options.urls[1], 1);
@@ -277,7 +277,7 @@ FABRIC.SceneGraph.registerNodeType('Video', {
     }));
 
     var redrawEventHandler = videoNode.constructEventHandlerNode('Redraw');
-    redrawEventHandler.addScope('video', dgnode);
+    redrawEventHandler.setScope('video', dgnode);
     redrawEventHandler.addMember('bufferID', 'Size', 0);
     redrawEventHandler.preDescendBindings.append(scene.constructOperator({
         operatorName: 'videoLoadToGPU',
@@ -325,7 +325,7 @@ FABRIC.SceneGraph.registerNodeType('PointSpriteTexture', {
     dgnode.addMember('resolution', 'Integer', options.spriteResolution);
 
     var redrawEventHandler = pointSpriteTextureNode.constructEventHandlerNode('Redraw');
-    redrawEventHandler.addScope('image', dgnode);
+    redrawEventHandler.setScope('image', dgnode);
     redrawEventHandler.addMember('bufferID', 'Size', 0);
     redrawEventHandler.preDescendBindings.append(scene.constructOperator({
             operatorName: 'createSpriteTexture',
@@ -613,7 +613,7 @@ FABRIC.SceneGraph.registerNodeType('Material', {
         if(options.storeUniformsInDGNode){
           if(!dgnode){
             dgnode = materialNode.constructDGNode('DGNode');
-            redrawEventHandler.addScope('material', dgnode);
+            redrawEventHandler.setScope('material', dgnode);
           }
           dgnode.addMember(uniformName, uniform.type, uniform.defaultValue);
           materialNode.addMemberInterface(dgnode, uniformName, true);
@@ -745,7 +745,7 @@ FABRIC.SceneGraph.registerNodeType('PointMaterial', {
     }
     else{
       dgnode = pointMaterial.constructDGNode('DGNode');
-      pointMaterial.getRedrawEventHandler().addScope('material', dgnode);
+      pointMaterial.getRedrawEventHandler().setScope('material', dgnode);
     }
     dgnode.addMember('pointSize', 'Scalar', options.pointSize);
     pointMaterial.addMemberInterface(dgnode, 'pointSize', true);

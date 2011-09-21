@@ -603,7 +603,7 @@ FABRIC.SceneGraph.registerNodeType('CharacterInstance', {
         throw ('Incorrect type assignment. Must assign a CharacterRig');
       }
       rigNode = scene.getPrivateInterface(node);
-      characterInstanceNode.getRedrawEventHandler().addScope('rig', rigNode.getDGNode());
+      characterInstanceNode.getRedrawEventHandler().setScope('rig', rigNode.getDGNode());
     };
     characterInstanceNode.pub.getRigNode = function() {
       return scene.getPublicInterface(rigNode);

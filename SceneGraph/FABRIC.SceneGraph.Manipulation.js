@@ -351,10 +351,10 @@ FABRIC.SceneGraph.registerNodeType('PaintManipulator', {
         paintOperator;
 
       paintInstanceEventHandler = paintManipulatorNode.constructEventHandlerNode('Paint' + node.getName());
-      paintInstanceEventHandler.addScope('geometryattributes', geometryNode.getAttributesDGNode());
-      paintInstanceEventHandler.addScope('geometryuniforms', geometryNode.getAttributesDGNode());
-      paintInstanceEventHandler.addScope('transform', transformNode.getDGNode());
-      paintInstanceEventHandler.addScope('instance', instanceNode.getDGNode());
+      paintInstanceEventHandler.setScope('geometryattributes', geometryNode.getAttributesDGNode());
+      paintInstanceEventHandler.setScope('geometryuniforms', geometryNode.getAttributesDGNode());
+      paintInstanceEventHandler.setScope('transform', transformNode.getDGNode());
+      paintInstanceEventHandler.setScope('instance', instanceNode.getDGNode());
 
       // The selector will return the node bound with the given binding name.
       var paintingOpDef = options.paintingOpDef;

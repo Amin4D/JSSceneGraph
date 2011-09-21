@@ -52,7 +52,7 @@ FABRIC.SceneGraph.registerNodeType('Light', {
     lightNode.getRedrawEventHandler = function() {
       // This call will replace the 'getRedrawEventHandler' with an accessor.
       redrawEventHandler = lightNode.constructEventHandlerNode('Redraw');
-      redrawEventHandler.addScope('light', dgnode);
+      redrawEventHandler.setScope('light', dgnode);
 
       redrawEventHandler.preDescendBindings.append(scene.constructOperator({
         operatorName: 'loadLight',
@@ -436,8 +436,8 @@ FABRIC.SceneGraph.registerNodeType('SpotLight', {
           ]
         }));
 
-      shadowRenderEventHandler.addScope('light', dgnode);
-      shadowRenderEventHandler.addScope('camera', dgnode);
+      shadowRenderEventHandler.setScope('light', dgnode);
+      shadowRenderEventHandler.setScope('camera', dgnode);
 
      
       shadowRenderEventHandler.preDescendBindings.append(scene.constructOperator({
@@ -462,7 +462,7 @@ FABRIC.SceneGraph.registerNodeType('SpotLight', {
         var shadowDebugRenderEventHandler = spotLightNode.constructEventHandlerNode('renderDebugQuad');
         shadowDebugRenderEventHandler.addMember('program', 'Integer');
         scene.getScenePostRedrawEventHandler().appendChildEventHandler(shadowDebugRenderEventHandler);
-        shadowDebugRenderEventHandler.addScope('light', dgnode);
+        shadowDebugRenderEventHandler.setScope('light', dgnode);
         shadowDebugRenderEventHandler.preDescendBindings.append(
           scene.constructOperator({
               operatorName:"debugShadowMapBuffer",

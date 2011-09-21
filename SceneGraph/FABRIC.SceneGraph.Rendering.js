@@ -89,15 +89,15 @@ FABRIC.SceneGraph.registerNodeType('OffscreenViewport', {
       if(!viewport.pub.isTypeOf('Viewport')) {
         throw ('Provided viewport is not of type Viewport!');
       }
-      eventHandlerNode.addScope('viewPort',viewport.getDGNode());
-      eventHandlerNode.addScope('window',viewport.getFabricWindowObject().windowNode);
+      eventHandlerNode.setScope('viewPort',viewport.getDGNode());
+      eventHandlerNode.setScope('window',viewport.getFabricWindowObject().windowNode);
     }
     offscreenNode.pub.setCameraNode = function(camera) {
       var camera = scene.getPrivateInterface(camera);
       if(!camera.pub.isTypeOf('Camera')) {
         throw ('Provided camera is not of type Camera!');
       }
-      eventHandlerNode.addScope('camera',camera.getDGNode());
+      eventHandlerNode.setScope('camera',camera.getDGNode());
     }
     offscreenNode.pub.constructMaterial = function(name) {
       var materialNode = scene.constructNode(name, {
@@ -112,7 +112,7 @@ FABRIC.SceneGraph.registerNodeType('OffscreenViewport', {
     // setup the known scopes
     offscreenNode.pub.setViewportNode(mainViewportNode);
     offscreenNode.pub.setCameraNode(cameraNode);
-    eventHandlerNode.addScope('data',dgnode);
+    eventHandlerNode.setScope('data',dgnode);
     
     // setup the prebindings in order
     var preBindings = eventHandlerNode.preDescendBindings;

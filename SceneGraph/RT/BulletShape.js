@@ -61,6 +61,16 @@ FABRIC.RT.BulletShape.createPlane = function(normal) {
   return shape;
 };
 
+FABRIC.RT.BulletShape.createConvexHull = function(geometryNode) {
+  if(geometryNode == undefined) {
+    throw('You need to specify the '+geometryNode+' for createConvexHull.');
+  }
+  var shape = new FABRIC.RT.BulletShape();
+  shape.type = FABRIC.RT.BulletShape.BULLET_CONVEX_HULL_SHAPE;
+  shape.geometryNode = geometryNode;
+  return shape;
+};
+
 FABRIC.appendOnCreateContextCallback(function(context) {
   context.RegisteredTypesManager.registerType('BulletShape', {
     members: {

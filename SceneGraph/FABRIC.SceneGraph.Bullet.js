@@ -3,47 +3,6 @@
 // Copyright 2010-2011Fabric Technologies Inc. All rights reserved.
 //
 
-/**
- * The bullet scene graph is the core implementation of Fabric's
- * bullet integration.
- */
-FABRIC.SceneGraph.registerNodeType('BulletRigidBodyNode', {
-  briefDesc: 'The BulletRigidBodyNode represents a collection of bullet physics rigid bodies.',
-  detailedDesc: 'The BulletRigidBodyNode represents a collection of bullet physics rigid bodies.',
-  factoryFn: function(options, scene) {
-    scene.assignDefaults(options, {
-      shape: undefined,
-      shapeName: 'shape'
-    });
-
-    var bulletShapeNode = scene.constructNode('SceneGraphNode', {name: 'BulletShapeNode'});
-    var dgnode = bulletShapeNode.constructDGNode('DGNode');
-    
-    bulletShapeNode.pub.addShape = function(shapeName,shape) {
-      if(shapeName == undefined)
-        throw('You need to specify a shapeName when calling addShape!');
-      if(shape == undefined)
-        throw('You need to specify a shape when calling addShape!');
-      dgnode.addMember(shapeName, 'BulletShape', shape);
-
-      // create rigid body operator
-      dgnode.bindings.append(scene.constructOperator({
-        operatorName: 'createBulletShape',
-        parameterLayout: [
-          'self.'+shapeName
-        ],
-        entryFunctionName: 'createBulletShape',
-        srcFile: 'FABRIC_ROOT/SceneGraph/KL/bullet.kl'
-      }));
-    }
-    
-    if(options.shape) {
-      bulletShapeNode.pub.addShape(options.shape,options.shapeName);
-    }
-    
-    return bulletShapeNode;
-  }});
-
 FABRIC.SceneGraph.registerNodeType('BulletWorldNode', {
   briefDesc: 'The BulletWorldNode represents a bullet physics simulation world.',
   detailedDesc: 'The BulletWorldNode represents a bullet physics simulation world.',
@@ -81,6 +40,25 @@ FABRIC.SceneGraph.registerNodeType('BulletWorldNode', {
       if(shape == undefined)
         throw('You need to specify a shape when calling addShape!');
       shapedgnode.addMember(shapeName, 'BulletShape', shape);
+
+      // copy the points for convex hulls
+      if(shape.type == FABRIC.RT.BulletShape.BULLET_CONVEX_HULL_SHAPE)
+      {
+        if(!shape.geometryNode)
+          throw('You need to specify geometryNode for a convex hull shape!')
+          
+        // create rigid body operator
+        shapedgnode.setDependency(scene.getPrivateInterface(shape.geometryNode).getAttributesDGNode(),shapeName+"_attributes");
+        shapedgnode.bindings.append(scene.constructOperator({
+          operatorName: 'copyShapeVertices',
+          parameterLayout: [
+            'self.'+shapeName,
+            shapeName+"_attributes.positions<>",
+          ],
+          entryFunctionName: 'copyShapeVertices',
+          srcFile: 'FABRIC_ROOT/SceneGraph/KL/bullet.kl'
+        }));
+      }
 
       // create rigid body operator
       shapedgnode.bindings.append(scene.constructOperator({

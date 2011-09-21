@@ -37,6 +37,15 @@ operator createBulletShape(
   shape.create(result);
 }
 
+operator copyShapeVertices(
+  io BulletShape shape,
+  io Vec3 positions<>
+){
+  shape.vertices.resize(positions.size());
+  for(Size i=0;i<positions.size();i++)
+    shape.vertices[i] = positions[i];
+}
+
 operator createBulletRigidBody(
   io BulletWorld world,
   io BulletShape shape,

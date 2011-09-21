@@ -392,12 +392,12 @@ FABRIC.SceneGraph.registerNodeType('PaintManipulator', {
     paintManipulatorNode.pub.enable = function(){
       enabled = true;
       brushInstance.pub.setDrawToggle(true);
-      scene.pub.redrawAllWindows();
+      scene.pub.redrawAllViewports();
     }
     paintManipulatorNode.pub.disable = function(){
       enabled = false;
       brushInstance.pub.setDrawToggle(false);
-      scene.pub.redrawAllWindows();
+      scene.pub.redrawAllViewports();
     }
 
     return paintManipulatorNode;

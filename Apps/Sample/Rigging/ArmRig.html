@@ -164,7 +164,7 @@ $(document).ready(function() {
       .bind('slide',
         function(event, ui) {
           rigVariables.setData('armIKBlend', ui.value);
-          scene.redrawAllWindows();
+          scene.redrawAllViewports();
         }
       );
 

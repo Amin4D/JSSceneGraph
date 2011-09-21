@@ -236,7 +236,7 @@ $(document).ready(function() {
         $('#'+name).slider().bind('slide',
           function(event, ui) {
             mixer.setShapeWeight(name,ui.value);
-            scene.redrawAllWindows();
+            scene.redrawAllViewports();
           });
       };
       for(var i=0;i<shapeNames.length;i++)

@@ -111,7 +111,7 @@ $(document).ready(function() {
       if (errors.length > 0) {
         throw (errors.toString());
       }
-      scene.redrawAllWindows();
+      scene.redrawAllViewports();
       return true;
     }
   });
@@ -125,7 +125,7 @@ $(document).ready(function() {
   .bind('slide',
     function(event, ui) {
       material.setFrequency(ui.value);
-      scene.redrawAllWindows();
+      scene.redrawAllViewports();
   }); 
   $('#amplitude_slider')
   .slider({
@@ -136,7 +136,7 @@ $(document).ready(function() {
   .bind('slide',
     function(event, ui) {
       material.setAmplitude(ui.value);
-      scene.redrawAllWindows();
+      scene.redrawAllViewports();
   }); 
 
 });

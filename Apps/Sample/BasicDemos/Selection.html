@@ -1,0 +1,252 @@
+<html xmlns="http://www.w3.org/1999/xhtml"> 
+  <!--
+    Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
+    -->
+  <head> 
+    <title>FABRIC - Mouse Events</title> 
+    
+    <meta charset="iso-8859-1"/>
+    <link href="../../../themes/default/style.css" rel="stylesheet" type="text/css" />
+    <link href="../../../themes/default/viewer.css" rel="stylesheet" type="text/css" />
+    
+    <script type="text/javascript" src="../../../ThirdParty/jQuery/jquery-1.4.2.min.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/jQuery/jquery-ui-1.8.5.custom.min.js"></script>
+
+    <link type="text/css" href="../../../ThirdParty/jQuery/css/vader/jquery-ui-1.8.5.custom.css" rel="stylesheet" />
+
+    <script type="text/javascript" src="../../../Core/FABRIC.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/Math.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/Vec2.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/Vec3.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/Vec4.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/Mat22.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/Mat33.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/Mat44.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/Quat.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/Xfo.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/RGBA.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/Color.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/Euler.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/Ray.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/CollectedPoints.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/OGLShaderProgram.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/OGLBuffer.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/OGLTexture2D.js" charset="utf-8"></script>
+    
+    <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Geometry.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Primitives.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Kinematics.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Materials.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Lights.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Manipulation.js" charset="utf-8"></script>
+    
+    <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Selection.js" charset="utf-8"></script>
+    
+<script type="text/javascript">
+
+ var _gaq = _gaq || [];
+ _gaq.push(['_setAccount', 'UA-25833362-1']);
+ _gaq.push(['_trackPageview']);
+
+ (function() {
+   var ga = document.createElement('script'); ga.type =
+'text/javascript'; ga.async = true;
+   ga.src = ('https:' == document.location.protocol ? 'https://ssl' :
+'http://www') + '.google-analytics.com/ga.js';
+   var s = document.getElementsByTagName('script')[0];
+s.parentNode.insertBefore(ga, s);
+ })();
+
+</script>
+
+    <script type="text/javascript">
+    
+    
+    
+    
+    
+    
+// These Node definitions are inlined for now, but will
+// be moved to a separate file once they are stabilized. 
+FABRIC.SceneGraph.registerNodeType('SelectableInstance', {
+  factoryFn: function(options, scene) {
+    scene.assignDefaults(options, {
+      highlightMaterial: undefined,
+      selectMaterial: undefined
+    });
+    
+    var selectableInstance = scene.constructNode('Instance', options);
+    var highglighted = false;
+    var selected = false;
+    selectableInstance.pub.addEventListener('highlight', function(evt) {
+      if(!selected){
+        selectableInstance.pub.setMaterialNode( options.highlightMaterial );
+        highglighted = true;
+      }
+    });
+    selectableInstance.pub.addEventListener('unhighlight', function(evt) {
+      if(highglighted){
+        selectableInstance.pub.removeMaterialNode( options.highlightMaterial );
+        highglighted = false;
+      }
+    });
+    selectableInstance.pub.addEventListener('selected', function(evt) {
+      if(highglighted){
+        selectableInstance.pub.removeMaterialNode( options.highlightMaterial );
+        highglighted = false;
+      }
+      selectableInstance.pub.setMaterialNode( options.selectMaterial );
+      selected = true;
+    });
+    selectableInstance.pub.addEventListener('deselected', function(evt) {
+      selectableInstance.pub.removeMaterialNode( options.selectMaterial );
+      selected = false;
+    });
+    
+    return selectableInstance;
+  }});
+    
+    
+$(document).ready(function() {
+  
+  var scene = FABRIC.SceneGraph.createScene();
+
+  var camera = scene.constructNode('TargetCamera', {
+      position: FABRIC.RT.vec3(70, 62, 40),
+      target: FABRIC.RT.vec3(30, 20, 0)
+    });
+  var viewport = scene.constructNode('Viewport', {
+      enableRaycasting: true,
+      windowElement: document.getElementById('FabricContainer'),
+      cameraNode: camera
+    });
+  
+  viewport.setBackgroundTextureImage(scene.constructNode('Image', {
+    url: 'Resources/fabric-demo-gradient.png'
+  }));
+
+  scene.constructNode('CameraManipulator', { targetNode: camera });
+  
+  
+  var selectionManager = scene.constructManager('ViewportSelectionManager');
+  
+
+  var light = scene.constructNode('PointLight', { position: FABRIC.RT.vec3(420.0, 1000.0, 600.0) });
+  var materials = [
+      scene.constructNode('PhongMaterial', { diffuseColor: FABRIC.RT.rgb(0.8, 0, 0, 1), lightNode: light }),
+      scene.constructNode('PhongMaterial', { diffuseColor: FABRIC.RT.rgb(0, 0.8, 0, 1), lightNode: light }),
+      scene.constructNode('PhongMaterial', { diffuseColor: FABRIC.RT.rgb(0, 0, 0.8, 1), lightNode: light })
+    ];
+  
+  var highlightMaterial = scene.constructNode('OutlineShader', {
+    color: FABRIC.RT.rgb(0.6, 0.6, 0.6, 0.5),
+    thickness: 0.2
+  });
+  var selectedMaterial = scene.constructNode('OutlineShader', {
+    color: FABRIC.RT.rgb(0.9, 0.9, 0.9, 1),
+    thickness: 0.2
+  });
+  
+
+  var objId = 0;
+  var scale = 7.0;
+  for (var k = 1; k < 3; k++) {
+    var base1 = FABRIC.RT.vec3((k & 1) * 4.0, (k & 2) * 2.0, (k & 4)).scaleInPlace(scale);
+    for (var j = 1; j < 4; j++) {
+      var base2 = FABRIC.RT.vec3((j & 1) * 2.0, (j & 2), (j & 4) / 2.0).scaleInPlace(scale);
+
+      var base = base2.add(base1);
+
+      for (var i = 0; i < 7; i++) {
+        var xfo = FABRIC.RT.xfo();
+
+        xfo.tr = FABRIC.RT.vec3((i & 1), (i & 2) / 2.0, (i & 4) / 4.0).scaleInPlace(scale);
+        xfo.tr.addInPlace(base);
+
+        var transformNode = scene.constructNode('Transform', { hierarchical: false, globalXfo: xfo });
+
+        var cube = scene.constructNode('Cuboid', {
+          name: 'CubeMesh',
+          length: (i & 3) + 3,
+          width: (j & 3) + 3.0,
+          height: (k & 3) + 3.0
+        });
+        scene.constructNode('SelectableInstance', {
+            name: 'Cuboid',
+            transformNode: transformNode,
+            geometryNode: cube,
+            materialNode: materials[objId % materials.length],
+            enableRaycasting: true,
+            
+            highlightMaterial: highlightMaterial,
+            selectMaterial: selectedMaterial
+          });
+
+        objId++;
+      }
+    }
+  }
+
+
+  $('#loadingDialog').dialog({
+    modal: true
+  });
+  var count = FABRIC.getAsyncTaskCount();
+  FABRIC.appendOnResolveAsyncTaskCallback(function(label, countRemaining){
+    $('#loadingProgressBar').progressbar({
+      value: (1.0-(countRemaining/count))*100
+    });
+    if(countRemaining===0){
+      $('#loadingDialog').dialog('close');
+      var errors = scene.getErrors();
+      if (errors.length > 0) {
+        throw (errors.toString());
+      }
+      viewport.redraw();
+      return true;
+    }
+  });
+  
+});
+
+</script>
+
+  </head> 
+  <body>
+    <div id="loadingDialog" title="Loading...">
+      <h4 id="loadingDesc" style="margin-bottom: 10px"></h4>
+      <div id="loadingProgressBar" class="ui-progressbar-value"></div>
+    </div>
+    <div id="wrapper">
+      <ul id="nav">
+        <li><a href="#" id="fabric-logo"><img src="../../../themes/default/_img/projects/fabric-logo.png" /></a></li>
+      </ul>
+      <div id="editor">
+        <div id="viewer">
+          <div id="FabricContainer"></div> 
+        </div><!--viewer-->
+        <div id="sidebar">
+          
+          <div class="box">
+            <h2>INFO</h2>
+            <div class="content">
+              Mouse Events.<br>
+              This sample shows the use of mouse events in FABRIC. As the mouse is moved
+              over the viewport, rays are cast into the scene. Hit objects are collected,
+              and JavaScript event handlers are invoked. Have a look at the source code of
+              this page to learn how this works.
+            </div><!--content-->
+          </div><!--box-->
+
+          <div class="box">
+            <h2>SELECTION</h2>
+            <div class="content">
+            </div>
+          </div><!--box-->
+            
+        </div><!--sidebar-->
+      </div> <!--editor-->
+    </div><!--wrapper-->
+  </body> 
+  </html>

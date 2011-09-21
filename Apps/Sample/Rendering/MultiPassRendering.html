@@ -247,7 +247,7 @@ $(document).ready(function() {
       .bind('slide',
         function(event, ui) {
           thickGlassMaterial.setSigma( ui.value );
-          scene.redrawAllWindows();
+          scene.redrawAllViewports();
         });
     
       viewport.redraw();

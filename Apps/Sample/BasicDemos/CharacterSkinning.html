@@ -134,7 +134,7 @@ $(document).ready(function() {
   $globalTimeSlider.bind('slide',
     function(event, ui) {
       scene.animation.setTime(ui.value);
-      scene.redrawAllWindows();
+      scene.redrawAllViewports();
     });
 
   var keyframeTrackNode = assetNodes.polymshAnimationTrack;

@@ -256,7 +256,7 @@ $(document).ready(function() { var $globalTimeSlider = $('#globalTime').slider({
   $globalTimeSlider.bind('slide',
     function(event, ui) {
       scene.animation.setTime(ui.value);
-      scene.redrawAllWindows();
+      scene.redrawAllViewports();
     });
 
   $('#curveEditor').button()

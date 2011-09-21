@@ -8,22 +8,39 @@
  * node graph in javascript.
  */
 FABRIC.SceneGraph = {
+  managerDescriptions: {},
   nodeDescriptions: {},
   assetLoaders: {},
-  registerNodeType: function(type, nodeDescription) {
-    if (this.nodeDescriptions[type]) {
+  registerManagerType: function(type, description) {
+    if (this.managerDescriptions[type]) {
       throw ('Node Constructor already Registered:' + type);
     }else {
-      if (!nodeDescription.factoryFn)
+      if (!description.factoryFn)
         throw ('Node Constructor "'+type+'" does not implement the factoryFn');
         // Commented out till we can finish the documentation.
   //    if (!nodeDescription.briefDesc || !nodeDescription.detailedDesc)
   //      console.log('WARNING: Node Constructor "'+type+'" does not provide a proper description.');
-      if(!nodeDescription.briefDesc) nodeDescription.briefDesc = '';
-      if(!nodeDescription.detailedDesc) nodeDescription.detailedDesc = '';
-      if(!nodeDescription.optionsDesc) nodeDescription.optionsDesc = {};
-      if(!nodeDescription.parentNodeDesc) nodeDescription.parentNodeDesc = '';
-      this.nodeDescriptions[type] = nodeDescription;
+      if(!description.briefDesc) description.briefDesc = '';
+      if(!description.detailedDesc) description.detailedDesc = '';
+      if(!description.optionsDesc) description.optionsDesc = {};
+      if(!description.parentNodeDesc) description.parentNodeDesc = '';
+      this.managerDescriptions[type] = description;
+    }
+  },
+  registerNodeType: function(type, description) {
+    if (this.nodeDescriptions[type]) {
+      throw ('Node Constructor already Registered:' + type);
+    }else {
+      if (!description.factoryFn)
+        throw ('Node Constructor "'+type+'" does not implement the factoryFn');
+        // Commented out till we can finish the documentation.
+  //    if (!nodeDescription.briefDesc || !nodeDescription.detailedDesc)
+  //      console.log('WARNING: Node Constructor "'+type+'" does not provide a proper description.');
+      if(!description.briefDesc) description.briefDesc = '';
+      if(!description.detailedDesc) description.detailedDesc = '';
+      if(!description.optionsDesc) description.optionsDesc = {};
+      if(!description.parentNodeDesc) description.parentNodeDesc = '';
+      this.nodeDescriptions[type] = description;
     }
   },
   help: function(type) {
@@ -237,6 +254,36 @@ FABRIC.SceneGraph = {
       else {
         return context.DependencyGraph.createNode(name);
       }
+    };
+    
+    scene.constructManager = function(type, options) {
+      if (!FABRIC.SceneGraph.managerDescriptions[type]) {
+        throw ('Manager Constructor not Registered:' + type);
+      }
+      options = (options ? options : {});
+      if(!options.type ){
+        options.__defineGetter__('type', function() {
+          return type;
+        });
+        options.__defineSetter__('type', function(val) {
+          throw ('Type is readonly');
+        });
+      }
+      var managerNode = FABRIC.SceneGraph.managerDescriptions[type].factoryFn(options, scene);
+      if (!managerNode) {
+        throw (' Factory function method must return an object');
+      }
+      var parentTypeOfFn = managerNode.pub.isTypeOf;
+      managerNode.pub.isTypeOf = function(classname) {
+        if (classname == type) {
+          return true;
+        }else if (parentTypeOfFn !== undefined) {
+          return parentTypeOfFn(classname);
+        }else {
+          return false;
+        }
+      }
+      return managerNode;
     };
 
     scene.constructNode = function(type, options) {
@@ -549,6 +596,9 @@ FABRIC.SceneGraph = {
     scene.pub.getRootTransformNode = function() {
       return rootNode;
     };
+    scene.pub.constructManager = function(type, options) {
+      return scene.constructManager(type, options).pub;
+    };
     scene.pub.constructNode = function(type, options) {
       return scene.constructNode(type, options).pub;
     };
@@ -573,7 +623,7 @@ FABRIC.SceneGraph = {
       }
     };
     scene.pub.IO = context.IO;
-    scene.pub.redrawAllWindows = function() {
+    scene.pub.redrawAllViewports = function() {
       for (var i=0; i<viewports.length; i++) {
         viewports[i].pub.redraw();
       }
@@ -699,7 +749,7 @@ FABRIC.SceneGraph = {
             onAdvanceCallback.call();
           }
           if(redraw !== false){
-            scene.pub.redrawAllWindows();
+            scene.pub.redrawAllViewports();
             if(isPlaying){
               // Queue up the next redraw immediately. 
               requestAnimFrame( advanceTime, viewports[0].getWindowElement() );
@@ -1404,7 +1454,7 @@ FABRIC.SceneGraph.registerNodeType('ResourceLoad', {
         // this callback is called early. For the Alpha11 release I am adding this
         // here, but it needs to be thoroughly understood and possibly removed. 
         setTimeout(function(){
-          scene.pub.redrawAllWindows();
+          scene.pub.redrawAllViewports();
         }, 100);
       }
     }

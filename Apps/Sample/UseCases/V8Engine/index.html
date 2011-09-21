@@ -368,7 +368,7 @@ $(document).ready(function() {
       $engineSpeedSlider.bind('slide',
         function(event, ui) {
           crankTransformNode.setEngineSpeed(ui.value);
-          scene.redrawAllWindows();
+          scene.redrawAllViewports();
         });
   
       var selectedMaterial;
@@ -455,7 +455,7 @@ $(document).ready(function() {
         selectedMaterial.setDiffuseColor(FABRIC.RT.rgb255(175, 0, 0));
   
         evt.stopPropagation();
-        scene.redrawAllWindows();
+        scene.redrawAllViewports();
         
         document.getElementById('enginePartHeading').childNodes[0].data = name.toUpperCase();
         document.getElementById('enginePartDetails').childNodes[0].data = text;

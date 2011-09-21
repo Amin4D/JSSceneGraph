@@ -153,10 +153,10 @@ FABRIC.RT.Color.prototype = {
   // Returns true if the vector is equal to the argument
   eql: function(color) {
     return (FABRIC.RT.isColor(color) &&
-      (Math.abs(this.r - color.r) < FABRIC.RT.precision) &&
-      (Math.abs(this.g - color.g) < FABRIC.RT.precision) &&
-      (Math.abs(this.b - color.b) < FABRIC.RT.precision) &&
-      (Math.abs(this.a - color.a) < FABRIC.RT.precision));
+      (Math.abs(this.r - color.r) < Math.PRECISION) &&
+      (Math.abs(this.g - color.g) < Math.PRECISION) &&
+      (Math.abs(this.b - color.b) < Math.PRECISION) &&
+      (Math.abs(this.a - color.a) < Math.PRECISION));
   },
 
   // Returns the result of adding the argument to the vector

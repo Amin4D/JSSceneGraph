@@ -2,7 +2,7 @@
 // Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
 //
 
-use Vec3, Quat, Mat44, RotationOrder, Euler;
+use Math, Vec3, Quat, Mat44, RotationOrder, Euler;
 
 function Xfo() {
   this.tr = this.tr.setNull();
@@ -124,7 +124,7 @@ function Xfo Mat44.decompose(in RotationOrder ro) {
     return xfo;
   }
 
-  if (abs(this.det()) < 0.00001) {
+  if (abs(this.det()) < PRECISION) {
     report('Matrix is singular.');
     return xfo;
   }

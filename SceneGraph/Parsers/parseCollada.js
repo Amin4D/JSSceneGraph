@@ -483,7 +483,7 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
                       parseFloat(str[0]),
                       parseFloat(str[1]),
                       parseFloat(str[2])),
-                    parseFloat(str[3]));
+                    Math.degToRad(parseFloat(str[3])));
           nodeData.xfo = nodeData.xfo.multiply(FABRIC.RT.xfo({ori:q}));
           break;
         }

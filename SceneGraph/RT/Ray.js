@@ -21,7 +21,7 @@ FABRIC.RT.Ray.prototype = {
     D = planeNormal.dot(this.direction);
     N = - planeNormal.dot(w);
 
-    if (Math.abs(D) < 0.0001) {
+    if (Math.abs(D) < Math.PRECISION) {
       // segment is parallel to plane
       if (N === 0) {
         // segment lies in plane

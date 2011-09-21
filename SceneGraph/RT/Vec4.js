@@ -70,10 +70,10 @@ FABRIC.RT.Vec4.prototype = {
   // Returns true if the vector is equal to the argument
   eql: function(v) {
     return (FABRIC.RT.isVec4(v) &&
-      (Math.abs(this.x - v.x) < FABRIC.RT.precision) &&
-      (Math.abs(this.y - v.y) < FABRIC.RT.precision) &&
-      (Math.abs(this.z - v.z) < FABRIC.RT.precision) &&
-      (Math.abs(this.t - v.t) < FABRIC.RT.precision));
+      (Math.abs(this.x - v.x) < Math.PRECISION) &&
+      (Math.abs(this.y - v.y) < Math.PRECISION) &&
+      (Math.abs(this.z - v.z) < Math.PRECISION) &&
+      (Math.abs(this.t - v.t) < Math.PRECISION));
   },
 
   scale: function(s) {
@@ -149,7 +149,7 @@ FABRIC.RT.Vec4.prototype = {
   },
 
   getAngleTo: function(v) {
-    return Math.radToDeg(Math.acos(this.dot(v)));
+    return Math.acos(this.dot(v));
   },
 
   // Returns the length ('length') of the vector

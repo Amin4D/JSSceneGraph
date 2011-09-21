@@ -243,6 +243,7 @@ FABRIC.SceneGraph.registerNodeType('MuscleSystem', {
       scene.constructOperator({
         operatorName: 'rotateMuscleVolume',
         srcCode: '\n\
+use Math;\n\
 use Quat;\n\
 use Vec3;\n\
 operator rotateMuscleVolume(\n\

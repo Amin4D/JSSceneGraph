@@ -83,19 +83,19 @@ FABRIC.SceneGraph.registerManagerType('ViewportSelectionManager', {
     
     var selectionManager = scene.constructManager('SelectionManager', options);
     
-    scene.pub.addEventListener('mouseover_geom', function(evt){
+    scene.pub.addEventListener('mouseover_selectableinst', function(evt){
         if(evt.targetNode.fireEvent){
           evt.targetNode.fireEvent('highlight');
           scene.pub.redrawAllViewports();
         }
       });
-    scene.pub.addEventListener('mouseout_geom', function(evt){
+    scene.pub.addEventListener('mouseout_selectableinst', function(evt){
         if(evt.targetNode.fireEvent){
           evt.targetNode.fireEvent('unhighlight');
           scene.pub.redrawAllViewports();
         }
       });
-    scene.pub.addEventListener('mousedown_geom', function(evt){
+    scene.pub.addEventListener('mousedown_selectableinst', function(evt){
         if(evt[options.addToSelectionKeyName]){
           selectionManager.pub.addToSelection(evt.targetNode);
         }else{
@@ -112,5 +112,27 @@ FABRIC.SceneGraph.registerManagerType('ViewportSelectionManager', {
     return selectionManager;
   }});
 
+
+// These Node definitions are inlined for now, but will
+// be moved to a separate file once they are stabilized. 
+FABRIC.SceneGraph.registerNodeType('SelectableInstance', {
+  factoryFn: function(options, scene) {
+    scene.assignDefaults(options, {
+      selectionManager: undefined
+    });
+    var selectionManager = options.selectionManager;
+    var selectableInstance = scene.constructNode('Instance', options);
+    selectableInstance.pub.addEventListener('mouseover_geom', function(evt) {
+      selectionManager.fireEvent('mouseover_selectableinst');
+    });
+    selectableInstance.pub.addEventListener('mouseout_geom', function(evt) {
+      selectionManager.fireEvent('mouseout_selectableinst');
+    });
+    selectableInstance.pub.addEventListener('mousedown_geom', function(evt) {
+      selectionManager.fireEvent('mousedown_selectableinst');
+    });
+    
+    return selectableInstance;
+  }});
 
 

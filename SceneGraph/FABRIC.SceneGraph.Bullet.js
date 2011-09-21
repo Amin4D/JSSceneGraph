@@ -11,7 +11,7 @@ FABRIC.SceneGraph.registerNodeType('BulletWorldNode', {
       createGroundPlane: true,
       connectToSceneTime: true
     });
-
+    
     // create the bullet node
     var bulletWorldNode = scene.constructNode('SceneGraphNode', {name: 'BulletWorldNode'});
     var dgnode = bulletWorldNode.constructDGNode('DGNode');
@@ -21,8 +21,10 @@ FABRIC.SceneGraph.registerNodeType('BulletWorldNode', {
     // create the dgnodes to store shapes and bodies
     var shapedgnode = bulletWorldNode.constructDGNode('ShapeDGNode');
     var rbddgnode = bulletWorldNode.constructDGNode('RbdDGNode');
+    var sbddgnode = bulletWorldNode.constructDGNode('SbdDGNode');
     rbddgnode.setDependency(dgnode,'simulation');
     rbddgnode.setDependency(shapedgnode,'shapes');
+    sbddgnode.setDependency(dgnode,'simulation');
     
     // create world init operator
     dgnode.bindings.append(scene.constructOperator({
@@ -50,7 +52,7 @@ FABRIC.SceneGraph.registerNodeType('BulletWorldNode', {
         // create rigid body operator
         shapedgnode.setDependency(scene.getPrivateInterface(shape.geometryNode).getAttributesDGNode(),shapeName+"_attributes");
         shapedgnode.bindings.append(scene.constructOperator({
-          operatorName: 'copyShapeVertices',
+          operatorName: 'copy'+shapeName+'Vertices',
           parameterLayout: [
             'self.'+shapeName,
             shapeName+"_attributes.positions<>",
@@ -62,7 +64,7 @@ FABRIC.SceneGraph.registerNodeType('BulletWorldNode', {
 
       // create rigid body operator
       shapedgnode.bindings.append(scene.constructOperator({
-        operatorName: 'createBulletShape',
+        operatorName: 'create'+shapeName+'Shape',
         parameterLayout: [
           'self.'+shapeName
         ],
@@ -85,7 +87,7 @@ FABRIC.SceneGraph.registerNodeType('BulletWorldNode', {
 
       // create rigid body operator
       rbddgnode.bindings.append(scene.constructOperator({
-        operatorName: 'createBulletRigidBody',
+        operatorName: 'create'+bodyName+'RigidBody',
         parameterLayout: [
           'simulation.world',
           'shapes.'+shapeName,
@@ -96,13 +98,73 @@ FABRIC.SceneGraph.registerNodeType('BulletWorldNode', {
       }));
     }
 
+    bulletWorldNode.pub.addSoftBody = function(bodyName,body) {
+      if(bodyName == undefined)
+        throw('You need to specify a bodyName when calling addSoftbody!');
+      if(body == undefined)
+        throw('You need to specify a body when calling addSoftbody!');
+      if(body.trianglesNode == undefined)
+        throw('You need to specify a trianglesNode for softbody when calling addSoftbody!');
+
+      // check if we are dealing with an array
+      sbddgnode.addMember(bodyName, 'BulletSoftBody', body);
+      
+      var trianglesNode = scene.getPrivateInterface(body.trianglesNode);
+      sbddgnode.setDependency(trianglesNode.getAttributesDGNode(),bodyName+"_Attributes");
+      sbddgnode.setDependency(trianglesNode.getUniformsDGNode(),bodyName+"_Uniforms");
+
+      var dataCopy = scene.constructNode('GeometryDataCopy', {baseGeometryNode: trianglesNode.pub} );
+      dataCopy.pub.addVertexAttributeValue('positions', 'Vec3', { genVBO:true, dynamic:true } );
+      dataCopy.pub.addVertexAttributeValue('normals', 'Vec3', { genVBO:true, dynamic:true } );
+      dataCopy.getAttributesDGNode().setDependency(sbddgnode,'softbody');
+
+      // create the create softbody operator
+      sbddgnode.bindings.append(scene.constructOperator({
+        operatorName: 'create'+bodyName+'SoftBody',
+        parameterLayout: [
+          'simulation.world',
+          'self.'+bodyName,
+          bodyName+'_Attributes.positions<>',
+          bodyName+'_Uniforms.indices'
+        ],
+        entryFunctionName: 'createBulletSoftBody',
+        srcFile: 'FABRIC_ROOT/SceneGraph/KL/bullet.kl'
+      }));
+
+      // create the softbody position operator
+       dataCopy.getAttributesDGNode().bindings.append(scene.constructOperator({
+        operatorName: 'getBulletSoftBodyPosition',
+        parameterLayout: [
+          'self.index',
+          'softbody.'+bodyName,
+          'self.positions',
+          'self.normals'
+        ],
+        entryFunctionName: 'getBulletSoftBodyPosition',
+        srcFile: 'FABRIC_ROOT/SceneGraph/KL/bullet.kl'
+      }));
+      
+      return dataCopy.pub;
+    }
+
     // create the ground plane
     if(options.createGroundPlane) {
 
       // create a shape
-      bulletWorldNode.pub.addShape('ground',FABRIC.RT.BulletShape.createPlane());
       // create the ground rigid body
-      bulletWorldNode.pub.addRigidBody('ground',new FABRIC.RT.BulletRigidBody({mass: 0}),'ground');
+      var groundTrans = FABRIC.RT.xfo({tr: FABRIC.RT.vec3(0,-1000,0)});
+      bulletWorldNode.pub.addShape('Ground',FABRIC.RT.BulletShape.createBox(FABRIC.RT.vec3(1000,1000,1000)));
+      bulletWorldNode.pub.addRigidBody('Ground',new FABRIC.RT.BulletRigidBody({mass: 0, transform: groundTrans}),'Ground');
+      
+      var instanceNode = scene.constructNode('Instance', {
+        geometryNode: scene.constructNode('Grid', {
+          size_x: 40.0,
+          size_z: 40.0,
+          sections_x: 20,
+          sections_z: 20 }).pub,
+        materialNode: scene.constructNode('FlatMaterial').pub
+      });
+      instanceNode.getDGNode().setDependency(rbddgnode,'rigidbodies');
     }
 
     // create animation operator

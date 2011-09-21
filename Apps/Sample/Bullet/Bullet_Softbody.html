@@ -3,7 +3,7 @@
     Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
     -->
   <head> 
-    <title>FABRIC - Bullet Convex Hull</title> 
+    <title>FABRIC - Bullet Basic Softbody</title> 
     
     <meta charset="iso-8859-1"/>
     <link href="../../../themes/default/style.css" rel="stylesheet" type="text/css" />
@@ -36,6 +36,7 @@
     <script type="text/javascript" src="../../../SceneGraph/RT/OGLTexture2D.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/RT/BulletShape.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/RT/BulletRigidBody.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/BulletSoftBody.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/RT/BulletWorld.js" charset="utf-8"></script>
 
     <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.js" charset="utf-8"></script>
@@ -101,60 +102,47 @@ $(document).ready(function() {
   
   // create a simulation world
   var bulletWorldNode = scene.constructNode('BulletWorldNode');
+
+  // create a passive rigid body
+  /*
+  bulletWorldNode.addShape('Box',new FABRIC.RT.BulletShape.createBox(FABRIC.RT.vec3(25,1,25)));
+  scene.constructNode('Instance', {
+    geometryNode: scene.constructNode('Cuboid', {
+      length: 25.0,
+      width: 25.0,
+      height: 2.0
+    }),
+    materialNode: phongMaterial,
+    transformNode: scene.constructNode('BulletRigidBodyTransform', {
+      bulletWorldNode: bulletWorldNode,
+      shapeName: 'Box',
+      rigidBody: new FABRIC.RT.BulletRigidBody({
+        friction: 0.8,
+        restitution: 0.7,
+        mass: 0.0
+      })
+    })
+  });
+  */
   
   // import the cow  
-  var assets = scene.importAssetFile('../BasicDemos/Models/cow.obj');
+  var geometryNode = scene.importAssetFile('../BasicDemos/Models/cow.obj').cow;
+  //var geometryNode = scene.constructNode('Sphere', {radius: 5, detail: 10});
 
-  // add a box shape
-  bulletWorldNode.addShape('Cow',new FABRIC.RT.BulletShape.createConvexHull(assets.cow));
+  // add a softbody to the sim
+  var softBodyNode = bulletWorldNode.addSoftBody('Sphere',new FABRIC.RT.BulletSoftBody({
+    trianglesNode: geometryNode,
+    transform: FABRIC.RT.xfo({
+      tr: FABRIC.RT.vec3(0,10,0),
+      ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(1,1,0),25)
+    }),
+    recover: 0.01
+    //clusters: 64
+  }));
 
   scene.constructNode('Instance', {
-    geometryNode: assets.cow,
-    materialNode: phongMaterial,
-    transformNode: scene.constructNode('BulletRigidBodyTransform', {
-      bulletWorldNode: bulletWorldNode,
-      shapeName: 'Cow',
-      rigidBody: new FABRIC.RT.BulletRigidBody({
-        transform: FABRIC.RT.xfo({
-          tr: FABRIC.RT.vec3(0,10,0),
-          ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(1,1,0),25)
-        }),
-        friction: 0.8,
-        restitution: 0.7
-      })
-    })
-  });
-  scene.constructNode('Instance', {
-    geometryNode: assets.cow,
-    materialNode: phongMaterial,
-    transformNode: scene.constructNode('BulletRigidBodyTransform', {
-      bulletWorldNode: bulletWorldNode,
-      shapeName: 'Cow',
-      rigidBody: new FABRIC.RT.BulletRigidBody({
-        transform: FABRIC.RT.xfo({
-          tr: FABRIC.RT.vec3(0,20,0),
-          ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(1,1,0),-40)
-        }),
-        friction: 0.8,
-        restitution: 0.7
-      })
-    })
-  });
-  scene.constructNode('Instance', {
-    geometryNode: assets.cow,
-    materialNode: phongMaterial,
-    transformNode: scene.constructNode('BulletRigidBodyTransform', {
-      bulletWorldNode: bulletWorldNode,
-      shapeName: 'Cow',
-      rigidBody: new FABRIC.RT.BulletRigidBody({
-        transform: FABRIC.RT.xfo({
-          tr: FABRIC.RT.vec3(0,30,0),
-          ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(0,1,0),180)
-        }),
-        friction: 0.8,
-        restitution: 0.7
-      })
-    })
+    geometryNode: softBodyNode,
+    materialNode: phongMaterial
   });
   
   $('#loadingDialog').dialog({

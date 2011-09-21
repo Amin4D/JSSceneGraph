@@ -43,3 +43,11 @@ function BulletWorld.addRigidBody(io BulletRigidBody body) {
 function BulletWorld.removeRigidBody(io BulletRigidBody body) {
   FabricBULLET_World_RemoveRigidBody(this.pointer,body.pointer);
 }
+
+function BulletWorld.addSoftBody(io BulletSoftBody body) {
+  FabricBULLET_World_AddSoftBody(this.pointer,body.pointer);
+}
+
+function BulletWorld.removeSoftBody(io BulletSoftBody body) {
+  FabricBULLET_World_RemoveSoftBody(this.pointer,body.pointer);
+}

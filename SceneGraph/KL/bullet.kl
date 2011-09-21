@@ -6,6 +6,7 @@ use Vec3;
 use Xfo;
 use BulletShape;
 use BulletRigidBody;
+use BulletSoftBody;
 use BulletWorld;
 
 operator createBulletWorld(
@@ -68,3 +69,24 @@ operator getBulletRigidBodyTransform(
   body[index].getTransform(transform);
 }
 
+operator createBulletSoftBody(
+  io BulletWorld world,
+  io BulletSoftBody body,
+  io Vec3 positions<>,
+  io Integer indices[]
+){
+  Boolean result = false;
+  body.create(result,world,positions,indices);
+  if(result) {
+    world.addSoftBody(body);  
+  }
+}
+
+operator getBulletSoftBodyPosition(
+  in Size index,
+  io BulletSoftBody body,
+  io Vec3 position,
+  io Vec3 normal,
+){
+  body.getPosition(index,position,normal);
+}

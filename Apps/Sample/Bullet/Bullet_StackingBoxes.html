@@ -102,7 +102,7 @@ $(document).ready(function() {
   var bulletWorldNode = scene.constructNode('BulletWorldNode');
   
   // add a box shape
-  bulletWorldNode.addShape('box',new FABRIC.RT.BulletShape.createBox());
+  bulletWorldNode.addShape('Box',new FABRIC.RT.BulletShape.createBox());
   
   // create an array of bodies
   var bodies = [];
@@ -120,7 +120,7 @@ $(document).ready(function() {
       materialNode: phongMaterial,
       transformNode: scene.constructNode('BulletRigidBodyTransform', {
         bulletWorldNode: bulletWorldNode,
-        shapeName: 'box',
+        shapeName: 'Box',
         rigidBody: new FABRIC.RT.BulletRigidBody({
           transform: FABRIC.RT.xfo({
             tr: FABRIC.RT.vec3(0,i,0),

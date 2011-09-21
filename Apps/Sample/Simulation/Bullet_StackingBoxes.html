@@ -94,7 +94,7 @@ $(document).ready(function() {
   var light = scene.constructNode('PointLight', { position: FABRIC.RT.vec3(420.0, 1000.0, 600.0) });
 
   var phongMaterial = scene.constructNode('PhongMaterial', {
-    diffuseColor: FABRIC.RT.rgb(1.0, 0.4, 0.4),
+    diffuseColor: FABRIC.RT.rgb(0.0, 0.0, 1.0),
     lightNode: light
   });
   
@@ -104,29 +104,33 @@ $(document).ready(function() {
   // add a box shape
   bulletWorldNode.addShape('box',new FABRIC.RT.BulletShape.createBox());
   
+  // create an array of bodies
+  var bodies = [];
+
   // create a cube to draw it
   var cuboidNode = scene.constructNode('Cuboid', {
     length: 2.0,
     width: 2.0,
     height: 2.0
   });
-  
-  // create a transform using a box!
-  for(var i=3;i<50;i++) {
+
+  for(var i=3;i<25;i++) {
     scene.constructNode('Instance', {
+      geometryNode: cuboidNode,
+      materialNode: phongMaterial,
       transformNode: scene.constructNode('BulletRigidBodyTransform', {
         bulletWorldNode: bulletWorldNode,
         shapeName: 'box',
         rigidBody: new FABRIC.RT.BulletRigidBody({
           transform: FABRIC.RT.xfo({
             tr: FABRIC.RT.vec3(0,i,0),
-            ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(1,1,0),30),
-            sc: FABRIC.RT.vec3(1.3,0.2,1).scale(0.5),
-          })
+            ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(1,1,0),1),
+            sc: FABRIC.RT.vec3(1.0,0.2,1.1).scale(1.0),
+          }),
+          friction: 0.8,
+          restitution: 0.7
         })
-      }),
-      geometryNode: cuboidNode,
-      materialNode: phongMaterial
+      })
     });
   }
   
@@ -181,6 +185,7 @@ $(document).ready(function() {
             }
           });
           scene.animation.pause();
+          viewport.redraw();
           scene.animation.setTime(0);
           viewport.redraw();
         });

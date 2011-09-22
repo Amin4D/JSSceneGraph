@@ -66,15 +66,19 @@ FABRIC.SceneGraph.registerNodeType('CPUSkinnedCharacterMesh', {
       characterRigNode: undefined
     });
     
-    if(!options.baseSkinMesh){
-      throw "A base mesh must be provided";
+    var baseSkinMesh;
+    if(options.baseSkinMesh){
+      if (!options.baseSkinMesh.isTypeOf('CharacterMesh')) {
+        throw ('Incorrect type assignment. Must assign a CharacterMesh');
+      }
+      baseSkinMesh = options.baseSkinMesh;
     }
-    if (!options.baseSkinMesh.isTypeOf('CharacterMesh')) {
-      throw ('Incorrect type assignment. Must assign a CharacterMesh');
+    else{
+      baseSkinMesh = scene.constructNode('CharacterMesh', options);
     }
     var deformedSkin = scene.constructNode('GeometryDataCopy', {
-      name: 'CPUSkinned' + options.baseSkinMesh.getName(),
-      baseGeometryNode:options.baseSkinMesh
+      name: 'CPUSkinned' + baseSkinMesh.pub.getName(),
+      baseGeometryNode:baseSkinMesh.pub
     });
     
     deformedSkin.pub.addVertexAttributeValue('positions', 'Vec3', { genVBO:true, dynamic:true } );
@@ -86,9 +90,9 @@ FABRIC.SceneGraph.registerNodeType('CPUSkinnedCharacterMesh', {
     deformedSkin.pub.setRigNode = function(node) {
       rigNode = scene.getPrivateInterface(node);
       skeletonNode = scene.getPrivateInterface(rigNode.pub.getSkeletonNode());
-      deformedSkin.getUniformsDGNode().addDependency(rigNode.getDGNode(), 'rig');
-      deformedSkin.getAttributesDGNode().addDependency(rigNode.getDGNode(), 'rig');
-      deformedSkin.getAttributesDGNode().addDependency(skeletonNode.getDGNode(), 'skeleton');
+      deformedSkin.getUniformsDGNode().setDependency(rigNode.getDGNode(), 'rig');
+      deformedSkin.getAttributesDGNode().setDependency(rigNode.getDGNode(), 'rig');
+      deformedSkin.getAttributesDGNode().setDependency(skeletonNode.getDGNode(), 'skeleton');
     };
     deformedSkin.pub.getRigNode = function() {
       return scene.getPublicInterface(rigNode);

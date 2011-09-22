@@ -866,7 +866,7 @@ operator calcSkinStickLocations(
   if(muscleIds.size() == 1){
     muscleBindingIds[0] = muscleIds[0];
     muscleBindingWeights[0] = muscleWeights[0];
-    debugDraw.drawPoint(position, muscles[muscleIds[0]].color );
+  //  debugDraw.drawPoint(position, muscles[muscleIds[0]].color );
   }
   else{
     Scalar total = 0.0;
@@ -898,7 +898,7 @@ operator calcSkinStickLocations(
         color += (muscles[muscleIds[i]].color * muscleWeights[i]);
       }
       
-      debugDraw.drawPoint(position, color);
+    //  debugDraw.drawPoint(position, color);
     }
   }
   
@@ -954,7 +954,7 @@ operator deformSkin(
     }
   }
   position += stickDelta;
-  /*
+  
   // Sliding
   Vec3 slideDelta(0.0,0.0,0.0);
   for(Integer i=0; i<1; i++){
@@ -975,7 +975,6 @@ operator deformSkin(
     }
   }
   position += bulgeDelta;
-  */
 }
 
 

@@ -107,7 +107,9 @@ $(document).ready(function() {
     });
   
   
-  var assetNodes = scene.importAssetFile('Models/BasicArm.dae');
+  var assetNodes = scene.importAssetFile('Models/BasicArm.dae', {
+    useCPUSkinning: true
+  });
     
   var rigNode = assetNodes.OilTank01CharacterRig;
   var rigInstanceNode = assetNodes.OilTank01CharacterInstance;
@@ -122,12 +124,12 @@ $(document).ready(function() {
   skeletonNode.setBones(bones);
   
   
-  
+  /*
   var cpuSkinnedCharacterMesh = scene.constructNode('CPUSkinnedCharacterMesh', {
       baseSkinMesh: characterMeshNode,
       characterRigNode: rigNode
     });
-
+  */
   /*
   var materialNode = scene.constructNode('PhongMaterial', {
       lightNode: scene.constructNode('PointLight', { position: FABRIC.RT.vec3(420.0, 1000.0, 600.0) }),
@@ -185,16 +187,16 @@ $(document).ready(function() {
     pointEnvelopeIds: FABRIC.RT.vec2(1,0),
     display: true
   });
-  
+  /*
   skin = scene.constructNode('MuscleSkinDeformation', {
       muscleSystem: muscleSystem,
-      baseMesh: cpuSkinnedCharacterMesh
+      baseMesh: characterMeshNode
     });
-  
+  */
   
 
   var skinInst = scene.constructNode('Instance', {
-      geometryNode: skin
+      geometryNode: characterMeshNode
     })
     .setMaterialNode( scene.constructNode('PhongMaterial', {
         diffuseColor: FABRIC.RT.rgb(0.8, 0.5, 0.2),

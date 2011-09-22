@@ -452,13 +452,13 @@ FABRIC.SceneGraph.registerNodeType('MuscleSkinDeformation', {
     });
     
     if(!usingSkinnedMesh){
-      boundSkin.pub.addUniformValue('bindShapeMatrix', 'Mat44' );
+      boundSkin.pub.addUniformValue('bindShapeMatrix', 'Mat44', new FABRIC.RT.Mat44());
     }
     boundSkin.pub.addUniformValue('reload', 'Boolean', false );
     boundSkin.pub.addVertexAttributeValue('muscleBindingIds', 'Integer[4]', [0,-1,-1,-1]);
     boundSkin.pub.addVertexAttributeValue('muscleBindingWeights', 'Scalar[4]', [1,0,0,0] );
     boundSkin.pub.addVertexAttributeValue('stickLocations', 'Vec3[4]' );
-    boundSkin.pub.addVertexAttributeValue('stickWeight', 'Scalar', { defaultValue:1.0 } );
+    boundSkin.pub.addVertexAttributeValue('stickWeight', 'Scalar', { defaultValue:0.0 } );
     boundSkin.pub.addVertexAttributeValue('slideWeight', 'Scalar', { defaultValue:0.0 } );
     boundSkin.pub.addVertexAttributeValue('bulgeWeight', 'Scalar', { defaultValue:0.0 } );
     boundSkin.pub.addVertexAttributeValue('debugDraw', 'DebugGeometry' );

@@ -7,6 +7,7 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
   
   if(!options.constructMaterialNodes) options.constructMaterialNodes = false;
   if(!options.constructInstanceNodes) options.constructInstanceNodes = true;
+  if(!options.useCPUSkinning) options.useCPUSkinning = false;
 
   var assetNodes = {};
   var warn = function( warningText ){
@@ -1007,7 +1008,7 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
     while(joint.parentId && joint.parentId != "Scene_Root"){
       joint = sceneData.nodeLibrary[joint.parentId];
     }
-    var skeletonData = constructRigFromHierarchy(sceneData, joint.name, name);
+    var rigData = constructRigFromHierarchy(sceneData, joint.name, name);
     
     ////////////////////////////////////////////////////////////////////////////
     // Set up the vertex weights.
@@ -1016,7 +1017,7 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
     // Here must convert the source data, which can have any number of bone influences
     // per vertex, down to 4. 
     var vertexWeightsSource = controllerData.sources[controllerData.vertex_weights.inputs.WEIGHT.source.slice(1)];
-    var bones = skeletonData.skeletonNode.getBones();
+    var bones = rigData.skeletonNode.getBones();
     var boneIds = [];
     var boneWeights = [];
     
@@ -1081,8 +1082,16 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
     }
     
     processedData.constructionOptions.name = name;
-    var characterMeshNode = scene.constructNode('CharacterMesh', processedData.constructionOptions);
-    characterMeshNode.loadGeometryData(processedData.geometryData);
+    var characterMeshNode, baseMeshNode;
+    if(options.useCPUSkinning){
+      processedData.constructionOptions.characterRigNode = rigData.rigNode;
+      characterMeshNode = scene.constructNode('CPUSkinnedCharacterMesh', processedData.constructionOptions);
+      baseMeshNode = characterMeshNode.getBaseGeometry();
+    }else{
+      characterMeshNode = scene.constructNode('GPUSkinnedCharacterMesh', processedData.constructionOptions);
+      baseMeshNode = characterMeshNode;
+    }
+    baseMeshNode.loadGeometryData(processedData.geometryData);
     
     
     /////////////////////////////////////
@@ -1108,15 +1117,15 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
       var mat = FABRIC.RT.mat44.apply(undefined, bindPoseValues).transpose();
       invmatrices[j] = mat;//controllerData.bind_shape_matrix.mul(mat);
     }
-    characterMeshNode.setBindShapeMatrix(controllerData.bind_shape_matrix);
-    characterMeshNode.setInvMatrices(invmatrices, jointRemapping);
+    baseMeshNode.setBindShapeMatrix(controllerData.bind_shape_matrix);
+    baseMeshNode.setInvMatrices(invmatrices, jointRemapping);
     
  
     assetNodes[geometryData.name] = characterMeshNode;
     
     var controllerNodes = {
       characterMeshNode:characterMeshNode,
-      skeletonData: skeletonData,
+      rigData: rigData,
       controllerData: controllerData
     }
     
@@ -1176,7 +1185,7 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
         materialNode = scene.constructNode('PhongSkinningMaterial', {
           lightNode: defaultLight,
           diffuseColor: FABRIC.RT.rgba(1.0, 0.0, 0.0, 1.0),
-          numBones: controllerNodes.skeletonData.skeletonNode.getNumBones()
+          numBones: controllerNodes.rigData.skeletonNode.getNumBones()
         });
         */
         if(instanceData.instance_controller.instance_material){
@@ -1190,15 +1199,30 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
           globalXfo: xfo
         });
         */
+        
+        if(options.constructInstanceNodes){
+          var characterNode;
+          if(options.useCPUSkinning){
+            characterNode = scene.constructNode('Instance', {
+              name: instanceData.name+'CharacterInstance',
+              geometryNode: controllerNodes.characterMeshNode,
+            /*  materialNode: materialNode, 
+              transformNode: transformNode, */
+              rigNode: controllerNodes.rigData.rigNode
+            });
+          }else{
+            characterNode = scene.constructNode('CharacterInstance', {
+              name: instanceData.name+'CharacterInstance',
+              geometryNode: controllerNodes.characterMeshNode,
+            /*  materialNode: materialNode, 
+              transformNode: transformNode, */
+              rigNode: controllerNodes.rigData.rigNode
+            });
+          }
+          assetNodes[characterNode.getName()] = characterNode;
+        }
         /*
-        var characterNode = scene.constructNode('CharacterInstance', {
-            name: instanceData.name+'CharacterInstance',
-            geometryNode: controllerNodes.characterMeshNode,
-          /*  materialNode: materialNode, 
-            transformNode: transformNode, * /
-            rigNode: controllerNodes.skeletonData.rigNode
-          });
-        assetNodes[characterNode.getName()] = characterNode;
+        
           */
       }
       

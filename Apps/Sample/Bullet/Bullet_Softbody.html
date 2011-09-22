@@ -50,6 +50,7 @@
     <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.CharacterSolvers.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Kinematics.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Bullet.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Alembic.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Parsers/parseCollada.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Parsers/parseOBJ.js" charset="utf-8"></script>
     
@@ -93,7 +94,7 @@ $(document).ready(function() {
   scene.constructNode('CameraManipulator', { targetNode: camera });
   viewport.setCameraNode(camera);
 
-  var light = scene.constructNode('PointLight', { position: FABRIC.RT.vec3(420.0, 1000.0, 600.0) });
+  var light = scene.constructNode('PointLight', { transformNode: camera.getTransformNode() });
 
   var phongMaterial = scene.constructNode('PhongMaterial', {
     diffuseColor: FABRIC.RT.rgb(0.0, 0.0, 1.0),
@@ -104,24 +105,34 @@ $(document).ready(function() {
   var bulletWorldNode = scene.constructNode('BulletWorldNode');
 
   // import the cow  
-  var geometryNode = scene.importAssetFile('../BasicDemos/Models/cow.obj').cow;
+  var assets = scene.importAssetFile('../Alembic/Models/cow.abc', {
+    dependentNode: viewport,
+    onLoadSuccessCallback: function(){
 
-  // add a softbody to the sim
-  var softBodyNode = bulletWorldNode.addSoftBody('Sphere',new FABRIC.RT.BulletSoftBody({
-    trianglesNode: geometryNode,
-    transform: FABRIC.RT.xfo({
-      tr: FABRIC.RT.vec3(0,10,0),
-      ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(1,1,0),25)
-    }),
-    recover: 0.05
-    //clusters: 64
-  }));
-
-  scene.constructNode('Instance', {
-    geometryNode: softBodyNode,
-    materialNode: phongMaterial
+      // add a softbody to the sim
+      var parsedNodes = assets['cow'].getParsedNodes();
+      var softBodyNode = bulletWorldNode.addSoftBody('Cow'+i,new FABRIC.RT.BulletSoftBody({
+        trianglesNode: parsedNodes['/polymsh/polymshShape'],
+        transform: FABRIC.RT.xfo({
+          tr: FABRIC.RT.vec3(0,10,0),
+          ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(1,-1,0),190)
+        }),
+        recover: 0.01,
+        //conservation: 0.6,
+        pressure: 5,
+        piterations: 4,
+      }));
+      
+      scene.constructNode('Instance', {
+        geometryNode: softBodyNode,
+        materialNode: phongMaterial
+      });
+      
+      $('#loadingDialog').dialog('close');
+      viewport.redraw();
+    }
   });
-  
+
   $('#loadingDialog').dialog({
     modal: true
   });

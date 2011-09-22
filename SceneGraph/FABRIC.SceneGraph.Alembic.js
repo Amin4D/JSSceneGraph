@@ -48,25 +48,6 @@ FABRIC.SceneGraph.registerNodeType('AlembicLoadNode', {
     resourceLoadNode.addMemberInterface(resourceloaddgnode, 'sample', true);
     resourceLoadNode.addMemberInterface(resourceloaddgnode, 'numSamples', false);
     
-    // create an animation controller for the sample
-    var animationController = scene.constructNode('AnimationController');
-    resourceLoadNode.pub.getAnimationController = function() {
-      return animationController.pub;
-    };
-    var animationControllerDGNode = animationController.getDGNode();
-    resourceloaddgnode.setDependency(animationControllerDGNode,'controller');
-
-    resourceloaddgnode.bindings.append(scene.constructOperator({
-      operatorName: 'alembicSetSample',
-      parameterLayout: [
-        'controller.localTime',
-        'self.sample'
-      ],
-      entryFunctionName: 'alembicSetSample',
-      srcFile: 'FABRIC_ROOT/SceneGraph/KL/loadAlembic.kl',
-      async: false
-    }));
-
     resourceloaddgnode.bindings.append(scene.constructOperator({
       operatorName: 'alembicLoad',
       parameterLayout: [
@@ -254,7 +235,27 @@ FABRIC.SceneGraph.registerNodeType('AlembicLoadNode', {
       }
       
       // setup the timerange
-      animationController.pub.setTimeRange(FABRIC.RT.vec2(0, resourceLoadNode.pub.getNumSamples() / 30.0));
+      if(resourceLoadNode.pub.getNumSamples() > 1) {
+        // create an animation controller for the sample
+        var animationController = scene.constructNode('AnimationController');
+        resourceLoadNode.pub.getAnimationController = function() {
+          return animationController.pub;
+        };
+        var animationControllerDGNode = animationController.getDGNode();
+        resourceloaddgnode.setDependency(animationControllerDGNode,'controller');
+    
+        resourceloaddgnode.bindings.insert(scene.constructOperator({
+          operatorName: 'alembicSetSample',
+          parameterLayout: [
+            'controller.localTime',
+            'self.sample'
+          ],
+          entryFunctionName: 'alembicSetSample',
+          srcFile: 'FABRIC_ROOT/SceneGraph/KL/loadAlembic.kl',
+          async: false
+        }),0);
+        animationController.pub.setTimeRange(FABRIC.RT.vec2(0, resourceLoadNode.pub.getNumSamples() / 30.0));
+      }
     });
     
     // also add the original on load callback

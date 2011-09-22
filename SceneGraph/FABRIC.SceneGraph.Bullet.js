@@ -9,13 +9,15 @@ FABRIC.SceneGraph.registerNodeType('BulletWorldNode', {
   factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
       createGroundPlane: true,
-      connectToSceneTime: true
+      connectToSceneTime: true,
+      gravity: FABRIC.RT.vec3(0,-40,0),
+      substeps: 3
     });
     
     // create the bullet node
     var bulletWorldNode = scene.constructNode('SceneGraphNode', {name: 'BulletWorldNode'});
     var dgnode = bulletWorldNode.constructDGNode('DGNode');
-    dgnode.addMember('world', 'BulletWorld');
+    dgnode.addMember('world', 'BulletWorld', new FABRIC.RT.BulletWorld(options));
     dgnode.addMember('prevTime', 'Scalar');
 
     // create the dgnodes to store shapes and bodies

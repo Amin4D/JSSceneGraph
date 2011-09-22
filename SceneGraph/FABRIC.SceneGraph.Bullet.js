@@ -125,6 +125,7 @@ FABRIC.SceneGraph.registerNodeType('BulletWorldNode', {
           'simulation.world',
           'self.'+bodyName,
           bodyName+'_Attributes.positions<>',
+          bodyName+'_Attributes.normals<>',
           bodyName+'_Uniforms.indices'
         ],
         entryFunctionName: 'createBulletSoftBody',

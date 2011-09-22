@@ -73,10 +73,11 @@ operator createBulletSoftBody(
   io BulletWorld world,
   io BulletSoftBody body,
   io Vec3 positions<>,
+  io Vec3 normals<>,
   io Integer indices[]
 ){
   Boolean result = false;
-  body.create(result,world,positions,indices);
+  body.create(result,world,positions,normals,indices);
   if(result) {
     world.addSoftBody(body);  
   }

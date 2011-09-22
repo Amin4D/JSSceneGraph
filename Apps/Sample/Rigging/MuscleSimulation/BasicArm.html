@@ -156,7 +156,7 @@ $(document).ready(function() {
     diffuseColor: FABRIC.RT.rgba(0.0, 0.8, 0.0, 1.0),
     xfo: FABRIC.RT.xfo( {
       tr: FABRIC.RT.vec3(11, 70, 0),
-      ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(0, 0, 1), 68)
+      ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(0, 0, 1), Math.degToRad(68))
     }),
     length: 100,
     radius: 12,
@@ -168,7 +168,7 @@ $(document).ready(function() {
     diffuseColor: FABRIC.RT.rgba(0.0, 0.0, 0.8, 1.0),
     xfo: FABRIC.RT.xfo( {
       tr: FABRIC.RT.vec3(27, 73, 0),
-      ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(0, 0, 1), 76)
+      ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(0, 0, 1), Math.degToRad(76))
     }),
     length: 85,
     radius: 12,
@@ -180,23 +180,22 @@ $(document).ready(function() {
     diffuseColor: FABRIC.RT.rgba(0.4, 0.0, 0.4, 1.0),
     xfo: FABRIC.RT.xfo( {
       tr: FABRIC.RT.vec3(-20, 22, 3),
-      ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(0, 1, 0), -3).multiply(FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(0, 0, 1), 45))
+      ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(0, 1, 0), -3).multiply(FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(0, 0, 1), Math.degToRad(45)))
     }),
     length: 95,
     radius: 9,
-    pointEnvelopeIds: FABRIC.RT.vec2(1,0),
+    pointEnvelopeIds: FABRIC.RT.vec2(0,1),
     display: true
   });
-  /*
+  
   skin = scene.constructNode('MuscleSkinDeformation', {
       muscleSystem: muscleSystem,
       baseMesh: characterMeshNode
     });
-  */
   
 
   var skinInst = scene.constructNode('Instance', {
-      geometryNode: characterMeshNode
+      geometryNode: skin
     })
     .setMaterialNode( scene.constructNode('PhongMaterial', {
         diffuseColor: FABRIC.RT.rgb(0.8, 0.5, 0.2),

@@ -166,7 +166,12 @@ FABRIC.SceneGraph.registerNodeType('MuscleSystem', {
           'self.skinningXfos'
         ]
       }));
-    
+    /*
+    simulationuniformsdgnode.addMember('bindShapeMatrix', 'Mat44', new FABRIC.RT.Mat44());
+    muscleSystem.pub.setBindShapeMatrix = function(mat){
+      simulationuniformsdgnode.setData('bindShapeMatrix', 0, mat);
+    }
+    */
     ////////////////////////////////////////////////////////////////////////////
     // Configure the node that will be used to calculate the simulation
     simulationdgnode.setDependency( paramsdgnode, 'musclesystem');
@@ -198,6 +203,9 @@ FABRIC.SceneGraph.registerNodeType('MuscleSystem', {
     
     simulationdgnode.addMember('debugDraw', 'DebugGeometry' );
     
+    simulationdgnode.setDependency(characterRigNode.getDGNode(), 'rig');
+    simulationdgnode.setDependency(characterSkeletonNode.getDGNode(), 'skeleton');
+    
     simulationdgnode.bindings.append(scene.constructOperator({
         operatorName: 'simulateMuscle',
         srcFile: './KL/MuscleSimulation.kl',
@@ -207,6 +215,9 @@ FABRIC.SceneGraph.registerNodeType('MuscleSystem', {
           KEYFRAME_EVALUATEDTYPE: 'Scalar'
         },
         parameterLayout: [
+          'rig.pose',
+          'skeleton.bones',
+          
           'initializationdgnode.muscle<>',
           
           'self.index',
@@ -459,7 +470,7 @@ FABRIC.SceneGraph.registerNodeType('MuscleSkinDeformation', {
     boundSkin.pub.addVertexAttributeValue('muscleBindingWeights', 'Scalar[4]', [1,0,0,0] );
     boundSkin.pub.addVertexAttributeValue('stickLocations', 'Vec3[4]' );
     boundSkin.pub.addVertexAttributeValue('stickWeight', 'Scalar', { defaultValue:0.0 } );
-    boundSkin.pub.addVertexAttributeValue('slideWeight', 'Scalar', { defaultValue:0.0 } );
+    boundSkin.pub.addVertexAttributeValue('slideWeight', 'Scalar', { defaultValue:1.0 } );
     boundSkin.pub.addVertexAttributeValue('bulgeWeight', 'Scalar', { defaultValue:0.0 } );
     boundSkin.pub.addVertexAttributeValue('debugDraw', 'DebugGeometry' );
     boundSkin.getAttributesDGNode().setDependency(muscleSystem.getSystemParamsDGNode(), 'musclesystem');

@@ -15,9 +15,9 @@ operator calcSkinningXfos(
   }
   xfos.resize(pose.size());
   for (var Integer i = 0; i < pose.size(); i++) {
-    xfos[i] = bones[i].referencePose.inv() * pose[i];
+  //  xfos[i] = bones[i].referencePose.inv() * pose[i];
   //  xfos[i] = Xfo(Mat44(pose[i]) * Mat44(bones[i].referencePose).inverse());
-  //  xfos[i] = Xfo(Mat44(bones[i].referencePose).inverse() * Mat44(pose[i]));
-  //  xfos[i].ori = xfos[i].ori.conjugate();
+    xfos[i] = Xfo(Mat44(bones[i].referencePose).inverse() * Mat44(pose[i]));
+    xfos[i].ori = xfos[i].ori.conjugate();
   }
 }

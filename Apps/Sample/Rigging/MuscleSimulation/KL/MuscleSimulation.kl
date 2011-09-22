@@ -8,6 +8,9 @@ use Color;
 use DebugGeometry;
 
 operator simulateMuscle(
+  io Xfo pose[],
+  io Bone bones[],
+  
   io Muscle initmuscles<>,
   
   in Size index,
@@ -43,6 +46,19 @@ operator simulateMuscle(
     initialized = false;
   }
   
+  /*
+  for (i = 0; i < pose.size(); i++) {
+    debugDraw.drawAxis(bones[i].referencePose, 10.0, Color(1.0,0.0,0.0,1.0));
+    debugDraw.drawAxis(pose[i], 10.0, Color(0.0,0.0,1.0,1.0));
+    debugDraw.drawAxis(skinningXfos[i], 10.0, Color(0.0,0.0,1.0,1.0));
+    
+    Xfo skiXfo = Xfo(Mat44(bones[i].referencePose).inverse() * Mat44(pose[i]));
+    skiXfo.ori = skiXfo.ori.conjugate();
+  //  Xfo skiXfo = pose[i] * bones[i].referencePose.inv();
+    debugDraw.drawAxis(skiXfo, 20.0, Color(0.0,0.0,1.0,1.0));
+  }
+  */
+  
   /////////////////////////////////////////////////
   // Enveloping/Skinning
   // Envelope the xfos to the skeleton using basic enveloping math.
@@ -51,6 +67,7 @@ operator simulateMuscle(
   Integer boneid;
   Scalar boneweight;
   for(i=0; i<muscle.xfos.size(); i++){
+  //  envelopedXfos[i] = muscle.initialXfos[i];;
     
     baseXfo = muscle.initialXfos[i];
     envelopedXfos[i].identity();

@@ -19,6 +19,7 @@ FABRIC.SceneGraph.registerManagerType('SelectionManager', {
       });
 
     var selection = [];
+    var listeners = [];
     
     var selectionManager = {
       pub:{
@@ -26,18 +27,26 @@ FABRIC.SceneGraph.registerManagerType('SelectionManager', {
           return selection.indexOf(obj) != -1;
         },
         select:function( obj ){
-          if(!this.isSelected(obj)){ 
-            this.clearSelection();
-            this.addToSelection(obj);
+          this.clearSelection(false);
+          if(obj.constructor.name == 'Array'){
+            for(var i=0; i<obj.length; i++){
+              this.addToSelection(obj[i]);
+            }
+          }
+          else{
+            if(!this.isSelected(obj)){ 
+              this.addToSelection(obj);
+            }
           }
         },
         addToSelection:function( obj ){
+          selection.push(obj);
           if(obj.fireEvent){
             obj.fireEvent('selected');
           }
-          selection.push(obj);
+          selectionManager.fireListenerEvents('selectionChanged', { selection:selection });
         },
-        removeFromSelection:function( obj ){ 
+        removeFromSelection:function( obj, firevents ){ 
           if( selection.length == 0 ){
             return;
           }
@@ -54,13 +63,33 @@ FABRIC.SceneGraph.registerManagerType('SelectionManager', {
               selection.splice(id,1);
             }
           }
+          if(firevents!=false){
+            selectionManager.fireListenerEvents('selectionChanged', { selection:selection });
+          }
         },
-        clearSelection:function(){ 
+        clearSelection:function(firevents){ 
           if(selection.length > 0){
             for (var i = selection.length-1; i >=0 ; i--) {
-              this.removeFromSelection(selection[i]);
+              this.removeFromSelection(selection[i], false);
             }
           }
+          if(firevents!=false){
+            selectionManager.fireListenerEvents('selectionChanged', { selection:selection });
+          }
+        },
+        getSelection: function(){
+          return selection.clone();
+        },
+        addListener: function(listener){
+          if(!listener.fireEvent){
+            throw "listener must support events";
+          }
+          listeners.push(listener);
+        }
+      },
+      fireListenerEvents: function(type, evt){
+        for (var i=0; i<listeners.length; i++) {
+          listeners[i].fireEvent(type, evt);
         }
       }
     }

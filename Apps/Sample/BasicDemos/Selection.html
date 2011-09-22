@@ -60,6 +60,14 @@ s.parentNode.insertBefore(ga, s);
 
 </script>
 
+<style>
+  #selectable .ui-selecting { background: #757a9f; }
+  #selectable .ui-selected { background: #4e516a; color: white; }
+  #selectable { list-style-type: none; margin: 0; padding: 0; }
+  #selectable li { margin: 3px; padding: 0.4em; font-size: 1.0em; height: 10px; }
+</style>
+
+
     <script type="text/javascript">
     
     
@@ -166,11 +174,11 @@ $(document).ready(function() {
     thickness: 0.2
   });
   
-
+  var nodes = {};
   var objId = 0;
   var scale = 2.0;
-  var gridSize = 40.0;
-  for (var k = 1; k < 30; k++) {
+  var gridSize = 25.0;
+  for (var k = 1; k < 16; k++) {
     var radius = (Math.random() + 0.5) * scale;
     var tr = FABRIC.RT.vec3(
       (Math.random() - 0.5) * gridSize,
@@ -186,7 +194,7 @@ $(document).ready(function() {
       radius: radius,
       detail: 10
     });
-    scene.constructNode('SelectableInstance', {
+    var inst = scene.constructNode('SelectableInstance', {
         name: 'SphereInstance',
         transformNode: transformNode,
         geometryNode: sphere,
@@ -196,10 +204,67 @@ $(document).ready(function() {
         highlightMaterial: highlightMaterial,
         selectMaterial: selectedMaterial
       });
-
+    nodes[inst.getName()] = inst;
     objId++;
   }
-
+  
+  var selecting = false;
+  for(var i in nodes){
+    $("#selectable").append('<li class="ui-widget-content" id="'+i+'">'+i+'</li>');
+  }
+  $( "#selectable" ).selectable({
+    selected: function(event, ui) {
+      var selection = [];
+      var selectedChildren = $("#selectable").children('.ui-selected');
+      for(var i=0; i<selectedChildren.length; i++){
+        selection.push(nodes[$(selectedChildren[i]).attr('id')]);
+      }
+      selecting = true;
+      selectionManager.select(selection);
+      scene.redrawAllViewports();
+      selecting = false;
+    }
+  });
+  
+  var selectionUIBox = (function(){
+    var eventListeners = {};
+    return {
+      addEventListener: function(type, fn) {
+        if (!eventListeners[type]) {
+          eventListeners[type] = [];
+        }
+        eventListeners[type].push(fn);
+      },
+      removeEventListener: function(type, fn) {
+        if (eventListeners[type]) {
+          var id = eventListeners[type].indexOf(fn);
+          if (id !== -1) {
+            eventListeners[type].splice(id, 1);
+          }
+        }
+      },
+      fireEvent: function(type, evt) {
+        for (i in eventListeners[type]) {
+          if (eventListeners[type].hasOwnProperty(i)) {
+            eventListeners[type][i].call(this, evt);
+          }
+        }
+      }
+    };
+  })();
+  
+  selectionManager.addListener(selectionUIBox);
+  
+  selectionUIBox.addEventListener('selectionChanged', function(evt){
+    if(selecting) return;
+    $("#selectable").children().each(function(){
+      $(this).removeClass('ui-selected');
+    });
+    for(var i=0; i<evt.selection.length; i++){
+      $("#"+evt.selection[i].getName()).addClass('ui-selected');
+    }
+  });
+  
 
   $('#loadingDialog').dialog({
     modal: true
@@ -254,6 +319,8 @@ $(document).ready(function() {
           <div class="box">
             <h2>SELECTION</h2>
             <div class="content">
+              <ol id="selectable">
+              </ol>
             </div>
           </div><!--box-->
             

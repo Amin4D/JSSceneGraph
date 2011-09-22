@@ -78,7 +78,8 @@ FABRIC.SceneGraph.registerManagerType('ViewportSelectionManager', {
   },
   factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
-      addToSelectionKeyName: 'ctrlKey'
+      addToSelectionKeyName: 'ctrlKey',
+      removeFromSelectionKeyName: 'altKey'
     });
     
     var selectionManager = scene.constructManager('SelectionManager', options);
@@ -98,6 +99,8 @@ FABRIC.SceneGraph.registerManagerType('ViewportSelectionManager', {
     scene.pub.addEventListener('mousedown_geom', function(evt){
         if(evt[options.addToSelectionKeyName]){
           selectionManager.pub.addToSelection(evt.targetNode);
+        }else if(evt[options.removeFromSelectionKeyName]){
+          selectionManager.pub.removeFromSelection(evt.targetNode);
         }else{
           selectionManager.pub.select(evt.targetNode);
           evt.stopPropagation();

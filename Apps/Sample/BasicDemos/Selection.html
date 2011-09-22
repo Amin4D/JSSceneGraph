@@ -77,6 +77,14 @@ FABRIC.SceneGraph.registerNodeType('SelectableInstance', {
     });
     
     var selectableInstance = scene.constructNode('Instance', options);
+    
+    var selectable = true;
+    selectableInstance.pub.isSelectable = function(){
+      return selectable;
+    }
+    selectableInstance.pub.setSelectable = function(val){
+      selectable = val;
+    }
     var highglighted = false;
     var selected = false;
     selectableInstance.pub.addEventListener('highlight', function(evt) {
@@ -113,8 +121,8 @@ $(document).ready(function() {
   var scene = FABRIC.SceneGraph.createScene();
 
   var camera = scene.constructNode('TargetCamera', {
-      position: FABRIC.RT.vec3(70, 62, 40),
-      target: FABRIC.RT.vec3(30, 20, 0)
+      position: FABRIC.RT.vec3(20, 30, 30).scale(1.5),
+      target: FABRIC.RT.vec3(0, 2, 0)
     });
   var viewport = scene.constructNode('Viewport', {
       enableRaycasting: true,
@@ -130,6 +138,16 @@ $(document).ready(function() {
   
   
   var selectionManager = scene.constructManager('ViewportSelectionManager');
+  
+  // create the scene grid
+  scene.constructNode('Instance', {
+    geometryNode: scene.constructNode('Grid', {
+      size_x: 40.0,
+      size_z: 40.0,
+      sections_x: 20,
+      sections_z: 20 }),
+    materialNode: scene.constructNode('FlatMaterial')
+  });
   
 
   var light = scene.constructNode('PointLight', { position: FABRIC.RT.vec3(420.0, 1000.0, 600.0) });
@@ -150,42 +168,36 @@ $(document).ready(function() {
   
 
   var objId = 0;
-  var scale = 7.0;
-  for (var k = 1; k < 3; k++) {
-    var base1 = FABRIC.RT.vec3((k & 1) * 4.0, (k & 2) * 2.0, (k & 4)).scaleInPlace(scale);
-    for (var j = 1; j < 4; j++) {
-      var base2 = FABRIC.RT.vec3((j & 1) * 2.0, (j & 2), (j & 4) / 2.0).scaleInPlace(scale);
+  var scale = 2.0;
+  var gridSize = 40.0;
+  for (var k = 1; k < 30; k++) {
+    var radius = (Math.random() + 0.5) * scale;
+    var tr = FABRIC.RT.vec3(
+      (Math.random() - 0.5) * gridSize,
+      radius,
+      (Math.random() - 0.5) * gridSize
+    );
 
-      var base = base2.add(base1);
+    var xfo = FABRIC.RT.xfo({ tr:tr });
+    var transformNode = scene.constructNode('Transform', { hierarchical: false, globalXfo: xfo });
 
-      for (var i = 0; i < 7; i++) {
-        var xfo = FABRIC.RT.xfo();
+    var sphere = scene.constructNode('Sphere', {
+      name: 'SphereMesh',
+      radius: radius,
+      detail: 10
+    });
+    scene.constructNode('SelectableInstance', {
+        name: 'SphereInstance',
+        transformNode: transformNode,
+        geometryNode: sphere,
+        materialNode: materials[objId % materials.length],
+        enableRaycasting: true,
+        
+        highlightMaterial: highlightMaterial,
+        selectMaterial: selectedMaterial
+      });
 
-        xfo.tr = FABRIC.RT.vec3((i & 1), (i & 2) / 2.0, (i & 4) / 4.0).scaleInPlace(scale);
-        xfo.tr.addInPlace(base);
-
-        var transformNode = scene.constructNode('Transform', { hierarchical: false, globalXfo: xfo });
-
-        var cube = scene.constructNode('Cuboid', {
-          name: 'CubeMesh',
-          length: (i & 3) + 3,
-          width: (j & 3) + 3.0,
-          height: (k & 3) + 3.0
-        });
-        scene.constructNode('SelectableInstance', {
-            name: 'Cuboid',
-            transformNode: transformNode,
-            geometryNode: cube,
-            materialNode: materials[objId % materials.length],
-            enableRaycasting: true,
-            
-            highlightMaterial: highlightMaterial,
-            selectMaterial: selectedMaterial
-          });
-
-        objId++;
-      }
-    }
+    objId++;
   }
 
 

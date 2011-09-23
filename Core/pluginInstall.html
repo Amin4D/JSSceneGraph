@@ -200,6 +200,7 @@ $(document).ready(function() {
   BrowserDetect.init();
 
   
+  var url, message;
   var createDownloadURL = function( div ){
    
     var os, arch, ext;
@@ -223,37 +224,34 @@ $(document).ready(function() {
         return false;
     }
     switch(BrowserDetect.browser){
-      case "Chrome": ext = "crx"; break;
-      case "Firefox": ext = "xpi"; break;
+      case "Chrome":
+        ext = "crx";
+        message = "1. Press the 'continue' button at the bottom of the screen.\n This will download the extension to your computer.\n\n"+
+                  "2. Once the download completes, press 'Install' button. \nThis will install the Fabric Engine extension for your Chrome browser\n\n" +
+                  "3. Refresh the page to view the demo.";
+        break;
+      case "Firefox":
+        ext = "xpi";
+        message = "1. Press the 'allow' button at the top of the screen.\n This will download the extension to your computer.\n\n"+
+                  "2. Once the download completes, press 'Install Now' button. \nThis will install the Fabric Engine extension for your Firefox browser\n\n" +
+                  "3. Restart the browser and return to the demo.";
+        break;
       default:
         alert("Unsupported Browser. Fabric supports only Chrome and Firefox.");
         return false;
     }
-    return "http://dist.fabric-engine.com/1.0.12/FabricEngine-"+os+"-"+arch+"."+ext;
+    url = "http://dist.fabric-engine.com/1.0.12/FabricEngine-"+os+"-"+arch+"."+ext;
   }
   
-  var url = createDownloadURL();
+  createDownloadURL();
   
   if(url){
     $('#install').button({ disabled: false })
     .click(function() {
-      $( "#alphaWarningDialogBox" ).dialog( "open" );
-      parent.location = url;
-    //  parent.location.reload();
+      // Note: this method is defined in the opener window. 
+      parent.downloadAndInstallPlugin(url, message);
     });
   }
-  
-  $("#alphaWarningDialogBox").dialog({
-      autoOpen: false,
-      width: 500,
-      height: 250,
-      modal: true,
-      buttons: {
-       Ok: function() {
-         $( this ).dialog( "close" );
-       }
-     }
-    });
   
 });
 
@@ -315,14 +313,6 @@ In no event shall Fabric Technologies, Inc. be liable for any damages (including
       </div> <!--editor-->
     </div><!--wrapper-->
 
-    <div id="alphaWarningDialogBox" title="Alpha Warning">
-      <div class="content">
-        This is an Alpha release of Fabric Engine, and we are working continuously to improve the developer experience and the plugin plugin performance. To be notified of updates, please register
-        <u><a href="http://fabric-engine.com/2011/07/looking-for-early-testers">here</a></u>.
-        <br><br>
-        Please refresh the page on completion of the plugin installation
-      </div>
-    </div>
 
   </body>
   

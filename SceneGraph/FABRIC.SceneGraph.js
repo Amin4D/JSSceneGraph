@@ -386,6 +386,7 @@ FABRIC.SceneGraph = {
       }
       
       var operator = context.DG.createOperator(uid);
+      var filename;
       operatorStore[uid] = operator;
       
       ///////////////////////////////////////////////////
@@ -400,7 +401,7 @@ FABRIC.SceneGraph = {
   
         descDiags = function(fullCode, diags) {
           var fullCodeLines = fullCode.split('\n');
-          var desc = 'Error compiling operator: ' + operatorDef.operatorName + '\n';
+          var desc = 'Error compiling operator: ' + operatorDef.operatorName + ' in '+filename+'\n';
           if (operatorDef.srcFile) desc += 'File:' + operatorDef.srcFile + '\n';
           for (var i = 0; i < diags.length; ++i) {
             if (i == 16) {
@@ -424,7 +425,7 @@ FABRIC.SceneGraph = {
   
         operator.setEntryFunctionName(operatorDef.entryFunctionName);
         try {
-          operator.setSourceCode(code);
+          operator.setSourceCode(filename, code);
         }
         catch (e) {
           var message = 'Error compiling operator: ' + operatorDef.operatorName + '\n';
@@ -438,7 +439,8 @@ FABRIC.SceneGraph = {
         }
       }
 
-      if (!operatorDef.srcCode) {
+      if (operatorDef.srcFile) {
+        filename = operatorDef.srcFile.split('/').pop();
         if(operatorDef.async === false){
           var code = FABRIC.loadResourceURL(operatorDef.srcFile, 'text/plain');
           code = scene.preProcessCode(code, operatorDef.preProcessorDefinitions, includedCodeSections);
@@ -450,7 +452,8 @@ FABRIC.SceneGraph = {
           });
         }
       }
-      else{
+      else if (operatorDef.srcCode) {
+        filename = operatorDef.operatorName;
         // Fake an asynchronous operator construction so that we don't block waiting
         // for the operator compilation.
         if(operatorDef.async === false){
@@ -462,6 +465,8 @@ FABRIC.SceneGraph = {
             configureOperator(code);
           });
         }
+      }else{
+        throw "Invalid operator definition. Either a source file must be specified, or source code.";
       }
       return constructBinding(operator);
     };
@@ -1355,6 +1360,7 @@ FABRIC.SceneGraph.registerNodeType('ResourceLoad', {
   parentNodeDesc: 'SceneGraphNode',
   optionsDesc: {
     onLoadSuccessCallback: 'A callback that will be fired once the resource has loaded successfully.',
+    onLoadProgressCallback: 'A callback that will be fired after some load progress.',
     onLoadFailureCallback: 'A callback that will be fired if the resource cannot load.',
     blockRedrawingTillResourceIsLoaded: 'If set to true redrawing will be blocked until the resource is loaded.',
     redrawOnLoad: 'If set to true, the viewport will fire a redraw once the resource has been loaded.'
@@ -1362,12 +1368,14 @@ FABRIC.SceneGraph.registerNodeType('ResourceLoad', {
   factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
       onLoadSuccessCallback: undefined,
+      onLoadProgressCallback: undefined,
       onLoadFailureCallback: undefined,
       blockRedrawingTillResourceIsLoaded:true,
       redrawOnLoad: true
     });
 
     var onloadSuccessCallbacks = [];
+    var onloadProgressCallbacks = [];
     var onloadFailureCallbacks = [];
     lastLoadCallbackURL = '';
 
@@ -1377,21 +1385,21 @@ FABRIC.SceneGraph.registerNodeType('ResourceLoad', {
     resourceLoadNode.addMemberInterface(dgnode, 'url');
     resourceLoadNode.addMemberInterface(dgnode, 'resource');
     
+    var remainingTaskWeight = 1.0;
     var incrementLoadProgressBar;
     if(options.blockRedrawingTillResourceIsLoaded){
-      incrementLoadProgressBar = FABRIC.addAsyncTask("Loading: "+ options.url);
+      incrementLoadProgressBar = FABRIC.addAsyncTask("Loading: "+ options.url, remainingTaskWeight);
     }
 
     var onLoadCallbackFunction = function(callbacks) {
       var i;
-      lastLoadCallbackURL = resourceLoadNode.pub.getUrl();
       for (i = 0; i < callbacks.length; i++) {
         callbacks[i](resourceLoadNode.pub);
       }
       callbacks.length = 0;
       
       if(incrementLoadProgressBar){
-        incrementLoadProgressBar();
+        incrementLoadProgressBar(true, -remainingTaskWeight);
       }
       else if (options.redrawOnLoad) {
         // PT 09-09-2011 Note: this is a hack to force the redrawing after the resource has
@@ -1404,14 +1412,26 @@ FABRIC.SceneGraph.registerNodeType('ResourceLoad', {
       }
     }
 
-    var onLoadSuccessCallbackFunction = function() {
+    var onLoadSuccessCallbackFunction = function(node) {
       onLoadCallbackFunction(onloadSuccessCallbacks);
     }
-    var onLoadFailureCallbackFunction = function() {
+    var onLoadProgressCallbackFunction = function(node, progress) {
+      prevRemainingTaskWeight = remainingTaskWeight;
+      //TaskWeight = 1 + size/100KB
+      remainingTaskWeight = 1.0 + (progress.total - progress.received) / 100000;
+      incrementLoadProgressBar(false, remainingTaskWeight-prevRemainingTaskWeight);
+
+      var i;
+      for (i = 0; i < onloadProgressCallbacks.length; i++) {
+        callbacks[i](resourceLoadNode.pub, progress);
+      }
+    }
+    var onLoadFailureCallbackFunction = function(node) {
       onLoadCallbackFunction(onloadFailureCallbacks);
     }
 
     dgnode.addOnLoadSuccessCallback(onLoadSuccessCallbackFunction);
+    dgnode.addOnLoadProgressCallback(onLoadProgressCallbackFunction);
     dgnode.addOnLoadFailureCallback(onLoadFailureCallbackFunction);
 
     resourceLoadNode.pub.isLoaded = function() {
@@ -1447,6 +1467,10 @@ FABRIC.SceneGraph.registerNodeType('ResourceLoad', {
       resourceLoadNode.pub.addOnLoadSuccessCallback(options.onLoadSuccessCallback);
     }
 
+    if (options.onLoadProgressCallback) {
+      resourceLoadNode.pub.addOnLoadProgressCallback(options.onLoadProgressCallback);
+    }
+
     if (options.onLoadFailureCallback) {
       resourceLoadNode.pub.addOnLoadFailureCallback(options.onLoadFailureCallback);
     }
@@ -1476,7 +1500,7 @@ FABRIC.SceneGraph.registerNodeType('Camera', {
     scene.assignDefaults(options, {
         nearDistance: 5,
         farDistance: 1000,
-        fovY: 60,
+        fovY: Math.degToRad(60),
         focalDistance: 160,
         orthographic: false,
         transformNode: 'Transform'
@@ -1490,7 +1514,7 @@ FABRIC.SceneGraph.registerNodeType('Camera', {
       
     dgnode.addMember('nearDistance', 'Scalar', options.nearDistance);
     dgnode.addMember('farDistance', 'Scalar', options.farDistance);
-    dgnode.addMember('fovY', 'Scalar', Math.degToRad(options.fovY));
+    dgnode.addMember('fovY', 'Scalar', options.fovY);
     dgnode.addMember('focalDistance', 'Scalar', options.focalDistance);
     dgnode.addMember('cameraMat44', 'Mat44');
     dgnode.addMember('orthographic', 'Boolean', options.orthographic);

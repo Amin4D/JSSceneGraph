@@ -85,8 +85,7 @@ $(document).ready(function() {
       target: FABRIC.RT.vec3(0, 6.5, 0),
       roll: 0,
       nearDistance: 0.001,
-      farDistance: 20000,
-      fovY: 60.0
+      farDistance: 20000
   });
 
   scene.constructNode('CameraManipulator', { targetNode: camera });
@@ -140,12 +139,11 @@ $(document).ready(function() {
   $('#loadingDialog').dialog({
     modal: true
   });
-  var count = FABRIC.getAsyncTaskCount();
-  FABRIC.appendOnResolveAsyncTaskCallback(function(label, countRemaining){
+  FABRIC.appendOnResolveAsyncTaskCallback(function(label, nbRemaining, doneWeight, totalWeight) {
     $('#loadingProgressBar').progressbar({
-      value: (1.0-(countRemaining/count))*100
+      value: (1.0-(doneWeight/totalWeight))*100
     });
-    if(countRemaining===0){
+    if (nbRemaining===0) {
       $('#loadingDialog').dialog('close');
       var errors = scene.getErrors();
       if (errors.length > 0) {

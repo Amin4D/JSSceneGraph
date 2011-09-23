@@ -217,9 +217,9 @@ FABRIC.RT.Euler.prototype = {
   // Returns true if the vector is equal to the argument
   eql: function(e) {
     return FABRIC.RT.isEuler(e) &&
-      (Math.abs(this.x - e.x) < FABRIC.RT.precision) &&
-      (Math.abs(this.y - e.y) < FABRIC.RT.precision) &&
-      (Math.abs(this.z - e.z) < FABRIC.RT.precision) &&
+      (Math.abs(this.x - e.x) < Math.PRECISION) &&
+      (Math.abs(this.y - e.y) < Math.PRECISION) &&
+      (Math.abs(this.z - e.z) < Math.PRECISION) &&
       (this.ro.order == e.ro.order);
   },
 

@@ -9,20 +9,26 @@ FABRIC = (function() {
   // so we can open the debugger with one
   var contextIDs = [];
   
-  var createDownloadPrompt = function( div ){
+  var displayPluginInstallPage = function( div ){
     var iframeTag = document.createElement('iframe');
     iframeTag.setAttributeNS(null, 'src', 'http://demos.fabric-engine.com/Fabric/Core/pluginInstall.html');
     iframeTag.setAttributeNS(null, 'style', 'position:absolute; left:10px; right:10px; top:10px; bottom:10px; z-index:10');
     iframeTag.setAttributeNS(null, 'width', '98%');
     iframeTag.setAttributeNS(null, 'height', '98%');
     document.body.appendChild(iframeTag);
+    window.downloadAndInstallPlugin = function(url, message){
+      // Remove the iframe, and display the message.
+      document.body.removeChild(iframeTag);
+      window.location = url;
+      alert(message);
+    }
   }
 
   var createContext = function(options) {
     
     // Check to see if the plugin is loaded.
     if(!navigator.mimeTypes["application/fabric"]){
-      createDownloadPrompt();
+      displayPluginInstallPage();
       throw("Fabric not installed");
     }else if(!navigator.mimeTypes["application/fabric"].enabledPlugin){
       alert("Fabric plugin not enabled");
@@ -77,14 +83,14 @@ FABRIC = (function() {
       "Please install the updated plugin";
     if (cmpVersions(version, requiredVersion) < 0) {
       alert(outOfDateMessage);
-      createDownloadPrompt();
+      displayPluginInstallPage();
       throw(outOfDateMessage);
     }
     
     if(context.build.isExpired()){
       var expiredMessage = "Fabric(Alpha) plugin has expired. Please install the lastest version";
       alert(expiredMessage);
-      createDownloadPrompt();
+      displayPluginInstallPage();
       throw(expiredMessage);
     }
     
@@ -195,7 +201,7 @@ FABRIC = (function() {
         queryDGNode.addMember('version', 'String', '');
         queryDGNode.addMember('token', 'String', '');
         queryDGNode.addMember('supported', 'Boolean', false);
-        queryDGNode.addDependency(result.windowNode,'window');
+        queryDGNode.setDependency(result.windowNode,'window');
         
         // operator to query the open gl version
         var queryOpVersion = context.DG.createOperator('getOpenGLVersion');
@@ -285,8 +291,10 @@ FABRIC = (function() {
     }
     return url;
   };
-  
-  var asyncTaskCount = 0;
+
+  var activeAsyncTaskCount = 0;
+  var asyncTasksWeight = 0.0;
+  var asyncTasksMaxWeight = 0.0;
   
   var onResolveAsyncTaskCallbacks = [];
   var appendOnResolveAsyncTaskCallback = function(fn) {
@@ -294,7 +302,7 @@ FABRIC = (function() {
   };
   var fireOnResolveAsyncTaskCallbacks = function(label){
     for (i=0; i<onResolveAsyncTaskCallbacks.length; i++){
-      if(onResolveAsyncTaskCallbacks[i].call(undefined, label, asyncTaskCount)){
+      if (onResolveAsyncTaskCallbacks[i].call(undefined, label, activeAsyncTaskCount, asyncTasksWeight, asyncTasksMaxWeight)) {
         onResolveAsyncTaskCallbacks.splice(i, 1);
         i--;
       }
@@ -304,20 +312,37 @@ FABRIC = (function() {
   // Some tasks can be defined to run asynchronously as part of the load
   // stage where operators are compiled. This enables delaying of complex tasks,
   // that would block the drawing to the page till after the first redraw.
-  var createAsyncTask = function(callback){
-    asyncTaskCount++;
+  var createAsyncTask = function(callback, weight) {
+    activeAsyncTaskCount++;
+    if (weight === undefined)
+      weight = 1.0;
+    asyncTasksWeight += weight;
+    asyncTasksMaxWeight += weight;
     setTimeout(function(){
+      activeAsyncTaskCount--;
       callback();
-      asyncTaskCount--;
+      asyncTasksWeight -= weight;
       fireOnResolveAsyncTaskCallbacks('...');
     }, 1);
   }
   // Tasks can be registered that contribute to the async workload. E.g. resource
   // loading can be defined to contribute to the intitial loading of the graph. 
-  var addAsyncTask = function(label){
-    asyncTaskCount++;
-    return function(){
-      asyncTaskCount--;
+  var addAsyncTask = function(label, weight) {
+    activeAsyncTaskCount++;
+    if (!weight)
+      weight = 1.0;
+    asyncTasksWeight += weight;
+    asyncTasksMaxWeight += weight;
+    return function(finished, deltaWeight) {
+      if (finished === undefined)
+        finished = true;
+      if (finished)
+        activeAsyncTaskCount--;
+      if (deltaWeight === undefined)
+        deltaWeight = -weight;
+      asyncTasksWeight += deltaWeight;
+      if (deltaWeight > 0)
+        asyncTasksMaxWeight += deltaWeight;
       fireOnResolveAsyncTaskCallbacks(label);
     }
   }
@@ -392,7 +417,9 @@ FABRIC = (function() {
     asyncResourceLoading: true,
     createAsyncTask: createAsyncTask,
     addAsyncTask: addAsyncTask,
-    getAsyncTaskCount: function(){ return asyncTaskCount; },
+    getActiveAsyncTaskCount: function() { return activeAsyncTaskCount; },
+    getAsyncTasksWeight: function() { return asyncTasksWeight; },
+    getAsyncTasksMaxWeight: function() { return asyncTasksMaxWeight; },
     appendOnResolveAsyncTaskCallback: appendOnResolveAsyncTaskCallback,
     convertImageURLToDataURL: convertImageURLToDataURL
   };

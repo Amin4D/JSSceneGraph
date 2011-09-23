@@ -240,24 +240,29 @@ $(document).ready(function() {
         max: 0.5,
         step: 0.01,
         slide: function( event, ui ) {
-          $( "#brushSizeValue" ).val( ui.value );
+          $( "#brushSizeValue" ).val( ui.value.toFixed(2) );
           paintManipulator.setBrushSize( ui.value );
         }
       });
   $( "#brushSizeValue" ).val( $( "#brushSizeSlider" ).slider( "value" ) );
+  
+  paintManipulator.addEventListener('brushsizechanged', function( evt ){
+    $( "#brushSizeSlider" ).slider('value', evt.brushSize.toFixed(2)  );
+    $( "#brushSizeValue" ).val( evt.brushSize.toFixed(2)  );
+  });
 
   
   $( "#brushStrengthSlider" ).slider({
         value: 1.0,
         min: 0,
         max: 1.0,
-        step: 0.1,
+        step: 0.01,
         slide: function( event, ui ) {
-          $( "#brushStrengthValue" ).val( ui.value );
+          $( "#brushStrengthValue" ).val( ui.value * 100 + '%' );
           paintManipulator.setBrushStrength( ui.value );
         }
       });
-  $( "#brushStrengthValue" ).val( $( "#brushStrengthSlider" ).slider( "value" ) );
+  $( "#brushStrengthValue" ).val( $( "#brushStrengthSlider" ).slider( "value" ) * 100 + '%' );
 
   $('#brushColor').ColorPicker({
       flat: true,

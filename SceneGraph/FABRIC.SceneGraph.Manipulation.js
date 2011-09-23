@@ -263,6 +263,8 @@ FABRIC.SceneGraph.registerNodeType('PaintManipulator', {
       paintEventHandler.setData('brushSize', brushSize);
       evt.stopPropagation();
       evt.viewportNode.redraw();
+      
+      paintManipulatorNode.pub.fireEvent('brushsizechanged', { brushSize:brushSize });
     }
     scene.pub.addEventListener('mousewheel', resizePaintBrushFn);
 

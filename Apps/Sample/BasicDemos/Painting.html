@@ -94,6 +94,9 @@ FABRIC.SceneGraph.registerNodeType('PaintVertexColorsManipulator', {
             'paintData.projectionMatrix',
             'paintData.aspectRatio',
 
+            'paintData.baseColor',
+            'paintData.mode',
+            'paintData.brushStrength',
             'paintData.brushPos',
             'paintData.brushSize',
             'paintData.brushColor',
@@ -109,7 +112,15 @@ FABRIC.SceneGraph.registerNodeType('PaintVertexColorsManipulator', {
     var vertexColorsPaintManipulator = scene.constructNode('PaintManipulator', options);
     
     var paintEventHandler = vertexColorsPaintManipulator.getPaintEventHandler();
+    
+    paintEventHandler.addMember('mode', 'Integer');
+    vertexColorsPaintManipulator.addMemberInterface(paintEventHandler, 'mode', true);
+    
+    paintEventHandler.addMember('brushStrength', 'Scalar', 1.0);
+    vertexColorsPaintManipulator.addMemberInterface(paintEventHandler, 'brushStrength', true);
+    
     paintEventHandler.addMember('brushColor', 'Color', options.brushColor);
+    paintEventHandler.addMember('baseColor', 'Color', options.baseColor);
     vertexColorsPaintManipulator.addMemberInterface(paintEventHandler, 'brushColor', true);
     
     return vertexColorsPaintManipulator;
@@ -160,7 +171,11 @@ $(document).ready(function() {
   var assets = scene.importAssetFile('Models/bunny.obj');
   geometry = assets['bunny'];
 
-  geometry.addVertexAttributeValue('vertexColors', 'Color', { defaultValue:FABRIC.RT.rgb(0.0, 0.6, 0.0), genVBO:true });
+  var baseColor = FABRIC.RT.rgb(0.0, 0.6, 0.0);
+  geometry.addVertexAttributeValue('vertexColors', 'Color', {
+    defaultValue:baseColor,
+    genVBO:true
+  });
 
   var instanceNode = scene.constructNode('Instance', { geometryNode: geometry, materialNode: material });
 
@@ -172,7 +187,8 @@ $(document).ready(function() {
   var paintManipulator = scene.constructNode('PaintVertexColorsManipulator', {
       brushSize: brushSize,
       enabled:false,
-      brushColor: brushColor
+      brushColor: brushColor,
+      baseColor: baseColor
     });
   paintManipulator.addPaintableNode(instanceNode);
 
@@ -201,6 +217,48 @@ $(document).ready(function() {
       }
     };
 
+  $( "#paintModeSet" ).buttonset()
+  .click(function(event) {
+    
+    console.log( $($(":checked")[0]).attr('id') );
+    switch($($(":checked")[0]).attr('id')){
+      case "paintModeAdd":
+        paintManipulator.setMode(0);
+        break;
+      case "paintModeSubtract":
+        paintManipulator.setMode(1);
+        break;
+      case "paintModeSmooth":
+        paintManipulator.setMode(2);
+        break;
+    }
+  })
+  
+  $( "#brushSizeSlider" ).slider({
+        value: brushSize,
+        min: 0,
+        max: 0.5,
+        step: 0.01,
+        slide: function( event, ui ) {
+          $( "#brushSizeValue" ).val( ui.value );
+          paintManipulator.setBrushSize( ui.value );
+        }
+      });
+  $( "#brushSizeValue" ).val( $( "#brushSizeSlider" ).slider( "value" ) );
+
+  
+  $( "#brushStrengthSlider" ).slider({
+        value: 1.0,
+        min: 0,
+        max: 1.0,
+        step: 0.1,
+        slide: function( event, ui ) {
+          $( "#brushStrengthValue" ).val( ui.value );
+          paintManipulator.setBrushStrength( ui.value );
+        }
+      });
+  $( "#brushStrengthValue" ).val( $( "#brushStrengthSlider" ).slider( "value" ) );
+
   $('#brushColor').ColorPicker({
       flat: true,
       color: { r: brushColor.r * 255, g: brushColor.g * 255, b: brushColor.b * 255} ,
@@ -227,7 +285,7 @@ $(document).ready(function() {
       return true;
     }
   });
-  
+
 });
 
 </script>
@@ -264,8 +322,29 @@ $(document).ready(function() {
                 <div class="box">
                     <h2>CONTROLS</h2>
                     <div class="content">
-                 <p id="brushColor"></p>
+                      
+                      <span id="paintModeSet" style="margin-bottom: 10px;">
+                        <input type="radio" id="paintModeAdd" name="paintMode" checked="checked" /><label for="paintModeAdd">Add</label>
+                        <input type="radio" id="paintModeSubtract" name="paintMode" /><label for="paintModeSubtract">Subtract</label>
+                        <input type="radio" id="paintModeSmooth" name="paintMode" /><label for="paintModeSmooth">Smooth</label>
+                      </span>
+                      <br>
+                    <!--  <p style="margin-bottom: 10px; margin-top: 10px" class="content"> -->
+                        <label for="brushSizeValue" >Brush Size:</label>
+                        <input type="text" id="brushSizeValue" style="border:0; font-weight:bold; margin-bottom: 10px; margin-top: 20px" />
+                    <!--  </p> -->
+                      <div id="brushSizeSlider" style="margin-bottom: 10px; margin-top: 2px"></div>
+                                                                                                   
+                    <!--  <p style="margin-bottom: 10px; margin-top: 10px" class="content"> -->
+                        <label for="brushStrengthValue" >Brush Strength:</label>
+                        <input type="text" id="brushStrengthValue" style="border:0; font-weight:bold; margin-bottom: 10px; margin-top: 10px" />
+                    <!--  </p> -->
+                      <div id="brushStrengthSlider" style="margin-bottom: 10px; margin-top: 2px"></div>
+                      
+
+                      <p id="brushColor" style="margin-bottom: 10px; margin-top: 10px"></p>
                     </div><!--content-->
+                    
                 </div><!--box-->
       
         </div><!--sidebar-->

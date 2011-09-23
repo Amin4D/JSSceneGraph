@@ -17,6 +17,9 @@ operator paintVertexColors(
   io Mat44 projectionMatrix,
   io Scalar aspectRatio,
 
+  io Color baseColor,
+  io Integer paintMode,
+  io Scalar brushStrength,
   io Vec3 brushPos,
   io Scalar brushSize,
   io Color brushColor,
@@ -51,10 +54,38 @@ operator paintVertexColors(
   // Rather than returning the data back to JavaScript, we process them here,
   // calculating the new vertex color values based on thier distances from the paint brush
   var Scalar Pi = 3.141592653589793238462643;
-
-  for (var Integer i = 0; i < collectedPoints.points.size(); i++) {
-    Scalar weight = (cos(Pi * (collectedPoints.distances[i] / brushSize)) * 0.5) + 0.5;
-    Integer vertexId = collectedPoints.points[i];
-    vertexColors[vertexId] = vertexColors[vertexId].lerp(brushColor, weight);
+  
+  switch(paintMode){
+    case 0:
+      for (var Integer i = 0; i < collectedPoints.points.size(); i++) {
+        Scalar weight = ((cos(Pi * (collectedPoints.distances[i] / brushSize)) * 0.5) + 0.5) * brushStrength;
+        Integer vertexId = collectedPoints.points[i];
+        vertexColors[vertexId] = vertexColors[vertexId].lerp(brushColor, weight);
+      }
+      break;
+    case 1:
+      for (var Integer i = 0; i < collectedPoints.points.size(); i++) {
+        Scalar weight = ((cos(Pi * (collectedPoints.distances[i] / brushSize)) * 0.5) + 0.5) * brushStrength;
+        Integer vertexId = collectedPoints.points[i];
+        vertexColors[vertexId] = vertexColors[vertexId].lerp(baseColor, weight);
+      }
+      break;
+    case 2:
+      Color averageColor;
+      Scalar weights[];
+      Scalar totalWeight = 0.0;
+      for (var Integer i = 0; i < collectedPoints.points.size(); i++) {
+        Scalar weight = ((cos(Pi * (collectedPoints.distances[i] / brushSize)) * 0.5) + 0.5) * brushStrength;
+        Integer vertexId = collectedPoints.points[i];
+        averageColor += vertexColors[vertexId] * weight;
+        totalWeight += weight;
+        weights.push(weight);
+      }
+      averageColor *= 1.0/totalWeight;
+      for (var Integer i = 0; i < collectedPoints.points.size(); i++) {
+        Integer vertexId = collectedPoints.points[i];
+        vertexColors[vertexId] = vertexColors[vertexId].lerp(averageColor, weights[i]);
+      }
+      break;
   }
 }

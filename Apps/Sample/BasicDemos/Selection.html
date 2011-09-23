@@ -226,36 +226,7 @@ $(document).ready(function() {
     }
   });
   
-  var selectionUIBox = (function(){
-    var eventListeners = {};
-    return {
-      addEventListener: function(type, fn) {
-        if (!eventListeners[type]) {
-          eventListeners[type] = [];
-        }
-        eventListeners[type].push(fn);
-      },
-      removeEventListener: function(type, fn) {
-        if (eventListeners[type]) {
-          var id = eventListeners[type].indexOf(fn);
-          if (id !== -1) {
-            eventListeners[type].splice(id, 1);
-          }
-        }
-      },
-      fireEvent: function(type, evt) {
-        for (i in eventListeners[type]) {
-          if (eventListeners[type].hasOwnProperty(i)) {
-            eventListeners[type][i].call(this, evt);
-          }
-        }
-      }
-    };
-  })();
-  
-  selectionManager.addListener(selectionUIBox);
-  
-  selectionUIBox.addEventListener('selectionChanged', function(evt){
+  selectionManager.addEventListener('selectionChanged', function(evt){
     if(selecting) return;
     $("#selectable").children().each(function(){
       $(this).removeClass('ui-selected');

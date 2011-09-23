@@ -14,6 +14,7 @@ FABRIC.RT.OGLTexture2D = function(glInternalFormat, glFormat, glType) {
   this.glType = glType ? glType : 0;
   this.bufferID = 0;
   this.nbPixels = 0;
+  this.clamp = false;
   this.forceRefresh = false;
 };
 
@@ -22,6 +23,16 @@ FABRIC.RT.oglTexture2D = function(){
     FABRIC.SceneGraph.OpenGLConstants.GL_RGBA8,
     FABRIC.SceneGraph.OpenGLConstants.GL_RGBA,
     FABRIC.SceneGraph.OpenGLConstants.GL_UNSIGNED_BYTE);
+}
+
+FABRIC.RT.oglMatrixBuffer2D = function(){
+  var oglTexture = new FABRIC.RT.OGLTexture2D();
+  oglTexture.glInternalFormat = FABRIC.SceneGraph.OpenGLConstants.GL_RGBA32F;
+  oglTexture.glFormat = FABRIC.SceneGraph.OpenGLConstants.GL_RGBA;
+  oglTexture.glType = FABRIC.SceneGraph.OpenGLConstants.GL_FLOAT;
+  oglTexture.clamp = true;
+  oglTexture.forceRefresh = true;
+  return oglTexture;
 }
 
 FABRIC.RT.oglDepthBuffer2D = function(){
@@ -35,7 +46,7 @@ FABRIC.RT.oglDepthBuffer2D = function(){
 FABRIC.appendOnCreateContextCallback(function(context) {
   context.RegisteredTypesManager.registerType('OGLTexture2D', {
     members: {
-     glInternalFormat: 'Size', glFormat: 'Size', glType: 'Size', bufferID: 'Size', nbPixels: 'Size', forceRefresh: 'Boolean'
+     glInternalFormat: 'Size', glFormat: 'Size', glType: 'Size', bufferID: 'Size', nbPixels: 'Size', clamp: 'Boolean', forceRefresh: 'Boolean'
     },
     constructor: FABRIC.RT.OGLTexture2D,
     klBindings: {

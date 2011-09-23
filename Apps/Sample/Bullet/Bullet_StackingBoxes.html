@@ -116,34 +116,36 @@ $(document).ready(function() {
   });
 
   for(var i=3;i<25;i++) {
-    scene.constructNode('Instance', {
-      geometryNode: cuboidNode,
-      materialNode: phongMaterial,
-      transformNode: scene.constructNode('BulletRigidBodyTransform', {
-        bulletWorldNode: bulletWorldNode,
-        shapeName: 'Box',
-        rigidBody: new FABRIC.RT.BulletRigidBody({
-          transform: FABRIC.RT.xfo({
-            tr: FABRIC.RT.vec3(0,i,0),
-            ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(1,1,0),1),
-            sc: FABRIC.RT.vec3(1.0,0.2,1.1).scale(1.0),
-          }),
-          friction: 0.8,
-          restitution: 0.7
-        })
-      })
-    });
+    bodies.push(new FABRIC.RT.BulletRigidBody({
+      transform: FABRIC.RT.xfo({
+        tr: FABRIC.RT.vec3(0,i,0),
+        ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(1,1,0),1),
+        sc: FABRIC.RT.vec3(1.0,0.2,1.1).scale(1.0),
+      }),
+      friction: 0.8,
+      restitution: 0.7
+    }));
   }
+
+  scene.constructNode('Instance', {
+    geometryNode: cuboidNode,
+    materialNode: phongMaterial,
+    transformNode: scene.constructNode('BulletRigidBodyTransform', {
+      bulletWorldNode: bulletWorldNode,
+      shapeName: 'Box',
+      rigidBody: bodies
+    })
+  });
   
   $('#loadingDialog').dialog({
     modal: true
   });
-  var count = FABRIC.getAsyncTaskCount();
-  FABRIC.appendOnResolveAsyncTaskCallback(function(label, countRemaining){
+  
+  FABRIC.appendOnResolveAsyncTaskCallback(function(label, nbRemaining, doneWeight, totalWeight) {
     $('#loadingProgressBar').progressbar({
-      value: (1.0-(countRemaining/count))*100
+      value: (1.0-(doneWeight/totalWeight))*100
     });
-    if(countRemaining===0){
+    if (nbRemaining===0) {
       $('#loadingDialog').dialog('close');
       var errors = scene.getErrors();
       if (errors.length > 0) {

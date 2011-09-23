@@ -546,7 +546,14 @@ FABRIC.SceneGraph.registerNodeType('Instance', {
     redrawEventHandler.setScope('instance', dgnode);
 
     var bindToSceneGraph = function() {
-      redrawEventHandler.setScope('transform', transformNode.getDGNode());
+      
+      // check if we have a sliced transform!
+      if(options.transformNodeIndex == undefined && transformNode.getDGNode().getCount() > 1) {
+        options.transformNodeIndex = 0
+      }
+      
+      var transformdgnode = transformNode.getDGNode();
+      redrawEventHandler.setScope('transform', transformdgnode);
       var preProcessorDefinitions = {
               MODELMATRIX_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('modelMatrix'),
               MODELMATRIXINVERSE_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('modelMatrixInverse'),
@@ -559,7 +566,7 @@ FABRIC.SceneGraph.registerNodeType('Instance', {
               MODELVIEW_MATRIX_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('modelViewMatrix'),
               MODELVIEWPROJECTION_MATRIX_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('modelViewProjectionMatrix')
             };
-      if(!options.transformNodeIndex){
+      if(options.transformNodeIndex == undefined){
         redrawEventHandler.preDescendBindings.append(scene.constructOperator({
             operatorName: 'loadModelProjectionMatrices',
             srcFile: 'FABRIC_ROOT/SceneGraph/KL/loadModelProjectionMatrices.kl',
@@ -575,18 +582,18 @@ FABRIC.SceneGraph.registerNodeType('Instance', {
       }else{
         redrawEventHandler.addMember('transformNodeIndex', 'Size', options.transformNodeIndex);
         redrawEventHandler.preDescendBindings.append(scene.constructOperator({
-            operatorName: 'loadIndexedModelProjectionMatrices',
-            srcFile: 'FABRIC_ROOT/SceneGraph/KL/loadModelProjectionMatrices.kl',
-            entryFunctionName: 'loadIndexedModelProjectionMatrices',
-            preProcessorDefinitions: preProcessorDefinitions,
-            parameterLayout: [
-              'shader.shaderProgram',
-              'transform.' + transformNodeMember + '<>',
-              'self.transformNodeIndex',
-              'camera.cameraMat44',
-              'camera.projectionMat44'
-            ]
-          }));
+          operatorName: 'loadIndexedModelProjectionMatrices',
+          srcFile: 'FABRIC_ROOT/SceneGraph/KL/loadModelProjectionMatrices.kl',
+          entryFunctionName: 'loadIndexedModelProjectionMatrices',
+          preProcessorDefinitions: preProcessorDefinitions,
+          parameterLayout: [
+            'shader.shaderProgram',
+            'transform.' + transformNodeMember + '<>',
+            'self.transformNodeIndex',
+            'camera.cameraMat44',
+            'camera.projectionMat44'
+          ]
+        }));
       }
       ///////////////////////////////////////////////
       // Ray Cast Event Handling

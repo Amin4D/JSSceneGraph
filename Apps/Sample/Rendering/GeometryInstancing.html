@@ -60,61 +60,7 @@ s.parentNode.insertBefore(ga, s);
     <script type="text/javascript">
     
     
-FABRIC.SceneGraph.defineEffectFromFile('PhongInstancingShaderBase', './Shaders/PhongInstancingShader.xml');
-
-
-    
-// These Node definitions are inlined for now, but will
-// be moved to a separate file once they are stabilized. 
-FABRIC.SceneGraph.registerNodeType('PhongInstancingMaterial', {
-  factoryFn: function(options, scene) {
-    
-    var phongInstancingShader = scene.constructNode('PhongInstancingShaderBase', options );
-    var redrawEventHandler = phongInstancingShader.getRedrawEventHandler();
-    var instanceTransformsID = FABRIC.SceneGraph.getShaderParamID('instanceTransforms');
-    
-    
-    redrawEventHandler.addMember('instanceTransforms', 'Mat44[]', options.instanceTransforms);
-    
-    redrawEventHandler.preDescendBindings.append(scene.constructOperator({
-        operatorName: 'loadInstanceTransforms',
-        srcCode: '\n\
-use OGLShaderProgram;\n\
-operator loadUniform(\n\
-  io OGLShaderProgram shaderProgram,\n\
-  io Mat44 value[]\n\
-) {\n\
-  Integer location = shaderProgram.getUniformLocation('+instanceTransformsID+');\n\
-//  report("loadUniform:" + location);\n\
-  if(location!=-1){\n\
-    shaderProgram.loadMat44UniformArray(location, value);\n\
-  }\n\
-}\n\
-        ',
-        entryFunctionName: 'loadUniform',
-        parameterLayout: [
-          'shader.shaderProgram',
-          'self.instanceTransforms'
-        ]
-      }));
-    
-    redrawEventHandler.preDescendBindings.append(scene.constructOperator({
-        operatorName: 'setNumInstances',
-        srcCode: '\n\
-operator setNumInstances(\n\
-  io OGLShaderProgram shaderProgram,\n\
-) {\n\
-  shaderProgram.numInstances = '+options.instanceTransforms.length+';\n\
-}\n\
-        ',
-        entryFunctionName: 'setNumInstances',
-        parameterLayout: [
-          'shader.shaderProgram'
-        ]
-      }));
-    
-    return phongInstancingShader;
-  }});
+//FABRIC.SceneGraph.defineEffectFromFile('PhongInstancingShaderBase', './Shaders/PhongInstancingShader.xml');
     
 $(document).ready(function() {
   
@@ -130,10 +76,10 @@ $(document).ready(function() {
   
   // Create a camera to draw the scene from
   camera = scene.constructNode('TargetCamera', {
-      nearDistance: 10,
+      nearDistance: 1,
       farDistance: 1200,
-      position: FABRIC.RT.vec3(37, 27, 70),
-      target: FABRIC.RT.vec3(10, -5, 30)
+      position: FABRIC.RT.vec3(10,10,10),
+      target: FABRIC.RT.vec3(0, 0, 0)
     });
 
   scene.constructNode('CameraManipulator', { targetNode: camera });
@@ -142,11 +88,14 @@ $(document).ready(function() {
   var light = scene.constructNode('PointLight', { position: FABRIC.RT.vec3(420.0, 1000.0, 600.0) });
   
   var gridSize = 100;
-  var numInstances = 60;
+  var numInstances = 600;
   var instanceTransforms = [];
   
   //////////////////////////////////////
   // add some cows
+  for (i = 0; i < numInstances; i++)
+    instanceTransforms.push(FABRIC.RT.xfo());
+  /*
   for (i = 0; i < numInstances; i++) {
     var scl = Math.random() + 0.5;
     instanceTransforms.push(FABRIC.RT.xfo( {
@@ -154,23 +103,30 @@ $(document).ready(function() {
         (Math.random() - 0.5) * gridSize * 0.95,
         -2.5/scl,
         (Math.random() - 0.5) * gridSize * 0.95),
-      ori:FABRIC.RT.Quat.makeFromAxisAndAngle( FABRIC.RT.vec3(0,1,0), (Math.random() - 0.5) * Math.TWO_PI ), /* TODO: Transtion the whole math libary to radians. */
+      ori:FABRIC.RT.Quat.makeFromAxisAndAngle( FABRIC.RT.vec3(0,1,0), (Math.random() - 0.5) * Math.TWO_PI ),
       sc: FABRIC.RT.vec3(scl, scl, scl)
-    }).makeMat44()
+    })
     );
   }
+  */
+  
+  // create a sliced transform node
+  var slicedTransform = scene.constructNode("Transform");
+  slicedTransform.setGlobalXfo(instanceTransforms);
+  
   scene.constructNode('Instance', {
     geometryNode: scene.importAssetFile('../BasicDemos/Models/cow.obj')['cow'],
     materialNode: scene.constructNode('PhongInstancingMaterial', {
-          diffuseColor: FABRIC.RT.rgb255(139,69,19),
-          lightNode: light,
-          numInstances: numInstances,
-          instanceTransforms: instanceTransforms
-        })
+      diffuseColor: FABRIC.RT.rgb255(139,69,19),
+      lightNode: light,
+      transformTextureNode: slicedTransform.getTransformTexture()
+    }),
+    transformNode: slicedTransform
   });
 
   //////////////////////////////////////
   // Now add some bunnys
+  /*
   instanceTransforms = [];
   for (i = 0; i < numInstances; i++) {
     var scl = (Math.random() + 0.5) * 15;
@@ -193,6 +149,7 @@ $(document).ready(function() {
           instanceTransforms: instanceTransforms
         })
   });
+  */
 
   $('#loadingDialog').dialog({
     modal: true

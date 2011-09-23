@@ -25,6 +25,7 @@ FABRIC.SceneGraph.registerNodeType('Transform', {
 
     var transformNode = scene.constructNode('SceneGraphNode', options),
       dgnode = transformNode.constructDGNode('DGNode'),
+      textureNode = undefined,
       parentTransformNode,
       children = [];
 
@@ -90,11 +91,47 @@ FABRIC.SceneGraph.registerNodeType('Transform', {
       }
     }else {
       transformNode.pub.setGlobalXfo = function(val) {
-        if (!val.getType || val.getType() !== 'FABRIC.RT.Xfo') {
-          throw ('Incorrect type assignment. Must assign a FABRIC.RT.Xfo');
+        if(val.constructor.toString().indexOf("Array") != -1)
+        {
+          dgnode.setCount(val.length);
+          dgnode.setBulkData({ globalXfo: val});
         }
-        dgnode.setData('globalXfo', 0, val);
+        else
+        {
+          if (!val.getType || val.getType() !== 'FABRIC.RT.Xfo') {
+            throw ('Incorrect type assignment. Must assign a FABRIC.RT.Xfo');
+          }
+          dgnode.setData('globalXfo', 0, val);
+        }
       };
+    }
+    
+    transformNode.setupInstanceDrawing = function() {
+      if(textureNode != undefined)
+        return true;
+      if(dgnode.getCount() <= 1)
+        return false;
+      
+      // create the operator to convert the matrices into a texture
+      dgnode.addMember('textureMatrix', 'Mat44');
+      dgnode.bindings.append(scene.constructOperator( {
+          operatorName: 'calcGlobalMatrix',
+          srcFile: 'FABRIC_ROOT/SceneGraph/KL/calcGlobalXfo.kl',
+          parameterLayout: [
+            'self.globalXfo',
+            'self.textureMatrix'
+          ],
+          entryFunctionName: 'calcGlobalMatrix'
+        }));
+
+      textureNode = scene.constructNode('TransformTexture', {transformNode: transformNode.pub});
+
+      return true;  
+    }
+    
+    transformNode.pub.getTransformTexture = function() {
+      transformNode.setupInstanceDrawing();
+      return textureNode.pub;
     }
 
     return transformNode;

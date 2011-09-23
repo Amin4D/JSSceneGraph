@@ -118,8 +118,8 @@ FABRIC.SceneGraph.registerNodeType('Transform', {
           operatorName: 'calcGlobalMatrix',
           srcFile: 'FABRIC_ROOT/SceneGraph/KL/calcGlobalXfo.kl',
           parameterLayout: [
-            'self.globalXfo',
-            'self.textureMatrix'
+            'self.globalXfo<>',
+            'self.textureMatrix<>'
           ],
           entryFunctionName: 'calcGlobalMatrix'
         }));

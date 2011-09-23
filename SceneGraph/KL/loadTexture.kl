@@ -123,13 +123,13 @@ operator bindTextureMatrix(
   io Integer textureUnit,
   io Mat44 matrices<>
 ) {
-  //report('previous matrix data: '+matrices[0]);
-  for(Size i=0;i<matrices.size();i++) {
-    Xfo xf;
-    xf.tr.z = (Scalar(i) - Scalar(matrices.size()) * 0.5) * 3;
-    xf.sc.x = xf.sc.y = xf.sc.z = 1.0;
-    matrices[i] = Mat44(xf);
-  }
+  report('matrix data: '+matrices[0]);
+  //for(Size i=0;i<matrices.size();i++) {
+  //  Xfo xf;
+  //  xf.tr.z = (Scalar(i) - Scalar(matrices.size()) * 0.5) * 3;
+  //  xf.sc.x = xf.sc.y = xf.sc.z = 1.0;
+  //  matrices[i] = Mat44(xf);
+  //}
   oglTexture2D.bindImageMatrix(matrices, textureUnit);
 }
 

@@ -97,7 +97,7 @@ function Boolean Ray.intersectTriangle(
   var Scalar det = e1.dot(pvec);
 
   if (cull) {
-    if (det < PRECISION) {
+    if (det < DIVIDEPRECISION) {
       return false;
     }
     var Vec3 tvec = this.start - v0;
@@ -116,7 +116,7 @@ function Boolean Ray.intersectTriangle(
     v *= inv_det;
   }
   else {
-    if (abs(det) < PRECISION) {
+    if (abs(det) < DIVIDEPRECISION) {
       return false;
     }
     var Scalar inv_det = 1.0 / det;

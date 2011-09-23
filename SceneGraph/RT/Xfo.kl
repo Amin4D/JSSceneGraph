@@ -124,7 +124,7 @@ function Xfo Mat44.decompose(in RotationOrder ro) {
     return xfo;
   }
 
-  if (abs(this.det()) < PRECISION) {
+  if (abs(this.det()) < DIVIDEPRECISION) {
     report('Matrix is singular.');
     return xfo;
   }

@@ -181,7 +181,7 @@ FABRIC.RT.Mat44.prototype = {
 
     var result = new FABRIC.RT.Mat44();
 
-    if (Math.abs(det) < Math.PRECISION) {
+    if (Math.abs(det) < Math.DIVIDEPRECISION) {
       return result;
     }
 

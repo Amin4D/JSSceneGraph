@@ -140,7 +140,7 @@ function Mat44 Mat44.inverse() {
 
   var Mat44 result;
 
-  if (abs(det) < PRECISION) {
+  if (abs(det) < DIVIDEPRECISION) {
     result.setNull();
     return result;
   }

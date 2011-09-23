@@ -15,7 +15,8 @@ Math.QUATER_PI = Math.PI / 4.0;
 /**
  * The precision of the math module.
  */
-Math.PRECISION = 10e-30
+Math.PRECISION = 10e-12
+Math.DIVIDEPRECISION = 10e-200
 /**
  * The factor to project radians to degrees.
  */

@@ -571,11 +571,7 @@ function OGLShaderProgram.genAndBindBuffer(
   }
   
   Integer location = this.getAttributeLocation(buffer.attributeID);
-  if(this.debug){
-    report("genAndBindBuffer " + buffer.name + ":" + buffer.bufferID + " elementCount:" + buffer.elementCount  + " attributeID:" + buffer.attributeID + " location:" + location );
-  }
   if(location!=-1){
-  
     if(this.attributesElementCount != bufferDataSize){
       if(this.attributesElementCount == 0){
         this.attributesElementCount = bufferDataSize;
@@ -589,6 +585,10 @@ function OGLShaderProgram.genAndBindBuffer(
     buffer.genBuffer(bufferData, bufferDataElementSize, bufferDataSize);
     buffer.bindBuffer(location);
     this.loadedAttributes.push(buffer.attributeID);
+  }
+  
+  if(this.debug){
+    report("genAndBindBuffer " + buffer.name + ":" + buffer.bufferID + " elementCount:" + buffer.elementCount  + " attributeID:" + buffer.attributeID + " location:" + location );
   }
 }
 

@@ -106,7 +106,7 @@ FABRIC.SceneGraph.registerNodeType('Transform', {
       };
     }
     
-    transformNode.setupInstanceDrawing = function() {
+    transformNode.setupInstanceDrawing = function(sliced) {
       if(textureNode != undefined)
         return true;
       if(dgnode.getCount() <= 1)
@@ -114,15 +114,27 @@ FABRIC.SceneGraph.registerNodeType('Transform', {
       
       // create the operator to convert the matrices into a texture
       dgnode.addMember('textureMatrix', 'Mat44');
-      dgnode.bindings.append(scene.constructOperator( {
-          operatorName: 'calcGlobalMatrix',
-          srcFile: 'FABRIC_ROOT/SceneGraph/KL/calcGlobalXfo.kl',
-          parameterLayout: [
-            'self.globalXfo<>',
-            'self.textureMatrix<>'
-          ],
-          entryFunctionName: 'calcGlobalMatrix'
-        }));
+      if(!sliced) {
+        dgnode.bindings.append(scene.constructOperator( {
+            operatorName: 'calcGlobalMatrix',
+            srcFile: 'FABRIC_ROOT/SceneGraph/KL/calcGlobalXfo.kl',
+            parameterLayout: [
+              'self.globalXfo<>',
+              'self.textureMatrix<>'
+            ],
+            entryFunctionName: 'calcGlobalMatrix'
+          }));
+      } else {
+        dgnode.bindings.append(scene.constructOperator( {
+            operatorName: 'calcGlobalMatrixSliced',
+            srcFile: 'FABRIC_ROOT/SceneGraph/KL/calcGlobalXfo.kl',
+            parameterLayout: [
+              'self.globalXfo',
+              'self.textureMatrix'
+            ],
+            entryFunctionName: 'calcGlobalMatrixSliced'
+          }));
+      }
 
       textureNode = scene.constructNode('TransformTexture', {transformNode: transformNode.pub});
 

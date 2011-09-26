@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <shader>
-  <name>PhongInstancingMaterial</name>
+  <name>PhongInstancingExtMaterial</name>
   
   <uniforms>
     <uniform name="u_lightPosition" constant="lightPosition" type="Vec3" owner="light"/>
@@ -23,7 +23,6 @@
   <attributes>
     <attribute name="a_position" binding="positions"/>
     <attribute name="a_normal" binding="normals"/>
-    <attribute name="a_instanceID" binding="instanceIDs"/>
   </attributes>
   
   <lights>
@@ -54,7 +53,7 @@
       varying vec3 viewDir;
 
       void main(){
-        int instanceID = a_instanceID;
+        int instanceID = gl_InstanceID;
         int y = (instanceID * 4) / 1024;
         mat4 mvp = mat4(texture2D(u_samplerTransformMap,vec2((instanceID*4+0)&1023,y) * (1.0/1024.0)),
             texture2D(u_samplerTransformMap,vec2((instanceID*4+1)&1023,y) * (1.0/1024.0)),

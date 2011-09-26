@@ -87,14 +87,14 @@ $(document).ready(function() {
 
   var light = scene.constructNode('PointLight', { position: FABRIC.RT.vec3(420.0, 1000.0, 600.0) });
   
-  var gridSize = 100;
-  var numInstances = 50;
+  var gridSize = 150;
+  var numInstances = 2;
   var instanceTransforms = [];
   
   //////////////////////////////////////
   // add some cows
   for (i = 0; i < numInstances; i++) {
-    var scl = Math.random() + 0.5;
+    var scl = Math.random() * 0.5 + 0.5;
     instanceTransforms.push(FABRIC.RT.xfo( {
       tr: FABRIC.RT.vec3(
         (Math.random() - 0.5) * gridSize * 0.95,
@@ -112,14 +112,15 @@ $(document).ready(function() {
   
   scene.constructNode('Instance', {
     geometryNode: scene.importAssetFile('../BasicDemos/Models/cow.obj')['cow'],
-    materialNode: scene.constructNode('PhongInstancingMaterial', {
+    materialNode: scene.constructNode('PhongInstancingExtMaterial', {
       diffuseColor: FABRIC.RT.rgb255(139,69,19),
       lightNode: light,
-      transformTextureNode: slicedTransform.getTransformTexture()
+      transformTextureNode: slicedTransform.getTransformTexture(false)
     }),
     transformNode: slicedTransform
   });
 
+  /*
   //////////////////////////////////////
   // Now add some bunnys
   instanceTransforms = [];
@@ -142,13 +143,14 @@ $(document).ready(function() {
   
   scene.constructNode('Instance', {
     geometryNode: scene.importAssetFile('../BasicDemos/Models/bunny.obj')['bunny'],
-    materialNode: scene.constructNode('PhongInstancingMaterial', {
+    materialNode: scene.constructNode('PhongInstancingExtMaterial', {
       diffuseColor: FABRIC.RT.rgb255(205,192,176),
       lightNode: light,
-      transformTextureNode: slicedTransform.getTransformTexture()
+      transformTextureNode: slicedTransform.getTransformTexture(false)
     }),
     transformNode: slicedTransform
   });
+  */
 
   $('#loadingDialog').dialog({
     modal: true

@@ -149,56 +149,6 @@ FABRIC.SceneGraph.registerNodeType('Image', {
     return imageNode;
   }});
 
-FABRIC.SceneGraph.registerNodeType('TransformTexture', {
-  briefDesc: 'The TransformTexture node is an Image node which can be used for storing matrices into a texture buffer.',
-  detailedDesc: 'The TransformTexture node is an Image node which can be used for storing matrices into a texture buffer. This is used for efficient instance rendering.',
-  parentNodeDesc: 'Texture',
-  optionsDesc: {
-    transformNode: 'A sliced transform node storing all of the transform to store.',
-  },
-  factoryFn: function(options, scene) {
-    scene.assignDefaults(options, {
-      transformNode: undefined
-    });
-    
-    if(!options.transformNode) {
-      throw('You need to specify a transformNode for this constructor!');
-    }
-    if(!options.transformNode.isTypeOf('Transform')) {
-      throw('The specified transformNode is not of type \'Transform\'.');
-    }
-    var transformdgnode = scene.getPrivateInterface(options.transformNode).getDGNode();
-    var textureNode = scene.constructNode('Texture', options);
-    
-    var redrawEventHandler = textureNode.constructEventHandlerNode('Redraw');
-    textureNode.getRedrawEventHandler = function() { return redrawEventHandler; }
-    
-    redrawEventHandler.addMember('oglTexture2D', 'OGLTexture2D', FABRIC.RT.oglMatrixBuffer2D());
-
-    redrawEventHandler.setScope('transform', transformdgnode);
-    redrawEventHandler.preDescendBindings.append(scene.constructOperator({
-      operatorName: 'setNumberOfMatrices',
-      srcFile: 'FABRIC_ROOT/SceneGraph/KL/loadTexture.kl',
-      entryFunctionName: 'setNumberOfMatrices',
-      parameterLayout: [
-        'transform.textureMatrix<>',
-        'shader.shaderProgram'
-      ]
-    }));
-    redrawEventHandler.preDescendBindings.append(scene.constructOperator({
-      operatorName: 'bindTextureMatrix',
-      srcFile: 'FABRIC_ROOT/SceneGraph/KL/loadTexture.kl',
-      entryFunctionName: 'bindTextureMatrix',
-      parameterLayout: [
-        'self.oglTexture2D',
-        'textureStub.textureUnit',
-        'transform.textureMatrix<>'
-      ]
-    }));
-    
-    return textureNode;
-  }});
-
 FABRIC.SceneGraph.registerNodeType('CubeMap', {
   briefDesc: 'The CubeMap node contains 6 Image nodes which can be used to texture with cubic mapping. ',
   detailedDesc: 'The CubeMap node contains 6 Image nodes which can be used to texture with cubic mapping. ' +
@@ -1365,6 +1315,7 @@ FABRIC.SceneGraph.defineEffectFromFile('FlatTextureMaterial', 'FABRIC_ROOT/Scene
 FABRIC.SceneGraph.defineEffectFromFile('FlatUVMaterial', 'FABRIC_ROOT/SceneGraph/Shaders/FlatUVShader.xml');
 FABRIC.SceneGraph.defineEffectFromFile('FlatBlendTextureMaterial', 'FABRIC_ROOT/SceneGraph/Shaders/FlatBlendTextureShader.xml');
 FABRIC.SceneGraph.defineEffectFromFile('PhongInstancingMaterial', 'FABRIC_ROOT/SceneGraph/Shaders/PhongInstancingShader.xml');
+FABRIC.SceneGraph.defineEffectFromFile('PhongInstancingExtMaterial', 'FABRIC_ROOT/SceneGraph/Shaders/PhongInstancingExtShader.xml');
 FABRIC.SceneGraph.defineEffectFromFile('PhongTextureMaterial', 'FABRIC_ROOT/SceneGraph/Shaders/PhongTextureShader.xml');
 FABRIC.SceneGraph.defineEffectFromFile('PhongTextureSimpleMaterial', 'FABRIC_ROOT/SceneGraph/Shaders/PhongTextureShaderSimple.xml');
 FABRIC.SceneGraph.defineEffectFromFile('PhongBumpReflectMaterial', 'FABRIC_ROOT/SceneGraph/Shaders/PhongBumpReflectShader.xml');

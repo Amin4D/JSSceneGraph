@@ -18,4 +18,5 @@ operator viewPortBeginRender(io Integer width, io Integer height, io Color backg
   if(polygonMode != -1) {
     glPolygonMode(GL_FRONT_AND_BACK, polygonMode);
   }
+  fglSetDebuggingEnabled(true);
 }

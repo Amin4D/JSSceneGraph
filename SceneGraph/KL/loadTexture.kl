@@ -123,9 +123,9 @@ operator bindTextureMatrix(
   io Integer textureUnit,
   io Mat44 matrices<>
 ) {
-  if(textureUnit > -1)
+  if(textureUnit > -1) {
     oglTexture2D.bindImageMatrix(matrices, textureUnit);
-  else {
+  } else {
     report('debugging instance matrices: ');
     for(Size i=0;i<10;i++) {
       report('matrix '+i+': '+matrices[i]);

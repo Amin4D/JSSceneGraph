@@ -88,7 +88,7 @@ $(document).ready(function() {
   var light = scene.constructNode('PointLight', { position: FABRIC.RT.vec3(420.0, 1000.0, 600.0) });
   
   var gridSize = 150;
-  var numInstances = 2;
+  var numInstances = 128 * 8;
   var instanceTransforms = [];
   
   //////////////////////////////////////
@@ -115,7 +115,8 @@ $(document).ready(function() {
     materialNode: scene.constructNode('PhongInstancingExtMaterial', {
       diffuseColor: FABRIC.RT.rgb255(139,69,19),
       lightNode: light,
-      transformTextureNode: slicedTransform.getTransformTexture(false)
+      transformTextureNode: slicedTransform.getTransformTexture(false),
+      numInstances: numInstances
     }),
     transformNode: slicedTransform
   });

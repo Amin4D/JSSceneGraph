@@ -79,11 +79,7 @@ function OGLTexture2D.bindImageMatrix(
   io Integer textureUnit
 ) {
   if (this.bufferID == 0 || this.forceRefresh) {
-    //report("creating all matrices...");
-    //Mat44 allMatrices[262144];
-    //for(Size i=0;i<matrices.size();i++)
-    //  allMatrices[i] = matrices[i];
-    this.configure(Size(1024), Size(1024), matrices.data(), Size(1024 * 1024), textureUnit);
+    this.configure(Size(512), Size(512), matrices.data(), Size(512 * 512), textureUnit);
   }
   this.bind(textureUnit);
 }

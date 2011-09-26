@@ -115,8 +115,7 @@ $(document).ready(function() {
     materialNode: scene.constructNode('PhongInstancingExtMaterial', {
       diffuseColor: FABRIC.RT.rgb255(139,69,19),
       lightNode: light,
-      transformTextureNode: slicedTransform.getTransformTexture(false),
-      numInstances: numInstances
+      transformTextureNode: slicedTransform.getTransformTexture(false,true)
     }),
     transformNode: slicedTransform
   });

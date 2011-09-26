@@ -3,7 +3,7 @@
     Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
     -->
   <head> 
-    <title>FABRIC - Bullet Convex Hull</title> 
+    <title>FABRIC - Bullet Round Tower</title> 
     
     <meta charset="iso-8859-1"/>
     <link href="../../../themes/default/style.css" rel="stylesheet" type="text/css" />
@@ -51,7 +51,6 @@
     <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Kinematics.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Bullet.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Parsers/parseCollada.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/Parsers/parseOBJ.js" charset="utf-8"></script>
     
     <script type="text/javascript">
 
@@ -85,8 +84,8 @@ $(document).ready(function() {
 
   // Create a camera to draw the scene from
   var camera = scene.constructNode('TargetCamera', {
-      position: FABRIC.RT.vec3(0, 3, 12).scale(3),
-      target: FABRIC.RT.vec3(0, 2, 0),
+      position: FABRIC.RT.vec3(0, 8, 12).scale(4),
+      target: FABRIC.RT.vec3(0, 6.5, 0),
       nearDistance: 0.1,
       farDistance: 200
     });
@@ -95,39 +94,45 @@ $(document).ready(function() {
 
   var light = scene.constructNode('PointLight', { position: FABRIC.RT.vec3(420.0, 1000.0, 600.0) });
 
-  var phongMaterial = scene.constructNode('PhongMaterial', {
-    diffuseColor: FABRIC.RT.rgb(0.0, 0.0, 1.0),
-    lightNode: light
-  });
-  
   // create a simulation world
   var bulletWorldNode = scene.constructNode('BulletWorldNode');
   
-  // import the cow  
-  var assets = scene.importAssetFile('../BasicDemos/Models/cow.obj');
-
   // add a box shape
-  bulletWorldNode.addShape('Cow',new FABRIC.RT.BulletShape.createConvexHull(assets.cow));
-
+  bulletWorldNode.addShape('Box',new FABRIC.RT.BulletShape.createBox());
+  
+  // create an array of bodies
   var bodies = [];
-  for(var i=0;i<25;i++) {
-    bodies.push(new FABRIC.RT.BulletRigidBody({
-      transform: FABRIC.RT.xfo({
-        tr: FABRIC.RT.vec3(0,3.0 + i * 8.0, 0)
-      }),
-      friction: 0.8,
-      restitution: 0.7
-    }));
+
+  // create a cube to draw it
+  var cuboidNode = scene.constructNode('Cuboid', {
+    length: 2.0,
+    width: 2.0,
+    height: 2.0
+  });
+
+  for(var j=0;j<32;j++) {
+    for(var i=0;i<16;i++) {
+      var ori = FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(0,1,0),j * 0.2 + 2.0 * 3.14 * (i / 16));
+      bodies.push(new FABRIC.RT.BulletRigidBody({
+        transform: FABRIC.RT.xfo({
+          tr: ori.rotateVector(FABRIC.RT.vec3(0,0.5 + j,6.0)),
+          ori: ori,
+          sc: FABRIC.RT.vec3(1.0,0.5,0.5).scale(1.0),
+        }),
+        friction: 0.8,
+        restitution: 0.7
+      }));
+    }
   }
   
   var slicedTransform = scene.constructNode('BulletRigidBodyTransform', {
     bulletWorldNode: bulletWorldNode,
-    shapeName: 'Cow',
+    shapeName: 'Box',
     rigidBody: bodies
   });
 
   scene.constructNode('Instance', {
-    geometryNode: assets.cow,
+    geometryNode: cuboidNode,
     materialNode: scene.constructNode('PhongInstancingExtMaterial', {
       diffuseColor: FABRIC.RT.rgb255(10,10,255),
       lightNode: light,
@@ -139,6 +144,7 @@ $(document).ready(function() {
   $('#loadingDialog').dialog({
     modal: true
   });
+  
   FABRIC.appendOnResolveAsyncTaskCallback(function(label, nbRemaining, doneWeight, totalWeight) {
     $('#loadingProgressBar').progressbar({
       value: (1.0-(doneWeight/totalWeight))*100

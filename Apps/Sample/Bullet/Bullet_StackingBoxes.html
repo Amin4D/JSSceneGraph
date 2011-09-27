@@ -76,7 +76,7 @@ $(document).ready(function() {
   
   var scene = FABRIC.SceneGraph.createScene();
   var viewport = scene.constructNode('Viewport', {
-    enableRaycasting: false,
+    enableRaycasting: true,
     windowElement: document.getElementById('FabricContainer')
   });
   
@@ -130,6 +130,14 @@ $(document).ready(function() {
     rigidBody: bodies
   });
 
+  // create a force manipulator
+  var manipulatorNode = scene.constructNode('BulletForceManipulator', {
+    bulletWorldNode: bulletWorldNode,
+    cameraNode: camera,
+    radius: 3.0,
+    useFalloff: false
+  });
+
   scene.constructNode('Instance', {
     geometryNode: cuboidNode,
     materialNode: scene.constructNode('PhongInstancingExtMaterial', {
@@ -137,7 +145,8 @@ $(document).ready(function() {
       lightNode: light,
       transformTextureNode: slicedTransform.getTransformTexture(true)
     }),
-    transformNode: slicedTransform
+    transformNode: slicedTransform,
+    enableRaycasting: true
   });
   
   $('#loadingDialog').dialog({

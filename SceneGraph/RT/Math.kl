@@ -11,11 +11,30 @@ const Scalar RAD_TO_DEG = 0.017453292519943295;
 const Scalar DIVIDEPRECISION = 10e-20;
 const Scalar PRECISION = 10e-6;
 
-function Scalar Math.clamp(in Scalar val, in Scalar minval, in Scalar maxval){
+function Scalar Math_radToDeg(in Scalar val){
+  return val * RAD_TO_DEG;
+}
+
+function Scalar Math_degToRad(in Scalar val){
+  return val * DEG_TO_RAD;
+}
+
+function Scalar Math_clamp(in Scalar val, in Scalar minval, in Scalar maxval){
   return (val < minval ? minval : (val > maxval ? maxval : val));
 }
 
-function Scalar Math.lerp(in Scalar val1, in Scalar val2, in Scalar t){
+function Scalar Math_linearInterpolate(in Scalar val1, in Scalar val2, in Scalar t){
   return val1 + ((val2 - val1) * t);
 }
 
+function Math_reportWarning(in String desc){
+  report("Math.Warning: " + desc);
+}
+
+function Boolean Math_badDivisor(in Scalar s){
+  return s < DIVIDEPRECISION && s > -DIVIDEPRECISION;
+}
+
+function Math_reportBadDivisor(in Scalar s, in String contextDesc){
+  Math_reportWarning( contextDesc + ": bad divisor: " + s );
+}

@@ -11,20 +11,43 @@ FABRIC.RT = FABRIC.RT ? FABRIC.RT : {};
 Math.TWO_PI = Math.PI * 2.0;
 Math.HALF_PI = Math.PI / 2.0;
 Math.QUATER_PI = Math.PI / 4.0;
-
-/**
- * The precision of the math module.
- */
+Math.DEG_TO_RAD = 57.29577951308232;
+Math.RAD_TO_DEG = 0.017453292519943295;
 Math.PRECISION = 10e-12
 Math.DIVIDEPRECISION = 10e-200
-/**
- * The factor to project radians to degrees.
+
+/*
+ * Convert between radians and degrees
  */
-Math.radToDeg = function(val){ return val * (180.0 / Math.PI); };
-/**
- * The factor to project degrees to radians.
- */
-Math.degToRad = function(val){ return val * (Math.PI / 180.0); };
+Math.radToDeg = function(val){ return val * Math.RAD_TO_DEG; };
+Math.degToRad = function(val){ return val * Math.DEG_TO_RAD; };
+
+Math.clamp = function(val, minval, maxval){
+  return (val < minval ? minval : (val > maxval ? maxval : val));
+}
+
+Math.linearInterpolate = function (val1, val2, t){
+  return val1 + ((val2 - val1) * t);
+}
+
+//Math.verboseLogFunction: Set this to a 'log' function such as console.log() to enable verbose
+
+Math.reportWarning = function(desc) {
+  if(Math.verboseLogFunction !== undefined) {
+    Math.verboseLogFunction("Math.Warning: " + desc);
+  }
+}
+
+Math.badDivisor = function(s){
+  return s < Math.DIVIDEPRECISION && s > -Math.DIVIDEPRECISION;
+}
+
+Math.checkDivisor = function(s, contextDesc){
+  if(Math.verboseLogFunction !== undefined && Math.badDivisor(s)) {
+    Math.reportWarning(contextDesc + ': bad divisor: ' + s);
+  }
+}
+
 /**
  * Function to test if a given value is a scalar.
  * @param {value} value The value to validate.

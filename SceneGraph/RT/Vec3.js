@@ -3,11 +3,7 @@
 // Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
 //
 
-/**
- * Function to determine if an object is a valid vec3.
- * @param {object} vec3 The vec3 object to validate.
- * @return {boolean} true if the given object is a valid vec3.
- */
+//determine if an object is a valid Vec3.
 FABRIC.RT.isVec3 = function(vec3) {
   return typeof vec3 === 'object' &&
     'x' in vec3 &&
@@ -18,13 +14,6 @@ FABRIC.RT.isVec3 = function(vec3) {
     typeof vec3.z === 'number';
 };
 
-/**
- * Constructor for a vec3 object.
- * @constructor
- * @param {number} x The x component.
- * @param {number} y The y component.
- * @param {number} z The z component.
- */
 FABRIC.RT.Vec3 = function(x, y, z) {
   if (typeof x === 'number' && typeof y === 'number' && typeof z === 'number') {
     this.x = x;
@@ -44,36 +33,42 @@ FABRIC.RT.Vec3 = function(x, y, z) {
   else throw'new Vec3: invalid arguments';
   };
 
-/**
- * Overloaded Constructor for a vec3 object.
- * @param {number} x The x component.
- * @param {number} y The y component.
- * @param {number} z The z component.
- * @return {object} The created vec3 object.
- */
-FABRIC.RT.vec3 = function(x, y, z) {
-  return new FABRIC.RT.Vec3(x, y, z);
-};
-
 FABRIC.RT.Vec3.prototype = {
+
   set: function(x, y, z) {
-    this.x = x; this.y = y; this.z = z;
+    if (typeof x === 'number') {
+      this.x = x;
+      this.y = y;
+      this.z = z;
+    } else {
+      this.x = x.x;
+      this.y = x.y;
+      this.z = x.z;
+    }
     return this;
-  },
-  // Returns true if the vector is equal to the argument
-  eql: function(v) {
-    return (FABRIC.RT.isVec3(v) &&
-      (Math.abs(this.x - v.x) < Math.PRECISION) &&
-      (Math.abs(this.y - v.y) < Math.PRECISION) &&
-      (Math.abs(this.z - v.z) < Math.PRECISION));
   },
 
-  scale: function(s) {
-    return new FABRIC.RT.Vec3(this.x * s, this.y * s, this.z * s);
+  setNull: function(x, y, z) {
+    this.x = 0; this.y = 0; this.z = 0;
   },
-  scaleInPlace: function(s) {
-    this.x *= s; this.y *= s; this.z *= s;
-    return this;
+
+  equal: function(v) {
+    var result = //JS bug: if the condition is directly returned it is wrong (??)
+      this.x === v.x &&
+      this.y === v.y &&
+      this.z === v.z;
+    return result;
+  },
+
+  almostEqual: function(v, precision) {
+    if (precision === undefined) {
+      precision = Math.PRECISION;
+    }
+    var result = //JS bug: if the condition is directly returned it is wrong (??)
+      (Math.abs(this.x - v.x) < precision) &&
+      (Math.abs(this.y - v.y) < precision) &&
+      (Math.abs(this.z - v.z) < precision);
+    return result;
   },
 
   // Returns the result of adding the argument to the vector
@@ -81,93 +76,45 @@ FABRIC.RT.Vec3.prototype = {
     return new FABRIC.RT.Vec3(this.x + v.x, this.y + v.y, this.z + v.z);
   },
 
-  addInPlace: function(v) {
-    this.x += v.x; this.y += v.y; this.z += v.z;
-    return this;
-  },
-
   subtract: function(v) {
     return new FABRIC.RT.Vec3(this.x - v.x, this.y - v.y, this.z - v.z);
   },
 
-  subInPlace: function(v) {
-    this.x -= v.x; this.y -= v.y; this.z -= v.z;
-    return this;
-  },
-
   multiply: function(v) {
-    if (typeof v == 'number') {
-      return new FABRIC.RT.Vec3(this.x * v, this.y * v, this.z * v);
-    }
-    else if (FABRIC.RT.isVec3(v)) {
-      return new FABRIC.RT.Vec3(this.x * v.x, this.y * v.y, this.z * v.z);
-    }
-    else {
-      throw'Incorrect param type for Multiply';
-      }
+    return new FABRIC.RT.Vec3(this.x * v.x, this.y * v.y, this.z * v.z);
   },
 
-  mulInPlace: function(v) {
-    if (typeof v == 'number') {
-      this.x *= v; this.y *= v; this.z *= v;
-    }
-    else if (FABRIC.RT.isVec3(v)) {
-      this.x *= v.x; this.y *= v.y; this.z *= v.z;
-    }
-    else {
-      throw'Incorrect param type for Multiply';
-      }
-    return this;
+  multiplyScalar: function(s) {
+    return new FABRIC.RT.Vec3(this.x * s, this.y * s, this.z * s);
   },
 
   divide: function(v) {
-    return this.multiply(1.0 / v);
+    if( Math.verboseLogFunction ) {
+      Math.checkDivisor(v.x, 'Vec3.divide v.x');
+      Math.checkDivisor(v.y, 'Vec3.divide v.y');
+      Math.checkDivisor(v.z, 'Vec3.divide v.z');
+    }
+    return new FABRIC.RT.Vec3(this.x / v.x, this.y / v.y, this.z / v.z);
   },
 
-  divInPlace: function(v) {
-    return this.mulInPlace(1.0 / v);
+  divideScalar: function(s) {
+    Math.checkDivisor(s, 'Vec3.divideScalar');
+    return this.multiplyScalar(1.0 / s);
   },
 
   negate: function(v) {
     return new FABRIC.RT.Vec3(-this.x, - this.y, - this.z);
   },
 
-  negateInPlace: function(v) {
-    this.x = - this.x;
-    this.y = - this.y;
-    this.z = - this.z;
-  },
-
   invert: function(v) {
-    return new FABRIC.RT.Vec3(
-      this.x == 0.0 ? 0.0 : 1.0 / this.x,
-      this.y == 0.0 ? 0.0 : 1.0 / this.y,
-      this.z == 0.0 ? 0.0 : 1.0 / this.z
-    );
+    if( Math.verboseLogFunction ) {
+      Math.checkDivisor(this.x, 'Vec3.invert this.x');
+      Math.checkDivisor(this.y, 'Vec3.invert this.y');
+      Math.checkDivisor(this.z, 'Vec3.invert this.z');
+    }
+    return new FABRIC.RT.Vec3(1.0/this.x, 1.0/this.y, 1.0/this.z);
   },
 
-  invertInPlace: function(v) {
-    this.x == 0.0 ? 0.0 : 1.0 / this.x,
-    this.y == 0.0 ? 0.0 : 1.0 / this.y,
-    this.z == 0.0 ? 0.0 : 1.0 / this.z;
-  },
-
-  absolute: function(v) {
-    return new FABRIC.RT.Vec3(
-      this.x < 0.0 ? - this.x : this.x,
-      this.y < 0.0 ? - this.y : this.y,
-      this.z < 0.0 ? - this.z : this.z
-    );
-  },
-
-  absoluteInPlace: function(v) {
-    this.x < 0.0 ? - this.x : this.x;
-    this.y < 0.0 ? - this.y : this.y;
-    this.z < 0.0 ? - this.z : this.z;
-  },
-
-  // Returns the scalar product of the vector with the argument
-  // Both vectors must have equal dimensionality
   dot: function(v) {
     return (this.x * v.x) + (this.y * v.y) + (this.z * v.z);
   },
@@ -178,19 +125,8 @@ FABRIC.RT.Vec3.prototype = {
     (this.x * v.y) - (this.y * v.x));
   },
 
-  getAngleTo: function(v) {
-    var acosAngle = this.unit().dot(v.unit());
-    return Math.acos(Math.min(Math.max(acosAngle,-1.0), 1.0));
-  },
-  dist: function(other) {
-    return this.subtract(other).length();
-  },
-
   length: function() {
     return Math.sqrt(this.dot(this));
-  },
-  norm: function() {
-    return this.length();
   },
 
   lengthSquared: function() {
@@ -199,22 +135,46 @@ FABRIC.RT.Vec3.prototype = {
 
   // Return a normalized form of this vector
   unit: function() {
-    return this.divide(this.length());
-  },
-
-  setUnit: function() {
-    this.divInPlace(this.length());
-    return this;
-  },
-
-  // Normalized this vector and returns the previous length
-  normalize: function() {
     var len = this.length();
-    if (len === 0) {
-      return 0;
-    }
-    this.mulInPlace(1.0 / len);
+    Math.checkDivisor(len, 'Vec3.unit');
+    return this.divideScalar(len);
+  },
+
+  //Note: setUnit returns the previous length
+  setUnit: function() {
+    var len = this.length();
+    Math.checkDivisor(len, 'Vec3.setUnit');
+    var invLen = 1.0 / len;
+    this.x *= invLen;
+    this.y *= invLen;
+    this.z *= invLen;
     return len;
+  },
+
+  clamp: function(min, max) {
+    return new FABRIC.RT.Vec3(
+      (this.x < min.x ? min.x : (this.x > max.x ? max.x : this.x)),
+      (this.y < min.y ? min.y : (this.y > max.y ? max.y : this.y)),
+      (this.z < min.z ? min.z : (this.z > max.z ? max.z : this.z))
+    );
+  },
+
+  //Note: expects both vectors to be units (else use angleTo)
+  unitsAngleTo: function(v) {
+    var acosAngle = Math.clamp(this.dot(v), -1.0, 1.0);
+    return Math.acos(acosAngle);
+  },
+
+  angleTo: function(v) {
+    return this.unit().unitsAngleTo(v.unit());
+  },
+
+  distanceTo: function(other) {
+    return this.subtract(other).length();
+  },
+
+  linearInterpolate: function(other, s) {
+    return this.add(other.subtract(this).multiplyScalar(s));
   },
 
   // Returns a copy of the vector
@@ -229,28 +189,10 @@ FABRIC.RT.Vec3.prototype = {
   }
 };
 
-/**
- * Overloaded Constructor for a vec3
- * @return {object} A preset vec3 for the origin.
- */
+//Vec3 constants
 FABRIC.RT.Vec3.origin = new FABRIC.RT.Vec3(0, 0, 0);
-
-/**
- * Overloaded Constructor for a vec3
- * @return {object} A preset vec3 for the x axis.
- */
 FABRIC.RT.Vec3.xAxis = new FABRIC.RT.Vec3(1, 0, 0);
-
-/**
- * Overloaded Constructor for a vec3
- * @return {object} A preset vec3 for the y axis.
- */
 FABRIC.RT.Vec3.yAxis = new FABRIC.RT.Vec3(0, 1, 0);
-
-/**
- * Overloaded Constructor for a vec3
- * @return {object} A preset vec3 for the z axis.
- */
 FABRIC.RT.Vec3.zAxis = new FABRIC.RT.Vec3(0, 0, 1);
 
 // distanceFromLineToLine():

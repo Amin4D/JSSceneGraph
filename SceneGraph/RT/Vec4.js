@@ -3,11 +3,7 @@
 // Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
 //
 
-/**
- * Function to determine if an object is a valid vec4.
- * @param {object} vec4 The vec4 object to validate.
- * @return {boolean} true if the given object is a valid vec4.
- */
+//determine if an object is a valid Vec4.
 FABRIC.RT.isVec4 = function(vec4) {
   return typeof vec4 === 'object' &&
     'x' in vec4 &&
@@ -45,20 +41,18 @@ FABRIC.RT.Vec4 = function(x, y, z, t) {
 FABRIC.RT.Vec4.prototype = {
 
   set: function(x, y, z, t) {
-    if (typeof x === 'number')
-    {
+    if (typeof x === 'number') {
       this.x = x;
       this.y = y;
       this.z = z;
       this.t = t;
-    }
-    else
-    {
+    } else {
       this.x = x.x;
       this.y = x.y;
       this.z = x.z;
       this.t = x.t;
     }
+    return this;
   },
 
   setNull: function(x, y, z, t) {
@@ -66,19 +60,19 @@ FABRIC.RT.Vec4.prototype = {
   },
 
   equal: function(v) {
-    return (FABRIC.RT.isVec4(v) &&
+    var result = //JS bug: if the condition is directly returned it is wrong (??)
       this.x === v.x &&
       this.y === v.y &&
       this.z === v.z &&
-      this.t === v.t);
+      this.t === v.t;
+    return result;
   },
 
   almostEqual: function(v, precision) {
     if (precision === undefined) {
       precision = Math.PRECISION;
     }
-    var result = 
-    //return //??Returning this directly outputs the wrong answer?
+    var result = //JS bug: if the condition is directly returned it is wrong (??)
       (Math.abs(this.x - v.x) < precision) &&
       (Math.abs(this.y - v.y) < precision) &&
       (Math.abs(this.z - v.z) < precision) &&
@@ -104,15 +98,32 @@ FABRIC.RT.Vec4.prototype = {
   },
 
   divide: function(v) {
+    if( Math.verboseLogFunction ) {
+      Math.checkDivisor(v.x, 'Vec4.divide v.x');
+      Math.checkDivisor(v.y, 'Vec4.divide v.y');
+      Math.checkDivisor(v.z, 'Vec4.divide v.z');
+      Math.checkDivisor(v.t, 'Vec4.divide v.t');
+    }
     return new FABRIC.RT.Vec4(this.x / v.x, this.y / v.y, this.z / v.z, this.t / v.t);
   },
 
-  divideScalar: function(v) {
-    return this.multiply(1.0 / v);
+  divideScalar: function(s) {
+    Math.checkDivisor(s, 'Vec4.divideScalar');
+    return this.multiplyScalar(1.0 / s);
   },
 
   negate: function(v) {
     return new FABRIC.RT.Vec4(-this.x, - this.y, - this.z, - this.t);
+  },
+
+  invert: function(v) {
+    if( Math.verboseLogFunction ) {
+      Math.checkDivisor(this.x, 'Vec4.invert this.x');
+      Math.checkDivisor(this.y, 'Vec4.invert this.y');
+      Math.checkDivisor(this.z, 'Vec4.invert this.z');
+      Math.checkDivisor(this.t, 'Vec4.invert this.t');
+    }
+    return new FABRIC.RT.Vec4(1.0/this.x, 1.0/this.y, 1.0/this.z, 1.0/this.t);
   },
 
   dot: function(v) {
@@ -129,30 +140,46 @@ FABRIC.RT.Vec4.prototype = {
 
   unit: function() {
     var len = this.length();
-    if (len > Math.DIVIDEPRECISION) {
-      return this.divideScalar(1.0/len);
-    }
-    return this.clone();
+    Math.checkDivisor(len, 'Vec4.unit');
+    return this.divideScalar(len);
   },
 
+  //Note: setUnit returns the previous length
   setUnit: function() {
     var len = this.length();
-    if (len > Math.DIVIDEPRECISION) {
-      var invLen = 1.0 / len;
-      this.x *= invLen;
-      this.y *= invLen;
-      this.z *= invLen;
-      this.t *= invLen;
-    }
+    Math.checkDivisor(len, 'Vec4.setUnit');
+    var invLen = 1.0 / len;
+    this.x *= invLen;
+    this.y *= invLen;
+    this.z *= invLen;
+    this.t *= invLen;
     return len;
   },
 
-  //expects that both vectors are unit
-  unitsGetAngleTo: function(v) {
-    return Math.acos(this.dot(v));
+  clamp: function(min, max) {
+    return new FABRIC.RT.Vec4(
+      (this.x < min.x ? min.x : (this.x > max.x ? max.x : this.x)),
+      (this.y < min.y ? min.y : (this.y > max.y ? max.y : this.y)),
+      (this.z < min.z ? min.z : (this.z > max.z ? max.z : this.z)),
+      (this.t < min.t ? min.t : (this.t > max.t ? max.t : this.t))
+    );
   },
 
-  lerp: function(s) {
+  //Note: expects both vectors to be units (else use angleTo)
+  unitsAngleTo: function(v) {
+    var acosAngle = Math.clamp(this.dot(v), -1.0, 1.0);
+    return Math.acos(acosAngle);
+  },
+
+  angleTo: function(v) {
+    return this.unit().unitsAngleTo(v.unit());
+  },
+
+  distanceTo: function(other) {
+    return this.subtract(other).length();
+  },
+
+  linearInterpolate: function(other, s) {
     return this.add(other.subtract(this).multiplyScalar(s));
   },
 
@@ -204,6 +231,7 @@ FABRIC.RT.Vec4.prototype = {
 };
 
 //Vec4 constants
+FABRIC.RT.Vec4.origin = new FABRIC.RT.Vec4(0, 0, 0, 0);
 FABRIC.RT.Vec4.xAxis = new FABRIC.RT.Vec4(1, 0, 0, 0);
 FABRIC.RT.Vec4.yAxis = new FABRIC.RT.Vec4(0, 1, 0, 0);
 FABRIC.RT.Vec4.zAxis = new FABRIC.RT.Vec4(0, 0, 1, 0);

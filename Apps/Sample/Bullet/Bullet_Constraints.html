@@ -3,7 +3,7 @@
     Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
     -->
   <head> 
-    <title>FABRIC - Bullet Round Tower</title> 
+    <title>FABRIC - Bullet Constraints</title> 
     
     <meta charset="iso-8859-1"/>
     <link href="../../../themes/default/style.css" rel="stylesheet" type="text/css" />
@@ -85,8 +85,8 @@ $(document).ready(function() {
 
   // Create a camera to draw the scene from
   var camera = scene.constructNode('TargetCamera', {
-      position: FABRIC.RT.vec3(0, 8, 12).scale(4),
-      target: FABRIC.RT.vec3(0, 6.5, 0),
+      position: FABRIC.RT.vec3(0, 3, 12).scale(2),
+      target: FABRIC.RT.vec3(0, 0, 0),
       nearDistance: 0.1,
       farDistance: 200
     });
@@ -99,43 +99,56 @@ $(document).ready(function() {
   var bulletWorldNode = scene.constructNode('BulletWorldNode');
   
   // add a box shape
-  bulletWorldNode.addShape('Box',new FABRIC.RT.BulletShape.createBox());
+  var radius = 0.5;
+  bulletWorldNode.addShape('Sphere',new FABRIC.RT.BulletShape.createSphere(radius));
   
   // create an array of bodies
   var bodies = [];
 
   // create a cube to draw it
-  var cuboidNode = scene.constructNode('Cuboid', {
-    length: 2.0,
-    width: 2.0,
-    height: 2.0
+  var sphereNode = scene.constructNode('Sphere', {
+    radius: radius
   });
 
-  for(var j=0;j<32;j++) {
-    for(var i=0;i<16;i++) {
-      var ori = FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(0,1,0),j * 0.2 + 2.0 * 3.14 * (i / 16));
-      bodies.push(new FABRIC.RT.BulletRigidBody({
-        transform: FABRIC.RT.xfo({
-          tr: ori.rotateVector(FABRIC.RT.vec3(0,0.5 + j,6.0)),
-          ori: ori,
-          sc: FABRIC.RT.vec3(1.0,0.5,0.5).scale(1.0),
-        }),
-        friction: 0.8,
-        restitution: 0.7
-      }));
-    }
+  // compute the transforms
+  var numInstances = 128*4;
+  for(var i=0;i<numInstances;i++) {
+    bodies.push(new FABRIC.RT.BulletRigidBody({
+      transform: FABRIC.RT.xfo({
+        tr: FABRIC.RT.vec3(0,3.0 + i * 2.0 * radius,0),
+      }),
+      friction: 0.8,
+      restitution: 0.7,
+    }));
   }
-  
+
+  // create a single sliced transform node  
   var slicedTransform = scene.constructNode('BulletRigidBodyTransform', {
+    name: 'Spheres',
     bulletWorldNode: bulletWorldNode,
-    shapeName: 'Box',
+    shapeName: 'Sphere',
     rigidBody: bodies
   });
+  
+  // create a constraint list, between all spheres
+  var constraints = [];
+  for(var i=0;i<bodies.length-1;i++) {
+    constraints.push(FABRIC.RT.BulletConstraint.createPoint2Point({
+      indexA: i,
+      indexB: i+1,
+      pivotA: FABRIC.RT.xfo({tr: FABRIC.RT.vec3(0,radius,0)}),
+      pivotB: FABRIC.RT.xfo({tr: FABRIC.RT.vec3(0,-radius,0)}),
+    }));
+  }
+  
+  // push the constraints to the world
+  bulletWorldNode.addConstraint('BallSockets',constraints,'Spheres','Spheres');
 
+  // create an instance to draw the spheres
   scene.constructNode('Instance', {
-    geometryNode: cuboidNode,
+    geometryNode: sphereNode,
     materialNode: scene.constructNode('PhongInstancingExtMaterial', {
-      diffuseColor: FABRIC.RT.rgb255(10,10,255),
+      diffuseColor: FABRIC.RT.rgb255(220,220,220),
       lightNode: light,
       transformTextureNode: slicedTransform.getTransformTexture(true)
     }),

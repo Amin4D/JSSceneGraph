@@ -149,6 +149,34 @@ FABRIC.SceneGraph.registerNodeType('BulletWorldNode', {
       
       return dataCopy.pub;
     }
+    
+    bulletWorldNode.pub.addConstraint = function(constraintName,constraint,bodyNameA,bodyNameB) {
+      if(constraintName == undefined)
+        throw('You need to specify a constraintName when calling addConstraint!');
+      if(constraint == undefined)
+        throw('You need to specify a constraint when calling addConstraint!');
+      if(bodyNameA == undefined)
+        throw('You need to specify a bodyNameA when calling addConstraint!');
+      if(bodyNameB == undefined)
+        throw('You need to specify a bodyNameB when calling addConstraint!');
+        
+      // check if we are dealing with an array
+      var isArray = constraint.constructor.toString().indexOf("Array") != -1;
+      rbddgnode.addMember(constraintName, 'BulletConstraint[]', isArray ? constraint : [constraint]);
+
+      // create rigid body operator
+      rbddgnode.bindings.append(scene.constructOperator({
+        operatorName: 'create'+constraintName+'Constraint',
+        parameterLayout: [
+          'simulation.world',
+          'self.'+constraintName,
+          'self.'+bodyNameA,
+          'self.'+bodyNameB
+        ],
+        entryFunctionName: 'createBulletConstraint',
+        srcFile: 'FABRIC_ROOT/SceneGraph/KL/bullet.kl'
+      }));
+    }
 
     // create the ground plane
     if(options.createGroundPlane) {
@@ -232,7 +260,7 @@ FABRIC.SceneGraph.registerNodeType('BulletRigidBodyTransform', {
     }
     
     // create the transform node
-    var rigidBodyTransformNode = scene.constructNode('Transform');
+    var rigidBodyTransformNode = scene.constructNode('Transform', {name: options.name});
 
     // create the rigid body on the world
     var bodyName = rigidBodyTransformNode.pub.getName();

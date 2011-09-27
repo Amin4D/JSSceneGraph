@@ -51,3 +51,11 @@ function BulletWorld.addSoftBody(io BulletSoftBody body) {
 function BulletWorld.removeSoftBody(io BulletSoftBody body) {
   FabricBULLET_World_RemoveSoftBody(this.pointer,body.pointer);
 }
+
+function BulletWorld.addConstraint(io BulletConstraint constraint) {
+  FabricBULLET_World_AddConstraint(this.pointer,constraint.pointer);
+}
+
+function BulletWorld.removeConstraint(io BulletConstraint constraint) {
+  FabricBULLET_World_RemoveConstraint(this.pointer,constraint.pointer);
+}

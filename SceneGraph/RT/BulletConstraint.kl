@@ -1,0 +1,21 @@
+
+//
+// Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
+//
+use FabricBULLET;
+use BulletRigidBody;
+
+function BulletConstraint.create(io Boolean result, io BulletRigidBody bodiesA[], io BulletRigidBody bodiesB[]) {
+  if(!this.pointer) {
+    this.bodyPointerA = bodiesA[this.indexA].pointer;
+    this.bodyPointerB = bodiesA[this.indexB].pointer;
+    FabricBULLET_Constraint_Create(this.pointer,this.bodyPointerA,this.bodyPointerB,this.type,this.pivotA,this.pivotB,this.parameters);
+    result = true;
+  }
+  else
+    result = false;
+}
+
+function BulletConstraint.delete() {
+  FabricBULLET_Constraint_Delete(this.pointer);
+}

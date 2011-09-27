@@ -40,7 +40,7 @@ FABRIC.RT.BulletShape.createBox = function(halfExtends) {
 
 FABRIC.RT.BulletShape.createSphere = function(radius) {
   if(radius == undefined) {
-    radius = 0.5;
+    radius = 1.0;
   }
   var shape = new FABRIC.RT.BulletShape();
   shape.type = FABRIC.RT.BulletShape.BULLET_SPHERE_SHAPE;

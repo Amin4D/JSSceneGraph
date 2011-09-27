@@ -8,6 +8,7 @@ use BulletShape;
 use BulletRigidBody;
 use BulletSoftBody;
 use BulletWorld;
+use BulletConstraint;
 
 operator createBulletWorld(
   io BulletWorld world
@@ -90,4 +91,19 @@ operator getBulletSoftBodyPosition(
   io Vec3 normal,
 ){
   body.getPosition(index,position,normal);
+}
+
+operator createBulletConstraint(
+  io BulletWorld world,
+  io BulletConstraint constraint[],
+  io BulletRigidBody bodiesA[],
+  io BulletRigidBody bodiesB[]
+){
+  Boolean result;
+  for(Size i=0;i<constraint.size();i++) {
+    constraint[i].create(result,bodiesA,bodiesB);
+    if(result) {
+      world.addConstraint(constraint[i]);  
+    }
+  }
 }

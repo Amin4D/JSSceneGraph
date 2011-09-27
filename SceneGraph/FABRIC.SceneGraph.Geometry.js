@@ -728,9 +728,11 @@ FABRIC.SceneGraph.registerNodeType('Instance', {
         options.enableRaycasting &&
         geometryNode.getRayIntersectionOperator
       ) {
-        
         // check if this is a sliced transform node
-        if(transformNode.getDGNode().getCount() && transformNode.getRaycastEventHandler) {
+        if(transformNode.getDGNode().getCount() > 1 && transformNode.getRaycastEventHandler) {
+          // In some cases, the transform node can provide raycasting services.
+          // For example, the bullet Transfrom node is associated with a geometry,
+          // and can provide the raycast. 
           scene.getSceneRaycastEventHandler().appendChildEventHandler(transformNode.getRaycastEventHandler());
         } else {
           var raycastOperator = geometryNode.getRayIntersectionOperator(transformNodeMember);

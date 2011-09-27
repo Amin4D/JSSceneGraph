@@ -140,9 +140,9 @@ $(document).ready(function() {
         $('#infoContent').html("This demo uses OpenGL 3.2 features such as 'GL_EXT_draw_instanced'.\n\nIt appears that your graphics card does not support geometry instancing. This demo is running in compatibility mode with greatly reduced complexity");
   
         var materialNode = scene.constructNode('PhongMaterial', {
-              diffuseColor: FABRIC.RT.rgb255(10,10,255),
-              lightNode: light
-            });
+          diffuseColor: FABRIC.RT.rgb255(10,10,255),
+          lightNode: light
+        });
   
         for(var i=0;i<128;i++) {
           var nonslicedTransform = scene.constructNode('BulletRigidBodyTransform', {
@@ -197,66 +197,65 @@ $(document).ready(function() {
         });
       }
       
-    
-    FABRIC.appendOnResolveAsyncTaskCallback(function(label, nbRemaining, doneWeight, totalWeight) {
-    $('#loadingProgressBar').progressbar({
-      value: (1.0-(doneWeight/totalWeight))*100
-    });
-    
-    if (nbRemaining===0) {
-      var errors = scene.getErrors();
-      if (errors.length > 0) {
-        throw (errors.toString());
-      }
-
-      $('#loadingDialog').dialog('close');
-
-      $('#play').button()
-        .click(function() {
-          var options;
-          if ($(this).text() == 'Play') {
-            $(this).button('option', {
-              label: 'Pause',
-              icons: {
-                primary: 'ui-icon-pause'
-              }
-            });
-            scene.animation.play();
-          } else {
-            $(this).button('option', {
+      
+      FABRIC.appendOnResolveAsyncTaskCallback(function(label, nbRemaining, doneWeight, totalWeight) {
+      $('#loadingProgressBar').progressbar({
+        value: (1.0-(doneWeight/totalWeight))*100
+      });
+      
+      if (nbRemaining===0) {
+        var errors = scene.getErrors();
+        if (errors.length > 0) {
+          throw (errors.toString());
+        }
+  
+        $('#loadingDialog').dialog('close');
+  
+        $('#play').button()
+          .click(function() {
+            var options;
+            if ($(this).text() == 'Play') {
+              $(this).button('option', {
+                label: 'Pause',
+                icons: {
+                  primary: 'ui-icon-pause'
+                }
+              });
+              scene.animation.play();
+            } else {
+              $(this).button('option', {
+                label: 'Play',
+                icons: {
+                  primary: 'ui-icon-play'
+                }
+              });
+              scene.animation.pause();
+            }
+          });
+        
+        $('#step').button()
+          .click(function() {
+            scene.animation.step();
+          });
+  
+        $('#reset').button()
+          .click(function() {
+            $('#play').button('option', {
               label: 'Play',
               icons: {
                 primary: 'ui-icon-play'
               }
             });
             scene.animation.pause();
-          }
-        });
-      
-      $('#step').button()
-        .click(function() {
-          scene.animation.step();
-        });
-
-      $('#reset').button()
-        .click(function() {
-          $('#play').button('option', {
-            label: 'Play',
-            icons: {
-              primary: 'ui-icon-play'
-            }
+            viewport.redraw();
+            scene.animation.setTime(0);
+            viewport.redraw();
           });
-          scene.animation.pause();
-          viewport.redraw();
-          scene.animation.setTime(0);
-          viewport.redraw();
-        });
-        
-    //  scene.animation.play();
-      viewport.show();
-      viewport.redraw();
-      return true;
-    }});
+          
+        viewport.show();
+        viewport.redraw();
+        return true;
+      }});
     
       return true;
     }});

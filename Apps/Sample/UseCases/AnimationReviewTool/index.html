@@ -1,0 +1,899 @@
+<html xmlns="http://www.w3.org/1999/xhtml"> 
+  <!--
+    Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
+    -->
+  <head> 
+    <title>FABRIC - Alembic Animation Review Tool</title> 
+    
+    <meta charset="iso-8859-1"/>
+    <link href="../../../../themes/default/style.css" rel="stylesheet" type="text/css" />
+    <link href="../../../../themes/default/viewer.css" rel="stylesheet" type="text/css" />
+    
+    <script type="text/javascript" src="../../../../ThirdParty/jQuery/jquery-1.4.2.min.js"></script>
+    <script type="text/javascript" src="../../../../ThirdParty/jQuery/jquery-ui-1.8.5.custom.min.js"></script>
+    <script type="text/javascript" src="../../../../ThirdParty/jQuery/colorpicker/js/colorpicker.js"></script>
+
+    <link type="text/css" href="../../../../ThirdParty/jQuery/css/vader/jquery-ui-1.8.5.custom.css" rel="stylesheet" />
+    <link href="../../../../ThirdParty/jQuery/colorpicker/css/colorpicker.css" rel="stylesheet" type="text/css" />
+
+    <script type="text/javascript" src="../../../../Core/FABRIC.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../../SceneGraph/RT/Math.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../../SceneGraph/RT/Vec2.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../../SceneGraph/RT/Vec3.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../../SceneGraph/RT/Vec4.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../../SceneGraph/RT/Mat22.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../../SceneGraph/RT/Mat33.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../../SceneGraph/RT/Mat44.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../../SceneGraph/RT/Quat.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../../SceneGraph/RT/Xfo.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../../SceneGraph/RT/RGBA.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../../SceneGraph/RT/Color.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../../SceneGraph/RT/Euler.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../../SceneGraph/RT/OGLShaderProgram.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../../SceneGraph/RT/OGLTexture2D.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../../SceneGraph/RT/OGLBuffer.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../../SceneGraph/RT/OGLRenderTarget.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../../SceneGraph/RT/Ray.js" charset="utf-8"></script>
+
+    <script type="text/javascript" src="../../../../SceneGraph/FABRIC.SceneGraph.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../../SceneGraph/FABRIC.SceneGraph.Geometry.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../../SceneGraph/FABRIC.SceneGraph.Primitives.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../../SceneGraph/FABRIC.SceneGraph.Lights.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../../SceneGraph/FABRIC.SceneGraph.Materials.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../../SceneGraph/FABRIC.SceneGraph.Manipulation.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../../SceneGraph/FABRIC.SceneGraph.Kinematics.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../../SceneGraph/FABRIC.SceneGraph.Animation.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../../SceneGraph/FABRIC.SceneGraph.Alembic.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../../SceneGraph/FABRIC.SceneGraph.Rendering.js" charset="utf-8"></script>
+
+    <style type="text/css">
+    
+#sidebar {
+  width:400px;
+}  
+#viewer {
+  right:400px;
+}
+
+  
+  </style>
+    
+    <script type="text/javascript">
+FABRIC.SceneGraph.registerNodeType('UVViewport', {
+  factoryFn: function(options, scene) {
+    scene.assignDefaults(options, {
+      eventName: 'UVDraw'
+    });
+    
+    // create the offscreennode and the uv material
+    var offscreenNode = scene.constructNode('OffscreenViewport', options);
+    offscreenNode.pub.constructMaterial('FlatUVMaterial');
+    
+    
+    // create the member to be able to query
+    var dgnode = offscreenNode.getDGNode();
+    dgnode.addMember('queryToggle','Boolean', false);
+    dgnode.addMember('queryPos','Vec2');
+    dgnode.addMember('querySize','Vec2', FABRIC.RT.vec2(1,1));
+    dgnode.addMember('queryPixels','Color[]');
+    /*
+    dgnode.bindings.append(scene.constructOperator({
+      operatorName: 'getRGBAPixelsFromRenderTarget',
+      entryFunctionName: 'getRGBAPixelsFromRenderTarget',
+      srcFile: 'FABRIC_ROOT/SceneGraph/KL/renderTarget.kl',
+      parameterLayout: [
+        'self.queryToggle',
+        'self.renderTarget',
+        'self.queryPos',
+        'self.querySize',
+        'self.queryPixels',
+      ],
+      mainThreadOnly: true
+    }));
+    */
+    
+    
+    dgnode.addMember('allPixels','Color[]');
+    var redrawEventHandler = offscreenNode.getRedrawEventHandler();
+    redrawEventHandler.postDescendBindings.insert(scene.constructOperator({
+      operatorName: 'getAllRGBAPixelsFromRenderTarget',
+      entryFunctionName: 'getAllRGBAPixelsFromRenderTarget',
+      srcFile: 'FABRIC_ROOT/SceneGraph/KL/renderTarget.kl',
+      parameterLayout: [
+        'data.renderTarget',
+        'data.allPixels',
+      ]
+    }), 0);
+    
+    dgnode.bindings.append(scene.constructOperator({
+      operatorName: 'lookupUVPixels',
+      entryFunctionName: 'lookupUVPixels',
+      srcFile: 'KL/AnimationReview.kl',
+      parameterLayout: [
+        'self.renderTarget',
+        'self.queryPos',
+        'self.querySize',
+        'self.allPixels',
+        'self.queryPixels',
+      ]
+    }));
+
+    offscreenNode.addMemberInterface(dgnode, 'queryToggle', true);
+    offscreenNode.addMemberInterface(dgnode, 'queryPos', true);
+    offscreenNode.addMemberInterface(dgnode, 'querySize', true);
+    offscreenNode.addMemberInterface(dgnode, 'queryPixels', false);
+    
+    return offscreenNode;
+  }});
+
+
+var uvPlaneGeometry;
+
+FABRIC.SceneGraph.registerNodeType('PaintPlaneInstance', {
+  factoryFn: function(options, scene) {
+    scene.assignDefaults(options, {
+      viewportNode: undefined,
+      uvViewportNode: undefined,
+      planeNode: undefined,
+      animationControllerNode: undefined,
+      planeTime: 0.0,
+      planeBlend: 5.0 / 30.0,
+      resolutionFactor: 0.25,
+      paintColor: FABRIC.RT.rgba(255,0,0,130),
+      paintRadius: 1,
+      planeDistance: 10.0
+    });
+
+    // check all of our required nodes
+    if (!options.viewportNode) {
+      throw ('viewportNode not specified');
+    }
+    var viewportNode = scene.getPrivateInterface(options.viewportNode);
+    if(!viewportNode.pub.isTypeOf('Viewport')) {
+      throw('viewportNode is not of type Viewport!');
+    }
+    if (!options.uvViewportNode) {
+      throw ('uvViewportNode not specified');
+    }
+    var uvViewportNode = scene.getPrivateInterface(options.uvViewportNode);
+    if(!uvViewportNode.pub.isTypeOf('UVViewport')) {
+      throw('uvViewportNode is not of type UVViewport!');
+    }
+    var cameraNode = scene.getPrivateInterface(viewportNode.pub.getCameraNode());
+    if(!cameraNode.pub.isTypeOf('Camera')) {
+      throw('cameraNode is not of type Camera!');
+    }
+    var cameraTransformNode = scene.getPrivateInterface(cameraNode.pub.getTransformNode());
+    if (!options.planeNode) {
+      throw ('planeNode not specified');
+    }
+    var planeNode = scene.getPrivateInterface(options.planeNode);
+    if(!planeNode.pub.isTypeOf('Plane')) {
+      throw('planeNode is not of type Plane!');
+    }
+    if (!options.animationControllerNode) {
+      throw ('animationControllerNode not specified');
+    }
+    var animationControllerNode = scene.getPrivateInterface(options.animationControllerNode);
+    if(!animationControllerNode.pub.isTypeOf('AnimationController')) {
+      throw('animationControllerNode is not of type AnimationController!');
+    }
+    
+    // get the center of the triangles object
+    var cameraXfo = cameraTransformNode.pub.getGlobalXfo();
+    var center = FABRIC.RT.vec3(0,0,-options.planeDistance);
+    var planeXfo = cameraXfo.project(FABRIC.RT.xfo({
+      tr: center,
+      ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(1,0,0), Math.HALF_PI)
+    }));
+    
+    // compute the width and height of the plane
+    var fovY = cameraNode.pub.getFovY();
+    var height = 1.95 * Math.abs(center.z) * Math.tan(fovY * 0.5);
+    var widthPixels = $('#FabricContainer').width();
+    var heightPixels = $('#FabricContainer').height();
+    var aspect = widthPixels / heightPixels;
+    var width = height * aspect;
+    planeXfo.sc.x = width;
+    planeXfo.sc.z = height;
+    
+    var parentTransformNode = cameraNode.pub.getTransformNode();
+    parentTransform = parentTransformNode.getGlobalXfo();
+    planeXfo = parentTransform.projectInv(planeXfo);
+    
+    // create a transform node for the plane
+    var transformNode = scene.constructNode('Transform', {
+      hierarchical: true,
+      parentTransformNode: parentTransformNode,
+      localXfo: planeXfo
+    });
+
+    // create a texture to paint onto
+    var textureNode = scene.constructNode('Image', {
+      createDgNode: true,
+      createResourceLoadNode: false,
+      width: parseInt(widthPixels * options.resolutionFactor),
+      height: parseInt(heightPixels * options.resolutionFactor),
+      forceRefresh: true
+    });
+    var texturedgnode = textureNode.getDGNode();
+
+    // create the paint operator for the texture
+    texturedgnode.addMember('paint','Integer',0);
+    texturedgnode.addMember('paintColor','RGBA',options.paintColor);
+    texturedgnode.addMember('paintErase','Boolean',false);
+    texturedgnode.addMember('paintRadius','Scalar',options.paintRadius);
+    texturedgnode.addMember('prevUVs','Color[]',[]);
+    texturedgnode.setDependency(uvViewportNode.getDGNode(),'uvviewport');
+    texturedgnode.bindings.append(scene.constructOperator({
+      operatorName: 'paintPixels',
+      entryFunctionName: 'paintPixels',
+      srcFile: 'KL/AnimationReview.kl',
+      parameterLayout: [
+        'self.paint',
+        'self.paintErase',
+        'self.paintColor',
+        'self.paintRadius',
+        'self.width',
+        'self.height',
+        'self.pixels',
+        'uvviewport.queryPixels',
+        'self.prevUVs'
+      ]
+    }));
+
+    // create a frame operator to the texture
+    texturedgnode.addMember('drawFrame','Boolean',true);
+    texturedgnode.addMember('frameColor','RGBA',FABRIC.RT.rgba(255,255,255,255));
+    texturedgnode.bindings.append(scene.constructOperator({
+      operatorName: 'setFramePixels',
+      entryFunctionName: 'setFramePixels',
+      srcFile: 'KL/AnimationReview.kl',
+      parameterLayout: [
+        'self.drawFrame',
+        'self.frameColor',
+        'self.width',
+        'self.height',
+        'self.pixels'
+      ]
+    }));
+    
+    // create a flat texture material
+    var materialNode = scene.constructNode('FlatBlendTextureMaterial', {
+      textureNode: textureNode.pub,
+      disableOptions: [FABRIC.SceneGraph.OpenGLConstants.GL_DEPTH_TEST],
+      enableOptions: [FABRIC.SceneGraph.OpenGLConstants.GL_BLEND],
+      blendModeSfactor: FABRIC.SceneGraph.OpenGLConstants.GL_SRC_ALPHA,
+      blendModeDfactor: FABRIC.SceneGraph.OpenGLConstants.GL_ONE_MINUS_SRC_ALPHA,
+    });
+    
+    // now create a plane
+    var instanceNode = scene.constructNode('Instance', {
+      transformNode: transformNode.pub,
+      geometryNode: planeNode.pub,
+    });
+
+    // now create the time relevant members
+    var dgnode = instanceNode.getDGNode();
+    dgnode.addMember('colorBlend','Scalar',1.0);
+    dgnode.addMember('planeTime','Scalar',options.planeTime);
+    dgnode.addMember('planeBlend','Scalar',options.planeBlend);
+    instanceNode.addMemberInterface(dgnode, 'planeTime', true);
+    instanceNode.addMemberInterface(dgnode, 'planeBlend', true);
+    instanceNode.addMemberInterface(texturedgnode, 'drawFrame', true);
+    instanceNode.addMemberInterface(texturedgnode, 'frameColor', true);
+    instanceNode.addMemberInterface(texturedgnode, 'paint', true);
+    instanceNode.addMemberInterface(texturedgnode, 'paintColor', true);
+    instanceNode.addMemberInterface(texturedgnode, 'paintErase', true);
+    instanceNode.addMemberInterface(texturedgnode, 'paintRadius', true);
+    instanceNode.addMemberInterface(texturedgnode, 'UVs', true);
+    
+    // link the material node to the animation controller
+    var animationdgnode = animationControllerNode.getDGNode();
+    dgnode.setDependency(animationdgnode,'animation');
+    dgnode.bindings.append(scene.constructOperator({
+      operatorName: 'setTextureBlend',
+      srcFile: 'KL/AnimationReview.kl',
+      entryFunctionName: 'setTextureBlend',
+      parameterLayout: [
+        'self.colorBlend',
+        'self.drawToggle',
+        'self.planeTime',
+        'self.planeBlend',
+        'animation.localTime'
+      ]
+    }));
+    
+    // create an operator to load the uniform to the GPU    
+    instanceNode.getRedrawEventHandler().preDescendBindings.append(scene.constructOperator({
+      operatorName: 'loadColorBlend',
+      srcFile: 'FABRIC_ROOT/SceneGraph/KL/loadUniforms.kl',
+      preProcessorDefinitions: {
+        ATTRIBUTE_NAME: 'u_colorBlend',
+        ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('colorBlend'),
+        DATA_TYPE: 'Scalar'
+      },
+      entryFunctionName: 'loadUniform',
+      parameterLayout: [
+        'shader.shaderProgram',
+        'instance.colorBlend'
+      ]
+    }));
+    
+    // set the material
+    instanceNode.pub.setMaterialNode(materialNode.pub);
+    
+    if(!uvPlaneGeometry){
+      uvPlaneGeometry = scene.constructNode('Plane', {
+        length: 1.0,
+        width: 1.0,
+        lengthSections: 1,
+        widthSections: 1,
+      });
+    }
+    var inst = scene.constructNode('Instance', {
+      transformNode: transformNode.pub,
+      geometryNode: uvPlaneGeometry.pub,
+    });
+    
+    // setup manipulation
+    var painting = false;
+    var height = 0;
+    var paint = function(evt) {
+      if(!painting) {
+        return;
+      }
+      uvViewportNode.pub.setQueryPos(FABRIC.RT.vec2(evt.offsetX, height - 1 - evt.offsetY));
+      viewportNode.pub.redraw();
+    };
+    var beginpaint = function(evt) {
+      instanceNode.pub.setPaint(1);
+      uvViewportNode.pub.setQueryToggle(true);
+      painting = true;
+      instanceNode.pub.setPaintErase(evt.button == 2);
+      paint(evt);
+    };
+    var endpaint = function(evt) {
+      painting = false;
+      instanceNode.pub.setPaint(0);
+      uvViewportNode.pub.setQueryToggle(false);
+      viewportNode.pub.redraw();
+    };
+
+    var enabledManip = false;
+    instanceNode.pub.enableManipulation = function() {
+      if(enabledManip)
+        return;
+      height = viewportNode.getFabricWindowObject().windowNode.getData('height',0);
+      // setup the flat material for drawing
+    //  instanceNode.pub.setMaterialNode( uvViewportNode.pub.getFlatUVMaterial() );
+      inst.pub.setMaterialNode( uvViewportNode.pub.getFlatUVMaterial() );
+      
+      uvViewportNode.pub.redraw();
+
+      // setup all of the event listeners
+      viewportNode.getWindowElement().addEventListener('mousedown', beginpaint, false);
+      viewportNode.getWindowElement().addEventListener('mouseup', endpaint, false);
+      viewportNode.getWindowElement().addEventListener('mousemove', paint, false);
+
+      enabledManip = true;
+    };
+    instanceNode.pub.disableManipulation = function() {
+      if(!enabledManip)
+        return;
+
+      // remove the flat uv material for drawing
+    //  instanceNode.pub.removeMaterialNode( uvViewportNode.pub.getFlatUVMaterial() );
+      inst.pub.removeMaterialNode( uvViewportNode.pub.getFlatUVMaterial() );
+      
+
+      viewportNode.getWindowElement().removeEventListener('mousemove', paint);
+      viewportNode.getWindowElement().removeEventListener('mouseup', endpaint);
+      viewportNode.getWindowElement().removeEventListener('mousedown', beginpaint);
+      enabledManip = false;
+    };
+
+    return instanceNode;    
+  }});    
+
+$(document).ready(function() {
+
+  var scene = FABRIC.SceneGraph.createScene();
+  var viewport = scene.constructNode('Viewport', {
+    windowElement: document.getElementById('FabricContainer'),
+    backgroundColor: FABRIC.RT.color(0.0, 0.0, 0.0, 0.0),
+  });
+
+  // Create a camera to draw the scene from
+  var camera = scene.constructNode('TargetCamera', {
+    position: FABRIC.RT.vec3(20, 20, 20),
+    target: FABRIC.RT.vec3(0, 0, 0),
+    nearDistance: 0.01,
+    farDistance: 1000
+  });
+  viewport.setCameraNode(camera);
+  
+  viewport.setBackgroundTextureImage(scene.constructNode('Image', {
+    url: '../../BasicDemos/Resources/fabric-demo-gradient.png'
+  }));
+  
+  // create an offscreen viewport to draw the UVs to
+  var uvViewport = scene.constructNode('UVViewport', {
+    mainViewportNode: viewport
+  });
+
+  var light = scene.constructNode('PointLight', { position: FABRIC.RT.vec3(10000, 10000, 10000) });
+
+  var cameraManipulator = scene.constructNode("CameraManipulator", { targetNode:camera } );
+
+  scene.constructNode('Instance', {
+          geometryNode: scene.constructNode('Grid', {
+              size_x: 120.0,
+              size_z: 120.0,
+              sections_x: 32,
+              sections_z: 32 }),
+          materialNode: scene.constructNode('FlatMaterial')
+      });
+  
+  // create a material and primitive to draw the other cameras  
+  var cameraMaterial = scene.constructNode('FlatMaterial', { color: FABRIC.RT.rgb(0.0, 0.0, 1.0, 1) });
+  var cameraPrimitive = scene.constructNode('CameraPrimitive', { size: 1.2 });
+  
+  // create a material for all alembic content
+  var phongMaterial = scene.constructNode('PhongMaterial', {
+    diffuseColor: FABRIC.RT.rgb(0.5, 0.5, 0.5, 1),
+    specularColor: FABRIC.RT.rgb(0.15, 0.15, 0.15, 1),
+    lightNode: light,
+  });
+
+  // hook for the alembic content
+  var resourceLoadNode = undefined;
+  var parsedCameras = {};
+  var parsedInstances = {};
+
+  // deal with camera switching
+  var usedCamera = "userCamera";
+  var switchCamera = function(cameraName) {
+    if(cameraName == usedCamera)
+      return;
+    usedCamera = cameraName;
+    
+    if(cameraName == "userCamera") {
+      viewport.setCameraNode(camera);
+      uvViewport.setCameraNode(camera);
+      for(var name in parsedCameras) {
+        parsedCameras[name].setDrawToggle(true);
+      }
+    } else {
+      viewport.setCameraNode(resourceLoadNode.getParsedNodes()[cameraName]);
+      uvViewport.setCameraNode(resourceLoadNode.getParsedNodes()[cameraName]);
+      for(var name in parsedCameras) {
+        parsedCameras[name].setDrawToggle(false);
+      }
+    }
+    viewport.redraw();
+  };
+  
+  // load the alembic content based on user interaction
+  var timeRange = undefined;
+  var loadAlembicAsset = function(url) {
+    var assets = scene.importAssetFile(url, {
+      dependentNode: viewport,
+      onLoadSuccessCallback: function(){
+  
+        // get the first asset name
+        var assetName = undefined;
+        for(var name in assets) {
+          assetName = name;
+          break;
+        }
+        
+        resourceLoadNode = assets[assetName];
+        var parsedNodes = resourceLoadNode.getParsedNodes();
+
+        // setup html for the object and camera list        
+        var cameraListHtml = "<option value='userCamera'>Free Camera</option>";
+        
+        // setup the animation time
+        timeRange = resourceLoadNode.getAnimationController().getTimeRange();
+        $('#localtime').slider({
+            min: timeRange.x,
+            max: timeRange.y,
+            step: 0.01
+        });
+        
+        // loop over all assets and create an instance
+        for(var name in parsedNodes) {
+          var parsedNode = parsedNodes[name];
+          if(parsedNode.isTypeOf('Triangles')) {
+            parsedInstances[name] = scene.constructNode('Instance', {
+              transformNode: resourceLoadNode.getCorrespondingTransform(name),
+              geometryNode: parsedNode,
+              materialNode: phongMaterial
+            });
+          }
+          else if(parsedNode.isTypeOf('Camera')) {
+            
+            // create a primitive for this camera
+            parsedCameras[name] = scene.constructNode('Instance', {
+              transformNode: parsedNode.getTransformNode(),
+              geometryNode: cameraPrimitive,
+              materialNode: cameraMaterial
+            });
+
+            // add the camera as an option to the list
+            cameraListHtml += "<option value='"+name+"'>"+name.substring(name.lastIndexOf('/')+1,1000)+"</option>"
+            
+          }
+        }
+        
+        // attach an on-select event to the camera list 
+        $('#cameralist').html(cameraListHtml).change( function(ui) {
+          switchCamera($('#cameralist').attr('value'));
+        });
+        
+        // now let's switch the camera
+        for(var name in parsedCameras) {
+          switchCamera(name);
+          break;
+        }
+
+        //$('#loadingDialog').dialog('close');
+        viewport.redraw();
+      }
+    });
+  };
+  
+  // for now let's load the frog
+  loadAlembicAsset('../../Alembic/Models/frog.abc');
+  
+  // create a map for all of the planes
+  var planes = {};
+
+  // create a single geometry that will be used for all planes
+  var planeGeometry = scene.constructNode('Plane', {
+    length: 1.0,
+    width: 1.0,
+    lengthSections: 1,
+    widthSections: 1,
+  });
+
+  // keep a key for the plane that's currently in use
+  var currentPlane = undefined;
+  var currentKey = undefined;
+
+  // paint a new plane
+  var paintPlane = function() {
+    
+    // setup the function to change the active plane    
+    var switchPlane = function(key) {
+      var plane = planes[key];
+      if(plane == undefined)
+        return;
+      currentPlane = plane;
+      currentKey = key;
+      
+      scene.animation.setTime(plane.time, false);
+      $('#localtime').slider('value', plane.time);
+      $('#planeblend').slider('value', plane.instance.getPlaneBlend());
+      $('#planeblend').unbind('slide').bind('slide',
+          function(event, ui) {
+            plane.instance.setPlaneBlend(ui.value);
+            viewport.redraw();
+        });
+      
+      // set the frame enable or disabled
+      for(var oldKey in planes) {
+        planes[oldKey].instance.setDrawFrame(oldKey == key);
+      }
+      
+      switchCamera(plane.camera);
+      $("#cameralist option[value='"+plane.camera+"']").attr('selected',true);
+    };
+    
+    // only allow to paint from animated cameras
+    if(usedCamera == 'userCamera'){
+      return;
+    }
+
+    // create a key to identify the plane
+    var timeKey = resourceLoadNode.getAnimationController().getLocalTime();
+    timeKey = ''+parseInt(timeKey * 30 + 0.5);
+    if(currentKey == timeKey)
+      return;
+    
+    // check if we need to create a new plane
+    if(planes[timeKey] == undefined ) {
+      var newPlane = scene.constructNode('PaintPlaneInstance', {
+        viewportNode: viewport,
+        uvViewportNode: uvViewport,
+        planeNode: planeGeometry,
+        animationControllerNode: resourceLoadNode.getAnimationController(),
+        planeTime: resourceLoadNode.getAnimationController().getLocalTime(),
+        planeBlend: 5.0 / 30.0,
+        resolutionFactor: 0.2
+      });
+      planes[timeKey] = {
+        camera: usedCamera,
+        instance: newPlane,
+        time: resourceLoadNode.getAnimationController().getLocalTime()
+      };
+  
+      // re-create the list html
+      var planeListHtml = "";
+      for(var key in planes) {
+        if(key == timeKey)
+          planeListHtml += "<option selected value='"+key+"'>At time "+planes[key].time+"</option>";
+        else
+          planeListHtml += "<option value='"+key+"'>At time "+planes[key].time+"</option>";
+      }
+      $('#planelist').html(planeListHtml).change( function (ui) {
+        switchPlane($('#planelist').attr('value'));
+        viewport.redraw();
+      });
+    }
+    switchPlane(timeKey);
+  };
+  
+  // setup hotkeys
+  window.onkeydown = function(evt) {
+    if(!timeRange)
+      return;
+    
+    var time = scene.animation.getTime() % timeRange.y;
+    if(evt.keyCode == 37 && time > timeRange.x) { // left arrow
+      time -= 1.0 / 30.0;
+      scene.animation.pause();
+      scene.animation.setTime(time);
+      $('#localtime').slider('value', time);
+      scene.redrawAllWindows();
+    } else if(evt.keyCode == 39 && time < timeRange.y) { // right arrow
+      time += 1.0 / 30.0;
+      scene.animation.pause();
+      scene.animation.setTime(time);
+      $('#localtime').slider('value', time);
+      scene.redrawAllWindows();
+    } else if(evt.keyCode == 38) { // up arrow
+      $('#play').button('option', {
+        label: 'Pause',
+        icons: {
+          primary: 'ui-icon-pause'
+        }
+      });
+      var localTime = $('#localtime').slider();
+      scene.animation.play( function() {
+        localTime.slider('value', resourceLoadNode.getAnimationController().getLocalTime());
+      });
+    } else if(evt.keyCode == 40) { // down arrow
+      $('#play').button('option', {
+        label: 'Play',
+        icons: {
+          primary: 'ui-icon-play'
+        }
+      });
+      scene.animation.pause();
+    } else if(evt.keyCode == 80) { // P
+      cameraManipulator.disable();
+      paintPlane();
+      
+      var count = FABRIC.getActiveAsyncTaskCount();
+      if(count>0){
+        FABRIC.appendOnResolveAsyncTaskCallback(function(label, countRemaining){
+          if(countRemaining===0){
+            if(currentPlane){
+              currentPlane.instance.enableManipulation();
+            }
+            viewport.redraw();
+            return true;
+          }
+        });
+      }
+      else{
+        if(currentPlane){
+          currentPlane.instance.enableManipulation();
+        }
+        viewport.redraw();
+      }
+    }
+  };
+  
+  window.onkeyup = function(evt) {
+    if(evt.keyCode == 80) { // P
+      var count = FABRIC.getActiveAsyncTaskCount();
+      if(count>0){
+        FABRIC.appendOnResolveAsyncTaskCallback(function(label, countRemaining){
+          if(countRemaining===0){
+            if(currentPlane)
+              currentPlane.instance.disableManipulation();
+            cameraManipulator.enable();
+            return true;
+          }
+        });
+      }
+      else{
+        if(currentPlane)
+          currentPlane.instance.disableManipulation();
+        cameraManipulator.enable();
+      }
+    }
+  }; 
+  
+  // create a slider for the light direction
+  $('#lightDirection').slider({
+      min: 0.0,
+      max: 360.0,
+      step: 0.5
+    }).bind('slide',
+      function(event, ui) {
+        var pos = FABRIC.RT.vec3(10000,10000,10000);
+        var rot = FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(0,1,0), Math.degToRad(ui.value));
+        pos = rot.rotateVector(pos);
+        light.setPosition(pos);
+        scene.redrawAllWindows();
+    });  
+
+  $('#localtime').slider().bind('slide',
+      function(event, ui) {
+        $('#play').button('option', {
+          label: 'Play',
+          icons: {
+            primary: 'ui-icon-play'
+          }
+        });
+        scene.animation.pause();
+        scene.animation.setTime(ui.value);
+        scene.redrawAllWindows();
+    });  
+  $('#planeblend').slider({
+      min: 0.0,
+      max: 2.0,
+      step: 1.0/30.0,
+      value: 5.0/30.0
+    });
+  
+  $('#play').button({
+      text: true,
+      icons: {
+        primary: 'ui-icon-play'
+      }
+    })
+    .click(function() {
+      if(!resourceLoadNode)
+        return;
+      var options;
+      if ($(this).text() == 'Play') {
+        $(this).button('option', {
+          label: 'Pause',
+          icons: {
+            primary: 'ui-icon-pause'
+          }
+        });
+        var localTime = $('#localtime').slider();
+        scene.animation.play( function() {
+          localTime.slider('value', resourceLoadNode.getAnimationController().getLocalTime());
+        });
+      } else {
+        $(this).button('option', {
+          label: 'Play',
+          icons: {
+            primary: 'ui-icon-play'
+          }
+        });
+        scene.animation.pause();
+      }
+    });
+
+  $('#brushColor').ColorPicker({
+      flat: true,
+      color: { r: 255, g: 0, b: 0} ,
+      onChange: function(hsb, hex, rgb) {
+        for(var name in planes) {
+          var color = planes[name].instance.getPaintColor();
+          color.r = rgb.r;
+          color.g = rgb.g;
+          color.b = rgb.b;
+          planes[name].instance.setPaintColor(color);
+        }
+        scene.redrawAllWindows();
+      }
+    });
+  $('#brushOpacity').slider({
+      min: 1.0,
+      max: 60.0,
+      step: 1.0,
+      value: 30.0
+    }).bind('slide',
+      function(event, ui) {
+        for(var name in planes) {
+          var color = planes[name].instance.getPaintColor();
+          color.a = ui.value;
+          planes[name].instance.setPaintColor(color);
+        }
+        scene.redrawAllWindows();
+    });  
+  $('#brushRadius').slider({
+      min: 0.5,
+      max: 5.0,
+      step: 0.01,
+      value: 1.5
+    }).bind('slide',
+      function(event, ui) {
+        for(var name in planes) {
+          planes[name].instance.setPaintRadius(ui.value);
+        }
+        scene.redrawAllWindows();
+    });  
+  $('#planeblend').slider({
+    });
+
+  $('#loadingDialog').dialog({
+    modal: true
+  });
+  FABRIC.appendOnResolveAsyncTaskCallback(function(label, nbRemaining, doneWeight, totalWeight) {
+    $('#loadingProgressBar').progressbar({
+      value: (1.0-(doneWeight/totalWeight))*100
+    });
+    if (nbRemaining===0) {
+      $('#loadingDialog').dialog('close');
+      viewport.redraw();
+      var errors = scene.getErrors();
+      if (errors.length > 0) {
+        throw (errors.toString());
+      }
+      return true;
+    }
+  });
+  
+});
+
+</script>
+
+  </head> 
+  <body>
+    <div id="loadingDialog" title="Loading...">
+      <h4 id="loadingDesc" style="margin-bottom: 10px">Downloading Alembic File.<br>This may take some time.</h4>
+      <div id="loadingProgressBar" class="ui-progressbar-value"></div>
+    </div>
+    <div id="wrapper">
+      <ul id="nav">
+        <li><a href="#" id="fabric-logo"><img src="../../../../themes/default/_img/projects/fabric-logo.png" /></a></li>
+      </ul>
+      <div id="editor">
+        <div id="viewer">
+          <div id="FabricContainer"></div> 
+        </div><!--viewer-->
+        <div id="sidebar">
+          <div class="box">
+            <h2>Scene</h2>
+            <div class="content">
+                <label for="lightDirection" >Light Direction:</label>
+                <div id='lightDirection' style="margin-top:10px;"></div>
+                <select multi size=3 id='cameralist' style='width: 200px; margin-top: 10px'>
+                  <option value='userCamera'>Free Camera</option>
+                </select>
+            </div><!--content-->
+            <h2>Planes</h2>
+            <div class="content">
+                <select multi size=10 id='planelist' style='width: 200px'>
+                </select>
+                <div id='planeblend' style="margin-top:10px;"></div>
+                 <p id="brushColor"></p>
+                        
+                <label for="brushOpacity" >Brush Opacity:</label>
+                <div id='brushOpacity' style="margin-top:10px;"></div>
+                
+                <label for="brushRadius" >Brush Radius:</label>
+                <div id='brushRadius' style="margin-top:10px;"></div>
+            </div><!--content-->
+            <h2>Playback</h2>
+            <div class="content">
+                <button id="play" style="margin-top:10px;">Play</button>
+                <div id='localtime' style="margin-top:10px;"></div>
+            </div><!--content-->
+          </div><!--box-->
+          </div><!--box-->
+        </div><!--sidebar-->
+      </div> <!--editor-->
+    </div><!--wrapper-->
+  </body> 
+  </html>

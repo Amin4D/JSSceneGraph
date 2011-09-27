@@ -149,6 +149,11 @@ FABRIC.SceneGraph.registerNodeType('Geometry', {
       buffer.bufferUsage = FABRIC.SceneGraph.OpenGLConstants.GL_DYNAMIC_DRAW;
       redrawEventHandler.setData(name + 'Buffer', 0, buffer);
     };
+    geometryNode.pub.setAttributeStatic = function(name) {
+      var buffer = redrawEventHandler.getData(name + 'Buffer');
+      buffer.bufferUsage = FABRIC.SceneGraph.OpenGLConstants.GL_STATIC_DRAW;
+      redrawEventHandler.setData(name + 'Buffer', 0, buffer);
+    };
     geometryNode.pub.getUniformValue = function(name) {
       return uniformsdgnode.getData(name);
     };
@@ -264,8 +269,8 @@ FABRIC.SceneGraph.registerNodeType('GeometryDataCopy', {
     return geometryDataCopyNode;
   }});
 
-FABRIC.SceneGraph.registerNodeType('GeometryInstancingNode', {
-  briefDesc: 'The GeometryInstancingNode node is created using an existing Geometry node, and is used to copy the geometry multiple times.',
+FABRIC.SceneGraph.registerNodeType('InstancedGeometry', {
+  briefDesc: 'The InstancedGeometry node is created using an existing Geometry node, and is used to copy the geometry multiple times.',
   detailedDesc: 'When performing instance drawing, GLSL based instancing can cause compatibility issues. By copying the geometry,' +
                 ' several times, and introducing a new instanceID vertex attribute, we can draw instances by utilizing more RAM but '+
                 ' being compatible with most graphic cards.',
@@ -350,6 +355,7 @@ FABRIC.SceneGraph.registerNodeType('GeometryInstancingNode', {
         DATA_TYPE: 'Vec3'
       },
     }));
+    geometryInstancingNode.pub.setAttributeStatic('instanceIDs');
 
     // now instantiate all attributes
     geometryInstancingNode.pub.instantiateAttribute = function(attrName) {
@@ -371,7 +377,8 @@ FABRIC.SceneGraph.registerNodeType('GeometryInstancingNode', {
           'self.'+attrName
         ],
         preProcessorDefinitions: {
-          DATA_TYPE: members[attrName].type
+          DATA_TYPE: members[attrName].type,
+          DATA_NAME: attrName
         },
       }));
     }

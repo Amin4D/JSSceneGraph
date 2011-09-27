@@ -55,11 +55,13 @@
 
       void main(){
         int instanceID = a_instanceID;
-        int y = (instanceID * 4) / 1024;
-        mat4 mvp = mat4(texture2D(u_samplerTransformMap,vec2((instanceID*4+0)&1023,y) * (1.0/1024.0)),
-            texture2D(u_samplerTransformMap,vec2((instanceID*4+1)&1023,y) * (1.0/1024.0)),
-            texture2D(u_samplerTransformMap,vec2((instanceID*4+2)&1023,y) * (1.0/1024.0)),
-            texture2D(u_samplerTransformMap,vec2((instanceID*4+3)&1023,y) * (1.0/1024.0)));
+        float factor = 1.0 / 512.0;
+        int x = (instanceID % 128) * 4;
+        float y = float(instanceID) / 128.0;
+        mat4 mvp = mat4(texture2D(u_samplerTransformMap,vec2(x,y) * factor),
+            texture2D(u_samplerTransformMap,vec2(x+1,y) * factor),
+            texture2D(u_samplerTransformMap,vec2(x+2,y) * factor),
+            texture2D(u_samplerTransformMap,vec2(x+3,y) * factor));
 
         mat4 modelViewMatrix = u_viewMatrix * mvp;
         mat4 modelViewProjectionMatrix = u_projectionMatrix * modelViewMatrix;

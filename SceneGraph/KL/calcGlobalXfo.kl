@@ -10,13 +10,6 @@ operator calcGlobalXfo(io Xfo localXfo, io Xfo parentGlobalXfo, io Xfo globalXfo
   globalXfo = localXfo * parentGlobalXfo;
 }
 
-operator calcGlobalMatrix(io Xfo globalXfo<>, io Mat44 globalMat<>) {
-  for(Size i=0;i<globalXfo.size();i++)
-  {
-    globalMat[i] = Mat44(globalXfo[i]);
-  }
-}
-
-operator calcGlobalMatrixSliced(io Xfo globalXfo, io Mat44 globalMat) {
+operator calcGlobalMatrix(io Xfo globalXfo, io Mat44 globalMat) {
   globalMat = Mat44(globalXfo);
 }

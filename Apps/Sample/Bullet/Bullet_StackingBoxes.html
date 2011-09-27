@@ -112,10 +112,6 @@ $(document).ready(function() {
     height: 2.0
   });
 
-  var materialNode = scene.constructNode('PhongMaterial', {
-        diffuseColor: FABRIC.RT.rgb255(10,10,255),
-        lightNode: light
-      });
   
   // create a force manipulator
   var manipulatorNode = scene.constructNode('BulletForceManipulator', {
@@ -131,16 +127,22 @@ $(document).ready(function() {
   });
   
   FABRIC.appendOnResolveAsyncTaskCallback(function(label, nbRemaining, doneWeight, totalWeight) {
-      
-      
+    
     if (nbRemaining===0) {
       var errors = scene.getErrors();
       if (errors.length > 0) {
         throw (errors.toString());
       }
+      
+      viewport.hide();
         
       if(!viewport.getGlewSupported('GL_EXT_draw_instanced')){
         $('#infoContent').html("This demo uses OpenGL 3.2 features such as 'GL_EXT_draw_instanced'.\n\nIt appears that your graphics card does not support geometry instancing. This demo is running in compatibility mode with greatly reduced complexity");
+  
+        var materialNode = scene.constructNode('PhongMaterial', {
+              diffuseColor: FABRIC.RT.rgb255(10,10,255),
+              lightNode: light
+            });
   
         for(var i=0;i<128;i++) {
           var nonslicedTransform = scene.constructNode('BulletRigidBodyTransform', {
@@ -195,7 +197,6 @@ $(document).ready(function() {
         });
       }
       
-    viewport.hide();
     
     FABRIC.appendOnResolveAsyncTaskCallback(function(label, nbRemaining, doneWeight, totalWeight) {
     $('#loadingProgressBar').progressbar({
@@ -282,8 +283,6 @@ $(document).ready(function() {
           <div class="box">
             <h2>INFO</h2>
               <div class="content" id="infoContent">
-              Bulle Stacking Boxes.<br>
-              TODO some text
             </div><!--content-->
           </div><!--box-->
           <div class="box">

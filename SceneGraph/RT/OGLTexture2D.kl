@@ -9,7 +9,6 @@ function OGLTexture2D.configure(
   Size height,
   Data pixels,
   Size nbPixels,
-  Size glSrcDataType,
   io Integer textureUnit
 ) {
   if(nbPixels > 0){
@@ -27,11 +26,11 @@ function OGLTexture2D.configure(
     if (nbPixels == (width * height))
       glTexImage2D(GL_TEXTURE_2D, 0, this.glInternalFormat, width, height, 0, this.glFormat, this.glType, pixels);
 
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, this.textureMinFilter);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, this.textureMaxFilter);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, this.wrapS);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, this.wrapT);
 
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
     this.nbPixels = nbPixels;
   }
 }
@@ -51,7 +50,7 @@ function OGLTexture2D.bindImageLDR(
   io Integer textureUnit
 ) {
   if (this.bufferID == 0 || this.forceRefresh) {
-    this.configure(width, height, bitmap.data(), bitmap.size(), GL_RGBA, textureUnit);
+    this.configure(width, height, bitmap.data(), bitmap.size(), textureUnit);
   }
   this.bind(textureUnit);
 }
@@ -64,11 +63,20 @@ function OGLTexture2D.bindImageHDR(
   io Integer textureUnit
 ) {
   if (this.bufferID == 0 || this.forceRefresh) {
-    this.configure(width, height, bitmap.data(), bitmap.size(), GL_RGBA16F_ARB, textureUnit);
+    this.configure(width, height, bitmap.data(), bitmap.size(), textureUnit);
   }
   this.bind(textureUnit);
 }
 
+function OGLTexture2D.bindImageMatrix(
+  io Mat44 matrices<>,
+  io Integer textureUnit
+) {
+  if (this.bufferID == 0 || this.forceRefresh) {
+    this.configure(Size(512), Size(512), matrices.data(), Size(512 * 512), textureUnit);
+  }
+  this.bind(textureUnit);
+}
 
 function OGLTexture2D.genTexture(
   Size width,

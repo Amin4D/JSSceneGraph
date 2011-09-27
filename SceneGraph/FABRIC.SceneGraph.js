@@ -972,6 +972,8 @@ FABRIC.SceneGraph.registerNodeType('Viewport', {
         // during the 1st redraw.
         viewportNode.pub.getOpenGLVersion = fabricwindow.getOpenGLVersion;
         viewportNode.pub.getGlewSupported = fabricwindow.getGlewSupported;
+        viewportNode.pub.show = function(){ fabricwindow.show(); };
+        viewportNode.pub.hide = function(){ fabricwindow.hide(); };
         fabricwindow.show();
         return true;
       }

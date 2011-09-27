@@ -1,0 +1,22 @@
+
+//
+// Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
+//
+use FabricBULLET;
+
+function BulletSoftBody.create(io Boolean result, io BulletWorld world, io Vec3 positions<>, io Vec3 normals<>, io Integer indices[]) {
+  if(!this.pointer) {
+    FabricBULLET_SoftBody_Create(this.pointer,world.pointer,positions,normals,indices,this.transform,this.clusters,this.constraints,this.mass,this.stiffness,this.friction,this.conservation,this.pressure,this.recover);
+    result = true;
+  }
+  else
+    result = false;
+}
+
+function BulletSoftBody.delete() {
+  FabricBULLET_SoftBody_Delete(this.pointer);
+}
+
+function BulletSoftBody.getPosition(in Size index, io Vec3 position, io Vec3 normal) {
+  FabricBULLET_SoftBody_GetPosition(index, this.pointer, position, normal);
+}

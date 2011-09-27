@@ -3,7 +3,7 @@
     Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
     -->
   <head> 
-    <title>FABRIC - Geometry Instancing</title> 
+    <title>FABRIC - Geometry Instancing - Compatible mode</title> 
     
     <meta charset="iso-8859-1"/>
     <link href="../../../themes/default/style.css" rel="stylesheet" type="text/css" />
@@ -78,7 +78,7 @@ $(document).ready(function() {
   camera = scene.constructNode('TargetCamera', {
       nearDistance: 1,
       farDistance: 1200,
-      position: FABRIC.RT.vec3(10,10,10),
+      position: FABRIC.RT.vec3(10,10,10).scale(1.5),
       target: FABRIC.RT.vec3(0, 0, 0)
     });
 
@@ -87,8 +87,8 @@ $(document).ready(function() {
 
   var light = scene.constructNode('PointLight', { position: FABRIC.RT.vec3(420.0, 1000.0, 600.0) });
   
-  var gridSize = 150;
-  var numInstances = 128 * 8;
+  var gridSize = 50;
+  var numInstances = 64;
   var instanceTransforms = [];
   
   //////////////////////////////////////
@@ -110,47 +110,24 @@ $(document).ready(function() {
   var slicedTransform = scene.constructNode("Transform");
   slicedTransform.setGlobalXfo(instanceTransforms);
   
+  // create a geometry instancing node
+  var instancingNode = scene.constructNode('InstancedGeometry', {
+    baseGeometryNode: scene.importAssetFile('../BasicDemos/Models/cow.obj')['cow'],
+    nbInstances: numInstances,
+    instancedAttributes: ['positions', 'normals']
+  });
+  instancingNode.setAttributeStatic('positions');
+  instancingNode.setAttributeStatic('normals');
+  
   scene.constructNode('Instance', {
-    geometryNode: scene.importAssetFile('../BasicDemos/Models/cow.obj')['cow'],
-    materialNode: scene.constructNode('PhongInstancingExtMaterial', {
+    geometryNode: instancingNode,
+    materialNode: scene.constructNode('PhongInstancingMaterial', {
       diffuseColor: FABRIC.RT.rgb255(139,69,19),
       lightNode: light,
       transformTextureNode: slicedTransform.getTransformTexture(false)
     }),
     transformNode: slicedTransform
   });
-
-  /*
-  //////////////////////////////////////
-  // Now add some bunnys
-  instanceTransforms = [];
-  for (i = 0; i < numInstances; i++) {
-    var scl = (Math.random() + 0.5) * 15;
-    instanceTransforms.push(FABRIC.RT.xfo( {
-      tr: FABRIC.RT.vec3(
-        (Math.random() - 0.5) * gridSize * 0.95,
-        -7,
-        (Math.random() - 0.5) * gridSize * 0.95),
-      ori:FABRIC.RT.Quat.makeFromAxisAndAngle( FABRIC.RT.vec3(0,1,0), (Math.random() - 0.5) * Math.TWO_PI ),
-      sc: FABRIC.RT.vec3(scl, scl, scl)
-    })
-    );
-  }
-
-  // create a sliced transform node
-  slicedTransform = scene.constructNode("Transform");
-  slicedTransform.setGlobalXfo(instanceTransforms);
-  
-  scene.constructNode('Instance', {
-    geometryNode: scene.importAssetFile('../BasicDemos/Models/bunny.obj')['bunny'],
-    materialNode: scene.constructNode('PhongInstancingExtMaterial', {
-      diffuseColor: FABRIC.RT.rgb255(205,192,176),
-      lightNode: light,
-      transformTextureNode: slicedTransform.getTransformTexture(false)
-    }),
-    transformNode: slicedTransform
-  });
-  */
 
   $('#loadingDialog').dialog({
     modal: true
@@ -166,10 +143,6 @@ $(document).ready(function() {
         throw (errors.toString());
       }
       viewport.redraw();
-      if(!viewport.getGlewSupported('GL_EXT_draw_instanced')){
-        alert("This demo requires OpenGL 3.2 features such as 'GL_EXT_draw_instanced' to run.\n\nIt appears that your graphics card does not support geometry instancing.");
-        throw("This demo requires OpenGL 3.2 features such as 'GL_EXT_draw_instanced' to run.\n\nIt appears that your graphics card does not support geometry instancing.");
-      }
       return true;
     }
   });
@@ -197,9 +170,10 @@ $(document).ready(function() {
           <div class="box">
             <h2>INFO</h2>
             <div class="content">
-              Geometry Instancing.<br>
-              The instances in this sample are drawn using glDrawElementsInstanced, which utilizes hardware instancing.
-              Due to this, the sample requires the OpenGL 3.2 profile to run properly.
+              Geometry Instancing - Compatible Mode.<br>
+              The instances in this sample are drawn using standard glDrawElements, by utilizing the
+              InstancedGeometry scenegraph node. This allows to draw instances, even if the OpenGL 3.2 profile is not supported.
+              The performance is much slower though, than using hardware based instancing.
             </div><!--content-->
           </div><!--box-->
         </div><!--sidebar-->

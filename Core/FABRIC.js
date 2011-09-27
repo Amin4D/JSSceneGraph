@@ -301,7 +301,7 @@ FABRIC = (function() {
     onResolveAsyncTaskCallbacks.push(fn);
   };
   var fireOnResolveAsyncTaskCallbacks = function(label){
-    for (i=0; i<onResolveAsyncTaskCallbacks.length; i++){
+    for (var i=0; i<onResolveAsyncTaskCallbacks.length; i++){
       if (onResolveAsyncTaskCallbacks[i].call(undefined, label, activeAsyncTaskCount, asyncTasksWeight, asyncTasksMaxWeight)) {
         onResolveAsyncTaskCallbacks.splice(i, 1);
         i--;

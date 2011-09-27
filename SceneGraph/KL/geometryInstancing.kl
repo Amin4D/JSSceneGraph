@@ -1,0 +1,48 @@
+//
+// Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
+//
+
+use Vec3;
+
+operator instantiateCount(
+  Size sourceCount,
+  io Size targetCount,
+  io Size nbInstances
+) {
+  targetCount = sourceCount * nbInstances;
+}
+
+operator instantiateIndices(
+  io Integer sourceIndices[],
+  io Integer targetIndices[],
+  io Size nbInstances,
+  Size vertexCount
+) {
+  Size vertexOffset = 0;
+  Size index = 0;
+  targetIndices.resize(nbInstances * sourceIndices.size());
+  for(Size i=0;i<nbInstances;i++) {
+    for(Size j=0;j<sourceIndices.size();j++) {
+      targetIndices[index] = sourceIndices[j] + vertexOffset;
+      index++;
+    }
+    vertexOffset += vertexCount;
+  }
+}
+
+operator instantiateInstanceIDs(
+  Size index,
+  Size sourceCount,
+  io Integer instanceID
+) {
+  instanceID = Integer(Scalar(index) / (Scalar(sourceCount)));
+}
+
+operator instantiateAttribute(
+  Size index,
+  Size sourceCount,
+  io DATA_TYPE sourceAttribute<>,
+  io DATA_TYPE targetAttribute
+) {
+  targetAttribute = sourceAttribute[index % sourceCount];
+}

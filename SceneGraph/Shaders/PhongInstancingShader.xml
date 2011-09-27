@@ -14,52 +14,58 @@
     <uniform name="u_materialSpecularColor" constant="specularColor" type="Color" defaultValue="FABRIC.RT.rgba(0.5,0.5,0.5,1)"/>
     <uniform name="u_materialShininess" constant="shininess" type="Scalar" defaultValue="20.0"/>
     
-    <uniform name="u_modelViewProjectionMatrix" constant="modelViewProjectionMatrix" type="Mat44" owner="instance"/>
-    <uniform name="u_modelMatrix" constant="modelMatrix" type="Mat44" owner="instance"/>
     <uniform name="u_viewMatrix" constant="viewMatrix" type="Mat44" owner="instance"/>
     <uniform name="u_projectionMatrix" constant="projectionMatrix" type="Mat44" owner="instance"/>
-    
-    <uniform name="u_instanceTransforms" constant="instanceTransforms" type="Mat44[]" owner="material" />
+
+		<uniform name="u_samplerTransformMap" constant="transformTexture" type="Integer" owner="texture"/>
   </uniforms>
   
   <attributes>
     <attribute name="a_position" binding="positions"/>
     <attribute name="a_normal" binding="normals"/>
+    <attribute name="a_instanceID" binding="instanceIDs"/>
   </attributes>
   
   <lights>
     <light type="Light" binding="light"/>
   </lights>
-  
-  <preprocessordirectives>
-    <preprocessordirective name="NUM_INSTANCES" binding="numInstances"/>
-  </preprocessordirectives>
+
+	<textures>
+		<texture binding="transformTexture"/>
+	</textures>
   
   <vertexshader>
     <source>
       <![CDATA[
+
       uniform mat4 u_modelViewProjectionMatrix;
       uniform mat4 u_viewMatrix;
       uniform mat4 u_projectionMatrix;
       uniform mat4 u_modelMatrix;
       uniform vec4 u_lightPosition;
-      
-      
-      uniform mat4 u_instanceTransforms[NUM_INSTANCES];
+      uniform sampler2D u_samplerTransformMap;
       
       attribute vec4 a_position;
       attribute vec3 a_normal;
+      attribute int a_instanceID;
 
       varying vec3 normal;
       varying vec3 lightDir;
       varying vec3 viewDir;
-      
 
       void main(){
-	mat4 modelViewMatrix = u_viewMatrix * u_instanceTransforms[gl_InstanceID] * u_modelMatrix;
-	mat4 modelViewProjectionMatrix = u_projectionMatrix * modelViewMatrix;
-      
-	mat3 normalMatrix = transpose(inverse(mat3(modelViewMatrix[0].xyz, modelViewMatrix[1].xyz, modelViewMatrix[2].xyz)));
+        int instanceID = a_instanceID;
+        float factor = 1.0 / 512.0;
+        int x = (instanceID % 128) * 4;
+        float y = float(instanceID) / 128.0;
+        mat4 mvp = mat4(texture2D(u_samplerTransformMap,vec2(x,y) * factor),
+            texture2D(u_samplerTransformMap,vec2(x+1,y) * factor),
+            texture2D(u_samplerTransformMap,vec2(x+2,y) * factor),
+            texture2D(u_samplerTransformMap,vec2(x+3,y) * factor));
+
+        mat4 modelViewMatrix = u_viewMatrix * mvp;
+        mat4 modelViewProjectionMatrix = u_projectionMatrix * modelViewMatrix;
+        mat3 normalMatrix = transpose(inverse(mat3(modelViewMatrix[0].xyz, modelViewMatrix[1].xyz, modelViewMatrix[2].xyz)));
     
         normal = normalMatrix * a_normal;
         vec4 modelCameraPosition = modelViewMatrix * a_position;

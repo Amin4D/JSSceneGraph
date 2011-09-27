@@ -3,7 +3,10 @@
 //
 
 use OGLTexture2D;
+use OGLShaderProgram;
 use FabricOGL, FabricPNG, FabricTGA, FabricHDR;
+use Xfo;
+use Mat44;
 
 function decodeLDRImageData(
   io FabricResource resource,
@@ -91,7 +94,7 @@ operator loadAndBindTextureLDR(
     Size width, height;
     RGBA imageLDR[];
     decodeLDRImageData(resource, width, height, imageLDR);
-    oglTexture2D.configure(width, height, imageLDR.data(), imageLDR.size(), GL_RGBA, textureUnit);
+    oglTexture2D.configure(width, height, imageLDR.data(), imageLDR.size(), textureUnit);
     var Data NULL;
     resource.data.resize(0);
   }
@@ -101,13 +104,35 @@ operator loadAndBindTextureLDR(
 operator bindTextureHDR(
   io Size width,
   io Size height,
-  io Color bitmap[],
   io OGLTexture2D oglTexture2D,
+  io Color bitmap[],
   io Integer textureUnit
 ) {
   oglTexture2D.bindImageHDR(width, height, bitmap, textureUnit);
 }
 
+operator setNumberOfMatrices(
+  io Mat44 matrices<>,
+  io OGLShaderProgram shaderProgram
+) {
+  shaderProgram.numInstances = Integer(matrices.size());
+}
+
+operator bindTextureMatrix(
+  io OGLTexture2D oglTexture2D,
+  io Integer textureUnit,
+  io Mat44 matrices<>
+) {
+  if(textureUnit > -1) {
+    oglTexture2D.bindImageMatrix(matrices, textureUnit);
+  } else {
+    report('debugging instance matrices: ');
+    for(Size i=0;i<10;i++) {
+      report('matrix '+i+': '+matrices[i]);
+    }
+    report('matrix '+(matrices.size()-1)+': '+matrices[matrices.size()-1]);
+  }
+}
 
 operator unbindTextures(
   io Size numTextures

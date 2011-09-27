@@ -1,0 +1,69 @@
+//
+// Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
+//
+use FabricBULLET;
+
+function BulletWorld.create(io Boolean result) {
+  if(!this.pointer) {
+    FabricBULLET_World_Create(this.pointer);
+    FabricBULLET_World_SetGravity(this.pointer,this.gravity);
+    result = true;
+  }
+  else
+    result = false;
+}
+
+function BulletWorld.delete() {
+  FabricBULLET_World_Delete(this.pointer);
+  FabricBULLET_World_SetGravity(this.pointer,this.gravity);
+}
+
+function BulletWorld.step(io Scalar timeStep) {
+  if(timeStep > 0)
+    FabricBULLET_World_Step(this.pointer,this.step,this.substeps,timeStep);
+}
+
+function BulletWorld.reset() {
+  FabricBULLET_World_Reset(this.pointer,this.step);
+}
+
+function BulletWorld.raycast(io Vec3 origin, io Vec3 direction) {
+  FabricBULLET_World_Raycast(this.pointer,origin,direction,this.hit,this.hitPosition);
+}
+
+function BulletWorld.applyForce(io BulletForce force) {
+  FabricBULLET_World_ApplyForce(this.pointer,force);
+}
+
+function BulletWorld.getGravity(io Vec3 gravity) {
+  gravity = this.gravity;
+}
+
+function BulletWorld.setGravity(io Vec3 gravity) {
+  this.gravity = gravity;
+  FabricBULLET_World_SetGravity(this.pointer,this.gravity);
+}
+
+function BulletWorld.addRigidBody(io BulletRigidBody body) {
+  FabricBULLET_World_AddRigidBody(this.pointer,body.pointer);
+}
+
+function BulletWorld.removeRigidBody(io BulletRigidBody body) {
+  FabricBULLET_World_RemoveRigidBody(this.pointer,body.pointer);
+}
+
+function BulletWorld.addSoftBody(io BulletSoftBody body) {
+  FabricBULLET_World_AddSoftBody(this.pointer,body.pointer);
+}
+
+function BulletWorld.removeSoftBody(io BulletSoftBody body) {
+  FabricBULLET_World_RemoveSoftBody(this.pointer,body.pointer);
+}
+
+function BulletWorld.addConstraint(io BulletConstraint constraint) {
+  FabricBULLET_World_AddConstraint(this.pointer,constraint.pointer);
+}
+
+function BulletWorld.removeConstraint(io BulletConstraint constraint) {
+  FabricBULLET_World_RemoveConstraint(this.pointer,constraint.pointer);
+}

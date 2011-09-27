@@ -325,7 +325,7 @@ function Boolean OGLShaderProgram.validateUniformBinding(
     glGetActiveUniform(this.programId, i, 1024, nbReceived, size, type, name);
     Integer activeUniformLocation = glGetUniformLocation(this.programId, name);
     if(activeUniformLocation == location){
-      report("Loading :"+ name);
+      //report("Loading :"+ name);
      // if(dataSize <= size[0]){
         return true;
      // }else{

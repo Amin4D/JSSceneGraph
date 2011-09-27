@@ -919,7 +919,8 @@ FABRIC.SceneGraph.registerNodeType('Viewport', {
         backgroundColor: FABRIC.RT.rgb(0.5, 0.5, 0.5),
         postProcessEffect: undefined,
         rayIntersectionThreshold: 0.2,
-        polygonMode: -1
+        polygonMode: -1,
+        checkOpenGL2Support: true
       });
 
     if (!options.windowElement) {
@@ -974,7 +975,12 @@ FABRIC.SceneGraph.registerNodeType('Viewport', {
         viewportNode.pub.getGlewSupported = fabricwindow.getGlewSupported;
         viewportNode.pub.show = function(){ fabricwindow.show(); };
         viewportNode.pub.hide = function(){ fabricwindow.hide(); };
-        fabricwindow.show();
+        
+        if(options.checkOpenGL2Support && !fabricwindow.getGlewSupported('GL_VERSION_2_0')){
+          alert('ERROR: Your graphics driver does not support OpenGL 2.0, which is required to run Fabric.')
+        }else{
+          fabricwindow.show();
+        }
         return true;
       }
     });

@@ -1,0 +1,140 @@
+use RGBA;
+use Color;
+use Vec3;
+use Vec2;
+
+
+operator lookupUVPixels(
+  io OGLRenderTarget renderTarget,
+  io Vec2 pos,
+  io Vec2 size,
+  io Color allPixels[],
+  io Color pixels[]
+) {
+  if(allPixels.size()==0){
+    return;
+  }
+  Integer pixelIndex = Size(pos.x) + (Size(pos.y) * Size(renderTarget.width));
+  pixels.resize(1);
+  pixels[0] = allPixels[pixelIndex];
+}
+
+
+operator setTextureBlend(
+  io Scalar colorBlend,
+  io Boolean drawToggle,
+  io Scalar planeTime,
+  io Scalar planeBlend,
+  io Scalar localTime
+) {
+  colorBlend = abs(planeTime - localTime) / planeBlend; 
+  if(colorBlend > 1.0)colorBlend = 1.0;
+  colorBlend = 1.0 - colorBlend;
+  drawToggle = colorBlend > 0.0;
+}
+
+operator setFramePixels(
+  io Boolean drawFrame,
+  io RGBA frameColor,
+  io Size width,
+  io Size height,
+  io RGBA pixels[]
+) {
+  var RGBA color; 
+  color.r = color.g = color.b = color.a = 0; 
+  if(drawFrame) color = frameColor;
+  var Size topOffset = (height-1) * width;
+  for(var Size i=0;i<height;i++) { 
+    pixels[width * i] = color;
+    pixels[width * i + width -1] = color;
+  };
+  for(var Size i=0;i<width;i++) { 
+    pixels[i] = color;
+    pixels[topOffset + i] = color;
+  };
+}
+
+operator paintPixels(
+  io Integer paint,
+  io Boolean paintErase,
+  io RGBA paintColor,
+  io Scalar paintRadius,
+  io Size width,
+  io Size height,
+  io RGBA pixels[],
+  io Color uvs[],
+  io Color prevUvs[]
+) {
+  if(paint == 0) {
+    return;
+  }
+  Scalar radiusWidth = 2.0*paintRadius/Scalar(width);
+  Scalar radiusHeight = 2.0*paintRadius/Scalar(height);
+  Scalar pixelWidth = 1.0/Scalar(width);
+  Scalar pixelHeight = 1.0/Scalar(height);
+  Scalar lineTolerance = 10.0 * pixelWidth;
+  
+  prevUvs.resize(uvs.size());
+  for(Size i=0; i<uvs.size(); i++) {
+  //  if(uvs[i].a <= 0.01) {
+  //    prevUvs[i] = uvs[i];
+  //    continue;
+  //  }
+    Vec2 diff(0.0,0.0);
+    Vec2 uvdiff(0.0,0.0);
+    if(paint > 1) {
+      if(prevUvs[i].a <= 0.01) {
+        prevUvs[i] = uvs[i];
+      }
+      diff.x = prevUvs[i].r - uvs[i].r;
+      diff.y = prevUvs[i].g - uvs[i].g;
+    }
+    if(abs(diff.x) > lineTolerance || abs(diff.y) > lineTolerance) {
+      diff.x = diff.y = 0.0;
+    }
+    
+    Scalar len = diff.norm();
+    Scalar step = 1.0;
+    if(len > 0.0)
+      step = 0.002 / len;
+    for(Scalar d=0; d<1.0; d+=step) {
+      for(Scalar rx=0; rx<=radiusWidth; rx+=pixelWidth) {
+        for(Scalar ry=0; ry<=radiusHeight; ry+=pixelHeight) {
+          uvdiff.x = diff.x * d + rx - radiusWidth * 0.5;
+          uvdiff.y = diff.y * d + ry - radiusHeight * 0.5;
+          if(uvdiff.x * uvdiff.y > radiusWidth * radiusHeight)
+            continue; 
+          Size x = Size(Scalar(width) * (uvs[i].r + uvdiff.x));
+          Size y = Size(Scalar(height) * (uvs[i].g + uvdiff.y));
+          if(x < 0 && x >= width)
+            continue;
+          if(y < 0 && y >= height)
+            continue;
+          Size index = width * y + x;
+          Scalar ratio = Scalar(paintColor.a) / 255.0;
+          if(paintErase) {
+            ratio = 1.0 - ratio;
+            pixels[index].r = Integer(Scalar(pixels[index].r * ratio));
+            pixels[index].g = Integer(Scalar(pixels[index].g * ratio));
+            pixels[index].b = Integer(Scalar(pixels[index].b * ratio));
+            pixels[index].a = Integer(Scalar(pixels[index].a * ratio));
+          } else {
+            pixels[index].r = Integer(ratio * Scalar(paintColor.r) + (1.0 - ratio) * Scalar(pixels[index].r));
+            pixels[index].g = Integer(ratio * Scalar(paintColor.g) + (1.0 - ratio) * Scalar(pixels[index].g));
+            pixels[index].b = Integer(ratio * Scalar(paintColor.b) + (1.0 - ratio) * Scalar(pixels[index].b));
+            if(Size(pixels[index].a) + Size(paintColor.a) > 255)
+              pixels[index].a = 255;
+            else
+              pixels[index].a += paintColor.a;
+          }
+        }
+      }
+    }
+    prevUvs[i] = uvs[i];
+  }
+  paint++;
+}
+
+
+
+

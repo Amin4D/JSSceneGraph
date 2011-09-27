@@ -5,7 +5,6 @@
 use Vec3;
 use Xfo;
 use FabricALEMBIC;
-use AlembicHandle;
 
 operator alembicLoad(
   io String url,

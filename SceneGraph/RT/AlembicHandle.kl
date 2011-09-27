@@ -1,0 +1,48 @@
+//
+// Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
+//
+
+use FabricALEMBIC;
+use Xfo;
+
+function ~AlembicHandle() {
+  report("AlembicHandle Destructor called.");
+  FabricALEMBICFreeData( this );
+}
+
+function AlembicHandle.loadResource(io FabricResource resource) {
+  if(this.pointer)
+    return;
+  if(resource.data.dataSize() == 0)
+    return;
+  FabricALEMBICDecode(resource.data.data(), resource.data.dataSize(), this);
+}
+
+function AlembicHandle.getIdentifiers(io String identifiers[]) {
+  FabricALEMBICGetIdentifiers(this,identifiers);
+}
+
+function AlembicHandle.getIdentifiers(io String identifiers[]) {
+  FabricALEMBICGetIdentifiers(this,identifiers);
+}
+
+function AlembicHandle.parseXform(io String identifier, io Integer sample, io Xfo transform) {
+  FabricALEMBICParseXform(this,identifier,sample,transform);
+}
+
+function AlembicHandle.parseCamera(io String identifier, io Integer sample, io Scalar near, io Scalar far, io Scalar fovY) {
+  FabricALEMBICParseCamera(this,identifier,sample,near,far,fovY);
+}
+
+function AlembicHandle.parsePolyMeshCount(io String identifier, io Size count) {
+  FabricALEMBICParsePolyMeshCount(this,identifier,count);
+}
+
+function AlembicHandle.parsePolyMeshUniforms(io String identifier, io Integer indices[]) {
+  FabricALEMBICParsePolyMeshUniforms(this,identifier,indices);
+}
+
+
+function AlembicHandle.parsePolyMeshAttributes(io String identifier, io Integer sample, io Vec3 vertices<>, io Vec3 normals<>, io Boolean uvsLoaded, io Vec2 uvs<>) {
+  FabricALEMBICParsePolyMeshAttributes(this,identifier,sample,vertices,normals,uvsLoaded,uvs);
+}

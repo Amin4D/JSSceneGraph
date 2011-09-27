@@ -40,13 +40,14 @@ FABRIC.SceneGraph.registerNodeType('AlembicLoadNode', {
       }
     }
 
-    resourceloaddgnode.addMember('archiveID', 'Integer',-1);
+    resourceloaddgnode.addMember('handle', 'AlembicHandle');
     resourceloaddgnode.addMember('identifiers', 'String[]');
     resourceloaddgnode.addMember('sample', 'Integer', 0);
-    resourceloaddgnode.addMember('numSamples', 'Integer', 0);
     
     resourceLoadNode.addMemberInterface(resourceloaddgnode, 'sample', true);
-    resourceLoadNode.addMemberInterface(resourceloaddgnode, 'numSamples', false);
+    resourceLoadNode.pub.getNumSamples = function() {
+      return resourceloaddgnode.getData('handle',0).numSamples;
+    };
     
     // create an animation controller for the sample
     var animationController = scene.constructNode('AnimationController');
@@ -72,8 +73,7 @@ FABRIC.SceneGraph.registerNodeType('AlembicLoadNode', {
       parameterLayout: [
         'self.url', //For debugging only
         'self.resource',
-        'self.archiveID',
-        'self.numSamples'
+        'self.handle'
       ],
       entryFunctionName: 'alembicLoad',
       srcFile: 'FABRIC_ROOT/SceneGraph/KL/loadAlembic.kl',
@@ -83,7 +83,7 @@ FABRIC.SceneGraph.registerNodeType('AlembicLoadNode', {
     resourceloaddgnode.bindings.append(scene.constructOperator({
       operatorName: 'alembicGetIdentifiers',
       parameterLayout: [
-        'self.archiveID',
+        'self.handle',
         'self.identifiers'
       ],
       entryFunctionName: 'alembicGetIdentifiers',
@@ -158,7 +158,7 @@ FABRIC.SceneGraph.registerNodeType('AlembicLoadNode', {
           uniformsdgnode.bindings.append(scene.constructOperator({
             operatorName: 'alembicParsePolyMeshUniforms',
             parameterLayout: [
-              'alembic.archiveID',
+              'alembic.handle',
               'self.identifier',
               'self.indices'
             ],
@@ -169,7 +169,7 @@ FABRIC.SceneGraph.registerNodeType('AlembicLoadNode', {
           attributesdgnode.bindings.append(scene.constructOperator({
             operatorName: 'alembicParsePolyMeshCount',
             parameterLayout: [
-              'alembic.archiveID',
+              'alembic.handle',
               'uniforms.identifier',
               'self.newCount'
             ],
@@ -180,7 +180,7 @@ FABRIC.SceneGraph.registerNodeType('AlembicLoadNode', {
           attributesdgnode.bindings.append(scene.constructOperator({
             operatorName: 'alembicParsePolyMeshAttributes',
             parameterLayout: [
-              'alembic.archiveID',
+              'alembic.handle',
               'uniforms.identifier',
               'alembic.sample',
               'self.positions<>',
@@ -213,7 +213,7 @@ FABRIC.SceneGraph.registerNodeType('AlembicLoadNode', {
           dgnode.bindings.insert(scene.constructOperator({
             operatorName: 'alembicParseCamera',
             parameterLayout: [
-              'alembic.archiveID',
+              'alembic.handle',
               'self.identifier',
               'alembic.sample',
               'self.nearDistance',
@@ -238,7 +238,7 @@ FABRIC.SceneGraph.registerNodeType('AlembicLoadNode', {
           dgnode.bindings.append(scene.constructOperator({
             operatorName: 'alembicParseXform',
             parameterLayout: [
-              'alembic.archiveID',
+              'alembic.handle',
               'self.identifier',
               'alembic.sample',
               'self.globalXfo'

@@ -116,6 +116,29 @@ $(document).ready(function() {
         diffuseColor: FABRIC.RT.rgb255(10,10,255),
         lightNode: light
       });
+  for(var i=0;i<512;i++) {
+    
+    var nonslicedTransform = scene.constructNode('BulletRigidBodyTransform', {
+      bulletWorldNode: bulletWorldNode,
+      shapeName: 'Box',
+      rigidBody: new FABRIC.RT.BulletRigidBody({
+        transform: FABRIC.RT.xfo({
+          tr: FABRIC.RT.vec3(0,3.0 + i * 0.6,0),
+          ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(1,1,0),0.1),
+          sc: FABRIC.RT.vec3(2.0,0.2,1.8).scale(1.0),
+        }),
+        friction: 0.8,
+        restitution: 0.7
+      })
+    });
+    
+    scene.constructNode('Instance', {
+      geometryNode: cuboidNode,
+      materialNode: materialNode,
+      transformNode: nonslicedTransform,
+      enableRaycasting: true
+    });
+  }
   
   // create a force manipulator
   var manipulatorNode = scene.constructNode('BulletForceManipulator', {
@@ -131,84 +154,15 @@ $(document).ready(function() {
   });
   
   FABRIC.appendOnResolveAsyncTaskCallback(function(label, nbRemaining, doneWeight, totalWeight) {
-      
-      
-    if (nbRemaining===0) {
-      var errors = scene.getErrors();
-      if (errors.length > 0) {
-        throw (errors.toString());
-      }
-        
-      if(!viewport.getGlewSupported('GL_EXT_draw_instanced')){
-        $('#infoContent').html("This demo uses OpenGL 3.2 features such as 'GL_EXT_draw_instanced'.\n\nIt appears that your graphics card does not support geometry instancing. This demo is running in compatibility mode with greatly reduced complexity");
-  
-        for(var i=0;i<128;i++) {
-          var nonslicedTransform = scene.constructNode('BulletRigidBodyTransform', {
-            bulletWorldNode: bulletWorldNode,
-            shapeName: 'Box',
-            rigidBody: new FABRIC.RT.BulletRigidBody({
-              transform: FABRIC.RT.xfo({
-                tr: FABRIC.RT.vec3(0,3.0 + i * 0.6,0),
-                ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(1,1,0),0.1),
-                sc: FABRIC.RT.vec3(2.0,0.2,1.8).scale(1.0),
-              }),
-              friction: 0.8,
-              restitution: 0.7
-            })
-          });
-          
-          scene.constructNode('Instance', {
-            geometryNode: cuboidNode,
-            materialNode: materialNode,
-            transformNode: nonslicedTransform,
-            enableRaycasting: true
-          });
-        }
-      }else{
-        for(var i=0;i<512;i++) {
-          bodies.push(new FABRIC.RT.BulletRigidBody({
-            transform: FABRIC.RT.xfo({
-              tr: FABRIC.RT.vec3(0,3.0 + i * 0.6,0),
-              ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(1,1,0),0.1),
-              sc: FABRIC.RT.vec3(2.0,0.2,1.8).scale(1.0),
-            }),
-            friction: 0.8,
-            restitution: 0.7
-          }));
-        }
-        
-        var slicedTransform = scene.constructNode('BulletRigidBodyTransform', {
-          bulletWorldNode: bulletWorldNode,
-          shapeName: 'Box',
-          rigidBody: bodies
-        });
-      
-        scene.constructNode('Instance', {
-          geometryNode: cuboidNode,
-          materialNode: scene.constructNode('PhongInstancingExtMaterial', {
-            diffuseColor: FABRIC.RT.rgb255(10,10,255),
-            lightNode: light,
-            transformTextureNode: slicedTransform.getTransformTexture(true)
-          }),
-          transformNode: slicedTransform,
-          enableRaycasting: true
-        });
-      }
-      
-    viewport.hide();
-    
-    FABRIC.appendOnResolveAsyncTaskCallback(function(label, nbRemaining, doneWeight, totalWeight) {
     $('#loadingProgressBar').progressbar({
       value: (1.0-(doneWeight/totalWeight))*100
     });
-    
     if (nbRemaining===0) {
+      $('#loadingDialog').dialog('close');
       var errors = scene.getErrors();
       if (errors.length > 0) {
         throw (errors.toString());
       }
-
-      $('#loadingDialog').dialog('close');
 
       $('#play').button()
         .click(function() {
@@ -252,13 +206,10 @@ $(document).ready(function() {
         });
         
     //  scene.animation.play();
-      viewport.show();
       viewport.redraw();
       return true;
-    }});
-    
-      return true;
-    }});
+    }
+  });
 });
 
 </script>
@@ -281,7 +232,7 @@ $(document).ready(function() {
 
           <div class="box">
             <h2>INFO</h2>
-              <div class="content" id="infoContent">
+              <div class="content">
               Bulle Stacking Boxes.<br>
               TODO some text
             </div><!--content-->

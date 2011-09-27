@@ -10,6 +10,8 @@ FABRIC.RT.BulletWorld = function(options) {
   this.gravity = options.gravity ? options.gravity : FABRIC.RT.vec3(0,-40,0);
   this.step = 0;
   this.substeps = options.substeps ? options.substeps : 3;
+  this.hit = false;
+  this.hitPosition = FABRIC.RT.vec3(0,0,0);
 };
 
 FABRIC.RT.BulletWorld.prototype = {
@@ -22,6 +24,8 @@ FABRIC.appendOnCreateContextCallback(function(context) {
       gravity: 'Vec3',
       step: 'Size',
       substeps: 'Size',
+      hit: 'Boolean',
+      hitPosition: 'Vec3',
     },
     constructor: FABRIC.RT.BulletWorld,
     klBindings: {

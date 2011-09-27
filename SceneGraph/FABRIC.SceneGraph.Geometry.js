@@ -728,18 +728,24 @@ FABRIC.SceneGraph.registerNodeType('Instance', {
         options.enableRaycasting &&
         geometryNode.getRayIntersectionOperator
       ) {
-        var raycastOperator = geometryNode.getRayIntersectionOperator(transformNodeMember);
-        raycastEventHandler = instanceNode.constructEventHandlerNode('Raycast');
-        raycastEventHandler.setScope('geometry_uniforms', geometryNode.getUniformsDGNode());
-        raycastEventHandler.setScope('geometry_attributes', geometryNode.getAttributesDGNode());
-        raycastEventHandler.setScope('boundingbox', geometryNode.getBoundingBoxDGNode());
-        raycastEventHandler.setScope('transform', transformNode.getDGNode());
-        raycastEventHandler.setScope('instance', dgnode);
-        // The selector will return the node bound with the given binding name.
-        raycastEventHandler.setSelector('instance', raycastOperator);
-
-        // the sceneRaycastEventHandler propogates the event throughtout the scene.
-        scene.getSceneRaycastEventHandler().appendChildEventHandler(raycastEventHandler);
+        
+        // check if this is a sliced transform node
+        if(transformNode.getDGNode().getCount() && transformNode.getRaycastEventHandler) {
+          scene.getSceneRaycastEventHandler().appendChildEventHandler(transformNode.getRaycastEventHandler());
+        } else {
+          var raycastOperator = geometryNode.getRayIntersectionOperator(transformNodeMember);
+          raycastEventHandler = instanceNode.constructEventHandlerNode('Raycast');
+          raycastEventHandler.setScope('geometry_uniforms', geometryNode.getUniformsDGNode());
+          raycastEventHandler.setScope('geometry_attributes', geometryNode.getAttributesDGNode());
+          raycastEventHandler.setScope('boundingbox', geometryNode.getBoundingBoxDGNode());
+          raycastEventHandler.setScope('transform', transformNode.getDGNode());
+          raycastEventHandler.setScope('instance', dgnode);
+          // The selector will return the node bound with the given binding name.
+          raycastEventHandler.setSelector('instance', raycastOperator);
+  
+          // the sceneRaycastEventHandler propogates the event throughtout the scene.
+          scene.getSceneRaycastEventHandler().appendChildEventHandler(raycastEventHandler);
+        }
       }
     }
 

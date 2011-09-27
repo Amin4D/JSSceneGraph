@@ -27,6 +27,14 @@ function BulletWorld.reset() {
   FabricBULLET_World_Reset(this.pointer,this.step);
 }
 
+function BulletWorld.raycast(io Vec3 origin, io Vec3 direction) {
+  FabricBULLET_World_Raycast(this.pointer,origin,direction,this.hit,this.hitPosition);
+}
+
+function BulletWorld.applyForce(io BulletForce force) {
+  FabricBULLET_World_ApplyForce(this.pointer,force);
+}
+
 function BulletWorld.getGravity(io Vec3 gravity) {
   gravity = this.gravity;
 }

@@ -39,6 +39,7 @@
     <script type="text/javascript" src="../../../SceneGraph/RT/BulletSoftBody.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/RT/BulletWorld.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/RT/BulletConstraint.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/BulletForce.js" charset="utf-8"></script>
 
     <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Geometry.js" charset="utf-8"></script>
@@ -75,7 +76,7 @@ $(document).ready(function() {
   
   var scene = FABRIC.SceneGraph.createScene();
   var viewport = scene.constructNode('Viewport', {
-    enableRaycasting: false,
+    enableRaycasting: true,
     windowElement: document.getElementById('FabricContainer')
   });
   
@@ -111,13 +112,13 @@ $(document).ready(function() {
   });
 
   // compute the transforms
-  var numInstances = 128*4;
+  var numInstances = 128*2;
   for(var i=0;i<numInstances;i++) {
     bodies.push(new FABRIC.RT.BulletRigidBody({
       transform: FABRIC.RT.xfo({
         tr: FABRIC.RT.vec3(0,3.0 + i * 2.0 * radius,0),
       }),
-      friction: 0.8,
+      friction: 0.3,
       restitution: 0.7,
     }));
   }
@@ -143,7 +144,15 @@ $(document).ready(function() {
   
   // push the constraints to the world
   bulletWorldNode.addConstraint('BallSockets',constraints,'Spheres','Spheres');
-
+  
+  // create a force manipulator
+  var manipulatorNode = scene.constructNode('BulletForceManipulator', {
+    bulletWorldNode: bulletWorldNode,
+    cameraNode: camera,
+    radius: 3.0,
+    useFalloff: false
+  });
+  
   // create an instance to draw the spheres
   scene.constructNode('Instance', {
     geometryNode: sphereNode,
@@ -152,7 +161,8 @@ $(document).ready(function() {
       lightNode: light,
       transformTextureNode: slicedTransform.getTransformTexture(true)
     }),
-    transformNode: slicedTransform
+    transformNode: slicedTransform,
+    enableRaycasting: true
   });
   
   $('#loadingDialog').dialog({

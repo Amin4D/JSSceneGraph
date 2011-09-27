@@ -9,6 +9,7 @@ use BulletRigidBody;
 use BulletSoftBody;
 use BulletWorld;
 use BulletConstraint;
+use BulletForce;
 
 operator createBulletWorld(
   io BulletWorld world
@@ -29,6 +30,34 @@ operator stepBulletWorld(
   } else {
     world.step(steppedTime);
     prevTime = time - steppedTime;
+  }
+}
+
+operator raycastBulletWorld(
+  io Boolean select,
+  io RayIntersection intersection,
+  io Ray ray,
+  io BulletWorld world,
+  io Boolean enable
+) {
+  world.raycast(ray.start,ray.direction);
+  if(world.hit) {
+    select = true;
+    intersection.point = world.hitPosition;
+    intersection.distance = (ray.start - world.hitPosition).norm();
+  }
+}
+
+operator applyBulletForce(
+  io BulletWorld world,
+  io BulletForce force[]
+){
+  for(Size i=0;i<force.size();i++) {
+    if(force[i].enabled) {
+      world.applyForce(force[i]);
+      if(force[i].autoDisable)
+        force[i].enabled = false;
+    }
   }
 }
 

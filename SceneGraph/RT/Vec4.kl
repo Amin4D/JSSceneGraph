@@ -6,10 +6,7 @@
 use Math;
 
 function Vec4(Scalar x, Scalar y, Scalar z, Scalar t) {
-  this.x = x;
-  this.y = y;
-  this.z = z;
-  this.t = t;
+  this.set(x, y, z, t);
 }
 
 function Vec4.set(Scalar x, Scalar y, Scalar z, Scalar t) {
@@ -105,15 +102,15 @@ function Vec4 Vec4.negate() {
   return Vec4(-this.x, - this.y, - this.z, - this.t);
 }
 
-function Vec4 Vec4.invert() {
+function Vec4 Vec4.inverse() {
   if( Math_badDivisor( this.x ) )//Perf: check first to avoid building the report string
-    Math_reportBadDivisor( this.x, "Vec4.invert: this.x" );
+    Math_reportBadDivisor( this.x, "Vec4.inverse: this.x" );
   if( Math_badDivisor( this.y ) )
-    Math_reportBadDivisor( this.y, "Vec4.invert: this.y" );
+    Math_reportBadDivisor( this.y, "Vec4.inverse: this.y" );
   if( Math_badDivisor( this.z ) )
-    Math_reportBadDivisor( this.z, "Vec4.invert: this.z" );
+    Math_reportBadDivisor( this.z, "Vec4.inverse: this.z" );
   if( Math_badDivisor( this.t ) )
-    Math_reportBadDivisor( this.t, "Vec4.invert: this.t" );
+    Math_reportBadDivisor( this.t, "Vec4.inverse: this.t" );
   return Vec4(1.0/this.x, 1.0/this.y, 1.0/this.z, 1.0/this.t);
 }
 

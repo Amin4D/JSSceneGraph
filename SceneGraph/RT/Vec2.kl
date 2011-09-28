@@ -6,8 +6,7 @@
 use Math;
 
 function Vec2(Scalar x, Scalar y) {
-  this.x = x;
-  this.y = y;
+  this.set(x, y);
 }
 
 function Vec2.set(Scalar x, Scalar y) {
@@ -95,11 +94,11 @@ function Vec2 Vec2.negate() {
   return Vec2(-this.x, - this.y);
 }
 
-function Vec2 Vec2.invert() {
+function Vec2 Vec2.inverse() {
   if( Math_badDivisor( this.x ) )//Perf: check first to avoid building the report string
-    Math_reportBadDivisor( this.x, "Vec2.invert: this.x" );
+    Math_reportBadDivisor( this.x, "Vec2.inverse: this.x" );
   if( Math_badDivisor( this.y ) )
-    Math_reportBadDivisor( this.y, "Vec2.invert: this.y" );
+    Math_reportBadDivisor( this.y, "Vec2.inverse: this.y" );
   return Vec2(1.0/this.x, 1.0/this.y);
 }
 

@@ -16,20 +16,24 @@ FABRIC.RT.isVec4 = function(vec4) {
     typeof vec4.t === 'number';
 };
 
-FABRIC.RT.Vec4 = function(x, y, z, t) {
-  if (typeof x === 'number' && typeof y === 'number' && typeof z === 'number' && typeof t === 'number') {
-    this.x = x;
-    this.y = y;
-    this.z = z;
-    this.t = t;
+FABRIC.RT.Vec4 = function() {
+  if (arguments.length == 4 &&
+      FABRIC.RT.isScalar(arguments[0]) && 
+      FABRIC.RT.isScalar(arguments[1]) && 
+      FABRIC.RT.isScalar(arguments[2]) && 
+      FABRIC.RT.isScalar(arguments[3]) ) {
+    this.x = arguments[0];
+    this.y = arguments[1];
+    this.z = arguments[2];
+    this.t = arguments[3];
   }
-  else if (FABRIC.RT.isVec4(x) && y === undefined && z === undefined && t === undefined) {
-    this.x = x.x;
-    this.y = x.y;
-    this.z = x.z;
-    this.t = x.t;
+  else if (arguments.length == 1 && FABRIC.RT.isVec4(arguments[0])) {
+    this.x = arguments[0].x;
+    this.y = arguments[0].y;
+    this.z = arguments[0].z;
+    this.t = arguments[0].t;
   }
-  else if (x === undefined && y === undefined && z === undefined && t === undefined) {
+  else if (arguments.length == 0) {
     this.x = 0;
     this.y = 0;
     this.z = 0;
@@ -41,17 +45,8 @@ FABRIC.RT.Vec4 = function(x, y, z, t) {
 FABRIC.RT.Vec4.prototype = {
 
   set: function(x, y, z, t) {
-    if (typeof x === 'number') {
-      this.x = x;
-      this.y = y;
-      this.z = z;
-      this.t = t;
-    } else {
-      this.x = x.x;
-      this.y = x.y;
-      this.z = x.z;
-      this.t = x.t;
-    }
+    //Call the constructor
+    FABRIC.RT.Vec4.apply(this, arguments);
     return this;
   },
 
@@ -116,12 +111,12 @@ FABRIC.RT.Vec4.prototype = {
     return new FABRIC.RT.Vec4(-this.x, - this.y, - this.z, - this.t);
   },
 
-  invert: function(v) {
+  inverse: function(v) {
     if( Math.verboseLogFunction ) {
-      Math.checkDivisor(this.x, 'Vec4.invert this.x');
-      Math.checkDivisor(this.y, 'Vec4.invert this.y');
-      Math.checkDivisor(this.z, 'Vec4.invert this.z');
-      Math.checkDivisor(this.t, 'Vec4.invert this.t');
+      Math.checkDivisor(this.x, 'Vec4.inverse this.x');
+      Math.checkDivisor(this.y, 'Vec4.inverse this.y');
+      Math.checkDivisor(this.z, 'Vec4.inverse this.z');
+      Math.checkDivisor(this.t, 'Vec4.inverse this.t');
     }
     return new FABRIC.RT.Vec4(1.0/this.x, 1.0/this.y, 1.0/this.z, 1.0/this.t);
   },

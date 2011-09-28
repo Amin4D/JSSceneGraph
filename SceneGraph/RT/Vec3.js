@@ -14,18 +14,21 @@ FABRIC.RT.isVec3 = function(vec3) {
     typeof vec3.z === 'number';
 };
 
-FABRIC.RT.Vec3 = function(x, y, z) {
-  if (typeof x === 'number' && typeof y === 'number' && typeof z === 'number') {
-    this.x = x;
-    this.y = y;
-    this.z = z;
+FABRIC.RT.Vec3 = function() {
+  if (arguments.length == 3 &&
+      FABRIC.RT.isScalar(arguments[0]) && 
+      FABRIC.RT.isScalar(arguments[1]) && 
+      FABRIC.RT.isScalar(arguments[2]) ) {
+    this.x = arguments[0];
+    this.y = arguments[1];
+    this.z = arguments[2];
   }
-  else if (FABRIC.RT.isVec3(x) && y === undefined && z === undefined) {
-    this.x = x.x;
-    this.y = x.y;
-    this.z = x.z;
+  else if (arguments.length == 1 && FABRIC.RT.isVec3(arguments[0])) {
+    this.x = arguments[0].x;
+    this.y = arguments[0].y;
+    this.z = arguments[0].z;
   }
-  else if (x === undefined && y === undefined && z === undefined) {
+  else if (arguments.length == 0) {
     this.x = 0;
     this.y = 0;
     this.z = 0;
@@ -36,15 +39,8 @@ FABRIC.RT.Vec3 = function(x, y, z) {
 FABRIC.RT.Vec3.prototype = {
 
   set: function(x, y, z) {
-    if (typeof x === 'number') {
-      this.x = x;
-      this.y = y;
-      this.z = z;
-    } else {
-      this.x = x.x;
-      this.y = x.y;
-      this.z = x.z;
-    }
+    //Call the constructor
+    FABRIC.RT.Vec3.apply(this, arguments);
     return this;
   },
 
@@ -106,11 +102,11 @@ FABRIC.RT.Vec3.prototype = {
     return new FABRIC.RT.Vec3(-this.x, - this.y, - this.z);
   },
 
-  invert: function(v) {
+  inverse: function(v) {
     if( Math.verboseLogFunction ) {
-      Math.checkDivisor(this.x, 'Vec3.invert this.x');
-      Math.checkDivisor(this.y, 'Vec3.invert this.y');
-      Math.checkDivisor(this.z, 'Vec3.invert this.z');
+      Math.checkDivisor(this.x, 'Vec3.inverse this.x');
+      Math.checkDivisor(this.y, 'Vec3.inverse this.y');
+      Math.checkDivisor(this.z, 'Vec3.inverse this.z');
     }
     return new FABRIC.RT.Vec3(1.0/this.x, 1.0/this.y, 1.0/this.z);
   },

@@ -26,10 +26,46 @@ function Vec3 Euler.getAngles() {
 function Euler(in Quat q, in RotationOrder ro) {
   this.ro = ro;
 
-  var Scalar nq = q.normSq();
-  var Scalar s = (nq > 0.0) ? (2.0 / nq) : 0.0;
-  var Scalar xs = q.v.x * s, ys = q.v.y * s, zs = q.v.z * s;
-  var Scalar wx = q.w * xs, wy = q.w * ys, wz = q.w * zs;
-  var Scalar xx = q.v.x * xs, xy = q.v.x * ys, xz = q.v.x * zs;
-  var Scalar yy = q.v.y * xs, yz = q.v.y * ys, zz = q.v.z * zs;
+  Scalar nq = q.normSq();
+  Scalar s = (nq > 0.0) ? (2.0 / nq) : 0.0;
+  Scalar xs = q.v.x * s, ys = q.v.y * s, zs = q.v.z * s;
+  Scalar wx = q.w * xs, wy = q.w * ys, wz = q.w * zs;
+  Scalar xx = q.v.x * xs, xy = q.v.x * ys, xz = q.v.x * zs;
+  Scalar yy = q.v.y * xs, yz = q.v.y * ys, zz = q.v.z * zs;
+}
+
+function Mat33 Euler.makeMat33() {
+  Scalar Cx = cos(this.x), Sx = sin(this.x);
+  Scalar Cy = cos(this.y), Sy = sin(this.y);
+  Scalar Cz = cos(this.z), Sz = sin(this.z);
+
+
+  Mat33 Rx( 1.0, 0.0, 0.0,
+            0.0,  Cx, -Sx,
+            0.0,  Sx,  Cx);
+
+  Mat33 Ry(  Cy,  0.0,  Sy,
+            0.0,  1.0, 0.0,
+            -Sy,  0.0,  Cy);
+
+  Mat33 Rz(  Cz,  -Sz,  0.0,
+             Sz,   Cz,  0.0,
+            0.0,  0.0,  1.0);
+
+  Mat33 result;
+
+  if (this.ro.isXYZ())
+    result = Rx * Ry * Rz;
+  else if (this.ro.isYZX())
+    result = Ry * Rz * Rx;
+  else if (this.ro.isZXY())
+    result = Rz * Rx * Ry;
+  else if (this.ro.isXZY())
+    result = Rx * Rz * Ry;
+  else if (this.ro.isZYX())
+    result = Rz * Ry * Rx;
+  else if (this.ro.isYXZ())
+    result = Ry * Rx * Rz;
+
+  return result;
 }

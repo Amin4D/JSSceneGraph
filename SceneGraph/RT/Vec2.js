@@ -12,16 +12,18 @@ FABRIC.RT.isVec2 = function(vec2) {
     typeof vec2.y === 'number';
 };
 
-FABRIC.RT.Vec2 = function(x, y) {
-  if (typeof x === 'number' && typeof y === 'number') {
-    this.x = x;
-    this.y = y;
+FABRIC.RT.Vec2 = function() {
+  if (arguments.length == 2 &&
+      FABRIC.RT.isScalar(arguments[0]) && 
+      FABRIC.RT.isScalar(arguments[1]) ) {
+    this.x = arguments[0];
+    this.y = arguments[1];
   }
-  else if (FABRIC.RT.isVec2(x) && y === undefined) {
-    this.x = x.x;
-    this.y = x.y;
+  else if (arguments.length == 1 && FABRIC.RT.isVec2(arguments[0])) {
+    this.x = arguments[0].x;
+    this.y = arguments[0].y;
   }
-  else if (x === undefined && y === undefined) {
+  else if (arguments.length == 0) {
     this.x = 0;
     this.y = 0;
   }
@@ -31,13 +33,8 @@ FABRIC.RT.Vec2 = function(x, y) {
 FABRIC.RT.Vec2.prototype = {
 
   set: function(x, y) {
-    if (typeof x === 'number') {
-      this.x = x;
-      this.y = y;
-    } else {
-      this.x = x.x;
-      this.y = x.y;
-    }
+    //Call the constructor
+    FABRIC.RT.Vec2.apply(this, arguments);
     return this;
   },
 
@@ -96,10 +93,10 @@ FABRIC.RT.Vec2.prototype = {
     return new FABRIC.RT.Vec2(-this.x, - this.y);
   },
 
-  invert: function(v) {
+  inverse: function(v) {
     if( Math.verboseLogFunction ) {
-      Math.checkDivisor(this.x, 'Vec2.invert this.x');
-      Math.checkDivisor(this.y, 'Vec2.invert this.y');
+      Math.checkDivisor(this.x, 'Vec2.inverse this.x');
+      Math.checkDivisor(this.y, 'Vec2.inverse this.y');
     }
     return new FABRIC.RT.Vec2(1.0/this.x, 1.0/this.y);
   },

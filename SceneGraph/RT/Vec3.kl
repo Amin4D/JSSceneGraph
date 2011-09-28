@@ -6,9 +6,7 @@
 use Math;
 
 function Vec3(Scalar x, Scalar y, Scalar z) {
-  this.x = x;
-  this.y = y;
-  this.z = z;
+  this.set(x, y, z);
 }
 
 function Vec3.set(Scalar x, Scalar y, Scalar z) {
@@ -100,13 +98,13 @@ function Vec3 Vec3.negate() {
   return Vec3(-this.x, -this.y, -this.z);
 }
 
-function Vec3 Vec3.invert() {
+function Vec3 Vec3.inverse() {
   if( Math_badDivisor( this.x ) )//Perf: check first to avoid building the report string
-    Math_reportBadDivisor( this.x, "Vec3.invert: this.x" );
+    Math_reportBadDivisor( this.x, "Vec3.inverse: this.x" );
   if( Math_badDivisor( this.y ) )
-    Math_reportBadDivisor( this.y, "Vec3.invert: this.y" );
+    Math_reportBadDivisor( this.y, "Vec3.inverse: this.y" );
   if( Math_badDivisor( this.z ) )
-    Math_reportBadDivisor( this.z, "Vec3.invert: this.z" );
+    Math_reportBadDivisor( this.z, "Vec3.inverse: this.z" );
   return Vec3(1.0/this.x, 1.0/this.y, 1.0/this.z);
 }
 
@@ -173,8 +171,8 @@ function Vec3 Vec3.linearInterpolate(in Vec3 other, in Scalar t) {
 }
 
 function Scalar distFromPointToLine(in Vec3 P, in Vec3 lineP0, in Vec3 lineP1) {
-  var Vec3 v, w, Pb;
-  var Scalar c1, c2, b;
+  Vec3 v, w, Pb;
+  Scalar c1, c2, b;
   v = lineP1 - lineP0;
   w = P - lineP0;
 
@@ -190,8 +188,8 @@ function Scalar distFromPointToLine(in Vec3 P, in Vec3 lineP0, in Vec3 lineP1) {
 }
 
 function Scalar distFromPointToSegment(in Vec3 P, in Vec3 segmentP0, in Vec3 segmentP1) {
-  var Vec3 v, w, Pb;
-  var Scalar c1, c2, b;
+  Vec3 v, w, Pb;
+  Scalar c1, c2, b;
   v = segmentP1 - segmentP0;
   w = P - segmentP0;
 

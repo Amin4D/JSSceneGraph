@@ -3,12 +3,8 @@
 // Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
 //
 
-/**
- * Function to determine if the given object is a matrix22 object.
- * @param {object} value The object to validate.
- * @return {boolean} True if the given object is a valid matrix22.
- */
-FABRIC.RT.isMat2 = function(value) {
+//determine if an object is a valid Mat22.
+FABRIC.RT.isMat22 = function(value) {
   return typeof value === 'object' &&
     'row0' in value &&
     FABRIC.RT.isVec2(value.row0) &&
@@ -16,10 +12,6 @@ FABRIC.RT.isMat2 = function(value) {
     FABRIC.RT.isVec2(value.row1);
 };
 
-/**
- * Constructor for a matrix22 object.
- * @constructor
- */
 FABRIC.RT.Mat22 = function() {
   if (arguments.length == 2 &&
       FABRIC.RT.isVec2(arguments[0]) &&
@@ -27,7 +19,7 @@ FABRIC.RT.Mat22 = function() {
     this.row0 = arguments[0].clone();
     this.row1 = arguments[1].clone();
   }
-  else if (arguments.length = 4 &&
+  else if (arguments.length == 4 &&
       FABRIC.RT.isScalar(arguments[0]) &&
       FABRIC.RT.isScalar(arguments[1]) &&
       FABRIC.RT.isScalar(arguments[2]) &&
@@ -35,8 +27,7 @@ FABRIC.RT.Mat22 = function() {
     this.row0 = new FABRIC.RT.Vec2(arguments[0], arguments[1]);
     this.row1 = new FABRIC.RT.Vec2(arguments[2], arguments[3]);
   }
-  else if (arguments.length == 1 &&
-      FABRIC.RT.isMat22(arguments[0])) {
+  else if (arguments.length == 1 && FABRIC.RT.isMat22(arguments[0])) {
     this.row0 = arguments[0].row0.clone();
     this.row1 = arguments[0].row1.clone();
   }
@@ -47,50 +38,124 @@ FABRIC.RT.Mat22 = function() {
   else throw'new Mat22: invalid arguments';
   };
 
-/**
- * Overloaded Constructor for a matrix22 object.
- * @param {object} row0 The first row of the matrix22 as a Vec2 object.
- * @param {object} row1 The second row of the matrix22 as a Vec2 object.
- * @return {object} The matrix22 object.
- */
-FABRIC.RT.mat22 = function(row0, row1) {
-  return new FABRIC.RT.Mat22(row0, row1);
-};
-
 FABRIC.RT.Mat22.prototype = {
-  eql: function(that) {
-    return FABRIC.RT.isMat22(that) &&
-      this.row0.eql(that.row0) &&
-      this.row1.eql(that.row1);
+
+  set: function() {
+    //Call the constructor
+    FABRIC.RT.Mat22.apply(this, arguments);
+    return this;
   },
 
-  mul: function(that) {
-    if (FABRIC.RT.isScalar(that))
-      return new FABRIC.RT.Mat22(
-      this.row0.multiply(that),
-      this.row1.multiply(that)
+  setRows: function(row0, row1) {
+    this.row0 = row0.clone();
+    this.row1 = row1.clone();
+  },
+
+  setColumns: function(col0, col1) {
+    this.row0.x = col0.x; this.row0.y = col1.x;
+    this.row1.x = col0.y; this.row1.y = col1.y;
+  },
+
+  setNull: function() {
+    this.row0 = FABRIC.RT.Vec2.origin.clone();
+    this.row1 = FABRIC.RT.Vec2.origin.clone();
+  },
+
+  setIdentity: function() {
+    this.set();
+  },
+
+  setDiagonal: function(v) {
+    if( FABRIC.RT.isScalar(v) ) {
+      this.row0.x = this.row1.y = v;
+    } else {
+      this.row0.x = v.x;
+      this.row1.y = v.y;
+    }
+  },
+
+  equal: function(v) {
+    return this.row0.equal(v.row0) && this.row1.equal(v.row1);
+  },
+
+  almostEqual: function(v, precision) {
+    if (precision === undefined) {
+      precision = Math.PRECISION;
+    }
+    return this.row0.almostEqual(v.row0, precision) && this.row1.almostEqual(v.row1, precision);
+  },
+
+  add: function(that) {
+    return new FABRIC.RT.Mat22(
+      this.row0.add(that.row0),
+      this.row1.add(that.row1)
     );
-    else if (FABRIC.RT.isVec2(that))
-      return new FABRIC.RT.Vec2(
+  },
+
+  subtract: function(that) {
+    return new FABRIC.RT.Mat22(
+      this.row0.subtract(that.row0),
+      this.row1.subtract(that.row1)
+    );
+  },
+
+  multiplyScalar: function(that) {
+    return new FABRIC.RT.Mat22(
+      this.row0.multiplyScalar(that),
+      this.row1.multiplyScalar(that)
+    );
+  },
+
+  multiplyVector: function(that) {
+    return new FABRIC.RT.Vec2(
       this.row0.dot(that),
       this.row1.dot(that)
     );
-    else if (FABRIC.RT.isMat22(that))
-      return new FABRIC.RT.Mat22(
+  },
+
+  multiply: function(that) {
+    return new FABRIC.RT.Mat22(
       this.row0.x * that.row0.x + this.row0.y * that.row1.x,
       this.row0.x * that.row0.y + this.row0.y * that.row1.y,
       //
       this.row1.x * that.row0.x + this.row1.y * that.row1.x,
       this.row1.x * that.row0.y + this.row1.y * that.row1.y
     );
-    else throw'Mat22.mul: incompatible type';
-    },
+  },
+
+  divideScalar: function(s) {
+    Math.checkDivisor(s, 'Mat22.divideScalar');
+    return this.multiplyScalar(1.0 / s);
+  },
+
+  determinant: function() {
+    var value = this.row0.x * this.row1.y - this.row0.y * this.row1.x;
+    return value;
+  },
+
+  adjoint: function() {
+    return new FABRIC.RT.Mat22(this.row1.y, -this.row0.y, -this.row1.x, this.row0.x);
+  },
+
+  inverse: function() {
+    var det = this.determinant();
+    if( Math.verboseLogFunction ) {
+      Math.checkDivisor(det, 'Mat22.inverse');
+    }
+    return this.adjoint().divideScalar(det);
+  },
+
+  transpose: function() {
+    return new FABRIC.RT.Mat22(
+      this.row0.x, this.row1.x,
+      this.row0.y, this.row1.y);
+  },
 
   clone: function() {
     return new FABRIC.RT.Mat22(this);
   },
   toString: function() {
-    return 'FABRIC.RT.mat22(' + this.row0.toString() + ',' + this.row1.toString() + ')';
+    return 'FABRIC.RT.mat22(' + this.row0.toString() + ',' + this.row1.toString() + ',' + this.row2.toString() + ')';
   },
   getType: function() {
     return 'FABRIC.RT.Mat22';
@@ -101,7 +166,7 @@ FABRIC.RT.Mat22.prototype = {
       changeHandlerFn(val);
     }
     var row0RefreshFn = this.row0.displayGUI($parentDiv, fn); $parentDiv.append($('<br/>'));
-    var row1RefreshFn = this.row1.displayGUI($parentDiv, fn);;
+    var row1RefreshFn = this.row1.displayGUI($parentDiv, fn);
     var refreshFn = function(val) {
       row0RefreshFn(val.row0);
       row1RefreshFn(val.row1);
@@ -109,6 +174,9 @@ FABRIC.RT.Mat22.prototype = {
     return refreshFn;
   }
 };
+
+//Mat22 constants
+FABRIC.RT.Mat22.identity = new FABRIC.RT.Mat22();
 
 FABRIC.appendOnCreateContextCallback(function(context) {
   context.RegisteredTypesManager.registerType('Mat22', {

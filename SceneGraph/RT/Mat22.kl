@@ -2,13 +2,13 @@
 //
 // Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
 //
+use Math, Vec2;
 
 function Mat22(
   Scalar _00, Scalar _01,
   Scalar _10, Scalar _11
 ) {
-  this.row0 = Vec2(_00, _01);
-  this.row1 = Vec2(_10, _11);
+  this.set(_00, _01, _10, _11);
 }
 
 function Mat22(
@@ -18,9 +18,32 @@ function Mat22(
   this.row1 = row1;
 }
 
+function Mat22.set(
+  Scalar _00, Scalar _01,
+  Scalar _10, Scalar _11
+) {
+  this.row0 = Vec2(_00, _01);
+  this.row1 = Vec2(_10, _11);
+}
+
+function Mat22.setRows(in Vec2 row0, in Vec2 row1) {
+  this.row0 = row0;
+  this.row1 = row1;
+}
+
+function Mat44.setColumns(in Vec2 col0, in Vec2 col1) {
+  this.row0.x = col0.x; this.row0.y = col1.x;
+  this.row1.x = col0.y; this.row1.y = col1.y;
+}
+
 function Mat22.setNull() {
-  var Vec2 null(0.0, 0.0);
+  Vec2 null(0.0, 0.0);
   this.row0 = this.row1 = null;
+}
+
+function Mat22.setIdentity() {
+  this.setNull();
+  this.setDiagonal(1.0);
 }
 
 function Mat22.setDiagonal(in Scalar v) {
@@ -32,11 +55,44 @@ function Mat22.setDiagonal(in Vec2 v) {
   this.row1.y = v.y;
 }
 
-function Vec2 * (Vec2 vec2, Mat22 mat22) {
-  return Vec2(
-    vec2.x * mat22.row0.x + vec2.y * mat22.row1.x,
-    vec2.x * mat22.row0.y + vec2.y * mat22.row1.y
-  );
+function Boolean Mat22.equal (in Mat22 other) {
+  return this.row0.equal( other.row0 ) && this.row1.equal( other.row1 );
+}
+
+function Boolean Mat22.almostEqual(in Mat22 other, in Scalar precision) {
+  return this.row0.almostEqual( other.row0, precision ) && this.row1.almostEqual( other.row1, precision );
+}
+
+function Boolean Mat22.almostEqual(in Mat22 other) {
+  return this.almostEqual(other, PRECISION);
+}
+
+function Mat22 + (Mat22 a, Mat22 b) {
+  return Mat22( a.row0 + b.row0, a.row1 + b.row1 );
+}
+
+function Mat22. += (Mat22 other) {
+  this = this + other;
+}
+
+function Mat22 - (Mat22 a, Mat22 b) {
+  return Mat22( a.row0 - b.row0, a.row1 - b.row1 );
+}
+
+function Mat22. -= (Mat22 other) {
+  this = this - other;
+}
+
+function Mat22 * (Mat22 left, Mat22 right) {
+  Mat22 result;
+
+  result.row0.x = left.row0.x * right.row0.x + left.row0.y * right.row1.x;
+  result.row0.y = left.row0.x * right.row0.y + left.row0.y * right.row1.y;
+
+  result.row1.x = left.row1.x * right.row0.x + left.row1.y * right.row1.x;
+  result.row1.y = left.row1.x * right.row0.y + left.row1.y * right.row1.y;
+
+  return result;
 }
 
 function Vec2 * (Mat22 mat22, Vec2 vec2) {
@@ -46,31 +102,50 @@ function Vec2 * (Mat22 mat22, Vec2 vec2) {
   );
 }
 
-function Mat22 * (Mat22 left, Mat22 right) {
-  var Mat22 result;
-
-  result.row0.x = left.row0.x * right.row0.x + left.row0.y;
-  result.row0.y = left.row0.x * right.row0.y + left.row0.y;
-
-  result.row1.x = left.row1.x * right.row0.x + left.row1.y;
-  result.row1.y = left.row1.x * right.row0.y + left.row1.y;
-
-  return result;
+function Mat22 * (Mat22 mat22, Scalar s) {
+  return Mat22( mat22.row0 * s, mat22.row1 * s );
 }
-function Mat22 / (Mat22 mat, Scalar value) {
-  var Mat22 result;
-  result.row0 = mat.row0 / value;
-  result.row1 = mat.row1 / value;
-  return result;
+
+function Mat22 * (Scalar s, Mat22 mat22) {
+  return Mat22( mat22.row0 * s, mat22.row1 * s );
+}
+
+function Mat22. *= (Mat22 other) {
+  this = this * other;
+}
+
+function Mat22. *= (Scalar other) {
+  this = this * other;
+}
+
+function Mat22 / (Mat22 mat22, Scalar s) {
+  if( Math_badDivisor( s ) )//Perf: check first to avoid building the report string
+    Math_reportBadDivisor( s, "Mat22.divide" );
+  return mat22 * (1.0 / s);
+}
+
+function Mat22. /= (Scalar other) {
+  this = this / other;
+}
+
+function Scalar Mat22.determinant() {
+  return this.row0.x * this.row1.y - this.row0.y * this.row1.x;
+}
+
+function Mat22 Mat22.adjoint() {
+  return Mat22(this.row1.y, -this.row0.y, -this.row1.x, this.row0.x);
+}
+
+function Mat22 Mat22.inverse() {
+  Scalar det = this.determinant();
+  if( Math_badDivisor( det ) )//Perf: check first to avoid building the report string
+    Math_reportBadDivisor( det, "Mat22.inverse" );
+  return this.adjoint() / det;
 }
 
 function Mat22 Mat22.transpose() {
-  var Mat22 result;
-
-  result.row0.x = this.row0.x;
-  result.row0.y = this.row1.x;
-  result.row1.x = this.row0.y;
-  result.row1.y = this.row1.y;
-
+  Mat22 result(
+    this.row0.x, this.row1.x,
+    this.row0.y, this.row1.y);
   return result;
 }

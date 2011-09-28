@@ -2,18 +2,18 @@
 // Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
 //
 
-use Math, Vec4;
+use Math, Vec4, Mat33;
 
 function Mat44(
   Scalar _00, Scalar _01, Scalar _02, Scalar _03,
   Scalar _10, Scalar _11, Scalar _12, Scalar _13,
   Scalar _20, Scalar _21, Scalar _22, Scalar _23,
-  Scalar _30, Scalar _31, Scalar _32, Scalar _33
-) {
-  this.row0 = Vec4(_00, _01, _02, _03);
-  this.row1 = Vec4(_10, _11, _12, _13);
-  this.row2 = Vec4(_20, _21, _22, _23);
-  this.row3 = Vec4(_30, _31, _32, _33);
+  Scalar _30, Scalar _31, Scalar _32, Scalar _33) {
+  this.set(_00, _01, _02, _03, _10, _11, _12, _13, _20, _21, _22, _23, _30, _31, _32, _33);
+}
+
+function Mat44(in Vec4 row0, in Vec4 row1, in Vec4 row2, in Vec4 row3) {
+  this.setRows(row0, row1, row2, row3);
 }
 
 function Mat44.set(
@@ -28,27 +28,11 @@ function Mat44.set(
   this.row3 = Vec4(_30, _31, _32, _33);
 }
 
-function Mat44(in Mat33 m) {
+function Mat44.setFromMat33(in Mat33 m) {
   this.row0.x = m.row0.x; this.row0.y = m.row0.y; this.row0.z = m.row0.z; this.row0.t = 0.0;
   this.row1.x = m.row1.x; this.row1.y = m.row1.y; this.row1.z = m.row1.z; this.row1.t = 0.0;
   this.row2.x = m.row2.x; this.row2.y = m.row2.y; this.row2.z = m.row2.z; this.row2.t = 0.0;
   this.row3.x = 0.0; this.row3.y = 0.0; this.row3.z = 0.0; this.row3.t = 1.0;
-}
-
-function Mat44.setNull() {
-  var Vec4 null(0.0, 0.0, 0.0, 0.0);
-  this.row0 = this.row1 = this.row2 = this.row3 = null;
-}
-
-function Mat44.setDiagonal(in Scalar v) {
-  this.row0.x = this.row1.y = this.row2.z = this.row3.t = v;
-}
-
-function Mat44.setDiagonal(in Vec4 v) {
-  this.row0.x = v.x;
-  this.row1.y = v.y;
-  this.row2.z = v.z;
-  this.row3.t = v.t;
 }
 
 function Mat44.setRows(in Vec4 row0, in Vec4 row1, in Vec4 row2, in Vec4 row3) {
@@ -65,35 +49,64 @@ function Mat44.setColumns(in Vec4 col0, in Vec4 col1, in Vec4 col2, in Vec4 col3
   this.row3.x = col0.t; this.row3.y = col1.t; this.row3.z = col2.t; this.row3.t = col3.t;
 }
 
-function Vec4 * (Vec4 vec4, Mat44 mat44) {
-  return Vec4(
-    vec4.x * mat44.row0.x + vec4.y * mat44.row1.x + vec4.z * mat44.row2.x + vec4.t * mat44.row3.x,
-    vec4.x * mat44.row0.y + vec4.y * mat44.row1.y + vec4.z * mat44.row2.y + vec4.t * mat44.row3.y,
-    vec4.x * mat44.row0.z + vec4.y * mat44.row1.z + vec4.z * mat44.row2.z + vec4.t * mat44.row3.z,
-    vec4.x * mat44.row0.t + vec4.y * mat44.row1.t + vec4.z * mat44.row2.t + vec4.t * mat44.row3.t
-  );
+function Mat44.setNull() {
+  Vec4 null(0.0, 0.0, 0.0, 0.0);
+  this.row0 = this.row1 = this.row2 = this.row3 = null;
 }
 
-function Vec4 * (Mat44 mat44, Vec4 vec4) {
-  return Vec4(
-    mat44.row0.x * vec4.x + mat44.row0.y * vec4.y + mat44.row0.z * vec4.z + mat44.row0.t * vec4.t,
-    mat44.row1.x * vec4.x + mat44.row1.y * vec4.y + mat44.row1.z * vec4.z + mat44.row1.t * vec4.t,
-    mat44.row2.x * vec4.x + mat44.row2.y * vec4.y + mat44.row2.z * vec4.z + mat44.row2.t * vec4.t,
-    mat44.row3.x * vec4.x + mat44.row3.y * vec4.y + mat44.row3.z * vec4.z + mat44.row3.t * vec4.t
-  );
+function Mat44.setIdentity() {
+  this.setNull();
+  this.setDiagonal(1.0);
 }
 
-function Vec3 * (Vec3 vec3, Mat44 mat44) {
-  var Vec4 temp = Vec4(vec3.x, vec3.y, vec3.z, 1.0) * mat44;
-  var Vec3 result;
-  result.x = temp.x / temp.t;
-  result.y = temp.y / temp.t;
-  result.z = temp.z / temp.t;
-  return result;
+function Mat44.setDiagonal(in Scalar v) {
+  this.row0.x = this.row1.y = this.row2.z = this.row3.t = v;
+}
+
+function Mat44.setDiagonal(in Vec3 v) {
+  this.row0.x = v.x;
+  this.row1.y = v.y;
+  this.row2.z = v.z;
+  this.row3.t = 1.0;
+}
+
+function Mat44.setDiagonal(in Vec4 v) {
+  this.row0.x = v.x;
+  this.row1.y = v.y;
+  this.row2.z = v.z;
+  this.row3.t = v.t;
+}
+
+function Boolean Mat44.equal (in Mat44 other) {
+  return this.row0.equal( other.row0 ) && this.row1.equal( other.row1 ) && this.row2.equal( other.row2 ) && this.row3.equal( other.row3 );
+}
+
+function Boolean Mat44.almostEqual(in Mat44 other, in Scalar precision) {
+  return this.row0.almostEqual( other.row0, precision ) && this.row1.almostEqual( other.row1, precision ) && this.row2.almostEqual( other.row2, precision ) && this.row3.almostEqual( other.row3, precision );
+}
+
+function Boolean Mat44.almostEqual(in Mat44 other) {
+  return this.almostEqual(other, PRECISION);
+}
+
+function Mat44 + (Mat44 a, Mat44 b) {
+  return Mat44( a.row0 + b.row0, a.row1 + b.row1, a.row2 + b.row2, a.row3 + b.row3 );
+}
+
+function Mat44. += (Mat44 other) {
+  this = this + other;
+}
+
+function Mat44 - (Mat44 a, Mat44 b) {
+  return Mat44( a.row0 - b.row0, a.row1 - b.row1, a.row2 - b.row2, a.row3 - b.row3 );
+}
+
+function Mat44. -= (Mat44 other) {
+  this = this - other;
 }
 
 function Mat44 * (Mat44 left, Mat44 right) {
-  var Mat44 result;
+  Mat44 result;
 
   result.row0.x = left.row0.x * right.row0.x + left.row0.y * right.row1.x + left.row0.z * right.row2.x + left.row0.t * right.row3.x;
   result.row0.y = left.row0.x * right.row0.y + left.row0.y * right.row1.y + left.row0.z * right.row2.y + left.row0.t * right.row3.y;
@@ -118,87 +131,112 @@ function Mat44 * (Mat44 left, Mat44 right) {
   return result;
 }
 
-function Scalar Mat44.det() {
-  var Scalar a0 = this.row0.x * this.row1.y - this.row0.y * this.row1.x;
-  var Scalar a1 = this.row0.x * this.row1.z - this.row0.z * this.row1.x;
-  var Scalar a2 = this.row0.x * this.row1.t - this.row0.t * this.row1.x;
-  var Scalar a3 = this.row0.y * this.row1.z - this.row0.z * this.row1.y;
-  var Scalar a4 = this.row0.y * this.row1.t - this.row0.t * this.row1.y;
-  var Scalar a5 = this.row0.z * this.row1.t - this.row0.t * this.row1.z;
-  var Scalar b0 = this.row2.x * this.row3.y - this.row2.y * this.row3.x;
-  var Scalar b1 = this.row2.x * this.row3.z - this.row2.z * this.row3.x;
-  var Scalar b2 = this.row2.x * this.row3.t - this.row2.t * this.row3.x;
-  var Scalar b3 = this.row2.y * this.row3.z - this.row2.z * this.row3.y;
-  var Scalar b4 = this.row2.y * this.row3.t - this.row2.t * this.row3.y;
-  var Scalar b5 = this.row2.z * this.row3.t - this.row2.t * this.row3.z;
-  return a0 * b5 - a1 * b4 + a2 * b3 + a3 * b2 - a4 * b1 + a5 * b0;
+function Vec4 * (Mat44 mat44, Vec4 vec4) {
+  return Vec4(
+    mat44.row0.x * vec4.x + mat44.row0.y * vec4.y + mat44.row0.z * vec4.z + mat44.row0.t * vec4.t,
+    mat44.row1.x * vec4.x + mat44.row1.y * vec4.y + mat44.row1.z * vec4.z + mat44.row1.t * vec4.t,
+    mat44.row2.x * vec4.x + mat44.row2.y * vec4.y + mat44.row2.z * vec4.z + mat44.row2.t * vec4.t,
+    mat44.row3.x * vec4.x + mat44.row3.y * vec4.y + mat44.row3.z * vec4.z + mat44.row3.t * vec4.t
+  );
+}
+
+function Vec3 * (Mat44 mat44, Vec3 vec3) {
+  Vec4 temp = mat44 * Vec4(vec3.x, vec3.y, vec3.z, 1.0);
+  if( Math_badDivisor( temp.t ) )//Perf: check first to avoid building the report string
+    Math_reportBadDivisor( temp.t, "Mat44.divide" );
+  Scalar invT = 1.0 / temp.t;
+  return Vec3(temp.x * invT, temp.y * invT, temp.z * invT);
+}
+
+function Mat44 * (Mat44 mat44, Scalar s) {
+  return Mat44( mat44.row0 * s, mat44.row1 * s, mat44.row2 * s, mat44.row3 * s );
+}
+
+function Mat44 * (Scalar s, Mat44 mat44) {
+  return Mat44( mat44.row0 * s, mat44.row1 * s, mat44.row2 * s, mat44.row3 * s );
+}
+
+function Mat44. *= (Mat44 other) {
+  this = this * other;
+}
+
+function Mat44. *= (Scalar other) {
+  this = this * other;
+}
+
+function Mat44 / (Mat44 mat44, Scalar s) {
+  if( Math_badDivisor( s ) )//Perf: check first to avoid building the report string
+    Math_reportBadDivisor( s, "Mat44.divide" );
+  return mat44 * (1.0 / s);
+}
+
+function Mat44. /= (Scalar other) {
+  this = this / other;
+}
+
+function Boolean Mat44.internalCompute( in Boolean computeDet, io Scalar det, in Boolean computeAdjoint, io Mat44 adjoint ) {
+  Scalar a0 = this.row0.x * this.row1.y - this.row0.y * this.row1.x;
+  Scalar a1 = this.row0.x * this.row1.z - this.row0.z * this.row1.x;
+  Scalar a2 = this.row0.x * this.row1.t - this.row0.t * this.row1.x;
+  Scalar a3 = this.row0.y * this.row1.z - this.row0.z * this.row1.y;
+  Scalar a4 = this.row0.y * this.row1.t - this.row0.t * this.row1.y;
+  Scalar a5 = this.row0.z * this.row1.t - this.row0.t * this.row1.z;
+  Scalar b0 = this.row2.x * this.row3.y - this.row2.y * this.row3.x;
+  Scalar b1 = this.row2.x * this.row3.z - this.row2.z * this.row3.x;
+  Scalar b2 = this.row2.x * this.row3.t - this.row2.t * this.row3.x;
+  Scalar b3 = this.row2.y * this.row3.z - this.row2.z * this.row3.y;
+  Scalar b4 = this.row2.y * this.row3.t - this.row2.t * this.row3.y;
+  Scalar b5 = this.row2.z * this.row3.t - this.row2.t * this.row3.z;
+
+  if(computeDet)
+    det = a0 * b5 - a1 * b4 + a2 * b3 + a3 * b2 - a4 * b1 + a5 * b0;
+
+  if(computeAdjoint) {
+    adjoint.row0.x =  + this.row1.y * b5 - this.row1.z * b4 + this.row1.t * b3;
+    adjoint.row0.y = -this.row0.y * b5 + this.row0.z * b4 - this.row0.t * b3;
+    adjoint.row0.z =  + this.row3.y * a5 - this.row3.z * a4 + this.row3.t * a3;
+    adjoint.row0.t = -this.row2.y * a5 + this.row2.z * a4 - this.row2.t * a3;
+    adjoint.row1.x = -this.row1.x * b5 + this.row1.z * b2 - this.row1.t * b1;
+    adjoint.row1.y =  + this.row0.x * b5 - this.row0.z * b2 + this.row0.t * b1;
+    adjoint.row1.z = -this.row3.x * a5 + this.row3.z * a2 - this.row3.t * a1;
+    adjoint.row1.t =  + this.row2.x * a5 - this.row2.z * a2 + this.row2.t * a1;
+    adjoint.row2.x =  + this.row1.x * b4 - this.row1.y * b2 + this.row1.t * b0;
+    adjoint.row2.y = -this.row0.x * b4 + this.row0.y * b2 - this.row0.t * b0;
+    adjoint.row2.z =  + this.row3.x * a4 - this.row3.y * a2 + this.row3.t * a0;
+    adjoint.row2.t = -this.row2.x * a4 + this.row2.y * a2 - this.row2.t * a0;
+    adjoint.row3.x = -this.row1.x * b3 + this.row1.y * b1 - this.row1.z * b0;
+    adjoint.row3.y =  + this.row0.x * b3 - this.row0.y * b1 + this.row0.z * b0;
+    adjoint.row3.z = -this.row3.x * a3 + this.row3.y * a1 - this.row3.z * a0;
+    adjoint.row3.t =  + this.row2.x * a3 - this.row2.y * a1 + this.row2.z * a0;
+  }
+  return true;//Dummy; make this an r-value func
+}
+
+function Scalar Mat44.determinant() {
+  Scalar det;
+  Mat44 dummy;
+  this.internalCompute(true, det, false, dummy);
+  return det;
+}
+
+function Mat44 Mat44.adjoint() {
+  Scalar dummy;
+  Mat44 adjoint;
+  this.internalCompute(false, dummy, true, adjoint);
+  return adjoint;
 }
 
 function Mat44 Mat44.inverse() {
-  // Compute the determinant of the matrix.
-  var Scalar det = this.det();
-
-  var Mat44 result;
-
-  if (abs(det) < DIVIDEPRECISION) {
-    result.setNull();
-    return result;
-  }
-
-  var Scalar a0 = this.row0.x * this.row1.y - this.row0.y * this.row1.x;
-  var Scalar a1 = this.row0.x * this.row1.z - this.row0.z * this.row1.x;
-  var Scalar a2 = this.row0.x * this.row1.t - this.row0.t * this.row1.x;
-  var Scalar a3 = this.row0.y * this.row1.z - this.row0.z * this.row1.y;
-  var Scalar a4 = this.row0.y * this.row1.t - this.row0.t * this.row1.y;
-  var Scalar a5 = this.row0.z * this.row1.t - this.row0.t * this.row1.z;
-  var Scalar b0 = this.row2.x * this.row3.y - this.row2.y * this.row3.x;
-  var Scalar b1 = this.row2.x * this.row3.z - this.row2.z * this.row3.x;
-  var Scalar b2 = this.row2.x * this.row3.t - this.row2.t * this.row3.x;
-  var Scalar b3 = this.row2.y * this.row3.z - this.row2.z * this.row3.y;
-  var Scalar b4 = this.row2.y * this.row3.t - this.row2.t * this.row3.y;
-  var Scalar b5 = this.row2.z * this.row3.t - this.row2.t * this.row3.z;
-
-  var Scalar di = 1.0 / det;
-  result.row0.x = ( + this.row1.y * b5 - this.row1.z * b4 + this.row1.t * b3) * di;
-  result.row1.x = (-this.row1.x * b5 + this.row1.z * b2 - this.row1.t * b1) * di;
-  result.row2.x = ( + this.row1.x * b4 - this.row1.y * b2 + this.row1.t * b0) * di;
-  result.row3.x = (-this.row1.x * b3 + this.row1.y * b1 - this.row1.z * b0) * di;
-  result.row0.y = (-this.row0.y * b5 + this.row0.z * b4 - this.row0.t * b3) * di;
-  result.row1.y = ( + this.row0.x * b5 - this.row0.z * b2 + this.row0.t * b1) * di;
-  result.row2.y = (-this.row0.x * b4 + this.row0.y * b2 - this.row0.t * b0) * di;
-  result.row3.y = ( + this.row0.x * b3 - this.row0.y * b1 + this.row0.z * b0) * di;
-  result.row0.z = ( + this.row3.y * a5 - this.row3.z * a4 + this.row3.t * a3) * di;
-  result.row1.z = (-this.row3.x * a5 + this.row3.z * a2 - this.row3.t * a1) * di;
-  result.row2.z = ( + this.row3.x * a4 - this.row3.y * a2 + this.row3.t * a0) * di;
-  result.row3.z = (-this.row3.x * a3 + this.row3.y * a1 - this.row3.z * a0) * di;
-  result.row0.t = (-this.row2.y * a5 + this.row2.z * a4 - this.row2.t * a3) * di;
-  result.row1.t = ( + this.row2.x * a5 - this.row2.z * a2 + this.row2.t * a1) * di;
-  result.row2.t = (-this.row2.x * a4 + this.row2.y * a2 - this.row2.t * a0) * di;
-  result.row3.t = ( + this.row2.x * a3 - this.row2.y * a1 + this.row2.z * a0) * di;
-
-  return result;
-}
-
-function Mat33 Mat44.upperLeft() {
-  var Mat33 result;
-
-  result.row0.x = this.row0.x;
-  result.row0.y = this.row0.y;
-  result.row0.z = this.row0.z;
-
-  result.row1.x = this.row1.x;
-  result.row1.y = this.row1.y;
-  result.row1.z = this.row1.z;
-
-  result.row2.x = this.row2.x;
-  result.row2.y = this.row2.y;
-  result.row2.z = this.row2.z;
-
-  return result;
+  Scalar det;
+  Mat44 adjoint;
+  this.internalCompute(true, det, true, adjoint);
+  if( Math_badDivisor( det ) )//Perf: check first to avoid building the report string
+    Math_reportBadDivisor( det, "Mat33.inverse" );
+  return adjoint / det;
 }
 
 function Mat44 Mat44.transpose() {
-  var Mat44 r;
+  Mat44 r;
   r.row0.x = this.row0.x; r.row1.x = this.row0.y; r.row2.x = this.row0.z; r.row3.x = this.row0.t;
   r.row0.y = this.row1.x; r.row1.y = this.row1.y; r.row2.y = this.row1.z; r.row3.y = this.row1.t;
   r.row0.z = this.row2.x; r.row1.z = this.row2.y; r.row2.z = this.row2.z; r.row3.z = this.row2.t;
@@ -207,9 +245,10 @@ function Mat44 Mat44.transpose() {
 }
 
 function Vec3 Mat44.translation() {
-  var Vec3 result;
+  Vec3 result;
   result.x = this.row3.x;
   result.y = this.row3.y;
   result.z = this.row3.z;
+  //Q: should we divide by this.row3.t?
   return result;
 }

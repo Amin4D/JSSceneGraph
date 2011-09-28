@@ -9,11 +9,10 @@ use FabricALEMBIC;
 operator alembicLoad(
   io String url,
   io FabricResource resource,
-  io Integer archiveID,
-  io Integer numSamples
+  io AlembicHandle handle
 ) {
   if(resource.data.dataSize() > 0) {
-    FabricALEMBICDecode(resource.data.data(), resource.data.dataSize(), archiveID, numSamples);
+    handle.loadResource(resource);
   }
 }
 
@@ -25,54 +24,54 @@ operator alembicSetSample(
 }
 
 operator alembicGetIdentifiers(
-  io Integer archiveID,
+  io AlembicHandle handle,
   io String identifiers[]
 ) {
-  FabricALEMBICGetIdentifiers(archiveID,identifiers);
+  handle.getIdentifiers(identifiers);
 }
 
 operator alembicParseXform(
-  io Integer archiveID,
+  io AlembicHandle handle,
   io String identifier,
   io Integer sample,
   io Xfo transform
 ) {
-  FabricALEMBICParseXform(archiveID,identifier,sample,transform);
+  handle.parseXform(identifier,sample,transform);
 }
 
 operator alembicParseCamera(
-  io Integer archiveID,
+  io AlembicHandle handle,
   io String identifier,
   io Integer sample,
   io Scalar near,
   io Scalar far,
   io Scalar fovY
 ) {
-  FabricALEMBICParseCamera(archiveID,identifier,sample,near,far,fovY);
+  handle.parseCamera(identifier,sample,near,far,fovY);
 }
 
 operator alembicParsePolyMeshCount(
-  io Integer archiveID,
+  io AlembicHandle handle,
   io String identifier,
   io Size count
 ) {
   if(count <= 1){
-    FabricALEMBICParsePolyMeshCount(archiveID,identifier,count);
+    handle.parsePolyMeshCount(identifier,count);
   }
 }
 
 operator alembicParsePolyMeshUniforms(
-  io Integer archiveID,
+  io AlembicHandle handle,
   io String identifier,
   io Integer indices[]
 ) {
   if(indices.size() == 0){
-    FabricALEMBICParsePolyMeshUniforms(archiveID,identifier,indices);
+    handle.parsePolyMeshUniforms(identifier,indices);
   }
 }
 
 operator alembicParsePolyMeshAttributes(
-  io Integer archiveID,
+  io AlembicHandle handle,
   io String identifier,
   io Integer sample,
   io Vec3 vertices<>,
@@ -81,6 +80,6 @@ operator alembicParsePolyMeshAttributes(
   io Vec2 uvs<>
 ) {
   if(vertices.size() > 0){
-    FabricALEMBICParsePolyMeshAttributes(archiveID,identifier,sample,vertices,normals,uvsLoaded,uvs);
+    handle.parsePolyMeshAttributes(identifier,sample,vertices,normals,uvsLoaded,uvs);
   }
 }

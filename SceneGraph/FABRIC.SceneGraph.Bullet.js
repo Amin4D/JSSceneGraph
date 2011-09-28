@@ -2,6 +2,188 @@
 //
 // Copyright 2010-2011Fabric Technologies Inc. All rights reserved.
 //
+FABRIC.RT.BulletWorld = function(options) {
+  if(!options)
+    options = {};
+  this.localData = null;
+  this.gravity = options.gravity ? options.gravity : FABRIC.RT.vec3(0,-40,0);
+  this.step = 0;
+  this.substeps = options.substeps ? options.substeps : 3;
+  this.hit = false;
+  this.hitPosition = FABRIC.RT.vec3(0,0,0);
+};
+
+FABRIC.RT.BulletWorld.prototype = {
+};
+
+FABRIC.RT.BulletSoftBody = function( options ) {
+  if(!options)
+    options = {};
+  this.localData = null;
+  this.name = options.name ? options.name : 'SoftBody';
+  this.transform = options.transform ? options.transform : FABRIC.RT.xfo();
+  this.clusters = options.clusters ? options.clusters : -1;
+  this.constraints = options.constraints ? options.constraints : 2;
+  this.mass = options.mass ? options.mass : 1.0;
+  this.stiffness = options.stiffness ? options.stiffness : 0.05;
+  this.friction = options.friction ? options.friction : 0.5;
+  this.conservation = options.conservation ? options.conservation : 0.0;
+  this.pressure = options.pressure ? options.pressure : 0.0;
+  this.recover = options.recover ? options.recover : 0.0;
+  this.trianglesNode = options.trianglesNode ? options.trianglesNode : undefined;
+};
+
+FABRIC.RT.BulletSoftBody.prototype = {
+};
+
+FABRIC.RT.BulletShape = function(options) {
+  if(!options)
+    options = {};
+  this.localData = null;
+  this.name = options.name ? options.name : 'Shape';
+  this.type = options.type ? options.type : -1;
+  this.parameters = [];
+  this.vertices = [];
+};
+
+FABRIC.RT.BulletShape.BULLET_BOX_SHAPE = 0;
+FABRIC.RT.BulletShape.BULLET_CONVEX_HULL_SHAPE = 4;
+FABRIC.RT.BulletShape.BULLET_SPHERE_SHAPE = 8;
+FABRIC.RT.BulletShape.BULLET_CAPSULE_SHAPE = 10;
+FABRIC.RT.BulletShape.BULLET_CONE_SHAPE = 11;
+FABRIC.RT.BulletShape.BULLET_CYLINDER_SHAPE = 13;
+FABRIC.RT.BulletShape.BULLET_GIMPACT_SHAPE = 25;
+FABRIC.RT.BulletShape.BULLET_PLANE_SHAPE = 28;
+FABRIC.RT.BulletShape.BULLET_COMPOUND_SHAPE = 31;
+FABRIC.RT.BulletShape.BULLET_SOFTBODY_SHAPE = 32;
+
+FABRIC.RT.BulletShape.prototype = {
+};
+
+FABRIC.RT.BulletShape.createBox = function(halfExtends) {
+  if(halfExtends == undefined) {
+    halfExtends = FABRIC.RT.vec3(1.0,1.0,1.0);
+  }
+  var shape = new FABRIC.RT.BulletShape();
+  shape.type = FABRIC.RT.BulletShape.BULLET_BOX_SHAPE;
+  shape.parameters.push(halfExtends.x);
+  shape.parameters.push(halfExtends.y);
+  shape.parameters.push(halfExtends.z);
+  return shape;
+};
+
+FABRIC.RT.BulletShape.createSphere = function(radius) {
+  if(radius == undefined) {
+    radius = 1.0;
+  }
+  var shape = new FABRIC.RT.BulletShape();
+  shape.type = FABRIC.RT.BulletShape.BULLET_SPHERE_SHAPE;
+  shape.parameters.push(radius);
+  return shape;
+};
+
+FABRIC.RT.BulletShape.createPlane = function(normal) {
+  if(normal == undefined) {
+    normal = FABRIC.RT.vec3(0.0,1.0,0.0);
+  }
+  var shape = new FABRIC.RT.BulletShape();
+  shape.type = FABRIC.RT.BulletShape.BULLET_PLANE_SHAPE;
+  shape.parameters.push(normal.x);
+  shape.parameters.push(normal.y);
+  shape.parameters.push(normal.z);
+  shape.parameters.push(0.0);
+  return shape;
+};
+
+FABRIC.RT.BulletShape.createConvexHull = function(geometryNode) {
+  if(geometryNode == undefined) {
+    throw('You need to specify the '+geometryNode+' for createConvexHull.');
+  }
+  var shape = new FABRIC.RT.BulletShape();
+  shape.type = FABRIC.RT.BulletShape.BULLET_CONVEX_HULL_SHAPE;
+  shape.geometryNode = geometryNode;
+  return shape;
+};
+
+FABRIC.RT.BulletRigidBody = function(options) {
+  if(options == undefined)
+    options = {};
+  this.localData = null;
+  this.name = options.name ? options.name : 'RigidBody';
+  this.transform = options.transform != undefined ? options.transform: FABRIC.RT.xfo();
+  this.mass = options.mass != undefined ? options.mass: 1.0;
+  this.friction = options.friction != undefined ? options.friction: 0.9;
+  this.restitution = options.restitution != undefined ? options.restitution: 0.0;
+};
+
+FABRIC.RT.BulletRigidBody.prototype = {
+};
+
+FABRIC.RT.BulletForce = function(options) {
+  if(!options)
+    options = {};
+  this.name = options.name ? options.name : 'Force';
+  this.origin = options.origin != undefined ? options.origin : FABRIC.RT.vec3(0,0,0);
+  this.direction = options.direction != undefined ? options.direction : FABRIC.RT.vec3(0,1,0);
+  this.radius = options.radius != undefined ? options.radius : 1.5;
+  this.factor = options.factor != undefined ? options.factor : 100.0;
+  this.useTorque = options.useTorque != undefined ? options.useTorque : true;
+  this.useFalloff = options.useFalloff != undefined ? options.useFalloff : true;
+  this.enabled = options.enabled != undefined ? options.enabled : true;
+  this.autoDisable = options.autoDisable != undefined ? options.autoDisable : false;
+};
+
+FABRIC.RT.BulletForce.prototype = {
+};
+
+FABRIC.RT.BulletConstraint = function(options) {
+  if(!options)
+    options = {};
+  this.localData = null;
+  this.bodyLocalDataA = null;
+  this.bodyLocalDataB = null;
+  this.type = -1;
+  this.name = options.name ? options.name : 'Constraint';
+  this.pivotA = options.pivotA ? options.pivotA : FABRIC.RT.xfo();
+  this.pivotB = options.pivotB ? options.pivotB : FABRIC.RT.xfo();
+  this.nameA = options.nameA ? options.nameA : '';
+  this.nameB = options.nameB ? options.nameB : '';
+  this.indexA = options.indexA != undefined ? options.indexA : 0;
+  this.indexB = options.indexB != undefined ? options.indexB : 0;
+  this.parameters = [];
+};
+
+// constants
+FABRIC.RT.BulletConstraint.BULLET_POINT2POINT_CONSTRAINT = 3;
+FABRIC.RT.BulletConstraint.BULLET_HINGE_CONSTRAINT = 4;
+FABRIC.RT.BulletConstraint.BULLET_SLIDER_CONSTRAINT= 7;
+
+FABRIC.RT.BulletConstraint.prototype = {
+};
+
+FABRIC.RT.BulletConstraint.createPoint2Point = function(options) {
+  if(!options)
+    options = {};
+  var constraint = new FABRIC.RT.BulletConstraint(options);
+  constraint.type = FABRIC.RT.BulletConstraint.BULLET_POINT2POINT_CONSTRAINT;
+  return constraint;
+};
+
+FABRIC.RT.BulletConstraint.createHinge = function(options) {
+  if(!options)
+    options = {};
+  var constraint = new FABRIC.RT.BulletConstraint(options);
+  constraint.type = FABRIC.RT.BulletConstraint.BULLET_HINGE_CONSTRAINT;
+  return constraint;
+};
+
+FABRIC.RT.BulletConstraint.createSlider = function(options) {
+  if(!options)
+    options = {};
+  var constraint = new FABRIC.RT.BulletConstraint(options);
+  constraint.type = FABRIC.RT.BulletConstraint.BULLET_SLIDER_CONSTRAINT;
+  return constraint;
+};
 
 FABRIC.SceneGraph.registerNodeType('BulletWorldNode', {
   briefDesc: 'The BulletWorldNode represents a bullet physics simulation world.',
@@ -24,6 +206,7 @@ FABRIC.SceneGraph.registerNodeType('BulletWorldNode', {
     var shapedgnode = bulletWorldNode.constructDGNode('ShapeDGNode');
     var rbddgnode = bulletWorldNode.constructDGNode('RbdDGNode');
     var sbddgnode = bulletWorldNode.constructDGNode('SbdDGNode');
+    shapedgnode.setDependency(dgnode,'simulation');
     rbddgnode.setDependency(dgnode,'simulation');
     rbddgnode.setDependency(shapedgnode,'shapes');
     sbddgnode.setDependency(dgnode,'simulation');
@@ -43,6 +226,7 @@ FABRIC.SceneGraph.registerNodeType('BulletWorldNode', {
         throw('You need to specify a shapeName when calling addShape!');
       if(shape == undefined)
         throw('You need to specify a shape when calling addShape!');
+      shape.name = shapeName;
       shapedgnode.addMember(shapeName+'Shape', 'BulletShape', shape);
 
       // copy the points for convex hulls
@@ -85,6 +269,13 @@ FABRIC.SceneGraph.registerNodeType('BulletWorldNode', {
         
       // check if we are dealing with an array
       var isArray = body.constructor.toString().indexOf("Array") != -1;
+      if(isArray) {
+        for(var i=0;i<body.length;i++) {
+          body[i].name = bodyName;
+        }
+      } else {
+        body.name = bodyName;
+      }
       rbddgnode.addMember(bodyName+'Rbd', 'BulletRigidBody[]', isArray ? body : [body]);
 
       // create rigid body operator
@@ -109,6 +300,13 @@ FABRIC.SceneGraph.registerNodeType('BulletWorldNode', {
         throw('You need to specify a trianglesNode for softbody when calling addSoftbody!');
 
       // check if we are dealing with an array
+      if(isArray) {
+        for(var i=0;i<body.length;i++) {
+          body[i].name = bodyName;
+        }
+      } else {
+        body.name = bodyName;
+      }
       sbddgnode.addMember(bodyName+'Sbd', 'BulletSoftBody', body);
       
       var trianglesNode = scene.getPrivateInterface(body.trianglesNode);
@@ -162,6 +360,13 @@ FABRIC.SceneGraph.registerNodeType('BulletWorldNode', {
         
       // check if we are dealing with an array
       var isArray = constraint.constructor.toString().indexOf("Array") != -1;
+      if(isArray) {
+        for(var i=0;i<constraint.length;i++) {
+          constraint[i].name = constraintName;
+        }
+      } else {
+        constraint.name = constraintName;
+      }
       rbddgnode.addMember(constraintName, 'BulletConstraint[]', isArray ? constraint : [constraint]);
 
       // create rigid body operator
@@ -186,6 +391,13 @@ FABRIC.SceneGraph.registerNodeType('BulletWorldNode', {
         
       // check if we are dealing with an array
       var isArray = force.constructor.toString().indexOf("Array") != -1;
+      if(isArray) {
+        for(var i=0;i<force.length;i++) {
+          force[i].name = forceName;
+        }
+      } else {
+        force.name = forceName;
+      }
       dgnode.addMember(forceName+'Force', 'BulletForce[]', isArray ? force : [force]);
       bulletWorldNode.addMemberInterface(dgnode, forceName+'Force', true);
 

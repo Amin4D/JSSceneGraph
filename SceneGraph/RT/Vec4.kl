@@ -3,7 +3,7 @@
 // Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
 //
 
-use Math;
+use Math, Vec3;
 
 function Vec4(Scalar x, Scalar y, Scalar z, Scalar t) {
   this.set(x, y, z, t);
@@ -167,4 +167,15 @@ function Scalar Vec4.distanceTo(in Vec4 other) {
 
 function Vec4 Vec4.linearInterpolate(in Vec4 other, in Scalar t) {
   return this + ((other - this) * t);
+}
+
+function Vec3 Vec4.makeHomogeneousVec3() {
+  if( this.t != 1.0 ) {
+    if( Math_badDivisor( this.t ) )//Perf: check first to avoid building the report string
+      Math_reportBadDivisor( this.t, "Vec4.makeHomogeneousVec3" );
+    Scalar invT = 1.0 / this.t;
+    return Vec3(this.x * invT, this.y * invT, this.z * invT);
+  }
+  else
+    return Vec3(this.x, this.y, this.z);
 }

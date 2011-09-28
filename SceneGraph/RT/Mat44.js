@@ -166,10 +166,8 @@ FABRIC.RT.Mat44.prototype = {
       );
     }
     else {
-      var temp = this.multiplyVector(FABRIC.RT.vec4(that.x, that.y, that.z, 1.0));
-      Math.checkDivisor(temp.t, 'Mat44.multiplyVector');
-      var invT = 1.0 / temp.t;
-      return FABRIC.RT.vec3(temp.x * invT, temp.y * invT, temp.z * invT);
+      var temp = this.multiplyVector(new FABRIC.RT.Vec4(that.x, that.y, that.z, 1.0));
+      return temp.makeHomogeneousVec3();
     }
   },
 
@@ -271,7 +269,6 @@ FABRIC.RT.Mat44.prototype = {
 
   translation: function () {
     return new FABRIC.RT.Vec3(this.row3.x, this.row3.y, this.row3.z);
-    //Q: should we divide by this.row3.t?
   },
 
   clone: function() {

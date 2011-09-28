@@ -160,6 +160,16 @@ FABRIC.RT.Vec4.prototype = {
     );
   },
 
+  makeHomogeneousVec3: function() {
+    if( this.t != 1.0 ) {
+      Math.checkDivisor(this.t, 'Vec3.makeHomogeneousVec3');
+      var invT = 1.0 / this.t;
+      return new FABRIC.RT.Vec3(this.x * invT, this.y * invT, this.z * invT);
+    }
+    else
+      return new FABRIC.RT.Vec3(this.x, this.y, this.z);
+  },
+
   //Note: expects both vectors to be units (else use angleTo)
   unitsAngleTo: function(v) {
     var acosAngle = Math.clamp(this.dot(v), -1.0, 1.0);

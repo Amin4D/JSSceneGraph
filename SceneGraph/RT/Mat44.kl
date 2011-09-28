@@ -142,10 +142,7 @@ function Vec4 * (Mat44 mat44, Vec4 vec4) {
 
 function Vec3 * (Mat44 mat44, Vec3 vec3) {
   Vec4 temp = mat44 * Vec4(vec3.x, vec3.y, vec3.z, 1.0);
-  if( Math_badDivisor( temp.t ) )//Perf: check first to avoid building the report string
-    Math_reportBadDivisor( temp.t, "Mat44.divide" );
-  Scalar invT = 1.0 / temp.t;
-  return Vec3(temp.x * invT, temp.y * invT, temp.z * invT);
+  return temp.makeHomogeneousVec3();
 }
 
 function Mat44 * (Mat44 mat44, Scalar s) {
@@ -249,6 +246,5 @@ function Vec3 Mat44.translation() {
   result.x = this.row3.x;
   result.y = this.row3.y;
   result.z = this.row3.z;
-  //Q: should we divide by this.row3.t?
   return result;
 }

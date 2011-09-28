@@ -299,14 +299,7 @@ FABRIC.SceneGraph.registerNodeType('BulletWorldNode', {
       if(body.trianglesNode == undefined)
         throw('You need to specify a trianglesNode for softbody when calling addSoftbody!');
 
-      // check if we are dealing with an array
-      if(isArray) {
-        for(var i=0;i<body.length;i++) {
-          body[i].name = bodyName;
-        }
-      } else {
-        body.name = bodyName;
-      }
+      body.name = bodyName;
       sbddgnode.addMember(bodyName+'Sbd', 'BulletSoftBody', body);
       
       var trianglesNode = scene.getPrivateInterface(body.trianglesNode);
@@ -544,13 +537,13 @@ FABRIC.SceneGraph.registerNodeType('BulletRigidBodyTransform', {
             'raycastData.ray',
             'simulation.world',
             'simulation.raycastEnable'
-          ]
+          ],
+          async: false
         });
 
         raycastEventHandler = rigidBodyTransformNode.constructEventHandlerNode('Raycast');
         bulletWorldNode.setupRaycasting();
         raycastEventHandler.setScope('simulation', bulletWorldNode.getDGNode());
-        // The selector will return the node bound with the given binding name.
         raycastEventHandler.setSelector('simulation', raycastOperator);
       }
       return raycastEventHandler;

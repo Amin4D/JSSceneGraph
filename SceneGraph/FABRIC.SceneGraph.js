@@ -13,10 +13,8 @@ FABRIC.SceneGraph = {
   assetLoaders: {},
   registerManagerType: function(type, description) {
     if (this.managerDescriptions[type]) {
-      throw ('Node Constructor already Registered:' + type);
+      throw ('Manager Constructor already Registered:' + type);
     }else {
-      if (!description.factoryFn)
-        throw ('Node Constructor "'+type+'" does not implement the factoryFn');
         // Commented out till we can finish the documentation.
   //    if (!nodeDescription.briefDesc || !nodeDescription.detailedDesc)
   //      console.log('WARNING: Node Constructor "'+type+'" does not provide a proper description.');
@@ -261,14 +259,6 @@ FABRIC.SceneGraph = {
         throw ('Manager Constructor not Registered:' + type);
       }
       options = (options ? options : {});
-      if(!options.type ){
-        options.__defineGetter__('type', function() {
-          return type;
-        });
-        options.__defineSetter__('type', function(val) {
-          throw ('Type is readonly');
-        });
-      }
       var managerNode = FABRIC.SceneGraph.managerDescriptions[type].factoryFn(options, scene);
       if (!managerNode) {
         throw (' Factory function method must return an object');
@@ -285,20 +275,12 @@ FABRIC.SceneGraph = {
       }
       return managerNode;
     };
-
+    
     scene.constructNode = function(type, options) {
       if (!FABRIC.SceneGraph.nodeDescriptions[type]) {
         throw ('Node Constructor not Registered:' + type);
       }
       options = (options ? options : {});
-      if(!options.type ){
-        options.__defineGetter__('type', function() {
-          return type;
-        });
-        options.__defineSetter__('type', function(val) {
-          throw ('Type is readonly');
-        });
-      }
       var sceneGraphNode = FABRIC.SceneGraph.nodeDescriptions[type].factoryFn(options, scene);
       if (!sceneGraphNode) {
         throw (' Factory function method must return an object');
@@ -315,6 +297,7 @@ FABRIC.SceneGraph = {
       }
       return sceneGraphNode;
     };
+    
     scene.getPrivateInterface = function(publicNode) {
       if (publicNode.pub && publicNode.pub.getName) {
         return publicNode;

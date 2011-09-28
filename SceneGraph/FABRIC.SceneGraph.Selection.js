@@ -30,8 +30,9 @@ FABRIC.SceneGraph.registerManagerType('SelectionManager', {
           this.clearSelection(false);
           if(obj.constructor.name == 'Array'){
             for(var i=0; i<obj.length; i++){
-              this.addToSelection(obj[i]);
+              this.addToSelection(obj[i], false);
             }
+            selectionManager.pub.fireEvent('selectionChanged', { selection:selection });
           }
           else{
             if(!this.isSelected(obj)){ 
@@ -39,12 +40,14 @@ FABRIC.SceneGraph.registerManagerType('SelectionManager', {
             }
           }
         },
-        addToSelection:function( obj ){
+        addToSelection:function( obj, fireevents ){
           selection.push(obj);
           if(obj.fireEvent){
             obj.fireEvent('selected');
           }
-          selectionManager.pub.fireEvent('selectionChanged', { selection:selection });
+          if(fireevents!=false){
+            selectionManager.pub.fireEvent('selectionChanged', { selection:selection });
+          }
         },
         removeFromSelection:function( obj, firevents ){ 
           if( selection.length == 0 ){

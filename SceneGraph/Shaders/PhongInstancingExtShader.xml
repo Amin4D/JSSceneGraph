@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<shader>
+  <name>PhongInstancingExtMaterial</name>
+  
+  <uniforms>
+    <uniform name="u_lightPosition" constant="lightPosition" type="Vec3" owner="light"/>
+    <uniform name="u_lightType" constant="lightType" type="Integer" owner="light"/>
+    <uniform name="u_lightDir" constant="lightDir" type="Vec3" owner="light"/>
+    <uniform name="u_lightColor" constant="lightColor" type="Color" owner="light"/>
+    <uniform name="u_lightCosCutoff" constant="lightCosCutoff" type="Scalar" owner="light"/>
+    
+    <uniform name="u_materialAmbientColor" constant="ambientColor" type="Color" defaultValue="FABRIC.RT.rgba(0.0,0.0,0.0,1)"/>
+    <uniform name="u_materialDiffuseColor" constant="diffuseColor" type="Color" defaultValue="FABRIC.RT.rgba(0.8,0,0,1)"/>
+    <uniform name="u_materialSpecularColor" constant="specularColor" type="Color" defaultValue="FABRIC.RT.rgba(0.5,0.5,0.5,1)"/>
+    <uniform name="u_materialShininess" constant="shininess" type="Scalar" defaultValue="20.0"/>
+    
+    <uniform name="u_viewMatrix" constant="viewMatrix" type="Mat44" owner="instance"/>
+    <uniform name="u_projectionMatrix" constant="projectionMatrix" type="Mat44" owner="instance"/>
+
+		<uniform name="u_samplerTransformMap" constant="transformTexture" type="Integer" owner="texture"/>
+  </uniforms>
+  
+  <attributes>
+    <attribute name="a_position" binding="positions"/>
+    <attribute name="a_normal" binding="normals"/>
+  </attributes>
+  
+  <lights>
+    <light type="Light" binding="light"/>
+  </lights>
+
+	<textures>
+		<texture binding="transformTexture"/>
+	</textures>
+  
+  <vertexshader>
+    <source>
+      <![CDATA[
+
+      uniform mat4 u_modelViewProjectionMatrix;
+      uniform mat4 u_viewMatrix;
+      uniform mat4 u_projectionMatrix;
+      uniform mat4 u_modelMatrix;
+      uniform vec4 u_lightPosition;
+      uniform sampler2D u_samplerTransformMap;
+      
+      attribute vec4 a_position;
+      attribute vec3 a_normal;
+      attribute int a_instanceID;
+
+      varying vec3 normal;
+      varying vec3 lightDir;
+      varying vec3 viewDir;
+
+      void main(){
+        int instanceID = gl_InstanceID;
+        float factor = 1.0 / 512.0;
+        int x = (instanceID % 128) * 4;
+        float y = float(instanceID) / 128.0;
+        mat4 mvp = mat4(texture2D(u_samplerTransformMap,vec2(x,y) * factor),
+            texture2D(u_samplerTransformMap,vec2(x+1,y) * factor),
+            texture2D(u_samplerTransformMap,vec2(x+2,y) * factor),
+            texture2D(u_samplerTransformMap,vec2(x+3,y) * factor));
+
+        mat4 modelViewMatrix = u_viewMatrix * mvp;
+        mat4 modelViewProjectionMatrix = u_projectionMatrix * modelViewMatrix;
+        mat3 normalMatrix = transpose(inverse(mat3(modelViewMatrix[0].xyz, modelViewMatrix[1].xyz, modelViewMatrix[2].xyz)));
+    
+        normal = normalMatrix * a_normal;
+        vec4 modelCameraPosition = modelViewMatrix * a_position;
+  
+        lightDir = vec3(u_lightPosition - modelCameraPosition);
+
+        viewDir = vec3(-modelCameraPosition);
+        gl_Position = modelViewProjectionMatrix * a_position;
+      }
+      ]]>
+    </source>
+  </vertexshader>
+  
+  <fragmentshader>
+    <source>
+      <![CDATA[
+      uniform int u_lightType;
+      uniform vec3 u_lightDir;
+      uniform vec4 u_lightColor;
+      uniform float u_lightCosCutoff;
+
+      uniform float u_materialShininess;
+      uniform vec4 u_materialAmbientColor;
+      uniform vec4 u_materialDiffuseColor;
+      uniform vec4 u_materialSpecularColor;
+
+      varying vec3 normal;
+      varying vec3 lightDir;
+      varying vec3 viewDir;
+    
+      
+      ]]>
+      </source>
+      <include file="FABRIC_ROOT/SceneGraph/Shaders/lighting.txt"/>
+      <source>
+      <![CDATA[
+      
+      
+      void main(){
+        
+        vec3 Ln = normalize(lightDir);
+        vec3 Vn = normalize(viewDir);
+        vec3 Nn = normalize(normal);
+        
+        float lightFactor = 1.0;
+        gl_FragColor = phong_shading(  Nn, 
+                        Ln, 
+                        Vn, 
+                        u_lightType,
+                        u_lightDir,
+                        lightFactor,
+                        u_lightCosCutoff,
+                        u_lightColor,
+                        u_materialDiffuseColor, 
+                        u_materialSpecularColor,
+                        u_materialShininess,
+                        u_materialAmbientColor );
+
+      }
+
+      ]]>
+    </source>
+  </fragmentshader>
+</shader>

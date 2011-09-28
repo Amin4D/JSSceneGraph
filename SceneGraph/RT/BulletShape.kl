@@ -1,0 +1,18 @@
+
+//
+// Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
+//
+use FabricBULLET;
+
+function BulletShape.create(io Boolean result) {
+  if(!this.pointer) {
+    FabricBULLET_Shape_Create(this.pointer,this.type,this.parameters,this.vertices);
+    result = true;
+  }
+  else
+    result = false;
+}
+
+function BulletShape.delete() {
+  FabricBULLET_Shape_Delete(this.pointer);
+}

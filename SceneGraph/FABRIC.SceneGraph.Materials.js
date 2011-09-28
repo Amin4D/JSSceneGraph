@@ -400,7 +400,7 @@ FABRIC.SceneGraph.registerNodeType('Shader', {
       shaderProgram.shaderSources.push(new FABRIC.RT.OGLShaderSource(
         options.geometryShader, FABRIC.SceneGraph.OpenGLConstants.GL_GEOMETRY_SHADER_EXT));
     }
-
+    
     ///////////////////////////////////////////////////
     // Uniform Values
     for (i in options.shaderUniforms) {
@@ -566,7 +566,8 @@ FABRIC.SceneGraph.registerNodeType('Material', {
           blendModeSfactor: options.blendModeSfactor,
           blendModeDfactor: options.blendModeDfactor,
           parentEventHandler: options.parentEventHandler,
-          assignUniformsOnPostDescend: options.assignUniformsOnPostDescend
+          assignUniformsOnPostDescend: options.assignUniformsOnPostDescend,
+          debug: options.debug
         });
       }
       
@@ -1313,6 +1314,8 @@ FABRIC.SceneGraph.defineEffectFromFile('ShadowMaterial', 'FABRIC_ROOT/SceneGraph
 FABRIC.SceneGraph.defineEffectFromFile('FlatTextureMaterial', 'FABRIC_ROOT/SceneGraph/Shaders/FlatTextureShader.xml');
 FABRIC.SceneGraph.defineEffectFromFile('FlatUVMaterial', 'FABRIC_ROOT/SceneGraph/Shaders/FlatUVShader.xml');
 FABRIC.SceneGraph.defineEffectFromFile('FlatBlendTextureMaterial', 'FABRIC_ROOT/SceneGraph/Shaders/FlatBlendTextureShader.xml');
+FABRIC.SceneGraph.defineEffectFromFile('PhongInstancingMaterial', 'FABRIC_ROOT/SceneGraph/Shaders/PhongInstancingShader.xml');
+FABRIC.SceneGraph.defineEffectFromFile('PhongInstancingExtMaterial', 'FABRIC_ROOT/SceneGraph/Shaders/PhongInstancingExtShader.xml');
 FABRIC.SceneGraph.defineEffectFromFile('PhongTextureMaterial', 'FABRIC_ROOT/SceneGraph/Shaders/PhongTextureShader.xml');
 FABRIC.SceneGraph.defineEffectFromFile('PhongTextureSimpleMaterial', 'FABRIC_ROOT/SceneGraph/Shaders/PhongTextureShaderSimple.xml');
 FABRIC.SceneGraph.defineEffectFromFile('PhongBumpReflectMaterial', 'FABRIC_ROOT/SceneGraph/Shaders/PhongBumpReflectShader.xml');

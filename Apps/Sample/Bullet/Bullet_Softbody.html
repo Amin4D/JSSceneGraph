@@ -1,0 +1,238 @@
+<html xmlns="http://www.w3.org/1999/xhtml"> 
+  <!--
+    Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
+    -->
+  <head> 
+    <title>FABRIC - Bullet Basic Softbody</title> 
+    
+    <meta charset="iso-8859-1"/>
+    <link href="../../../themes/default/style.css" rel="stylesheet" type="text/css" />
+    <link href="../../../themes/default/viewer.css" rel="stylesheet" type="text/css" />
+    
+    <script type="text/javascript" src="../../../ThirdParty/jQuery/jquery-1.4.2.min.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/jQuery/jquery-ui-1.8.5.custom.min.js"></script>
+
+    <link type="text/css" href="../../../ThirdParty/jQuery/css/vader/jquery-ui-1.8.5.custom.css" rel="stylesheet" />
+
+    <script type="text/javascript" src="../../../Core/FABRIC.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/Math.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/Vec2.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/Vec3.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/Vec4.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/Mat22.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/Mat33.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/Mat44.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/Quat.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/Xfo.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/RGBA.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/Color.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/Euler.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/BezierKeyframe.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/LinearKeyframe.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/Ray.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/Bone.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/OGLShaderProgram.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/OGLBuffer.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/OGLTexture2D.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/BulletShape.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/BulletRigidBody.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/BulletSoftBody.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/BulletWorld.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/BulletConstraint.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/BulletForce.js" charset="utf-8"></script>
+
+    <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Geometry.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Primitives.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Lights.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Materials.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Manipulation.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Animation.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Characters.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.CharacterSolvers.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Kinematics.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Bullet.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Alembic.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Parsers/parseCollada.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Parsers/parseOBJ.js" charset="utf-8"></script>
+    
+    <script type="text/javascript">
+
+$(document).ready(function() {
+  
+  $('#play').button({
+      text: true,
+      icons: {
+        primary: 'ui-icon-play'
+      }
+    });
+  $('#step').button({
+    text: true,
+    icons: {
+      primary: 'ui-icon-step'
+    }
+  });
+  $('#reset').button({
+    text: true,
+  });
+  
+  var scene = FABRIC.SceneGraph.createScene();
+  var viewport = scene.constructNode('Viewport', {
+    enableRaycasting: false,
+    windowElement: document.getElementById('FabricContainer')
+  });
+  
+  viewport.setBackgroundTextureImage(scene.constructNode('Image', {
+    url: '../BasicDemos/Resources/fabric-demo-gradient.png'
+  }));
+
+  // Create a camera to draw the scene from
+  var camera = scene.constructNode('TargetCamera', {
+      position: FABRIC.RT.vec3(0, 3, 12).scale(3),
+      target: FABRIC.RT.vec3(0, 2, 0),
+      nearDistance: 0.1,
+      farDistance: 200
+    });
+  scene.constructNode('CameraManipulator', { targetNode: camera });
+  viewport.setCameraNode(camera);
+
+  var light = scene.constructNode('PointLight', { transformNode: camera.getTransformNode() });
+
+  var phongMaterial = scene.constructNode('PhongMaterial', {
+    diffuseColor: FABRIC.RT.rgb(0.0, 0.0, 1.0),
+    lightNode: light
+  });
+  
+  // create a simulation world
+  var bulletWorldNode = scene.constructNode('BulletWorldNode');
+
+  // import the cow  
+  var assets = scene.importAssetFile('../Alembic/Models/cow.abc', {
+    dependentNode: viewport,
+    onLoadSuccessCallback: function(){
+
+      // add a softbody to the sim
+      var parsedNodes = assets['cow'].getParsedNodes();
+      var softBodyNode = bulletWorldNode.addSoftBody('Cow'+i,new FABRIC.RT.BulletSoftBody({
+        trianglesNode: parsedNodes['/polymsh/polymshShape'],
+        transform: FABRIC.RT.xfo({
+          tr: FABRIC.RT.vec3(0,10,0),
+          ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(1,-1,0),190)
+        }),
+        recover: 0.01,
+        //conservation: 0.6,
+        pressure: 5,
+        piterations: 4,
+      }));
+      
+      scene.constructNode('Instance', {
+        geometryNode: softBodyNode,
+        materialNode: phongMaterial
+      });
+      
+      $('#loadingDialog').dialog('close');
+      viewport.redraw();
+    }
+  });
+
+  $('#loadingDialog').dialog({
+    modal: true
+  });
+  FABRIC.appendOnResolveAsyncTaskCallback(function(label, nbRemaining, doneWeight, totalWeight) {
+    $('#loadingProgressBar').progressbar({
+      value: (1.0-(doneWeight/totalWeight))*100
+    });
+    if (nbRemaining===0) {
+      $('#loadingDialog').dialog('close');
+      var errors = scene.getErrors();
+      if (errors.length > 0) {
+        throw (errors.toString());
+      }
+
+      $('#play').button()
+        .click(function() {
+          var options;
+          if ($(this).text() == 'Play') {
+            $(this).button('option', {
+              label: 'Pause',
+              icons: {
+                primary: 'ui-icon-pause'
+              }
+            });
+            scene.animation.play();
+          } else {
+            $(this).button('option', {
+              label: 'Play',
+              icons: {
+                primary: 'ui-icon-play'
+              }
+            });
+            scene.animation.pause();
+          }
+        });
+      
+      $('#step').button()
+        .click(function() {
+          scene.animation.step();
+        });
+
+      $('#reset').button()
+        .click(function() {
+          $('#play').button('option', {
+            label: 'Play',
+            icons: {
+              primary: 'ui-icon-play'
+            }
+          });
+          scene.animation.pause();
+          viewport.redraw();
+          scene.animation.setTime(0);
+          viewport.redraw();
+        });
+        
+    //  scene.animation.play();
+      viewport.redraw();
+      return true;
+    }
+  });
+});
+
+</script>
+
+  </head> 
+  <body>
+    <div id="loadingDialog" title="Loading...">
+      <h4 id="loadingDesc" style="margin-bottom: 10px"></h4>
+      <div id="loadingProgressBar" class="ui-progressbar-value"></div>
+    </div>
+    <div id="wrapper">
+      <ul id="nav">
+        <li><a href="#" id="fabric-logo"><img src="../../../themes/default/_img/projects/fabric-logo.png" /></a></li>
+      </ul>
+      <div id="editor">
+        <div id="viewer">
+          <div id="FabricContainer"></div> 
+        </div><!--viewer-->
+        <div id="sidebar">
+
+          <div class="box">
+            <h2>INFO</h2>
+              <div class="content">
+              Bulle Stacking Boxes.<br>
+              TODO some text
+            </div><!--content-->
+          </div><!--box-->
+          <div class="box">
+            <h2>CONTROLS</h2>
+            <div class="content">
+              <button id="play" style="margin-top:10px;">Play</button>
+              <button id="step" style="margin-top:10px;">Step</button>
+              <button id="reset" style="margin-top:10px;">Reset</button>
+            </div><!--content-->
+          </div><!--box-->
+          
+        </div><!--sidebar-->
+      </div> <!--editor-->
+    </div><!--wrapper-->
+  </body> 
+  </html>

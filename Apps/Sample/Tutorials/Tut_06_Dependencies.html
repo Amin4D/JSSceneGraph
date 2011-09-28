@@ -8,7 +8,6 @@
     <meta charset="iso-8859-1"/>
     <script type="text/javascript" src="../../../ThirdParty/jQuery/jquery-1.4.2.min.js"></script>
 
-    <script type="text/javascript" src="../../../Core/FABRIC.Wrappers.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../Core/FABRIC.js" charset="utf-8"></script>
     
 
@@ -73,7 +72,7 @@ $(document).ready(function() {
   
   var operatorMul = context.DependencyGraph.createOperator("operatorMul");
   operatorMul.setSourceCode(
-    'operator mul(io Scalar input[], io Scalar result, in Size index) {\n'+
+    'operator mul(io Scalar input<>, io Scalar result, in Size index) {\n'+
     '  result = 3.0 * input[index];\n'+
     '}\n');
   operatorMul.setEntryFunctionName('mul');
@@ -96,7 +95,7 @@ $(document).ready(function() {
   var binding2 = context.DependencyGraph.createBinding();
   binding2.setOperator(operatorMul);
   binding2.setParameterLayout([
-    'otherNode.result[]',
+    'otherNode.result<>',
     'self.result',
     'self.index'
   ]);

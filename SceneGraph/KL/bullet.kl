@@ -1,0 +1,138 @@
+//
+// Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
+//
+
+use Vec3;
+use Xfo;
+use BulletShape;
+use BulletRigidBody;
+use BulletSoftBody;
+use BulletWorld;
+use BulletConstraint;
+use BulletForce;
+
+operator createBulletWorld(
+  io BulletWorld world
+){
+  Boolean result;
+  world.create(result);  
+}
+
+operator stepBulletWorld(
+  io BulletWorld world,
+  io Scalar prevTime,
+  io Scalar time,
+){
+  Scalar steppedTime = time - prevTime;
+  if(time == 0.0 && prevTime > 0.0) {
+    world.reset();
+    prevTime = 0.0;
+  } else {
+    world.step(steppedTime);
+    prevTime = time - steppedTime;
+  }
+}
+
+operator raycastBulletWorld(
+  io Boolean select,
+  io RayIntersection intersection,
+  io Ray ray,
+  io BulletWorld world,
+  io Boolean enable
+) {
+  world.raycast(ray.start,ray.direction);
+  if(world.hit) {
+    select = true;
+    intersection.point = world.hitPosition;
+    intersection.distance = (ray.start - world.hitPosition).norm();
+  }
+}
+
+operator applyBulletForce(
+  io BulletWorld world,
+  io BulletForce force[]
+){
+  for(Size i=0;i<force.size();i++) {
+    if(force[i].enabled) {
+      world.applyForce(force[i]);
+      if(force[i].autoDisable)
+        force[i].enabled = false;
+    }
+  }
+}
+
+operator createBulletShape(
+  io BulletShape shape
+){
+  Boolean result;
+  shape.create(result);
+}
+
+operator copyShapeVertices(
+  io BulletShape shape,
+  io Vec3 positions<>
+){
+  shape.vertices.resize(positions.size());
+  for(Size i=0;i<positions.size();i++)
+    shape.vertices[i] = positions[i];
+}
+
+operator createBulletRigidBody(
+  io BulletWorld world,
+  io BulletShape shape,
+  io BulletRigidBody body[]
+){
+  Boolean result;
+  for(Size i=0;i<body.size();i++) {
+    body[i].create(shape,result);
+    if(result) {
+      world.addRigidBody(body[i]);  
+    }
+  }
+}
+
+operator getBulletRigidBodyTransform(
+  in Size index,
+  io BulletRigidBody body[],
+  io Xfo transform
+){
+  body[index].getTransform(transform);
+}
+
+operator createBulletSoftBody(
+  io BulletWorld world,
+  io BulletSoftBody body,
+  io Vec3 positions<>,
+  io Vec3 normals<>,
+  io Integer indices[]
+){
+  Boolean result = false;
+  body.create(result,world,positions,normals,indices);
+  if(result) {
+    world.addSoftBody(body);  
+  }
+}
+
+operator getBulletSoftBodyPosition(
+  in Size index,
+  io BulletSoftBody body,
+  io Vec3 position,
+  io Vec3 normal,
+){
+  body.getPosition(index,position,normal);
+}
+
+operator createBulletConstraint(
+  io BulletWorld world,
+  io BulletConstraint constraint[],
+  io BulletRigidBody bodiesA[],
+  io BulletRigidBody bodiesB[]
+){
+  Boolean result;
+  for(Size i=0;i<constraint.size();i++) {
+    constraint[i].create(result,bodiesA,bodiesB);
+    if(result) {
+      world.addConstraint(constraint[i]);  
+    }
+  }
+}

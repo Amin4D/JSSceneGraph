@@ -267,7 +267,25 @@ FABRIC.RT.Mat44.prototype = {
   },
 
   translation: function () {
-    return new FABRIC.RT.Vec3(this.row3.x, this.row3.y, this.row3.z);
+    return new FABRIC.RT.Vec3(this.row0.t, this.row1.t, this.row2.t);
+  },
+
+  upperLeft: function() {
+    var result = new FABRIC.RT.Mat33();
+
+    result.row0.x = this.row0.x;
+    result.row0.y = this.row0.y;
+    result.row0.z = this.row0.z;
+
+    result.row1.x = this.row1.x;
+    result.row1.y = this.row1.y;
+    result.row1.z = this.row1.z;
+
+    result.row2.x = this.row2.x;
+    result.row2.y = this.row2.y;
+    result.row2.z = this.row2.z;
+
+    return result;
   },
 
   clone: function() {

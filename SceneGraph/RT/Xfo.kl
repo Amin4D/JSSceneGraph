@@ -5,86 +5,103 @@
 use Math, Vec3, Quat, Mat44, RotationOrder, Euler;
 
 function Xfo() {
-  this.tr = this.tr.setNull();
-  this.ori = this.ori.inv();
-  this.sc = this.sc.inv();
+  this.setIdentity();
+}
+
+function Xfo(Vec3 tr) {
+  this.set(tr);
 }
 
 function Xfo(Vec3 tr, Quat ori) {
+  this.set(tr,ori);
+}
+
+function Xfo(Vec3 tr, Quat ori, Vec3 sc) {
+  this.set(tr,ori,sc);
+}
+
+function Xfo.set(Vec3 tr) {
+  this.tr = tr;
+  this.sc = Vec3(1.0, 1.0, 1.0);
+}
+
+function Xfo.set(Vec3 tr, Quat ori) {
   this.tr = tr;
   this.ori = ori;
   this.sc = Vec3(1.0, 1.0, 1.0);
 }
 
-function Xfo(Vec3 tr, Quat ori, Vec3 sc) {
+function Xfo.set(Vec3 tr, Quat ori, Vec3 sc) {
   this.tr = tr;
   this.ori = ori;
   this.sc = sc;
 }
 
-function Xfo.identity() {
+function Xfo.setIdentity() {
   this.tr.setNull();
-  this.ori.identity();
+  this.ori.setIdentity();
   this.sc = Vec3(1.0, 1.0, 1.0);
 }
 
-function Xfo * (in Xfo local, in Xfo global) {
-  var Quat lcl_ori = local.ori.unit();
-  var Quat glb_ori = global.ori.unit();
 
-  var Xfo result;
-  result.tr = global.tr + glb_ori.transform(global.sc * local.tr);
-  //  result.ori = lcl_ori * glb_ori;
-  result.ori = glb_ori * lcl_ori;
-  result.ori.setUnit();
-  result.sc = global.sc * local.sc;
-  return result;
+function Xfo.setFromMat44(Mat44 m) {
+
+  if (abs(1.0 - m.row3.t) > 0.001) {
+    Math_reportWarning('Mat44.setFromMat44: Cannot handle denormalized matrices: ' + m.row3.t);
+    this.setIdentity();
+    return;
+  }
+
+  if (m.row3.x != 0.0 || m.row3.y != 0.0 || m.row3.z != 0.0) {
+    Math_reportWarning('Mat44.setFromMat44: Cannot handle perspective projection matrices');
+    this.setIdentity();
+    return;
+  }
+
+  // Grab the translation
+  this.tr.x = m.row0.t;
+  this.tr.y = m.row1.t;
+  this.tr.z = m.row2.t;
+
+  Mat33 mat33(
+              m.row0.x, m.row0.y, m.row0.z,
+              m.row1.x, m.row1.y, m.row1.z,
+              m.row2.x, m.row2.y, m.row2.z);
+
+  // Grab the X scale and normalize the first row
+  this.sc.x = mat33.row0.length();
+  if( Math_badDivisor( this.sc.x ) )//Perf: check first to avoid building the report string
+    Math_reportBadDivisor( this.sc.x, "Mat44.setFromMat44: Matrix is singular" );
+  mat33.row0 /= this.sc.x;
+
+  // Make the 2nd row orthogonal to the 1st
+  mat33.row1 -= mat33.row0 * mat33.row0.dot(mat33.row1);
+
+  // Grab the Y scale and normalize
+  this.sc.y = mat33.row1.length();
+  if( Math_badDivisor( this.sc.y ) )//Perf: check first to avoid building the report string
+    Math_reportBadDivisor( this.sc.y, "Mat44.setFromMat44: Matrix is singular" );
+  mat33.row1 /= this.sc.y;
+
+  // Make the 3rd row orthogonal to the 1st and 2nd
+  mat33.row2 -= mat33.row0 * mat33.row0.dot(mat33.row2);
+  mat33.row2 -= mat33.row1 * mat33.row1.dot(mat33.row2);
+
+  this.sc.z = mat33.row2.length();
+  if( Math_badDivisor( this.sc.z ) )//Perf: check first to avoid building the report string
+    Math_reportBadDivisor( this.sc.z, "Mat44.setFromMat44: Matrix is singular" );
+  mat33.row2 /= this.sc.z;
+
+  this.ori.setFromMat33(mat33);
 }
 
-function Xfo Xfo.inv() {
-  var Xfo result;
-  result.tr = this.tr.neg();
-  result.ori = this.ori.inv();
-  result.sc = this.sc.inv();
-  return result;
-}
-
-function Xfo Xfo.project(in Xfo xf) {
-  return xf * this;
-}
-
-function Xfo Xfo.invProject(in Xfo xf) {
-  var Xfo thisInv = this.inv();
-  var Quat glb_ori = xf.ori.unit();
-  var Quat inv_ori = thisInv.ori.unit();
-
-  var Xfo result;
-  result.tr = inv_ori.transform(thisInv.sc * (xf.tr + thisInv.tr));
-  result.ori = glb_ori * inv_ori;
-  //  result.ori = inv_ori * glb_ori;
-  result.ori.setUnit();
-  result.sc = thisInv.sc * xf.sc;
-  return result;
-}
-
-function Vec3 Xfo.transform(in Vec3 v) {
-  return this.ori.transform(v) * this.sc + this.tr;
-}
-
-// TODO: Remove the function above. 'transform' is too ambiguous,
-// and inconsistent with our JS library.
-function Vec3 Xfo.transformVector(in Vec3 v) {
-  return this.ori.rotateVector(v) * this.sc + this.tr;
-}
-
-function Mat44(in Xfo xfo) {
-  var Mat44 scl, rot, trn;
+function Mat44 Xfo.toMat44() {
+  Mat44 scl, rot, trn;
 
   scl.setNull();
-  scl.setDiagonal(Vec4(xfo.sc.x, xfo.sc.y, xfo.sc.z, 1.0));
+  scl.setDiagonal(Vec4(this.sc.x, this.sc.y, this.sc.z, 1.0));
 
-  // [hi 20110311 this transpose shouldn't be needed but we do]
-  var Quat q = xfo.ori;
+  Quat q = this.ori;
   rot.setNull();
   rot.row0.x = 1.0 - 2.0 * (q.v.y * q.v.y + q.v.z * q.v.z);
   rot.row0.y = 2.0 * (q.v.x * q.v.y - q.v.z * q.w);
@@ -99,89 +116,37 @@ function Mat44(in Xfo xfo) {
   rot.row2.z = 1.0 - 2.0 * (q.v.x * q.v.x + q.v.y * q.v.y);
 
   rot.row3.t = 1.0;
-  rot = rot.transpose();
 
-  trn.setNull();
-  trn.setDiagonal(1.0);
-  trn.row3.x = xfo.tr.x;
-  trn.row3.y = xfo.tr.y;
-  trn.row3.z = xfo.tr.z;
+  trn.setIdentity();
+  trn.row0.t = this.tr.x;
+  trn.row1.t = this.tr.y;
+  trn.row2.t = this.tr.z;
 
-  this = scl * rot * trn;
+  return trn * rot * scl;
 }
 
-function Xfo Mat44.decompose(in RotationOrder ro) {
-  var Xfo xfo;
+function Xfo * (in Xfo local, in Xfo global) {
+  //[jcg] We shouldn't need this, and it's not done in JS
+  Quat lcl_ori = local.ori.unit();
+  Quat glb_ori = global.ori.unit();
 
-  if (abs(1.0 - this.row3.t) > 0.001) {
-    report('Cannot handle denormalized matrices');
-    report(this.row3.t);
-    return xfo;
-  }
-
-  if (this.row0.t != 0.0 || this.row1.t != 0.0 || this.row2.t != 0.0) {
-    report('Cannot handle perspective projection matrices');
-    return xfo;
-  }
-
-  if (abs(this.det()) < DIVIDEPRECISION) {
-    report('Matrix is singular.');
-    return xfo;
-  }
-
-  // Grab the translation
-  xfo.tr.x = this.row3.x;
-  xfo.tr.y = this.row3.y;
-  xfo.tr.z = this.row3.z;
-
-  var Vec3 row0, row1, row2;
-  row0.set(this.row0.x, this.row0.y, this.row0.z);
-  row1.set(this.row1.x, this.row1.y, this.row1.z);
-  row2.set(this.row2.x, this.row2.y, this.row2.z);
-
-  // Grab the X scale and normalize the first row
-  xfo.sc.x = row0.norm();
-  row0.setUnit();
-
-  // Make the 2nd row orthogonal to the 1st
-  row1 -= row0 * row0.dot(row1);
-
-  // Grab the Y scale and normalize
-  xfo.sc.y = row1.norm();
-  row1.setUnit();
-
-  // Make the 3rd row orthogonal to the 1st and 2nd
-  row2 -= row0 * row0.dot(row2);
-  row2 -= row1 * row1.dot(row2);
-
-  xfo.sc.z = row2.norm();
-  row2.setUnit();
-
-  var Vec3 rot;
-
-  if (ro.isXYZ()) {
-    rot.y = asin(row0.z);
-    if (abs(row0.z) > 0.9995) {
-      rot.x = atan2(row2.y, row1.y);
-      rot.y = row0.z < 0.0 ? - rot.y : rot.y;
-      rot.z = 0.0;
-    }
-    else {
-      rot.x = atan2(-row1.z, row2.z);
-      rot.z = atan2(-row0.y, row0.x);
-    }
-  }
-  else {
-    report('Mat44.decompose only implemented for XYZ rotation order');
-  }
-
-  var Euler e(rot, ro);
-  var Quat q(e);
-  xfo.ori = q;
-
-  return xfo;
+  Xfo result;
+  result.tr = global.tr + glb_ori.rotateVector(global.sc * local.tr);
+  //  result.ori = lcl_ori * glb_ori;
+  result.ori = glb_ori * lcl_ori;
+  result.ori.setUnit();
+  result.sc = global.sc * local.sc;
+  return result;
 }
 
-function Xfo(in Mat44 m) {
-  this = m.decompose(RotationOrder(0));
+function Xfo Xfo.inverse() {
+  Xfo result;
+  result.tr = this.tr.negate();
+  result.ori = this.ori.inverse();
+  result.sc = this.sc.inverse();
+  return result;
+}
+
+function Vec3 Xfo.transformVector(in Vec3 v) {
+  return this.ori.rotateVector(v) * this.sc + this.tr;
 }

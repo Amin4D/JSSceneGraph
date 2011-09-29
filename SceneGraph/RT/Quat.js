@@ -42,8 +42,8 @@ FABRIC.RT.Quat = function() {
     this.w = arguments[0].w;
   }
   else if (arguments.length == 0) {
-    this.v = new FABRIC.RT.Vec3();
-    this.w = 1;
+    this.v = new FABRIC.RT.Vec3(1.0,0.0,0.0);
+    this.w = 0.0;
   }
   else throw'Quat constructor: invalid arguments';
 };
@@ -54,6 +54,10 @@ FABRIC.RT.Quat.prototype = {
   set: function() {
     FABRIC.RT.Quat.apply(this, arguments);
     return this;
+  },
+
+  setIdentity: function(){
+    this.set();
   },
 
   setFromEuler: function(e) {

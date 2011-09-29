@@ -5,13 +5,7 @@
 use Math, Euler;
 
 function Quat() {
-  this.v = Vec3(0.0, 0.0, 0.0);
-  this.w = 1.0;
-}
-
-function Quat.identity() {
-  this.v = Vec3(0.0, 0.0, 0.0);
-  this.w = 1.0;
+  this.setIdentity();
 }
 
 function Quat(in Scalar x, in Scalar y, in Scalar z, in Scalar w) {
@@ -42,6 +36,11 @@ function Quat.set(in Scalar w, in Vec3 v) {
 function Quat.set(in Vec3 v, in Scalar w) {
   this.v = v;
   this.w = w;
+}
+
+function Quat.setIdentity() {
+  this.v = Vec3(1.0, 0.0, 0.0);
+  this.w = 0.0;
 }
 
 function Quat.setFromEuler(in Euler e) {

@@ -13,8 +13,8 @@ Math.HALF_PI = Math.PI / 2.0;
 Math.QUATER_PI = Math.PI / 4.0;
 Math.DEG_TO_RAD = 57.29577951308232;
 Math.RAD_TO_DEG = 0.017453292519943295;
-Math.PRECISION = 10e-12
-Math.DIVIDEPRECISION = 10e-200
+Math.PRECISION = 10e-12;
+Math.DIVIDEPRECISION = 10e-200;
 
 /*
  * Convert between radians and degrees

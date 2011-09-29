@@ -243,8 +243,26 @@ function Mat44 Mat44.transpose() {
 
 function Vec3 Mat44.translation() {
   Vec3 result;
-  result.x = this.row3.x;
-  result.y = this.row3.y;
-  result.z = this.row3.z;
+  result.x = this.row0.t;
+  result.y = this.row1.t;
+  result.z = this.row2.t;
+  return result;
+}
+
+function Mat33 Mat44.upperLeft() {
+  Mat33 result;
+
+  result.row0.x = this.row0.x;
+  result.row0.y = this.row0.y;
+  result.row0.z = this.row0.z;
+
+  result.row1.x = this.row1.x;
+  result.row1.y = this.row1.y;
+  result.row1.z = this.row1.z;
+
+  result.row2.x = this.row2.x;
+  result.row2.y = this.row2.y;
+  result.row2.z = this.row2.z;
+
   return result;
 }

@@ -4,14 +4,16 @@
 //
 
 //determine if an object is a valid Vec2.
-FABRIC.RT.isVec2 = function(vec2) {
-  return typeof vec2 === 'object' &&
-    'x' in vec2 &&
-    typeof vec2.x === 'number' &&
-    'y' in vec2 &&
-    typeof vec2.y === 'number';
+FABRIC.RT.isVec2 = function(t) {
+  return t && t.getType &&
+         t.getType() === 'FABRIC.RT.Vec2';
 };
 
+//Constructor:
+//  Supported args:
+//    (none)
+//    x, y
+//    Vec
 FABRIC.RT.Vec2 = function() {
   if (arguments.length == 2 &&
       FABRIC.RT.isScalar(arguments[0]) && 
@@ -32,8 +34,8 @@ FABRIC.RT.Vec2 = function() {
 
 FABRIC.RT.Vec2.prototype = {
 
-  set: function(x, y) {
-    //Call the constructor
+  //set: see constructor for supported args
+  set: function() {
     FABRIC.RT.Vec2.apply(this, arguments);
     return this;
   },

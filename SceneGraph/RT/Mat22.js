@@ -4,14 +4,17 @@
 //
 
 //determine if an object is a valid Mat22.
-FABRIC.RT.isMat22 = function(value) {
-  return typeof value === 'object' &&
-    'row0' in value &&
-    FABRIC.RT.isVec2(value.row0) &&
-    'row1' in value &&
-    FABRIC.RT.isVec2(value.row1);
+FABRIC.RT.isMat22 = function(t) {
+  return t && t.getType &&
+         t.getType() === 'FABRIC.RT.Mat22';
 };
 
+//Constructor:
+//  Supported args:
+//    (none)
+//    Vec2: row0, row1
+//    4 scalars (_00, _01, ...)
+//    Mat33
 FABRIC.RT.Mat22 = function() {
   if (arguments.length == 2 &&
       FABRIC.RT.isVec2(arguments[0]) &&
@@ -40,8 +43,8 @@ FABRIC.RT.Mat22 = function() {
 
 FABRIC.RT.Mat22.prototype = {
 
+  //set: see constructor for supported args
   set: function() {
-    //Call the constructor
     FABRIC.RT.Mat22.apply(this, arguments);
     return this;
   },

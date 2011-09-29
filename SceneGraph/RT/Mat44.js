@@ -4,18 +4,17 @@
 //
 
 //determine if an object is a valid Mat44.
-FABRIC.RT.isMat44 = function(value) {
-  return typeof value === 'object' &&
-    'row0' in value &&
-    FABRIC.RT.isVec4(value.row0) &&
-    'row1' in value &&
-    FABRIC.RT.isVec4(value.row1) &&
-    'row2' in value &&
-    FABRIC.RT.isVec4(value.row2) &&
-    'row3' in value &&
-    FABRIC.RT.isVec4(value.row3);
+FABRIC.RT.isMat44 = function(t) {
+  return t && t.getType &&
+         t.getType() === 'FABRIC.RT.Mat44';
 };
 
+//Constructor:
+//  Supported args:
+//    (none)
+//    Vec4: row0, row1, row2, row3
+//    16 scalars (_00, _01, ...)
+//    Mat44
 FABRIC.RT.Mat44 = function() {
   if (arguments.length == 4 &&
       FABRIC.RT.isVec4(arguments[0]) &&
@@ -66,8 +65,8 @@ FABRIC.RT.Mat44 = function() {
 
 FABRIC.RT.Mat44.prototype = {
 
+  //set: see constructor for supported args
   set: function() {
-    //Call the constructor
     FABRIC.RT.Mat44.apply(this, arguments);
     return this;
   },

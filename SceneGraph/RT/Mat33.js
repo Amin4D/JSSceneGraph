@@ -4,16 +4,17 @@
 //
 
 //determine if an object is a valid Mat33.
-FABRIC.RT.isMat33 = function(value) {
-  return typeof value === 'object' &&
-    'row0' in value &&
-    FABRIC.RT.isVec3(value.row0) &&
-    'row1' in value &&
-    FABRIC.RT.isVec3(value.row1) &&
-    'row2' in value &&
-    FABRIC.RT.isVec3(value.row2);
+FABRIC.RT.isMat33 = function(t) {
+  return t && t.getType &&
+         t.getType() === 'FABRIC.RT.Mat33';
 };
 
+//Constructor:
+//  Supported args:
+//    (none)
+//    Vec3: row0, row1, row2
+//    9 scalars (_00, _01, ...)
+//    Mat33
 FABRIC.RT.Mat33 = function() {
   if (arguments.length == 3 &&
       FABRIC.RT.isVec3(arguments[0]) &&
@@ -52,8 +53,8 @@ FABRIC.RT.Mat33 = function() {
 
 FABRIC.RT.Mat33.prototype = {
 
+  //set: see constructor for supported args
   set: function() {
-    //Call the constructor
     FABRIC.RT.Mat33.apply(this, arguments);
     return this;
   },

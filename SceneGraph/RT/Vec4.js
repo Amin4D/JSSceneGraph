@@ -4,18 +4,16 @@
 //
 
 //determine if an object is a valid Vec4.
-FABRIC.RT.isVec4 = function(vec4) {
-  return typeof vec4 === 'object' &&
-    'x' in vec4 &&
-    typeof vec4.x === 'number' &&
-    'y' in vec4 &&
-    typeof vec4.y === 'number' &&
-    'z' in vec4 &&
-    typeof vec4.z === 'number' &&
-    't' in vec4 &&
-    typeof vec4.t === 'number';
+FABRIC.RT.isVec4 = function(t) {
+  return t && t.getType &&
+         t.getType() === 'FABRIC.RT.Vec4';
 };
 
+//Constructor:
+//  Supported args:
+//    (none)
+//    x, y, z, t
+//    Vec4
 FABRIC.RT.Vec4 = function() {
   if (arguments.length == 4 &&
       FABRIC.RT.isScalar(arguments[0]) && 
@@ -44,8 +42,8 @@ FABRIC.RT.Vec4 = function() {
 
 FABRIC.RT.Vec4.prototype = {
 
-  set: function(x, y, z, t) {
-    //Call the constructor
+  //set: see constructor for supported args
+  set: function() {
     FABRIC.RT.Vec4.apply(this, arguments);
     return this;
   },

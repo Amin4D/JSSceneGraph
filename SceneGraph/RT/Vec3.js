@@ -4,16 +4,16 @@
 //
 
 //determine if an object is a valid Vec3.
-FABRIC.RT.isVec3 = function(vec3) {
-  return typeof vec3 === 'object' &&
-    'x' in vec3 &&
-    typeof vec3.x === 'number' &&
-    'y' in vec3 &&
-    typeof vec3.y === 'number' &&
-    'z' in vec3 &&
-    typeof vec3.z === 'number';
+FABRIC.RT.isVec3 = function(t) {
+  return t && t.getType &&
+         t.getType() === 'FABRIC.RT.Vec3';
 };
 
+//Constructor:
+//  Supported args:
+//    (none)
+//    x, y, z
+//    Vec3
 FABRIC.RT.Vec3 = function() {
   if (arguments.length == 3 &&
       FABRIC.RT.isScalar(arguments[0]) && 
@@ -38,8 +38,8 @@ FABRIC.RT.Vec3 = function() {
 
 FABRIC.RT.Vec3.prototype = {
 
-  set: function(x, y, z) {
-    //Call the constructor
+  //set: see constructor for supported args
+  set: function() {
     FABRIC.RT.Vec3.apply(this, arguments);
     return this;
   },

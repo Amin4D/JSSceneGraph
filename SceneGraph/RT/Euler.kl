@@ -3,6 +3,8 @@
 // Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
 //
 
+use RotationOrder, Mat33;
+
 function Euler(in Vec3 angles) {
   this.x = angles.x;
   this.y = angles.y;
@@ -11,34 +13,64 @@ function Euler(in Vec3 angles) {
 }
 
 function Euler(in Vec3 angles, in RotationOrder order) {
+  this.set(angles, order);
+}
+
+function Euler(in Scalar x, in Scalar y, in Scalar z) {
+  this.set(x, y, z);
+}
+
+function Euler(in Scalar x, in Scalar y, in Scalar z, in RotationOrder order) {
+  this.set(x, y, z, order);
+}
+
+function Euler.set(in Vec3 angles, in RotationOrder order) {
   this.x = angles.x;
   this.y = angles.y;
   this.z = angles.z;
   this.ro = order;
 }
 
+function Euler.set(in Scalar x, in Scalar y, in Scalar z) {
+  this.x = x;
+  this.y = y;
+  this.z = z;
+  this.ro.setXYZ();
+}
+
+function Euler.set(in Scalar x, in Scalar y, in Scalar z, in RotationOrder order) {
+  this.x = x;
+  this.y = y;
+  this.z = z;
+  this.ro = order;
+}
+
+function Euler.setAngles(in Vec3 v) {
+  this.x = v.x;
+  this.y = v.y;
+  this.z = v.z;
+}
+
 function Vec3 Euler.getAngles() {
   return Vec3(this.x, this.y, this.z);
 }
 
-// Euler <-> Quaternion/Mat33 conversion
-
-function Euler(in Quat q, in RotationOrder ro) {
-  this.ro = ro;
-
-  Scalar nq = q.normSq();
-  Scalar s = (nq > 0.0) ? (2.0 / nq) : 0.0;
-  Scalar xs = q.v.x * s, ys = q.v.y * s, zs = q.v.z * s;
-  Scalar wx = q.w * xs, wy = q.w * ys, wz = q.w * zs;
-  Scalar xx = q.v.x * xs, xy = q.v.x * ys, xz = q.v.x * zs;
-  Scalar yy = q.v.y * xs, yz = q.v.y * ys, zz = q.v.z * zs;
+function Boolean Euler.equal (in Euler other) {
+  return this.x == other.x && this.y == other.y && this.z == other.z && this.ro.order == other.ro.order;
 }
 
-function Mat33 Euler.makeMat33() {
+function Boolean Euler.almostEqual(in Euler other, in Scalar precision) {
+  return
+      (abs(this.x - other.x) < precision) &&
+      (abs(this.y - other.y) < precision) &&
+      (abs(this.z - other.z) < precision) &&
+      (this.ro.order == other.ro.order);
+}
+
+function Mat33 Euler.toMat33() {
   Scalar Cx = cos(this.x), Sx = sin(this.x);
   Scalar Cy = cos(this.y), Sy = sin(this.y);
   Scalar Cz = cos(this.z), Sz = sin(this.z);
-
 
   Mat33 Rx( 1.0, 0.0, 0.0,
             0.0,  Cx, -Sx,
@@ -55,17 +87,17 @@ function Mat33 Euler.makeMat33() {
   Mat33 result;
 
   if (this.ro.isXYZ())
-    result = Rx * Ry * Rz;
-  else if (this.ro.isYZX())
-    result = Ry * Rz * Rx;
-  else if (this.ro.isZXY())
-    result = Rz * Rx * Ry;
-  else if (this.ro.isXZY())
-    result = Rx * Rz * Ry;
-  else if (this.ro.isZYX())
     result = Rz * Ry * Rx;
-  else if (this.ro.isYXZ())
+  else if (this.ro.isYZX())
+    result = Rx * Rz * Ry;
+  else if (this.ro.isZXY())
     result = Ry * Rx * Rz;
+  else if (this.ro.isXZY())
+    result = Ry * Rz * Rx;
+  else if (this.ro.isZYX())
+    result = Rx * Ry * Rz;
+  else if (this.ro.isYXZ())
+    result = Rz * Rx * Ry;
 
   return result;
 }

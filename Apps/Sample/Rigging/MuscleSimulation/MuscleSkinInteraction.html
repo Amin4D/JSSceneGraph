@@ -206,14 +206,14 @@ $(document).ready(function() {
   var camera = scene.constructNode('TargetCamera', {
       nearDistance: 0.1,
       farDistance: 500,
-      position: FABRIC.RT.vec3(0, 5, 10).scale(1.5),
-      target: FABRIC.RT.vec3(0, 0, 0)
+      position: new FABRIC.RT.Vec3(0, 5, 10).multiplyScalar(1.5),
+      target: new FABRIC.RT.Vec3(0, 0, 0)
     });
   
   viewport.setCameraNode(camera);
   var cameraManipulator = scene.constructNode("CameraManipulator", { targetNode:camera } );
   
-  var light = scene.constructNode('PointLight', { position: FABRIC.RT.vec3(420.0, 1000.0, 600.0) });
+  var light = scene.constructNode('PointLight', { position: new FABRIC.RT.Vec3(420.0, 1000.0, 600.0) });
   /*
   // create the scene grid
   scene.constructNode('Instance', {
@@ -229,11 +229,11 @@ $(document).ready(function() {
   var skeleton = scene.constructNode('CharacterSkeleton');
 
   skeleton.addBone({name: 'anchorLeft', referencePose: FABRIC.RT.xfo({
-      tr: FABRIC.RT.vec3(-6, 0, 0)
+      tr: new FABRIC.RT.Vec3(-6, 0, 0)
     }) });
   
   skeleton.addBone({name: 'anchorRight', referencePose: FABRIC.RT.xfo({
-      tr: FABRIC.RT.vec3(6, 0, 0)
+      tr: new FABRIC.RT.Vec3(6, 0, 0)
     }) });
 
   // create the rig
@@ -288,7 +288,7 @@ $(document).ready(function() {
     });
   var transformedMesh = scene.constructNode('TransformedGeometry', {
       baseGeometryNode: plane,
-      xfo: FABRIC.RT.xfo({ tr: FABRIC.RT.vec3(0, -0.5, 0.5) })
+      xfo: FABRIC.RT.xfo({ tr: new FABRIC.RT.Vec3(0, -0.5, 0.5) })
     });
       
   //////////////////////////////////////////////////////////////
@@ -296,12 +296,12 @@ $(document).ready(function() {
   
   var muscleSystem = scene.constructNode('MuscleSystem', {
       characterRig: rig,
-      gravity: FABRIC.RT.vec3(0, 0.0, 0)
+      gravity: new FABRIC.RT.Vec3(0, 0.0, 0)
     });
   
   muscleSystem.addMuscle( {
     xfo: FABRIC.RT.xfo( {
-        tr: FABRIC.RT.vec3( 0, 5, 0)
+        tr: new FABRIC.RT.Vec3( 0, 5, 0)
       })
     });
   

@@ -80,12 +80,29 @@ function computeNormals(
     for (var Size j = 0; j < a[i].qidx.size(); j++)
       avgn += q[a[i].qidx[j]].normal;
 
-    if (avgn.norm() > 0.0)
+    if (avgn.length() > 0.0)
       avgn.setUnit();
 
     normals[i] = avgn;
   }
 }
+
+function Vec3 maxVec(in Vec3 a, in Vec3 b) {
+  var Vec3 v;
+  v.x = a.x > b.x ? a.x : b.x;
+  v.y = a.y > b.y ? a.y : b.y;
+  v.z = a.z > b.z ? a.z : b.z;
+  return v;
+}
+
+function Vec3 minVec(in Vec3 a, in Vec3 b) {
+  var Vec3 v;
+  v.x = a.x < b.x ? a.x : b.x;
+  v.y = a.y < b.y ? a.y : b.y;
+  v.z = a.z < b.z ? a.z : b.z;
+  return v;
+}
+
 
 function getTeapotHull(
   io Patch p[],
@@ -164,8 +181,8 @@ function getTeapotHull(
   vmin.setNull();
   vmax.setNull();
   for (var Size i = 0; i < positions.size(); i++) {
-    vmin = vmin.min(positions[i]);
-    vmax = vmax.max(positions[i]);
+    vmin = maxVec(vmin, positions[i]);
+    vmax = maxVec(vmax, positions[i]);
   }
 
   vmid = (vmin + vmax) * 0.5;
@@ -320,8 +337,8 @@ function generateTeapotBase(
   }
   var Scalar maxV = 0.0;
   for (var Size i = 0; i < positions.size(); i++) {
-    if (positions[i].norm() > maxV) {
-      maxV = positions[i].norm();
+    if (positions[i].length() > maxV) {
+      maxV = positions[i].length();
     }
   }
   var Scalar scale = (size / maxV) * 2.0;

@@ -371,7 +371,7 @@ FABRIC.SceneGraph.registerNodeType('AnimationEvaluator', {
               else
                 memberBindingCode += '  tempVec3.z = 0.0;\n';
               memberBindingCode += '  tempEuler = Euler(tempVec3);\n';
-              memberBindingCode += '  ' + memberAccessor + ' = Quat(tempEuler);\n';
+              memberBindingCode += '  ' + memberAccessor + '.setFromEuler(tempEuler);\n';
             }else if (memberBinding.length === 4) {
 
             }

@@ -11,7 +11,7 @@ FABRIC.SceneGraph.registerNodeType('MuscleSystem', {
     options = scene.assignDefaults(options, {
       characterRig: undefined,
       volumeConstraintMesh: undefined,
-      gravity: FABRIC.RT.vec3(0, -0.1, 0),
+      gravity: new FABRIC.RT.Vec3(0, -0.1, 0),
       numRelaxationIterations: 6,
       displacementMapResolution: 32
       });
@@ -33,7 +33,7 @@ FABRIC.SceneGraph.registerNodeType('MuscleSystem', {
         length: 10,
         display: true,
         xfo: FABRIC.RT.xfo(),
-        pointEnvelopeIds: FABRIC.RT.vec2(0,1)
+        pointEnvelopeIds: new FABRIC.RT.Vec2(0,1)
       }
     
     initializationdgnode.setCount(0);
@@ -53,10 +53,10 @@ FABRIC.SceneGraph.registerNodeType('MuscleSystem', {
       
     for(i = 0; i < muscleDefaults.numSegments; i++){
       pointXfos.push(FABRIC.RT.xfo( {
-        tr: FABRIC.RT.vec3( ((i/(muscleDefaults.numSegments-1)) - 0.5) * muscleDefaults.length, 0,0)
+        tr: new FABRIC.RT.Vec3( ((i/(muscleDefaults.numSegments-1)) - 0.5) * muscleDefaults.length, 0,0)
       }));
       var envelopWeight = (Math.cos((i/(muscleDefaults.numSegments-1)) * Math.PI) + 1) * 0.5;
-      pointEnvelopWeights.push(FABRIC.RT.vec2(envelopWeight, 1.0 - envelopWeight));
+      pointEnvelopWeights.push(new FABRIC.RT.Vec2(envelopWeight, 1.0 - envelopWeight));
       
       var flexibilityWeight = (Math.cos((i/(muscleDefaults.numSegments-1) * 2.0 * Math.PI)) * 0.45) + 0.55;
       flexibilityWeights.push(1.0 - Math.pow(flexibilityWeight, 4));
@@ -80,9 +80,9 @@ FABRIC.SceneGraph.registerNodeType('MuscleSystem', {
     
     var key = FABRIC.Animation.bezierKeyframe;
     var contractionCurve = [];
-    contractionCurve.push( key(0.6, 0, null, FABRIC.RT.vec2(0.1, 0)) );
-    contractionCurve.push( key(1.0, 1.0, FABRIC.RT.vec2(-0.1, 0), FABRIC.RT.vec2(0.1, 0)));
-    contractionCurve.push( key(2.0, 1.0, FABRIC.RT.vec2(-0.1, 0), null));
+    contractionCurve.push( key(0.6, 0, null, new FABRIC.RT.Vec2(0.1, 0)) );
+    contractionCurve.push( key(1.0, 1.0, new FABRIC.RT.Vec2(-0.1, 0), new FABRIC.RT.Vec2(0.1, 0)));
+    contractionCurve.push( key(2.0, 1.0, new FABRIC.RT.Vec2(-0.1, 0), null));
     initializationdgnode.addMember('contractionCurve', 'BezierKeyframe[]', contractionCurve);
     initializationdgnode.addMember('contractionWeights', 'Scalar[]', contractionWeights);
     
@@ -90,9 +90,9 @@ FABRIC.SceneGraph.registerNodeType('MuscleSystem', {
     // Displacement Map
     
     var quadrantCurve = [];
-    quadrantCurve.push( key(0.0, 0.5, null, FABRIC.RT.vec2(0.2, 0)) );
-    quadrantCurve.push( key(0.5, 2.0, FABRIC.RT.vec2(-0.2, 0), FABRIC.RT.vec2(0.2, 0)));
-    quadrantCurve.push( key(1.0, 0.5, FABRIC.RT.vec2(-0.2, 0), null));
+    quadrantCurve.push( key(0.0, 0.5, null, new FABRIC.RT.Vec2(0.2, 0)) );
+    quadrantCurve.push( key(0.5, 2.0, new FABRIC.RT.Vec2(-0.2, 0), new FABRIC.RT.Vec2(0.2, 0)));
+    quadrantCurve.push( key(1.0, 0.5, new FABRIC.RT.Vec2(-0.2, 0), null));
     initializationdgnode.addMember('quadrantCurve0', 'BezierKeyframe[]', quadrantCurve);
     initializationdgnode.addMember('quadrantCurve1', 'BezierKeyframe[]', quadrantCurve);
     initializationdgnode.addMember('quadrantCurve2', 'BezierKeyframe[]', quadrantCurve);
@@ -275,7 +275,7 @@ operator rotateMuscleVolume(\n\
       var scale = length / pointXfos[0].tr.dist(pointXfos[pointXfos.length-1].tr);
       var center = pointXfos[0].tr.lerp(pointXfos[pointXfos.length-1].tr, 0.5);
       for(i = 0; i < muscleDefaults.numSegments; i++){
-        pointXfos[i].tr = pointXfos[i].tr.subtract(center).scale(scale).add(center);
+        pointXfos[i].tr = pointXfos[i].tr.subtract(center).multiplyScalar(scale).add(center);
       }
       initializationdgnode.setData('initialXfos', 0, pointXfos);
     }
@@ -322,7 +322,7 @@ operator rotateMuscleVolume(\n\
         geometryNode: deformedVolume.pub,
         materialNode: scene.constructNode('PhongMaterial', {
           diffuseColor: FABRIC.RT.rgba(0.8, 0.0, 0.0, 0.5),
-          lightNode: scene.constructNode('PointLight', { position: FABRIC.RT.vec3(420.0, 1000.0, 600.0) }).pub
+          lightNode: scene.constructNode('PointLight', { position: new FABRIC.RT.Vec3(420.0, 1000.0, 600.0) }).pub
         }).pub
       });
       

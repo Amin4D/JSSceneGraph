@@ -76,16 +76,16 @@ $(document).ready(function() {
   
   // Create a camera to draw the scene from
   var camera = scene.constructNode('TargetCamera', {
-    position: FABRIC.RT.vec3(30, 30, 0),
-    target: FABRIC.RT.vec3(2, 0, -3)
+    position: new FABRIC.RT.Vec3(30, 30, 0),
+    target: new FABRIC.RT.Vec3(2, 0, -3)
   });
 
   scene.constructNode("CameraManipulator", { targetNode:camera } );
   viewport.setCameraNode(camera);
 
   var spotLightNode = scene.constructNode('SpotLight', {
-    position: FABRIC.RT.vec3(10, 20, 5),
-    target: FABRIC.RT.vec3(0, 2, -6),
+    position: new FABRIC.RT.Vec3(10, 20, 5),
+    target: new FABRIC.RT.Vec3(0, 2, -6),
     coneAngle: Math.degToRad(80.0),
     farDistance: 60,
     castShadows: true,
@@ -109,7 +109,7 @@ $(document).ready(function() {
   scene.constructNode('Instance', {
       transformNode: scene.constructNode('Transform', {
         hierarchical: false,
-        globalXfo: FABRIC.RT.xfo({ tr: FABRIC.RT.vec3(0, 3.8, -16) })
+        globalXfo: FABRIC.RT.xfo({ tr: new FABRIC.RT.Vec3(0, 3.8, -16) })
       }),
       geometryNode: scene.constructNode('Teapot', { size: 4 }),
     })
@@ -119,7 +119,7 @@ $(document).ready(function() {
   scene.constructNode('Instance', {
       transformNode: scene.constructNode('Transform', {
         hierarchical: false,
-        globalXfo: FABRIC.RT.xfo({ tr: FABRIC.RT.vec3(0, 2, -5) })
+        globalXfo: FABRIC.RT.xfo({ tr: new FABRIC.RT.Vec3(0, 2, -5) })
       }),
       geometryNode: scene.constructNode('Cuboid', {
         length: 4,
@@ -133,7 +133,7 @@ $(document).ready(function() {
   scene.constructNode('Instance', {
       transformNode: scene.constructNode('Transform', {
         hierarchical: false,
-        globalXfo: FABRIC.RT.xfo({ tr: FABRIC.RT.vec3(-10, 0, -10) })
+        globalXfo: FABRIC.RT.xfo({ tr: new FABRIC.RT.Vec3(-10, 0, -10) })
       }),
       geometryNode: scene.constructNode('Plane', { length: 50, width: 50, doubleSided: false })
     })

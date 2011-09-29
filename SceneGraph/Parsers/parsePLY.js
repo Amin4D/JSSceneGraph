@@ -67,8 +67,7 @@ FABRIC.SceneGraph.registerParser("ply", function(scene, assetFile, options ) {
             var pos = new FABRIC.RT.Vec3(parseFloat(items[0]), parseFloat(items[1]), parseFloat(items[2]));
             var color = FABRIC.RT.rgb255(parseFloat(items[6]), parseFloat(items[7]), parseFloat(items[8]));
             pos = options.xfo.ori.rotateVector(pos);
-            pos.mulInPlace(options.xfo.sc);
-            pos.addInPlace(options.xfo.tr);
+            pos = pos.multiply(options.xfo.sc).add(options.xfo.tr);
             if(options.sliceData){
               parseResults.push({ positions:pos, indices:pointIndex});
             }

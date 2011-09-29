@@ -80,8 +80,8 @@ $(document).ready(function() {
   
   // Create a camera to draw the scene from
   var camera = scene.constructNode('TargetCamera', {
-      position: FABRIC.RT.vec3(0, 14, 14),
-      target: FABRIC.RT.vec3(0, 6, 0),
+      position: new FABRIC.RT.Vec3(0, 14, 14),
+      target: new FABRIC.RT.Vec3(0, 6, 0),
       roll: 0,
       nearDistance: 0.001,
       farDistance: 20000
@@ -104,8 +104,8 @@ $(document).ready(function() {
   skeletonNode.addBone({name: 'root'});
 
   var xfo = FABRIC.RT.xfo({
-      ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(0, 0, 1), Math.degToRad(-15)),
-      tr: FABRIC.RT.vec3(-5, 5, 0)
+      ori: FABRIC.RT.Quat.makeFromAxisAndAngle(new FABRIC.RT.Vec3(0, 0, 1), Math.degToRad(-15)),
+      tr: new FABRIC.RT.Vec3(-5, 5, 0)
     });
   skeletonNode.addBone({name: 'Rod', referencePose: xfo, length: 6, parent: 'root'});
 

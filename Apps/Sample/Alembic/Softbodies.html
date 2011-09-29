@@ -97,8 +97,8 @@ $(document).ready(function() {
   var camera = scene.constructNode('TargetCamera', {
       nearDistance: 1,
       farDistance: 2000,
-      position: FABRIC.RT.vec3(-.2, 1, 1).scale(18),
-      target: FABRIC.RT.vec3(0, .2, 0).scale(13),
+      position: new FABRIC.RT.Vec3(-.2, 1, 1).multiplyScalar(18),
+      target: new FABRIC.RT.Vec3(0, .2, 0).multiplyScalar(13),
     });
 
   scene.constructNode('CameraManipulator', { targetNode: camera });
@@ -108,7 +108,7 @@ $(document).ready(function() {
     url: '../BasicDemos/Resources/fabric-demo-gradient.png'
   }));
 
-  var light = scene.constructNode('PointLight', { position: FABRIC.RT.vec3(10, 30, 100).scale(3) });
+  var light = scene.constructNode('PointLight', { position: new FABRIC.RT.Vec3(10, 30, 100).multiplyScalar(3) });
 
   var cubeTextureMap = scene.constructNode('CubeMap', {
         urls: [

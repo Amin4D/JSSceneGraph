@@ -105,14 +105,14 @@ $(document).ready(function() {
 
   // Create a camera to draw the scene from
   camera = scene.constructNode('TargetCamera', {
-      position: FABRIC.RT.vec3(54, 30, 60),
-      target: FABRIC.RT.vec3(25, 20, -10)
+      position: new FABRIC.RT.Vec3(54, 30, 60),
+      target: new FABRIC.RT.Vec3(25, 20, -10)
     });
 
   scene.constructNode('CameraManipulator', { targetNode: camera });
 
   viewport.setCameraNode(camera);
-  var light = scene.constructNode('PointLight', { position: FABRIC.RT.vec3(420.0, 1000.0, 600.0) });
+  var light = scene.constructNode('PointLight', { position: new FABRIC.RT.Vec3(420.0, 1000.0, 600.0) });
 
   var materials = [];
   materials.push(scene.constructNode('PhongMaterial', {
@@ -143,17 +143,17 @@ $(document).ready(function() {
     transformNode;
 
   for (k = 0; k < 3; k++) {
-    base1 = FABRIC.RT.vec3((k & 1) * 4.0, (k & 2) * 2.0, (k & 4)).scaleInPlace(scale);
+    base1 = new FABRIC.RT.Vec3((k & 1) * 4.0, (k & 2) * 2.0, (k & 4)).scaleInPlace(scale);
     cube = scene.constructNode('Cuboid', { length: (i & 3) + 3, width: (j & 3) + 3.0, height: (k & 3) + 3.0 });
     for (j = 0; j < 4; j++) {
 
-      base2 = FABRIC.RT.vec3((j & 1) * 2.0, (j & 2), (j & 4) / 2.0).scaleInPlace(scale);
+      base2 = new FABRIC.RT.Vec3((j & 1) * 2.0, (j & 2), (j & 4) / 2.0).scaleInPlace(scale);
       base = base2.add(base1);
 
       for (i = 0; i < 5; i++) {
         xfo = FABRIC.RT.xfo();
 
-        xfo.tr = FABRIC.RT.vec3((i & 1), (i & 2) / 2.0, (i & 4) / 4.0).scaleInPlace(scale);
+        xfo.tr = new FABRIC.RT.Vec3((i & 1), (i & 2) / 2.0, (i & 4) / 4.0).scaleInPlace(scale);
         xfo.tr.addInPlace(base);
 
         transformNode = scene.constructNode('SwirleyMovementTransform', {

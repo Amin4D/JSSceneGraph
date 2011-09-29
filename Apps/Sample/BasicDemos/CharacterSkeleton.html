@@ -97,8 +97,8 @@ $(document).ready(function() {
   var haveCameraManipulator = false;
   // Create a camera to draw the scene from
   var camera = scene.constructNode('TargetCamera', {
-    position: FABRIC.RT.vec3(30, 25, 30),
-    target: FABRIC.RT.vec3(-10, 5, 10)
+    position: new FABRIC.RT.Vec3(30, 25, 30),
+    target: new FABRIC.RT.Vec3(-10, 5, 10)
   });
 
   var assetNodes = scene.importAssetFile('Models/mocap_01.dae', {
@@ -130,7 +130,7 @@ $(document).ready(function() {
     materialNode: scene.constructNode('FlatMaterial')
   });
   
-  assetNodes.Biped_Nulls_UpperBodyController.setTimeRange(FABRIC.RT.vec2(0, 2.5));
+  assetNodes.Biped_Nulls_UpperBodyController.setTimeRange(new FABRIC.RT.Vec2(0, 2.5));
   
   
   $('#loadingDialog').dialog({

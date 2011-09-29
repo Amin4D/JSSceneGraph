@@ -774,7 +774,7 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
       }
       boneOptions.referenceLocalPose = nodeData.xfo;
       if (boneOptions.parent !== -1) {
-        boneOptions.referencePose = bones[boneOptions.parent].referencePose.project(nodeData.xfo);
+        boneOptions.referencePose = bones[boneOptions.parent].referencePose * nodeData.xfo;
 
         // set the length of the parent bone based on the child bone local offset.
         if(nodeData.xfo.tr.x > (Math.abs(nodeData.xfo.tr.y) + Math.abs(nodeData.xfo.tr.z)) &&

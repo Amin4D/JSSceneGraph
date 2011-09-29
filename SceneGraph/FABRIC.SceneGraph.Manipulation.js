@@ -45,8 +45,8 @@ FABRIC.SceneGraph.registerNodeType('CameraManipulator', {
       }
       var zoomDist = cameraNode.getFocalDistance() * options.mouseWheelZoomRate * evt.wheelDelta * -0.001;
       var cameraXfo = cameraNode.getTransformNode().getGlobalXfo();
-      var cameraZoom = cameraXfo.ori.getZaxis().mulInPlace(zoomDist);
-      cameraXfo.tr.addInPlace(cameraZoom);
+      var cameraZoom = cameraXfo.ori.getZaxis().multiplyScalar(zoomDist);
+      cameraXfo.tr = cameraXfo.tr.add(cameraZoom);
       cameraNode.getTransformNode().setGlobalXfo(cameraXfo);
       if (!cameraNode.getTransformNode().getTarget) {
         cameraNode.setFocalDistance(cameraNode.getFocalDistance() - zoomDist);
@@ -129,11 +129,11 @@ FABRIC.SceneGraph.registerNodeType('CameraManipulator', {
       }
       var mouseDragScreenPos = new FABRIC.RT.Vec2(evt.screenX, evt.screenY);
       var mouseDragScreenDelta = mouseDragScreenPos.subtract(mouseDownScreenPos);
-      var dragDist = upaxis.multiply(mouseDragScreenDelta.y)
-                           .add(swaxis.multiply(-mouseDragScreenDelta.x))
-                           .mulInPlace(focalDist * 0.001);
+      var dragDist = upaxis.multiplyScalar(mouseDragScreenDelta.y)
+                           .add(swaxis.multiplyScalar(-mouseDragScreenDelta.x))
+                           .multiplyScalar(focalDist * 0.001);
       var newcameraXfo = cameraXfo.clone();
-      newcameraXfo.tr.addInPlace(dragDist);
+      newcameraXfo.tr = newcameraXfo.tr.add(dragDist);
       cameraNode.getTransformNode().setGlobalXfo(newcameraXfo);
       if (cameraNode.getTransformNode().getTarget) {
         cameraNode.getTransformNode().setTarget(cameraTarget.add(dragDist));
@@ -157,8 +157,8 @@ FABRIC.SceneGraph.registerNodeType('CameraManipulator', {
       
       var zoomDist = cameraNode.getFocalDistance() * -options.mouseDragZoomRate * mouseDragScreenDelta;
       var newcameraXfo = cameraXfo.clone();
-      var cameraZoom = cameraXfo.ori.getZaxis().mulInPlace(zoomDist);
-      newcameraXfo.tr.addInPlace(cameraZoom);
+      var cameraZoom = cameraXfo.ori.getZaxis().multiplyScalar(zoomDist);
+      newcameraXfo.tr = newcameraXfo.tr.add(cameraZoom);
       cameraNode.getTransformNode().setGlobalXfo(newcameraXfo);
       if (!cameraNode.getTransformNode().getTarget) {
         cameraNode.setFocalDistance(cameraNode.getFocalDistance() - zoomDist);
@@ -891,7 +891,7 @@ FABRIC.SceneGraph.registerNodeType('LinearTranslationManipulator', {
       var dragPoint = dragStartXFo.tr.add(translateAxis.multiplyScalar(intersection.lineParam));
       var distance = dragPoint.subtract(dragStartPoint).dot(translateAxis);
       var dragXfo = dragStartXFo.clone();
-      dragXfo.tr.addInPlace(translateAxis.multiplyScalar(distance));
+      dragXfo.tr = dragXfo.tr.add(translateAxis.multiplyScalar(distance));
       manipulatorNode.setTargetGlobalXfo(dragXfo);
     }
     manipulatorNode.pub.addEventListener('drag', dragFn);
@@ -943,7 +943,7 @@ FABRIC.SceneGraph.registerNodeType('PlanarTranslationManipulator', {
         return;
       var delta = hitPoint2.subtract(hitPoint1);
       var dragXfo = dragStartXFo.clone();
-      dragXfo.tr.addInPlace(delta);
+      dragXfo.tr = dragXfo.tr.add(delta);
       manipulatorNode.setTargetGlobalXfo(dragXfo);
     }
     manipulatorNode.pub.addEventListener('drag', dragFn);
@@ -990,7 +990,7 @@ FABRIC.SceneGraph.registerNodeType('ScreenTranslationManipulator', {
         return;
       var delta = hitPoint2.subtract(hitPoint1);
       var dragXfo = dragStartXFo.clone();
-      dragXfo.tr.addInPlace(delta);
+      dragXfo.tr = dragXfo.tr.add(delta);
       manipulatorNode.setTargetGlobalXfo(dragXfo);
     }
     manipulatorNode.pub.addEventListener('drag', dragFn);
@@ -1183,7 +1183,7 @@ FABRIC.SceneGraph.registerNodeType('PivotRotationManipulator', {
 
       dragXfo = dragStartXFo.clone();
       dragXfo.ori = dragXfo.ori.multiply(new FABRIC.RT.Quat().setFromAxisAndAngle(normal, angle));
-      dragXfo.tr.addInPlace(movement);
+      dragXfo.tr = dragXfo.tr.add(movement);
       manipulatorNode.setTargetGlobalXfo(dragXfo);
     }
     manipulatorNode.pub.addEventListener('drag', dragFn);
@@ -1278,7 +1278,7 @@ FABRIC.SceneGraph.registerNodeType('BoneManipulator', {
       }else{
         parentXfo = manipulatorNode.getParentXfo();
         // The root of the chain can be translated.
-      //  dragXfo.tr.addInPlace(dragVec);
+      //  dragXfo.tr = dragXfo.tr.add(dragVec);
       }
 
       var angle1 = -(vec1.negate().getAngleTo(dragXfo.tr.subtract(planePoint.add(vec1.multiplyScalar(options.length)))));
@@ -1334,21 +1334,21 @@ FABRIC.SceneGraph.registerNodeType('BoneManipulator', {
     manipulatorNode.counterRotateParent = function(movement) {
       var dragXfo = dragStartXFo.clone(),
         newVec1 = movement.add(vec1.multiplyScalar(options.length)),
-        newVec1Length = newVec1.norm(),
+        newVec1Length = newVec1.length(),
         counterRotation = new FABRIC.RT.Quat().setFrom2Vectors(vec1, newVec1.multiplyScalar(1.0 / newVec1Length));
 
       dragXfo.ori = dragXfo.ori.multiply(counterRotation);
       this.setTargetGlobalOri(dragXfo.ori);
-      dragXfo.tr.addInPlace(dragXfo.ori.rotateVector(options.boneVector).multiplyScalar(options.length));
+      dragXfo.tr = dragXfo.tr.add(dragXfo.ori.rotateVector(options.boneVector).multiplyScalar(options.length));
       return dragXfo;
     };
     manipulatorNode.counterRotateChild = function(movement, parentXfo) {
       var dragXfo = dragStartXFo.clone(),
         newVec1 = movement.add(vec1.multiplyScalar(-options.length)),
-        newVec1Length = newVec1.norm(),
+        newVec1Length = newVec1.length(),
         counterRotation = new FABRIC.RT.Quat().setFrom2Vectors(vec1.negate(), newVec1.multiplyScalar(1.0 / newVec1Length));
 
-      dragXfo.tr.addInPlace(movement);
+      dragXfo.tr = dragXfo.tr.add(movement);
       dragXfo.ori = dragXfo.ori.multiply(counterRotation);
       this.setTargetOri(dragXfo.ori.multiply(parentXfo.ori.invert()));
      // this.setTargetOri(parentXfo.multiplyInv(dragXfo).ori);

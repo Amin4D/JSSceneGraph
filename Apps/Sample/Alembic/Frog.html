@@ -117,7 +117,7 @@ $(document).ready(function() {
       var materialNode = scene.constructNode('PhongTextureSimpleMaterial', {
         diffuseTextureNode: scene.constructNode('Image', { url: 'Models/frog_diffuse.png' }),
         lightNode: scene.constructNode('PointLight', {
-          position: FABRIC.RT.vec3(100, 100, 0)
+          position: new FABRIC.RT.Vec3(100, 100, 0)
         }),
         specularColor: FABRIC.RT.rgba(0.2,0.2,0.2,1)
       });

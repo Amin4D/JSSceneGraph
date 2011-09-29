@@ -43,7 +43,7 @@ operator solveArmRig(
       maxLineLengthSoftening
     );
 
-    pose[boneIndices[1]].tr = pose[boneIndices[0]].transform(Vec3(bones[boneIndices[0]].length, 0.0, 0.0));
+    pose[boneIndices[1]].tr = pose[boneIndices[0]] * Vec3(bones[boneIndices[0]].length, 0.0, 0.0);
 
     Integer ikboneIndices[];
     for (Integer i = 1; i < boneIndices.size() - 1; i++) {
@@ -53,13 +53,13 @@ operator solveArmRig(
 
     Integer wristIndex = boneIndices[boneIndices.size() - 1];
     Integer forearmIndex = boneIndices[boneIndices.size() - 2];
-    pose[wristIndex].tr = pose[forearmIndex].transform(Vec3(bones[forearmIndex].length, 0.0, 0.0));
+    pose[wristIndex].tr = pose[forearmIndex] * Vec3(bones[forearmIndex].length, 0.0, 0.0);
     pose[wristIndex].ori = targetXfo.ori;
 
     for (Integer i = 0; i < boneIndices.size(); i++) {
       pose[boneIndices[i]].ori = slerp(fkPose[i].ori, pose[boneIndices[i]].ori, ikBlend);
       if (i > 0) {
-        pose[boneIndices[i]].tr = pose[boneIndices[i - 1]].transform(bones[boneIndices[i]].referenceLocalPose.tr);
+        pose[boneIndices[i]].tr = pose[boneIndices[i - 1]] * bones[boneIndices[i]].referenceLocalPose.tr;
       }
     }
   }
@@ -104,7 +104,7 @@ operator solveLegRig(
       maxLineLengthSoftening
     );
 
-    targetXfo.tr = targetXfo.transform(Vec3(-bones[ankleIndex].length, 0.0, 0.0));
+    targetXfo.tr = targetXfo * Vec3(-bones[ankleIndex].length, 0.0, 0.0);
 
     Integer ikboneIndices[];
     ikboneIndices.push(thighIndex);
@@ -112,13 +112,13 @@ operator solveLegRig(
 
     solveNCFIK(pose, bones, ikboneIndices, targetXfo);
 
-    pose[ankleIndex].tr = pose[calfIndex].transform(Vec3(bones[calfIndex].length, 0.0, 0.0));
+    pose[ankleIndex].tr = pose[calfIndex] * Vec3(bones[calfIndex].length, 0.0, 0.0);
     pose[ankleIndex].ori = targetXfo.ori;
 
     for (Integer i = 0; i < boneIndices.size(); i++) {
       pose[boneIndices[i]].ori = slerp(fkPose[i].ori, pose[boneIndices[i]].ori, ikBlend);
       if (i > 0) {
-        pose[boneIndices[i]].tr = pose[boneIndices[i - 1]].transform(bones[boneIndices[i]].referenceLocalPose.tr);
+        pose[boneIndices[i]].tr = pose[boneIndices[i - 1]] * bones[boneIndices[i]].referenceLocalPose.tr;
       }
     }
   }

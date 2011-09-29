@@ -68,14 +68,14 @@ $(document).ready(function() {
 
   // create a camera, to be able to see something
   var camera = scene.constructNode('TargetCamera', {
-      position: FABRIC.RT.vec3(15, 15, 15),
-      target: FABRIC.RT.vec3(0, 0, 0)
+      position: new FABRIC.RT.Vec3(15, 15, 15),
+      target: new FABRIC.RT.Vec3(0, 0, 0)
     });
   viewport.setCameraNode(camera);
 
   // create a light node  
   var light = scene.constructNode('PointLight', {
-    position: FABRIC.RT.vec3(100,100,100)
+    position: new FABRIC.RT.Vec3(100,100,100)
   });
 
   // create a material node
@@ -87,7 +87,7 @@ $(document).ready(function() {
   // create a transform node
   var transform = scene.constructNode('Transform', {
     hierarchical: false,
-    globalXfo: FABRIC.RT.xfo({ tr: FABRIC.RT.vec3(0, 2, 0) })
+    globalXfo: FABRIC.RT.xfo({ tr: new FABRIC.RT.Vec3(0, 2, 0) })
   })
   
   // create a geometry node

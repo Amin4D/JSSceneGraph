@@ -86,7 +86,7 @@ operator simulateFlock(
   // Goal Seek
   {
     var Vec3 goalDir = goal - position;
-    var Scalar goalDist = goalDir.norm();
+    var Scalar goalDist = goalDir.length();
 
     if (goalDist < neighborInfluenceRange) {
       velocity = velocity.lerp(Vec3(0.0, 0.0, 0.0), 0.1);

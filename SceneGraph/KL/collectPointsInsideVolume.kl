@@ -38,7 +38,7 @@ operator collectPointsInsideBrush(
     Vec3 delta = v - brushPos;
     delta.x *= aspectRatio;
     delta.z *= 0.0;
-    Scalar dist = delta.norm();
+    Scalar dist = delta.length();
 
     if (dist < brushSize) {
       collectedPoints.distances.push(dist);

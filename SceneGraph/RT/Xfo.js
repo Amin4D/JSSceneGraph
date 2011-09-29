@@ -157,7 +157,7 @@ FABRIC.RT.Xfo.prototype = {
       trn = new FABRIC.RT.Mat44(),
       q = this.ori;
 
-    scl.setDiagonal(FABRIC.RT.vec4(this.sc.x, this.sc.y, this.sc.z, 1.0));
+    scl.setDiagonal(new FABRIC.RT.Vec4(this.sc.x, this.sc.y, this.sc.z, 1.0));
 
     rot.row0.x = 1.0 - 2.0 * (q.v.y * q.v.y + q.v.z * q.v.z);
     rot.row0.y = 2.0 * (q.v.x * q.v.y - q.v.z * q.w);

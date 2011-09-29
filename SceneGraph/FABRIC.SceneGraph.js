@@ -1030,11 +1030,11 @@ FABRIC.SceneGraph.registerNodeType('Viewport', {
       var browserZoom = fabricwindow.windowNode.getData('width') / evt.target.clientWidth;
       if (evt.offsetX) {
         // Webkit
-        return FABRIC.RT.vec2(Math.floor(evt.offsetX*browserZoom), Math.floor(evt.offsetY*browserZoom));
+        return new FABRIC.RT.Vec2(Math.floor(evt.offsetX*browserZoom), Math.floor(evt.offsetY*browserZoom));
       }
       else if (evt.layerX) {
         // Firefox
-        return FABRIC.RT.vec2(Math.floor(evt.layerX*browserZoom), Math.floor(evt.layerY*browserZoom));
+        return new FABRIC.RT.Vec2(Math.floor(evt.layerX*browserZoom), Math.floor(evt.layerY*browserZoom));
       }
       throw("Unsupported Browser");
     }
@@ -1598,12 +1598,12 @@ FABRIC.SceneGraph.registerNodeType('FreeCamera', {
   },
   factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
-        position: FABRIC.RT.vec3(1, 0, 0),
+        position: new FABRIC.RT.Vec3(1, 0, 0),
         orientation: FABRIC.RT.quat()
       });
 
     options.transformNode = scene.constructNode('Transform', {
-      globalXfo: FABRIC.RT.xfo({ tr: options.position, ori: options.orientation })
+      globalXfo: new FABRIC.RT.Xfo({ tr: options.position, ori: options.orientation })
     });
 
     var freeCameraNode = scene.constructNode('Camera', options);
@@ -1622,7 +1622,7 @@ FABRIC.SceneGraph.registerNodeType('TargetCamera', {
   },
   factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
-        target: FABRIC.RT.vec3(0, 0, 0)
+        target: new FABRIC.RT.Vec3(0, 0, 0)
       });
 
     options.transformNode = scene.pub.constructNode('AimTransform', {

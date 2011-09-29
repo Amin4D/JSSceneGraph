@@ -458,7 +458,7 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
       name:  node.getAttribute('name'),
       type:  node.getAttribute('type'),
       instance_geometry: undefined,
-      xfo: FABRIC.RT.xfo(),
+      xfo: new FABRIC.RT.Xfo(),
       children:[]
     };
     if(parentId){
@@ -471,27 +471,27 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
         case 'translate': {
           var sid = child.getAttribute('sid');
           var str = child.textContent.split(new RegExp("\\s+"));
-          var tr = FABRIC.RT.vec3(parseFloat(str[0]), parseFloat(str[1]), parseFloat(str[2]));
-          nodeData.xfo = nodeData.xfo.multiply(FABRIC.RT.xfo({tr:tr}));
+          var tr = new FABRIC.RT.Vec3(parseFloat(str[0]), parseFloat(str[1]), parseFloat(str[2]));
+          nodeData.xfo = nodeData.xfo.multiply(new FABRIC.RT.Xfo({tr:tr}));
           break;
         }
         case 'rotate': {
           var sid = child.getAttribute('sid');
           var str = child.textContent.split(new RegExp("\\s+"));
-          var q = FABRIC.RT.Quat.makeFromAxisAndAngle(
-                    FABRIC.RT.vec3(
+          var q = new FABRIC.RT.Quat().setFromAxisAndAngle(
+                    new FABRIC.RT.Vec3(
                       parseFloat(str[0]),
                       parseFloat(str[1]),
                       parseFloat(str[2])),
                     Math.degToRad(parseFloat(str[3])));
-          nodeData.xfo = nodeData.xfo.multiply(FABRIC.RT.xfo({ori:q}));
+          nodeData.xfo = nodeData.xfo.multiply(new FABRIC.RT.Xfo({ori:q}));
           break;
         }
         case 'scale': {
           var sid = child.getAttribute('sid');
           var str = child.textContent.split(new RegExp("\\s+"));
-          var sc = FABRIC.RT.vec3(parseFloat(str[0]), parseFloat(str[1]), parseFloat(str[2]));
-          nodeData.xfo = nodeData.xfo.multiply(FABRIC.RT.xfo({sc:sc}));
+          var sc = new FABRIC.RT.Vec3(parseFloat(str[0]), parseFloat(str[1]), parseFloat(str[2]));
+          nodeData.xfo = nodeData.xfo.multiply(new FABRIC.RT.Xfo({sc:sc}));
           break;
         }
         case 'instance_geometry':
@@ -616,7 +616,7 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
   //////////////////////////////////////////////////////////////////////////////
   // SceneGraph Construction
   /*
-  var defaultLight = scene.constructNode('PointLight', { position: FABRIC.RT.vec3(420.0, 1000.0, 600.0) });
+  var defaultLight = scene.constructNode('PointLight', { position: new FABRIC.RT.Vec3(420.0, 1000.0, 600.0) });
   var defaultMaterial = scene.constructNode('PhongMaterial', {
       diffuseColor: FABRIC.RT.rgb(0.8, 0, 0, 1),
       lightNode: defaultLight
@@ -648,14 +648,14 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
         case 'VERTEX':
           meshTriangleSourceData.positions = {
             source: meshData.sources[meshData.vertices.source.slice(1)],
-            constructorFn: FABRIC.RT.vec3
+            constructorFn: new FABRIC.RT.Vec3
           };
           processedData.geometryData.positions = [];
           break;
         case 'NORMAL':
           meshTriangleSourceData.normals = {
             source: meshData.sources[sourceName],
-            constructorFn: FABRIC.RT.vec3
+            constructorFn: new FABRIC.RT.Vec3
           };
           processedData.geometryData.normals = [];
           break;
@@ -663,7 +663,7 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
           var uvset = 'uvs' + numUVsets;
           meshTriangleSourceData[uvset] = {
             source: meshData.sources[sourceName],
-            constructorFn: FABRIC.RT.vec2
+            constructorFn: new FABRIC.RT.Vec2
           };
           processedData.geometryData[uvset] = [];
           processedData.constructionOptions.tangentsFromUV = numUVsets;
@@ -1179,7 +1179,7 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
           // TODO: materialNode =
         }
         /*
-        var xfo = FABRIC.RT.xfo();
+        var xfo = new FABRIC.RT.Xfo();
         xfo.setFromMat44(controllerNodes.controllerNodes.bind_shape_matrix);
         var transformNode = scene.constructNode('Transform', {
           hierarchical: false,

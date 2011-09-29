@@ -59,7 +59,7 @@ FABRIC.SceneGraph.registerNodeType('CameraManipulator', {
     var cameraPos, cameraTarget, cameraOffset, cameraXfo, upaxis, swaxis, focalDist;
     var mouseDownScreenPos, viewportNode;
     var getCameraValues = function(evt) {
-      mouseDownScreenPos = FABRIC.RT.vec2(evt.screenX, evt.screenY);
+      mouseDownScreenPos = new FABRIC.RT.Vec2(evt.screenX, evt.screenY);
       viewportNode = evt.viewportNode;
       cameraXfo = evt.cameraNode.getTransformNode().getGlobalXfo();
       cameraPos = cameraXfo.tr;
@@ -99,14 +99,14 @@ FABRIC.SceneGraph.registerNodeType('CameraManipulator', {
       if(!enabled){
         return;
       }
-      var mouseDragScreenPos = FABRIC.RT.vec2(evt.screenX, evt.screenY);
+      var mouseDragScreenPos = new FABRIC.RT.Vec2(evt.screenX, evt.screenY);
       var mouseDragScreenDelta = mouseDownScreenPos.subtract(mouseDragScreenPos);
       var newcameraXfo = cameraXfo.clone();
-      var arbit = FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(0,1,0), mouseDragScreenDelta.x * options.orbitRate);
-      newcameraXfo.ori.postMultiplyInPlace(arbit);
+      var arbit = new FABRIC.RT.Quat().setFromAxisAndAngle(new FABRIC.RT.Vec3(0,1,0), mouseDragScreenDelta.x * options.orbitRate);
+      newcameraXfo.ori = newcameraXfo.ori.multiply(arbit);
       
-      var pitch = FABRIC.RT.Quat.makeFromAxisAndAngle(newcameraXfo.ori.getXaxis(), mouseDragScreenDelta.y * options.orbitRate);
-      newcameraXfo.ori.postMultiplyInPlace(pitch);
+      var pitch = new FABRIC.RT.Quat().setFromAxisAndAngle(newcameraXfo.ori.getXaxis(), mouseDragScreenDelta.y * options.orbitRate);
+      newcameraXfo.ori = newcameraXfo.ori.multiply(pitch);
       
       var newCameraOffset = arbit.rotateVector(cameraOffset);
       newCameraOffset = pitch.rotateVector(newCameraOffset);
@@ -127,7 +127,7 @@ FABRIC.SceneGraph.registerNodeType('CameraManipulator', {
       if(!enabled){
         return;
       }
-      var mouseDragScreenPos = FABRIC.RT.vec2(evt.screenX, evt.screenY);
+      var mouseDragScreenPos = new FABRIC.RT.Vec2(evt.screenX, evt.screenY);
       var mouseDragScreenDelta = mouseDragScreenPos.subtract(mouseDownScreenPos);
       var dragDist = upaxis.multiply(mouseDragScreenDelta.y)
                            .add(swaxis.multiply(-mouseDragScreenDelta.x))
@@ -226,9 +226,9 @@ FABRIC.SceneGraph.registerNodeType('PaintManipulator', {
     paintEvent.appendEventHandler(paintEventHandler);
     
     var brushMaterial = scene.constructNode('FlatScreenSpaceMaterial', { color: FABRIC.RT.rgb(0.8, 0, 0) });
-    var brushShapeTransform = scene.constructNode('Transform', { hierarchical: false, globalXfo: FABRIC.RT.xfo({
-        ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(1, 0, 0), Math.HALF_PI),
-        sc: FABRIC.RT.vec3(0, 0, 0)
+    var brushShapeTransform = scene.constructNode('Transform', { hierarchical: false, globalXfo: new FABRIC.RT.Xfo({
+        ori: new FABRIC.RT.Quat().setFromAxisAndAngle(new FABRIC.RT.Vec3(1, 0, 0), Math.HALF_PI),
+        sc: new FABRIC.RT.Vec3(0, 0, 0)
       }) });
     var brushInstance = scene.constructNode('Instance', {
         transformNode: brushShapeTransform.pub,
@@ -269,11 +269,11 @@ FABRIC.SceneGraph.registerNodeType('PaintManipulator', {
     }
     var getMousePos = function(evt) {
       if (evt.offsetX) {
-        return FABRIC.RT.vec2(evt.offsetX, evt.offsetY);
+        return new FABRIC.RT.Vec2(evt.offsetX, evt.offsetY);
       }
       else if (evt.pageY) {
         var eloffset = getOffset(evt.target);
-        return FABRIC.RT.vec2(evt.pageX-eloffset.left, evt.pageY-eloffset.top);
+        return new FABRIC.RT.Vec2(evt.pageX-eloffset.left, evt.pageY-eloffset.top);
       }
       throw("Unsupported Browser");
     }
@@ -283,12 +283,12 @@ FABRIC.SceneGraph.registerNodeType('PaintManipulator', {
       width = parseInt(evt.target.width, 10);
       height = parseInt(evt.target.height, 10);
       aspectRatio = width / height;
-      brushPos = FABRIC.RT.vec3(((mousepos.x / width) - 0.5) * 2.0, ((mousepos.y / height) - 0.5) * -2.0, 0);
+      brushPos = new FABRIC.RT.Vec3(((mousepos.x / width) - 0.5) * 2.0, ((mousepos.y / height) - 0.5) * -2.0, 0);
 
-      brushShapeTransform.pub.setGlobalXfo(FABRIC.RT.xfo({
+      brushShapeTransform.pub.setGlobalXfo(new FABRIC.RT.Xfo({
           tr: brushPos,
-          ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(1, 0, 0), Math.HALF_PI),
-          sc: FABRIC.RT.vec3(options.brushSize / aspectRatio, options.brushSize, options.brushSize)
+          ori: new FABRIC.RT.Quat().setFromAxisAndAngle(new FABRIC.RT.Vec3(1, 0, 0), Math.HALF_PI),
+          sc: new FABRIC.RT.Vec3(options.brushSize / aspectRatio, options.brushSize, options.brushSize)
         }));
     }
 
@@ -676,7 +676,7 @@ FABRIC.SceneGraph.registerNodeType('Manipulator', {
     var mouseDownScreenPos, mouseDrag, viewportNode;
     var dragFn = function(evt) {
       evt.mouseDownScreenPos = mouseDownScreenPos;
-      evt.mouseDragScreenPos = FABRIC.RT.vec2(evt.screenX, evt.screenY);
+      evt.mouseDragScreenPos = new FABRIC.RT.Vec2(evt.screenX, evt.screenY);
       evt.mouseDragScreenDelta = evt.mouseDragScreenPos.subtract(mouseDownScreenPos);
       manipulatorNode.pub.fireEvent('drag', evt);
       evt.stopPropagation();
@@ -697,7 +697,7 @@ FABRIC.SceneGraph.registerNodeType('Manipulator', {
         manipulatorGlobals.manipulating = true;
         highlightNode();
         viewportNode = evt.viewportNode;
-        evt.mouseDownScreenPos = mouseDownScreenPos = FABRIC.RT.vec2(evt.screenX, evt.screenY);
+        evt.mouseDownScreenPos = mouseDownScreenPos = new FABRIC.RT.Vec2(evt.screenX, evt.screenY);
         manipulatorNode.pub.fireEvent('dragstart', evt);
         document.addEventListener('mousemove', dragFn, false);
         document.addEventListener('mouseup', releaseFn, false);
@@ -711,9 +711,9 @@ FABRIC.SceneGraph.registerNodeType('Manipulator', {
     // camera facing direction. 
     manipulatorNode.findClosestLocalAxis = function(vec) {
       var manipulationSpaceOri = this.getManipulationSpaceXfo().ori,
-        localX = manipulationSpaceOri.rotateVector(FABRIC.RT.vec3(1, 0, 0)),
-        localY = manipulationSpaceOri.rotateVector(FABRIC.RT.vec3(0, 1, 0)),
-        localZ = manipulationSpaceOri.rotateVector(FABRIC.RT.vec3(0, 0, 1)),
+        localX = manipulationSpaceOri.rotateVector(new FABRIC.RT.Vec3(1, 0, 0)),
+        localY = manipulationSpaceOri.rotateVector(new FABRIC.RT.Vec3(0, 1, 0)),
+        localZ = manipulationSpaceOri.rotateVector(new FABRIC.RT.Vec3(0, 0, 1)),
         deltaX = vec.getAngleTo(localX),
         deltaY = vec.getAngleTo(localY),
         deltaZ = vec.getAngleTo(localZ);
@@ -797,7 +797,7 @@ FABRIC.SceneGraph.registerNodeType('RotationManipulator', {
       }
       vec1 = vec2;
       var dragXfo = dragStartXFo.clone();
-      dragXfo.ori.postMultiplyInPlace(FABRIC.RT.Quat.makeFromAxisAndAngle(planeNormal, angle));
+      dragXfo.ori = dragXfo.ori.multiply(new FABRIC.RT.Quat().setFromAxisAndAngle(planeNormal, angle));
       manipulatorNode.setTargetGlobalXfo(dragXfo);
     }
     manipulatorNode.pub.addEventListener('drag', dragFn);
@@ -837,7 +837,7 @@ FABRIC.SceneGraph.registerNodeType('3AxisRotationManipulator', {
     var xaxisGizmoNode = scene.pub.constructNode('RotationManipulator', scene.assignDefaults(options, {
         name: name + 'XAxis',
         color: FABRIC.RT.rgb(0.8, 0, 0, 1),
-        localXfo: new FABRIC.RT.Xfo({ ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(0, 0, 1), -Math.HALF_PI) }),
+        localXfo: new FABRIC.RT.Xfo({ ori: new FABRIC.RT.Quat().setFromAxisAndAngle(new FABRIC.RT.Vec3(0, 0, 1), -Math.HALF_PI) }),
         geometryNode: circle
       }, true));
     var yaxisGizmoNode = scene.pub.constructNode('RotationManipulator', scene.assignDefaults(options, {
@@ -849,7 +849,7 @@ FABRIC.SceneGraph.registerNodeType('3AxisRotationManipulator', {
     var zaxisGizmoNode = scene.pub.constructNode('RotationManipulator', scene.assignDefaults(options, {
         name: name + 'ZAxis',
         color: FABRIC.RT.rgb(0, 0, 0.8, 1),
-        localXfo: new FABRIC.RT.Xfo({ ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(1, 0, 0), Math.HALF_PI) }),
+        localXfo: new FABRIC.RT.Xfo({ ori: new FABRIC.RT.Quat().setFromAxisAndAngle(new FABRIC.RT.Vec3(1, 0, 0), Math.HALF_PI) }),
         geometryNode: circle
       }, true));
 
@@ -870,7 +870,7 @@ FABRIC.SceneGraph.registerNodeType('LinearTranslationManipulator', {
         name: 'LinearTranslationManipulator'
       });
     if (!options.geometryNode) {
-      options.geometryNode = scene.pub.constructNode('LineVector', { to: FABRIC.RT.vec3(0, options.size, 0) });
+      options.geometryNode = scene.pub.constructNode('LineVector', { to: new FABRIC.RT.Vec3(0, options.size, 0) });
     }
     var manipulatorNode = scene.constructNode('Manipulator', options);
 
@@ -878,7 +878,7 @@ FABRIC.SceneGraph.registerNodeType('LinearTranslationManipulator', {
     var dragStartFn = function(evt) {
       viewportNode = evt.viewportNode;
       dragStartXFo = manipulatorNode.getTargetGlobalXfo();
-      translateAxis = manipulatorNode.getManipulationSpaceXfo().ori.rotateVector(FABRIC.RT.vec3(0, 1, 0));
+      translateAxis = manipulatorNode.getManipulationSpaceXfo().ori.rotateVector(new FABRIC.RT.Vec3(0, 1, 0));
       ray1 = evt.rayData;
       var intersection = ray1.distanceToLine(dragStartXFo.tr, dragStartXFo.tr.add(translateAxis));
       dragStartPoint = dragStartXFo.tr.add(translateAxis.scale(intersection.lineParam));
@@ -917,8 +917,8 @@ FABRIC.SceneGraph.registerNodeType('PlanarTranslationManipulator', {
       // Draw a simple triangle on the XY plane
       options.geometryNode = scene.pub.constructNode('Triangles');
       options.geometryNode.loadGeometryData({
-          positions: [FABRIC.RT.vec3(0, 0, 0), FABRIC.RT.vec3(0, 0, options.size),
-                      FABRIC.RT.vec3(options.size, 0, 0)],
+          positions: [new FABRIC.RT.Vec3(0, 0, 0), new FABRIC.RT.Vec3(0, 0, options.size),
+                      new FABRIC.RT.Vec3(options.size, 0, 0)],
           indices: [0, 1, 2]
         });
     }
@@ -931,7 +931,7 @@ FABRIC.SceneGraph.registerNodeType('PlanarTranslationManipulator', {
       dragStartXFo = manipulatorNode.getTargetGlobalXfo();
       ray1 = evt.rayData;
       planePoint = dragStartXFo.tr;
-      planeNormal = manipulatorNode.getManipulationSpaceXfo().ori.rotateVector(FABRIC.RT.vec3(0, 1, 0));
+      planeNormal = manipulatorNode.getManipulationSpaceXfo().ori.rotateVector(new FABRIC.RT.Vec3(0, 1, 0));
       hitPoint1 = ray1.intersectPlane(planePoint, planeNormal).point;
     }
     manipulatorNode.pub.addEventListener('dragstart', dragStartFn);
@@ -978,7 +978,7 @@ FABRIC.SceneGraph.registerNodeType('ScreenTranslationManipulator', {
       dragStartXFo = manipulatorNode.getTargetGlobalXfo();
       ray1 = evt.rayData;
       planePoint = dragStartXFo.tr;
-      planeNormal = evt.cameraNode.getTransformNode().getGlobalXfo().ori.rotateVector(FABRIC.RT.vec3(0, 0, 1));
+      planeNormal = evt.cameraNode.getTransformNode().getGlobalXfo().ori.rotateVector(new FABRIC.RT.Vec3(0, 0, 1));
       hitPoint1 = ray1.intersectPlane(planePoint, planeNormal).point;
     }
     manipulatorNode.pub.addEventListener('dragstart', dragStartFn);
@@ -1017,23 +1017,23 @@ FABRIC.SceneGraph.registerNodeType('3AxisTranslationManipulator', {
     var threeAxisTranslationManipulator = scene.constructNode('SceneGraphNode', options);
     var name = threeAxisTranslationManipulator.pub.getName();
 
-    var lineVector = scene.pub.constructNode('LineVector', { to: FABRIC.RT.vec3(0, options.size, 0) });
+    var lineVector = scene.pub.constructNode('LineVector', { to: new FABRIC.RT.Vec3(0, options.size, 0) });
     var arrowHead = scene.pub.constructNode('Cone', { radius: options.size * 0.04, height: options.size * 0.2 });
 
     scene.pub.constructNode('LinearTranslationManipulator', scene.assignDefaults(options, {
         name: name + '_XAxis',
         color: FABRIC.RT.rgb(0.8, 0, 0, 1),
         localXfo: new FABRIC.RT.Xfo({
-          ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(0, 0, 1), -Math.HALF_PI)
+          ori: new FABRIC.RT.Quat().setFromAxisAndAngle(new FABRIC.RT.Vec3(0, 0, 1), -Math.HALF_PI)
         }),
         geometryNode: lineVector
       }, true));
     scene.pub.constructNode('LinearTranslationManipulator', scene.assignDefaults(options, {
         name: name + '_XAxisArrowHead',
         color: FABRIC.RT.rgb(0.8, 0, 0, 1),
-        localXfo: FABRIC.RT.xfo({
-          ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(0, 0, 1), -Math.HALF_PI),
-          tr: FABRIC.RT.vec3(options.size, 0, 0)
+        localXfo: new FABRIC.RT.Xfo({
+          ori: new FABRIC.RT.Quat().setFromAxisAndAngle(new FABRIC.RT.Vec3(0, 0, 1), -Math.HALF_PI),
+          tr: new FABRIC.RT.Vec3(options.size, 0, 0)
         }),
         geometryNode: arrowHead
       }, true));
@@ -1047,8 +1047,8 @@ FABRIC.SceneGraph.registerNodeType('3AxisTranslationManipulator', {
     scene.pub.constructNode('LinearTranslationManipulator', scene.assignDefaults(options, {
         name: name + '_YAxisArrowHead',
         color: FABRIC.RT.rgb(0, 0.8, 0),
-        localXfo: FABRIC.RT.xfo({
-          tr: FABRIC.RT.vec3(0, options.size, 0)
+        localXfo: new FABRIC.RT.Xfo({
+          tr: new FABRIC.RT.Vec3(0, options.size, 0)
         }),
         geometryNode: arrowHead
       }, true));
@@ -1057,25 +1057,25 @@ FABRIC.SceneGraph.registerNodeType('3AxisTranslationManipulator', {
         name: name + '_ZAxis',
         color: FABRIC.RT.rgb(0, 0, 0.8),
         localXfo: new FABRIC.RT.Xfo({
-          ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(1, 0, 0), Math.HALF_PI)
+          ori: new FABRIC.RT.Quat().setFromAxisAndAngle(new FABRIC.RT.Vec3(1, 0, 0), Math.HALF_PI)
         }),
         geometryNode: lineVector
       }, true));
     scene.pub.constructNode('LinearTranslationManipulator', scene.assignDefaults(options, {
         name: name + '_ZAxisArrowHead',
         color: FABRIC.RT.rgb(0, 0, 0.8),
-        localXfo: FABRIC.RT.xfo({
-          ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(1, 0, 0), Math.HALF_PI),
-          tr: FABRIC.RT.vec3(0, 0, options.size)
+        localXfo: new FABRIC.RT.Xfo({
+          ori: new FABRIC.RT.Quat().setFromAxisAndAngle(new FABRIC.RT.Vec3(1, 0, 0), Math.HALF_PI),
+          tr: new FABRIC.RT.Vec3(0, 0, options.size)
         }),
         geometryNode: arrowHead
       }, true));
 
     var drawTriangle = scene.pub.constructNode('Triangles');
     drawTriangle.loadGeometryData({
-        positions: [FABRIC.RT.vec3(0, 0, 0), FABRIC.RT.vec3(0, 0, options.size * 0.6),
-                    FABRIC.RT.vec3(options.size * 0.6, 0, 0), FABRIC.RT.vec3(0, 0, 0),
-                    FABRIC.RT.vec3(0, 0, options.size * 0.6), FABRIC.RT.vec3(options.size * 0.6, 0, 0)],
+        positions: [new FABRIC.RT.Vec3(0, 0, 0), new FABRIC.RT.Vec3(0, 0, options.size * 0.6),
+                    new FABRIC.RT.Vec3(options.size * 0.6, 0, 0), new FABRIC.RT.Vec3(0, 0, 0),
+                    new FABRIC.RT.Vec3(0, 0, options.size * 0.6), new FABRIC.RT.Vec3(options.size * 0.6, 0, 0)],
         indices: [0, 1, 2, 3, 5, 4]
       });
 
@@ -1083,7 +1083,7 @@ FABRIC.SceneGraph.registerNodeType('3AxisTranslationManipulator', {
         name: name + '_YZPlane',
         color: FABRIC.RT.rgb(0.8, 0, 0, 1),
         localXfo: new FABRIC.RT.Xfo({
-          ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(0, 0, 1), Math.HALF_PI)
+          ori: new FABRIC.RT.Quat().setFromAxisAndAngle(new FABRIC.RT.Vec3(0, 0, 1), Math.HALF_PI)
         }),
         geometryNode: drawTriangle
       }, true));
@@ -1097,7 +1097,7 @@ FABRIC.SceneGraph.registerNodeType('3AxisTranslationManipulator', {
         name: name + '_XYPlane',
         color: FABRIC.RT.rgb(0, 0, 0.8, 1),
         localXfo: new FABRIC.RT.Xfo({
-          ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(1, 0, 0), -Math.HALF_PI)
+          ori: new FABRIC.RT.Quat().setFromAxisAndAngle(new FABRIC.RT.Vec3(1, 0, 0), -Math.HALF_PI)
         }),
         geometryNode: drawTriangle
       }, true));
@@ -1182,7 +1182,7 @@ FABRIC.SceneGraph.registerNodeType('PivotRotationManipulator', {
       }
 
       dragXfo = dragStartXFo.clone();
-      dragXfo.ori.postMultiplyInPlace(FABRIC.RT.Quat.makeFromAxisAndAngle(normal, angle));
+      dragXfo.ori = dragXfo.ori.multiply(new FABRIC.RT.Quat().setFromAxisAndAngle(normal, angle));
       dragXfo.tr.addInPlace(movement);
       manipulatorNode.setTargetGlobalXfo(dragXfo);
     }
@@ -1212,7 +1212,7 @@ FABRIC.SceneGraph.registerNodeType('BoneManipulator', {
         parentManipulator: undefined,
         childManipulator: undefined,
         length: 35,
-        boneVector: FABRIC.RT.vec3(1, 0, 0)
+        boneVector: new FABRIC.RT.Vec3(1, 0, 0)
       });
     
     options.geometryNode = scene.pub.constructNode('LineVector', { to: options.boneVector.scale(options.length) });
@@ -1296,10 +1296,10 @@ FABRIC.SceneGraph.registerNodeType('BoneManipulator', {
         angle = -angle;
       }
       
-      dragXfo.ori.postMultiplyInPlace(FABRIC.RT.Quat.makeFromAxisAndAngle(normal, angle));
+      dragXfo.ori = dragXfo.ori.multiply(new FABRIC.RT.Quat().setFromAxisAndAngle(normal, angle));
       
       if(parentManipulator){
-        manipulatorNode.setTargetOri(dragXfo.ori.postMultiply(parentXfo.ori.invert()));
+        manipulatorNode.setTargetOri(dragXfo.ori.multiply(parentXfo.ori.invert()));
       }else{
         manipulatorNode.setTargetGlobalXfo(dragXfo);
       }
@@ -1335,9 +1335,9 @@ FABRIC.SceneGraph.registerNodeType('BoneManipulator', {
       var dragXfo = dragStartXFo.clone(),
         newVec1 = movement.add(vec1.scale(options.length)),
         newVec1Length = newVec1.norm(),
-        counterRotation = FABRIC.RT.Quat.makeFrom2Vectors(vec1, newVec1.scale(1.0 / newVec1Length));
+        counterRotation = new FABRIC.RT.Quat().setFrom2Vectors(vec1, newVec1.scale(1.0 / newVec1Length));
 
-      dragXfo.ori.postMultiplyInPlace(counterRotation);
+      dragXfo.ori = dragXfo.ori.multiply(counterRotation);
       this.setTargetGlobalOri(dragXfo.ori);
       dragXfo.tr.addInPlace(dragXfo.ori.rotateVector(options.boneVector).scale(options.length));
       return dragXfo;
@@ -1346,11 +1346,11 @@ FABRIC.SceneGraph.registerNodeType('BoneManipulator', {
       var dragXfo = dragStartXFo.clone(),
         newVec1 = movement.add(vec1.scale(-options.length)),
         newVec1Length = newVec1.norm(),
-        counterRotation = FABRIC.RT.Quat.makeFrom2Vectors(vec1.negate(), newVec1.scale(1.0 / newVec1Length));
+        counterRotation = new FABRIC.RT.Quat().setFrom2Vectors(vec1.negate(), newVec1.scale(1.0 / newVec1Length));
 
       dragXfo.tr.addInPlace(movement);
-      dragXfo.ori.postMultiplyInPlace(counterRotation);
-      this.setTargetOri(dragXfo.ori.postMultiply(parentXfo.ori.invert()));
+      dragXfo.ori = dragXfo.ori.multiply(counterRotation);
+      this.setTargetOri(dragXfo.ori.multiply(parentXfo.ori.invert()));
      // this.setTargetOri(parentXfo.multiplyInv(dragXfo).ori);
 
       if (childManipulator) {

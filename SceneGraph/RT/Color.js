@@ -262,24 +262,7 @@ FABRIC.RT.Color.prototype = {
   },
   getType: function() {
     return 'FABRIC.RT.Color';
-  }/*,
-  displayGUI:function($parentDiv, changeHandlerFn, size){
-    var val = this;
-    try{
-      var $widget = $("<p></p>").ColorPicker(
-        {
-          flat: true,
-          color: { r:this.r*255, g:this.g*255, b:this.b*255} ,
-          onChange: function (hsb, hex, rgb) {
-            val.setRGB255(rgb.r, rgb.g, rgb.b);
-            changeHandlerFn(val);
-          }
-        });
-      $parentDiv.append($widget);
-    }catch(e){
-      console.error("Missing jQuery Color Picker Plugin");
-    }
-  }*/
+  }
 };
 
 /**

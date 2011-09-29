@@ -170,7 +170,7 @@ FABRIC.SceneGraph.registerNodeType('AnimationController', {
     scene.assignDefaults(options, {
         playbackRate: 1.0,
         bindToGlobalTime: true,
-        timeRange: FABRIC.RT.vec2(0, 10),
+        timeRange: new FABRIC.RT.Vec2(0, 10),
         timeControl: 0, /* 0: absolute, 1:increment */
         outOfRange: 1 /* 0: linear, 1:loop, 3:clamp */
       });
@@ -447,7 +447,7 @@ FABRIC.SceneGraph.registerNodeType('TrackDisplay', {
     scene.assignDefaults(options, {
         animationTrackNode: undefined,
         trackIndex: 0,
-        timeRange: FABRIC.RT.vec2(0, 100),
+        timeRange: new FABRIC.RT.Vec2(0, 100),
         segmentCount: 100
       });
 

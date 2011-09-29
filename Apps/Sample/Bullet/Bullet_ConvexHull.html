@@ -105,23 +105,6 @@ $(document).ready(function() {
   // add a box shape
   bulletWorldNode.addShape('Cow',new FABRIC.RT.BulletShape.createConvexHull(assets.cow));
 
-  var bodies = [];
-  for(var i=0;i<25;i++) {
-    bodies.push(new FABRIC.RT.BulletRigidBody({
-      transform: FABRIC.RT.xfo({
-        tr: FABRIC.RT.vec3(0,3.0 + i * 8.0, 0)
-      }),
-      friction: 0.8,
-      restitution: 0.7
-    }));
-  }
-  
-  var slicedTransform = scene.constructNode('BulletRigidBodyTransform', {
-    bulletWorldNode: bulletWorldNode,
-    shapeName: 'Cow',
-    rigidBody: bodies
-  });
-
   // create a force manipulator
   var manipulatorNode = scene.constructNode('BulletForceManipulator', {
     bulletWorldNode: bulletWorldNode,
@@ -130,77 +113,142 @@ $(document).ready(function() {
     useFalloff: false
   });
 
-  scene.constructNode('Instance', {
-    geometryNode: assets.cow,
-    materialNode: scene.constructNode('PhongInstancingExtMaterial', {
-      diffuseColor: FABRIC.RT.rgb255(10,10,255),
-      lightNode: light,
-      transformTextureNode: slicedTransform.getTransformTexture(true)
-    }),
-    transformNode: slicedTransform,
-    enableRaycasting: true
-  });
   
   $('#loadingDialog').dialog({
     modal: true
   });
+  
   FABRIC.appendOnResolveAsyncTaskCallback(function(label, nbRemaining, doneWeight, totalWeight) {
-    $('#loadingProgressBar').progressbar({
-      value: (1.0-(doneWeight/totalWeight))*100
-    });
+    
     if (nbRemaining===0) {
-      $('#loadingDialog').dialog('close');
       var errors = scene.getErrors();
       if (errors.length > 0) {
         throw (errors.toString());
       }
-
-      $('#play').button()
-        .click(function() {
-          var options;
-          if ($(this).text() == 'Play') {
-            $(this).button('option', {
-              label: 'Pause',
-              icons: {
-                primary: 'ui-icon-pause'
-              }
-            });
-            scene.animation.play();
-          } else {
-            $(this).button('option', {
-              label: 'Play',
-              icons: {
-                primary: 'ui-icon-play'
-              }
-            });
-            scene.animation.pause();
-          }
+      
+      viewport.hide();
+        
+      if(!viewport.getGlewSupported('GL_EXT_draw_instanced')){
+        $('#infoContent').html("This demo uses OpenGL 3.2 features such as 'GL_EXT_draw_instanced'.\n\nIt appears that your graphics card does not support geometry instancing. This demo is running in compatibility mode with greatly reduced complexity.");
+  
+        var materialNode = scene.constructNode('PhongMaterial', {
+            diffuseColor: FABRIC.RT.rgb255(10,10,255),
+            lightNode: light
+          });
+        
+        for(var i=0;i<20;i++) {
+          var nonslicedTransform = scene.constructNode('BulletRigidBodyTransform', {
+            bulletWorldNode: bulletWorldNode,
+            shapeName: 'Cow',
+            rigidBody: new FABRIC.RT.BulletRigidBody({
+              transform: FABRIC.RT.xfo({
+                tr: FABRIC.RT.vec3(0,3.0 + i * 8.0, 0)
+              }),
+              friction: 0.8,
+              restitution: 0.7
+            })
+          });
+          
+          scene.constructNode('Instance', {
+            geometryNode: assets.cow,
+            materialNode: materialNode,
+            transformNode: nonslicedTransform,
+            enableRaycasting: true
+          });
+        }
+      }
+      else{
+        
+        var bodies = [];
+        for(var i=0;i<25;i++) {
+          bodies.push(new FABRIC.RT.BulletRigidBody({
+            transform: FABRIC.RT.xfo({
+              tr: FABRIC.RT.vec3(0,3.0 + i * 8.0, 0)
+            }),
+            friction: 0.8,
+            restitution: 0.7
+          }));
+        }
+        
+        var slicedTransform = scene.constructNode('BulletRigidBodyTransform', {
+          bulletWorldNode: bulletWorldNode,
+          shapeName: 'Cow',
+          rigidBody: bodies
         });
       
-      $('#step').button()
-        .click(function() {
-          scene.animation.step();
+        scene.constructNode('Instance', {
+          geometryNode: assets.cow,
+          materialNode: scene.constructNode('PhongInstancingExtMaterial', {
+            diffuseColor: FABRIC.RT.rgb255(10,10,255),
+            lightNode: light,
+            transformTextureNode: slicedTransform.getTransformTexture(true)
+          }),
+          transformNode: slicedTransform,
+          enableRaycasting: true
         });
-
-      $('#reset').button()
-        .click(function() {
-          $('#play').button('option', {
-            label: 'Play',
-            icons: {
-              primary: 'ui-icon-play'
-            }
-          });
-          scene.animation.pause();
-          viewport.redraw();
-          scene.animation.setTime(0);
-          viewport.redraw();
+  
+      }
+      
+      FABRIC.appendOnResolveAsyncTaskCallback(function(label, nbRemaining, doneWeight, totalWeight) {
+        $('#loadingProgressBar').progressbar({
+          value: (1.0-(doneWeight/totalWeight))*100
         });
+        if (nbRemaining===0) {
+          $('#loadingDialog').dialog('close');
+          var errors = scene.getErrors();
+          if (errors.length > 0) {
+            throw (errors.toString());
+          }
+    
+          $('#play').button()
+            .click(function() {
+              var options;
+              if ($(this).text() == 'Play') {
+                $(this).button('option', {
+                  label: 'Pause',
+                  icons: {
+                    primary: 'ui-icon-pause'
+                  }
+                });
+                scene.animation.play();
+              } else {
+                $(this).button('option', {
+                  label: 'Play',
+                  icons: {
+                    primary: 'ui-icon-play'
+                  }
+                });
+                scene.animation.pause();
+              }
+            });
+          
+          $('#step').button()
+            .click(function() {
+              scene.animation.step();
+            });
+    
+          $('#reset').button()
+            .click(function() {
+              $('#play').button('option', {
+                label: 'Play',
+                icons: {
+                  primary: 'ui-icon-play'
+                }
+              });
+              scene.animation.pause();
+              viewport.redraw();
+              scene.animation.setTime(0);
+              viewport.redraw();
+            });
         
-    //  scene.animation.play();
-      viewport.redraw();
+          viewport.show();
+          viewport.redraw();
+          return true;
+        }
+      });
+    
       return true;
-    }
-  });
+    }});
 });
 
 </script>

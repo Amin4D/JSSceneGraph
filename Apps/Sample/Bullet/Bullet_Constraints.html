@@ -105,40 +105,6 @@ $(document).ready(function() {
     radius: radius
   });
 
-  // compute the transforms
-  var numInstances = 128*2;
-  for(var i=0;i<numInstances;i++) {
-    bodies.push(new FABRIC.RT.BulletRigidBody({
-      transform: FABRIC.RT.xfo({
-        tr: FABRIC.RT.vec3(0,3.0 + i * 2.0 * radius,0),
-      }),
-      friction: 0.3,
-      restitution: 0.7,
-    }));
-  }
-
-  // create a single sliced transform node  
-  var slicedTransform = scene.constructNode('BulletRigidBodyTransform', {
-    name: 'Spheres',
-    bulletWorldNode: bulletWorldNode,
-    shapeName: 'Sphere',
-    rigidBody: bodies
-  });
-  
-  // create a constraint list, between all spheres
-  var constraints = [];
-  for(var i=0;i<bodies.length-1;i++) {
-    constraints.push(FABRIC.RT.BulletConstraint.createPoint2Point({
-      indexA: i,
-      indexB: i+1,
-      pivotA: FABRIC.RT.xfo({tr: FABRIC.RT.vec3(0,radius,0)}),
-      pivotB: FABRIC.RT.xfo({tr: FABRIC.RT.vec3(0,-radius,0)}),
-    }));
-  }
-  
-  // push the constraints to the world
-  bulletWorldNode.addConstraint('BallSockets',constraints,'Spheres','Spheres');
-  
   // create a force manipulator
   var manipulatorNode = scene.constructNode('BulletForceManipulator', {
     bulletWorldNode: bulletWorldNode,
@@ -147,79 +113,177 @@ $(document).ready(function() {
     useFalloff: false
   });
   
-  // create an instance to draw the spheres
-  scene.constructNode('Instance', {
-    geometryNode: sphereNode,
-    materialNode: scene.constructNode('PhongInstancingExtMaterial', {
-      diffuseColor: FABRIC.RT.rgb255(220,220,220),
-      lightNode: light,
-      transformTextureNode: slicedTransform.getTransformTexture(true)
-    }),
-    transformNode: slicedTransform,
-    enableRaycasting: true
-  });
   
   $('#loadingDialog').dialog({
     modal: true
   });
   
   FABRIC.appendOnResolveAsyncTaskCallback(function(label, nbRemaining, doneWeight, totalWeight) {
-    $('#loadingProgressBar').progressbar({
-      value: (1.0-(doneWeight/totalWeight))*100
-    });
+    
     if (nbRemaining===0) {
-      $('#loadingDialog').dialog('close');
       var errors = scene.getErrors();
       if (errors.length > 0) {
         throw (errors.toString());
       }
-
-      $('#play').button()
-        .click(function() {
-          var options;
-          if ($(this).text() == 'Play') {
-            $(this).button('option', {
-              label: 'Pause',
-              icons: {
-                primary: 'ui-icon-pause'
-              }
-            });
-            scene.animation.play();
-          } else {
-            $(this).button('option', {
-              label: 'Play',
-              icons: {
-                primary: 'ui-icon-play'
-              }
-            });
-            scene.animation.pause();
-          }
-        });
       
-      $('#step').button()
-        .click(function() {
-          scene.animation.step();
-        });
-
-      $('#reset').button()
-        .click(function() {
-          $('#play').button('option', {
-            label: 'Play',
-            icons: {
-              primary: 'ui-icon-play'
-            }
+      viewport.hide();
+        
+      if(!viewport.getGlewSupported('GL_EXT_draw_instanced')){
+        $('#infoContent').html("This demo uses OpenGL 3.2 features such as 'GL_EXT_draw_instanced'.\n\nIt appears that your graphics card does not support geometry instancing. This demo is running in compatibility mode with greatly reduced complexity.");
+  
+        var materialNode = scene.constructNode('PhongMaterial', {
+            diffuseColor: FABRIC.RT.rgb255(10,10,255),
+            lightNode: light
           });
-          scene.animation.pause();
-          viewport.redraw();
-          scene.animation.setTime(0);
-          viewport.redraw();
+        
+        var numInstances = 8;
+        for(var i=0;i<numInstances;i++) {
+          var nonslicedTransform = scene.constructNode('BulletRigidBodyTransform', {
+            name: 'Sphere'+i,
+            bulletWorldNode: bulletWorldNode,
+            shapeName: 'Sphere',
+            rigidBody: new FABRIC.RT.BulletRigidBody({
+              transform: FABRIC.RT.xfo({
+                tr: FABRIC.RT.vec3(0,3.0 + i * 2.0 * radius,0),
+              }),
+              friction: 0.3,
+              restitution: 0.7,
+            })
+          });
+          
+          scene.constructNode('Instance', {
+            geometryNode: sphereNode,
+            materialNode: materialNode,
+            transformNode: nonslicedTransform,
+            enableRaycasting: true
+          });
+          
+          
+          // create a constraint list, between all spheres
+          if(i>0){
+            // push the constraints to the world
+            bulletWorldNode.addConstraint(
+              'BallSocket'+i,
+              FABRIC.RT.BulletConstraint.createPoint2Point({
+                pivotA: FABRIC.RT.xfo({tr: FABRIC.RT.vec3(0,radius,0)}),
+                pivotB: FABRIC.RT.xfo({tr: FABRIC.RT.vec3(0,-radius,0)}),
+              }),
+             'Sphere'+(i-1),
+             'Sphere'+i);
+          }
+        }
+      }
+      else{
+        
+        // compute the transforms
+        var numInstances = 128*2;
+        for(var i=0;i<numInstances;i++) {
+          bodies.push(new FABRIC.RT.BulletRigidBody({
+            transform: FABRIC.RT.xfo({
+              tr: FABRIC.RT.vec3(0,3.0 + i * 2.0 * radius,0),
+            }),
+            friction: 0.3,
+            restitution: 0.7,
+          }));
+        }
+      
+        // create a single sliced transform node  
+        var slicedTransform = scene.constructNode('BulletRigidBodyTransform', {
+          name: 'Spheres',
+          bulletWorldNode: bulletWorldNode,
+          shapeName: 'Sphere',
+          rigidBody: bodies
         });
         
-    //  scene.animation.play();
-      viewport.redraw();
+        // create an instance to draw the spheres
+        scene.constructNode('Instance', {
+          geometryNode: sphereNode,
+          materialNode: scene.constructNode('PhongInstancingExtMaterial', {
+            diffuseColor: FABRIC.RT.rgb255(220,220,220),
+            lightNode: light,
+            transformTextureNode: slicedTransform.getTransformTexture(true)
+          }),
+          transformNode: slicedTransform,
+          enableRaycasting: true
+        });
+          
+        // create a constraint list, between all spheres
+        var constraints = [];
+        for(var i=0;i<bodies.length-1;i++) {
+          constraints.push(FABRIC.RT.BulletConstraint.createPoint2Point({
+            indexA: i,
+            indexB: i+1,
+            pivotA: FABRIC.RT.xfo({tr: FABRIC.RT.vec3(0,radius,0)}),
+            pivotB: FABRIC.RT.xfo({tr: FABRIC.RT.vec3(0,-radius,0)}),
+          }));
+        }
+        
+        // push the constraints to the world
+        bulletWorldNode.addConstraint('BallSockets',constraints,'Spheres','Spheres');
+      
+      }
+      
+      
+      FABRIC.appendOnResolveAsyncTaskCallback(function(label, nbRemaining, doneWeight, totalWeight) {
+        $('#loadingProgressBar').progressbar({
+          value: (1.0-(doneWeight/totalWeight))*100
+        });
+        if (nbRemaining===0) {
+          $('#loadingDialog').dialog('close');
+          var errors = scene.getErrors();
+          if (errors.length > 0) {
+            throw (errors.toString());
+          }
+    
+          $('#play').button()
+            .click(function() {
+              var options;
+              if ($(this).text() == 'Play') {
+                $(this).button('option', {
+                  label: 'Pause',
+                  icons: {
+                    primary: 'ui-icon-pause'
+                  }
+                });
+                scene.animation.play();
+              } else {
+                $(this).button('option', {
+                  label: 'Play',
+                  icons: {
+                    primary: 'ui-icon-play'
+                  }
+                });
+                scene.animation.pause();
+              }
+            });
+          
+          $('#step').button()
+            .click(function() {
+              scene.animation.step();
+            });
+    
+          $('#reset').button()
+            .click(function() {
+              $('#play').button('option', {
+                label: 'Play',
+                icons: {
+                  primary: 'ui-icon-play'
+                }
+              });
+              scene.animation.pause();
+              viewport.redraw();
+              scene.animation.setTime(0);
+              viewport.redraw();
+            });
+        
+          viewport.show();
+          viewport.redraw();
+          return true;
+        }
+      });
+    
       return true;
-    }
-  });
+    }});
 });
 
 </script>

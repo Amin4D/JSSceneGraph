@@ -106,7 +106,6 @@ $(document).ready(function() {
     height: 2.0
   });
 
-
   // create a force manipulator
   var manipulatorNode = scene.constructNode('BulletForceManipulator', {
     bulletWorldNode: bulletWorldNode,
@@ -114,10 +113,10 @@ $(document).ready(function() {
     radius: 3.0,
     useFalloff: false
   });
+  
   $('#loadingDialog').dialog({
     modal: true
   });
-  
   
   FABRIC.appendOnResolveAsyncTaskCallback(function(label, nbRemaining, doneWeight, totalWeight) {
     
@@ -152,9 +151,7 @@ $(document).ready(function() {
                   }),
                   friction: 0.8,
                   restitution: 0.7
-                }),
-                friction: 0.8,
-                restitution: 0.7
+                })
               });
             
             scene.constructNode('Instance', {

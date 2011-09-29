@@ -179,6 +179,7 @@ FABRIC.RT.Euler.prototype = {
     this.x = v3.x;
     this.y = v3.y;
     this.z = v3.z;
+    return this;
   },
 
   getAngles: function(){

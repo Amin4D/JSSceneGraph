@@ -50,6 +50,7 @@ FABRIC.RT.Vec4.prototype = {
 
   setNull: function(x, y, z, t) {
     this.x = 0; this.y = 0; this.z = 0; this.t = 0;
+    return this;
   },
 
   equal: function(v) {

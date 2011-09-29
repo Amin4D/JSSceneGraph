@@ -42,6 +42,7 @@ FABRIC.RT.Vec2.prototype = {
 
   setNull: function(x, y) {
     this.x = 0; this.y = 0;
+    return this;
   },
 
   equal: function(v) {

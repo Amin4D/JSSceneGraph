@@ -58,6 +58,7 @@ FABRIC.RT.Quat.prototype = {
 
   setIdentity: function(){
     this.set();
+    return this;
   },
 
   setFromEuler: function(e) {
@@ -94,6 +95,7 @@ FABRIC.RT.Quat.prototype = {
     else if (e.ro.isZXY()) {
       this.v.x = aj; this.v.y = ai; this.v.z = ak;
     }
+    return this;
   },
 
   setFromAxisAndAngle: function(vec, radians) {
@@ -101,6 +103,7 @@ FABRIC.RT.Quat.prototype = {
 
     this.w = Math.cos(halfAngle);
     this.v = vec.unit().multiplyScalar(Math.sin(halfAngle));
+    return this;
   },
 
   setFromMat33: function(mat) {
@@ -135,6 +138,7 @@ FABRIC.RT.Quat.prototype = {
       this.v.z = 0.25 * s;
     }
     this.setUnit();
+    return this;
   },
 
   // NB. Function taken from the 'Game Programming Gems' article 'The Shortest Arc Quat' by Stan Melax
@@ -160,6 +164,7 @@ FABRIC.RT.Quat.prototype = {
     }
     this.v = sourceDirVec.cross(destDirVec).divideScalar(val);
     this.w = val / 2;
+    return this;
   },
 
   equal: function(q) {

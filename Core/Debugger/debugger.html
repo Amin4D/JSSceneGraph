@@ -289,7 +289,7 @@ $(document).ready(function() {
     
     var layoutDGNodes = function(dgnode, parentPos){
       var name = dgnode.getName();
-      var pos = parentPos.subtract(FABRIC.vec2(1, 0));
+      var pos = parentPos.subtract(new FABRIC.Vec2(1, 0));
       if(!dgcolumns[pos.x]) dgcolumns[pos.x] = 0;
       if(layoutMap[name]){
         if(layoutMap[name].x > pos.x){
@@ -315,7 +315,7 @@ $(document).ready(function() {
         for(var j=0; j < children.length; j++){
           var eventHandler = children[j];
           var name = eventHandler.getName();
-          var pos = parentPos.add(FABRIC.vec2(1, 0));
+          var pos = parentPos.add(new FABRIC.Vec2(1, 0));
           if(!ehcolumns[pos.x]) ehcolumns[pos.x] = 0;
           if(layoutMap[name]){
             if( layoutMap[name].x < pos.x){
@@ -354,7 +354,7 @@ $(document).ready(function() {
         row = ehcolumns[1];
       }
       ehcolumns[0] = row;
-      layoutMap[i] = FABRIC.vec2(0, row);
+      layoutMap[i] = new FABRIC.Vec2(0, row);
       layoutEventHandlers(eventsMap[i].getEventHandlers(), layoutMap[i]);
     }
   }
@@ -400,8 +400,8 @@ $(document).ready(function() {
     }
     
     var displayNodes = {};
-    var tl = FABRIC.vec2(0,0);
-    var br = FABRIC.vec2(0,0);
+    var tl = new FABRIC.Vec2(0,0);
+    var br = new FABRIC.Vec2(0,0);
     
     var displayError = function(name, errorList){
       $('#errorDisplay').append('<br>'+ name + ': ' + JSON.stringify(errorList) + '</br>');
@@ -542,7 +542,7 @@ $(document).ready(function() {
       return svgnode;
     }
     
-    var graphSpacing = FABRIC.vec2(240, 100);
+    var graphSpacing = new FABRIC.Vec2(240, 100);
     
     for(var i in layoutMap){
       var corenode = allNamedObjects[i];
@@ -560,7 +560,7 @@ $(document).ready(function() {
         displayNodes[name] = displayEventHandler(name, pos.multiply(graphSpacing));
       }
       if(type === "Node" && displayDependencyGraphNodes){
-        displayNodes[name]= displayDGnode(corenode.getName(), pos.add(FABRIC.vec2(0, maxehrow)).multiply(graphSpacing));
+        displayNodes[name]= displayDGnode(corenode.getName(), pos.add(new FABRIC.Vec2(0, maxehrow)).multiply(graphSpacing));
       }
       if(tl.x > pos.x) tl.x = pos.x;
       if(br.x < pos.x) br.x = pos.x;

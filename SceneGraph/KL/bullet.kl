@@ -4,12 +4,7 @@
 
 use Vec3;
 use Xfo;
-use BulletShape;
-use BulletRigidBody;
-use BulletSoftBody;
-use BulletWorld;
-use BulletConstraint;
-use BulletForce;
+use FabricBULLET;
 
 operator createBulletWorld(
   io BulletWorld world

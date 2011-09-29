@@ -103,7 +103,7 @@ FABRIC.RT.Xfo.prototype = {
   },
 
   setFromMat44: function(m) {
-    if (abs(1.0 - m.row3.t) > 0.001) {
+    if (Math.abs(1.0 - m.row3.t) > 0.001) {
       Math.reportWarning('Mat44.setFromMat44: Cannot handle denormalized matrices: ' + m.row3.t);
       this.setIdentity();
       return this;
@@ -118,9 +118,9 @@ FABRIC.RT.Xfo.prototype = {
     // We're going out on a limb and assuming this is a
     // straight homogenous transformation matrix. No
     // singularities, denormilizations, or projections.
-    this.tr.x = m.row3.x;
-    this.tr.y = m.row3.y;
-    this.tr.z = m.row3.z;
+    this.tr.x = m.row0.t;
+    this.tr.y = m.row1.t;
+    this.tr.z = m.row2.t;
 
     var mat33 = new FABRIC.RT.Mat33(
                   m.row0.x, m.row0.y, m.row0.z,
@@ -130,24 +130,24 @@ FABRIC.RT.Xfo.prototype = {
     // Grab the X scale and normalize the first row
     this.sc.x = mat33.row0.length();
     Math.checkDivisor(this.sc.x, 'Xfo.setFromMat44: Matrix is singular');
-    mat33.row0.divideScalar(this.sc.x);
+    mat33.row0 = mat33.row0.divideScalar(this.sc.x);
 
     // Make the 2nd row orthogonal to the 1st
-    mat33.row1 = mat33.row1.subtract(mat33.row0.multiply(mat33.row0.dot(mat33.row1)));
+    mat33.row1 = mat33.row1.subtract(mat33.row0.multiplyScalar(mat33.row0.dot(mat33.row1)));
 
     // Grab the Y scale and normalize the 2nd row
     this.sc.y = mat33.row1.length();
     Math.checkDivisor(this.sc.y, 'Xfo.setFromMat44: Matrix is singular');
-    mat33.row1.divideScalar(this.sc.y);
+    mat33.row1 = mat33.row1.divideScalar(this.sc.y);
 
     // Make the 3rd row orthogonal to the 1st and 2nd
-    mat33.row2 = mat33.row2.subtract(mat33.row0.multiply(mat33.row0.dot(mat33.row2)));
-    mat33.row2 = mat33.row2.subtract(mat33.row1.multiply(mat33.row1.dot(mat33.row2)));
+    mat33.row2 = mat33.row2.subtract(mat33.row0.multiplyScalar(mat33.row0.dot(mat33.row2)));
+    mat33.row2 = mat33.row2.subtract(mat33.row1.multiplyScalar(mat33.row1.dot(mat33.row2)));
 
     // Grab the Y scale and normalize the 2nd row
     this.sc.z = mat33.row2.length();
     Math.checkDivisor(this.sc.z, 'Xfo.setFromMat44: Matrix is singular');
-    mat33.row2.divideScalar(this.sc.z);
+    mat33.row2 = mat33.row2.divideScalar(this.sc.z);
 
     this.ori.setFromMat33(mat33);
     return this;
@@ -183,21 +183,24 @@ FABRIC.RT.Xfo.prototype = {
   },
 
   multiply: function(xf) {
+    var this_ori = this.ori.unit();
+    var xf_ori = xf.ori.unit();
+
     var result = new FABRIC.RT.Xfo();
+    result.tr = this.tr.add(this_ori.rotateVector(this.sc.multiply(xf.tr)));
+    result.ori = this_ori.multiply(xf_ori);
+    result.ori.setUnit();
     result.sc = this.sc.multiply(xf.sc);
-    result.ori = xf.ori.multiply(this.ori);
-    //  result.ori = this.ori.multiply(xf.ori);
-    result.tr = this.sc.multiply(xf.tr);
-    result.tr = this.ori.rotateVector(result.tr);
-    result.tr = this.tr.add(result.tr);
     return result;
   },
 
   inverse: function() {
     var result = new FABRIC.RT.Xfo();
-    result.sc = this.sc.invert();
-    result.ori = this.ori.invert();
-    result.tr = this.tr.negate();
+    result.setFromMat44(this.toMat44().inverse());
+/*  TOFIX! The commented code is completely wrong; see if there is an more optimal method than above to find the solution
+    result.sc = this.sc.inverse();
+    result.ori = this.ori.inverse();
+    result.tr = this.tr.negate();*/
     return result;
   },
 

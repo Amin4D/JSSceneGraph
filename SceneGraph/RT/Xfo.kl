@@ -131,19 +131,24 @@ function Xfo * (in Xfo local, in Xfo global) {
   Quat glb_ori = global.ori.unit();
 
   Xfo result;
-  result.tr = global.tr + glb_ori.rotateVector(global.sc * local.tr);
-  //  result.ori = lcl_ori * glb_ori;
-  result.ori = glb_ori * lcl_ori;
+  result.tr = local.tr + lcl_ori.rotateVector(local.sc * global.tr);
+  result.ori = lcl_ori * glb_ori;
   result.ori.setUnit();
-  result.sc = global.sc * local.sc;
+  result.sc = local.sc * global.sc;
   return result;
+}
+
+function Xfo. *= (in Xfo global) {
+  this = this * global;
 }
 
 function Xfo Xfo.inverse() {
   Xfo result;
+  result.setFromMat44(this.toMat44().inverse());
+/*  TOFIX! The commented code is completely wrong; see if there is an more optimal method than above to find the solution
   result.tr = this.tr.negate();
   result.ori = this.ori.inverse();
-  result.sc = this.sc.inverse();
+  result.sc = this.sc.inverse();*/
   return result;
 }
 

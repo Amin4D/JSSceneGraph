@@ -34,12 +34,6 @@
     <script type="text/javascript" src="../../../SceneGraph/RT/OGLShaderProgram.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/RT/OGLBuffer.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/RT/OGLTexture2D.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/RT/BulletShape.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/RT/BulletRigidBody.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/RT/BulletSoftBody.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/RT/BulletWorld.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/RT/BulletConstraint.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/RT/BulletForce.js" charset="utf-8"></script>
 
     <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Geometry.js" charset="utf-8"></script>
@@ -112,7 +106,6 @@ $(document).ready(function() {
     height: 2.0
   });
 
-  
   // create a force manipulator
   var manipulatorNode = scene.constructNode('BulletForceManipulator', {
     bulletWorldNode: bulletWorldNode,
@@ -120,7 +113,6 @@ $(document).ready(function() {
     radius: 3.0,
     useFalloff: false
   });
-
   
   $('#loadingDialog').dialog({
     modal: true

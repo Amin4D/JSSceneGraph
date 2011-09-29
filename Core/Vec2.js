@@ -4,9 +4,9 @@
 //
 
 //determine if an object is a valid Vec2.
-FABRIC.RT.isVec2 = function(t) {
+FABRIC.isVec2 = function(t) {
   return t && t.getType &&
-         t.getType() === 'FABRIC.RT.Vec2';
+         t.getType() === 'FABRIC.Vec2';
 };
 
 //Constructor:
@@ -14,14 +14,14 @@ FABRIC.RT.isVec2 = function(t) {
 //    (none)
 //    x, y
 //    Vec
-FABRIC.RT.Vec2 = function() {
+FABRIC.Vec2 = function() {
   if (arguments.length == 2 &&
-      FABRIC.RT.isScalar(arguments[0]) && 
-      FABRIC.RT.isScalar(arguments[1]) ) {
+      typeof arguments[0] === 'number' && 
+      typeof arguments[1] === 'number') {
     this.x = arguments[0];
     this.y = arguments[1];
   }
-  else if (arguments.length == 1 && FABRIC.RT.isVec2(arguments[0])) {
+  else if (arguments.length == 1 && FABRIC.isVec2(arguments[0])) {
     this.x = arguments[0].x;
     this.y = arguments[0].y;
   }
@@ -32,11 +32,11 @@ FABRIC.RT.Vec2 = function() {
   else throw'new Vec2: invalid arguments';
   };
 
-FABRIC.RT.Vec2.prototype = {
+FABRIC.Vec2.prototype = {
 
   //set: see constructor for supported args
   set: function() {
-    FABRIC.RT.Vec2.apply(this, arguments);
+    FABRIC.Vec2.apply(this, arguments);
     return this;
   },
 
@@ -63,19 +63,19 @@ FABRIC.RT.Vec2.prototype = {
 
   // Returns the result of adding the argument to the vector
   add: function(v) {
-    return new FABRIC.RT.Vec2(this.x + v.x, this.y + v.y);
+    return new FABRIC.Vec2(this.x + v.x, this.y + v.y);
   },
 
   subtract: function(v) {
-    return new FABRIC.RT.Vec2(this.x - v.x, this.y - v.y);
+    return new FABRIC.Vec2(this.x - v.x, this.y - v.y);
   },
 
   multiply: function(v) {
-    return new FABRIC.RT.Vec2(this.x * v.x, this.y * v.y);
+    return new FABRIC.Vec2(this.x * v.x, this.y * v.y);
   },
 
   multiplyScalar: function(s) {
-    return new FABRIC.RT.Vec2(this.x * s, this.y * s);
+    return new FABRIC.Vec2(this.x * s, this.y * s);
   },
 
   divide: function(v) {
@@ -83,7 +83,7 @@ FABRIC.RT.Vec2.prototype = {
       Math.checkDivisor(v.x, 'Vec2.divide v.x');
       Math.checkDivisor(v.y, 'Vec2.divide v.y');
     }
-    return new FABRIC.RT.Vec2(this.x / v.x, this.y / v.y);
+    return new FABRIC.Vec2(this.x / v.x, this.y / v.y);
   },
 
   divideScalar: function(s) {
@@ -92,7 +92,7 @@ FABRIC.RT.Vec2.prototype = {
   },
 
   negate: function(v) {
-    return new FABRIC.RT.Vec2(-this.x, - this.y);
+    return new FABRIC.Vec2(-this.x, - this.y);
   },
 
   inverse: function(v) {
@@ -100,7 +100,7 @@ FABRIC.RT.Vec2.prototype = {
       Math.checkDivisor(this.x, 'Vec2.inverse this.x');
       Math.checkDivisor(this.y, 'Vec2.inverse this.y');
     }
-    return new FABRIC.RT.Vec2(1.0/this.x, 1.0/this.y);
+    return new FABRIC.Vec2(1.0/this.x, 1.0/this.y);
   },
 
   dot: function(v) {
@@ -136,7 +136,7 @@ FABRIC.RT.Vec2.prototype = {
   },
 
   clamp: function(min, max) {
-    return new FABRIC.RT.Vec2(
+    return new FABRIC.Vec2(
       (this.x < min.x ? min.x : (this.x > max.x ? max.x : this.x)),
       (this.y < min.y ? min.y : (this.y > max.y ? max.y : this.y))
     );
@@ -162,14 +162,14 @@ FABRIC.RT.Vec2.prototype = {
 
   // Returns a copy of the vector
   clone: function() {
-    return (new FABRIC.RT.Vec2(this.x, this.y));
+    return (new FABRIC.Vec2(this.x, this.y));
   },
 
   toString: function() {
-    return 'FABRIC.RT.vec2(' + this.x + ',' + this.y + ')';
+    return 'FABRIC.vec2(' + this.x + ',' + this.y + ')';
   },
   getType: function() {
-    return 'FABRIC.RT.Vec2';
+    return 'FABRIC.Vec2';
   },
   displayGUI: function($parentDiv, changeHandlerFn) {
     var val = this;
@@ -196,19 +196,7 @@ FABRIC.RT.Vec2.prototype = {
 };
 
 //Vec2 constants
-FABRIC.RT.Vec2.origin = new FABRIC.RT.Vec2(0, 0);
-FABRIC.RT.Vec2.xAxis = new FABRIC.RT.Vec2(1, 0);
-FABRIC.RT.Vec2.yAxis = new FABRIC.RT.Vec2(0, 1);
+FABRIC.Vec2.origin = new FABRIC.Vec2(0, 0);
+FABRIC.Vec2.xAxis = new FABRIC.Vec2(1, 0);
+FABRIC.Vec2.yAxis = new FABRIC.Vec2(0, 1);
 
-FABRIC.appendOnCreateContextCallback(function(context) {
-  context.RegisteredTypesManager.registerType('Vec2', {
-    members: {
-      x: 'Scalar', y: 'Scalar'
-    },
-    constructor: FABRIC.RT.Vec2,
-    klBindings: {
-      filename: 'Vec2.kl',
-      sourceCode: FABRIC.loadResourceURL('FABRIC_ROOT/SceneGraph/RT/Vec2.kl')
-    }
-  });
-});

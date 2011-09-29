@@ -215,9 +215,9 @@ FABRIC.createSVGRootElem = function(domRootID) {
           }
           var str = this.attr('transform');
           if (str.indexOf('translate') === 0) {
-            pos.subInPlace(this.translate());
+            pos = pos.subtract(this.translate());
           }else if (str.indexOf('scale') === 0) {
-            pos.scaleInPlace(1 / this.scale());
+            pos = pos.multiplyScalar(1 / this.scale());
           }
           return pos;
         }
@@ -235,9 +235,9 @@ FABRIC.createSVGRootElem = function(domRootID) {
         }
         var str = this.attr('transform');
         if (str.indexOf('translate') === 0) {
-          pos.subInPlace(this.translate());
+          pos = pos.subtract(this.translate());
         }else if (str.indexOf('scale') === 0) {
-          pos.scaleInPlace(1 / this.scale());
+          pos = pos.multiplyScalar(1 / this.scale());
         }
         return pos;
         }
@@ -252,9 +252,9 @@ FABRIC.createSVGRootElem = function(domRootID) {
         var fn = function(pos) {
           var str = this.attr('transform');
           if (str.indexOf('translate') === 0) {
-            pos.addInPlace(this.translate());
+            pos = pos.add(this.translate());
           }else if (str.indexOf('scale') === 0) {
-            pos.scaleInPlace(this.scale());
+            pos = pos.multiplyScalar(this.scale());
           }
           if (this.parent != this.svgRoot) {
             pos = fn.call(this.parent, pos);
@@ -275,25 +275,25 @@ FABRIC.createSVGRootElem = function(domRootID) {
       var fn = function(pos) {
         var str = this.attr('transform');
         if (str.indexOf('translate') === 0) {
-          pos.addInPlace(this.translate());
+          pos = pos.add(this.translate());
         }else if (str.indexOf('scale') === 0) {
-          pos.scaleInPlace(this.scale());
+          pos = pos.multiplyScalar(this.scale());
         }
         if (this.parent != this.svgRoot && this.parent != wrt) {
           pos = fn.call(this.parent, pos);
         }
         return pos;
       }
-      return fn.call(this, FABRIC.vec2(0, 0));
+      return fn.call(this, new FABRIC.Vec2(0, 0));
     },
     translate: function() {
       if (arguments.length === 0) {
         var str = this.attr('transform');
         if (str && str.split(',').length==2) {
-          return (FABRIC.vec2(parseFloat(str.split('(')[1].split(',')[0]),
+          return (new FABRIC.Vec2(parseFloat(str.split('(')[1].split(',')[0]),
             parseFloat(str.split(')')[0].split(',')[1])));
         }else {
-          return FABRIC.vec2(0, 0);
+          return new FABRIC.Vec2(0, 0);
         }
       }
       else if (arguments.length === 1 && FABRIC.isVec2(arguments[0])) {
@@ -521,8 +521,8 @@ FABRIC.createSVGRootElem = function(domRootID) {
             var pos;
             // We can use a delegate object when the event catcher is not the node we want transformed.
             var dragNode = (options.delegateTranslateObj !== undefined ? options.delegateTranslateObj : self);
-            var mouseDraggedStartPos = dragNode ? dragNode.screenToLocalPos(FABRIC.vec2(evt.clientX, evt.clientY)) : FABRIC.vec2(evt.clientX, evt.clientY);
-            var draggedStartPos = dragNode ? dragNode.translate() : FABRIC.vec2(0, 0);
+            var mouseDraggedStartPos = dragNode ? dragNode.screenToLocalPos(new FABRIC.Vec2(evt.clientX, evt.clientY)) : new FABRIC.Vec2(evt.clientX, evt.clientY);
+            var draggedStartPos = dragNode ? dragNode.translate() : new FABRIC.Vec2(0, 0);
 
             var dragFn = function(evt) {
               if (options.mouseButton !== -1 && evt.button !== options.mouseButton) {
@@ -534,19 +534,19 @@ FABRIC.createSVGRootElem = function(domRootID) {
                 self.elem.dispatchEvent(mouseUpEvt);
                 return;
               }
-              var mousePos = dragNode ? dragNode.screenToLocalPos(FABRIC.vec2(evt.clientX, evt.clientY)) : FABRIC.vec2(evt.clientX, evt.clientY);
+              var mousePos = dragNode ? dragNode.screenToLocalPos(new FABRIC.Vec2(evt.clientX, evt.clientY)) : new FABRIC.Vec2(evt.clientX, evt.clientY);
               var delta = mousePos.subtract(mouseDraggedStartPos);
               pos = draggedStartPos.add(delta);
               if (options.containment) {
                 var canvasSize = options.containment.size();
                 var size = self.size();
-                pos = pos.clamp(FABRIC.vec2(0, 0), canvasSize.subtract(size));
+                pos = pos.clamp(new FABRIC.Vec2(0, 0), canvasSize.subtract(size));
               }
               if (options.snapSize > 0) {
-                pos.scaleInPlace(1.0 / options.snapSize);
+                pos = pos.multiplyScalar(1.0 / options.snapSize);
                 pos.x = Math.round(pos.x);
                 pos.y = Math.round(pos.y);
-                pos.scaleInPlace(options.snapSize);
+                pos = pos.multiplyScalar(options.snapSize);
               }
               if (options.axis === 'X') {
                 pos.y = draggedStartPos.y;
@@ -899,7 +899,7 @@ FABRIC.createSVGRootElem = function(domRootID) {
         }
         return this;
       },
-      options: { sizeObj: undefined, size: FABRIC.vec2(0, 0) },
+      options: { sizeObj: undefined, size: new FABRIC.Vec2(0, 0) },
       sizeObj: function(obj) {
         if (arguments.length === 0) {
           return this.options.sizeObj;
@@ -1029,7 +1029,7 @@ FABRIC.createSVGRootElem = function(domRootID) {
           },
           size: function() {
             if (arguments.length === 0) {
-              return FABRIC.vec2(parseFloat(this.attr('width')), parseFloat(this.attr('height')));
+              return new FABRIC.Vec2(parseFloat(this.attr('width')), parseFloat(this.attr('height')));
             }
             else if (arguments.length === 1 && FABRIC.isVec2(arguments[0])) {
               this.attr('width', arguments[0].x);
@@ -1066,7 +1066,7 @@ FABRIC.createSVGRootElem = function(domRootID) {
             if (arguments.length === 0) {
               var rx = this.attr('rx');
               var ry = this.attr('ry');
-              return FABRIC.vec2(rx ? parseFloat(rx) : 0, ry ? parseFloat(ry) : 0);
+              return new FABRIC.Vec2(rx ? parseFloat(rx) : 0, ry ? parseFloat(ry) : 0);
             }
             else if (arguments.length === 1 && FABRIC.isVec2(arguments[0])) {
               this.attr('rx', arguments[0].x);
@@ -1089,7 +1089,7 @@ FABRIC.createSVGRootElem = function(domRootID) {
             options = this.extend({
                 borderThickness: 20,
                 onResize: null,
-                minSize: FABRIC.vec2(0, 0),
+                minSize: new FABRIC.Vec2(0, 0),
                 width: true,
                 height: true
               }, options, false);
@@ -1115,7 +1115,7 @@ FABRIC.createSVGRootElem = function(domRootID) {
               rightBorderResizer = this.parent.createRect().addClass('EventCatcher').cursor('e-resize')
                 .draggable({ axis: 'X', addClasses: false, setCursor: false, mouseButton: 0 }).
                   addOnDragCallback(function(evt) {
-                    evt.size = FABRIC.vec2(
+                    evt.size = new FABRIC.Vec2(
                       evt.localPos.x + (options.borderThickness * 0.5) - pos.x,
                       self.size().y).max(options.minSize);
                     self.size(evt.size);
@@ -1126,7 +1126,7 @@ FABRIC.createSVGRootElem = function(domRootID) {
               bottomBorderResizer = this.parent.createRect().addClass('EventCatcher').cursor('s-resize')
                 .draggable({ axis: 'Y', addClasses: false, setCursor: false, mouseButton: 0 }).
                   addOnDragCallback(function(evt) {
-                    evt.size = FABRIC.vec2(
+                    evt.size = new FABRIC.Vec2(
                       self.size().x,
                       evt.localPos.y + (options.borderThickness * 0.5) - pos.y).max(options.minSize);
                     self.size(evt.size);
@@ -1160,13 +1160,13 @@ FABRIC.createSVGRootElem = function(domRootID) {
           },
           dropShadow: function(options) {
             options = this.extend({
-                offset: FABRIC.vec2(5, 5)
+                offset: new FABRIC.Vec2(5, 5)
               }, options, false);
 
             var dropShadow = this.parent.createRect().size(this.size())
                                                      .cornerRadius(this.cornerRadius())
                                                      .addClass('Shadow')
-                                                     .translate(this.translate().addInPlace(options.offset));
+                                                     .translate(this.translate().add(options.offset));
             this.parent.insertBefore(dropShadow, this);
             this.addOnSizeCallback(function(size) { dropShadow.size(size);});
             return this;
@@ -1189,7 +1189,7 @@ FABRIC.createSVGRootElem = function(domRootID) {
             // TODO: I think 'size' should always return a Vec2 so that it can be used to align text etc..
             if (arguments.length === 0) {
               var r = this.radius() * 2.0;
-              return FABRIC.vec2(r, r);
+              return new FABRIC.Vec2(r, r);
             }
             else if (arguments.length === 1 && (typeof arguments[0]) == 'number') {
               this.radius(arguments[0].x * 0.5);
@@ -1198,7 +1198,7 @@ FABRIC.createSVGRootElem = function(domRootID) {
           },
           dropShadow: function(options) {
             options = this.extend({
-                offset: FABRIC.vec2(5, 5),
+                offset: new FABRIC.Vec2(5, 5),
                 shadowParent: this
               }, options, false);
             var dropShadow = this.createCircle().size(this.size())
@@ -1365,7 +1365,7 @@ FABRIC.createSVGRootElem = function(domRootID) {
           },
           dropShadow: function(options) {
             options = this.extend({
-                offset: FABRIC.vec2(5, 5),
+                offset: new FABRIC.Vec2(5, 5),
                 shadowParent: this
               }, options, false);
           //  var dropShadow = this.createCircle().size(this.size())
@@ -1398,7 +1398,7 @@ FABRIC.createSVGRootElem = function(domRootID) {
         if (options.text) {
           var textNode = buttonGroup.createText().text(options.text).preventSelection({delegate: this.elem });
           var alignTextToButton = function(size) {
-            var pos = size.scale(0.5);
+            var pos = size.multiplyScalar(0.5);
             pos.y += size.y * 0.25; //textNode.fontSize() * 2.5;
             textNode.translate(pos);
           }
@@ -1427,7 +1427,7 @@ FABRIC.createSVGRootElem = function(domRootID) {
           operatorHeight: 14,
           createEditButton: true,
           draggable: true,
-          shadow: FABRIC.vec2(3, 3)
+          shadow: new FABRIC.Vec2(3, 3)
         }, options, false);
 
         var nodeGroup = this.createGroup();
@@ -1564,7 +1564,7 @@ FABRIC.createSVGRootElem = function(domRootID) {
           resizeNodeWidth();
         };
         nodeGroup.getSize = function() {
-          return FABRIC.vec2(nodeWidth, nodeHeight);
+          return new FABRIC.Vec2(nodeWidth, nodeHeight);
         };
 
 
@@ -1595,7 +1595,7 @@ FABRIC.createSVGRootElem = function(domRootID) {
                                           .size(operatorWidth, options.operatorHeight)
                                           .cornerRadius(options.operatorHeight * 0.4)
                                           .color(operatorOptions.color);
-                                          //.dropShadow({ offset:FABRIC.vec2(3,3) });
+                                          //.dropShadow({ offset:new FABRIC.Vec2(3,3) });
           operatorGroup.createText()
                        .preventSelection()
                        .text(operatorOptions.text)
@@ -1905,7 +1905,7 @@ FABRIC.createSVGRootElem = function(domRootID) {
                 color: options.color
               });
               connector.setSourcePos(graphHolderGroup.screenToLocalPos(
-                FABRIC.vec2(evt.offsetX, evt.offsetY)));
+                new FABRIC.Vec2(evt.offsetX, evt.offsetY)));
             }else {
               connector = edgeHolderGroup.createConnector({
                 sourcePort: portGroup,
@@ -1914,7 +1914,7 @@ FABRIC.createSVGRootElem = function(domRootID) {
                 color: options.color
               });
               connector.setTargetPos(graphHolderGroup.screenToLocalPos(
-                FABRIC.vec2(evt.offsetX, evt.offsetY)));
+                new FABRIC.Vec2(evt.offsetX, evt.offsetY)));
             }
             evt.preventDefault();
             evt.stopPropagation();
@@ -1946,30 +1946,30 @@ FABRIC.createSVGRootElem = function(domRootID) {
         var line = connectorGroup.createPath().addClass('LineCore').stroke(options.color);
         var lineEventCatcher = connectorGroup.createPath().addClass('EventCatcher');
 
-        sourcePos = targetPos = FABRIC.vec2();
+        sourcePos = targetPos = new FABRIC.Vec2();
         var sourceDirection, targetDirection;
         var calcSourceConnectionDirection = function() {
           if (options.sourcePort) {
             switch (options.sourcePort.getConnectionDirection()) {
-              case 'Right': sourceDirection = FABRIC.vec2(1, 0); break;
-              case 'Left': sourceDirection = FABRIC.vec2(-1, 0); break;
-              case 'Up': sourceDirection = FABRIC.vec2(0, -1); break;
-              case 'Down': sourceDirection = FABRIC.vec2(0, 1); break;
+              case 'Right': sourceDirection = new FABRIC.Vec2(1, 0); break;
+              case 'Left': sourceDirection = new FABRIC.Vec2(-1, 0); break;
+              case 'Up': sourceDirection = new FABRIC.Vec2(0, -1); break;
+              case 'Down': sourceDirection = new FABRIC.Vec2(0, 1); break;
             }
           } else {
-            sourceDirection = FABRIC.vec2(1, 0);
+            sourceDirection = new FABRIC.Vec2(1, 0);
           }
         }
         var calcTargetConnectionDirection = function() {
           if (options.targetPort) {
             switch (options.targetPort.getConnectionDirection()) {
-              case 'Right': targetDirection = FABRIC.vec2(1, 0); break;
-              case 'Left': targetDirection = FABRIC.vec2(-1, 0); break;
-              case 'Up': targetDirection = FABRIC.vec2(0, -1); break;
-              case 'Down': targetDirection = FABRIC.vec2(0, 1); break;
+              case 'Right': targetDirection = new FABRIC.Vec2(1, 0); break;
+              case 'Left': targetDirection = new FABRIC.Vec2(-1, 0); break;
+              case 'Up': targetDirection = new FABRIC.Vec2(0, -1); break;
+              case 'Down': targetDirection = new FABRIC.Vec2(0, 1); break;
             }
           }else {
-            targetDirection = FABRIC.vec2(-1, 0);
+            targetDirection = new FABRIC.Vec2(-1, 0);
           }
         }
 
@@ -1978,16 +1978,16 @@ FABRIC.createSVGRootElem = function(domRootID) {
           p1 = sourcePos;
           p4 = targetPos;
           if (targetPos.subtract(sourcePos).dot(sourceDirection) > 0) {
-            p2 = p1.add(sourceDirection.scale(p4.subtract(p1).dot(sourceDirection) * 0.3));
+            p2 = p1.add(sourceDirection.multiplyScalar(p4.subtract(p1).dot(sourceDirection) * 0.3));
           }
           else {
-            p2 = p1.add(sourceDirection.scale(p4.subtract(p1).dot(sourceDirection) * -0.3));
+            p2 = p1.add(sourceDirection.multiplyScalar(p4.subtract(p1).dot(sourceDirection) * -0.3));
           }
           if (targetPos.subtract(sourcePos).dot(targetDirection) < 0) {
-            p3 = p4.add(targetDirection.scale(p1.subtract(p4).dot(targetDirection) * 0.3));
+            p3 = p4.add(targetDirection.multiplyScalar(p1.subtract(p4).dot(targetDirection) * 0.3));
           }
           else {
-            p3 = p4.add(targetDirection.scale(p1.subtract(p4).dot(targetDirection) * -0.3));
+            p3 = p4.add(targetDirection.multiplyScalar(p1.subtract(p4).dot(targetDirection) * -0.3));
           }
           var path = ['M', p1.x.toFixed(3), p1.y.toFixed(3), 'C',
                       p2.x, p2.y, p3.x, p3.y, p4.x.toFixed(3), p4.y.toFixed(3)].join(' ');
@@ -2024,11 +2024,11 @@ FABRIC.createSVGRootElem = function(domRootID) {
           });
           connectorGroup.elem.addEventListener('mousedown',
             function(evt) {
-              var mouseDownPos = graphHolderGroup.screenToLocalPos(FABRIC.vec2(evt.offsetX, evt.offsetY));
+              var mouseDownPos = graphHolderGroup.screenToLocalPos(new FABRIC.Vec2(evt.offsetX, evt.offsetY));
               var connectorVec = targetPos.subtract(sourcePos);
               connectorVec.normalize();
               var mouseMoveFn = function(evt) {
-                var mousePos = graphHolderGroup.screenToLocalPos(FABRIC.vec2(evt.offsetX, evt.offsetY));
+                var mousePos = graphHolderGroup.screenToLocalPos(new FABRIC.Vec2(evt.offsetX, evt.offsetY));
                 var dragDist = mousePos.subtract(mouseDownPos).dot(connectorVec);
                 if (dragDist > 3) {
                   bindSourceToMouseFn();
@@ -2098,7 +2098,7 @@ FABRIC.createSVGRootElem = function(domRootID) {
           var mouseMoveFn = function(evt) {
             if (!connectionPortGroup) {
               connectorGroup.setSourcePos(graphHolderGroup.screenToLocalPos(
-                FABRIC.vec2(evt.offsetX, evt.offsetY)));
+                new FABRIC.Vec2(evt.offsetX, evt.offsetY)));
             }
           };
           var mouseOverFn = function(evt) {
@@ -2148,7 +2148,7 @@ FABRIC.createSVGRootElem = function(domRootID) {
           var mouseMoveFn = function(evt) {
             if (!connectionPortGroup) {
               connectorGroup.setTargetPos(graphHolderGroup.screenToLocalPos(
-                FABRIC.vec2(evt.offsetX, evt.offsetY)));
+                new FABRIC.Vec2(evt.offsetX, evt.offsetY)));
             }
           };
           var mouseOverFn = function(evt) {

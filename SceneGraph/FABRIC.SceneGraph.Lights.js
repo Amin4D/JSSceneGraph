@@ -103,7 +103,7 @@ FABRIC.SceneGraph.registerNodeType('Light', {
 
       dgnode.bindings.append(scene.constructOperator({
         operatorName: 'loadLightXfo',
-        srcCode: 'use Xfo; use Mat44; operator loadLightXfo(io Xfo xfo, io Mat44 lightMat44, io Mat44 cameraMat44){ lightMat44 = xfo; cameraMat44 = lightMat44.inverse(); }',
+        srcCode: 'use Xfo; use Mat44; operator loadLightXfo(io Xfo xfo, io Mat44 lightMat44, io Mat44 cameraMat44){ lightMat44 = xfo.toMat44(); cameraMat44 = lightMat44.inverse(); }',
         entryFunctionName: 'loadLightXfo',
         parameterLayout: [
           'transform.' + transformNodeMember,
@@ -491,7 +491,7 @@ FABRIC.SceneGraph.registerNodeType('SpotLight', {
       // tan(theta)/a = o
       var coneDist = options.displaySize;
       if(options.position && options.target){
-        coneDist = options.position.dist(options.target);
+        coneDist = options.position.distanceTo(options.target);
       }
       var coneRadius = Math.tan(options.coneAngle * 0.5) * coneDist;
       var lightMaterial = scene.pub.constructNode('FlatMaterial', { color: FABRIC.RT.rgb(1.0, 0.7, 0.4) });

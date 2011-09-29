@@ -75,7 +75,7 @@ operator simulateFlock(
   // Narrow Phase Interaction Detection
   neighborDistances.resize(neighborIndices.size());
   for (i = 0; i < neighborIndices.size; i++) {
-    neighborDistances[i] = position.dist(previousframe_positions[neighborIndices[i]]);
+    neighborDistances[i] = position.distanceTo(previousframe_positions[neighborIndices[i]]);
   }
   
   debugDraw.reset();

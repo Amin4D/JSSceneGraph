@@ -10,7 +10,7 @@ operator calcInverseBindPose(io Bone bones[], io Mat44 invGlobalMat44[]) {
   report('calcInverseBindPose\n');
   invGlobalMat44.resize(bones.size());
   for (Integer i = 0; i < bones.size(); i++) {
-    Mat44 globalMat44 = bones[i].referencePose;
+    Mat44 globalMat44 = bones[i].referencePose.toMat44();
     invGlobalMat44[i] = globalMat44.inverse();
   }
 }

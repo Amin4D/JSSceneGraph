@@ -480,7 +480,7 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('IK2BoneSolver',
       // compute the upvector
       targetPos.subInPlace(referencePose[boneIDs.boneA].tr);
       lengthCenter = targetPos.unit().dot(referencePose[boneIDs.boneA].ori.getXaxis()) * bones[boneIDs.boneB].length;
-      center = targetPos.unit().scale(lengthCenter).add(referencePose[boneIDs.boneA].tr);
+      center = targetPos.unit().multiplyScalar(lengthCenter).add(referencePose[boneIDs.boneA].tr);
       center.addInPlace(targetPos);
       center.addInPlace(referencePose[boneIDs.boneA].tr);
       center.mulInPlace(0.5);
@@ -490,7 +490,7 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('IK2BoneSolver',
       upvector = referencePose[boneIDs.upvectorParent].multiplyInv(new FABRIC.RT.Xfo({ tr: upvectorPos }));
       
       if(options.projectTargetToUpvectorFactor != undefined) {
-        upvector.tr = targetXfo.tr.scale(options.projectTargetToUpvectorFactor);
+        upvector.tr = targetXfo.tr.multiplyScalar(options.projectTargetToUpvectorFactor);
       }
 
       constantsNode.pub.addMember(name + 'boneA', 'Integer', boneIDs.boneA);
@@ -631,7 +631,7 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('SpineSolver',
 
       if (options.createManipulators) {
         size = options.manipulatorSize ? options.manipulatorSize :
-          referencePose[baseVertebreIndex].tr.dist(referencePose[boneIDs['end']].tr) * 0.3;
+          referencePose[baseVertebreIndex].tr.distanceTo(referencePose[boneIDs['end']].tr) * 0.3;
 
         if (options.createBaseManipulators) {
           solver.constructManipulator(name + 'startRotation', 'RotationManipulator', {
@@ -893,7 +893,7 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('FishingRodSolver',
 
       // compute the target
       rodTipPos = referencePose[boneIDs.rod].transform(new FABRIC.RT.Vec3(bones[boneIDs.rod].length, 0, 0));
-      lineLength = rodTipPos.dist(options.targetXfo.tr);
+      lineLength = rodTipPos.distanceTo(options.targetXfo.tr);
 
       constantsNode.pub.addMember(name + 'boneIndex', 'Integer', boneIDs.rod);
       variablesNode.pub.addMember(name + 'lineLength', 'Scalar', lineLength);

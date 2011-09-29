@@ -20,7 +20,7 @@ operator rayIntersectLines(
   io Vec3 bboxmin,
   io Vec3 bboxmax
 ) {
-  Mat44 globalMat44 = Mat44(globalXfo);
+  Mat44 globalMat44 = globalXfo.toMat44();
   Mat44 invGlobalMat44 = globalMat44.inverse();
   Ray objRay;
   objRay.start = ray.start * invGlobalMat44;
@@ -64,7 +64,7 @@ operator rayIntersectLineStrip(
   io Vec3 bboxmin,
   io Vec3 bboxmax
 ) {
-  Mat44 globalMat44 = Mat44(globalXfo);
+  Mat44 globalMat44 = globalXfo.toMat44();
   Mat44 invGlobalMat44 = globalMat44.inverse();
   Ray objRay;
   objRay.start = ray.start * invGlobalMat44;

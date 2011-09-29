@@ -24,7 +24,7 @@ operator loadSkinningMatrices(
     for (var Integer i = 0; i < invMatrices.size(); i++) {
       if(boneMapping[i] < 0)
         continue;
-      skinningMatrices[i] = invMatrices[i] * Mat44(pose[boneMapping[i]]);
+      skinningMatrices[i] = invMatrices[i] * pose[boneMapping[i]].toMat44();
     }
     shaderProgram.loadMat44UniformArray(location, skinningMatrices);
   }

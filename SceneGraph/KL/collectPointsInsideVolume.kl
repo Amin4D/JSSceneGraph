@@ -25,7 +25,7 @@ operator collectPointsInsideBrush(
   io Vec3 normals<>
 ) {
   select = true;
-  Mat44 modelMatrix = globalXfo;
+  Mat44 modelMatrix = globalXfo.toMat44();
   Mat44 modelViewProjectionMatrix = modelMatrix * cameraMatrix * projectionMatrix;
   Mat33 normalMatrix = modelViewProjectionMatrix.upperLeft().inverse().transpose();
 

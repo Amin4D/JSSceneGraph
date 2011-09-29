@@ -38,7 +38,7 @@ FABRIC.RT.Ray.prototype = {
       return - 1; // no intersection
     }
     return {
-      point: this.start.add(this.direction.scale(sI)), dist: sI
+      point: this.start.add(this.direction.multiplyScalar(sI)), dist: sI
     };
   },
 
@@ -51,11 +51,11 @@ FABRIC.RT.Ray.prototype = {
     rayT = c1 / c2;
 
     if (rayT >= 0.0) {
-      var pointOnRay = this.start.add(this.direction.scale(rayT));
-      return pointOnRay.dist(point);
+      var pointOnRay = this.start.add(this.direction.multiplyScalar(rayT));
+      return pointOnRay.distanceTo(point);
     }
     else {
-      return this.start.dist(point);
+      return this.start.distanceTo(point);
     }
   },
 
@@ -95,7 +95,7 @@ FABRIC.RT.Ray.prototype = {
     }
 
     // get the difference of the two closest points
-    result.deltaVec = w.add(u.scale(result.lineParam).subtract(this.direction.scale(result.rayParam)));
+    result.deltaVec = w.add(u.multiplyScalar(result.lineParam).subtract(this.direction.multiplyScalar(result.rayParam)));
     result.dist = result.deltaVec.length();
     return result; // return the closest distance
   }

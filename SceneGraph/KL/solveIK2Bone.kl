@@ -34,6 +34,7 @@ operator solveIK2Bone(
   var Scalar lengthA = bones[boneA].length;
   var Scalar lengthB = bones[boneB].length;
   var Scalar lengthC = sideC.norm();
+  Quat boneOffsetRotation;
 
   // compute the direction of the first bone
   var Vec3 direction;
@@ -60,12 +61,14 @@ operator solveIK2Bone(
     boneBXaxis = boneBXaxis.neg();
   }
   if (directionBlend > 0.0) {
-    pose[boneA].ori = makeQuatFrom2Vectors(boneAXaxis, direction.unit()).unit() * pose[boneA].ori;
+    boneOffsetRotation.setFrom2Vectors(boneAXaxis, direction.unit());
+    pose[boneA].ori = boneOffsetRotation * pose[boneA].ori;
   }
   pose[boneB].tr = pose[boneA].transform(bones[boneB].referenceLocalPose.tr);
   direction = targetPos - pose[boneB].tr;
   if (directionBlend > 0.0) {
-    pose[boneB].ori = makeQuatFrom2Vectors(boneBXaxis, direction.unit()).unit() * pose[boneB].ori;
+    boneOffsetRotation.setFrom2Vectors(boneBXaxis, direction.unit());
+    pose[boneB].ori = boneOffsetRotation * pose[boneB].ori;
   }
 
   // compute the upvector directions
@@ -88,8 +91,12 @@ operator solveIK2Bone(
     boneBXaxis = pose[boneB].ori.getXaxis();
     upDirectionB = boneBXaxis.cross(upDirectionB.cross(boneBXaxis)).unit();
 
-    pose[boneA].ori = makeQuatFrom2Vectors(pose[boneA].ori.getYaxis(), upDirectionA).unit() * pose[boneA].ori;
-    pose[boneB].ori = makeQuatFrom2Vectors(pose[boneB].ori.getYaxis(), upDirectionB).unit() * pose[boneB].ori;
+  
+    boneOffsetRotation.setFrom2Vectors(pose[boneA].ori.getYaxis(), upDirectionA);
+    pose[boneA].ori = boneOffsetRotation * pose[boneA].ori;
+    
+    boneOffsetRotation.setFrom2Vectors(pose[boneB].ori.getYaxis(), upDirectionB);
+    pose[boneB].ori = boneOffsetRotation * pose[boneB].ori;
   }
 }
 

@@ -150,6 +150,10 @@ function Quat.setFrom2Vectors(in Vec3 sourceDirVec, in Vec3 destDirVec, Boolean 
   this.w = val / 2;
 }
 
+function Quat.setFrom2Vectors(in Vec3 sourceDirVec, in Vec3 destDirVec) {
+  this.setFrom2Vectors(sourceDirVec, destDirVec, false);
+}
+
 function Boolean Quat.equal (in Quat other) {
   return this.v.equal(other.v) && this.w == other.w;
 }

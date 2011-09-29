@@ -1561,7 +1561,7 @@ FABRIC.SceneGraph.registerNodeType('Camera', {
 
       dgnode.bindings.append(scene.constructOperator({
         operatorName: 'loadXfo',
-        srcCode: 'use Xfo, Mat44; operator loadXfo(io Xfo xfo, io Mat44 mat44){ mat44 = Mat44(xfo); mat44 = mat44.inverse(); }',
+        srcCode: 'use Xfo, Mat44; operator loadXfo(io Xfo xfo, io Mat44 mat44){ mat44 = xfo.toMat44(); mat44 = mat44.inverse(); }',
         entryFunctionName: 'loadXfo',
         parameterLayout: [
           'transform.' + transformNodeMember,
@@ -1636,7 +1636,7 @@ FABRIC.SceneGraph.registerNodeType('TargetCamera', {
     targetCameraNode.getDGNode().bindings.append(scene.constructOperator({
       operatorName: 'loadFocalDist',
       srcCode: 'use Xfo, Vec3; operator loadFocalDist(io Xfo xfo, io Vec3 target, io Scalar focalDist){' +
-      '  focalDist = xfo.tr.dist(target);' +
+      '  focalDist = xfo.tr.distanceTo(target);' +
       '}',
       entryFunctionName: 'loadFocalDist',
       parameterLayout: [

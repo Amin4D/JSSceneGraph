@@ -196,41 +196,6 @@ FABRIC.RT.Vec4.prototype = {
   },
   getType: function() {
     return 'FABRIC.RT.Vec4';
-  },
-  displayGUI: function($parentDiv, changeHandlerFn) {
-    var val = this;
-    var fn = function() {
-      changeHandlerFn(val);
-    }
-    var size = 22;
-    var $xWidget = $('<input type="number" style="width:' + size + '%" value="' + this.x + '"/>').bind(
-      'change', function(event, ui) {
-        val.x = parseFloat($(this).val()); fn();
-    });
-    var $yWidget = $('<input type="number" style="width:' + size + '%" value="' + this.y + '"/>').bind(
-      'change', function(event, ui) {
-        val.y = parseFloat($(this).val()); fn();
-    });
-    var $zWidget = $('<input type="number" style="width:' + size + '%" value="' + this.y + '"/>').bind(
-      'change', function(event, ui) {
-        val.z = parseFloat($(this).val()); fn();
-    });
-    var $tWidget = $('<input type="number" style="width:' + size + '%" value="' + this.y + '"/>').bind(
-      'change', function(event, ui) {
-        val.t = parseFloat($(this).val()); fn();
-    });
-
-    $parentDiv.append($xWidget);
-    $parentDiv.append($yWidget);
-    $parentDiv.append($zWidget);
-    $parentDiv.append($tWidget);
-    var refreshFn = function(val) {
-      $xWidget.val(val.x);
-      $yWidget.val(val.y);
-      $zWidget.val(val.z);
-      $tWidget.val(val.t);
-    };
-    return refreshFn;
   }
 };
 

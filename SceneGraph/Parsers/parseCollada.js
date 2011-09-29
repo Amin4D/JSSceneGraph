@@ -12,6 +12,21 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
   //  console.warn(warningText);
   }
   
+    
+  var makeRT = (function() {
+    var ctor;
+    function RT(args) {
+      return ctor.apply(this, args);
+    }
+    return function() {
+      ctor = arguments[0];
+      var rt = new RT(arguments[1]);
+      rt.__proto__ = ctor.prototype;
+      return rt;
+    }
+  })();
+    
+    
   //////////////////////////////////////////////////////////////////////////////
   // Collada File Parsing Functions
 
@@ -361,6 +376,7 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
       joints: []
     };
     var child = node.firstElementChild;
+    
     while(child){
       switch (child.nodeName) {
         case 'bind_shape_matrix':
@@ -371,8 +387,9 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
               float_array.push(parseFloat(text_array[i]));
             }
           }
-          var matrix44 = FABRIC.RT.mat44.apply(undefined, float_array);
-          skin.bind_shape_matrix = matrix44.transpose();
+          
+          var matrix44 = makeRT(FABRIC.RT.Mat44, float_array);
+          skin.bind_shape_matrix = matrix44;//.transpose();
           break;
         case 'source':
           skin.sources[child.getAttribute('id')] = parseSource(child);
@@ -648,14 +665,14 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
         case 'VERTEX':
           meshTriangleSourceData.positions = {
             source: meshData.sources[meshData.vertices.source.slice(1)],
-            constructorFn: new FABRIC.RT.Vec3
+            constructorFn: FABRIC.RT.Vec3
           };
           processedData.geometryData.positions = [];
           break;
         case 'NORMAL':
           meshTriangleSourceData.normals = {
             source: meshData.sources[sourceName],
-            constructorFn: new FABRIC.RT.Vec3
+            constructorFn: FABRIC.RT.Vec3
           };
           processedData.geometryData.normals = [];
           break;
@@ -663,7 +680,7 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
           var uvset = 'uvs' + numUVsets;
           meshTriangleSourceData[uvset] = {
             source: meshData.sources[sourceName],
-            constructorFn: new FABRIC.RT.Vec2
+            constructorFn: FABRIC.RT.Vec2
           };
           processedData.geometryData[uvset] = [];
           processedData.constructionOptions.tangentsFromUV = numUVsets;
@@ -679,6 +696,7 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
     var indicesMapping = {};
     var vcount = 0;
     var vid = 0;
+    
     for(var tid=0; tid<numTriangles; tid++){
       for(var j=0; j<3; j++){
         var attributeDataIndices = trianglesData.indices.slice( vid*attrcount, (vid*attrcount) + attrcount );
@@ -693,7 +711,7 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
             var elementid = attributeDataIndices[vattrid];
             var sourceData = getSourceData(meshTriangleSourceData[inputid].source, elementid);
             var constructorFn = meshTriangleSourceData[inputid].constructorFn;
-            processedData.geometryData[inputid].push(constructorFn.apply(undefined, sourceData));
+            processedData.geometryData[inputid].push(makeRT(constructorFn, sourceData));
             vattrid++;
           }
           processedData.geometryData.indices.push(vcount);
@@ -1102,8 +1120,8 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
     var invmatrices = [];
     for (var j = 0; j < jointDataSource.data.length; j++) {
       var bindPoseValues = getSourceData(bindPoseDataSource, j);
-      var mat = FABRIC.RT.mat44.apply(undefined, bindPoseValues).transpose();
-      invmatrices[j] = controllerData.bind_shape_matrix.mul(mat);
+      var mat = makeRT(FABRIC.RT.Mat44, bindPoseValues);//.transpose();
+      invmatrices[j] = controllerData.bind_shape_matrix.multiply(mat);
     }
     characterMeshNode.setInvMatrices(invmatrices, jointRemapping);
     

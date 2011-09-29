@@ -207,21 +207,6 @@ FABRIC.RT.Mat33.prototype = {
   },
   getType: function() {
     return 'FABRIC.RT.Mat33';
-  },
-  displayGUI: function($parentDiv, changeHandlerFn) {
-    var val = this;
-    var fn = function() {
-      changeHandlerFn(val);
-    }
-    var row0RefreshFn = this.row0.displayGUI($parentDiv, fn); $parentDiv.append($('<br/>'));
-    var row1RefreshFn = this.row1.displayGUI($parentDiv, fn); $parentDiv.append($('<br/>'));
-    var row2RefreshFn = this.row2.displayGUI($parentDiv, fn);
-    var refreshFn = function(val) {
-      row0RefreshFn(val.row0);
-      row1RefreshFn(val.row1);
-      row2RefreshFn(val.row2);
-    };
-    return refreshFn;
   }
 };
 

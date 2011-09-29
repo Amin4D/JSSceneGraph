@@ -44,7 +44,7 @@ operator computeTriangleTangents(
     var Vec3 pe10 = p1 - p0, pe20 = p2 - p0;
     var Vec2 te10 = t1 - t0, te20 = t2 - t0;
 
-    var Scalar r = 1.0 / te10.det(te20);
+    var Scalar r = 1.0 / te10.cross(te20);
 
     var Vec3 sdir((te20.y * pe10.x - te10.y * pe20.x) * r, (te20.y * pe10.y - te10.y * pe20.y) * r, (te20.y * pe10.z - te10.y * pe20.z) * r);
     tanS[i0] += sdir;

@@ -184,13 +184,14 @@ print('TruTru' + mat33);
   },
 
   multiply: function(xf) {
+    var this_ori = this.ori.unit();
+    var xf_ori = xf.ori.unit();
+
     var result = new FABRIC.RT.Xfo();
+    result.tr = this.tr.add(this_ori.rotateVector(this.sc.multiply(xf.tr)));
+    result.ori = this_ori.multiply(xf_ori);
+    result.ori.setUnit();
     result.sc = this.sc.multiply(xf.sc);
-    result.ori = xf.ori.multiply(this.ori);
-    //  result.ori = this.ori.multiply(xf.ori);
-    result.tr = this.sc.multiply(xf.tr);
-    result.tr = this.ori.rotateVector(result.tr);
-    result.tr = this.tr.add(result.tr);
     return result;
   },
 

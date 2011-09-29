@@ -144,9 +144,11 @@ function Xfo. *= (in Xfo global) {
 
 function Xfo Xfo.inverse() {
   Xfo result;
+  result.setFromMat44(this.toMat44().inverse());
+/*  TOFIX! The commented code is completely wrong; see if there is an more optimal method than above to find the solution
   result.tr = this.tr.negate();
   result.ori = this.ori.inverse();
-  result.sc = this.sc.inverse();
+  result.sc = this.sc.inverse();*/
   return result;
 }
 

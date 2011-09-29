@@ -126,7 +126,6 @@ FABRIC.RT.Xfo.prototype = {
                   m.row0.x, m.row0.y, m.row0.z,
                   m.row1.x, m.row1.y, m.row1.z,
                   m.row2.x, m.row2.y, m.row2.z);
-print('TruTru' + mat33);
 
     // Grab the X scale and normalize the first row
     this.sc.x = mat33.row0.length();
@@ -197,9 +196,11 @@ print('TruTru' + mat33);
 
   inverse: function() {
     var result = new FABRIC.RT.Xfo();
-    result.sc = this.sc.invert();
-    result.ori = this.ori.invert();
-    result.tr = this.tr.negate();
+    result.setFromMat44(this.toMat44().inverse());
+/*  TOFIX! The commented code is completely wrong; see if there is an more optimal method than above to find the solution
+    result.sc = this.sc.inverse();
+    result.ori = this.ori.inverse();
+    result.tr = this.tr.negate();*/
     return result;
   },
 

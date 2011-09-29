@@ -99,19 +99,20 @@ FABRIC.RT.Xfo.prototype = {
 
   setIdentity: function() {
     this.set();
+    return this;
   },
 
   setFromMat44: function(m) {
     if (abs(1.0 - m.row3.t) > 0.001) {
       Math.reportWarning('Mat44.setFromMat44: Cannot handle denormalized matrices: ' + m.row3.t);
       this.setIdentity();
-      return;
+      return this;
     }
 
     if (m.row3.x != 0.0 || m.row3.y != 0.0 || m.row3.z != 0.0) {
       Math.reportWarning('Mat44.setFromMat44: Cannot handle perspective projection matrices');
       this.setIdentity();
-      return;
+      return this;
     }
 
     // We're going out on a limb and assuming this is a
@@ -149,6 +150,7 @@ FABRIC.RT.Xfo.prototype = {
     mat33.row2.divideScalar(this.sc.z);
 
     this.ori.setFromMat33(mat33);
+    return this;
   },
 
   toMat44: function() {

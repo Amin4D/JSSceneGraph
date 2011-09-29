@@ -52,20 +52,23 @@ FABRIC.RT.Mat22.prototype = {
   setRows: function(row0, row1) {
     this.row0 = row0.clone();
     this.row1 = row1.clone();
+    return this;
   },
 
   setColumns: function(col0, col1) {
     this.row0.x = col0.x; this.row0.y = col1.x;
     this.row1.x = col0.y; this.row1.y = col1.y;
+    return this;
   },
 
   setNull: function() {
     this.row0 = FABRIC.RT.Vec2.origin.clone();
     this.row1 = FABRIC.RT.Vec2.origin.clone();
+    return this;
   },
 
   setIdentity: function() {
-    this.set();
+    return this.set();
   },
 
   setDiagonal: function(v) {
@@ -75,6 +78,7 @@ FABRIC.RT.Mat22.prototype = {
       this.row0.x = v.x;
       this.row1.y = v.y;
     }
+    return this;
   },
 
   equal: function(v) {

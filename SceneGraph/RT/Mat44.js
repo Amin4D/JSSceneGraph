@@ -76,6 +76,7 @@ FABRIC.RT.Mat44.prototype = {
     this.row1.x = m.row1.x; this.row1.y = m.row1.y; this.row1.z = m.row1.z; this.row1.t = 0.0;
     this.row2.x = m.row2.x; this.row2.y = m.row2.y; this.row2.z = m.row2.z; this.row2.t = 0.0;
     this.row3.x = 0.0; this.row3.y = 0.0; this.row3.z = 0.0; this.row3.t = 1.0;
+    return this;
   },
 
   setRows: function(row0, row1, row2, row3) {
@@ -83,6 +84,7 @@ FABRIC.RT.Mat44.prototype = {
     this.row1 = row1.clone();
     this.row2 = row2.clone();
     this.row3 = row3.clone();
+    return this;
   },
 
   setColumns: function(col0, col1, col2, col3) {
@@ -90,6 +92,7 @@ FABRIC.RT.Mat44.prototype = {
     this.row1.x = col0.y; this.row1.y = col1.y; this.row1.z = col2.y; this.row1.t = col3.y;
     this.row2.x = col0.z; this.row2.y = col1.z; this.row2.z = col2.z; this.row2.t = col3.z;
     this.row3.x = col0.t; this.row3.y = col1.t; this.row3.z = col2.t; this.row3.t = col3.t;
+    return this;
   },
 
   setNull: function() {
@@ -97,10 +100,11 @@ FABRIC.RT.Mat44.prototype = {
     this.row1 = FABRIC.RT.Vec4.origin.clone();
     this.row2 = FABRIC.RT.Vec4.origin.clone();
     this.row3 = FABRIC.RT.Vec4.origin.clone();
+    return this;
   },
 
   setIdentity: function() {
-    this.set();
+    return this.set();
   },
 
   setDiagonal: function(v) {
@@ -115,6 +119,7 @@ FABRIC.RT.Mat44.prototype = {
       else
         this.row3.t = 1.0;
     }
+    return this;
   },
 
   equal: function(v) {

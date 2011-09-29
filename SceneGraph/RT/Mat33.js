@@ -63,22 +63,25 @@ FABRIC.RT.Mat33.prototype = {
     this.row0 = row0.clone();
     this.row1 = row1.clone();
     this.row2 = row2.clone();
+    return this;
   },
 
   setColumns: function(col0, col1, col2) {
     this.row0.x = col0.x; this.row0.y = col1.x; this.row0.z = col2.x;
     this.row1.x = col0.y; this.row1.y = col1.y; this.row1.z = col2.y;
     this.row2.x = col0.z; this.row2.y = col1.z; this.row2.z = col2.z;
+    return this;
   },
 
   setNull: function() {
     this.row0 = FABRIC.RT.Vec3.origin.clone();
     this.row1 = FABRIC.RT.Vec3.origin.clone();
     this.row2 = FABRIC.RT.Vec3.origin.clone();
+    return this;
   },
 
   setIdentity: function() {
-    this.set();
+    return this.set();
   },
 
   setDiagonal: function(v) {
@@ -89,6 +92,7 @@ FABRIC.RT.Mat33.prototype = {
       this.row1.y = v.y;
       this.row2.z = v.z;
     }
+    return this;
   },
 
   equal: function(v) {

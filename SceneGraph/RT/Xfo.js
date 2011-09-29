@@ -103,7 +103,7 @@ FABRIC.RT.Xfo.prototype = {
   },
 
   setFromMat44: function(m) {
-    if (abs(1.0 - m.row3.t) > 0.001) {
+    if (Math.abs(1.0 - m.row3.t) > 0.001) {
       Math.reportWarning('Mat44.setFromMat44: Cannot handle denormalized matrices: ' + m.row3.t);
       this.setIdentity();
       return this;
@@ -118,36 +118,37 @@ FABRIC.RT.Xfo.prototype = {
     // We're going out on a limb and assuming this is a
     // straight homogenous transformation matrix. No
     // singularities, denormilizations, or projections.
-    this.tr.x = m.row3.x;
-    this.tr.y = m.row3.y;
-    this.tr.z = m.row3.z;
+    this.tr.x = m.row0.t;
+    this.tr.y = m.row1.t;
+    this.tr.z = m.row2.t;
 
     var mat33 = new FABRIC.RT.Mat33(
                   m.row0.x, m.row0.y, m.row0.z,
                   m.row1.x, m.row1.y, m.row1.z,
                   m.row2.x, m.row2.y, m.row2.z);
+print('TruTru' + mat33);
 
     // Grab the X scale and normalize the first row
     this.sc.x = mat33.row0.length();
     Math.checkDivisor(this.sc.x, 'Xfo.setFromMat44: Matrix is singular');
-    mat33.row0.divideScalar(this.sc.x);
+    mat33.row0 = mat33.row0.divideScalar(this.sc.x);
 
     // Make the 2nd row orthogonal to the 1st
-    mat33.row1 = mat33.row1.subtract(mat33.row0.multiply(mat33.row0.dot(mat33.row1)));
+    mat33.row1 = mat33.row1.subtract(mat33.row0.multiplyScalar(mat33.row0.dot(mat33.row1)));
 
     // Grab the Y scale and normalize the 2nd row
     this.sc.y = mat33.row1.length();
     Math.checkDivisor(this.sc.y, 'Xfo.setFromMat44: Matrix is singular');
-    mat33.row1.divideScalar(this.sc.y);
+    mat33.row1 = mat33.row1.divideScalar(this.sc.y);
 
     // Make the 3rd row orthogonal to the 1st and 2nd
-    mat33.row2 = mat33.row2.subtract(mat33.row0.multiply(mat33.row0.dot(mat33.row2)));
-    mat33.row2 = mat33.row2.subtract(mat33.row1.multiply(mat33.row1.dot(mat33.row2)));
+    mat33.row2 = mat33.row2.subtract(mat33.row0.multiplyScalar(mat33.row0.dot(mat33.row2)));
+    mat33.row2 = mat33.row2.subtract(mat33.row1.multiplyScalar(mat33.row1.dot(mat33.row2)));
 
     // Grab the Y scale and normalize the 2nd row
     this.sc.z = mat33.row2.length();
     Math.checkDivisor(this.sc.z, 'Xfo.setFromMat44: Matrix is singular');
-    mat33.row2.divideScalar(this.sc.z);
+    mat33.row2 = mat33.row2.divideScalar(this.sc.z);
 
     this.ori.setFromMat33(mat33);
     return this;
@@ -159,7 +160,7 @@ FABRIC.RT.Xfo.prototype = {
       trn = new FABRIC.RT.Mat44(),
       q = this.ori;
 
-    scl.setDiagonal(FABRIC.RT.vec4(this.sc.x, this.sc.y, this.sc.z, 1.0));
+    scl.setDiagonal(new FABRIC.RT.Vec4(this.sc.x, this.sc.y, this.sc.z, 1.0));
 
     rot.row0.x = 1.0 - 2.0 * (q.v.y * q.v.y + q.v.z * q.v.z);
     rot.row0.y = 2.0 * (q.v.x * q.v.y - q.v.z * q.w);

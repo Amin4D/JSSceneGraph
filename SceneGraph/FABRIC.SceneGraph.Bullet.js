@@ -543,6 +543,7 @@ FABRIC.SceneGraph.registerNodeType('BulletRigidBodyTransform', {
       throw('The specified bulletWorldNode is not of type \'BulletWorldNode\'.');
     }
     var rbddgnode = scene.getPrivateInterface(options.bulletWorldNode).getRbdDGNode();
+    var sbddgnode = scene.getPrivateInterface(options.bulletWorldNode).getSbdDGNode();
 
     // check if we have a shape node
     if(!options.shapeName) {
@@ -563,7 +564,8 @@ FABRIC.SceneGraph.registerNodeType('BulletRigidBodyTransform', {
     var bulletWorldNode = scene.getPrivateInterface(options.bulletWorldNode);
 
     var dgnode = rigidBodyTransformNode.getDGNode();
-    dgnode.setDependency(rbddgnode,'bodies');
+    dgnode.setDependency(rbddgnode,'rigidbodies');
+    dgnode.setDependency(sbddgnode,'softbodies');
     
     // check if we are using multiple rigid bodies
     if(options.rigidBody.constructor.toString().indexOf("Array") != -1)
@@ -574,7 +576,7 @@ FABRIC.SceneGraph.registerNodeType('BulletRigidBodyTransform', {
       operatorName: 'getBulletRigidBodyTransform',
       parameterLayout: [
         'self.index',
-        'bodies.'+bodyName+'Rbd',
+        'rigidbodies.'+bodyName+'Rbd',
         'self.globalXfo'
       ],
       entryFunctionName: 'getBulletRigidBodyTransform',

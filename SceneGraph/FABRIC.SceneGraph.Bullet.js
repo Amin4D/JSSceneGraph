@@ -254,7 +254,7 @@ FABRIC.SceneGraph.registerNodeType('BulletWorldNode', {
         // create rigid body operator
         shapedgnode.setDependency(scene.getPrivateInterface(shape.geometryNode).getAttributesDGNode(),shapeName+"Shape_attributes");
         shapedgnode.bindings.append(scene.constructOperator({
-          operatorName: 'copy'+shapeName+'Vertices',
+          operatorName: 'copyShapeVertices',
           parameterLayout: [
             'self.'+shapeName+'Shape',
             shapeName+"Shape_attributes.positions<>",
@@ -266,7 +266,7 @@ FABRIC.SceneGraph.registerNodeType('BulletWorldNode', {
 
       // create rigid body operator
       shapedgnode.bindings.append(scene.constructOperator({
-        operatorName: 'create'+shapeName+'Shape',
+        operatorName: 'createBulletShape',
         parameterLayout: [
           'self.'+shapeName+'Shape'
         ],
@@ -296,7 +296,7 @@ FABRIC.SceneGraph.registerNodeType('BulletWorldNode', {
 
       // create rigid body operator
       rbddgnode.bindings.append(scene.constructOperator({
-        operatorName: 'create'+bodyName+'RigidBody',
+        operatorName: 'createBulletRigidBody',
         parameterLayout: [
           'simulation.world',
           'shapes.'+shapeName+'Shape',
@@ -329,7 +329,7 @@ FABRIC.SceneGraph.registerNodeType('BulletWorldNode', {
 
       // create the create softbody operator
       sbddgnode.bindings.append(scene.constructOperator({
-        operatorName: 'create'+bodyName+'SoftBody',
+        operatorName: 'createBulletSoftBody',
         parameterLayout: [
           'simulation.world',
           'self.'+bodyName+'Sbd',
@@ -380,7 +380,7 @@ FABRIC.SceneGraph.registerNodeType('BulletWorldNode', {
 
       // create rigid body operator
       rbddgnode.bindings.append(scene.constructOperator({
-        operatorName: 'create'+constraintName+'Constraint',
+        operatorName: 'createBulletConstraint',
         parameterLayout: [
           'simulation.world',
           'self.'+constraintName,
@@ -415,7 +415,7 @@ FABRIC.SceneGraph.registerNodeType('BulletWorldNode', {
 
       // create rigid body operator
       sbddgnode.bindings.append(scene.constructOperator({
-        operatorName: 'create'+anchorName+'Anchor',
+        operatorName: 'createBulletAnchor',
         parameterLayout: [
           'simulation.world',
           'self.'+anchorName,
@@ -447,7 +447,7 @@ FABRIC.SceneGraph.registerNodeType('BulletWorldNode', {
 
       // create rigid body operator
       dgnode.bindings.append(scene.constructOperator({
-        operatorName: 'apply'+forceName+'Force',
+        operatorName: 'applyBulletForce',
         parameterLayout: [
           'self.world',
           'self.'+forceName+'Force',

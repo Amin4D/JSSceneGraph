@@ -91,10 +91,10 @@ operator getBulletRigidBodyTransform(
   io BulletRigidBody body[],
   io Xfo transform
 ){
-  if(body[index].mass == 0.0)
-    body[index].setTransform(transform);
+  if(body[index].mass > 0.0)
+    transform = body[index].getTransform();
   else
-    body[index].getTransform(transform);
+    body[index].setTransform(transform);
 }
 
 operator createBulletSoftBody(
@@ -117,7 +117,7 @@ operator getBulletSoftBodyPosition(
   io Vec3 position,
   io Vec3 normal,
 ){
-  body.getPosition(index,position,normal);
+  body.getPosition(index, position, normal);
 }
 
 operator createBulletConstraint(

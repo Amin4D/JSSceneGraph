@@ -44,7 +44,7 @@ function applyFishingRod(
   vecToTarget *= 1.0 / distBoneBaseToTarget;
 
   boneLengthVector = boneXfo.ori.rotateVector(boneLocalAxis);
-  distBoneTipToTarget = (boneXfo.tr + (boneLengthVector * boneLength)).dist(target.tr);
+  distBoneTipToTarget = (boneXfo.tr + (boneLengthVector * boneLength)).distanceTo(target.tr);
 
   newDistBoneTipToTarget = applySoftLimitBezierCurve(
     distBoneTipToTarget,

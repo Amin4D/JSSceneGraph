@@ -254,34 +254,6 @@ FABRIC.RT.Euler.prototype = {
   },
   getType: function() {
     return 'FABRIC.RT.Euler';
-  },
-  displayGUI: function($parentDiv, changeHandlerFn) {
-    var val = this;
-    var fn = function() {
-      changeHandlerFn(val);
-    }
-    var size = 47;
-    var $xWidget = $('<input type="number" style="width:' + size + '%" value="' + this.x + '"/>').bind(
-      'change', function(event, ui) {
-        val.x = parseFloat($(this).val()); fn();
-    });
-    var $yWidget = $('<input type="number" style="width:' + size + '%" value="' + this.y + '"/>').bind(
-      'change', function(event, ui) {
-        val.y = parseFloat($(this).val()); fn();
-    });
-    var $zWidget = $('<input type="number" style="width:' + size + '%" value="' + this.z + '"/>').bind(
-      'change', function(event, ui) {
-        val.z = parseFloat($(this).val()); fn();
-    });
-
-    $parentDiv.append($xWidget);
-    $parentDiv.append($yWidget);
-    $parentDiv.append($zWidget);
-    return function() {
-      $xWidget.val(val.x);
-      $yWidget.val(val.y);
-      $zWidget.val(val.z);
-    }
   }
 };
 

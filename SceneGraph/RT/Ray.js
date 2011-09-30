@@ -10,8 +10,8 @@
  * @param {object} direction A Vec3 defining the direction of the ray.
  */
 FABRIC.RT.Ray = function(start, direction) {
-  this.start = FABRIC.RT.isVec3(start) ? start : FABRIC.RT.vec3();
-  this.direction = FABRIC.RT.isVec3(direction) ? direction : FABRIC.RT.vec3(1, 0, 0);
+  this.start = FABRIC.RT.isVec3(start) ? start : new FABRIC.RT.Vec3();
+  this.direction = FABRIC.RT.isVec3(direction) ? direction : new FABRIC.RT.Vec3(1, 0, 0);
 };
 
 FABRIC.RT.Ray.prototype = {
@@ -38,7 +38,7 @@ FABRIC.RT.Ray.prototype = {
       return - 1; // no intersection
     }
     return {
-      point: this.start.add(this.direction.scale(sI)), dist: sI
+      point: this.start.add(this.direction.multiplyScalar(sI)), dist: sI
     };
   },
 
@@ -51,11 +51,11 @@ FABRIC.RT.Ray.prototype = {
     rayT = c1 / c2;
 
     if (rayT >= 0.0) {
-      var pointOnRay = this.start.add(this.direction.scale(rayT));
-      return pointOnRay.dist(point);
+      var pointOnRay = this.start.add(this.direction.multiplyScalar(rayT));
+      return pointOnRay.distanceTo(point);
     }
     else {
-      return this.start.dist(point);
+      return this.start.distanceTo(point);
     }
   },
 
@@ -95,7 +95,7 @@ FABRIC.RT.Ray.prototype = {
     }
 
     // get the difference of the two closest points
-    result.deltaVec = w.add(u.scale(result.lineParam).subtract(this.direction.scale(result.rayParam)));
+    result.deltaVec = w.add(u.multiplyScalar(result.lineParam).subtract(this.direction.multiplyScalar(result.rayParam)));
     result.dist = result.deltaVec.length();
     return result; // return the closest distance
   }
@@ -131,15 +131,15 @@ FABRIC.RT.Ray.calculateRayFromViewportData = function(
   // Transform the origin from camera local to world space
   var camInv = cameraMat44.inverse();
 
-  //  ray.start = camInv.mul(FABRIC.RT.vec3(0.0, 0.0, 0.0));
-  ray.start = FABRIC.RT.vec3(camInv.row3.x, camInv.row3.y, camInv.row3.z);
+  //  ray.start = camInv.mul(new FABRIC.RT.Vec3(0.0, 0.0, 0.0));
+  ray.start = new FABRIC.RT.Vec3(camInv.row3.x, camInv.row3.y, camInv.row3.z);
 
   // Get the projected window coordinate on the near plane
   // See http://www.songho.ca/opengl/gl_projectionmatrix.html
   // for details.
   var projInv = projectionMat44.inverse();
 
-  ray.direction = projInv.mul(FABRIC.RT.vec3(sx, - sy, - 1.0));
+  ray.direction = projInv.mul(new FABRIC.RT.Vec3(sx, - sy, - 1.0));
 
   // And from projection space to camera local.
   // - We nuke the translation part since we're transforming a vector.
@@ -168,8 +168,8 @@ FABRIC.appendOnCreateContextCallback(function(context) {
  * @constructor
  */
 FABRIC.RT.RayIntersection = function() {
-  this.point = FABRIC.RT.vec3();
-  this.normal = FABRIC.RT.vec3();
+  this.point = new FABRIC.RT.Vec3();
+  this.normal = new FABRIC.RT.Vec3();
   this.distance = 0;
   this.elementid = - 1;
 };

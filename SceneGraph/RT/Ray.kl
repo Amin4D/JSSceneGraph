@@ -27,10 +27,10 @@ function Scalar Ray.distanceToPoint(Vec3 point) {
 
   if (rayT >= 0.0) {
     Vec3 pointOnRay = this.start + (rayT * this.direction);
-    return pointOnRay.dist(point);
+    return pointOnRay.distanceTo(point);
   }
   else {
-    return this.start.dist(point);
+    return this.start.distanceTo(point);
   }
 }
 
@@ -147,7 +147,7 @@ function Boolean intersectBBoxEdge(
     return false;
   }
   var Vec3 rayPoint = ray.start + (ray.direction * p.x);
-  var Vec3 edgeP = e1.lerp(e2, p.y);
+  var Vec3 edgeP = e1.linearInterpolate(e2, p.y);
   return ((rayPoint - edgeP).dot(rayPoint - bboxCenter) < 0.0);
 }
 

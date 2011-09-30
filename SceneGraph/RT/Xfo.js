@@ -241,22 +241,6 @@ FABRIC.RT.Xfo.prototype = {
 
   getType: function() {
     return 'FABRIC.RT.Xfo';
-  },
-
-  displayGUI: function($parentDiv, changeHandlerFn) {
-    var val = this;
-    var fn = function() {
-      changeHandlerFn(val);
-    };
-    var oriRefreshFn = this.ori.displayGUI($parentDiv, fn); $parentDiv.append($('<br/>'));
-    var trRefreshFn = this.tr.displayGUI($parentDiv, fn); $parentDiv.append($('<br/>'));
-    var scRefreshFn = this.sc.displayGUI($parentDiv, fn);
-    var refreshFn = function(val) {
-      oriRefreshFn(val.ori);
-      trRefreshFn(val.tr);
-      scRefreshFn(val.sc);
-    };
-    return refreshFn;
   }
 };
 

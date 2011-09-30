@@ -28,8 +28,8 @@ FABRIC.SceneGraph.registerNodeType('LineVector', {
   },
   factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
-        from: FABRIC.RT.vec3(0, 0, 0),
-        to: FABRIC.RT.vec3(1, 0, 0)
+        from: new FABRIC.RT.Vec3(0, 0, 0),
+        to: new FABRIC.RT.Vec3(1, 0, 0)
       });
 
     var lineSegmentNode = scene.constructNode('Lines', options);
@@ -119,8 +119,8 @@ FABRIC.SceneGraph.registerNodeType('BoundingBox', {
   },
   factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
-      bboxmin: FABRIC.RT.vec3(-2, -3, -4),
-      bboxmax: FABRIC.RT.vec3(4, 3, 2)
+      bboxmin: new FABRIC.RT.Vec3(-2, -3, -4),
+      bboxmax: new FABRIC.RT.Vec3(4, 3, 2)
     });
 
     var boundingBoxNode = scene.constructNode('Lines', options);

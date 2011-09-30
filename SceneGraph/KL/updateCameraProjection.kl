@@ -27,10 +27,10 @@ function Mat44 symmetricPerspectiveFrustum(
 ) {
   var Scalar d = f - n;
   var Mat44 result(
-    2.0 * n / w, 0.0, 0.0, 0.0,
-    0.0, 2.0 * n / h, 0.0, 0.0,
-    0.0, 0.0, -(f + n) / d, - 1.0,
-  0.0, 0.0, -(2.0 * f * n) / d, 0.0);
+    -2.0 * n / w, 0.0, 0.0, 0.0,
+    0.0, -2.0 * n / h, 0.0, 0.0,
+    0.0, 0.0, -(f + n) / d, -(2.0 * f * n) / d,
+    0.0, 0.0, -1.0, 0.0);
   return result;
 }
 

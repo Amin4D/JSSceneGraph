@@ -48,7 +48,9 @@ operator solveTwistBones(
 
   Vec3 baseVec = (endXfo.tr - baseXfo.tr).unit();
   Vec3 endVec = endXfo.ori.getXaxis();
-  endXfo.ori = makeQuatFrom2Vectors(endVec, baseVec) * endXfo.ori;
+  Quat boneOffsetRotation;
+  boneOffsetRotation.setFrom2Vectors(endVec, baseVec);
+  endXfo.ori = boneOffsetRotation * endXfo.ori;
 
   for (var Integer i = 0; i < twistBones.size(); i++) {
     pose[twistBones[i]].tr = baseXfo.transformVector(bones[twistBones[i]].referenceLocalPose.tr);

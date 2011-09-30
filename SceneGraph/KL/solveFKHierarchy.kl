@@ -14,7 +14,7 @@ operator solveFKBone(
     pose[index] = local;
   }
   else {
-    pose[index] = pose[bones[index].parent].project(local);
+    pose[index] = pose[bones[index].parent] * local;
   }
 }
 
@@ -29,7 +29,7 @@ operator solveFKHierarchy(
       pose[indices[i]] = local[i];
     }
     else {
-      pose[indices[i]] = pose[bones[indices[i]].parent].project(local[i]);
+      pose[indices[i]] = pose[bones[indices[i]].parent] * local[i];
     }
   }
 }
@@ -51,7 +51,7 @@ operator solveChain(
       chainpose[i] = local[i];
     }
     else {
-      chainpose[i] = pose[bones[indices[i]].parent].project(local[i]);
+      chainpose[i] = pose[bones[indices[i]].parent] * local[i];
     }
     pose[indices[i]] = chainpose[i];
   }
@@ -68,6 +68,6 @@ operator solveInvParentList(
     if (bones[indices[i]].parent == - 1)
       local[indices[i]] = pose[indices[i]];
     else
-      local[indices[i]] = pose[bones[indices[i]].parent].invProject(pose[indices[i]]);
+      local[indices[i]] = pose[bones[indices[i]].parent].inverse() * pose[indices[i]];
   }
 }

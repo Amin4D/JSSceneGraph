@@ -302,23 +302,6 @@ FABRIC.RT.Mat44.prototype = {
   },
   getType: function() {
     return 'FABRIC.RT.Mat44';
-  },
-  displayGUI: function($parentDiv, changeHandlerFn) {
-    var val = this;
-    var fn = function() {
-      changeHandlerFn(val);
-    }
-    var row0RefreshFn = this.row0.displayGUI($parentDiv, fn); $parentDiv.append($('<br/>'));
-    var row1RefreshFn = this.row1.displayGUI($parentDiv, fn); $parentDiv.append($('<br/>'));
-    var row2RefreshFn = this.row2.displayGUI($parentDiv, fn); $parentDiv.append($('<br/>'));
-    var row3RefreshFn = this.row3.displayGUI($parentDiv, fn);
-    var refreshFn = function(val) {
-      row0RefreshFn(val.row0);
-      row1RefreshFn(val.row1);
-      row2RefreshFn(val.row2);
-      row3RefreshFn(val.row3);
-    };
-    return refreshFn;
   }
 };
 

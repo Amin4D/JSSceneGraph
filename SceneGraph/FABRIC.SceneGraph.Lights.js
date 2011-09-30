@@ -31,7 +31,7 @@ FABRIC.SceneGraph.registerNodeType('Light', {
       color: FABRIC.RT.rgb(1.0, 1.0, 1.0),
       transformNode: 'Transform',
       transformNodeMember: 'globalXfo',
-      globalXfo: FABRIC.RT.xfo()
+      globalXfo: new FABRIC.RT.Xfo()
     });
 
     if (options.lightType == undefined) {
@@ -103,7 +103,7 @@ FABRIC.SceneGraph.registerNodeType('Light', {
 
       dgnode.bindings.append(scene.constructOperator({
         operatorName: 'loadLightXfo',
-        srcCode: 'use Xfo; use Mat44; operator loadLightXfo(io Xfo xfo, io Mat44 lightMat44, io Mat44 cameraMat44){ lightMat44 = xfo; cameraMat44 = lightMat44.inverse(); }',
+        srcCode: 'use Xfo; use Mat44; operator loadLightXfo(io Xfo xfo, io Mat44 lightMat44, io Mat44 cameraMat44){ lightMat44 = xfo.toMat44(); cameraMat44 = lightMat44.inverse(); }',
         entryFunctionName: 'loadLightXfo',
         parameterLayout: [
           'transform.' + transformNodeMember,
@@ -141,13 +141,13 @@ FABRIC.SceneGraph.registerNodeType('PointLight', {
   factoryFn: function (options, scene) {
 
     scene.assignDefaults(options, {
-      position: FABRIC.RT.vec3(420.0, 1000.0, 600.0),
+      position: new FABRIC.RT.Vec3(420.0, 1000.0, 600.0),
       display: false,
       displaySize: 5
     });
 
     options.lightType = FABRIC.SceneGraph.Lights.types.PointLight;
-    options.globalXfo = FABRIC.RT.xfo({ tr: options.position });
+    options.globalXfo = new FABRIC.RT.Xfo({ tr: options.position });
     var pointLightNode = scene.constructNode('Light', options);
     var dgnode = pointLightNode.getDGNode();
     
@@ -155,7 +155,7 @@ FABRIC.SceneGraph.registerNodeType('PointLight', {
       return pointLightNode.pub.getTransformNode().getGlobalXfo().tr;
     }
     pointLightNode.pub.setPosition = function(v) {
-      pointLightNode.pub.getTransformNode().setGlobalXfo(FABRIC.RT.xfo({ tr: v }));
+      pointLightNode.pub.getTransformNode().setGlobalXfo(new FABRIC.RT.Xfo({ tr: v }));
     }
 
     if (options.display === true) {
@@ -176,7 +176,7 @@ FABRIC.SceneGraph.registerNodeType('PointLight', {
         transformNode: scene.pub.constructNode('Transform', {
           hierarchical: true,
           parentTransformNode: pointLightNode.pub.getTransformNode(),
-          localXfo: FABRIC.RT.xfo({ ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.Vec3.xAxis, Math.HALF_PI) })
+          localXfo: new FABRIC.RT.Xfo({ ori: new FABRIC.RT.Quat().setFromAxisAndAngle(FABRIC.RT.Vec3.xAxis, Math.HALF_PI) })
         }),
         geometryNode: circleNode,
         materialNode: materialNode
@@ -186,7 +186,7 @@ FABRIC.SceneGraph.registerNodeType('PointLight', {
         transformNode: scene.pub.constructNode('Transform', {
           hierarchical: true,
           parentTransformNode: pointLightNode.pub.getTransformNode(),
-          localXfo: FABRIC.RT.xfo({ ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.Vec3.zAxis, Math.HALF_PI) })
+          localXfo: new FABRIC.RT.Xfo({ ori: new FABRIC.RT.Quat().setFromAxisAndAngle(FABRIC.RT.Vec3.zAxis, Math.HALF_PI) })
         }),
         geometryNode: circleNode,
         materialNode: materialNode
@@ -211,20 +211,24 @@ FABRIC.SceneGraph.registerNodeType('DirectionalLight', {
 
     if (!options.transformNode) {
       scene.assignDefaults(options, {
-        direction: FABRIC.RT.vec3(0.0, 0.737, 0.737),
-        position: FABRIC.RT.vec3(100.0, 100.0, 100.0),
+        direction: new FABRIC.RT.Vec3(0.0, 0.737, 0.737),
+        position: new FABRIC.RT.Vec3(100.0, 100.0, 100.0),
         displaySize: 5
       });
     }
 
     options.lightType = FABRIC.SceneGraph.Lights.types.DirectionalLight;
-    options.globalXfo = FABRIC.RT.xfo();
+    options.globalXfo = new FABRIC.RT.Xfo();
     if (options.position) {
       //The position is not used for directionalLight's lighting, but might be used for displaying the light
       options.globalXfo.tr = new FABRIC.RT.Vec3(options.position);
     }
     if (options.direction) {
-      xfo.ori = FABRIC.RT.Quat.makeFrom2Vectors(new FABRIC.RT.Vec3(0.0, 0.0, -1.0), new FABRIC.RT.Vec3(options.direction).unit(), true);
+      xfo.ori = new FABRIC.RT.Quat().setFrom2Vectors(
+                  new FABRIC.RT.Vec3(0.0, 0.0, -1.0),
+                  new FABRIC.RT.Vec3(options.direction).unit(),
+                  true
+                );
     }
     var directionalLightNode = scene.constructNode('Light', options);
     var dgnode = directionalLightNode.getDGNode();
@@ -267,7 +271,7 @@ FABRIC.SceneGraph.registerNodeType('DirectionalLight', {
         transformNode: scene.pub.constructNode('Transform', {
           hierarchical: true,
           parentTransformNode: directionalLightNode.pub.getTransformNode(),
-          localXfo: FABRIC.RT.xfo({ ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.Vec3.xAxis, Math.HALF_PI) })
+          localXfo: new FABRIC.RT.Xfo({ ori: new FABRIC.RT.Quat().setFromAxisAndAngle(FABRIC.RT.Vec3.xAxis, Math.HALF_PI) })
         }),
         geometryNode: circleNode,
         materialNode: materialNode
@@ -277,7 +281,7 @@ FABRIC.SceneGraph.registerNodeType('DirectionalLight', {
         transformNode: scene.pub.constructNode('Transform', {
           hierarchical: true,
           parentTransformNode: directionalLightNode.pub.getTransformNode(),
-          localXfo: FABRIC.RT.xfo({ ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.Vec3.xAxis, Math.HALF_PI), tr: FABRIC.RT.vec3(0, 0, -options.displaySize) })
+          localXfo: new FABRIC.RT.Xfo({ ori: new FABRIC.RT.Quat().setFromAxisAndAngle(FABRIC.RT.Vec3.xAxis, Math.HALF_PI), tr: new FABRIC.RT.Vec3(0, 0, -options.displaySize) })
         }),
         geometryNode: circleNode,
         materialNode: materialNode
@@ -287,7 +291,7 @@ FABRIC.SceneGraph.registerNodeType('DirectionalLight', {
         transformNode: scene.pub.constructNode('Transform', {
           hierarchical: true,
           parentTransformNode: directionalLightNode.pub.getTransformNode(),
-          localXfo: FABRIC.RT.xfo({ ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.Vec3.xAxis, Math.HALF_PI), tr: FABRIC.RT.vec3(0, 0, -options.displaySize*0.8) })
+          localXfo: new FABRIC.RT.Xfo({ ori: new FABRIC.RT.Quat().setFromAxisAndAngle(FABRIC.RT.Vec3.xAxis, Math.HALF_PI), tr: new FABRIC.RT.Vec3(0, 0, -options.displaySize*0.8) })
         }),
         geometryNode: circleNode,
         materialNode: materialNode
@@ -330,12 +334,16 @@ FABRIC.SceneGraph.registerNodeType('SpotLight', {
 
     if (!options.transformNode) {
       scene.assignDefaults(options, {
-        position: FABRIC.RT.vec3(100.0, 100.0, 100.0),
-        target: FABRIC.RT.vec3(0.0, 0.0, 0.0)
+        position: new FABRIC.RT.Vec3(100.0, 100.0, 100.0),
+        target: new FABRIC.RT.Vec3(0.0, 0.0, 0.0)
       });
-      options.globalXfo = FABRIC.RT.xfo({
-        tr: FABRIC.RT.vec3(options.position),
-        ori: FABRIC.RT.Quat.makeFrom2Vectors(new FABRIC.RT.Vec3(0.0, 0.0, -1.0), new FABRIC.RT.Vec3(options.target).subtract(options.position).unit(), true)
+      options.globalXfo = new FABRIC.RT.Xfo({
+        tr: new FABRIC.RT.Vec3(options.position),
+        ori: new FABRIC.RT.Quat().setFrom2Vectors(
+          new FABRIC.RT.Vec3(0.0, 0.0, -1.0),
+          new FABRIC.RT.Vec3(options.target).subtract(options.position).unit(),
+          true
+        )
       });
     }
 
@@ -483,7 +491,7 @@ FABRIC.SceneGraph.registerNodeType('SpotLight', {
       // tan(theta)/a = o
       var coneDist = options.displaySize;
       if(options.position && options.target){
-        coneDist = options.position.dist(options.target);
+        coneDist = options.position.distanceTo(options.target);
       }
       var coneRadius = Math.tan(options.coneAngle * 0.5) * coneDist;
       var lightMaterial = scene.pub.constructNode('FlatMaterial', { color: FABRIC.RT.rgb(1.0, 0.7, 0.4) });
@@ -498,7 +506,7 @@ FABRIC.SceneGraph.registerNodeType('SpotLight', {
         transformNode: scene.pub.constructNode('Transform', {
           hierarchical: true,
           parentTransformNode: spotLightNode.pub.getTransformNode(),
-          localXfo: FABRIC.RT.xfo({ tr: FABRIC.RT.vec3(0, 0, -coneDist) })
+          localXfo: new FABRIC.RT.Xfo({ tr: new FABRIC.RT.Vec3(0, 0, -coneDist) })
         }),
         geometryNode: crossGeometry,
         materialNode: lightMaterial
@@ -507,9 +515,9 @@ FABRIC.SceneGraph.registerNodeType('SpotLight', {
         transformNode: scene.pub.constructNode('Transform', {
           hierarchical: true,
           parentTransformNode: spotLightNode.pub.getTransformNode(),
-          localXfo: FABRIC.RT.xfo({
-            ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.Vec3.xAxis, Math.HALF_PI),
-            tr: FABRIC.RT.vec3(0, 0, -coneDist)
+          localXfo: new FABRIC.RT.Xfo({
+            ori: new FABRIC.RT.Quat().setFromAxisAndAngle(FABRIC.RT.Vec3.xAxis, Math.HALF_PI),
+            tr: new FABRIC.RT.Vec3(0, 0, -coneDist)
           })
         }),
         geometryNode: scene.pub.constructNode('Circle', {

@@ -369,24 +369,6 @@ FABRIC.RT.Quat.prototype = {
 
   getType: function() {
     return 'FABRIC.RT.Quat';
-  },
-  displayGUI: function($parentDiv, changeHandlerFn) {
-    var val = this;
-    var fn = function() {
-      changeHandlerFn(val);
-    }
-    var vecRefreshFn = this.v.displayGUI($parentDiv, fn, 22);
-    var $wWidget = $('<input type="number" style="width: 20%" value="' + this.w + '"/>').bind(
-      'change', function(event, ui) {
-        val.w = parseFloat($(this).val()); fn();
-    });
-
-    $parentDiv.append($wWidget);
-    var hdler = function(val) {
-      vecRefreshFn(val.v);
-      $wWidget.val(val.w);
-    };
-    return hdler;
   }
 };
 

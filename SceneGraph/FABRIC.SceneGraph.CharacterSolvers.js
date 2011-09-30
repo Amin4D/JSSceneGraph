@@ -331,8 +331,8 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('FKChainSolver',
               parentNode: rigNode.pub,
               parentMember: (i > 0 ? name + 'globalXfos' : 'pose'),
               parentMemberIndex: (i > 0 ? i - 1 : bones[boneIDs.bones[i]].parent),
-              localXfo: FABRIC.RT.xfo({
-                ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(0, 0, 1), -Math.HALF_PI)
+              localXfo: new FABRIC.RT.Xfo({
+                ori: new FABRIC.RT.Quat().setFromAxisAndAngle(new FABRIC.RT.Vec3(0, 0, 1), -Math.HALF_PI)
               }),
               color: FABRIC.RT.rgb(0, .5, 0),
               radius: (options.twistManipulatorRadius ?
@@ -405,8 +405,8 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('RootBoneSolver',
             parentNode: variablesNode.pub,
             parentMember: name + 'rootXfo',
             geometryNode: scene.pub.constructNode('BoundingBox', {
-              bboxmin: FABRIC.RT.vec3(size * -0.3, size * -0.5, size * -0.5),
-              bboxmax: FABRIC.RT.vec3(size * 0.3, size * 0.5, size * 0.5)
+              bboxmin: new FABRIC.RT.Vec3(size * -0.3, size * -0.5, size * -0.5),
+              bboxmax: new FABRIC.RT.Vec3(size * 0.3, size * 0.5, size * 0.5)
             }),
             color: FABRIC.RT.rgb(1, 0, 0)
           });
@@ -414,7 +414,7 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('RootBoneSolver',
         solver.constructManipulator(name + 'Twist', 'RotationManipulator', {
             parentNode: variablesNode.pub,
             parentMember: name + 'rootXfo',
-            localXfo: FABRIC.RT.xfo({ ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(0, 0, 1), Math.HALF_PI) }),
+            localXfo: new FABRIC.RT.Xfo({ ori: new FABRIC.RT.Quat().setFromAxisAndAngle(new FABRIC.RT.Vec3(0, 0, 1), Math.HALF_PI) }),
             color: FABRIC.RT.rgb(0, .5, 0),
             radius: size
           });
@@ -423,7 +423,7 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('RootBoneSolver',
             parentNode: variablesNode.pub,
             parentMember: name + 'rootXfo',
             length: size * 1.5,
-            boneVector: FABRIC.RT.vec3(1, 0, 0),
+            boneVector: new FABRIC.RT.Vec3(1, 0, 0),
             color: FABRIC.RT.rgb(0, 0, 1)
           });
       }
@@ -474,23 +474,22 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('IK2BoneSolver',
       }
 
       // compute the target
-      targetPos = referencePose[boneIDs.boneB].transform(new FABRIC.RT.Vec3(bones[boneIDs.boneB].length, 0, 0));
-      targetXfo = referencePose[boneIDs.targetParent].multiplyInv(FABRIC.RT.xfo({ tr: targetPos }));
+      targetPos = referencePose[boneIDs.boneB].transformVector(new FABRIC.RT.Vec3(bones[boneIDs.boneB].length, 0, 0));
+      targetXfo = referencePose[boneIDs.targetParent].multiplyInv(new FABRIC.RT.Xfo({ tr: targetPos }));
 
       // compute the upvector
       targetPos.subInPlace(referencePose[boneIDs.boneA].tr);
       lengthCenter = targetPos.unit().dot(referencePose[boneIDs.boneA].ori.getXaxis()) * bones[boneIDs.boneB].length;
-      center = targetPos.unit().scale(lengthCenter).add(referencePose[boneIDs.boneA].tr);
-      center.addInPlace(targetPos);
-      center.addInPlace(referencePose[boneIDs.boneA].tr);
-      center.mulInPlace(0.5);
+      center = targetPos.unit().multiplyScalar(lengthCenter).add(referencePose[boneIDs.boneA].tr);
+      center = center.add(targetPos).add(referencePose[boneIDs.boneA].tr);
+      center.multiplyScalar(0.5);
 
       height = referencePose[boneIDs.boneB].tr.subtract(center);
       upvectorPos = referencePose[boneIDs.boneB].tr.add(height).add(height);
-      upvector = referencePose[boneIDs.upvectorParent].multiplyInv(FABRIC.RT.xfo({ tr: upvectorPos }));
+      upvector = referencePose[boneIDs.upvectorParent].multiplyInv(new FABRIC.RT.Xfo({ tr: upvectorPos }));
       
       if(options.projectTargetToUpvectorFactor != undefined) {
-        upvector.tr = targetXfo.tr.scale(options.projectTargetToUpvectorFactor);
+        upvector.tr = targetXfo.tr.multiplyScalar(options.projectTargetToUpvectorFactor);
       }
 
       constantsNode.pub.addMember(name + 'boneA', 'Integer', boneIDs.boneA);
@@ -589,10 +588,10 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('SpineSolver',
 
       // check if we know the U values
       var uValues = [0];
-      var endLength = startXfo.projectInv(endXfo).tr.norm();
+      var endLength = startXfo.projectInv(endXfo).tr.length();
       for (var i = 1; i < boneIDs.vertebra.length; i++) {
         var local = startXfo.projectInv(referencePose[boneIDs.vertebra[i]]);
-        var u = local.tr.norm() / endLength;
+        var u = local.tr.length() / endLength;
         if (u > 1.0) {
           throw ("Unexpected U value, vertebra '" + bones[boneIDs.vertebra[i]].name + "' outside of  spine.");
         }
@@ -631,7 +630,7 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('SpineSolver',
 
       if (options.createManipulators) {
         size = options.manipulatorSize ? options.manipulatorSize :
-          referencePose[baseVertebreIndex].tr.dist(referencePose[boneIDs['end']].tr) * 0.3;
+          referencePose[baseVertebreIndex].tr.distanceTo(referencePose[boneIDs['end']].tr) * 0.3;
 
         if (options.createBaseManipulators) {
           solver.constructManipulator(name + 'startRotation', 'RotationManipulator', {
@@ -640,7 +639,7 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('SpineSolver',
               parentNode: rigNode.pub,
               parentMember: 'pose',
               parentMemberIndex: skeletonNode.getParentId(baseVertebreIndex),
-              localXfo: FABRIC.RT.xfo({ ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(0, 0, 1), Math.HALF_PI) }),
+              localXfo: new FABRIC.RT.Xfo({ ori: new FABRIC.RT.Quat().setFromAxisAndAngle(new FABRIC.RT.Vec3(0, 0, 1), Math.HALF_PI) }),
               color: FABRIC.RT.rgb(0, .5, 0),
               radius: size
             });
@@ -652,7 +651,7 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('SpineSolver',
               parentMember: 'pose',
               parentMemberIndex: skeletonNode.getParentId(baseVertebreIndex),
               length: size * 1.5,
-              boneVector: FABRIC.RT.vec3(1, 0, 0),
+              boneVector: new FABRIC.RT.Vec3(1, 0, 0),
               color: FABRIC.RT.rgb(0, 0, 1)
             });
 
@@ -664,8 +663,8 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('SpineSolver',
               parentMember: 'pose',
               parentMemberIndex: skeletonNode.getParentId(baseVertebreIndex),
               geometryNode: scene.pub.constructNode('BoundingBox', {
-                bboxmin: FABRIC.RT.vec3(size * -0.3, size * -0.5, size * -0.5),
-                bboxmax: FABRIC.RT.vec3(size * 0.3, size * 0.5, size * 0.5)
+                bboxmin: new FABRIC.RT.Vec3(size * -0.3, size * -0.5, size * -0.5),
+                bboxmax: new FABRIC.RT.Vec3(size * 0.3, size * 0.5, size * 0.5)
               }),
               color: FABRIC.RT.rgb(1, 0, 0)
             });
@@ -676,7 +675,7 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('SpineSolver',
             parentNode: rigNode.pub,
             parentMember: 'pose',
             parentMemberIndex: skeletonNode.getParentId(baseVertebreIndex),
-            localXfo: FABRIC.RT.xfo({ ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(0, 0, 1), Math.HALF_PI) }),
+            localXfo: new FABRIC.RT.Xfo({ ori: new FABRIC.RT.Quat().setFromAxisAndAngle(new FABRIC.RT.Vec3(0, 0, 1), Math.HALF_PI) }),
             color: FABRIC.RT.rgb(0, .5, 0),
             radius: size
           });
@@ -689,7 +688,7 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('SpineSolver',
             parentMember: 'pose',
             parentMemberIndex: skeletonNode.getParentId(baseVertebreIndex),
             length: size * 1.5,
-            boneVector: FABRIC.RT.vec3(-1, 0, 0),
+            boneVector: new FABRIC.RT.Vec3(-1, 0, 0),
             color: FABRIC.RT.rgb(0, 0, 1)
           });
 
@@ -701,8 +700,8 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('SpineSolver',
             parentMember: 'pose',
             parentMemberIndex: skeletonNode.getParentId(baseVertebreIndex),
             geometryNode: scene.pub.constructNode('BoundingBox', {
-              bboxmin: FABRIC.RT.vec3(size * -0.3, size * -0.5, size * -0.5),
-              bboxmax: FABRIC.RT.vec3(size * 0.3, size * 0.5, size * 0.5)
+              bboxmin: new FABRIC.RT.Vec3(size * -0.3, size * -0.5, size * -0.5),
+              bboxmax: new FABRIC.RT.Vec3(size * 0.3, size * 0.5, size * 0.5)
             }),
             color: FABRIC.RT.rgb(1, 0, 0)
           });
@@ -747,10 +746,10 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('TwistBoneSolver',
       var uValues = options.uValues;
       if (!uValues) {
         uValues = [];
-        var boneLength = startXfo.projectInv(endXfo).tr.norm();
+        var boneLength = startXfo.projectInv(endXfo).tr.length();
         for (var i = 0; i < boneIDs.twistBones.length; i++) {
           var local = startXfo.projectInv(referencePose[boneIDs.twistBones[i]]);
-          var u = local.tr.norm() / boneLength;
+          var u = local.tr.length() / boneLength;
           if (u > 1.0) {
             throw ("Unexpected U value, twistBone '" + bones[boneIDs.twistBones[i]].name + "' outside of bone.");
           }
@@ -822,7 +821,7 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('BlendBoneSolver',
       var blendBoneOffsets = [];
       for (var i = 0; i < boneIDs.blendBones.length; i++) {
         var blendedXfo = startXfo.clone();
-        blendedXfo.ori = FABRIC.RT.Quat.makeSlerp(startXfo.ori, startXfo.ori, options.blendWeights[i]);
+        blendedXfo.ori.sphericalLinearInterpolate(startXfo.ori, options.blendWeights[i]);
         blendBoneOffsets.push(startXfo.projectInv(blendedXfo));
       }
       constantsNode.pub.addMember(name + 'start', 'Integer', boneIDs.start);
@@ -860,7 +859,7 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('FishingRodSolver',
 
     scene.assignDefaults(options, {
         rigNode: undefined,
-        targetXfo: FABRIC.RT.xfo()
+        targetXfo: new FABRIC.RT.Xfo()
       });
     var solver,
       parameterLayout,
@@ -892,8 +891,8 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('FishingRodSolver',
       }
 
       // compute the target
-      rodTipPos = referencePose[boneIDs.rod].transform(FABRIC.RT.vec3(bones[boneIDs.rod].length, 0, 0));
-      lineLength = rodTipPos.dist(options.targetXfo.tr);
+      rodTipPos = referencePose[boneIDs.rod].transformVector(new FABRIC.RT.Vec3(bones[boneIDs.rod].length, 0, 0));
+      lineLength = rodTipPos.distanceTo(options.targetXfo.tr);
 
       constantsNode.pub.addMember(name + 'boneIndex', 'Integer', boneIDs.rod);
       variablesNode.pub.addMember(name + 'lineLength', 'Scalar', lineLength);
@@ -969,8 +968,8 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('NCFIKSolver',
       lastBoneIndex = boneIDs.bones[boneIDs.bones.length - 1];
 
       // compute the target
-      targetPos = referencePose[lastBoneIndex].transform(FABRIC.RT.vec3(bones[lastBoneIndex].length, 0, 0));
-      targetXfo = referencePose[boneIDs.targetParent].multiplyInv(FABRIC.RT.xfo({ tr: targetPos }));
+      targetPos = referencePose[lastBoneIndex].transformVector(new FABRIC.RT.Vec3(bones[lastBoneIndex].length, 0, 0));
+      targetXfo = referencePose[boneIDs.targetParent].multiplyInv(new FABRIC.RT.Xfo({ tr: targetPos }));
 
       constantsNode.pub.addMember(name + 'boneIndices', 'Integer[]', boneIDs.bones);
       variablesNode.pub.addMember(name + 'target', 'Xfo', targetXfo);
@@ -1056,7 +1055,7 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('ArmSolver',
       // compute the target
       var wristBoneIndex = boneIDs.bones[boneIDs.bones.length - 1];
       handControlXfo = referencePose[wristBoneIndex].clone();
-      handControlXfo.tr = referencePose[wristBoneIndex].transform(FABRIC.RT.vec3(bones[wristBoneIndex].length, 0, 0));
+      handControlXfo.tr = referencePose[wristBoneIndex].transformVector(new FABRIC.RT.Vec3(bones[wristBoneIndex].length, 0, 0));
       wristOffsetXfo = handControlXfo.multiplyInv(referencePose[wristBoneIndex]);
 
       constantsNode.pub.addMember(name + 'bones', 'Integer[]', boneIDs.bones);
@@ -1086,7 +1085,7 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('ArmSolver',
         solver.constructManipulator(name + 'WristTwistRotation', 'RotationManipulator', {
             parentNode: variablesNode.pub,
             parentMember: name + 'handControlXfo',
-            localXfo: FABRIC.RT.xfo({ ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(0, 0, 1), Math.HALF_PI) }),
+            localXfo: new FABRIC.RT.Xfo({ ori: new FABRIC.RT.Quat().setFromAxisAndAngle(new FABRIC.RT.Vec3(0, 0, 1), Math.HALF_PI) }),
             color: FABRIC.RT.rgb(0, .5, 0),
             radius: size
           });
@@ -1102,7 +1101,7 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('ArmSolver',
             parentNode: variablesNode.pub,
             parentMember: name + 'handControlXfo',
             length: size,
-            boneVector: FABRIC.RT.vec3(1, 0, 0),
+            boneVector: new FABRIC.RT.Vec3(1, 0, 0),
             color: FABRIC.RT.rgb(0, 0, 1)
           });
 
@@ -1111,8 +1110,8 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('ArmSolver',
           parentNode: variablesNode.pub,
           parentMember: name + 'handControlXfo',
           geometryNode: scene.pub.constructNode('BoundingBox', {
-                bboxmin: FABRIC.RT.vec3(size * -0.8, size * -0.7, size * -0.4),
-                bboxmax: FABRIC.RT.vec3(size * 0.8, size * 0.7, size * 0.4)
+                bboxmin: new FABRIC.RT.Vec3(size * -0.8, size * -0.7, size * -0.4),
+                bboxmax: new FABRIC.RT.Vec3(size * 0.8, size * 0.7, size * 0.4)
               }),
           color: FABRIC.RT.rgb(1, 0, 0)
         });
@@ -1173,13 +1172,13 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('LegSolver',
 
       // compute the target
       ankleTipXfo = referencePose[ankleIndex].clone();
-      ankleTipXfo.tr = referencePose[ankleIndex].transform(FABRIC.RT.vec3(bones[ankleIndex].length, 0, 0));
+      ankleTipXfo.tr = referencePose[ankleIndex].transformVector(new FABRIC.RT.Vec3(bones[ankleIndex].length, 0, 0));
       footPlatformXfo = ankleTipXfo.clone();
       footPlatformXfo.tr.y = 0;
-      footPlatformXfo.ori.postMultiplyInPlace(
-        FABRIC.RT.Quat.makeFrom2Vectors(
-          footPlatformXfo.ori.rotateVector(FABRIC.RT.vec3(0, 1, 0)),
-          FABRIC.RT.vec3(0, 1, 0)
+      footPlatformXfo.ori = footPlatformXfo.ori.multiply(
+        new FABRIC.RT.Quat().setFrom2Vectors(
+          footPlatformXfo.ori.rotateVector(new FABRIC.RT.Vec3(0, 1, 0)),
+          new FABRIC.RT.Vec3(0, 1, 0)
        )
      );
 
@@ -1232,7 +1231,7 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('LegSolver',
           targetMember: name + 'ankleIKAnimationXfo',
           parentMember: name + 'footPlatformXfo',
           length: bones[ankleIndex].length * 2.0,
-          boneVector: FABRIC.RT.vec3(-1, 0, 0),
+          boneVector: new FABRIC.RT.Vec3(-1, 0, 0),
           color: FABRIC.RT.rgb(0, 0, 1)
         });
 

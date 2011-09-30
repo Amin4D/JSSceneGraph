@@ -79,8 +79,8 @@ $(document).ready(function() {
   
   // Create a camera to draw the scene from
   camera = scene.constructNode('TargetCamera', {
-      position: FABRIC.RT.vec3(0, 10, 12),
-      target: FABRIC.RT.vec3(0, 4.5, -1),
+      position: new FABRIC.RT.Vec3(0, 10, 12),
+      target: new FABRIC.RT.Vec3(0, 4.5, -1),
       roll: 0,
       nearDistance: 0.001,
       farDistance: 20000
@@ -105,7 +105,7 @@ $(document).ready(function() {
   skeletonNode.addBone({
     name: 'BoneA',
     referencePose: FABRIC.RT.xfo({
-      tr: FABRIC.RT.vec3(-6, 9, 0)
+      tr: new FABRIC.RT.Vec3(-6, 9, 0)
     }),
     length: 7,
     parent: 'root'
@@ -114,7 +114,7 @@ $(document).ready(function() {
   skeletonNode.addBone({
     name: 'BoneB',
     referenceLocalPose: FABRIC.RT.xfo({
-      tr: FABRIC.RT.vec3(7, 0, 0)
+      tr: new FABRIC.RT.Vec3(7, 0, 0)
     }),
     length: 5,
     parent: 'BoneA'
@@ -123,7 +123,7 @@ $(document).ready(function() {
   skeletonNode.addBone({
     name: 'BoneC',
     referenceLocalPose: FABRIC.RT.xfo({
-      tr: FABRIC.RT.vec3(5, 0, 0)
+      tr: new FABRIC.RT.Vec3(5, 0, 0)
     }),
     length: 4,
     parent: 'BoneB'
@@ -132,7 +132,7 @@ $(document).ready(function() {
   skeletonNode.addBone({
     name: 'BoneD',
     referenceLocalPose: FABRIC.RT.xfo({
-      tr: FABRIC.RT.vec3(4, 0, 0)
+      tr: new FABRIC.RT.Vec3(4, 0, 0)
     }),
     length: 3,
     parent: 'BoneC'
@@ -140,7 +140,7 @@ $(document).ready(function() {
   skeletonNode.addBone({
     name: 'BoneE',
     referenceLocalPose: FABRIC.RT.xfo({
-      tr: FABRIC.RT.vec3(3, 0, 0)
+      tr: new FABRIC.RT.Vec3(3, 0, 0)
     }),
     length: 2,
     parent: 'BoneD'
@@ -161,7 +161,7 @@ $(document).ready(function() {
   var bones = skeletonNode.getBones();
   var referencePose = skeletonNode.getReferencePose();
   var lastBonePose = referencePose[referencePose.length - 1];
-  var targetPos = lastBonePose.transform(FABRIC.RT.vec3(bones[bones.length - 1].length, 0, 0));
+  var targetPos = lastBonePose.transform(new FABRIC.RT.Vec3(bones[bones.length - 1].length, 0, 0));
   lastBonePose.tr = targetPos;
 
 /*  // Cross

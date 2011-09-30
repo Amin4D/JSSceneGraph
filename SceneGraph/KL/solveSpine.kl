@@ -31,10 +31,10 @@ operator solveSpine(
   var Vec3 p1 = baseXfo.tr;
   var Vec3 p4 = tipXfo.tr;
 
-  Scalar spineLength = p1.dist(p4);
+  Scalar spineLength = p1.distanceTo(p4);
 
-  var Vec3 p2 = baseXfo.transform(Vec3(spineLength * startTangent, 0.0, 0.0));
-  var Vec3 p3 = tipXfo.transform(Vec3(-spineLength * endTangent, 0.0, 0.0));
+  var Vec3 p2 = baseXfo * Vec3(spineLength * startTangent, 0.0, 0.0);
+  var Vec3 p3 = tipXfo * Vec3(-spineLength * endTangent, 0.0, 0.0);
 
   Vec3 curvePoints[];
   curvePoints.resize(vertebraIndices.size() + 1);
@@ -51,6 +51,7 @@ operator solveSpine(
     curvePoints[i] = a * p1 + b * p2 + c * p3 + d * p4;
   }
 
+  Quat boneOffsetRotation;
   for (var Integer i = 0; i < vertebraIndices.size(); i++) {
     // orient them
     Xfo vertebreXfo = pose[vertebraIndices[i]];
@@ -58,10 +59,12 @@ operator solveSpine(
     vertebreXfo.ori = slerp(baseXfo.ori, tipXfo.ori, (uvalues[i] + uvalues[i + 1]) * 0.5);
 
     var Vec3 alignment = curvePoints[i + 1] - curvePoints[i];
-    Scalar vertebreLength = alignment.norm();
+    Scalar vertebreLength = alignment.length();
     alignment *= 1.0 / vertebreLength;
     var Vec3 xAxis = vertebreXfo.ori.getXaxis();
-    vertebreXfo.ori = makeQuatFrom2Vectors(xAxis, alignment).unit() * vertebreXfo.ori;
+    boneOffsetRotation.setFrom2Vectors(xAxis, alignment);
+    vertebreXfo.ori = boneOffsetRotation * vertebreXfo.ori;
+      
     vertebreXfo.sc.x = vertebreLength / bones[vertebraIndices[i]].length;
 
     pose[vertebraIndices[i]] = vertebreXfo;

@@ -75,7 +75,7 @@ FABRIC.SceneGraph.registerNodeType('ThickGlassMaterial', {
     
     var thickGlassMaterialPP = scene.constructNode('PostProcessEffect', {
       name: 'ThickGlassMaterialPP',
-      parentEventHandler: scene.getSceneRedrawEventHandler(),
+      parentEventHandler: scene.getSceneRedrawTransparentObjectsEventHandler(),
       renderTarget: FABRIC.RT.oglRenderTarget(0,  0, [
         new FABRIC.RT.OGLRenderTargetTextureDesc(
             2, /*COLOR*/
@@ -195,15 +195,15 @@ $(document).ready(function() {
   camera = scene.constructNode('TargetCamera', {
       nearDistance: 5,
       farDistance: 100,
-      position: FABRIC.RT.vec3(4, 1, 42).scale(0.3),
-      target: FABRIC.RT.vec3(0, 0, 0)
+      position: new FABRIC.RT.Vec3(4, 1, 42).multiplyScalar(0.3),
+      target: new FABRIC.RT.Vec3(0, 0, 0)
     });
 
   scene.constructNode("CameraManipulator", { targetNode:camera } );
 
   viewport.setCameraNode(camera);
 
-  var light = scene.constructNode('PointLight', { position: FABRIC.RT.vec3(1420.0, 1000.0, 600.0) });
+  var light = scene.constructNode('PointLight', { position: new FABRIC.RT.Vec3(1420.0, 1000.0, 600.0) });
 
   // Flat Shader
   var thickGlassMaterial = scene.constructNode('ThickGlassMaterial', {
@@ -216,7 +216,7 @@ $(document).ready(function() {
   scene.constructNode('Instance', {
       transformNode: scene.constructNode('Transform', {
           hierarchical: false,
-          globalXfo: FABRIC.RT.xfo({ tr: FABRIC.RT.vec3(0, 0, 0) })
+          globalXfo: FABRIC.RT.xfo({ tr: new FABRIC.RT.Vec3(0, 0, 0) })
         }),
       geometryNode: assets['beethovan'],
       materialNode: thickGlassMaterial

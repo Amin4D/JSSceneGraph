@@ -27,20 +27,20 @@ operator paintVertexColors(
   io Color vertexColors<>
 ) {
   select = true;
-  Mat44 modelMatrix = globalXfo;
+  Mat44 modelMatrix = globalXfo.toMat44();
   Mat44 modelViewProjectionMatrix = modelMatrix * cameraMatrix * projectionMatrix;
   Mat33 normalMatrix = modelViewProjectionMatrix.upperLeft().inverse().transpose();
 
   for (var Integer i = 0; i < positions.size(); i++) {
-    Vec3 n = normals[i] * normalMatrix;
+    Vec3 n = normalMatrix * normals[i];
     if (n.z > 0) {
       continue;
     }
-    Vec3 v = positions[i] * modelViewProjectionMatrix;
+    Vec3 v = modelViewProjectionMatrix * positions[i];
     Vec3 delta = v - brushPos;
     delta.x *= aspectRatio;
     delta.z *= 0.0;
-    Scalar dist = delta.norm();
+    Scalar dist = delta.length();
 
     if (dist < brushSize) {
       collectedPoints.distances.push(dist);

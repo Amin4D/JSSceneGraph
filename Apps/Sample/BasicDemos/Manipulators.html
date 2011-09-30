@@ -75,22 +75,22 @@ $(document).ready(function() {
   
   // Create a camera to draw the scene from
   var camera = scene.constructNode('TargetCamera', {
-      position: FABRIC.RT.vec3(25, 60, 100),
-      target: FABRIC.RT.vec3(0, 0, 0)
+      position: new FABRIC.RT.Vec3(25, 60, 100),
+      target: new FABRIC.RT.Vec3(0, 0, 0)
     });
   scene.constructNode('CameraManipulator', { targetNode: camera });
   viewport.setCameraNode(camera);
 
-  var light = scene.constructNode('PointLight', { position: FABRIC.RT.vec3(420.0, 1000.0, 600.0) });
+  var light = scene.constructNode('PointLight', { position: new FABRIC.RT.Vec3(420.0, 1000.0, 600.0) });
 
-  var light = scene.constructNode('PointLight', { position: FABRIC.RT.vec3(420.0, 1000.0, 600.0) });
+  var light = scene.constructNode('PointLight', { position: new FABRIC.RT.Vec3(420.0, 1000.0, 600.0) });
   var cube = scene.constructNode('Cuboid', { length: 10, width: 10, height: 15 });
 
   // Rotation
   var cube1Draw = scene.constructNode('Instance', {
       transformNode: scene.constructNode('Transform', {
         hierarchical: false,
-        globalXfo: FABRIC.RT.xfo({ tr: FABRIC.RT.vec3(-35, 0, 0) })
+        globalXfo: FABRIC.RT.xfo({ tr: new FABRIC.RT.Vec3(-35, 0, 0) })
       }),
       geometryNode: cube,
       materialNode: scene.constructNode('PhongMaterial', {
@@ -104,7 +104,7 @@ $(document).ready(function() {
   var cube2Draw = scene.constructNode('Instance', {
       transformNode: scene.constructNode('Transform', {
         hierarchical: false,
-        globalXfo: FABRIC.RT.xfo({ tr: FABRIC.RT.vec3(0, 0, 0) })
+        globalXfo: FABRIC.RT.xfo({ tr: new FABRIC.RT.Vec3(0, 0, 0) })
       }),
       geometryNode: cube,
       materialNode: scene.constructNode('PhongMaterial', {
@@ -118,7 +118,7 @@ $(document).ready(function() {
   var cube2Draw = scene.constructNode('Instance', {
       transformNode: scene.constructNode('Transform', {
         hierarchical: false,
-        globalXfo: FABRIC.RT.xfo({ tr: FABRIC.RT.vec3(35, 0, 0) })
+        globalXfo: FABRIC.RT.xfo({ tr: new FABRIC.RT.Vec3(35, 0, 0) })
       }),
       geometryNode: cube,
       materialNode: scene.constructNode('PhongMaterial', {
@@ -132,7 +132,7 @@ $(document).ready(function() {
   var cube3Draw = scene.constructNode('Instance', {
       transformNode: scene.constructNode('Transform', {
         hierarchical: false,
-        globalXfo: FABRIC.RT.xfo({ tr: FABRIC.RT.vec3(70, 0, 0) })
+        globalXfo: FABRIC.RT.xfo({ tr: new FABRIC.RT.Vec3(70, 0, 0) })
       }),
       geometryNode: cube,
       materialNode: scene.constructNode('PhongMaterial', {

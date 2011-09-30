@@ -132,14 +132,14 @@ $(document).ready(function() {
   camera = scene.constructNode('TargetCamera', {
       nearDistance: 10,
       farDistance: 1200,
-      position: FABRIC.RT.vec3(37, 27, 70),
-      target: FABRIC.RT.vec3(10, -5, 30)
+      position: new FABRIC.RT.Vec3(37, 27, 70),
+      target: new FABRIC.RT.Vec3(10, -5, 30)
     });
 
   scene.constructNode('CameraManipulator', { targetNode: camera });
   viewport.setCameraNode(camera);
 
-  var light = scene.constructNode('PointLight', { position: FABRIC.RT.vec3(420.0, 1000.0, 600.0) });
+  var light = scene.constructNode('PointLight', { position: new FABRIC.RT.Vec3(420.0, 1000.0, 600.0) });
   
   var gridSize = 100;
   var numInstances = 60;
@@ -150,12 +150,12 @@ $(document).ready(function() {
   for (i = 0; i < numInstances; i++) {
     var scl = Math.random() + 0.5;
     instanceTransforms.push(FABRIC.RT.xfo( {
-      tr: FABRIC.RT.vec3(
+      tr: new FABRIC.RT.Vec3(
         (Math.random() - 0.5) * gridSize * 0.95,
         -2.5/scl,
         (Math.random() - 0.5) * gridSize * 0.95),
-      ori:FABRIC.RT.Quat.makeFromAxisAndAngle( FABRIC.RT.vec3(0,1,0), (Math.random() - 0.5) * Math.TWO_PI ), /* TODO: Transtion the whole math libary to radians. */
-      sc: FABRIC.RT.vec3(scl, scl, scl)
+      ori:FABRIC.RT.Quat.makeFromAxisAndAngle( new FABRIC.RT.Vec3(0,1,0), (Math.random() - 0.5) * Math.TWO_PI ), /* TODO: Transtion the whole math libary to radians. */
+      sc: new FABRIC.RT.Vec3(scl, scl, scl)
     }).makeMat44()
     );
   }
@@ -175,12 +175,12 @@ $(document).ready(function() {
   for (i = 0; i < numInstances; i++) {
     var scl = (Math.random() + 0.5) * 15;
     instanceTransforms.push(FABRIC.RT.xfo( {
-      tr: FABRIC.RT.vec3(
+      tr: new FABRIC.RT.Vec3(
         (Math.random() - 0.5) * gridSize * 0.95,
         -7,
         (Math.random() - 0.5) * gridSize * 0.95),
-      ori:FABRIC.RT.Quat.makeFromAxisAndAngle( FABRIC.RT.vec3(0,1,0), (Math.random() - 0.5) * Math.TWO_PI ),
-      sc: FABRIC.RT.vec3(scl, scl, scl)
+      ori:FABRIC.RT.Quat.makeFromAxisAndAngle( new FABRIC.RT.Vec3(0,1,0), (Math.random() - 0.5) * Math.TWO_PI ),
+      sc: new FABRIC.RT.Vec3(scl, scl, scl)
     }).makeMat44()
     );
   }

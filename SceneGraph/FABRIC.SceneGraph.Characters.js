@@ -496,7 +496,7 @@ FABRIC.SceneGraph.registerNodeType('CharacterRigDebug', {
       dynamic: true,
       color: FABRIC.RT.rgba(0.0, 1.0, 1.0, 1.0),
       size: 5.0,
-      offsetpose: FABRIC.RT.xfo(),
+      offsetpose: new FABRIC.RT.Xfo(),
       constructInstanceNode: true
       });
 

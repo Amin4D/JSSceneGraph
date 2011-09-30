@@ -9,7 +9,8 @@ operator aimTransform(io Xfo xfo, io Vec3 target) {
   var Vec3 newforward = xfo.tr - target;
   newforward.setUnit();
 
-  Quat adj = makeQuatFrom2Vectors(currforward, newforward);
+  Quat adj;
+  adj.setFrom2Vectors(currforward, newforward);
   xfo.ori = adj * xfo.ori;
   xfo.ori = xfo.ori.setUnit();
 }

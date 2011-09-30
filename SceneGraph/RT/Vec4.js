@@ -106,11 +106,11 @@ FABRIC.RT.Vec4.prototype = {
     return this.multiplyScalar(1.0 / s);
   },
 
-  negate: function(v) {
+  negate: function() {
     return new FABRIC.RT.Vec4(-this.x, - this.y, - this.z, - this.t);
   },
 
-  inverse: function(v) {
+  inverse: function() {
     if( Math.verboseLogFunction ) {
       Math.checkDivisor(this.x, 'Vec4.inverse this.x');
       Math.checkDivisor(this.y, 'Vec4.inverse this.y');

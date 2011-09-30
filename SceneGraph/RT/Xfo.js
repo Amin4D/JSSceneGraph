@@ -149,6 +149,17 @@ FABRIC.RT.Xfo.prototype = {
     Math.checkDivisor(this.sc.z, 'Xfo.setFromMat44: Matrix is singular');
     mat33.row2 = mat33.row2.divideScalar(this.sc.z);
 
+    // Fix negative scaling
+    var det = mat33.determinant();
+    if( det < -Math.PRECISION ) {
+      //Negative scales on 2 axis is the same as a 180 deg rot, and negative scales on 3 axis is the same as a 180 deg rot + negative scale on 1 axis.
+      //So we we'll just pick X axis and scale it negatively.
+      this.sc.x = -this.sc.x;
+      mat33.row0.x = -mat33.row0.x;
+      mat33.row1.x = -mat33.row1.x;
+      mat33.row2.x = -mat33.row2.x;
+    }
+
     this.ori.setFromMat33(mat33);
     return this;
   },

@@ -182,9 +182,19 @@ FABRIC.RT.Xfo.prototype = {
     return trn.multiply(rot.multiply(scl));
   },
 
+  //NOTE: it 'xf' has non-uniform scaling, multiplication is not supported
   multiply: function(xf) {
+    //[jcg] We shouldn't need this!
     var this_ori = this.ori.unit();
     var xf_ori = xf.ori.unit();
+
+    if(xf.sc.x != xf.sc.y || xf.sc.x != xf.sc.z)
+    {
+      var relativePrecision = Math.abs(xf.sc.x)*Math.PRECISION*10.0;
+      if( Math.abs(xf.sc.x - xf.sc.y) > relativePrecision || Math.abs(xf.sc.x - xf.sc.z) > relativePrecision ) {
+        Math.reportWarning('Mat44.multiply: Cannot multiply to xfos having non-uniform scaling without causing shearing. Use Mat44s instead.');
+      }
+    }
 
     var result = new FABRIC.RT.Xfo();
     result.tr = this.tr.add(this_ori.rotateVector(this.sc.multiply(xf.tr)));
@@ -194,18 +204,27 @@ FABRIC.RT.Xfo.prototype = {
     return result;
   },
 
-  inverse: function() {
-    var result = new FABRIC.RT.Xfo();
-    result.setFromMat44(this.toMat44().inverse());
-/*  TOFIX! The commented code is completely wrong; see if there is an more optimal method than above to find the solution
-    result.sc = this.sc.inverse();
-    result.ori = this.ori.inverse();
-    result.tr = this.tr.negate();*/
-    return result;
-  },
-
   transformVector: function(v) {
     return this.tr.add(this.ori.rotateVector(this.sc.multiply(v)));
+  },
+
+  //Note: we have 'inverseTransformVector' because Xfos with non-uniform scaling cannot be inverted as Xfos
+  inverseTransformVector: function(vec) {
+    return this.ori.inverse().rotateVector(vec.subtract(this.tr)).multiply(this.sc.inverse());
+  },
+
+  inverse: function() {
+    var result = new FABRIC.RT.Xfo();
+    if(this.sc.x != this.sc.y || this.sc.x != this.sc.z) {
+      var relativePrecision = Math.abs(this.sc.x)*Math.PRECISION*10.0;
+      if( Math.abs(this.sc.x - this.sc.y) > relativePrecision || Math.abs(this.sc.x - this.sc.z) > relativePrecision ) {
+        Math.reportWarning('Mat44.setFromMat44: Cannot invert xfo with non-uniform scaling without causing shearing. Try using inverseTransformVector, or use Mat44s instead.');
+      }
+    }
+    result.sc = this.sc.inverse();
+    result.ori = this.ori.inverse();
+    result.tr = result.ori.rotateVector(this.tr.negate().multiply(result.sc));
+    return result;
   },
 
   clone: function() {

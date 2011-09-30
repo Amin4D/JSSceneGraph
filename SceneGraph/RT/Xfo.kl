@@ -130,6 +130,13 @@ function Xfo * (in Xfo local, in Xfo global) {
   Quat lcl_ori = local.ori.unit();
   Quat glb_ori = global.ori.unit();
 
+  if(global.sc.x != global.sc.y || global.sc.x != global.sc.z) {
+    Scalar relativePrecision = abs(global.sc.x)*PRECISION*10.0;
+    if( abs(global.sc.x - global.sc.y) > relativePrecision || abs(global.sc.x - global.sc.z) > relativePrecision ) {
+      Math_reportWarning('Mat44.multiply: Cannot multiply to xfos having non-uniform scaling without causing shearing. Use Mat44s instead.');
+    }
+  }
+
   Xfo result;
   result.tr = local.tr + lcl_ori.rotateVector(local.sc * global.tr);
   result.ori = lcl_ori * glb_ori;
@@ -142,16 +149,26 @@ function Xfo. *= (in Xfo global) {
   this = this * global;
 }
 
-function Xfo Xfo.inverse() {
-  Xfo result;
-  result.setFromMat44(this.toMat44().inverse());
-/*  TOFIX! The commented code is completely wrong; see if there is an more optimal method than above to find the solution
-  result.tr = this.tr.negate();
-  result.ori = this.ori.inverse();
-  result.sc = this.sc.inverse();*/
-  return result;
-}
-
 function Vec3 Xfo.transformVector(in Vec3 v) {
   return this.ori.rotateVector(v) * this.sc + this.tr;
 }
+
+function Xfo Xfo.inverse() {
+  Xfo result;
+  if(this.sc.x != this.sc.y || this.sc.x != this.sc.z) {
+    Scalar relativePrecision = abs(this.sc.x)*PRECISION*10.0;
+    if( abs(this.sc.x - this.sc.y) > relativePrecision || abs(this.sc.x - this.sc.z) > relativePrecision ) {
+      Math_reportWarning('Mat44.setFromMat44: Cannot invert xfo with non-uniform scaling without causing shearing. Try using inverseTransformVector, use Mat44s instead.');
+    }
+  }
+  result.sc = this.sc.inverse();
+  result.ori = this.ori.inverse();
+  result.tr = result.ori.rotateVector(this.tr.negate()*result.sc);
+  return result;
+}
+
+//Note: we have 'inverseTransformVector' because Xfos with non-uniform scaling cannot be inverted as Xfos
+function Vec3 Xfo.inverseTransformVector(in Vec3 vec) {
+  return this.ori.inverse().rotateVector(vec - this.tr) * this.sc.inverse();
+}
+

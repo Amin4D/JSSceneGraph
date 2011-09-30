@@ -26,11 +26,11 @@ operator rayIntersectTriangles(
   Mat44 globalMat44 = globalXfo.toMat44();
   Mat44 invGlobalMat44 = globalMat44.inverse();
   Ray objRay;
-  objRay.start = ray.start * invGlobalMat44;
+  objRay.start = invGlobalMat44 * ray.start;
   invGlobalMat44.row3.x = 0.0;
   invGlobalMat44.row3.y = 0.0;
   invGlobalMat44.row3.z = 0.0;
-  objRay.direction = ray.direction * invGlobalMat44;
+  objRay.direction = invGlobalMat44 * ray.direction;
 
   if (!objRay.intersectBoundingBox(bboxmin, bboxmax)) {
     return;
@@ -48,7 +48,7 @@ operator rayIntersectTriangles(
     if (objRay.intersectTriangle(true, v0, v1, v2, point, dist, u, v)) {
       select = true;
       if (dist < intersection.distance) {
-        intersection.point = point * globalMat44;
+        intersection.point = globalMat44 * point;
         intersection.distance = dist;
         intersection.elementid = i;
       }

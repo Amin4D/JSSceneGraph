@@ -821,7 +821,7 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('BlendBoneSolver',
       var blendBoneOffsets = [];
       for (var i = 0; i < boneIDs.blendBones.length; i++) {
         var blendedXfo = startXfo.clone();
-        blendedXfo.ori = FABRIC.RT.Quat.makeSlerp(startXfo.ori, startXfo.ori, options.blendWeights[i]);
+        blendedXfo.ori.sphericalLinearInterpolate(startXfo.ori, options.blendWeights[i]);
         blendBoneOffsets.push(startXfo.projectInv(blendedXfo));
       }
       constantsNode.pub.addMember(name + 'start', 'Integer', boneIDs.start);

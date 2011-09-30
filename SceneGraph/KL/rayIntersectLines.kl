@@ -23,11 +23,11 @@ operator rayIntersectLines(
   Mat44 globalMat44 = globalXfo.toMat44();
   Mat44 invGlobalMat44 = globalMat44.inverse();
   Ray objRay;
-  objRay.start = ray.start * invGlobalMat44;
+  objRay.start = invGlobalMat44 * ray.start;
   invGlobalMat44.row3.x = 0.0;
   invGlobalMat44.row3.y = 0.0;
   invGlobalMat44.row3.z = 0.0;
-  objRay.direction = ray.direction * invGlobalMat44;
+  objRay.direction = invGlobalMat44 * ray.direction;
   
   if (indices.size() > 2 && !objRay.intersectBoundingBox(bboxmin, bboxmax)) {
     return;
@@ -43,7 +43,7 @@ operator rayIntersectLines(
       if (dist < threshold) {
         select = true;
         if (dist < intersection.distance) {
-          intersection.point = v0.lerp(v1, segmentParam) * globalMat44;
+          intersection.point = globalMat44 * v0.linearInterpolate(v1, segmentParam);
           intersection.distance = rayParam;
           intersection.elementid = i;
         }
@@ -67,11 +67,11 @@ operator rayIntersectLineStrip(
   Mat44 globalMat44 = globalXfo.toMat44();
   Mat44 invGlobalMat44 = globalMat44.inverse();
   Ray objRay;
-  objRay.start = ray.start * invGlobalMat44;
+  objRay.start = invGlobalMat44 * ray.start;
   invGlobalMat44.row3.x = 0.0;
   invGlobalMat44.row3.y = 0.0;
   invGlobalMat44.row3.z = 0.0;
-  objRay.direction = ray.direction * invGlobalMat44;
+  objRay.direction = invGlobalMat44 * ray.direction;
   
   if (indices.size() > 2 && !objRay.intersectBoundingBox(bboxmin, bboxmax)) {
     return;
@@ -87,7 +87,7 @@ operator rayIntersectLineStrip(
       if (dist < threshold) {
         select = true;
         if (dist < intersection.distance) {
-          intersection.point = v0.lerp(v1, segmentParam) * globalMat44;
+          intersection.point = globalMat44 * v0.linearInterpolate(v1, segmentParam);
           intersection.distance = rayParam;
           intersection.elementid = i;
         }

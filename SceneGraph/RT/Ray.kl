@@ -147,7 +147,7 @@ function Boolean intersectBBoxEdge(
     return false;
   }
   var Vec3 rayPoint = ray.start + (ray.direction * p.x);
-  var Vec3 edgeP = e1.lerp(e2, p.y);
+  var Vec3 edgeP = e1.linearInterpolate(e2, p.y);
   return ((rayPoint - edgeP).dot(rayPoint - bboxCenter) < 0.0);
 }
 

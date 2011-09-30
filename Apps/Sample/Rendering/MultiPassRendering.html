@@ -75,7 +75,7 @@ FABRIC.SceneGraph.registerNodeType('ThickGlassMaterial', {
     
     var thickGlassMaterialPP = scene.constructNode('PostProcessEffect', {
       name: 'ThickGlassMaterialPP',
-      parentEventHandler: scene.getSceneRedrawEventHandler(),
+      parentEventHandler: scene.getSceneRedrawTransparentObjectsEventHandler(),
       renderTarget: FABRIC.RT.oglRenderTarget(0,  0, [
         new FABRIC.RT.OGLRenderTargetTextureDesc(
             2, /*COLOR*/

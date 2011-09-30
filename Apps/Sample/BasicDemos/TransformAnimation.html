@@ -143,18 +143,16 @@ $(document).ready(function() {
     transformNode;
 
   for (k = 0; k < 3; k++) {
-    base1 = new FABRIC.RT.Vec3((k & 1) * 4.0, (k & 2) * 2.0, (k & 4)).scaleInPlace(scale);
+    base1 = new FABRIC.RT.Vec3((k & 1) * 4.0, (k & 2) * 2.0, (k & 4)).multiplyScalar(scale);
     cube = scene.constructNode('Cuboid', { length: (i & 3) + 3, width: (j & 3) + 3.0, height: (k & 3) + 3.0 });
     for (j = 0; j < 4; j++) {
 
-      base2 = new FABRIC.RT.Vec3((j & 1) * 2.0, (j & 2), (j & 4) / 2.0).scaleInPlace(scale);
-      base = base2.add(base1);
+      base = new FABRIC.RT.Vec3((j & 1) * 2.0, (j & 2), (j & 4) / 2.0).multiplyScalar(scale).add(base1);
 
       for (i = 0; i < 5; i++) {
         xfo = FABRIC.RT.xfo();
 
-        xfo.tr = new FABRIC.RT.Vec3((i & 1), (i & 2) / 2.0, (i & 4) / 4.0).scaleInPlace(scale);
-        xfo.tr.addInPlace(base);
+        xfo.tr = new FABRIC.RT.Vec3((i & 1), (i & 2) / 2.0, (i & 4) / 4.0).multiplyScalar(scale).add(base);
 
         transformNode = scene.constructNode('SwirleyMovementTransform', {
           name: 'Transform' + k + '' + j + '' + i,

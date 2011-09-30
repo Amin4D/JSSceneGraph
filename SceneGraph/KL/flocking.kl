@@ -89,10 +89,10 @@ operator simulateFlock(
     var Scalar goalDist = goalDir.length();
 
     if (goalDist < neighborInfluenceRange) {
-      velocity = velocity.lerp(Vec3(0.0, 0.0, 0.0), 0.1);
+      velocity = velocity.linearInterpolate(Vec3(0.0, 0.0, 0.0), 0.1);
     }
     else {
-      velocity = velocity.lerp(goalDir * (0.05 / goalDist), 0.1);
+      velocity = velocity.linearInterpolate(goalDir * (0.05 / goalDist), 0.1);
     }
   }
 

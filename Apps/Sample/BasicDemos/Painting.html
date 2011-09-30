@@ -203,7 +203,7 @@ $(document).ready(function() {
   // Switch to painting when the shiftKey key is pressed
   var painting = false;
   window.onkeydown = function(evt) {
-      if(evt.shiftKey){
+      if(evt.shiftKey || evt.keyCode == 16){
         cameraManipulator.disable();
         paintManipulator.enable();
         painting = true;

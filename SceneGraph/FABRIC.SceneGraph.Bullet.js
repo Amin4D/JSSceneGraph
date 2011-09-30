@@ -185,6 +185,21 @@ FABRIC.RT.BulletConstraint.createSlider = function(options) {
   return constraint;
 };
 
+FABRIC.RT.BulletAnchor = function(options) {
+  if(!options)
+    options = {};
+  this.localData = null;
+  this.rigidBodyLocalData = null;
+  this.softBodyLocalData = null;
+  this.name = options.name ? options.name : 'Anchor';
+  this.rigidBodyIndex = options.rigidBodyIndex != undefined ? options.rigidBodyIndex : 0;
+  this.softBodyNodeIndices = options.softBodyNodeIndices != undefined ? options.softBodyNodeIndices : [];
+  this.disableCollision = options.disableCollision != undefined ? options.disableCollision : true;
+};
+
+FABRIC.RT.BulletAnchor.prototype = {
+};
+
 FABRIC.SceneGraph.registerNodeType('BulletWorldNode', {
   briefDesc: 'The BulletWorldNode represents a bullet physics simulation world.',
   detailedDesc: 'The BulletWorldNode represents a bullet physics simulation world.',
@@ -210,6 +225,7 @@ FABRIC.SceneGraph.registerNodeType('BulletWorldNode', {
     rbddgnode.setDependency(dgnode,'simulation');
     rbddgnode.setDependency(shapedgnode,'shapes');
     sbddgnode.setDependency(dgnode,'simulation');
+    sbddgnode.setDependency(rbddgnode,'rigidBodies');
     
     // create world init operator
     dgnode.bindings.append(scene.constructOperator({
@@ -376,6 +392,41 @@ FABRIC.SceneGraph.registerNodeType('BulletWorldNode', {
       }));
     }
 
+    bulletWorldNode.pub.addAnchor = function(anchorName,anchor,rigidBodyName,softBodyName) {
+      if(anchorName == undefined)
+        throw('You need to specify a constraintName when calling addAnchor!');
+      if(anchor == undefined)
+        throw('You need to specify a anchor when calling addAnchor!');
+      if(rigidBodyName == undefined)
+        throw('You need to specify a rigidBodyName when calling addAnchor!');
+      if(softBodyName == undefined)
+        throw('You need to specify a softBodyName when calling addAnchor!');
+        
+      // check if we are dealing with an array
+      var isArray = anchor.constructor.toString().indexOf("Array") != -1;
+      if(isArray) {
+        for(var i=0;i<anchor.length;i++) {
+          anchor[i].name = anchorName;
+        }
+      } else {
+        anchor.name = anchorName;
+      }
+      sbddgnode.addMember(anchorName, 'BulletAnchor[]', isArray ? anchor : [anchor]);
+
+      // create rigid body operator
+      sbddgnode.bindings.append(scene.constructOperator({
+        operatorName: 'create'+anchorName+'Anchor',
+        parameterLayout: [
+          'simulation.world',
+          'self.'+anchorName,
+          'rigidBodies.'+rigidBodyName+'Rbd',
+          'self.'+softBodyName+'Sbd'
+        ],
+        entryFunctionName: 'createBulletAnchor',
+        srcFile: 'FABRIC_ROOT/SceneGraph/KL/bullet.kl'
+      }));
+    }
+
     bulletWorldNode.pub.addForce = function(forceName,force) {
       if(forceName == undefined)
         throw('You need to specify a forceName when calling addForce!');
@@ -498,8 +549,13 @@ FABRIC.SceneGraph.registerNodeType('BulletRigidBodyTransform', {
       throw('You need to specify a shapeName for this constructor!');
     }
     
+    // reuse the transform for passive rigid bodies
+    if(options.rigidBody.mass == 0.0 && !options.globalXfo) {
+      options.globalXfo = options.rigidBody.transform;
+    }
+    
     // create the transform node
-    var rigidBodyTransformNode = scene.constructNode('Transform', {name: options.name});
+    var rigidBodyTransformNode = scene.constructNode('Transform', {name: options.name, globalXfo: options.globalXfo});
 
     // create the rigid body on the world
     var bodyName = rigidBodyTransformNode.pub.getName();

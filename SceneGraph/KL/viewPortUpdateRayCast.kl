@@ -40,6 +40,5 @@ operator viewPortUpdateRayCast(
   camInv.row3.x = 0.0;
   camInv.row3.y = 0.0;
   camInv.row3.z = 0.0;
-  ray.direction = camInv * ray.direction;
-  ray.direction = ray.direction.unit();
+  ray.direction = (camInv * ray.direction).unit();
 }

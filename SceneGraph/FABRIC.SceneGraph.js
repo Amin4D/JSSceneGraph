@@ -1561,7 +1561,7 @@ FABRIC.SceneGraph.registerNodeType('Camera', {
 
       dgnode.bindings.append(scene.constructOperator({
         operatorName: 'loadXfo',
-        srcCode: 'use Xfo, Mat44; operator loadXfo(io Xfo xfo, io Mat44 mat44){ mat44 = xfo.toMat44(); mat44 = mat44.inverse(); }',
+        srcCode: 'use Xfo, Mat44; operator loadXfo(io Xfo xfo, io Mat44 mat44){ mat44 = xfo.toMat44().inverse(); }',
         entryFunctionName: 'loadXfo',
         parameterLayout: [
           'transform.' + transformNodeMember,

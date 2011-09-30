@@ -24,8 +24,8 @@ var constructCurveEditor = function(domRootID, keyframeTrackNode, options){
   ///////////////
   var trackDisplayNodes = [];
   var trackCount = keyframeTrackNode.getTrackCount();
-  var timeRange = FABRIC.vec2(0, 0);
-  var yRange = FABRIC.vec2(0, 0);
+  var timeRange = new FABRIC.Vec2(0, 0);
+  var yRange = new FABRIC.Vec2(0, 0);
   var curvesData = [];
   var trackCurves = [];
   for (var i = 0; i < trackCount; i++) {
@@ -41,8 +41,8 @@ var constructCurveEditor = function(domRootID, keyframeTrackNode, options){
 
 
   var screenXfo = {
-    tr: FABRIC.vec2(0, 0),
-    sc: FABRIC.vec2(1, 1),
+    tr: new FABRIC.Vec2(0, 0),
+    sc: new FABRIC.Vec2(1, 1),
     fitToScreen:function(){
       for (var i = 0; i < trackCount; i++) {
         var keys = keyframeTrackNode.getTrackKeys(i);
@@ -67,12 +67,12 @@ var constructCurveEditor = function(domRootID, keyframeTrackNode, options){
         trackDisplayNodes[i].setTimeRange(timeRange);
         curvesData[i] = trackDisplayNodes[i].getCurveData();
         if(i==0){
-          yRange = FABRIC.vec2(curvesData[0].value[0], curvesData[0].value[0]);
+          yRange = new FABRIC.Vec2(curvesData[0].value[0], curvesData[0].value[0]);
         }
         getCurveYRange(curvesData[i]);
       }
-      this.sc = FABRIC.vec2(windowWidth/(timeRange.y - timeRange.x), -(windowHeight - 40) / (yRange.y - yRange.x));
-      this.tr = FABRIC.vec2(-timeRange.x, (yRange.y + yRange.x) * -0.5);
+      this.sc = new FABRIC.Vec2(windowWidth/(timeRange.y - timeRange.x), -(windowHeight - 40) / (yRange.y - yRange.x));
+      this.tr = new FABRIC.Vec2(-timeRange.x, (yRange.y + yRange.x) * -0.5);
     },
     update: function(){
       this.sc.x = windowWidth / (timeRange.y - timeRange.x);
@@ -86,9 +86,9 @@ var constructCurveEditor = function(domRootID, keyframeTrackNode, options){
     },
     toGraphSpace: function(val, local){
       if(local){
-        return val.multiply(this.sc.invert());
+        return val.multiply(this.sc.inverse());
       }else{
-        return val.multiply(this.sc.invert()).subtract(this.tr);
+        return val.multiply(this.sc.inverse()).subtract(this.tr);
       }
     }
   }
@@ -97,10 +97,10 @@ var constructCurveEditor = function(domRootID, keyframeTrackNode, options){
   var drawTrackCurves = function(){
     var drawTrackCurve = function(trackIndex) {
       var setPathCurveValues = function(curveData) {
-        var val = screenXfo.toScreenSpace(FABRIC.vec2(curveData.time[0], curveData.value[0]))
+        var val = screenXfo.toScreenSpace(new FABRIC.Vec2(curveData.time[0], curveData.value[0]))
         var path = ['M', val.x, val.y, 'L', 100, 100, 300, 200];
         for (var i = 0; i < curveData.time.length; i++) {
-          val = screenXfo.toScreenSpace(FABRIC.vec2(curveData.time[i], curveData.value[i]))
+          val = screenXfo.toScreenSpace(new FABRIC.Vec2(curveData.time[i], curveData.value[i]))
           path[(i * 2) + 4] = val.x;
           path[(i * 2) + 5] = val.y;
         }
@@ -120,7 +120,7 @@ var constructCurveEditor = function(domRootID, keyframeTrackNode, options){
            keyData.time < timeRange.y && keyData.time > timeRange.x ){
           ///////////////////////////////////////////////
           // Key
-          var keySsVal = screenXfo.toScreenSpace(FABRIC.vec2(keyData.time, keyData.value));
+          var keySsVal = screenXfo.toScreenSpace(new FABRIC.Vec2(keyData.time, keyData.value));
           // When keyframes are manipulated, we can maintain the tangent lengths
           // by storing the relative lengths, and gradients. Then, during manipulation
           // we maintain these relative lengths and gradients. This simplifies the
@@ -350,7 +350,7 @@ var constructCurveEditor = function(domRootID, keyframeTrackNode, options){
         function(evt){
           timeRange.x = dragStartTimeRange.x - (evt.dragVec.x / screenXfo.sc.x);
           timeRange.y = dragStartTimeRange.y - (evt.dragVec.x / screenXfo.sc.x);
-          screenXfo.tr = dragStartOffset.add(evt.dragVec.multiply(screenXfo.sc.invert()));
+          screenXfo.tr = dragStartOffset.add(evt.dragVec.multiply(screenXfo.sc.inverse()));
           updateTimeRange();
         });
   }

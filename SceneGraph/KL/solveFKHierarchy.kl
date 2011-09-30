@@ -14,7 +14,7 @@ operator solveFKBone(
     pose[index] = local;
   }
   else {
-    pose[index] = pose[bones[index].parent] * local;
+    pose[index] =  pose[bones[index].parent] * local;
   }
 }
 

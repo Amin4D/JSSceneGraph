@@ -33,7 +33,7 @@ operator calcReferenceLocalPose(io Bone bones[]) {
     else {
       // Our Math library has some fundamental bugs in it, and I'm working around them here.
       bones[i].referenceLocalPose = bones[bones[i].parent].referencePose.inverse() * bones[i].referencePose;
-      //  bones[i].referenceLocalPose = bones[i].referencePose * bones[bones[i].parent].referencePose.inv();
+      
       //  report( bones[i].referenceLocalPose );
       //    Mat44 parentGlobal = bones[bones[i].parent].referencePose;
       //    Mat44 thisGlobal = bones[i].referencePose;
@@ -60,7 +60,7 @@ operator calcReferenceGlobalPose(io Bone bones[]) {
       //  report( bones[i].referenceLocalPose );
       Mat44 parentGlobal = bones[bones[i].parent].referencePose;
       Mat44 thisLocal = bones[i].referenceLocalPose;
-      Mat44 thisGlobal = thisLocal * parentGlobal;
+      Mat44 thisGlobal = parentGlobal * thisLocal;
       bones[i].referencePose = Xfo(thisGlobal);
 
       //  report( bones[i].referencePose );

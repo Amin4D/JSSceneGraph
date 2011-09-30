@@ -26,7 +26,7 @@ operator collectPointsInsideBrush(
 ) {
   select = true;
   Mat44 modelMatrix = globalXfo.toMat44();
-  Mat44 modelViewProjectionMatrix = modelMatrix * cameraMatrix * projectionMatrix;
+  Mat44 modelViewProjectionMatrix = projectionMatrix * cameraMatrix * modelMatrix;
   Mat33 normalMatrix = modelViewProjectionMatrix.upperLeft().inverse().transpose();
 
   for (var Integer i = 0; i < positions.size(); i++) {

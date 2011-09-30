@@ -40,7 +40,7 @@ operator generateSkeleton(
     }else{
       nbAxes++;
     }
-    finalPose[i] = offsetpose * pose[i];
+    finalPose[i] =  pose[i];//offsetpose * pose[i];
   }
 
   var Integer nbPos = (nbBones * 12) + (nbAxes * 6);

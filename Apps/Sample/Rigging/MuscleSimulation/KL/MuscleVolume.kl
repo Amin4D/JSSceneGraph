@@ -62,17 +62,24 @@ function Vec3 evalPiecewiseBSpline(
     t = 1.0;
   }
 
+  Vec3 result;
   if( i == 0 ){
-    p = xfos[ i ].tr + ( xfos[ i ].tr - xfos[ i + 1 ].tr );
-    return evalBSpline( p, xfos[ i ].tr, xfos[ i + 1 ].tr, xfos[ i + 2 ].tr, t );
+    if ( i + 2 < xfos.size() ) {
+      p = xfos[ i ].tr + ( xfos[ i ].tr - xfos[ i + 1 ].tr );
+      result = evalBSpline( p, xfos[ i ].tr, xfos[ i + 1 ].tr, xfos[ i + 2 ].tr, t );
+    }
   }
   else if( i == ( xfos.size() - 2 ) ){
-    p = xfos[ i + 1 ].tr + ( xfos[ i + 1 ].tr - xfos[ i ].tr );
-    return evalBSpline( xfos[ i - 1 ].tr, xfos[ i ].tr, xfos[ i + 1 ].tr, p, t );
+    if ( i >= 1 && i + 1 < xfos.size() ) {
+      p = xfos[ i + 1 ].tr + ( xfos[ i + 1 ].tr - xfos[ i ].tr );
+      result = evalBSpline( xfos[ i - 1 ].tr, xfos[ i ].tr, xfos[ i + 1 ].tr, p, t );
+    }
   }
   else{
-    return evalBSpline( xfos[ i - 1 ].tr, xfos[ i ].tr, xfos[ i + 1 ].tr, xfos[ i + 2 ].tr, t );
+    if ( i > 0 && i + 2 < xfos.size() )
+      result = evalBSpline( xfos[ i - 1 ].tr, xfos[ i ].tr, xfos[ i + 1 ].tr, xfos[ i + 2 ].tr, t );
   }
+  return result;
 }
 
 

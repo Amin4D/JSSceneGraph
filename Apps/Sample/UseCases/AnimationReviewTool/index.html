@@ -54,6 +54,14 @@
 #viewer {
   right:400px;
 }
+#timeControls {
+  right:400px;
+}
+
+#FabricContainer{
+  bottom:125;
+}
+
 
   
   </style>
@@ -874,7 +882,7 @@ $(document).ready(function() {
             </div><!--content-->
             <h2>Planes</h2>
             <div class="content">
-                <select multi size=10 id='planelist' style='width: 200px'>
+                <select multi size=5 id='planelist' style='width: 200px'>
                 </select>
                 <div id='planeblend' style="margin-top:10px;"></div>
                  <p id="brushColor"></p>
@@ -885,14 +893,17 @@ $(document).ready(function() {
                 <label for="brushRadius" >Brush Radius:</label>
                 <div id='brushRadius' style="margin-top:10px;"></div>
             </div><!--content-->
-            <h2>Playback</h2>
-            <div class="content">
-                <button id="play" style="margin-top:10px;">Play</button>
-                <div id='localtime' style="margin-top:10px;"></div>
-            </div><!--content-->
-          </div><!--box-->
           </div><!--box-->
         </div><!--sidebar-->
+        <div id="timeControls">
+          <div class="box">
+            <h2>Playback</h2>
+            <div class="content">
+                <button id="play">Play</button>
+                <div id='localtime'></div>
+            </div><!--content-->
+          </div><!--box-->
+        </div><!--timeControls-->
       </div> <!--editor-->
     </div><!--wrapper-->
   </body> 

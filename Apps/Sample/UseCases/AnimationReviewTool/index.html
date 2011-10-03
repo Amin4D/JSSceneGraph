@@ -351,7 +351,9 @@ FABRIC.SceneGraph.registerNodeType('PaintPlaneInstance', {
       if(!painting) {
         return;
       }
-      uvViewportNode.pub.setQueryPos(FABRIC.RT.vec2(evt.offsetX, height - 1 - evt.offsetY));
+      var mousePos = viewportNode.getElementCoords(evt);
+      mousePos.y = height - 1 - mousePos.y;
+      uvViewportNode.pub.setQueryPos(mousePos);
       viewportNode.pub.redraw();
     };
     var beginpaint = function(evt) {

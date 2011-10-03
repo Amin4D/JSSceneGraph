@@ -103,7 +103,7 @@ $(document).ready(function() {
   var skeletonNode = scene.constructNode('CharacterSkeleton');
   skeletonNode.addBone({name: 'root'});
 
-  var xfo = FABRIC.RT.xfo({
+  var xfo = new FABRIC.RT.Xfo({
       ori: FABRIC.RT.Quat.makeFromAxisAndAngle(new FABRIC.RT.Vec3(0, 0, 1), Math.degToRad(-15)),
       tr: new FABRIC.RT.Vec3(-5, 5, 0)
     });

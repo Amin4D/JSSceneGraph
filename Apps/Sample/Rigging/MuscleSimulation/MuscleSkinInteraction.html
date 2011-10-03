@@ -57,7 +57,7 @@ FABRIC.SceneGraph.registerNodeType('TransformedGeometry', {
   factoryFn: function(options, scene) {
     options = scene.assignDefaults(options, {
         baseGeometryNode: undefined,
-        xfo: FABRIC.RT.xfo()
+        xfo: new FABRIC.RT.Xfo()
       });
     
     var transformedGeometry = scene.constructNode('GeometryDataCopy', {
@@ -228,11 +228,11 @@ $(document).ready(function() {
   // first create a skeleton
   var skeleton = scene.constructNode('CharacterSkeleton');
 
-  skeleton.addBone({name: 'anchorLeft', referencePose: FABRIC.RT.xfo({
+  skeleton.addBone({name: 'anchorLeft', referencePose: new FABRIC.RT.Xfo({
       tr: new FABRIC.RT.Vec3(-6, 0, 0)
     }) });
   
-  skeleton.addBone({name: 'anchorRight', referencePose: FABRIC.RT.xfo({
+  skeleton.addBone({name: 'anchorRight', referencePose: new FABRIC.RT.Xfo({
       tr: new FABRIC.RT.Vec3(6, 0, 0)
     }) });
 
@@ -288,7 +288,7 @@ $(document).ready(function() {
     });
   var transformedMesh = scene.constructNode('TransformedGeometry', {
       baseGeometryNode: plane,
-      xfo: FABRIC.RT.xfo({ tr: new FABRIC.RT.Vec3(0, -0.5, 0.5) })
+      xfo: new FABRIC.RT.Xfo({ tr: new FABRIC.RT.Vec3(0, -0.5, 0.5) })
     });
       
   //////////////////////////////////////////////////////////////
@@ -300,7 +300,7 @@ $(document).ready(function() {
     });
   
   muscleSystem.addMuscle( {
-    xfo: FABRIC.RT.xfo( {
+    xfo: new FABRIC.RT.Xfo( {
         tr: new FABRIC.RT.Vec3( 0, 5, 0)
       })
     });

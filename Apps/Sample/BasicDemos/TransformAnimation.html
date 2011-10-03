@@ -61,7 +61,7 @@ s.parentNode.insertBefore(ga, s);
 FABRIC.SceneGraph.registerNodeType('SwirleyMovementTransform', {
 factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
-        baseXfo: FABRIC.RT.xfo(),
+        baseXfo: new FABRIC.RT.Xfo(),
         objId: 0
       });
 
@@ -150,7 +150,7 @@ $(document).ready(function() {
       base = new FABRIC.RT.Vec3((j & 1) * 2.0, (j & 2), (j & 4) / 2.0).multiplyScalar(scale).add(base1);
 
       for (i = 0; i < 5; i++) {
-        xfo = FABRIC.RT.xfo();
+        xfo = new FABRIC.RT.Xfo();
 
         xfo.tr = new FABRIC.RT.Vec3((i & 1), (i & 2) / 2.0, (i & 4) / 4.0).multiplyScalar(scale).add(base);
 

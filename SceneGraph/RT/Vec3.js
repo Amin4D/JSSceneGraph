@@ -179,7 +179,7 @@ FABRIC.RT.Vec3.prototype = {
     return new FABRIC.RT.Vec3(this.x, this.y, this.z);
   },
   toString: function() {
-    return 'FABRIC.RT.vec3(' + this.x + ',' + this.y + ',' + this.z + ')';
+    return 'FABRIC.RT.Vec3(' + this.x + ',' + this.y + ',' + this.z + ')';
   },
   getType: function() {
     return 'FABRIC.RT.Vec3';

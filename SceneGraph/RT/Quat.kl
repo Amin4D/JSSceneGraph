@@ -341,27 +341,28 @@ function Mat33 Quat.toMat33() {
 // Note: this and q2 should be unit Quaternions
 function Quat Quat.sphericalLinearInterpolate(in Quat q2, in Scalar t) {
   Scalar angle = this.dot(q2);
+  Quat _q2 = q2;
   if (angle < 0.0) {
-    q2 = q2.negate();
-    q2.w *= - 1.0;
+    _q2.v = _q2.v.negate();
+    _q2.w *= - 1.0;
   }
 
   Quat r;
 
-  Scalar cosHalfTheta = this.dot(q2);
+  Scalar cosHalfTheta = this.dot(_q2);
 
   if (abs(cosHalfTheta) < 1.0) {
     Scalar halfTheta = acos(cosHalfTheta);
     Scalar sinHalfTheta = sqrt(1.0 - cosHalfTheta * cosHalfTheta);
 
     if (abs(sinHalfTheta) < DIVIDEPRECISION) {
-      r = Quat((this.w + q2.w) * 0.5, (this.v + q2.v) * 0.5);
+      r = Quat((this.w + _q2.w) * 0.5, (this.v + _q2.v) * 0.5);
     }
     else {
       Scalar rA = sin((1 - t) * halfTheta) / sinHalfTheta;
       Scalar rB = sin(t * halfTheta) / sinHalfTheta;
 
-      r = Quat(this.w * rA + q2.w * rB, this.v * rA + q2.v * rB);
+      r = Quat(this.w * rA + _q2.w * rB, this.v * rA + _q2.v * rB);
     }
   }
   else {
@@ -373,13 +374,14 @@ function Quat Quat.sphericalLinearInterpolate(in Quat q2, in Scalar t) {
 
 function Quat Quat.linearInterpolate(in Quat other, in Scalar t) {
   Scalar angle = this.dot(other);
+  Quat _other = other;
   if (angle < 0.0) {
-    other = other.negate();
-    other.w *= - 1.0;
+    _other.v = _other.v.negate();
+    _other.w *= - 1.0;
   }
 
   Quat q;
-  q.v = this.v.linearInterpolate(other.v, t);
-  q.w = this.w + ((other.w - this.w) * t);
+  q.v = this.v.linearInterpolate(_other.v, t);
+  q.w = this.w + ((_other.w - this.w) * t);
   return q.unit();
 }

@@ -228,7 +228,7 @@ function Mat44 Mat44.inverse() {
   Mat44 adjoint;
   this.internalCompute(true, det, true, adjoint);
   if( Math_badDivisor( det ) )//Perf: check first to avoid building the report string
-    Math_reportBadDivisor( det, "Mat33.inverse" );
+    Math_reportBadDivisor( det, "Mat44.inverse" );
   return adjoint / det;
 }
 

@@ -102,13 +102,13 @@ $(document).ready(function() {
   var skeletonNode = scene.constructNode('CharacterSkeleton');
   skeletonNode.addBone({name: 'root'});
 
-  var xfo = FABRIC.RT.xfo({
+  var xfo = new FABRIC.RT.Xfo({
       ori: FABRIC.RT.Quat.makeFromAxisAndAngle(new FABRIC.RT.Vec3(0, 0, 1), Math.degToRad(-45)),
         tr: new FABRIC.RT.Vec3(0, 11, 0)
     });
   skeletonNode.addBone({name: 'forearmBone', referencePose: xfo, length: 5, parent: 'root'});
 
-  xfo = FABRIC.RT.xfo({
+  xfo = new FABRIC.RT.Xfo({
       ori: FABRIC.RT.Quat.makeFromAxisAndAngle(new FABRIC.RT.Vec3(1, 0, 0), Math.degToRad(-45)),
       tr: xfo.tr.add(xfo.ori.rotateVector(new FABRIC.RT.Vec3(5, 0, 0)))
     });
@@ -117,27 +117,27 @@ $(document).ready(function() {
 
   skeletonNode.addBone({
       name: 'twistBone1',
-      referenceLocalPose: FABRIC.RT.xfo({ tr: new FABRIC.RT.Vec3(1, 0, 0) }),
+      referenceLocalPose: new FABRIC.RT.Xfo({ tr: new FABRIC.RT.Vec3(1, 0, 0) }),
       length: 1,
       parent: 'forearmBone'
     });
 
   skeletonNode.addBone({
       name: 'twistBone2',
-      referenceLocalPose: FABRIC.RT.xfo({ tr: new FABRIC.RT.Vec3(2, 0, 0) }),
+      referenceLocalPose: new FABRIC.RT.Xfo({ tr: new FABRIC.RT.Vec3(2, 0, 0) }),
       length: 1,
       parent: 'forearmBone'
     });
 
   skeletonNode.addBone({
       name: 'twistBone3',
-      referenceLocalPose: FABRIC.RT.xfo({ tr: new FABRIC.RT.Vec3(3, 0, 0) }),
+      referenceLocalPose: new FABRIC.RT.Xfo({ tr: new FABRIC.RT.Vec3(3, 0, 0) }),
       length: 1,
       parent: 'forearmBone'
     });
   skeletonNode.addBone({
       name: 'twistBone4',
-      referenceLocalPose: FABRIC.RT.xfo({ tr: new FABRIC.RT.Vec3(4, 0, 0) }),
+      referenceLocalPose: new FABRIC.RT.Xfo({ tr: new FABRIC.RT.Vec3(4, 0, 0) }),
       length: 1,
       parent: 'forearmBone'
     });

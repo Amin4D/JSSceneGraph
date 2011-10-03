@@ -79,7 +79,7 @@ FABRIC.SceneGraph.registerNodeType('CamshaftTransform', {
       });
     
     options.hierarchical = false;
-    options.globalXfo = FABRIC.RT.xfo({ tr: new FABRIC.RT.Vec3(0, 114.4, 269.5) });
+    options.globalXfo = new FABRIC.RT.Xfo({ tr: new FABRIC.RT.Vec3(0, 114.4, 269.5) });
     
     var camshaftTransform = scene.constructNode('Transform', options);
     var dgnode = camshaftTransform.getDGNode();
@@ -297,7 +297,7 @@ $(document).ready(function() {
 /*  // IntakeValve
   window.intakeValveTransformNode = scene.constructNode("TransformNode();
   intakeValveTransformNode.setParentNode( scene.getRootTransformNode() );
-  intakeValveTransformNode.localXfo = FABRIC.RT.xfo(FABRIC.RT.quat(0,0,0,1),
+  intakeValveTransformNode.localXfo = new new FABRIC.RT.Xfo(FABRIC.RT.Quat(0,0,0,1),
     new FABRIC.RT.Vec3(0,114.4,269.5),new FABRIC.RT.Vec3(1,1,1));
 
   intakeValveTransformNode.getDGNode().setDependency( crankTransformNode.getDGNode(), "camshaft" );

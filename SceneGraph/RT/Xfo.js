@@ -247,7 +247,7 @@ FABRIC.RT.Xfo.prototype = {
   },
 
   toString: function() {
-    return 'FABRIC.RT.xfo(' + this.ori.toString() + ',' + this.tr.toString() + ',' + this.sc.toString() + ')';
+    return 'FABRIC.RT.Xfo(' + this.ori.toString() + ',' + this.tr.toString() + ',' + this.sc.toString() + ')';
   },
 
   getType: function() {

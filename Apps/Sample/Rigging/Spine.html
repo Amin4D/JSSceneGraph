@@ -96,14 +96,14 @@ $(document).ready(function() {
   var skeletonNode = scene.constructNode('CharacterSkeleton');
   var boneCount = 12;
   var boneLength = 1;
-  var boneOri = FABRIC.RT.quat(new FABRIC.RT.Vec3(0, 0, 1), 90)
-                           .multiply(FABRIC.RT.quat(new FABRIC.RT.Vec3(0, 1, 0), 90));
+  var boneOri = new FABRIC.RT.Quat(new FABRIC.RT.Vec3(0, 0, 1), 90)
+                           .multiply(new FABRIC.RT.Quat(new FABRIC.RT.Vec3(0, 1, 0), 90));
   skeletonNode.addBone({name: 'root'});
   for (var i = 0; i < boneCount; i++)
   {
     skeletonNode.addBone({
       name: 'bone' + i,
-      referencePose: FABRIC.RT.xfo({
+      referencePose: new FABRIC.RT.Xfo({
           tr: new FABRIC.RT.Vec3(0, boneLength * i, 0) ,
           ori: boneOri
         }),

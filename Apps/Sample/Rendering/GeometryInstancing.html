@@ -149,7 +149,7 @@ $(document).ready(function() {
   // add some cows
   for (i = 0; i < numInstances; i++) {
     var scl = Math.random() + 0.5;
-    instanceTransforms.push(FABRIC.RT.xfo( {
+    instanceTransforms.push(new FABRIC.RT.Xfo( {
       tr: new FABRIC.RT.Vec3(
         (Math.random() - 0.5) * gridSize * 0.95,
         -2.5/scl,
@@ -174,7 +174,7 @@ $(document).ready(function() {
   instanceTransforms = [];
   for (i = 0; i < numInstances; i++) {
     var scl = (Math.random() + 0.5) * 15;
-    instanceTransforms.push(FABRIC.RT.xfo( {
+    instanceTransforms.push(new FABRIC.RT.Xfo( {
       tr: new FABRIC.RT.Vec3(
         (Math.random() - 0.5) * gridSize * 0.95,
         -7,

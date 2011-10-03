@@ -216,7 +216,7 @@ $(document).ready(function() {
   scene.constructNode('Instance', {
       transformNode: scene.constructNode('Transform', {
           hierarchical: false,
-          globalXfo: FABRIC.RT.xfo({ tr: new FABRIC.RT.Vec3(0, 0, 0) })
+          globalXfo: new FABRIC.RT.Xfo({ tr: new FABRIC.RT.Vec3(0, 0, 0) })
         }),
       geometryNode: assets['beethovan'],
       materialNode: thickGlassMaterial

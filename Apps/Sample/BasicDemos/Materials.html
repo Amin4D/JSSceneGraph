@@ -92,7 +92,7 @@ $(document).ready(function() {
   var inst = scene.constructNode('Instance', {
       transformNode: scene.constructNode('Transform', {
           hierarchical: false,
-          globalXfo: FABRIC.RT.xfo({ tr: new FABRIC.RT.Vec3(-30, 0, 0) })
+          globalXfo: new FABRIC.RT.Xfo({ tr: new FABRIC.RT.Vec3(-30, 0, 0) })
         }),
       geometryNode: sphere,
       materialNode: flatMaterial
@@ -111,7 +111,7 @@ $(document).ready(function() {
   scene.constructNode('Instance', {
       transformNode: scene.constructNode('Transform', {
           hierarchical: false,
-          globalXfo: FABRIC.RT.xfo({ tr: new FABRIC.RT.Vec3(-10, 0, 0) })
+          globalXfo: new FABRIC.RT.Xfo({ tr: new FABRIC.RT.Vec3(-10, 0, 0) })
         }),
       geometryNode: sphere,
       materialNode: phongMaterial
@@ -124,7 +124,7 @@ $(document).ready(function() {
   scene.constructNode('Instance', {
       transformNode: scene.constructNode('Transform', {
         hierarchical: false,
-        globalXfo: FABRIC.RT.xfo({ tr: new FABRIC.RT.Vec3(10, 0, 0) })
+        globalXfo: new FABRIC.RT.Xfo({ tr: new FABRIC.RT.Vec3(10, 0, 0) })
       }),
       geometryNode: sphere,
       materialNode: flatTexturedMaterial
@@ -141,7 +141,7 @@ $(document).ready(function() {
   scene.constructNode('Instance', {
       transformNode: scene.constructNode('Transform', {
           hierarchical: false,
-          globalXfo: FABRIC.RT.xfo({ tr: new FABRIC.RT.Vec3(30, 0, 0) })
+          globalXfo: new FABRIC.RT.Xfo({ tr: new FABRIC.RT.Vec3(30, 0, 0) })
         }),
       geometryNode: sphere,
       materialNode: phongBumpReflectMaterial
@@ -154,7 +154,7 @@ $(document).ready(function() {
   scene.constructNode('Instance', {
       transformNode: scene.constructNode('Transform', {
         hierarchical: false,
-        globalXfo: FABRIC.RT.xfo({ tr: new FABRIC.RT.Vec3(30, 0, 0) })
+        globalXfo: new FABRIC.RT.Xfo({ tr: new FABRIC.RT.Vec3(30, 0, 0) })
       }),
       geometryNode: sphere,
       materialNode: scene.constructNode('NormalMaterial', {
@@ -183,7 +183,7 @@ $(document).ready(function() {
   scene.constructNode('Instance', {
       transformNode: scene.constructNode('Transform', {
           hierarchical: false,
-          globalXfo: FABRIC.RT.xfo({ tr: new FABRIC.RT.Vec3(50, 0, 0) })
+          globalXfo: new FABRIC.RT.Xfo({ tr: new FABRIC.RT.Vec3(50, 0, 0) })
         }),
       geometryNode: sphere,
       materialNode: transparentMaterial

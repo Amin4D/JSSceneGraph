@@ -85,7 +85,7 @@ $(document).ready(function() {
   // create a transform node
   var transform = scene.constructNode('Transform', {
     hierarchical: false,
-    globalXfo: FABRIC.RT.xfo({ tr: new FABRIC.RT.Vec3(0, 2, 0) })
+    globalXfo: new FABRIC.RT.Xfo({ tr: new FABRIC.RT.Vec3(0, 2, 0) })
   })
   
   // create a geometry node

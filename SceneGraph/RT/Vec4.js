@@ -192,7 +192,7 @@ FABRIC.RT.Vec4.prototype = {
   },
 
   toString: function() {
-    return 'FABRIC.RT.vec4(' + this.x + ',' + this.y + ',' + this.z + ',' + this.t + ')';
+    return 'FABRIC.RT.Vec4(' + this.x + ',' + this.y + ',' + this.z + ',' + this.t + ')';
   },
   getType: function() {
     return 'FABRIC.RT.Vec4';

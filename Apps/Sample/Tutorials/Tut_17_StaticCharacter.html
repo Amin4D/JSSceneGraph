@@ -120,7 +120,7 @@ $(document).ready(function() {
   scene.constructNode('CharacterSkeletonDebug', {
     characterRigNode: assets.tuscanyCharacterRig,
     boneradius: 1.0,
-    offsetpose: FABRIC.RT.xfo({ tr: new FABRIC.RT.Vec3(12, 0, 0) })
+    offsetpose: new FABRIC.RT.Xfo({ tr: new FABRIC.RT.Vec3(12, 0, 0) })
   });
 
   // create a light node  

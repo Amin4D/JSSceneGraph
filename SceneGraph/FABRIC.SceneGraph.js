@@ -1600,7 +1600,7 @@ FABRIC.SceneGraph.registerNodeType('FreeCamera', {
   factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
         position: new FABRIC.RT.Vec3(1, 0, 0),
-        orientation: FABRIC.RT.quat()
+        orientation: new FABRIC.RT.Quat()
       });
 
     options.transformNode = scene.constructNode('Transform', {

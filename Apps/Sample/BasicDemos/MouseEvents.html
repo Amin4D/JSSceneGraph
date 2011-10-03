@@ -103,7 +103,7 @@ $(document).ready(function() {
       var base = base2.add(base1);
 
       for (var i = 0; i < 7; i++) {
-        var xfo = FABRIC.RT.xfo();
+        var xfo = new FABRIC.RT.Xfo();
 
         xfo.tr = new FABRIC.RT.Vec3((i & 1), (i & 2) / 2.0, (i & 4) / 4.0).multiplyScalar(scale).add(base);
 

@@ -167,7 +167,7 @@ FABRIC.RT.Vec2.prototype = {
   },
 
   toString: function() {
-    return 'FABRIC.RT.vec2(' + this.x + ',' + this.y + ')';
+    return 'FABRIC.RT.Vec2(' + this.x + ',' + this.y + ')';
   },
   getType: function() {
     return 'FABRIC.RT.Vec2';

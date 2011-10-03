@@ -104,27 +104,27 @@ $(document).ready(function() {
   var skeletonNode = scene.constructNode('CharacterSkeleton');
   skeletonNode.addBone({name: 'root'});
 
-  var xfo = FABRIC.RT.xfo({
+  var xfo = new FABRIC.RT.Xfo({
       ori: FABRIC.RT.Quat.makeFromAxisAndAngle(new FABRIC.RT.Vec3(0, 1, 0), Math.degToRad(-105)),
       tr: new FABRIC.RT.Vec3(0, 11, 0)
     });
   skeletonNode.addBone({name: 'clavicleBone', referencePose: xfo, length: 2, parent: 'root'});
 
-  var xfo = FABRIC.RT.xfo({
+  var xfo = new FABRIC.RT.Xfo({
       ori: FABRIC.RT.Quat.makeFromAxisAndAngle(new FABRIC.RT.Vec3(0, 1, 0), Math.degToRad(-105))
         .multiply(FABRIC.RT.Quat.makeFromAxisAndAngle(new FABRIC.RT.Vec3(1, 0, 0), Math.degToRad(70))),
       tr: xfo.tr.add(xfo.ori.rotateVector(new FABRIC.RT.Vec3(2, 0, 0)))
     });
   skeletonNode.addBone({name: 'upperarmBone', referencePose: xfo, length: 5, parent: 'clavicleBone'});
 
-  xfo = FABRIC.RT.xfo({
+  xfo = new FABRIC.RT.Xfo({
       ori: FABRIC.RT.Quat.makeFromAxisAndAngle(new FABRIC.RT.Vec3(0, 1, 0), Math.degToRad(-40))
         .multiply(FABRIC.RT.Quat.makeFromAxisAndAngle(new FABRIC.RT.Vec3(1, 0, 0), Math.degToRad(70))),
       tr: xfo.tr.add(xfo.ori.rotateVector(new FABRIC.RT.Vec3(5, 0, 0)))
     });
   skeletonNode.addBone({name: 'forearmBone', referencePose: xfo, length: 4, parent: 'upperarmBone' });
 
-  xfo = FABRIC.RT.xfo({
+  xfo = new FABRIC.RT.Xfo({
       ori: FABRIC.RT.Quat.makeFromAxisAndAngle(new FABRIC.RT.Vec3(0, 1, 0), Math.degToRad(-50))
         .multiply(FABRIC.RT.Quat.makeFromAxisAndAngle(new FABRIC.RT.Vec3(1, 0, 0), Math.degToRad(80))),
       tr: xfo.tr.add(xfo.ori.rotateVector(new FABRIC.RT.Vec3(4, 0, 0)))

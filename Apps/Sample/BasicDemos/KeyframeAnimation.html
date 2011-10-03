@@ -139,7 +139,7 @@ $(document).ready(function() { var $globalTimeSlider = $('#globalTime').slider({
     animationTrackNode: linearPosKeyframeTrackNode
   });
 
-  var xfo = FABRIC.RT.xfo({ tr: new FABRIC.RT.Vec3(-50, 0, 0) });
+  var xfo = new FABRIC.RT.Xfo({ tr: new FABRIC.RT.Vec3(-50, 0, 0) });
   var linearAnimatedTransformNode = scene.constructNode('Transform', {
     hierarchical: false,
     globalXfo: xfo
@@ -188,7 +188,7 @@ $(document).ready(function() { var $globalTimeSlider = $('#globalTime').slider({
     animationTrackNode: bezierPosKeyframeTrackNode
   });
 
-  var xfo = FABRIC.RT.xfo({ tr: new FABRIC.RT.Vec3(0, 0, 0) });
+  var xfo = new FABRIC.RT.Xfo({ tr: new FABRIC.RT.Vec3(0, 0, 0) });
   var bezierAnimatedTransformNode = scene.constructNode('Transform', {
     hierarchical: false,
     globalXfo: xfo
@@ -236,7 +236,7 @@ $(document).ready(function() { var $globalTimeSlider = $('#globalTime').slider({
     animationTrackNode: bezierEulerKeyframeTrackNode
   });
 
-  var xfo = FABRIC.RT.xfo({ tr: new FABRIC.RT.Vec3(50, 0, 0) });
+  var xfo = new FABRIC.RT.Xfo({ tr: new FABRIC.RT.Vec3(50, 0, 0) });
   var bezierAnimatedTransformNode = scene.constructNode('Transform', {
     hierarchical: false,
     globalXfo: xfo

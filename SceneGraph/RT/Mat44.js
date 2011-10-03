@@ -297,7 +297,7 @@ FABRIC.RT.Mat44.prototype = {
     return new FABRIC.RT.Mat44(this);
   },
   toString: function() {
-    return 'FABRIC.RT.mat44(' + this.row0.toString() + ',' + this.row1.toString() + ',' +
+    return 'FABRIC.RT.Mat44(' + this.row0.toString() + ',' + this.row1.toString() + ',' +
       this.row2.toString() + ',' + this.row3.toString() + ')';
   },
   getType: function() {

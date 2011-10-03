@@ -200,25 +200,25 @@ FABRIC.SceneGraph.registerNodeType('AimTransform', {
   },
   factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
-        target: FABRIC.RT.vec3(0, 0, 0)
+        target: new FABRIC.RT.Vec3(0, 0, 0)
       });
     
     if(options.position && options.target){
-      options.globalXfo = FABRIC.RT.xfo({ tr: options.position });
+      options.globalXfo = new FABRIC.RT.Xfo({ tr: options.position });
       
       var dirVec = options.position.subtract(options.target);
       var vec2 = dirVec.unit();
-      options.globalXfo.ori.setFrom2Vectors(FABRIC.RT.vec3(0, 0, 1) , vec2, true);
+      options.globalXfo.ori.setFrom2Vectors(new FABRIC.RT.Vec3(0, 0, 1) , vec2, true);
       vec1 = options.globalXfo.ori.getYaxis();
-      vec2 = dirVec.cross(FABRIC.RT.vec3(0, 1, 0) ).cross(dirVec).unit();
+      vec2 = dirVec.cross(new FABRIC.RT.Vec3(0, 1, 0) ).cross(dirVec).unit();
       options.globalXfo.ori = options.globalXfo.ori.multiply( new FABRIC.RT.Quat().setFrom2Vectors(vec1, vec2, true));
       
 /*
       var zaxis = options.position.subtract(options.target).unit();
-      var yaxis = zaxis.cross(FABRIC.RT.vec3(0, 1, 0) ).cross(zaxis).unit();
+      var yaxis = zaxis.cross(new FABRIC.RT.Vec3(0, 1, 0) ).cross(zaxis).unit();
       var xaxis = yaxis.cross(zaxis).unit();
-      options.globalXfo = FABRIC.RT.xfo({ tr: options.position });
-      options.globalXfo.ori.setFromMat33(FABRIC.RT.mat33(xaxis, yaxis, zaxis));
+      options.globalXfo = new FABRIC.RT.Xfo({ tr: options.position });
+      options.globalXfo.ori.setFromMat33(new FABRIC.RT.Mat33(xaxis, yaxis, zaxis));
 */  }
 
     var aimTransformNode = scene.constructNode('Transform', options);

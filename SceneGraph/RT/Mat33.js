@@ -203,7 +203,7 @@ FABRIC.RT.Mat33.prototype = {
     return new FABRIC.RT.Mat33(this);
   },
   toString: function() {
-    return 'FABRIC.RT.mat33(' + this.row0.toString() + ',' + this.row1.toString() + ',' + this.row2.toString() + ')';
+    return 'FABRIC.RT.Mat33(' + this.row0.toString() + ',' + this.row1.toString() + ',' + this.row2.toString() + ')';
   },
   getType: function() {
     return 'FABRIC.RT.Mat33';

@@ -332,7 +332,8 @@ FABRIC.RT.Quat.prototype = {
   sphericalLinearInterpolate: function(q2, t) {
     var angle = this.dot(q2);
     if (angle < 0.0) {
-      q2 = q2.negate();
+      q2 = q2.clone();
+      q2.v = q2.v.negate();
       q2.w *= - 1.0;
     }
 
@@ -363,7 +364,8 @@ FABRIC.RT.Quat.prototype = {
   linearInterpolate: function(other, t) {
     var angle = this.dot(other);
     if (angle < 0.0) {
-      other = other.negate();
+      other = other.clone()
+      other.v = other.v.negate();
       other.w *= - 1.0;
     }
 
@@ -376,7 +378,7 @@ FABRIC.RT.Quat.prototype = {
   },
 
   toString: function() {
-    return 'FABRIC.RT.quat({' + this.v.x + ',' + this.v.y + ',' + this.v.z + '},' + this.w + ')';
+    return 'FABRIC.RT.Quat({' + this.v.x + ',' + this.v.y + ',' + this.v.z + '},' + this.w + ')';
   },
 
   getType: function() {

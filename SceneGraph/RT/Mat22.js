@@ -162,7 +162,7 @@ FABRIC.RT.Mat22.prototype = {
     return new FABRIC.RT.Mat22(this);
   },
   toString: function() {
-    return 'FABRIC.RT.mat22(' + this.row0.toString() + ',' + this.row1.toString() + ',' + this.row2.toString() + ')';
+    return 'FABRIC.RT.Mat22(' + this.row0.toString() + ',' + this.row1.toString() + ',' + this.row2.toString() + ')';
   },
   getType: function() {
     return 'FABRIC.RT.Mat22';

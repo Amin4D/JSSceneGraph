@@ -32,7 +32,7 @@ FABRIC.SceneGraph.registerNodeType('MuscleSystem', {
         numSegments: 3,
         length: 10,
         display: true,
-        xfo: FABRIC.RT.xfo(),
+        xfo: new FABRIC.RT.Xfo(),
         pointEnvelopeIds: new FABRIC.RT.Vec2(0,1)
       }
     
@@ -52,7 +52,7 @@ FABRIC.SceneGraph.registerNodeType('MuscleSystem', {
       pointPositions = [];
       
     for(i = 0; i < muscleDefaults.numSegments; i++){
-      pointXfos.push(FABRIC.RT.xfo( {
+      pointXfos.push(new FABRIC.RT.Xfo( {
         tr: new FABRIC.RT.Vec3( ((i/(muscleDefaults.numSegments-1)) - 0.5) * muscleDefaults.length, 0,0)
       }));
       var envelopWeight = (Math.cos((i/(muscleDefaults.numSegments-1)) * Math.PI) + 1) * 0.5;

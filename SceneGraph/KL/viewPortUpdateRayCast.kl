@@ -37,8 +37,6 @@ operator viewPortUpdateRayCast(
 
   // And from projection space to camera local.
   // - We nuke the translation part since we're transforming a vector.
-  camInv.row3.x = 0.0;
-  camInv.row3.y = 0.0;
-  camInv.row3.z = 0.0;
+  camInv.zeroTranslation();
   ray.direction = (camInv * ray.direction).unit();
 }

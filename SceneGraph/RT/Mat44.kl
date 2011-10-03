@@ -249,6 +249,18 @@ function Vec3 Mat44.translation() {
   return result;
 }
 
+function Mat44.zeroTranslation() {
+  this.row0.t = 0.0;
+  this.row1.t = 0.0;
+  this.row2.t = 0.0;
+}
+
+function Mat44.setTranslation(Vec3 tr) {
+  this.row0.t = tr.x;
+  this.row1.t = tr.y;
+  this.row2.t = tr.z;
+}
+
 function Mat33 Mat44.upperLeft() {
   Mat33 result;
 

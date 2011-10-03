@@ -98,7 +98,13 @@ FABRIC.RT.Ray.prototype = {
     result.deltaVec = w.add(u.multiplyScalar(result.lineParam).subtract(this.direction.multiplyScalar(result.rayParam)));
     result.dist = result.deltaVec.length();
     return result; // return the closest distance
+  },
+  
+  
+  toString: function() {
+    return 'FABRIC.RT.ray(' + this.start.toString() + ',' + this.direction.toString() + ')';
   }
+  
 };
 
 /**
@@ -143,9 +149,7 @@ FABRIC.RT.Ray.calculateRayFromViewportData = function(
 
   // And from projection space to camera local.
   // - We nuke the translation part since we're transforming a vector.
-  camInv.row3.x = 0.0;
-  camInv.row3.y = 0.0;
-  camInv.row3.z = 0.0;
+  camInv.zeroTranslation();
   ray.direction = camInv.mul(ray.direction).unit();
   return ray;
 };

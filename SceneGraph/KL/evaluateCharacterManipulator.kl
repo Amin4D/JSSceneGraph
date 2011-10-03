@@ -8,6 +8,6 @@ operator evaluateCharacterManipulator(in Size index, io Vec3 positions[], io Vec
   Mat44 poseMat = pose[boneindex].toMat44();
   Mat44 offsetMat(offset);
   for (var Integer i = 0; i < positions.size(); i++) {
-    positions[i] = originalpositions[i] * offsetMat * poseMat;
+    positions[i] = poseMat * offsetMat * originalpositions[i];
   }
 }

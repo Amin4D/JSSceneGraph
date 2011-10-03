@@ -36,7 +36,7 @@ operator calcLightProjectionMatricies(
   var Mat44 biasMat;
   biasMat.setNull();
   biasMat.setDiagonal(0.5);
-  biasMat.row3 = Vec4(0.5, 0.5, 0.5, 1.0);
+  biasMat.setTranslation(Vec4(0.5, 0.5, 0.5, 1.0));
 
   shadowMat = lightInvMat * lightProjectionMat * biasMat;
 }

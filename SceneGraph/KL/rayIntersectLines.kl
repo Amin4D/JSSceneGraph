@@ -24,9 +24,7 @@ operator rayIntersectLines(
   Mat44 invGlobalMat44 = globalMat44.inverse();
   Ray objRay;
   objRay.start = invGlobalMat44 * ray.start;
-  invGlobalMat44.row3.x = 0.0;
-  invGlobalMat44.row3.y = 0.0;
-  invGlobalMat44.row3.z = 0.0;
+  invGlobalMat44.zeroTranslation();
   objRay.direction = invGlobalMat44 * ray.direction;
   
   if (indices.size() > 2 && !objRay.intersectBoundingBox(bboxmin, bboxmax)) {
@@ -68,9 +66,7 @@ operator rayIntersectLineStrip(
   Mat44 invGlobalMat44 = globalMat44.inverse();
   Ray objRay;
   objRay.start = invGlobalMat44 * ray.start;
-  invGlobalMat44.row3.x = 0.0;
-  invGlobalMat44.row3.y = 0.0;
-  invGlobalMat44.row3.z = 0.0;
+  invGlobalMat44.zeroTranslation();
   objRay.direction = invGlobalMat44 * ray.direction;
   
   if (indices.size() > 2 && !objRay.intersectBoundingBox(bboxmin, bboxmax)) {

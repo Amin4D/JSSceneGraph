@@ -1150,6 +1150,7 @@ FABRIC.SceneGraph.registerNodeType('Viewport', {
       viewPortRayCastDgNode.setData('x', elementCoords.x);
       viewPortRayCastDgNode.setData('y', elementCoords.y);
       var nodes = viewPortRaycastEvent.select('RayIntersection');
+      
       var result = {
         rayData: viewPortRayCastDgNode.getData('ray')
       };

@@ -488,7 +488,10 @@ FABRIC.SceneGraph.registerNodeType('Manipulator', {
     // for that.
     // TODO: review the following code. It seems unnecessary to
     // define functions defined in 'Transform' here. 
-    var transformNode = scene.constructNode('Transform', { hierarchical: false });
+    var transformNode = scene.constructNode('Transform', {
+      name: options.name + 'Transform',
+      hierarchical: false
+    });
     var transformDGNode = transformNode.getDGNode();
     transformDGNode.addMember('localXfo', 'Xfo', options.localXfo);
     transformNode.getLocalXfo = function() {
@@ -714,9 +717,9 @@ FABRIC.SceneGraph.registerNodeType('Manipulator', {
         localX = manipulationSpaceOri.rotateVector(new FABRIC.RT.Vec3(1, 0, 0)),
         localY = manipulationSpaceOri.rotateVector(new FABRIC.RT.Vec3(0, 1, 0)),
         localZ = manipulationSpaceOri.rotateVector(new FABRIC.RT.Vec3(0, 0, 1)),
-        deltaX = vec.getAngleTo(localX),
-        deltaY = vec.getAngleTo(localY),
-        deltaZ = vec.getAngleTo(localZ);
+        deltaX = vec.angleTo(localX),
+        deltaY = vec.angleTo(localY),
+        deltaZ = vec.angleTo(localZ);
 
       if (deltaX > Math.HALF_PI) {
         deltaX = Math.PI - deltaX;
@@ -789,7 +792,7 @@ FABRIC.SceneGraph.registerNodeType('RotationManipulator', {
         return;
 
       var vec2 = hitPoint2.subtract(planePoint).unit();
-      var deltaAngle = vec1.getAngleTo(vec2);
+      var deltaAngle = vec1.angleTo(vec2);
       if (vec1.cross(vec2).dot(planeNormal) > 0) {
         angle += deltaAngle;
       }else {
@@ -1169,7 +1172,7 @@ FABRIC.SceneGraph.registerNodeType('PivotRotationManipulator', {
         return;
 
       vec2 = hitPoint2.subtract(pivotPoint).unit();
-      angle = vec1.getAngleTo(vec2);
+      angle = vec1.angleTo(vec2);
 
       if (evt.shiftKey) {
         angle = Math.round(angle / Math.degToRad(5.0)) * Math.degToRad(5.0);
@@ -1281,8 +1284,8 @@ FABRIC.SceneGraph.registerNodeType('BoneManipulator', {
       //  dragXfo.tr = dragXfo.tr.add(dragVec);
       }
 
-      var angle1 = -(vec1.negate().getAngleTo(dragXfo.tr.subtract(planePoint.add(vec1.multiplyScalar(options.length)))));
-      var angle2 = vec1.getAngleTo(vec2);
+      var angle1 = -(vec1.negate().angleTo(dragXfo.tr.subtract(planePoint.add(vec1.multiplyScalar(options.length)))));
+      var angle2 = vec1.angleTo(vec2);
       
       if(childManipulator){
         angle = angle1;

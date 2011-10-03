@@ -1421,6 +1421,7 @@ FABRIC.SceneGraph.registerNodeType('ResourceLoad', {
     }
 
     var onLoadSuccessCallbackFunction = function(node) {
+      lastLoadCallbackURL = resourceLoadNode.pub.getUrl();
       onLoadCallbackFunction(onloadSuccessCallbacks);
     }
     var onLoadProgressCallbackFunction = function(node, progress) {

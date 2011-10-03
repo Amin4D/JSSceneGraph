@@ -95,6 +95,7 @@ $(document).ready(function() {
   var assets = scene.importAssetFile('Models/'+resourceName+'.abc', {
     dependentNode: viewport
   });
+
   assets[resourceName].addOnLoadSuccessCallback(function(){
     // loop over all assets and create an instance
     for(var name in assets[resourceName].getParsedNodes()) {

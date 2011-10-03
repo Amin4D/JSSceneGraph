@@ -29,7 +29,8 @@ operator loadLight(
   }
   location = shaderProgram.getUniformLocation(LIGHTPOS_ATTRIBUTE_ID); // LIGHTPOS ATTRIBUTE ID
   if(location!=-1){
-    Vec4 viewPos = cameraMatrix * lightMatrix.row3;
+    Vec3 lightPos = lightMatrix.translation();
+    Vec4 viewPos = cameraMatrix * Vec4(lightPos.x, lightPos.y, lightPos.z, 0.0);
     shaderProgram.loadVec4Uniform(location, viewPos);
   }
 }

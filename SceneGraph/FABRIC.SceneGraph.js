@@ -1048,6 +1048,11 @@ FABRIC.SceneGraph.registerNodeType('Viewport', {
     }
 
     // private interface
+    
+    viewportNode.getElementCoords = function(evt) {
+      return getElementCoords(evt);
+    };
+    
     viewportNode.getWindowElement = function() {
       return windowElement;
     };

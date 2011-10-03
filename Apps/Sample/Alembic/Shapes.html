@@ -191,66 +191,66 @@ $(document).ready(function() {
 
   var light = scene.constructNode('PointLight', { position: FABRIC.RT.vec3(10, 30, 100).scale(3) });
 
-  // create the alembic content, and fire the load once it is loaded
-  var resourceName = 'shapes';
-  var assets = scene.importAssetFile('Models/'+resourceName+'.abc', {
-    dependentNode: viewport,
-    onLoadSuccessCallback: function(){
-      
-      var shaderColor = {
-        '/head/headShape': FABRIC.RT.rgb(1.0, 0.6, 0.0, 1),
-        '/l_eye/l_eyeShape': FABRIC.RT.rgb(0.0, 0.0, 0.0, 1),
-        '/r_eye/r_eyeShape': FABRIC.RT.rgb(0.0, 0.0, 0.0, 1)
-      };
-      
-      // loop over all assets and create an instance
-      for(var name in shaderColor) {
-        if(assets[resourceName].getParsedNodes()[name].isTypeOf('Triangles'))
-        {
-          var inst = scene.constructNode('Instance', {
-            transformNode: assets[resourceName].getCorrespondingTransform(name),
-            geometryNode: assets[resourceName].getParsedNodes()[name],
-            materialNode: scene.constructNode('PhongMaterial', {
-              diffuseColor: shaderColor[name],
-              specularColor: FABRIC.RT.rgb(0.15, 0.15, 0.15, 1),
-              lightNode: light,
-            })
-          });
-        }
-      }
-      
-      // construct all shapes
-      var shapes = {};
-      for(var i=0;i<shapeNames.length;i++) {
-        var name = shapeNames[i];
-        shapes[name] = assets[resourceName].getParsedNodes()['/'+name+'/'+name+'Shape'];
-      }
-      
-      // construct the shape mixer
-      var mixer = scene.constructNode('ShapeMixer', {
-        target: assets[resourceName].getParsedNodes()['/head/headShape'],
-        shapes: shapes
-      });
-      
-      // setup the slider interaction
-      var setupSlider = function(name) {
-        $('#'+name).slider().bind('slide',
-          function(event, ui) {
-            mixer.setShapeWeight(name,ui.value);
-            scene.redrawAllWindows();
-          });
-      };
-      for(var i=0;i<shapeNames.length;i++)
-        setupSlider(shapeNames[i]);
-
-      $('#loadingDialog').dialog('close');
-      viewport.redraw();
-    }
-  });
-
   $('#loadingDialog').dialog({
     modal: true
   });
+
+  // create the alembic content, and fire the load once it is loaded
+  var resourceName = 'shapes';
+  var assets = scene.importAssetFile('Models/'+resourceName+'.abc', {
+    dependentNode: viewport
+  });
+  assets[resourceName].addOnLoadSuccessCallback(function(){
+    var shaderColor = {
+      '/head/headShape': FABRIC.RT.rgb(1.0, 0.6, 0.0, 1),
+      '/l_eye/l_eyeShape': FABRIC.RT.rgb(0.0, 0.0, 0.0, 1),
+      '/r_eye/r_eyeShape': FABRIC.RT.rgb(0.0, 0.0, 0.0, 1)
+    };
+    
+    // loop over all assets and create an instance
+    for(var name in shaderColor) {
+      if(assets[resourceName].getParsedNodes()[name].isTypeOf('Triangles'))
+      {
+        var inst = scene.constructNode('Instance', {
+          transformNode: assets[resourceName].getCorrespondingTransform(name),
+          geometryNode: assets[resourceName].getParsedNodes()[name],
+          materialNode: scene.constructNode('PhongMaterial', {
+            diffuseColor: shaderColor[name],
+            specularColor: FABRIC.RT.rgb(0.15, 0.15, 0.15, 1),
+            lightNode: light,
+          })
+        });
+      }
+    }
+    
+    // construct all shapes
+    var shapes = {};
+    for(var i=0;i<shapeNames.length;i++) {
+      var name = shapeNames[i];
+      shapes[name] = assets[resourceName].getParsedNodes()['/'+name+'/'+name+'Shape'];
+    }
+    
+    // construct the shape mixer
+    var mixer = scene.constructNode('ShapeMixer', {
+      target: assets[resourceName].getParsedNodes()['/head/headShape'],
+      shapes: shapes
+    });
+    
+    // setup the slider interaction
+    var setupSlider = function(name) {
+      $('#'+name).slider().bind('slide',
+        function(event, ui) {
+          mixer.setShapeWeight(name,ui.value);
+          scene.redrawAllWindows();
+        });
+    };
+    for(var i=0;i<shapeNames.length;i++)
+      setupSlider(shapeNames[i]);
+
+    $('#loadingDialog').dialog('close');
+    viewport.redraw();
+  });
+  
   FABRIC.appendOnResolveAsyncTaskCallback(function(label, nbRemaining, doneWeight, totalWeight) {
     $('#loadingProgressBar').progressbar({
       value: (1.0-(doneWeight/totalWeight))*100

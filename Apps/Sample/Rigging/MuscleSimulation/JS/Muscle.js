@@ -63,7 +63,7 @@ FABRIC.SceneGraph.registerNodeType('MuscleSystem', {
       pointPositions.push(pointXfos[i].tr);
       segmentCompressionFactors.push(1.0);
       if(i>0){
-        segmentLengths.push(pointXfos[i].tr.dist(pointXfos[i-1].tr));
+        segmentLengths.push(pointXfos[i].tr.distanceTo(pointXfos[i-1].tr));
         contractionWeights.push((flexibilityWeights[i]+flexibilityWeights[i-1]) * 0.5 );
       }
     }
@@ -249,7 +249,7 @@ use Vec3;\n\
 operator rotateMuscleVolume(\n\
   io Vec3 position\n\
 ) {\n\
-  position = axisAndAngleToQuat(Vec3(0.0,0.0,1.0), PI*-0.5).rotateVector(position);\n\
+  position = Quat().setFromAxisAndAngle(Vec3(0.0,0.0,1.0), PI*-0.5).rotateVector(position);\n\
 }\n\
         ',
         entryFunctionName: 'rotateMuscleVolume',
@@ -267,13 +267,13 @@ operator rotateMuscleVolume(\n\
     
     muscleSystem.getLength = function(index){
       var pointXfos = initializationdgnode.getData('initialXfos');
-      return pointXfos[0].tr.dist(pointXfos[pointXfos.length-1].tr);
+      return pointXfos[0].tr.distanceTo(pointXfos[pointXfos.length-1].tr);
     }
     muscleSystem.setLength = function(index, length){
       var pointXfos = initializationdgnode.getData('initialXfos');
       // Scale all the Xfos away from the center of the muscle.
-      var scale = length / pointXfos[0].tr.dist(pointXfos[pointXfos.length-1].tr);
-      var center = pointXfos[0].tr.lerp(pointXfos[pointXfos.length-1].tr, 0.5);
+      var scale = length / pointXfos[0].tr.distanceTo(pointXfos[pointXfos.length-1].tr);
+      var center = pointXfos[0].tr.linearInterpolate(pointXfos[pointXfos.length-1].tr, 0.5);
       for(i = 0; i < muscleDefaults.numSegments; i++){
         pointXfos[i].tr = pointXfos[i].tr.subtract(center).multiplyScalar(scale).add(center);
       }

@@ -127,7 +127,7 @@ operator solveNCFIK(
       deltaBoneAngle = (ikBoneAngle - fkBoneAngle);
 
       // Apply the rotation to the current bones
-      boneXfo.ori = axisAndAngleToQuat(bendAxis, deltaBoneAngle) * boneXfo.ori;
+      boneXfo.ori.setFromAxisAndAngle(bendAxis, deltaBoneAngle) * boneXfo.ori;
     }
 
     pose[boneIndex] = boneXfo;

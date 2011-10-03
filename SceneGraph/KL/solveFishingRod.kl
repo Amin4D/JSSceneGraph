@@ -40,7 +40,7 @@ function applyFishingRod(
   Scalar distBoneBaseToTarget, distBoneTipToTarget, newDistBoneTipToTarget;
 
   vecToTarget = target.tr - boneXfo.tr;
-  distBoneBaseToTarget = vecToTarget.norm();
+  distBoneBaseToTarget = vecToTarget.length();
   vecToTarget *= 1.0 / distBoneBaseToTarget;
 
   boneLengthVector = boneXfo.ori.rotateVector(boneLocalAxis);
@@ -70,7 +70,7 @@ function applyFishingRod(
     Scalar deltaBoneAngle = (ikBoneAngle - fkBoneAngle);
 
     bendAxis = vecToTarget.cross(boneLengthVector);
-    boneXfo.ori = axisAndAngleToQuat(bendAxis, deltaBoneAngle) * boneXfo.ori;
+    boneXfo.ori.setFromAxisAndAngle(bendAxis, deltaBoneAngle) * boneXfo.ori;
   }
 }
 

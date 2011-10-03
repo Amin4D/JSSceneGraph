@@ -147,7 +147,7 @@ FABRIC.SceneGraph.registerNodeType('CharacterSkeleton', {
         }
         else {
           var refPose = bones[boneOptions.parent].referencePose;
-          boneOptions.referenceLocalPose = refPose.projectInv(boneOptions.referencePose);
+          boneOptions.referenceLocalPose = refPose.inverse().multiply(boneOptions.referencePose);
         }
       }
       else if (!boneOptions.referencePose && boneOptions.referenceLocalPose) {
@@ -155,7 +155,7 @@ FABRIC.SceneGraph.registerNodeType('CharacterSkeleton', {
           boneOptions.referencePose = boneOptions.referenceLocalPose;
         }
         else {
-          boneOptions.referencePose = bones[boneOptions.parent].referencePose.project(boneOptions.referenceLocalPose);
+          boneOptions.referencePose = boneOptions.referenceLocalPose.multiply(bones[boneOptions.parent].referencePose);
         }
       }
 

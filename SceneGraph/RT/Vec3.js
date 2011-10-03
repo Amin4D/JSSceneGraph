@@ -242,7 +242,7 @@ FABRIC.RT.Vec3.distanceFromLineToLine = function(
   }
 
   // get the difference of the two closest points
-  result.dP = w.add(u.scale(result.l1_t).subtract(v.scale(result.l2_t)));
+  result.dP = w.add(u.multiplyScalar(result.l1_t).subtract(v.multiplyScalar(result.l2_t)));
   result.dist = result.dP.length();
   return result; // return the closest distance
 };

@@ -330,6 +330,12 @@ FABRIC.RT.Quat.prototype = {
 
   // Note: this and q2 should be unit Quaternions
   sphericalLinearInterpolate: function(q2, t) {
+    var angle = this.dot(q2);
+    if (angle < 0.0) {
+      q2 = q2.negate();
+      q2.w *= - 1.0;
+    }
+
     var r;
     var cosHalfTheta = this.dot(q2);
 
@@ -355,6 +361,12 @@ FABRIC.RT.Quat.prototype = {
   },
 
   linearInterpolate: function(other, t) {
+    var angle = this.dot(other);
+    if (angle < 0.0) {
+      other = other.negate();
+      other.w *= - 1.0;
+    }
+
     var q = new FABRIC.RT.Quat(this.v.linearInterpolate(other.v, t), this.w + ((other.w - this.w) * t));
     return q.unit();
   },
@@ -384,61 +396,3 @@ FABRIC.appendOnCreateContextCallback(function(context) {
     }
   });
 });
-
-/*
-Old implementation of linearInterpolate. Which one should we keep? For now I kept the KL one...
-If we keep the one below, it has to be fixed: it is modifying q2!
-
-FABRIC.RT.Quat.makeNlerp = function(q1, q2, t) {
-  var q = new FABRIC.RT.Quat();
-  var angle = q1.dot(q2);
-  if (angle < 0.0) {
-    q2.v.negateInPlace();
-    q2.w *= - 1.0;
-  }
-  var p1 = 1.0 - t;
-  q.v = q1.v.multiply(p1) + q2.v.multiply(t);
-  q.w = (q1.w * p1) + (q2.w * t);
-  q.normalize();
-  return q;
-};
-*/
-
-/*
-Old implementation of linearInterpolate. Which one should we keep? For now I kept the KL one...
-If we keep the one below, it has to be fixed: it is modifying q2!
-
-FABRIC.RT.Quat.makeSlerp = function(q1, q2, t) {
-  var q = new FABRIC.RT.Quat();
-  var angle = q1.dot(q2);
-  if (angle < 0.0) {
-    q1 *= - 1.0;
-    angle *= - 1.0;
-  }
-
-  var scale;
-  var invscale;
-
-  if ((angle + 1.0) > 0.05) {
-    if ((1.0 - angle) >= 0.05)// spherical interpolation
-    {
-      var theta = acos(angle);
-      var invsintheta = 1.0 / (Math.sin(theta));
-      scale = Math.sin(theta * (1.0 - t)) * invsintheta;
-      invscale = Math.sin(theta * t) * invsintheta;
-    }
-    else // linear interploation
-    {
-      scale = 1.0 - t;
-      invscale = t;
-    }
-  }
-  else {
-    q2.set(-q1.v.y, q1.v.x, - q1.w, q1.v.z);
-    scale = Math.sin(Math.PI * (0.5 - t));
-    invscale = Math.sin(Math.PI * t);
-  }
-  q = q1.multiply(scale).addInPlace(q2.multiply(invscale));
-  return q;
-};
-*/

@@ -154,9 +154,9 @@ $(document).ready(function() {
         (Math.random() - 0.5) * gridSize * 0.95,
         -2.5/scl,
         (Math.random() - 0.5) * gridSize * 0.95),
-      ori:FABRIC.RT.Quat.makeFromAxisAndAngle( new FABRIC.RT.Vec3(0,1,0), (Math.random() - 0.5) * Math.TWO_PI ), /* TODO: Transtion the whole math libary to radians. */
+      ori: new FABRIC.RT.Quat().setFromAxisAndAngle( new FABRIC.RT.Vec3(0,1,0), (Math.random() - 0.5) * Math.TWO_PI ), /* TODO: Transtion the whole math libary to radians. */
       sc: new FABRIC.RT.Vec3(scl, scl, scl)
-    }).makeMat44()
+    }).toMat44()
     );
   }
   scene.constructNode('Instance', {
@@ -179,9 +179,9 @@ $(document).ready(function() {
         (Math.random() - 0.5) * gridSize * 0.95,
         -7,
         (Math.random() - 0.5) * gridSize * 0.95),
-      ori:FABRIC.RT.Quat.makeFromAxisAndAngle( new FABRIC.RT.Vec3(0,1,0), (Math.random() - 0.5) * Math.TWO_PI ),
+      ori: new FABRIC.RT.Quat().setFromAxisAndAngle( new FABRIC.RT.Vec3(0,1,0), (Math.random() - 0.5) * Math.TWO_PI ),
       sc: new FABRIC.RT.Vec3(scl, scl, scl)
-    }).makeMat44()
+    }).toMat44()
     );
   }
   scene.constructNode('Instance', {

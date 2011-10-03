@@ -15,7 +15,7 @@ operator generateDebugPoints(io Xfo debugPose[], io Xfo offset, io Vec3 position
   positions.resize(debugPose.size());
   colors.resize(debugPose.size());
   for (var Integer i = 0; i < debugPose.size(); i++) {
-    positions[i] = offset.transform(debugPose[i].tr);
+    positions[i] = offset.transformVector(debugPose[i].tr);
     colors[i] = color;
   }
 }

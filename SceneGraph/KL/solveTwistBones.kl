@@ -25,7 +25,7 @@ operator solveBlendBones(
 
   for (var Integer i = 0; i < blendBones.size(); i++) {
     pose[blendBones[i]].tr = baseXfo.transformVector(bones[blendBones[i]].referenceLocalPose.tr);
-    pose[blendBones[i]].ori = slerp(baseXfo.ori, endXfo.ori, blendWeights[i]);
+    pose[blendBones[i]].ori = baseXfo.ori.sphericalLinearInterpolate(endXfo.ori, blendWeights[i]);
   }
 }
 
@@ -54,6 +54,6 @@ operator solveTwistBones(
 
   for (var Integer i = 0; i < twistBones.size(); i++) {
     pose[twistBones[i]].tr = baseXfo.transformVector(bones[twistBones[i]].referenceLocalPose.tr);
-    pose[twistBones[i]].ori = slerp(baseXfo.ori, endXfo.ori, twistWeights[i]);
+    pose[twistBones[i]].ori = baseXfo.ori.sphericalLinearInterpolate(endXfo.ori, twistWeights[i]);
   }
 }

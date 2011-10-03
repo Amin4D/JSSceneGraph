@@ -57,7 +57,7 @@ operator solveArmRig(
     pose[wristIndex].ori = targetXfo.ori;
 
     for (Integer i = 0; i < boneIndices.size(); i++) {
-      pose[boneIndices[i]].ori = slerp(fkPose[i].ori, pose[boneIndices[i]].ori, ikBlend);
+      pose[boneIndices[i]].ori = fkPose[i].ori.sphericalLinearInterpolate(pose[boneIndices[i]].ori, ikBlend);
       if (i > 0) {
         pose[boneIndices[i]].tr = pose[boneIndices[i - 1]] * bones[boneIndices[i]].referenceLocalPose.tr;
       }
@@ -116,7 +116,7 @@ operator solveLegRig(
     pose[ankleIndex].ori = targetXfo.ori;
 
     for (Integer i = 0; i < boneIndices.size(); i++) {
-      pose[boneIndices[i]].ori = slerp(fkPose[i].ori, pose[boneIndices[i]].ori, ikBlend);
+      pose[boneIndices[i]].ori = fkPose[i].ori.sphericalLinearInterpolate(pose[boneIndices[i]].ori, ikBlend);
       if (i > 0) {
         pose[boneIndices[i]].tr = pose[boneIndices[i - 1]] * bones[boneIndices[i]].referenceLocalPose.tr;
       }

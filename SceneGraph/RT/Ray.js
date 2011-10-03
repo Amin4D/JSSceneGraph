@@ -137,7 +137,7 @@ FABRIC.RT.Ray.calculateRayFromViewportData = function(
   // Transform the origin from camera local to world space
   var camInv = cameraMat44.inverse();
 
-  //  ray.start = camInv.mul(new FABRIC.RT.Vec3(0.0, 0.0, 0.0));
+  //  ray.start = camInv.multiply(new FABRIC.RT.Vec3(0.0, 0.0, 0.0));
   ray.start = new FABRIC.RT.Vec3(camInv.row3.x, camInv.row3.y, camInv.row3.z);
 
   // Get the projected window coordinate on the near plane
@@ -145,12 +145,12 @@ FABRIC.RT.Ray.calculateRayFromViewportData = function(
   // for details.
   var projInv = projectionMat44.inverse();
 
-  ray.direction = projInv.mul(new FABRIC.RT.Vec3(sx, - sy, - 1.0));
+  ray.direction = projInv.multiply(new FABRIC.RT.Vec3(sx, - sy, - 1.0));
 
   // And from projection space to camera local.
   // - We nuke the translation part since we're transforming a vector.
   camInv.zeroTranslation();
-  ray.direction = camInv.mul(ray.direction).unit();
+  ray.direction = camInv.multiply(ray.direction).unit();
   return ray;
 };
 

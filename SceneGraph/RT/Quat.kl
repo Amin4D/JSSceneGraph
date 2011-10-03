@@ -340,6 +340,12 @@ function Mat33 Quat.toMat33() {
 
 // Note: this and q2 should be unit Quaternions
 function Quat Quat.sphericalLinearInterpolate(in Quat q2, in Scalar t) {
+  Scalar angle = this.dot(q2);
+  if (angle < 0.0) {
+    q2 = q2.negate();
+    q2.w *= - 1.0;
+  }
+
   Quat r;
 
   Scalar cosHalfTheta = this.dot(q2);
@@ -366,6 +372,12 @@ function Quat Quat.sphericalLinearInterpolate(in Quat q2, in Scalar t) {
 }
 
 function Quat Quat.linearInterpolate(in Quat other, in Scalar t) {
+  Scalar angle = this.dot(other);
+  if (angle < 0.0) {
+    other = other.negate();
+    other.w *= - 1.0;
+  }
+
   Quat q;
   q.v = this.v.linearInterpolate(other.v, t);
   q.w = this.w + ((other.w - this.w) * t);

@@ -19,7 +19,8 @@ operator calcReferencePoseFromInverseBindPose(io Bone bones[], io Mat44 invGloba
   report('calcReferencePoseFromInverseBindPose bones.size():' + bones.size() + ' invGlobalMat44.size():' + invGlobalMat44.size());
   if (bones.size() == invGlobalMat44.size()) {
     for (Integer i = 0; i < bones.size(); i++) {
-      bones[i].referencePose = Xfo(invGlobalMat44[i]).inv();
+      Xfo xfo;
+      bones[i].referencePose = xfo.setFromMat44(invGlobalMat44[i]).inverse();
     }
   }
 }
@@ -55,8 +56,8 @@ operator calcReferenceGlobalPose(io Bone bones[]) {
     }
     else {
       // Our Math library has some fundamental bugs in it, and I'm working around them here.
-      //  bones[i].referenceLocalPose = bones[bones[i].parent].referencePose.inv() * bones[i].referencePose;
-      //  bones[i].referenceLocalPose = bones[i].referencePose * bones[bones[i].parent].referencePose.inv();
+      //  bones[i].referenceLocalPose = bones[bones[i].parent].referencePose.inverse() * bones[i].referencePose;
+      //  bones[i].referenceLocalPose = bones[i].referencePose * bones[bones[i].parent].referencePose.inverse();
       //  report( bones[i].referenceLocalPose );
       Mat44 parentGlobal = bones[bones[i].parent].referencePose;
       Mat44 thisLocal = bones[i].referenceLocalPose;

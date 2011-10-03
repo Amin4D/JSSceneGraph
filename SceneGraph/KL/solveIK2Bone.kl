@@ -43,7 +43,8 @@ operator solveIK2Bone(
   if (lengthC < lengthA + lengthB) {
     var Scalar angle = - acos((lengthA * lengthA + lengthC * lengthC - lengthB * lengthB) / (2.0 * lengthA * lengthC));
     var Vec3 axis = sideA.cross(sideC).unit();
-    var Quat q = axisAndAngleToQuat(axis, angle);
+    var Quat q;
+    q.setFromAxisAndAngle(axis, angle);
     direction = q.rotateVector(sideC);
     triangleSolution = true;
   }
@@ -54,11 +55,11 @@ operator solveIK2Bone(
   // orient the bone inside of the plane
   var Vec3 boneAXaxis = pose[boneA].ori.getXaxis();
   if (pose[boneA].sc.x < 0.0) {
-    boneAXaxis = boneAXaxis.neg();
+    boneAXaxis = boneAXaxis.negate();
   }
   var Vec3 boneBXaxis = pose[boneB].ori.getXaxis();
   if (pose[boneB].sc.x < 0.0) {
-    boneBXaxis = boneBXaxis.neg();
+    boneBXaxis = boneBXaxis.negate();
   }
   if (directionBlend > 0.0) {
     boneOffsetRotation.setFrom2Vectors(boneAXaxis, direction.unit());

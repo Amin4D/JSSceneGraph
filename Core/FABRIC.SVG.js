@@ -2026,7 +2026,7 @@ FABRIC.createSVGRootElem = function(domRootID) {
             function(evt) {
               var mouseDownPos = graphHolderGroup.screenToLocalPos(new FABRIC.Vec2(evt.offsetX, evt.offsetY));
               var connectorVec = targetPos.subtract(sourcePos);
-              connectorVec.normalize();
+              connectorVec.setUnit();
               var mouseMoveFn = function(evt) {
                 var mousePos = graphHolderGroup.screenToLocalPos(new FABRIC.Vec2(evt.offsetX, evt.offsetY));
                 var dragDist = mousePos.subtract(mouseDownPos).dot(connectorVec);

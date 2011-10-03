@@ -637,7 +637,7 @@ FABRIC.SceneGraph.registerNodeType('Manipulator', {
         setTargetXfo(xfo);
       }
       else {
-        setTargetXfo(getParentXfo().multiplyInv(xfo));
+        setTargetXfo(getParentXfo().inverse.multiply(xfo));
       }
     };
     manipulatorNode.setTargetOri = function(ori) {
@@ -648,7 +648,7 @@ FABRIC.SceneGraph.registerNodeType('Manipulator', {
         setTargetOri(xfo);
       }
       else {
-        setTargetOri(getParentXfo().ori.invert().postMultiply(ori));
+        setTargetOri(getParentXfo().ori.inverse().multiply(ori));
       }
     };
     
@@ -723,15 +723,15 @@ FABRIC.SceneGraph.registerNodeType('Manipulator', {
 
       if (deltaX > Math.HALF_PI) {
         deltaX = Math.PI - deltaX;
-        localX.negateInPlace();
+        localX = localX.negate();
       }
       if (deltaY > Math.HALF_PI) {
         deltaY = Math.PI - deltaY;
-        localY.negateInPlace();
+        localY = localY.negate();
       }
       if (deltaZ > Math.HALF_PI) {
         deltaZ = Math.PI - deltaZ;
-        localZ.negateInPlace();
+        localZ = localZ.negate();
       }
       if (deltaX < deltaY && deltaX < deltaZ) {
         return localX;
@@ -1302,7 +1302,7 @@ FABRIC.SceneGraph.registerNodeType('BoneManipulator', {
       dragXfo.ori = dragXfo.ori.multiply(new FABRIC.RT.Quat().setFromAxisAndAngle(normal, angle));
       
       if(parentManipulator){
-        manipulatorNode.setTargetOri(dragXfo.ori.multiply(parentXfo.ori.invert()));
+        manipulatorNode.setTargetOri(dragXfo.ori.multiply(parentXfo.ori.inverse()));
       }else{
         manipulatorNode.setTargetGlobalXfo(dragXfo);
       }
@@ -1353,8 +1353,8 @@ FABRIC.SceneGraph.registerNodeType('BoneManipulator', {
 
       dragXfo.tr = dragXfo.tr.add(movement);
       dragXfo.ori = dragXfo.ori.multiply(counterRotation);
-      this.setTargetOri(dragXfo.ori.multiply(parentXfo.ori.invert()));
-     // this.setTargetOri(parentXfo.multiplyInv(dragXfo).ori);
+      this.setTargetOri(dragXfo.ori.multiply(parentXfo.ori.inverse()));
+     // this.setTargetOri(parentXfo.inverse.multiply(dragXfo).ori);
 
       if (childManipulator) {
         childManipulator.counterRotateChild(newVec1.multiplyScalar((newVec1Length - options.length) / newVec1Length), dragXfo);

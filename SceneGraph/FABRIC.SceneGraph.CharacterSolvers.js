@@ -475,10 +475,10 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('IK2BoneSolver',
 
       // compute the target
       targetPos = referencePose[boneIDs.boneB].transformVector(new FABRIC.RT.Vec3(bones[boneIDs.boneB].length, 0, 0));
-      targetXfo = referencePose[boneIDs.targetParent].multiplyInv(new FABRIC.RT.Xfo({ tr: targetPos }));
+      targetXfo = referencePose[boneIDs.targetParent].inverse().multiply(new FABRIC.RT.Xfo({ tr: targetPos }));
 
       // compute the upvector
-      targetPos.subInPlace(referencePose[boneIDs.boneA].tr);
+      targetPos = targetPos.subtract(referencePose[boneIDs.boneA].tr);
       lengthCenter = targetPos.unit().dot(referencePose[boneIDs.boneA].ori.getXaxis()) * bones[boneIDs.boneB].length;
       center = targetPos.unit().multiplyScalar(lengthCenter).add(referencePose[boneIDs.boneA].tr);
       center = center.add(targetPos).add(referencePose[boneIDs.boneA].tr);
@@ -486,7 +486,7 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('IK2BoneSolver',
 
       height = referencePose[boneIDs.boneB].tr.subtract(center);
       upvectorPos = referencePose[boneIDs.boneB].tr.add(height).add(height);
-      upvector = referencePose[boneIDs.upvectorParent].multiplyInv(new FABRIC.RT.Xfo({ tr: upvectorPos }));
+      upvector = referencePose[boneIDs.upvectorParent].inverse.multiply(new FABRIC.RT.Xfo({ tr: upvectorPos }));
       
       if(options.projectTargetToUpvectorFactor != undefined) {
         upvector.tr = targetXfo.tr.multiplyScalar(options.projectTargetToUpvectorFactor);
@@ -582,15 +582,15 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('SpineSolver',
       // first, we will compute the local transform of the end inside the start's space
       var rootXfo = referencePose[skeletonNode.getParentId(baseVertebreIndex)];
       var startXfo = referencePose[baseVertebreIndex];
-      var startlocalXfo = rootXfo ? rootXfo.projectInv(startXfo) : startXfo;
+      var startlocalXfo = rootXfo ? rootXfo.inverse().multiply(startXfo) : startXfo;
       var endXfo = referencePose[boneIDs.end];
-      var endlocalXfo = rootXfo ? rootXfo.projectInv(endXfo) : startXfo.projectInv(endXfo);
+      var endlocalXfo = rootXfo ? rootXfo.inverse().multiply(endXfo) : startXfo.projectInv(endXfo);
 
       // check if we know the U values
       var uValues = [0];
-      var endLength = startXfo.projectInv(endXfo).tr.length();
+      var endLength = startXfo.inverse().multiply(endXfo).tr.length();
       for (var i = 1; i < boneIDs.vertebra.length; i++) {
-        var local = startXfo.projectInv(referencePose[boneIDs.vertebra[i]]);
+        var local = startXfo.inverse().multiply(referencePose[boneIDs.vertebra[i]]);
         var u = local.tr.length() / endLength;
         if (u > 1.0) {
           throw ("Unexpected U value, vertebra '" + bones[boneIDs.vertebra[i]].name + "' outside of  spine.");
@@ -746,9 +746,9 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('TwistBoneSolver',
       var uValues = options.uValues;
       if (!uValues) {
         uValues = [];
-        var boneLength = startXfo.projectInv(endXfo).tr.length();
+        var boneLength = startXfo.inverse().multiply(endXfo).tr.length();
         for (var i = 0; i < boneIDs.twistBones.length; i++) {
-          var local = startXfo.projectInv(referencePose[boneIDs.twistBones[i]]);
+          var local = startXfo.inverse().multiply(referencePose[boneIDs.twistBones[i]]);
           var u = local.tr.length() / boneLength;
           if (u > 1.0) {
             throw ("Unexpected U value, twistBone '" + bones[boneIDs.twistBones[i]].name + "' outside of bone.");
@@ -822,7 +822,7 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('BlendBoneSolver',
       for (var i = 0; i < boneIDs.blendBones.length; i++) {
         var blendedXfo = startXfo.clone();
         blendedXfo.ori.sphericalLinearInterpolate(startXfo.ori, options.blendWeights[i]);
-        blendBoneOffsets.push(startXfo.projectInv(blendedXfo));
+        blendBoneOffsets.push(startXfo.inverse().multiply(blendedXfo));
       }
       constantsNode.pub.addMember(name + 'start', 'Integer', boneIDs.start);
       constantsNode.pub.addMember(name + 'end', 'Integer', boneIDs.end);
@@ -969,7 +969,7 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('NCFIKSolver',
 
       // compute the target
       targetPos = referencePose[lastBoneIndex].transformVector(new FABRIC.RT.Vec3(bones[lastBoneIndex].length, 0, 0));
-      targetXfo = referencePose[boneIDs.targetParent].multiplyInv(new FABRIC.RT.Xfo({ tr: targetPos }));
+      targetXfo = referencePose[boneIDs.targetParent].inverse.multiply(new FABRIC.RT.Xfo({ tr: targetPos }));
 
       constantsNode.pub.addMember(name + 'boneIndices', 'Integer[]', boneIDs.bones);
       variablesNode.pub.addMember(name + 'target', 'Xfo', targetXfo);
@@ -1056,7 +1056,7 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('ArmSolver',
       var wristBoneIndex = boneIDs.bones[boneIDs.bones.length - 1];
       handControlXfo = referencePose[wristBoneIndex].clone();
       handControlXfo.tr = referencePose[wristBoneIndex].transformVector(new FABRIC.RT.Vec3(bones[wristBoneIndex].length, 0, 0));
-      wristOffsetXfo = handControlXfo.multiplyInv(referencePose[wristBoneIndex]);
+      wristOffsetXfo = handControlXfo.inverse().multiply(referencePose[wristBoneIndex]);
 
       constantsNode.pub.addMember(name + 'bones', 'Integer[]', boneIDs.bones);
       constantsNode.pub.addMember(name + 'wristOffsetXfo', 'Xfo', wristOffsetXfo);
@@ -1182,7 +1182,7 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('LegSolver',
        )
      );
 
-      ankleOffsetXfo = footPlatformXfo.multiplyInv(ankleTipXfo);
+      ankleOffsetXfo = footPlatformXfo.inverse().multiply(ankleTipXfo);
 
 
       constantsNode.pub.addMember(name + 'bones', 'Integer[]', boneIDs.bones);

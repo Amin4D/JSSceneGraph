@@ -259,8 +259,11 @@ operator deformMuscleVolume(
   Vec3 frameoffsetvec = parentpositions[index] * volumePixel.r * compressionFactor;
   frameoffsetvec.x = 0.0;
   Quat frame;
-  if ( i >= 0 && i < xfos.size )
+  if ( i < (xfos.size-1) ){
     frame = xfos[i].ori.nlerp( xfos[i+1].ori, t );
+  }else{
+    frame = xfos[i].ori;
+  }
   normal = frame.rotateVector( frameoffsetvec );
   position = corepos + normal;
   normal.setUnit();

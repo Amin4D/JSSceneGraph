@@ -9,12 +9,17 @@ use Mat44;
 use OGLRenderTarget;
 use OGLTexture2D;
 
-function Mat44 symmetricFrustum(Scalar r, Scalar t, Scalar n, Scalar f) {
+function Mat44 symmetricFrustum(Scalar width, Scalar height, Scalar near, Scalar far) {
+  var Scalar d = far - near;
+  var Scalar q = -(far + near) / d;
+  var Scalar qn = -2.0 * (far * near) / d;
+  var Scalar w = 2.0 * (near / width);
+  var Scalar h = 2.0 * (near / height);
   var Mat44 result(
-    n / r, 0.0, 0.0, 0.0,
-    0.0, n / t, 0.0, 0.0,
-    0.0, 0.0, -(f + n) / (f - n), - 1.0,
-    0.0, 0.0, -(2.0 * f * n) / (f - n), 0.0);
+    w, 0.0, 0.0, 0.0,
+    0.0, h, 0.0, 0.0,
+    0.0, 0.0, q, qn,
+    0.0, 0.0, -1.0, 0.0);
   return result;
 }
 
@@ -36,9 +41,10 @@ operator calcLightProjectionMatricies(
   var Mat44 biasMat;
   biasMat.setNull();
   biasMat.setDiagonal(0.5);
-  biasMat.setTranslation(Vec4(0.5, 0.5, 0.5, 1.0));
+  biasMat.setTranslation(Vec3(0.5, 0.5, 0.5));
+  biasMat.row3.t = 1.0;
 
-  shadowMat = lightInvMat * lightProjectionMat * biasMat;
+  shadowMat = biasMat * lightProjectionMat * lightInvMat;
 }
 
 operator bindShadowMapBuffer(

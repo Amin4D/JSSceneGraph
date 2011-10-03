@@ -16,21 +16,21 @@ function loadModelProjectionMatricesFn(
 
   location = shaderProgram.getUniformLocation(MODELMATRIX_ATTRIBUTE_ID);
   if(location!=-1){
-    shaderProgram.loadMat44Uniform(location, modelXfo.toMat44().transpose());
+    shaderProgram.loadMat44Uniform(location, modelXfo.toMat44());
   }
   location = shaderProgram.getUniformLocation(MODELMATRIXINVERSE_ATTRIBUTE_ID);
   if(location!=-1){
-    shaderProgram.loadMat44Uniform(location, modelXfo.toMat44().inverse().transpose());
+    shaderProgram.loadMat44Uniform(location, modelXfo.toMat44().inverse());
   }
   location = shaderProgram.getUniformLocation(VIEWMATRIX_ATTRIBUTE_ID);
   if(location!=-1){
-    shaderProgram.loadMat44Uniform(location, cameraMatrix.transpose());
+    shaderProgram.loadMat44Uniform(location, cameraMatrix);
   }
   location = shaderProgram.getUniformLocation(CAMERAMATRIX_ATTRIBUTE_ID);
   if(location!=-1){
     // Some shaders need the world space transform of the camera.
     // The camera matrix is inverted. 
-    shaderProgram.loadMat44Uniform(location, cameraMatrix.inverse().transpose());
+    shaderProgram.loadMat44Uniform(location, cameraMatrix.inverse());
   }
   location = shaderProgram.getUniformLocation(CAMERAPOS_ATTRIBUTE_ID);
   if(location!=-1){
@@ -38,12 +38,12 @@ function loadModelProjectionMatricesFn(
   }
   location = shaderProgram.getUniformLocation(PROJECTIONMATRIX_ATTRIBUTE_ID);
   if(location!=-1){
-    shaderProgram.loadMat44Uniform(location, projectionMatrix.transpose());
+    shaderProgram.loadMat44Uniform(location, projectionMatrix);
   }
   location = shaderProgram.getUniformLocation(NORMALMATRIX_ATTRIBUTE_ID);
   if(location!=-1){
     Mat44 modelViewMatrix = cameraMatrix * modelXfo.toMat44();
-    Mat33 normalMatrix = modelViewMatrix.upperLeft().inverse();
+    Mat33 normalMatrix = modelViewMatrix.upperLeft().inverse().transpose();
     shaderProgram.loadMat33Uniform(location, normalMatrix);
   }
   location = shaderProgram.getUniformLocation(PROJECTIONMATRIXINV_ATTRIBUTE_ID);
@@ -53,12 +53,12 @@ function loadModelProjectionMatricesFn(
   location = shaderProgram.getUniformLocation(MODELVIEW_MATRIX_ATTRIBUTE_ID);
   if(location!=-1){
     Mat44 modelViewMatrix = cameraMatrix * modelXfo.toMat44();
-    shaderProgram.loadMat44Uniform(location, modelViewMatrix.transpose());
+    shaderProgram.loadMat44Uniform(location, modelViewMatrix);
   }
   location = shaderProgram.getUniformLocation(MODELVIEWPROJECTION_MATRIX_ATTRIBUTE_ID);
   if(location!=-1){
     Mat44 modelViewProjectionMatrix = projectionMatrix * cameraMatrix * modelXfo.toMat44();
-    shaderProgram.loadMat44Uniform(location, modelViewProjectionMatrix.transpose());
+    shaderProgram.loadMat44Uniform(location, modelViewProjectionMatrix);
   }
 }
 

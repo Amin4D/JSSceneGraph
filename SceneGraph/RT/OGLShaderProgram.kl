@@ -482,7 +482,7 @@ function OGLShaderProgram.loadMat33Uniform(
   }
   if (location != - 1) {
     var Mat33 values[];
-    values.push(value);
+    values.push(value.transpose());
     glUniformMatrix3fv(location, 1, false, values);
   }
   else{
@@ -503,7 +503,7 @@ function OGLShaderProgram.loadMat44Uniform(
       this.validateUniformBinding(location, value.dataSize());
     }
     var Mat44 values[];
-    values.push(value);
+    values.push(value.transpose());
     glUniformMatrix4fv(location, 1, false, values);
   }
   else{

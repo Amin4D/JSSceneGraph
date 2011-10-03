@@ -43,7 +43,7 @@ operator loadDirectionalLight(
 //  report("loadDirectionalLight");
   Integer location = shaderProgram.getUniformLocation(LIGHTDIR_ATTRIBUTE_ID); // LIGHTDIR ATTRIBUTE ID
   if(location!=-1){
-    Vec3 viewDir = cameraMatrix.upperLeft() * lightMatrix.upperLeft() * Vec3(0.0, 0.0, -1.0);
+    Vec3 viewDir = lightMatrix.upperLeft() * cameraMatrix.upperLeft() * Vec3(0.0, 0.0, -1.0);
     viewDir = viewDir.unit(); //lightMatrix might have scaling
     shaderProgram.loadVec3Uniform(location, viewDir);
   }
@@ -60,7 +60,7 @@ operator loadSpotLight(
 
   location = shaderProgram.getUniformLocation(LIGHTDIR_ATTRIBUTE_ID); // LIGHTDIR ATTRIBUTE ID
   if(location!=-1){
-    var Vec3 viewDir = cameraMatrix.upperLeft() * lightMatrix.upperLeft() * Vec3(0.0, 0.0, -1.0) ;
+    var Vec3 viewDir = lightMatrix.upperLeft() * cameraMatrix.upperLeft() * Vec3(0.0, 0.0, -1.0) ;
     viewDir = viewDir.unit(); //lightMatrix might have scaling
     shaderProgram.loadVec3Uniform(location, viewDir);
   }
@@ -78,7 +78,7 @@ operator loadLightMatrixUniform(
 //  report("loadLightMatrixUniform");
   Integer location = shaderProgram.getUniformLocation(LIGHTVIEWMATRIX_ATTRIBUTE_ID); // LIGHTVIEWMATRIX ATTRIBUTE ID
   if(location!=-1){
-    Mat44 lightViewMatrix = lightShadowMapMatrix * cameraMatrix.inverse();
-    shaderProgram.loadMat44Uniform(location, lightViewMatrix.transpose());
+    Mat44 lightViewMatrix = cameraMatrix.inverse() * lightShadowMapMatrix;
+    shaderProgram.loadMat44Uniform(location, lightViewMatrix);
   }
 }

@@ -30,11 +30,11 @@ operator collectPointsInsideBrush(
   Mat33 normalMatrix = modelViewProjectionMatrix.upperLeft().inverse().transpose();
 
   for (var Integer i = 0; i < positions.size(); i++) {
-    Vec3 n = normals[i] * normalMatrix;
+    Vec3 n = normalMatrix * normals[i];
     if (n.z > 0) {
       continue;
     }
-    Vec3 v = positions[i] * modelViewProjectionMatrix;
+    Vec3 v = modelViewProjectionMatrix * positions[i];
     Vec3 delta = v - brushPos;
     delta.x *= aspectRatio;
     delta.z *= 0.0;

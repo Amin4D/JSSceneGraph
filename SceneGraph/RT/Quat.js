@@ -42,8 +42,8 @@ FABRIC.RT.Quat = function() {
     this.w = arguments[0].w;
   }
   else if (arguments.length == 0) {
-    this.v = new FABRIC.RT.Vec3(1.0,0.0,0.0);
-    this.w = 0.0;
+    this.v = new FABRIC.RT.Vec3(0.0,0.0,0.0);
+    this.w = 1.0;
   }
   else throw'Quat constructor: invalid arguments';
 };

@@ -118,7 +118,6 @@ FABRIC.SceneGraph.registerNodeType('AimTransform', {
       options.globalXfo = new FABRIC.RT.Xfo({ tr: options.position });
       
       var dirVec = options.position.subtract(options.target);
-      var vec1 = options.globalXfo.ori.getZaxis();
       var vec2 = dirVec.unit();
       options.globalXfo.ori.setFrom2Vectors(new FABRIC.RT.Vec3(0, 0, 1) , vec2, true);
       vec1 = options.globalXfo.ori.getYaxis();

@@ -23,7 +23,7 @@ FABRIC.SceneGraph.registerNodeType('CharacterMesh', {
       operatorName: 'loadSkinningMatrices',
       srcFile: 'FABRIC_ROOT/SceneGraph/KL/loadSkinningMatrices.kl',
       preProcessorDefinitions: {
-        SKINNING_MATRICIES_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('skinningMatrices')
+        SKINNING_MATRICES_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('skinningMatrices')
       },
       entryFunctionName: 'loadSkinningMatrices',
       parameterLayout: [

@@ -431,9 +431,9 @@ FABRIC.SceneGraph.registerNodeType('SpotLight', {
       dgnode.addMember('depthRenderTarget', 'OGLRenderTarget', FABRIC.RT.oglDepthRenderTarget(options.resolution));
       
       dgnode.bindings.append(scene.constructOperator({
-          operatorName: 'calcLightProjectionMatricies',
+          operatorName: 'calcLightProjectionMatrices',
           srcFile: 'FABRIC_ROOT/SceneGraph/KL/shadowMaps.kl',
-          entryFunctionName: 'calcLightProjectionMatricies',
+          entryFunctionName: 'calcLightProjectionMatrices',
           parameterLayout: [
             'self.nearDistance',
             'self.farDistance',

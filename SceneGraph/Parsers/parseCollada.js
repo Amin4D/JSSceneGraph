@@ -823,7 +823,7 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
       name:controllerName+"Skeleton",
       calcReferenceLocalPose: false,
       calcReferenceGlobalPose: false,
-      calcInvMatricies: false
+      calcInvMatrices: false
     });
     skeletonNode.setBones(bones);
     

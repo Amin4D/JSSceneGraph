@@ -17,15 +17,15 @@ operator loadSkinningMatrices(
   io Boolean drawToggle
 ) {
 //  report("loadSkinningMatrices");
-  Integer location = shaderProgram.getUniformLocation(SKINNING_MATRICIES_ATTRIBUTE_ID);
+  Integer location = shaderProgram.getUniformLocation(SKINNING_MATRICES_ATTRIBUTE_ID);
   if(location!=-1){
     Mat44 skinningMatrices[];
     skinningMatrices.resize(invMatrices.size());
     for (var Integer i = 0; i < invMatrices.size(); i++) {
       if(boneMapping[i] < 0)
         continue;
-      skinningMatrices[i] = (invMatrices[i] * pose[boneMapping[i]].toMat44()).transpose();
+      skinningMatrices[i] = (pose[boneMapping[i]].toMat44() * invMatrices[i]).transpose();
     }
-    shaderProgram.loadMat44UniformArray(location, skinningMatrices);
+    shaderProgram.loadMat44TransposedUniformArray(location, skinningMatrices);
   }
 }

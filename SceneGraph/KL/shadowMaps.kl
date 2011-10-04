@@ -23,7 +23,7 @@ function Mat44 symmetricFrustum(Scalar width, Scalar height, Scalar near, Scalar
   return result;
 }
 
-operator calcLightProjectionMatricies(
+operator calcLightProjectionMatrices(
   io Scalar near,
   io Scalar far,
   io Scalar fovY,
@@ -31,7 +31,7 @@ operator calcLightProjectionMatricies(
   io Mat44 lightProjectionMat,
   io Mat44 shadowMat
 ) {
-  //  report( "calcLightProjectionMatricies" );
+  //  report( "calcLightProjectionMatrices" );
   
   var Scalar frustumH = tan(fovY / 2) * near;
   var Scalar frustumW = frustumH;

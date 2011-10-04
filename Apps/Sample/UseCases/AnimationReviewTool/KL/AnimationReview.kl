@@ -83,15 +83,15 @@ operator paintPixels(
     Vec2 diff(0.0,0.0);
     Vec2 uvdiff(0.0,0.0);
     if(paint > 1) {
-      if(prevUvs[i].a <= 0.01) {
-        prevUvs[i] = uvs[i];
-      }
+    //  if(prevUvs[i].a <= 0.01) {
+    //    prevUvs[i] = uvs[i];
+    //  }
       diff.x = prevUvs[i].r - uvs[i].r;
       diff.y = prevUvs[i].g - uvs[i].g;
     }
-    if(abs(diff.x) > lineTolerance || abs(diff.y) > lineTolerance) {
-      diff.x = diff.y = 0.0;
-    }
+  //  if(abs(diff.x) > lineTolerance || abs(diff.y) > lineTolerance) {
+  //    diff.x = diff.y = 0.0;
+  //  }
     
     Scalar len = diff.norm();
     Scalar step = 1.0;
@@ -102,8 +102,8 @@ operator paintPixels(
         for(Scalar ry=0; ry<=radiusHeight; ry+=pixelHeight) {
           uvdiff.x = diff.x * d + rx - radiusWidth * 0.5;
           uvdiff.y = diff.y * d + ry - radiusHeight * 0.5;
-          if(uvdiff.x * uvdiff.y > radiusWidth * radiusHeight)
-            continue; 
+        //  if(uvdiff.x * uvdiff.y > radiusWidth * radiusHeight)
+        //    continue; 
           Size x = Size(Scalar(width) * (uvs[i].r + uvdiff.x));
           Size y = Size(Scalar(height) * (uvs[i].g + uvdiff.y));
           if(x < 0 && x >= width)

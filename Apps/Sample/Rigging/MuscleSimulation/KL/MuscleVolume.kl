@@ -53,26 +53,39 @@ function Vec3 evalPiecewiseBSpline(
 ){
   Vec3 p;
   t = u * Scalar(xfos.size() - 1);
-  if( t < Scalar(xfos.size() - 1) ){
+  if( t < 0.0 ){
+     i = 0;
+     t = 0.0;
+     return xfos[ 0 ].tr;
+  }
+  if( t >= Scalar(xfos.size() - 1) ){
+    i = xfos.size() - 2;
+    t = 1.0;
+    return xfos[ xfos.size() - 1 ].tr;
+  }
+  else{
     i = Integer(floor( t ));
     t = t - Scalar(i);
   }
-  else{
-    i = xfos.size() - 2;
-    t = 1.0;
-  }
-
+    
+  Vec3 result;
   if( i == 0 ){
-    p = xfos[ i ].tr + ( xfos[ i ].tr - xfos[ i + 1 ].tr );
-    return evalBSpline( p, xfos[ i ].tr, xfos[ i + 1 ].tr, xfos[ i + 2 ].tr, t );
+    if ( i + 2 < xfos.size() ) {
+      p = xfos[ i ].tr + ( xfos[ i ].tr - xfos[ i + 1 ].tr );
+      result = evalBSpline( p, xfos[ i ].tr, xfos[ i + 1 ].tr, xfos[ i + 2 ].tr, t );
+    }
   }
   else if( i == ( xfos.size() - 2 ) ){
-    p = xfos[ i + 1 ].tr + ( xfos[ i + 1 ].tr - xfos[ i ].tr );
-    return evalBSpline( xfos[ i - 1 ].tr, xfos[ i ].tr, xfos[ i + 1 ].tr, p, t );
+    if ( i >= 1 && i + 1 < xfos.size() ) {
+      p = xfos[ i + 1 ].tr + ( xfos[ i + 1 ].tr - xfos[ i ].tr );
+      result = evalBSpline( xfos[ i - 1 ].tr, xfos[ i ].tr, xfos[ i + 1 ].tr, p, t );
+    }
   }
   else{
-    return evalBSpline( xfos[ i - 1 ].tr, xfos[ i ].tr, xfos[ i + 1 ].tr, xfos[ i + 2 ].tr, t );
+    if ( i > 0 && i + 2 < xfos.size() )
+      result = evalBSpline( xfos[ i - 1 ].tr, xfos[ i ].tr, xfos[ i + 1 ].tr, xfos[ i + 2 ].tr, t );
   }
+  return result;
 }
 
 
@@ -251,7 +264,16 @@ operator deformMuscleVolume(
   
   Vec3 frameoffsetvec = parentpositions[index] * volumePixel.r * compressionFactor;
   frameoffsetvec.x = 0.0;
-  Quat frame = xfos[i].ori.nlerp( xfos[i+1].ori, t );
+  Quat frame;
+  if(i<0){
+    frame = xfos[0].ori;
+  }
+  else if (i < (xfos.size-1)){
+    frame = xfos[i].ori.nlerp( xfos[i+1].ori, t );
+  }
+  else{
+    frame = xfos[xfos.size-1].ori;
+  }
   normal = frame.rotateVector( frameoffsetvec );
   position = corepos + normal;
   normal.setUnit();

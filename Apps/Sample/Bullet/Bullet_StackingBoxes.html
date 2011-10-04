@@ -52,6 +52,10 @@
 
 $(document).ready(function() {
   
+  $('#loadingDialog').dialog({
+    modal: true
+  });
+  
   $('#play').button({
       text: true,
       icons: {
@@ -114,9 +118,6 @@ $(document).ready(function() {
     useFalloff: false
   });
   
-  $('#loadingDialog').dialog({
-    modal: true
-  });
   
   FABRIC.appendOnResolveAsyncTaskCallback(function(label, nbRemaining, doneWeight, totalWeight) {
     

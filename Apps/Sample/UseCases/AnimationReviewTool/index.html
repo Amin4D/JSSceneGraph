@@ -54,6 +54,14 @@
 #viewer {
   right:400px;
 }
+#timeControls {
+  right:400px;
+}
+
+#FabricContainer{
+  bottom:125;
+}
+
 
   
   </style>
@@ -343,7 +351,9 @@ FABRIC.SceneGraph.registerNodeType('PaintPlaneInstance', {
       if(!painting) {
         return;
       }
-      uvViewportNode.pub.setQueryPos(FABRIC.RT.vec2(evt.offsetX, height - 1 - evt.offsetY));
+      var mousePos = viewportNode.getElementCoords(evt);
+      mousePos.y = height - 1 - mousePos.y;
+      uvViewportNode.pub.setQueryPos(mousePos);
       viewportNode.pub.redraw();
     };
     var beginpaint = function(evt) {
@@ -397,6 +407,10 @@ FABRIC.SceneGraph.registerNodeType('PaintPlaneInstance', {
   }});    
 
 $(document).ready(function() {
+  
+  $('#loadingDialog').dialog({
+    modal: true
+  });
 
   var scene = FABRIC.SceneGraph.createScene();
   var viewport = scene.constructNode('Viewport', {
@@ -636,6 +650,7 @@ $(document).ready(function() {
   };
   
   // setup hotkeys
+  var painting = false;
   window.onkeydown = function(evt) {
     if(!timeRange)
       return;
@@ -672,7 +687,8 @@ $(document).ready(function() {
         }
       });
       scene.animation.pause();
-    } else if(evt.keyCode == 80) { // P
+    }
+    else if(evt.shiftKey) {
       cameraManipulator.disable();
       paintPlane();
       
@@ -694,11 +710,12 @@ $(document).ready(function() {
         }
         viewport.redraw();
       }
+      painting = true;
     }
   };
   
   window.onkeyup = function(evt) {
-    if(evt.keyCode == 80) { // P
+    if(painting) { 
       var count = FABRIC.getActiveAsyncTaskCount();
       if(count>0){
         FABRIC.appendOnResolveAsyncTaskCallback(function(label, countRemaining){
@@ -826,20 +843,18 @@ $(document).ready(function() {
   $('#planeblend').slider({
     });
 
-  $('#loadingDialog').dialog({
-    modal: true
-  });
   FABRIC.appendOnResolveAsyncTaskCallback(function(label, nbRemaining, doneWeight, totalWeight) {
     $('#loadingProgressBar').progressbar({
       value: (1.0-(doneWeight/totalWeight))*100
     });
     if (nbRemaining===0) {
       $('#loadingDialog').dialog('close');
-      viewport.redraw();
       var errors = scene.getErrors();
       if (errors.length > 0) {
         throw (errors.toString());
       }
+      
+      viewport.redraw();
       return true;
     }
   });
@@ -853,6 +868,9 @@ $(document).ready(function() {
     <div id="loadingDialog" title="Loading...">
       <h4 id="loadingDesc" style="margin-bottom: 10px">Downloading Alembic File.<br>This may take some time.</h4>
       <div id="loadingProgressBar" class="ui-progressbar-value"></div>
+    </div>
+    <div id="instructionsDialog" title="Instructions">
+      Hold down 'shift' to paint.
     </div>
     <div id="wrapper">
       <ul id="nav">
@@ -874,7 +892,7 @@ $(document).ready(function() {
             </div><!--content-->
             <h2>Planes</h2>
             <div class="content">
-                <select multi size=10 id='planelist' style='width: 200px'>
+                <select multi size=5 id='planelist' style='width: 200px'>
                 </select>
                 <div id='planeblend' style="margin-top:10px;"></div>
                  <p id="brushColor"></p>
@@ -885,14 +903,17 @@ $(document).ready(function() {
                 <label for="brushRadius" >Brush Radius:</label>
                 <div id='brushRadius' style="margin-top:10px;"></div>
             </div><!--content-->
-            <h2>Playback</h2>
-            <div class="content">
-                <button id="play" style="margin-top:10px;">Play</button>
-                <div id='localtime' style="margin-top:10px;"></div>
-            </div><!--content-->
-          </div><!--box-->
           </div><!--box-->
         </div><!--sidebar-->
+        <div id="timeControls">
+          <div class="box">
+            <h2>Playback</h2>
+            <div class="content">
+                <button id="play">Play</button>
+                <div id='localtime'></div>
+            </div><!--content-->
+          </div><!--box-->
+        </div><!--timeControls-->
       </div> <!--editor-->
     </div><!--wrapper-->
   </body> 

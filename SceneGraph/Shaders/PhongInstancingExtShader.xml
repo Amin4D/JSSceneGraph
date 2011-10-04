@@ -36,6 +36,7 @@
   <vertexshader>
     <source>
       <![CDATA[
+      #version 150
 
       uniform mat4 u_modelViewProjectionMatrix;
       uniform mat4 u_viewMatrix;
@@ -44,13 +45,13 @@
       uniform vec4 u_lightPosition;
       uniform sampler2D u_samplerTransformMap;
       
-      attribute vec4 a_position;
-      attribute vec3 a_normal;
-      attribute int a_instanceID;
+      in vec4 a_position;
+      in vec3 a_normal;
+      in int a_instanceID;
 
-      varying vec3 normal;
-      varying vec3 lightDir;
-      varying vec3 viewDir;
+      out vec3 normal;
+      out vec3 lightDir;
+      out vec3 viewDir;
 
       void main(){
         int instanceID = gl_InstanceID;

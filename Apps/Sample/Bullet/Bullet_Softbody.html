@@ -54,6 +54,10 @@
 
 $(document).ready(function() {
   
+  $('#loadingDialog').dialog({
+    modal: true
+  });
+  
   $('#play').button({
       text: true,
       icons: {
@@ -100,11 +104,13 @@ $(document).ready(function() {
   // create a simulation world
   var bulletWorldNode = scene.constructNode('BulletWorldNode');
 
+
   // import the cow  
   var assets = scene.importAssetFile('../Alembic/Models/cow.abc', {
     dependentNode: viewport,
-    onLoadSuccessCallback: function(){
+  });
 
+  assets['cow'].addOnLoadSuccessCallback(function(){
       // add a softbody to the sim
       var parsedNodes = assets['cow'].getParsedNodes();
       var softBodyNode = bulletWorldNode.addSoftBody('Cow'+i,new FABRIC.RT.BulletSoftBody({
@@ -126,12 +132,8 @@ $(document).ready(function() {
       
       $('#loadingDialog').dialog('close');
       viewport.redraw();
-    }
-  });
+    });
 
-  $('#loadingDialog').dialog({
-    modal: true
-  });
   FABRIC.appendOnResolveAsyncTaskCallback(function(label, nbRemaining, doneWeight, totalWeight) {
     $('#loadingProgressBar').progressbar({
       value: (1.0-(doneWeight/totalWeight))*100

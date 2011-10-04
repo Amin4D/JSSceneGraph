@@ -185,6 +185,21 @@ FABRIC.RT.BulletConstraint.createSlider = function(options) {
   return constraint;
 };
 
+FABRIC.RT.BulletAnchor = function(options) {
+  if(!options)
+    options = {};
+  this.localData = null;
+  this.rigidBodyLocalData = null;
+  this.softBodyLocalData = null;
+  this.name = options.name ? options.name : 'Anchor';
+  this.rigidBodyIndex = options.rigidBodyIndex != undefined ? options.rigidBodyIndex : 0;
+  this.softBodyNodeIndices = options.softBodyNodeIndices != undefined ? options.softBodyNodeIndices : [];
+  this.disableCollision = options.disableCollision != undefined ? options.disableCollision : true;
+};
+
+FABRIC.RT.BulletAnchor.prototype = {
+};
+
 FABRIC.SceneGraph.registerNodeType('BulletWorldNode', {
   briefDesc: 'The BulletWorldNode represents a bullet physics simulation world.',
   detailedDesc: 'The BulletWorldNode represents a bullet physics simulation world.',
@@ -210,6 +225,7 @@ FABRIC.SceneGraph.registerNodeType('BulletWorldNode', {
     rbddgnode.setDependency(dgnode,'simulation');
     rbddgnode.setDependency(shapedgnode,'shapes');
     sbddgnode.setDependency(dgnode,'simulation');
+    sbddgnode.setDependency(rbddgnode,'rigidBodies');
     
     // create world init operator
     dgnode.bindings.append(scene.constructOperator({
@@ -238,7 +254,7 @@ FABRIC.SceneGraph.registerNodeType('BulletWorldNode', {
         // create rigid body operator
         shapedgnode.setDependency(scene.getPrivateInterface(shape.geometryNode).getAttributesDGNode(),shapeName+"Shape_attributes");
         shapedgnode.bindings.append(scene.constructOperator({
-          operatorName: 'copy'+shapeName+'Vertices',
+          operatorName: 'copyShapeVertices',
           parameterLayout: [
             'self.'+shapeName+'Shape',
             shapeName+"Shape_attributes.positions<>",
@@ -250,7 +266,7 @@ FABRIC.SceneGraph.registerNodeType('BulletWorldNode', {
 
       // create rigid body operator
       shapedgnode.bindings.append(scene.constructOperator({
-        operatorName: 'create'+shapeName+'Shape',
+        operatorName: 'createBulletShape',
         parameterLayout: [
           'self.'+shapeName+'Shape'
         ],
@@ -280,7 +296,7 @@ FABRIC.SceneGraph.registerNodeType('BulletWorldNode', {
 
       // create rigid body operator
       rbddgnode.bindings.append(scene.constructOperator({
-        operatorName: 'create'+bodyName+'RigidBody',
+        operatorName: 'createBulletRigidBody',
         parameterLayout: [
           'simulation.world',
           'shapes.'+shapeName+'Shape',
@@ -313,7 +329,7 @@ FABRIC.SceneGraph.registerNodeType('BulletWorldNode', {
 
       // create the create softbody operator
       sbddgnode.bindings.append(scene.constructOperator({
-        operatorName: 'create'+bodyName+'SoftBody',
+        operatorName: 'createBulletSoftBody',
         parameterLayout: [
           'simulation.world',
           'self.'+bodyName+'Sbd',
@@ -364,7 +380,7 @@ FABRIC.SceneGraph.registerNodeType('BulletWorldNode', {
 
       // create rigid body operator
       rbddgnode.bindings.append(scene.constructOperator({
-        operatorName: 'create'+constraintName+'Constraint',
+        operatorName: 'createBulletConstraint',
         parameterLayout: [
           'simulation.world',
           'self.'+constraintName,
@@ -372,6 +388,41 @@ FABRIC.SceneGraph.registerNodeType('BulletWorldNode', {
           'self.'+bodyNameB+'Rbd'
         ],
         entryFunctionName: 'createBulletConstraint',
+        srcFile: 'FABRIC_ROOT/SceneGraph/KL/bullet.kl'
+      }));
+    }
+
+    bulletWorldNode.pub.addAnchor = function(anchorName,anchor,rigidBodyName,softBodyName) {
+      if(anchorName == undefined)
+        throw('You need to specify a constraintName when calling addAnchor!');
+      if(anchor == undefined)
+        throw('You need to specify a anchor when calling addAnchor!');
+      if(rigidBodyName == undefined)
+        throw('You need to specify a rigidBodyName when calling addAnchor!');
+      if(softBodyName == undefined)
+        throw('You need to specify a softBodyName when calling addAnchor!');
+        
+      // check if we are dealing with an array
+      var isArray = anchor.constructor.toString().indexOf("Array") != -1;
+      if(isArray) {
+        for(var i=0;i<anchor.length;i++) {
+          anchor[i].name = anchorName;
+        }
+      } else {
+        anchor.name = anchorName;
+      }
+      sbddgnode.addMember(anchorName, 'BulletAnchor[]', isArray ? anchor : [anchor]);
+
+      // create rigid body operator
+      sbddgnode.bindings.append(scene.constructOperator({
+        operatorName: 'createBulletAnchor',
+        parameterLayout: [
+          'simulation.world',
+          'self.'+anchorName,
+          'rigidBodies.'+rigidBodyName+'Rbd',
+          'self.'+softBodyName+'Sbd'
+        ],
+        entryFunctionName: 'createBulletAnchor',
         srcFile: 'FABRIC_ROOT/SceneGraph/KL/bullet.kl'
       }));
     }
@@ -396,7 +447,7 @@ FABRIC.SceneGraph.registerNodeType('BulletWorldNode', {
 
       // create rigid body operator
       dgnode.bindings.append(scene.constructOperator({
-        operatorName: 'apply'+forceName+'Force',
+        operatorName: 'applyBulletForce',
         parameterLayout: [
           'self.world',
           'self.'+forceName+'Force',
@@ -492,14 +543,20 @@ FABRIC.SceneGraph.registerNodeType('BulletRigidBodyTransform', {
       throw('The specified bulletWorldNode is not of type \'BulletWorldNode\'.');
     }
     var rbddgnode = scene.getPrivateInterface(options.bulletWorldNode).getRbdDGNode();
+    var sbddgnode = scene.getPrivateInterface(options.bulletWorldNode).getSbdDGNode();
 
     // check if we have a shape node
     if(!options.shapeName) {
       throw('You need to specify a shapeName for this constructor!');
     }
     
+    // reuse the transform for passive rigid bodies
+    if(options.rigidBody.mass == 0.0 && !options.globalXfo) {
+      options.globalXfo = options.rigidBody.transform;
+    }
+    
     // create the transform node
-    var rigidBodyTransformNode = scene.constructNode('Transform', {name: options.name});
+    var rigidBodyTransformNode = scene.constructNode('Transform', {name: options.name, globalXfo: options.globalXfo});
 
     // create the rigid body on the world
     var bodyName = rigidBodyTransformNode.pub.getName();
@@ -507,7 +564,8 @@ FABRIC.SceneGraph.registerNodeType('BulletRigidBodyTransform', {
     var bulletWorldNode = scene.getPrivateInterface(options.bulletWorldNode);
 
     var dgnode = rigidBodyTransformNode.getDGNode();
-    dgnode.setDependency(rbddgnode,'bodies');
+    dgnode.setDependency(rbddgnode,'rigidbodies');
+    dgnode.setDependency(sbddgnode,'softbodies');
     
     // check if we are using multiple rigid bodies
     if(options.rigidBody.constructor.toString().indexOf("Array") != -1)
@@ -518,7 +576,7 @@ FABRIC.SceneGraph.registerNodeType('BulletRigidBodyTransform', {
       operatorName: 'getBulletRigidBodyTransform',
       parameterLayout: [
         'self.index',
-        'bodies.'+bodyName+'Rbd',
+        'rigidbodies.'+bodyName+'Rbd',
         'self.globalXfo'
       ],
       entryFunctionName: 'getBulletRigidBodyTransform',

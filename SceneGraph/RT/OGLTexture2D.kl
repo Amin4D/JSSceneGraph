@@ -73,7 +73,14 @@ function OGLTexture2D.bindImageMatrix(
   io Integer textureUnit
 ) {
   if (this.bufferID == 0 || this.forceRefresh) {
-    this.configure(Size(512), Size(512), matrices.data(), Size(512 * 512), textureUnit);
+    Mat44 matricesWithPadding[];
+    if(this.glInternalFormat != GL_RGBA32F)
+      report('bindImageMatrix: unexpected texture format');
+    matricesWithPadding.resize((512*512)/4);
+    for( Size i = 0; i < matrices.size(); ++i ) {
+      matricesWithPadding[i] = matrices[i];
+    }
+    this.configure(Size(512), Size(512), matricesWithPadding.data(), Size(512 * 512), textureUnit);
   }
   this.bind(textureUnit);
 }

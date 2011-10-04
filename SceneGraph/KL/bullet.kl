@@ -91,7 +91,12 @@ operator getBulletRigidBodyTransform(
   io BulletRigidBody body[],
   io Xfo transform
 ){
-  body[index].getTransform(transform);
+  if(body[index].mass > 0.0) {
+    transform = body[index].getTransform();
+  }
+  else {
+    body[index].setTransform(transform);
+  }
 }
 
 operator createBulletSoftBody(
@@ -104,7 +109,7 @@ operator createBulletSoftBody(
   Boolean result = false;
   body.create(result,world,positions,normals,indices);
   if(result) {
-    world.addSoftBody(body);  
+    world.addSoftBody(body);
   }
 }
 
@@ -114,7 +119,7 @@ operator getBulletSoftBodyPosition(
   io Vec3 position,
   io Vec3 normal,
 ){
-  body.getPosition(index,position,normal);
+  body.getPosition(index, position, normal);
 }
 
 operator createBulletConstraint(
@@ -129,5 +134,17 @@ operator createBulletConstraint(
     if(result) {
       world.addConstraint(constraint[i]);  
     }
+  }
+}
+
+operator createBulletAnchor(
+  io BulletWorld world,
+  io BulletAnchor anchor[],
+  io BulletRigidBody rigidBodies[],
+  io BulletSoftBody softBody
+){
+  Boolean result;
+  for(Size i=0;i<anchor.size();i++) {
+    anchor[i].create(result,rigidBodies,softBody);
   }
 }

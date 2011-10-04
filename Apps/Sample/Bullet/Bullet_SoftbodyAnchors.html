@@ -3,7 +3,7 @@
     Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
     -->
   <head> 
-    <title>FABRIC - Bullet Constraints</title> 
+    <title>FABRIC - Bullet Softbody Anchors</title> 
     
     <meta charset="iso-8859-1"/>
     <link href="../../../themes/default/style.css" rel="stylesheet" type="text/css" />
@@ -46,7 +46,9 @@
     <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.CharacterSolvers.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Kinematics.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Bullet.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Alembic.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/Parsers/parseCollada.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/Parsers/parseOBJ.js" charset="utf-8"></script>
     
     <script type="text/javascript">
 
@@ -55,6 +57,7 @@ $(document).ready(function() {
   $('#loadingDialog').dialog({
     modal: true
   });
+  
   $('#play').button({
       text: true,
       icons: {
@@ -83,207 +86,194 @@ $(document).ready(function() {
 
   // Create a camera to draw the scene from
   var camera = scene.constructNode('TargetCamera', {
-      position: FABRIC.RT.vec3(0, 3, 12).scale(2),
-      target: FABRIC.RT.vec3(0, 0, 0),
+      position: FABRIC.RT.vec3(0, 3, 12).scale(3),
+      target: FABRIC.RT.vec3(0, 2, 0),
       nearDistance: 0.1,
       farDistance: 200
     });
   scene.constructNode('CameraManipulator', { targetNode: camera });
   viewport.setCameraNode(camera);
 
-  var light = scene.constructNode('PointLight', { position: FABRIC.RT.vec3(420.0, 1000.0, 600.0) });
+  var light = scene.constructNode('PointLight', { transformNode: camera.getTransformNode() });
 
+  var phongMaterial = scene.constructNode('PhongMaterial', {
+    diffuseColor: FABRIC.RT.rgb(0.0, 0.0, 1.0),
+    lightNode: light
+  });
+  
   // create a simulation world
   var bulletWorldNode = scene.constructNode('BulletWorldNode');
-  
+
   // add a box shape
-  var radius = 0.5;
-  bulletWorldNode.addShape('Sphere',new FABRIC.RT.BulletShape.createSphere(radius));
+  bulletWorldNode.addShape('Box',new FABRIC.RT.BulletShape.createBox());
   
-  // create an array of bodies
-  var bodies = [];
-
   // create a cube to draw it
-  var sphereNode = scene.constructNode('Sphere', {
-    radius: radius
+  var cuboidNode = scene.constructNode('Cuboid', {
+    length: 2.0,
+    width: 2.0,
+    height: 2.0
   });
 
-  // create a force manipulator
-  var manipulatorNode = scene.constructNode('BulletForceManipulator', {
-    bulletWorldNode: bulletWorldNode,
-    cameraNode: camera,
-    radius: 3.0,
-    useFalloff: false
+  var cubeA = scene.constructNode('Instance', {
+    geometryNode: cuboidNode,
+    materialNode: phongMaterial,
+    transformNode: scene.constructNode('BulletRigidBodyTransform', {
+      name: 'CubeA',
+      bulletWorldNode: bulletWorldNode,
+      shapeName: 'Box',
+      rigidBody: new FABRIC.RT.BulletRigidBody({
+        transform: FABRIC.RT.xfo({
+          tr: FABRIC.RT.vec3(-8,10,0),
+          sc: FABRIC.RT.vec3(1.0,1.0,1.0).scale(0.5),
+        }),
+        friction: 0.8,
+        restitution: 0.7,
+        mass: 0
+      })
+    })
   });
-  
-  
-  
+  var cubeB = scene.constructNode('Instance', {
+    geometryNode: cuboidNode,
+    materialNode: phongMaterial,
+    transformNode: scene.constructNode('BulletRigidBodyTransform', {
+      name: 'CubeB',
+      bulletWorldNode: bulletWorldNode,
+      shapeName: 'Box',
+      rigidBody: new FABRIC.RT.BulletRigidBody({
+        transform: FABRIC.RT.xfo({
+          tr: FABRIC.RT.vec3(8,10,0),
+          sc: FABRIC.RT.vec3(1.0,1.0,1.0).scale(0.5),
+        }),
+        friction: 0.8,
+        restitution: 0.7,
+        mass: 0.0
+      }),
+    })
+  });
+
+  scene.constructNode('ScreenTranslationManipulator', {
+    parentNode: cubeA,
+    parentMember: 'globalXfo',
+    radius: 0.75
+  });
+  scene.constructNode('ScreenTranslationManipulator', {
+    parentNode: cubeB,
+    parentMember: 'globalXfo',
+    radius: 0.75
+  });
+
+  // import the cow  
+  var assets = scene.importAssetFile('../Alembic/Models/cow.abc', {
+    dependentNode: viewport
+  });
+
+  assets['cow'].addOnLoadSuccessCallback(function(){
+      // add a softbody to the sim
+      var parsedNodes = assets['cow'].getParsedNodes();
+      var softBodyNode = bulletWorldNode.addSoftBody('Cow',new FABRIC.RT.BulletSoftBody({
+        trianglesNode: parsedNodes['/polymsh/polymshShape'],
+        transform: FABRIC.RT.xfo({
+          tr: FABRIC.RT.vec3(0,10,0),
+        }),
+        recover: 0.01,
+        //conservation: 0.6,
+        pressure: 5,
+        piterations: 4,
+      }));
+      
+      scene.constructNode('Instance', {
+        geometryNode: softBodyNode,
+        materialNode: phongMaterial
+      });
+      
+      bulletWorldNode.addAnchor('toCubeA',new FABRIC.RT.BulletAnchor({
+          softBodyNodeIndices: [1941, 1943, 1951, 1959, 1966, 1988, 1990, 2729, 2731, 2732, 2733, 2734,
+                                2735, 2736, 2737, 2738, 2739, 2740, 2741, 2742, 2743, 2744, 2745, 2746,
+                                2747, 2748, 2749, 2750, 2751, 2752, 2753, 2754, 2755, 2756, 2757, 2758,
+                                2759, 2760, 2761, 2762, 2763, 2764, 2765, 2766, 2767, 2768, 2769, 2770,
+                                2771, 2772, 2773, 2774, 2775, 2776, 2777, 2778, 2779, 2780, 2781, 2782,
+                                2783, 2784, 2785, 2786, 2787, 2788, 2789, 2790, 2791, 2792, 2793, 2794,
+                                2795, 2796, 2797, 2798, 2799, 2812, 1973, 1982, 1984, 1986, 2806]
+        }),
+        'CubeA',
+        'Cow'
+      );
+      bulletWorldNode.addAnchor('toCubeB',new FABRIC.RT.BulletAnchor({
+          softBodyNodeIndices: [0, 1, 2, 21, 22, 23, 24, 25, 26, 29, 30, 33, 34, 35, 36, 37, 38, 39,
+                                43, 44, 45, 46, 61, 62, 63, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75,
+                                76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 150, 151,
+                                152, 153, 154, 155, 156, 157, 160, 161, 162, 1014, 1015, 1016, 1021, 1022,
+                                1023, 1024, 1025, 1026, 1027, 1028, 1029, 1030, 1031, 1033, 1034, 1035, 1036,
+                                1037, 1038, 1039, 1040, 1041, 1042, 1043, 1046, 1047, 1048, 1051, 1052, 1053,
+                                1054, 1055, 1058, 1060, 1061, 1062, 1064, 1075, 1076, 1082, 1083, 2107, 2108,
+                                2109, 2110, 2114, 2115, 2116, 2117, 2118, 2119, 2120, 2121, 2122, 2123, 2124,
+                                2125, 2126, 2127, 2128, 2129, 2130, 2131, 2135, 2136]
+        }),
+        'CubeB',
+        'Cow'
+      );
+      
+      $('#loadingDialog').dialog('close');
+      viewport.redraw();
+    });
+
   FABRIC.appendOnResolveAsyncTaskCallback(function(label, nbRemaining, doneWeight, totalWeight) {
-    
+    $('#loadingProgressBar').progressbar({
+      value: (1.0-(doneWeight/totalWeight))*100
+    });
     if (nbRemaining===0) {
+      $('#loadingDialog').dialog('close');
       var errors = scene.getErrors();
       if (errors.length > 0) {
         throw (errors.toString());
       }
-      
-      viewport.hide();
-        
-      if(!viewport.getGlewSupported('GL_EXT_draw_instanced')){
-        $('#infoContent').html("This demo uses OpenGL 3.2 features such as 'GL_EXT_draw_instanced'.\n\nIt appears that your graphics card does not support geometry instancing. This demo is running in compatibility mode with greatly reduced complexity.");
-  
-        var materialNode = scene.constructNode('PhongMaterial', {
-            diffuseColor: FABRIC.RT.rgb255(10,10,255),
-            lightNode: light
-          });
-        
-        var numInstances = 64;
-        for(var i=0;i<numInstances;i++) {
-          var nonslicedTransform = scene.constructNode('BulletRigidBodyTransform', {
-            name: 'Sphere'+i,
-            bulletWorldNode: bulletWorldNode,
-            shapeName: 'Sphere',
-            rigidBody: new FABRIC.RT.BulletRigidBody({
-              transform: FABRIC.RT.xfo({
-                tr: FABRIC.RT.vec3(0,3.0 + i * 2.0 * radius,0),
-              }),
-              friction: 0.3,
-              restitution: 0.7,
-            })
-          });
-          
-          scene.constructNode('Instance', {
-            geometryNode: sphereNode,
-            materialNode: materialNode,
-            transformNode: nonslicedTransform,
-            enableRaycasting: true
-          });
-          
-          
-          // create a constraint list, between all spheres
-          if(i>0){
-            // push the constraints to the world
-            bulletWorldNode.addConstraint(
-              'BallSocket'+i,
-              FABRIC.RT.BulletConstraint.createPoint2Point({
-                pivotA: FABRIC.RT.xfo({tr: FABRIC.RT.vec3(0,radius,0)}),
-                pivotB: FABRIC.RT.xfo({tr: FABRIC.RT.vec3(0,-radius,0)}),
-              }),
-             'Sphere'+(i-1),
-             'Sphere'+i);
-          }
-        }
-      }
-      else{
-        
-        // compute the transforms
-        var numInstances = 128*2;
-        for(var i=0;i<numInstances;i++) {
-          bodies.push(new FABRIC.RT.BulletRigidBody({
-            transform: FABRIC.RT.xfo({
-              tr: FABRIC.RT.vec3(0,3.0 + i * 2.0 * radius,0),
-            }),
-            friction: 0.3,
-            restitution: 0.7,
-          }));
-        }
-      
-        // create a single sliced transform node  
-        var slicedTransform = scene.constructNode('BulletRigidBodyTransform', {
-          name: 'Spheres',
-          bulletWorldNode: bulletWorldNode,
-          shapeName: 'Sphere',
-          rigidBody: bodies
-        });
-        
-        // create an instance to draw the spheres
-        scene.constructNode('Instance', {
-          geometryNode: sphereNode,
-          materialNode: scene.constructNode('PhongInstancingExtMaterial', {
-            diffuseColor: FABRIC.RT.rgb255(220,220,220),
-            lightNode: light,
-            transformTextureNode: slicedTransform.getTransformTexture(true)
-          }),
-          transformNode: slicedTransform,
-          enableRaycasting: true
-        });
-          
-        // create a constraint list, between all spheres
-        var constraints = [];
-        for(var i=0;i<bodies.length-1;i++) {
-          constraints.push(FABRIC.RT.BulletConstraint.createPoint2Point({
-            indexA: i,
-            indexB: i+1,
-            pivotA: FABRIC.RT.xfo({tr: FABRIC.RT.vec3(0,radius,0)}),
-            pivotB: FABRIC.RT.xfo({tr: FABRIC.RT.vec3(0,-radius,0)}),
-          }));
-        }
-        
-        // push the constraints to the world
-        bulletWorldNode.addConstraint('BallSockets',constraints,'Spheres','Spheres');
-      
-      }
-      
-      
-      FABRIC.appendOnResolveAsyncTaskCallback(function(label, nbRemaining, doneWeight, totalWeight) {
-        $('#loadingProgressBar').progressbar({
-          value: (1.0-(doneWeight/totalWeight))*100
-        });
-        if (nbRemaining===0) {
-          $('#loadingDialog').dialog('close');
-          var errors = scene.getErrors();
-          if (errors.length > 0) {
-            throw (errors.toString());
-          }
-    
-          $('#play').button()
-            .click(function() {
-              var options;
-              if ($(this).text() == 'Play') {
-                $(this).button('option', {
-                  label: 'Pause',
-                  icons: {
-                    primary: 'ui-icon-pause'
-                  }
-                });
-                scene.animation.play();
-              } else {
-                $(this).button('option', {
-                  label: 'Play',
-                  icons: {
-                    primary: 'ui-icon-play'
-                  }
-                });
-                scene.animation.pause();
+
+      $('#play').button()
+        .click(function() {
+          var options;
+          if ($(this).text() == 'Play') {
+            $(this).button('option', {
+              label: 'Pause',
+              icons: {
+                primary: 'ui-icon-pause'
               }
             });
-          
-          $('#step').button()
-            .click(function() {
-              scene.animation.step();
+            scene.animation.play();
+          } else {
+            $(this).button('option', {
+              label: 'Play',
+              icons: {
+                primary: 'ui-icon-play'
+              }
             });
-    
-          $('#reset').button()
-            .click(function() {
-              $('#play').button('option', {
-                label: 'Play',
-                icons: {
-                  primary: 'ui-icon-play'
-                }
-              });
-              scene.animation.pause();
-              viewport.redraw();
-              scene.animation.setTime(0);
-              viewport.redraw();
-            });
-        
-          viewport.show();
+            scene.animation.pause();
+          }
+        });
+      
+      $('#step').button()
+        .click(function() {
+          scene.animation.step();
+        });
+
+      $('#reset').button()
+        .click(function() {
+          $('#play').button('option', {
+            label: 'Play',
+            icons: {
+              primary: 'ui-icon-play'
+            }
+          });
+          scene.animation.pause();
           viewport.redraw();
-          return true;
-        }
-      });
-    
+          scene.animation.setTime(0);
+          viewport.redraw();
+        });
+        
+    //  scene.animation.play();
+      viewport.redraw();
       return true;
-    }});
+    }
+  });
 });
 
 </script>

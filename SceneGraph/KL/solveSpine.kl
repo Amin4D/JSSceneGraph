@@ -33,8 +33,8 @@ operator solveSpine(
 
   Scalar spineLength = p1.distanceTo(p4);
 
-  var Vec3 p2 = baseXfo * Vec3(spineLength * startTangent, 0.0, 0.0);
-  var Vec3 p3 = tipXfo * Vec3(-spineLength * endTangent, 0.0, 0.0);
+  Vec3 p2 = baseXfo.transformVector(Vec3(spineLength * startTangent, 0.0, 0.0));
+  Vec3 p3 = tipXfo.transformVector(Vec3(-spineLength * endTangent, 0.0, 0.0));
 
   Vec3 curvePoints[];
   curvePoints.resize(vertebraIndices.size() + 1);
@@ -72,7 +72,6 @@ operator solveSpine(
 
   pose[end].ori = tipXfo.ori;
   pose[end].tr = curvePoints[vertebraIndices.size()];
-
 }
 
 operator solveInvSpine(

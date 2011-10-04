@@ -54,6 +54,10 @@
 
 $(document).ready(function() {
   
+  $('#loadingDialog').dialog({
+    modal: true
+  });
+  
   $('#play').button({
       text: true,
       icons: {
@@ -213,9 +217,6 @@ $(document).ready(function() {
       viewport.redraw();
     });
 
-  $('#loadingDialog').dialog({
-    modal: true
-  });
   FABRIC.appendOnResolveAsyncTaskCallback(function(label, nbRemaining, doneWeight, totalWeight) {
     $('#loadingProgressBar').progressbar({
       value: (1.0-(doneWeight/totalWeight))*100

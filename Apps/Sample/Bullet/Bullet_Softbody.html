@@ -54,6 +54,10 @@
 
 $(document).ready(function() {
   
+  $('#loadingDialog').dialog({
+    modal: true
+  });
+  
   $('#play').button({
       text: true,
       icons: {
@@ -100,9 +104,6 @@ $(document).ready(function() {
   // create a simulation world
   var bulletWorldNode = scene.constructNode('BulletWorldNode');
 
-  $('#loadingDialog').dialog({
-    modal: true
-  });
 
   // import the cow  
   var assets = scene.importAssetFile('../Alembic/Models/cow.abc', {

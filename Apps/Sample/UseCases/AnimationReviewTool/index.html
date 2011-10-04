@@ -407,6 +407,10 @@ FABRIC.SceneGraph.registerNodeType('PaintPlaneInstance', {
   }});    
 
 $(document).ready(function() {
+  
+  $('#loadingDialog').dialog({
+    modal: true
+  });
 
   var scene = FABRIC.SceneGraph.createScene();
   var viewport = scene.constructNode('Viewport', {
@@ -646,6 +650,7 @@ $(document).ready(function() {
   };
   
   // setup hotkeys
+  var painting = false;
   window.onkeydown = function(evt) {
     if(!timeRange)
       return;
@@ -682,7 +687,8 @@ $(document).ready(function() {
         }
       });
       scene.animation.pause();
-    } else if(evt.keyCode == 80) { // P
+    }
+    else if(evt.shiftKey) {
       cameraManipulator.disable();
       paintPlane();
       
@@ -704,11 +710,12 @@ $(document).ready(function() {
         }
         viewport.redraw();
       }
+      painting = true;
     }
   };
   
   window.onkeyup = function(evt) {
-    if(evt.keyCode == 80) { // P
+    if(painting) { 
       var count = FABRIC.getActiveAsyncTaskCount();
       if(count>0){
         FABRIC.appendOnResolveAsyncTaskCallback(function(label, countRemaining){
@@ -836,9 +843,6 @@ $(document).ready(function() {
   $('#planeblend').slider({
     });
 
-  $('#loadingDialog').dialog({
-    modal: true
-  });
   FABRIC.appendOnResolveAsyncTaskCallback(function(label, nbRemaining, doneWeight, totalWeight) {
     $('#loadingProgressBar').progressbar({
       value: (1.0-(doneWeight/totalWeight))*100
@@ -850,6 +854,14 @@ $(document).ready(function() {
       if (errors.length > 0) {
         throw (errors.toString());
       }
+      
+      if(!localStorage || !localStorage.getItem("instructionsDisplayed")){
+        $('#instructionsDialog').dialog({
+          modal: true
+        });
+        localStorage.setItem("instructionsDisplayed", true);
+      }
+  
       return true;
     }
   });
@@ -863,6 +875,9 @@ $(document).ready(function() {
     <div id="loadingDialog" title="Loading...">
       <h4 id="loadingDesc" style="margin-bottom: 10px">Downloading Alembic File.<br>This may take some time.</h4>
       <div id="loadingProgressBar" class="ui-progressbar-value"></div>
+    </div>
+    <div id="instructionsDialog" title="Instructions">
+      Hold down 'shift' to paint.
     </div>
     <div id="wrapper">
       <ul id="nav">

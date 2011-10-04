@@ -48,7 +48,7 @@ function loadModelProjectionMatricesFn(
   }
   location = shaderProgram.getUniformLocation(PROJECTIONMATRIXINV_ATTRIBUTE_ID);
   if(location!=-1){
-    shaderProgram.loadMat44Uniform(location, projectionMatrix.inverse().transpose());
+    shaderProgram.loadMat44Uniform(location, projectionMatrix.inverse());
   }
   location = shaderProgram.getUniformLocation(MODELVIEW_MATRIX_ATTRIBUTE_ID);
   if(location!=-1){

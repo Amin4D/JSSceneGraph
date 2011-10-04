@@ -92,11 +92,9 @@ operator getBulletRigidBodyTransform(
   io Xfo transform
 ){
   if(body[index].mass > 0.0) {
-    report "index=" + index + " body.size=" + body.size;
     transform = body[index].getTransform();
   }
   else {
-    report "index=" + index + " body.size=" + body.size;
     body[index].setTransform(transform);
   }
 }

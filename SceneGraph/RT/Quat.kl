@@ -44,10 +44,30 @@ function Quat.setIdentity() {
 }
 
 function Quat.setFromEuler(in Euler e) {
+  Vec3 ordered;
+  if (e.ro.isZYX()) {
+    ordered.set(e.z,e.y,e.x);
+  }
+  else if (e.ro.isXZY()) {
+    ordered.set(e.x,e.z,e.y);
+  }
+  else if (e.ro.isYXZ()) {
+    ordered.set(e.y,e.x,e.z);
+  }
+  else if (e.ro.isYZX()) {
+    ordered.set(e.y,e.z,e.x);
+  }
+  else if (e.ro.isXYZ()) {
+    ordered.set(e.x,e.y,e.z);
+  }
+  else if (e.ro.isZXY()) {
+    ordered.set(e.z,e.x,e.y);
+  }
+
   Scalar ti, tj, tk;
-  ti = e.x * 0.5;
-  tj = e.ro.isReversed() ? - e.y * 0.5 : e.y * 0.5;
-  tk = e.z * 0.5;
+  ti = ordered.x * 0.5;
+  tj = e.ro.isReversed() ? - ordered.y * 0.5 : ordered.y * 0.5;
+  tk = ordered.z * 0.5;
   Scalar ci = cos(ti), cj = cos(tj), ck = cos(tk);
   Scalar si = sin(ti), sj = sin(tj), sk = sin(tk);
   Scalar cc = ci * ck, cs = ci * sk, sc = si * ck, ss = si * sk;
@@ -59,25 +79,26 @@ function Quat.setFromEuler(in Euler e) {
   if (e.ro.isReversed()) {
     aj = - aj;
   }
+
   this.w = cj * cc + sj * ss;
 
   if (e.ro.isZYX()) {
-    this.v.x = ai; this.v.y = aj; this.v.z = ak;
-  }
-  else if (e.ro.isXZY()) {
-    this.v.x = aj; this.v.y = ak; this.v.z = ai;
-  }
-  else if (e.ro.isYXZ()) {
-    this.v.x = ak; this.v.y = ai; this.v.z = aj;
-  }
-  else if (e.ro.isYZX()) {
-    this.v.x = ai; this.v.y = ak; this.v.z = aj;
-  }
-  else if (e.ro.isXYZ()) {
     this.v.x = ak; this.v.y = aj; this.v.z = ai;
   }
-  else if (e.ro.isZXY()) {
+  else if (e.ro.isXZY()) {
+    this.v.x = ai; this.v.y = ak; this.v.z = aj;
+  }
+  else if (e.ro.isYXZ()) {
     this.v.x = aj; this.v.y = ai; this.v.z = ak;
+  }
+  else if (e.ro.isYZX()) {
+    this.v.x = ak; this.v.y = ai; this.v.z = aj;
+  }
+  else if (e.ro.isXYZ()) {
+    this.v.x = ai; this.v.y = aj; this.v.z = ak;
+  }
+  else if (e.ro.isZXY()) {
+    this.v.x = aj; this.v.y = ak; this.v.z = ai;
   }
 }
 

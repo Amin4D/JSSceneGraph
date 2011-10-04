@@ -62,10 +62,30 @@ FABRIC.RT.Quat.prototype = {
   },
 
   setFromEuler: function(e) {
+    var ordered = new FABRIC.RT.Vec3();
+    if (e.ro.isZYX()) {
+      ordered.set(e.z,e.y,e.x);
+    }
+    else if (e.ro.isXZY()) {
+      ordered.set(e.x,e.z,e.y);
+    }
+    else if (e.ro.isYXZ()) {
+      ordered.set(e.y,e.x,e.z);
+    }
+    else if (e.ro.isYZX()) {
+      ordered.set(e.y,e.z,e.x);
+    }
+    else if (e.ro.isXYZ()) {
+      ordered.set(e.x,e.y,e.z);
+    }
+    else if (e.ro.isZXY()) {
+      ordered.set(e.z,e.x,e.y);
+    }
+
     var ti, tj, tk;
-    ti = (e.x * 0.5);
-    tj = (e.ro.isReversed() ? - e.y * 0.5 : e.y * 0.5);
-    tk = (e.z * 0.5);
+    ti = (ordered.x * 0.5);
+    tj = (e.ro.isReversed() ? - ordered.y * 0.5 : ordered.y * 0.5);
+    tk = (ordered.z * 0.5);
     var ci = Math.cos(ti), cj = Math.cos(tj), ck = Math.cos(tk);
     var si = Math.sin(ti), sj = Math.sin(tj), sk = Math.sin(tk);
     var cc = ci * ck, cs = ci * sk, sc = si * ck, ss = si * sk;
@@ -78,22 +98,22 @@ FABRIC.RT.Quat.prototype = {
     this.w = cj * cc + sj * ss;
 
     if (e.ro.isZYX()) {
-      this.v.x = ai; this.v.y = aj; this.v.z = ak;
-    }
-    else if (e.ro.isXZY()) {
-      this.v.x = aj; this.v.y = ak; this.v.z = ai;
-    }
-    else if (e.ro.isYXZ()) {
-      this.v.x = ak; this.v.y = ai; this.v.z = aj;
-    }
-    else if (e.ro.isYZX()) {
-      this.v.x = ai; this.v.y = ak; this.v.z = aj;
-    }
-    else if (e.ro.isXYZ()) {
       this.v.x = ak; this.v.y = aj; this.v.z = ai;
     }
-    else if (e.ro.isZXY()) {
+    else if (e.ro.isXZY()) {
+      this.v.x = ai; this.v.y = ak; this.v.z = aj;
+    }
+    else if (e.ro.isYXZ()) {
       this.v.x = aj; this.v.y = ai; this.v.z = ak;
+    }
+    else if (e.ro.isYZX()) {
+      this.v.x = ak; this.v.y = ai; this.v.z = aj;
+    }
+    else if (e.ro.isXYZ()) {
+      this.v.x = ai; this.v.y = aj; this.v.z = ak;
+    }
+    else if (e.ro.isZXY()) {
+      this.v.x = aj; this.v.y = ak; this.v.z = ai;
     }
     return this;
   },

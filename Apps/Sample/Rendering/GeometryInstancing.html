@@ -87,7 +87,7 @@ operator loadUniform(\n\
   Integer location = shaderProgram.getUniformLocation('+instanceTransformsID+');\n\
 //  report("loadUniform:" + location);\n\
   if(location!=-1){\n\
-    shaderProgram.loadMat44UniformArray(location, value);\n\
+    shaderProgram.loadMat44TransposedUniformArray(location, value);\n\
   }\n\
 }\n\
         ',
@@ -156,7 +156,7 @@ $(document).ready(function() {
         (Math.random() - 0.5) * gridSize * 0.95),
       ori: new FABRIC.RT.Quat().setFromAxisAndAngle( new FABRIC.RT.Vec3(0,1,0), (Math.random() - 0.5) * Math.TWO_PI ), /* TODO: Transtion the whole math libary to radians. */
       sc: new FABRIC.RT.Vec3(scl, scl, scl)
-    }).toMat44()
+    }).toMat44().transpose()//Transpose: prepare for loadMat44TransposedUniformArray
     );
   }
   scene.constructNode('Instance', {
@@ -181,7 +181,7 @@ $(document).ready(function() {
         (Math.random() - 0.5) * gridSize * 0.95),
       ori: new FABRIC.RT.Quat().setFromAxisAndAngle( new FABRIC.RT.Vec3(0,1,0), (Math.random() - 0.5) * Math.TWO_PI ),
       sc: new FABRIC.RT.Vec3(scl, scl, scl)
-    }).toMat44()
+    }).toMat44().transpose()//Transpose: prepare for loadMat44TransposedUniformArray
     );
   }
   scene.constructNode('Instance', {

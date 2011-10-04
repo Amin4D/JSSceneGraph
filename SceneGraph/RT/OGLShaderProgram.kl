@@ -511,7 +511,7 @@ function OGLShaderProgram.loadMat44Uniform(
   }
 }
 
-function OGLShaderProgram.loadMat44UniformArray(
+function OGLShaderProgram.loadMat44TransposedUniformArray(
   Integer location,
   io Mat44 values[] /* PT 28-06-11 I'm not sure why values is an l-value in the following call */
 ) {

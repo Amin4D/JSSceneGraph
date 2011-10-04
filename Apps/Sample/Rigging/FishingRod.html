@@ -104,7 +104,7 @@ $(document).ready(function() {
   skeletonNode.addBone({name: 'root'});
 
   var xfo = new FABRIC.RT.Xfo({
-      ori: FABRIC.RT.Quat.makeFromAxisAndAngle(new FABRIC.RT.Vec3(0, 0, 1), Math.degToRad(-15)),
+      ori: new FABRIC.RT.Quat().setFromAxisAndAngle(new FABRIC.RT.Vec3(0, 0, 1), Math.degToRad(-15)),
       tr: new FABRIC.RT.Vec3(-5, 5, 0)
     });
   skeletonNode.addBone({name: 'Rod', referencePose: xfo, length: 6, parent: 'root'});

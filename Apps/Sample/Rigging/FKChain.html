@@ -161,7 +161,7 @@ $(document).ready(function() {
   var bones = skeletonNode.getBones();
   var referencePose = skeletonNode.getReferencePose();
   var lastBonePose = referencePose[referencePose.length - 1];
-  var targetPos = lastBonePose.transform(new FABRIC.RT.Vec3(bones[bones.length - 1].length, 0, 0));
+  var targetPos = lastBonePose.transformVector(new FABRIC.RT.Vec3(bones[bones.length - 1].length, 0, 0));
   lastBonePose.tr = targetPos;
 
 /*  // Cross

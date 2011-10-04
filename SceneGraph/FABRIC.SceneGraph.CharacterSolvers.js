@@ -486,7 +486,7 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('IK2BoneSolver',
 
       height = referencePose[boneIDs.boneB].tr.subtract(center);
       upvectorPos = referencePose[boneIDs.boneB].tr.add(height).add(height);
-      upvector = referencePose[boneIDs.upvectorParent].inverse.multiply(new FABRIC.RT.Xfo({ tr: upvectorPos }));
+      upvector = referencePose[boneIDs.upvectorParent].inverse().multiply(new FABRIC.RT.Xfo({ tr: upvectorPos }));
       
       if(options.projectTargetToUpvectorFactor != undefined) {
         upvector.tr = targetXfo.tr.multiplyScalar(options.projectTargetToUpvectorFactor);
@@ -969,7 +969,7 @@ FABRIC.SceneGraph.CharacterSolvers.registerSolver('NCFIKSolver',
 
       // compute the target
       targetPos = referencePose[lastBoneIndex].transformVector(new FABRIC.RT.Vec3(bones[lastBoneIndex].length, 0, 0));
-      targetXfo = referencePose[boneIDs.targetParent].inverse.multiply(new FABRIC.RT.Xfo({ tr: targetPos }));
+      targetXfo = referencePose[boneIDs.targetParent].inverse().multiply(new FABRIC.RT.Xfo({ tr: targetPos }));
 
       constantsNode.pub.addMember(name + 'boneIndices', 'Integer[]', boneIDs.bones);
       variablesNode.pub.addMember(name + 'target', 'Xfo', targetXfo);

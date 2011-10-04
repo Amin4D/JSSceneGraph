@@ -637,7 +637,7 @@ FABRIC.SceneGraph.registerNodeType('Manipulator', {
         setTargetXfo(xfo);
       }
       else {
-        setTargetXfo(getParentXfo().inverse.multiply(xfo));
+        setTargetXfo(getParentXfo().inverse().multiply(xfo));
       }
     };
     manipulatorNode.setTargetOri = function(ori) {
@@ -1354,7 +1354,7 @@ FABRIC.SceneGraph.registerNodeType('BoneManipulator', {
       dragXfo.tr = dragXfo.tr.add(movement);
       dragXfo.ori = dragXfo.ori.multiply(counterRotation);
       this.setTargetOri(dragXfo.ori.multiply(parentXfo.ori.inverse()));
-     // this.setTargetOri(parentXfo.inverse.multiply(dragXfo).ori);
+     // this.setTargetOri(parentXfo.inverse().multiply(dragXfo).ori);
 
       if (childManipulator) {
         childManipulator.counterRotateChild(newVec1.multiplyScalar((newVec1Length - options.length) / newVec1Length), dragXfo);

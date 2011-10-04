@@ -104,13 +104,13 @@ $(document).ready(function() {
   skeletonNode.addBone({name: 'root'});
 
   var xfo = new FABRIC.RT.Xfo({
-      ori: FABRIC.RT.Quat.makeFromAxisAndAngle(new FABRIC.RT.Vec3(0, 0, 1), Math.degToRad(-45)),
+      ori: new FABRIC.RT.Quat().setFromAxisAndAngle(new FABRIC.RT.Vec3(0, 0, 1), Math.degToRad(-45)),
       tr: new FABRIC.RT.Vec3(0, 20, 0)
     });
   skeletonNode.addBone({name: 'firstBone', referencePose: xfo, length: 6, parent: 'root'});
 
   xfo = new FABRIC.RT.Xfo({
-      ori: FABRIC.RT.Quat.makeFromAxisAndAngle(new FABRIC.RT.Vec3(0, 0, 1), Math.degToRad(-145)),
+      ori: new FABRIC.RT.Quat().setFromAxisAndAngle(new FABRIC.RT.Vec3(0, 0, 1), Math.degToRad(-145)),
       tr: xfo.tr.add(xfo.ori.rotateVector(new FABRIC.RT.Vec3(6, 0, 0)))
     });
   skeletonNode.addBone({name: 'secondBone', referencePose: xfo, length: 4, parent: 'firstBone' });

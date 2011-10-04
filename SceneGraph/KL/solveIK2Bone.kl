@@ -26,7 +26,7 @@ operator solveIK2Bone(
 
   // compute the manipulator positions
   var Vec3 targetPos = pose[targetParent] * target.tr;
-  var Vec3 upvectorPos = pose[upvectorParent] * upvector.tr);
+  var Vec3 upvectorPos = pose[upvectorParent] * upvector.tr;
 
   // compute the sides of the triangles and their lengths
   var Vec3 sideA = upvectorPos - pose[boneA].tr;

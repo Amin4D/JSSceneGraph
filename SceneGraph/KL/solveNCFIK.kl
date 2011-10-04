@@ -58,7 +58,7 @@ operator solveNCFIK(
       vecToFkChainTip = fkChainTip - (chainRootPos + (chainOffsetRotation * (boneXfo.tr - chainRootPos)));
 
       // Calculate a new pose position based on the parent bones new orientation
-      boneXfo.tr = pose[bone.parent] * Vec3(bones[bone.parent].length, 0.0, 0.0));
+      boneXfo.tr = pose[bone.parent] * Vec3(bones[bone.parent].length, 0.0, 0.0);
     }
     distToFkChainTip = vecToFkChainTip.length();
     vecToFkChainTip *= 1.0 / distToFkChainTip;

@@ -83,7 +83,7 @@ operator transformMesh(\n\
   io Vec3 normal,\n\
   in Size index\n\
 ) {\n\
-  position = xfo.transform(parentspositions[index]);\n\
+  position = xfo.transformVector(parentspositions[index]);\n\
   normal = xfo.ori.rotateVector(parentnormals[index]);\n\
 }\n\
         ',

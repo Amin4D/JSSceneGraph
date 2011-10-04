@@ -849,19 +849,12 @@ $(document).ready(function() {
     });
     if (nbRemaining===0) {
       $('#loadingDialog').dialog('close');
-      viewport.redraw();
       var errors = scene.getErrors();
       if (errors.length > 0) {
         throw (errors.toString());
       }
       
-      if(!localStorage || !localStorage.getItem("instructionsDisplayed")){
-        $('#instructionsDialog').dialog({
-          modal: true
-        });
-        localStorage.setItem("instructionsDisplayed", true);
-      }
-  
+      viewport.redraw();
       return true;
     }
   });

@@ -688,7 +688,7 @@ $(document).ready(function() {
       });
       scene.animation.pause();
     }
-    else if(evt.shiftKey) {
+    else if(evt.shiftKey || evt.keyCode == 16) {
       cameraManipulator.disable();
       paintPlane();
       

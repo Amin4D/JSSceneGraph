@@ -77,7 +77,6 @@ FABRIC.SceneGraph.registerNodeType('UVViewport', {
     var offscreenNode = scene.constructNode('OffscreenViewport', options);
     offscreenNode.pub.constructMaterial('FlatUVMaterial');
     
-    
     // create the member to be able to query
     var dgnode = offscreenNode.getDGNode();
     dgnode.addMember('queryToggle','Boolean', false);
@@ -99,7 +98,6 @@ FABRIC.SceneGraph.registerNodeType('UVViewport', {
       mainThreadOnly: true
     }));
     */
-    
     
     dgnode.addMember('allPixels','Color[]');
     var redrawEventHandler = offscreenNode.getRedrawEventHandler();
@@ -137,6 +135,27 @@ FABRIC.SceneGraph.registerNodeType('UVViewport', {
 
 var uvPlaneGeometry;
 
+FABRIC.SceneGraph.registerNodeType('pngEncodeEventNode', {
+  factoryFn: function(options, scene) {
+    scene.assignDefaults(options, {
+    });
+
+    var pngEncodeEventNode = scene.constructNode('SceneGraphNode', {name: 'pngEncodeEventNode'});
+    var eventNode = pngEncodeEventNode.constructEventNode('pngEncode');
+    var eventHandlerNode = pngEncodeEventNode.constructEventHandlerNode('Encode');
+    eventNode.appendEventHandler(eventHandlerNode);
+    
+    pngEncodeEventNode.getEventHandler = function() {
+      return eventHandlerNode;
+    };
+
+    pngEncodeEventNode.pub.fire = function() {
+      return eventNode.fire();
+    };
+
+    return pngEncodeEventNode;    
+  }});    
+
 FABRIC.SceneGraph.registerNodeType('PaintPlaneInstance', {
   factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
@@ -149,7 +168,8 @@ FABRIC.SceneGraph.registerNodeType('PaintPlaneInstance', {
       resolutionFactor: 0.25,
       paintColor: FABRIC.RT.rgba(255,0,0,130),
       paintRadius: 1,
-      planeDistance: 10.0
+      planeDistance: 10.0,
+      encodeEventNode: undefined
     });
 
     // check all of our required nodes
@@ -185,6 +205,13 @@ FABRIC.SceneGraph.registerNodeType('PaintPlaneInstance', {
     var animationControllerNode = scene.getPrivateInterface(options.animationControllerNode);
     if(!animationControllerNode.pub.isTypeOf('AnimationController')) {
       throw('animationControllerNode is not of type AnimationController!');
+    }
+    if (!options.encodeEventNode) {
+      throw ('encodeEventNode not specified');
+    }
+    var encodeEventNode = scene.getPrivateInterface(options.encodeEventNode);
+    if(!encodeEventNode.pub.isTypeOf('pngEncodeEventNode')) {
+      throw('encodeEventNode is not of type pngEncodeEventNode!');
     }
     
     // get the center of the triangles object
@@ -402,6 +429,29 @@ FABRIC.SceneGraph.registerNodeType('PaintPlaneInstance', {
       viewportNode.getWindowElement().removeEventListener('mousedown', beginpaint);
       enabledManip = false;
     };
+    
+    // create an encode event handler and connect it up
+    var eventHandler = instanceNode.constructEventHandlerNode('Encode');
+    encodeEventNode.getEventHandler().appendChildEventHandler(eventHandler);
+    eventHandler.setScope('texture',texturedgnode);
+    eventHandler.addMember('resource', 'FabricResource');
+
+    eventHandler.preDescendBindings.append(scene.constructOperator({
+      operatorName: 'encodeImage',
+      srcFile: 'FABRIC_ROOT/SceneGraph/KL/encodeImage.kl',
+      entryFunctionName: 'encodeImageLDR',
+      parameterLayout: [
+            'texture.width',
+            'texture.height',
+            'texture.pixels',
+            'self.resource'
+          ]
+    }));
+    
+    instanceNode.pub.savePNG = function(path,filename) {
+      path.filename = filename;
+      eventHandler.putResourceToFile('resource',path);
+    };
 
     return instanceNode;    
   }});    
@@ -435,6 +485,9 @@ $(document).ready(function() {
   var uvViewport = scene.constructNode('UVViewport', {
     mainViewportNode: viewport
   });
+  
+  // create a node to control the encode events
+  var encodeEvent = scene.constructNode('pngEncodeEventNode');
 
   var light = scene.constructNode('PointLight', { position: FABRIC.RT.vec3(10000, 10000, 10000) });
 
@@ -577,6 +630,8 @@ $(document).ready(function() {
   var currentKey = undefined;
 
   // paint a new plane
+  var brushRadius = 1.5;
+  var brushColor = FABRIC.RT.rgba(255,0,0,130);
   var paintPlane = function() {
     
     // setup the function to change the active plane    
@@ -586,6 +641,9 @@ $(document).ready(function() {
         return;
       currentPlane = plane;
       currentKey = key;
+      
+      plane.instance.setPaintColor(brushColor);
+      plane.instance.setPaintRadius(brushRadius);
       
       scene.animation.setTime(plane.time, false);
       $('#localtime').slider('value', plane.time);
@@ -600,6 +658,9 @@ $(document).ready(function() {
       for(var oldKey in planes) {
         planes[oldKey].instance.setDrawFrame(oldKey == key);
       }
+      
+      plane.instance.setPaintColor(brushColor);
+      plane.instance.setPaintRadius(brushRadius);
       
       switchCamera(plane.camera);
       $("#cameralist option[value='"+plane.camera+"']").attr('selected',true);
@@ -625,7 +686,10 @@ $(document).ready(function() {
         animationControllerNode: resourceLoadNode.getAnimationController(),
         planeTime: resourceLoadNode.getAnimationController().getLocalTime(),
         planeBlend: 5.0 / 30.0,
-        resolutionFactor: 0.2
+        resolutionFactor: 0.2,
+        paintColor: brushColor,
+        paintRadius: brushRadius,
+        encodeEventNode: encodeEvent
       });
       planes[timeKey] = {
         camera: usedCamera,
@@ -645,6 +709,9 @@ $(document).ready(function() {
         switchPlane($('#planelist').attr('value'));
         viewport.redraw();
       });
+      
+      // disable loading
+      $('#saveload').button({text: true, label: 'Save'});
     }
     switchPlane(timeKey);
   };
@@ -768,6 +835,57 @@ $(document).ready(function() {
       value: 5.0/30.0
     });
   
+  $('#saveload').button({
+      text: true
+    })
+    .click(function() {
+      if(!resourceLoadNode)
+        return;
+      
+      if($(this).text() == 'Save') {
+        // ensure that we have some planes
+        var planeCount = 0;
+        for(var name in planes)
+          planeCount++;
+        if(planeCount == 0) {
+          throw("We cannot save a scene with no planes in it!");
+        }
+        
+        // fire the png encode event!
+        encodeEvent.fire();
+        
+        var jsonData = {};
+        
+        // store general scene data
+        jsonData.currentTime = scene.animation.getTime();
+        jsonData.currentCamera = usedCamera;
+        jsonData.currentPlane = currentKey;
+        jsonData.currentRadius = brushRadius;
+        jsonData.currentColor = brushColor;
+
+        // get a path handle
+        var path = scene.IO.queryUserFileAndFolderHandle(scene.IO.forOpenWithWriteAccess, "Animation Review Data", "json", "review");
+        var basename = path.filename.split('.')[0];
+        
+        // store all planes
+        jsonData.planes = {};
+        for(var name in planes) {
+          planes[name].instance.savePNG(path,basename+'.'+name+'.png');
+          jsonData.planes[name] = {};
+          jsonData.planes[name].filename = basename+'.'+name+'.png';
+          jsonData.planes[name].transform = planes[name].instance.getTransformNode().getGlobalXfo();
+        }
+        
+        // save the json file
+        scene.IO.putTextFile(JSON.stringify(jsonData), path);
+        
+      } else {
+        
+        // switch the button to save
+        //$('#saveload').button({text: true, label: 'Save'});
+      }
+    });
+
   $('#play').button({
       text: true,
       icons: {
@@ -804,13 +922,10 @@ $(document).ready(function() {
       flat: true,
       color: { r: 255, g: 0, b: 0} ,
       onChange: function(hsb, hex, rgb) {
-        for(var name in planes) {
-          var color = planes[name].instance.getPaintColor();
-          color.r = rgb.r;
-          color.g = rgb.g;
-          color.b = rgb.b;
-          planes[name].instance.setPaintColor(color);
-        }
+        brushColor.r = rgb.r;
+        brushColor.g = rgb.g;
+        brushColor.b = rgb.b;
+        currentPlane.instance.setPaintColor(brushColor);
         scene.redrawAllWindows();
       }
     });
@@ -818,26 +933,22 @@ $(document).ready(function() {
       min: 1.0,
       max: 60.0,
       step: 1.0,
-      value: 30.0
+      value: brushColor.a
     }).bind('slide',
       function(event, ui) {
-        for(var name in planes) {
-          var color = planes[name].instance.getPaintColor();
-          color.a = ui.value;
-          planes[name].instance.setPaintColor(color);
-        }
+        brushColor.a = ui.value;
+        currentPlane.instance.setPaintColor(brushColor);
         scene.redrawAllWindows();
     });  
   $('#brushRadius').slider({
       min: 0.5,
       max: 5.0,
       step: 0.01,
-      value: 1.5
+      value: brushRadius
     }).bind('slide',
       function(event, ui) {
-        for(var name in planes) {
-          planes[name].instance.setPaintRadius(ui.value);
-        }
+        brushRadius = ui.value;
+        currentPlane.instance.setPaintRadius(brushRadius);
         scene.redrawAllWindows();
     });  
   $('#planeblend').slider({
@@ -889,6 +1000,7 @@ $(document).ready(function() {
                 <select multi size=3 id='cameralist' style='width: 200px; margin-top: 10px'>
                   <option value='userCamera'>Free Camera</option>
                 </select>
+                <button id="saveload">Open</button>
             </div><!--content-->
             <h2>Planes</h2>
             <div class="content">

@@ -15,4 +15,12 @@ included with this distribution.
 Getting Started
 ---------------
 
-*FIXME* Phil
+This SceneGraph is a technology layer that provides a SceneGraph interface as
+an abstraction layer from the Fabric Engine plugin. The Scene Graph provides
+the building blocks for 3d applications.
+
+The SceneGraph, because it was built on the multi-threaded dependency graph
+that Fabric Engine provides, is a very high performance multithreaed scene graph.
+
+Please visit the Fabric Engine demos to see examples of the Scene Graph in action.
+http://demos.fabric-engine.com/

@@ -54,9 +54,6 @@
 
 $(document).ready(function() {
   
-  $('#loadingDialog').dialog({
-    modal: true
-  });
   
   $('#play').button({
       text: true,
@@ -75,6 +72,12 @@ $(document).ready(function() {
   });
   
   var scene = FABRIC.SceneGraph.createScene();
+  
+  
+  $('#loadingDialog').dialog({
+    modal: true
+  });
+  
   var viewport = scene.constructNode('Viewport', {
     enableRaycasting: false,
     windowElement: document.getElementById('FabricContainer')

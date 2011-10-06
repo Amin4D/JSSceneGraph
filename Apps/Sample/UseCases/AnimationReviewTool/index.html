@@ -448,8 +448,8 @@ FABRIC.SceneGraph.registerNodeType('PaintPlaneInstance', {
           ]
     }));
     
-    instanceNode.pub.savePNG = function(path,filename) {
-      path.filename = filename;
+    instanceNode.pub.savePNG = function(path,fileName) {
+      path.fileName = fileName;
       eventHandler.putResourceToFile('resource',path);
     };
 
@@ -865,7 +865,8 @@ $(document).ready(function() {
 
         // get a path handle
         var path = scene.IO.queryUserFileAndFolderHandle(scene.IO.forOpenWithWriteAccess, "Animation Review Data", "json", "review");
-        var basename = path.filename.split('.')[0];
+        var jsonFileName = path.fileName;
+        var basename = path.fileName.split('.')[0];
         
         // store all planes
         jsonData.planes = {};
@@ -877,6 +878,7 @@ $(document).ready(function() {
         }
         
         // save the json file
+        path.fileName = jsonFileName;
         scene.IO.putTextFile(JSON.stringify(jsonData), path);
         
       } else {

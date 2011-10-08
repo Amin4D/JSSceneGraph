@@ -128,33 +128,37 @@ FABRIC.RT.Quat.prototype = {
 
   setFromMat33: function(mat) {
     var trace = mat.row0.x + mat.row1.y + mat.row2.z;
-    if (trace+1.0 > 0) {
-      var s = 0.5 / Math.sqrt(trace + 1.0);
+    if (trace > 0) {
+      var s = 2.0 * Math.sqrt(trace + 1.0);
+      this.w = 0.25 * s;
       Math.checkDivisor(s, 'Quat.setFromMat33');
-      this.w = 0.25 / s;
-      this.v.x = (mat.row2.y - mat.row1.z) * s;
-      this.v.y = (mat.row0.z - mat.row2.x) * s;
-      this.v.z = (mat.row1.x - mat.row0.y) * s;
+      var invS = 1.0 / s;
+      this.v.x = (mat.row2.y - mat.row1.z) * invS;
+      this.v.y = (mat.row0.z - mat.row2.x) * invS;
+      this.v.z = (mat.row1.x - mat.row0.y) * invS;
     }else if (mat.row0.x > mat.row1.y && mat.row0.x > mat.row2.z) {
       var s = 2.0 * Math.sqrt(1.0 + mat.row0.x - mat.row1.y - mat.row2.z);
       Math.checkDivisor(s, 'Quat.setFromMat33');
-      this.w = (mat.row2.y - mat.row1.z) / s;
+      var invS = 1.0 / s;
+      this.w = (mat.row2.y - mat.row1.z) * invS;
       this.v.x = 0.25 * s;
-      this.v.y = (mat.row0.y + mat.row1.x) / s;
-      this.v.z = (mat.row0.z + mat.row2.x) / s;
+      this.v.y = (mat.row0.y + mat.row1.x) * invS;
+      this.v.z = (mat.row0.z + mat.row2.x) * invS;
     }else if (mat.row1.y > mat.row2.z) {
       var s = 2.0 * Math.sqrt(1.0 + mat.row1.y - mat.row0.x - mat.row2.z);
       Math.checkDivisor(s, 'Quat.setFromMat33');
-      this.w = (mat.row0.z - mat.row2.x) / s;
-      this.v.x = (mat.row0.y + mat.row1.x) / s;
+      var invS = 1.0 / s;
+      this.w = (mat.row0.z - mat.row2.x) * invS;
+      this.v.x = (mat.row0.y + mat.row1.x) * invS;
       this.v.y = 0.25 * s;
-      this.v.z = (mat.row1.z + mat.row2.y) / s;
+      this.v.z = (mat.row1.z + mat.row2.y) * invS;
     }else {
       var s = 2.0 * Math.sqrt(1.0 + mat.row2.z - mat.row0.x - mat.row1.y);
       Math.checkDivisor(s, 'Quat.setFromMat33');
-      this.w = (mat.row1.x - mat.row0.y) / s;
-      this.v.x = (mat.row0.z + mat.row2.x) / s;
-      this.v.y = (mat.row1.z + mat.row2.y) / s;
+      var invS = 1.0 / s;
+      this.w = (mat.row1.x - mat.row0.y) * invS;
+      this.v.x = (mat.row0.z + mat.row2.x) * invS;
+      this.v.y = (mat.row1.z + mat.row2.y) * invS;
       this.v.z = 0.25 * s;
     }
     this.setUnit();

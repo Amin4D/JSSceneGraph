@@ -9,7 +9,10 @@ use Mat44;
 use OGLRenderTarget;
 use OGLTexture2D;
 
-function Mat44 symmetricFrustum(Scalar width, Scalar height, Scalar near, Scalar far) {
+function Mat44 symmetricFrustum(
+  Scalar width, Scalar height, 
+  Scalar near, Scalar far)
+{
   var Scalar d = far - near;
   var Scalar q = -(far + near) / d;
   var Scalar qn = -2.0 * (far * near) / d;
@@ -33,7 +36,7 @@ operator calcLightProjectionMatrices(
 ) {
   //  report( "calcLightProjectionMatrices" );
   
-  var Scalar frustumH = tan(fovY / 2) * near;
+  var Scalar frustumH = tan(fovY / 2) * near * 2;
   var Scalar frustumW = frustumH;
 
   lightProjectionMat = symmetricFrustum(frustumW, frustumH, near, far);
@@ -43,7 +46,6 @@ operator calcLightProjectionMatrices(
   biasMat.setDiagonal(0.5);
   biasMat.setTranslation(Vec3(0.5, 0.5, 0.5));
   biasMat.row3.t = 1.0;
-
   shadowMat = biasMat * lightProjectionMat * lightInvMat;
 }
 
@@ -52,7 +54,6 @@ operator bindShadowMapBuffer(
   io OGLRenderTarget depthRenderTarget
 ) {
   Integer depthTextureID = depthRenderTarget.textures[depthRenderTarget.depthBuffer].texture.bufferID;
-//  report("bindShadowMapBuffer textureUnit:"+textureUnit+" depthTextureID:"+ depthTextureID);
   glActiveTexture(GL_TEXTURE0 + textureUnit);
   glBindTexture(GL_TEXTURE_2D, depthTextureID);
 }

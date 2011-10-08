@@ -800,7 +800,7 @@ FABRIC.SceneGraph.registerNodeType('RotationManipulator', {
       }
       vec1 = vec2;
       var dragXfo = dragStartXFo.clone();
-      dragXfo.ori = dragXfo.ori.multiply(new FABRIC.RT.Quat().setFromAxisAndAngle(planeNormal, angle));
+      dragXfo.ori = (new FABRIC.RT.Quat().setFromAxisAndAngle(planeNormal, angle)).multiply(dragXfo.ori);
       manipulatorNode.setTargetGlobalXfo(dragXfo);
     }
     manipulatorNode.pub.addEventListener('drag', dragFn);

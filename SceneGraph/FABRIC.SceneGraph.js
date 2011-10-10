@@ -1490,7 +1490,12 @@ FABRIC.SceneGraph.registerNodeType('ResourceLoad', {
     }
 
     if (options.url) {
-      resourceLoadNode.pub.setUrl(options.url);
+      // check if the url has a handle
+      if(options.url.folderHandle) {
+        dgnode.getResourceFromFile('resource', options.url);
+      } else {
+        resourceLoadNode.pub.setUrl(options.url);
+      }
     }
 
     return resourceLoadNode;

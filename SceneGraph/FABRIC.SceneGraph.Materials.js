@@ -88,7 +88,7 @@ FABRIC.SceneGraph.registerNodeType('Image', {
         return resourceLoadNode ? resourceLoadNode.pub.isLoaded() : false;
       };
     } else {
-      if(options.createDgNode && options.initImage){
+      if(options.createDgNode && options.initImage && options.width && options.height){
         dgnode.addMember('color', 'RGBA', options.color);
         dgnode.addMember('initiated', 'Boolean', false);
         dgnode.bindings.append(scene.constructOperator({

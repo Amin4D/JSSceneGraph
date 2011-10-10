@@ -153,6 +153,9 @@ $(document).ready(function() {
       }),
     })
   });
+  
+  var cubeAInitialTransform = cubeA.getTransformNode().getGlobalXfo();
+  var cubeBInitialTransform = cubeB.getTransformNode().getGlobalXfo();
 
   scene.constructNode('ScreenTranslationManipulator', {
     parentNode: cubeA,
@@ -266,6 +269,8 @@ $(document).ready(function() {
               primary: 'ui-icon-play'
             }
           });
+          cubeA.getTransformNode().setGlobalXfo(cubeAInitialTransform);
+          cubeB.getTransformNode().setGlobalXfo(cubeBInitialTransform);
           scene.animation.pause();
           viewport.redraw();
           scene.animation.setTime(0);

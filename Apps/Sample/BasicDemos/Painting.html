@@ -5,14 +5,12 @@
   <head> 
     <title>FABRIC - Painting</title> 
     
-    <meta charset="iso-8859-1"/>
-    <link href="../../../themes/default/style.css" rel="stylesheet" type="text/css" />
-    <link href="../../../themes/default/viewer.css" rel="stylesheet" type="text/css" />
-    
+    <meta charset="utf-8"/>    
     <script type="text/javascript" src="../../../ThirdParty/jQuery/jquery-1.4.2.min.js"></script>
     <script type="text/javascript" src="../../../ThirdParty/jQuery/jquery-ui-1.8.5.custom.min.js"></script>
 
-    <link type="text/css" href="../../../ThirdParty/jQuery/css/vader/jquery-ui-1.8.5.custom.css" rel="stylesheet" />
+    <link type="text/css" href="../../../ThirdParty/jQuery/css/fabric/main.css" rel="stylesheet" />
+    <link type="text/css" href="../../../ThirdParty/jQuery/css/fabric/jquery-ui-1.8.16.custom.css" rel="stylesheet" />
     <script type="text/javascript" src="../../../ThirdParty/jQuery/colorpicker/js/colorpicker.js"></script>
     <link href="../../../ThirdParty/jQuery/colorpicker/css/colorpicker.css" rel="stylesheet" type="text/css" />
 
@@ -149,7 +147,7 @@ $(document).ready(function() {
   });
   
   viewport.setBackgroundTextureImage(scene.constructNode('Image', {
-    url: 'Resources/fabric-demo-gradient.png'
+    url: 'Resources/fabric-demo-gradient-bright.png'
   }));
 
   // Create a camera to draw the scene from
@@ -258,13 +256,13 @@ $(document).ready(function() {
         max: 1.0,
         step: 0.01,
         slide: function( event, ui ) {
-          $( "#brushStrengthValue" ).val( ui.value * 100 + '%' );
+          $( "#brushStrengthValue" ).val( Math.round(ui.value * 100) + '%' );
           paintManipulator.setBrushStrength( ui.value );
         }
       });
   $( "#brushStrengthValue" ).val( $( "#brushStrengthSlider" ).slider( "value" ) * 100 + '%' );
 
-  $('#brushColor').ColorPicker({
+  $('#colorpickerHolder2').ColorPicker({
       flat: true,
       color: { r: brushColor.r * 255, g: brushColor.g * 255, b: brushColor.b * 255} ,
       onChange: function(hsb, hex, rgb) {
@@ -297,22 +295,19 @@ $(document).ready(function() {
 
   </head> 
   <body>
-    <div id="loadingDialog" title="Loading...">
-      <h4 id="loadingDesc" style="margin-bottom: 10px"></h4>
+    <div id="loadingDialog" title="Loading Assets...">
+      <h4 id="loadingDesc" style="margin: 10px 0;line-height:20px;">Engaging all your processor cores.<br> Buckle up &mdash; it's going to blow your mind</h4>
       <div id="loadingProgressBar" class="ui-progressbar-value"></div>
     </div>
     <div id="wrapper">
-      <ul id="nav">
-        <li><a href="#" id="fabric-logo"><img src="../../../themes/default/_img/projects/fabric-logo.png" /></a></li>
-      </ul>
       <div id="editor">
         <div id="viewer">
           <div id="FabricContainer"></div> 
         </div><!--viewer-->
-        <div id="sidebar" style="width=400px">
+        <div id="sidebar">
         
-          <div class="box">
-            <h2>INFO</h2>
+          <div class="box ui-widget">
+            <h2  class="ui-widget-header ui-corner-all">INFO</h2>
             <div class="content">
               Vertex Map Painting.<br>
               The painting interface is built using event hanlders, and it very similar to ray casting.
@@ -324,8 +319,8 @@ $(document).ready(function() {
             </div><!--content-->
           </div><!--box-->
 
-                <div class="box">
-                    <h2>CONTROLS</h2>
+                <div class="box ui-widget">
+                    <h2 class="ui-widget-header ui-corner-all">CONTROLS</h2>
                     <div class="content">
                       
                       <span id="paintModeSet" style="margin-bottom: 10px;">
@@ -347,7 +342,7 @@ $(document).ready(function() {
                       <div id="brushStrengthSlider" style="margin-bottom: 10px; margin-top: 2px"></div>
                       
 
-                      <p id="brushColor" style="margin-bottom: 10px; margin-top: 10px"></p>
+                      <p id="colorpickerHolder2" style="margin-bottom: 10px; margin-top: 10px"></p>
                     </div><!--content-->
                     
                 </div><!--box-->

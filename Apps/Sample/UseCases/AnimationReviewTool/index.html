@@ -190,7 +190,7 @@ FABRIC.SceneGraph.registerNodeType('PaintPlaneInstance', {
     // get the center of the triangles object
     var cameraXfo = cameraTransformNode.pub.getGlobalXfo();
     var center = new FABRIC.RT.Vec3(0,0,-options.planeDistance);
-    var planeXfo = cameraXfo.project(FABRIC.RT.xfo({
+    var planeXfo = cameraXfo.multiply(new FABRIC.RT.Xfo({
       tr: center,
       ori: new FABRIC.RT.Quat().setFromAxisAndAngle(new FABRIC.RT.Vec3(1,0,0), Math.HALF_PI)
     }));
@@ -207,8 +207,8 @@ FABRIC.SceneGraph.registerNodeType('PaintPlaneInstance', {
     
     var parentTransformNode = cameraNode.pub.getTransformNode();
     parentTransform = parentTransformNode.getGlobalXfo();
-    planeXfo = parentTransform.projectInv(planeXfo);
-    
+    planeXfo = parentTransform.inverse().multiply(planeXfo);
+
     // create a transform node for the plane
     var transformNode = scene.constructNode('Transform', {
       hierarchical: true,

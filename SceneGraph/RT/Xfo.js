@@ -199,11 +199,11 @@ FABRIC.RT.Xfo.prototype = {
     var this_ori = this.ori.unit();
     var xf_ori = xf.ori.unit();
 
-    if(xf.sc.x != xf.sc.y || xf.sc.x != xf.sc.z)
+    if(this.sc.x != this.sc.y || this.sc.x != this.sc.z)
     {
-      var relativePrecision = Math.abs(xf.sc.x)*Math.PRECISION*10.0;
-      if( Math.abs(xf.sc.x - xf.sc.y) > relativePrecision || Math.abs(xf.sc.x - xf.sc.z) > relativePrecision ) {
-        Math.reportWarning('Mat44.multiply: Cannot multiply to xfos having non-uniform scaling without causing shearing. Use Mat44s instead.');
+      var relativePrecision = Math.abs(this.sc.x)*Math.PRECISION*10.0;
+      if( Math.abs(this.sc.x - this.sc.y) > relativePrecision || Math.abs(this.sc.x - this.sc.z) > relativePrecision ) {
+        Math.reportWarning('Mat44.multiply: Cannot multiply to xfos when having non-uniform scaling without causing shearing. Use Mat44s instead.');
       }
     }
 

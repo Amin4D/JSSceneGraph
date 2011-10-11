@@ -141,10 +141,10 @@ function Xfo * (in Xfo local, in Xfo global) {
   Quat lcl_ori = local.ori.unit();
   Quat glb_ori = global.ori.unit();
 
-  if(global.sc.x != global.sc.y || global.sc.x != global.sc.z) {
-    Scalar relativePrecision = abs(global.sc.x)*PRECISION*10.0;
-    if( abs(global.sc.x - global.sc.y) > relativePrecision || abs(global.sc.x - global.sc.z) > relativePrecision ) {
-      Math_reportWarning('Mat44.multiply: Cannot multiply to xfos having non-uniform scaling without causing shearing. Use Mat44s instead.');
+  if(local.sc.x != local.sc.y || local.sc.x != local.sc.z) {
+    Scalar relativePrecision = abs(local.sc.x)*PRECISION*10.0;
+    if( abs(local.sc.x - local.sc.y) > relativePrecision || abs(local.sc.x - local.sc.z) > relativePrecision ) {
+      Math_reportWarning('Mat44.multiply: Cannot multiply to xfos when having non-uniform scaling without causing shearing. Use Mat44s instead.');
     }
   }
 

@@ -25,8 +25,8 @@ operator solveIK2Bone(
   pose[boneB] = bones[boneB].referenceLocalPose * pose[boneA];
 
   // compute the manipulator positions
-  var Vec3 targetPos = pose[targetParent] * target.tr;
-  var Vec3 upvectorPos = pose[upvectorParent] * upvector.tr;
+  var Vec3 targetPos = pose[targetParent].transformVector(target.tr);
+  var Vec3 upvectorPos = pose[upvectorParent].transformVector(upvector.tr);
 
   // compute the sides of the triangles and their lengths
   var Vec3 sideA = upvectorPos - pose[boneA].tr;
@@ -65,7 +65,7 @@ operator solveIK2Bone(
     boneOffsetRotation.setFrom2Vectors(boneAXaxis, direction.unit());
     pose[boneA].ori = boneOffsetRotation * pose[boneA].ori;
   }
-  pose[boneB].tr = pose[boneA] * bones[boneB].referenceLocalPose.tr;
+  pose[boneB].tr = pose[boneA].transformVector(bones[boneB].referenceLocalPose.tr);
   direction = targetPos - pose[boneB].tr;
   if (directionBlend > 0.0) {
     boneOffsetRotation.setFrom2Vectors(boneBXaxis, direction.unit());
@@ -76,8 +76,8 @@ operator solveIK2Bone(
   var Vec3 upDirectionA;
   var Vec3 upDirectionB;
   if (triangleSolution) {
-    upDirectionA = (pose[boneA] * Vec3(bones[boneA].length * 0.5, 0.0, 0.0)) - targetPos;
-    upDirectionB = (pose[boneB] * Vec3(bones[boneB].length * 0.5, 0.0, 0.0)) - pose[boneA].tr;
+    upDirectionA = (pose[boneA].transformVector(Vec3(bones[boneA].length * 0.5, 0.0, 0.0))) - targetPos;
+    upDirectionB = (pose[boneB].transformVector(Vec3(bones[boneB].length * 0.5, 0.0, 0.0))) - pose[boneA].tr;
   }
   else {
     upDirectionA = upvectorPos - pose[boneA].tr;
@@ -94,10 +94,10 @@ operator solveIK2Bone(
 
   
     boneOffsetRotation.setFrom2Vectors(pose[boneA].ori.getYaxis(), upDirectionA);
-    pose[boneA].ori = boneOffsetRotation * pose[boneA].ori;
+    pose[boneA].ori = (boneOffsetRotation * pose[boneA].ori).unit();
     
     boneOffsetRotation.setFrom2Vectors(pose[boneB].ori.getYaxis(), upDirectionB);
-    pose[boneB].ori = boneOffsetRotation * pose[boneB].ori;
+    pose[boneB].ori = (boneOffsetRotation * pose[boneB].ori).unit();
   }
 }
 
@@ -115,12 +115,12 @@ operator solveInvIK2Bone(
 ) {
   // compute the target
   target = pose[boneB];
-  target.tr = target * Vec3(bones[boneB].length, 0.0, 0.0);
+  target.tr = target.transformVector(Vec3(bones[boneB].length, 0.0, 0.0));
   target = pose[targetParent].inverse() * target;
 
   // compute the upvector
   upvector = pose[boneB];
-  upvector.tr = pose[boneA] * Vec3(bones[boneA].length, bones[boneA].length, 0.0);
+  upvector.tr = pose[boneA].transformVector(Vec3(bones[boneA].length, bones[boneA].length, 0.0));
   upvector = pose[upvectorParent].inverse() * upvector;
 
   // use total blends for now

@@ -127,7 +127,7 @@ $(document).ready(function() {
         geometryNode: assets.frog.getParsedNodes()['/lowXfo/low'],
         materialNode: materialNode
       });
-
+      
       $('#loadingDialog').dialog('close');
       viewport.redraw();
     }
@@ -143,9 +143,7 @@ $(document).ready(function() {
             primary: 'ui-icon-pause'
           }
         });
-        scene.animation.play( function(){
-          assets.frog.setSample(parseInt(scene.animation.getTime() * 30.0));
-        });
+        scene.animation.play();
       } else {
         $(this).button('option', {
           label: 'Play',

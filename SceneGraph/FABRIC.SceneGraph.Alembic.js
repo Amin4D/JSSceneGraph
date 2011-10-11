@@ -41,12 +41,12 @@ FABRIC.SceneGraph.registerNodeType('AlembicLoadNode', {
     }
 
     resourceloaddgnode.addMember('handle', 'AlembicHandle');
+    resourceloaddgnode.addMember('time', 'Scalar', 0);
     resourceloaddgnode.addMember('identifiers', 'String[]');
-    resourceloaddgnode.addMember('sample', 'Integer', 0);
     
-    resourceLoadNode.addMemberInterface(resourceloaddgnode, 'sample', true);
-    resourceLoadNode.pub.getNumSamples = function() {
-      return resourceloaddgnode.getData('handle',0).numSamples;
+    resourceLoadNode.addMemberInterface(resourceloaddgnode, 'time', true);
+    resourceLoadNode.pub.getTimeRange = function() {
+      return resourceloaddgnode.getData('handle',0).timeRange;
     };
     
     resourceloaddgnode.bindings.append(scene.constructOperator({
@@ -163,7 +163,7 @@ FABRIC.SceneGraph.registerNodeType('AlembicLoadNode', {
             parameterLayout: [
               'alembic.handle',
               'uniforms.identifier',
-              'alembic.sample',
+              'alembic.time',
               'self.positions<>',
               'self.normals<>',
               'uniforms.uvsLoaded',
@@ -196,7 +196,7 @@ FABRIC.SceneGraph.registerNodeType('AlembicLoadNode', {
             parameterLayout: [
               'alembic.handle',
               'self.identifier',
-              'alembic.sample',
+              'alembic.time',
               'self.nearDistance',
               'self.farDistance',
               'self.fovY'
@@ -221,7 +221,7 @@ FABRIC.SceneGraph.registerNodeType('AlembicLoadNode', {
             parameterLayout: [
               'alembic.handle',
               'self.identifier',
-              'alembic.sample',
+              'alembic.time',
               'self.globalXfo'
             ],
             entryFunctionName: 'alembicParseXform',
@@ -235,7 +235,8 @@ FABRIC.SceneGraph.registerNodeType('AlembicLoadNode', {
       }
       
       // setup the timerange
-      if(resourceLoadNode.pub.getNumSamples() > 1) {
+      var timeRange = resourceLoadNode.pub.getTimeRange();
+      if(timeRange.x < timeRange.y) {
         // create an animation controller for the sample
         var animationController = scene.constructNode('AnimationController');
         resourceLoadNode.pub.getAnimationController = function() {
@@ -243,18 +244,18 @@ FABRIC.SceneGraph.registerNodeType('AlembicLoadNode', {
         };
         var animationControllerDGNode = animationController.getDGNode();
         resourceloaddgnode.setDependency(animationControllerDGNode,'controller');
-    
-        resourceloaddgnode.bindings.insert(scene.constructOperator({
-          operatorName: 'alembicSetSample',
+
+        resourceloaddgnode.bindings.append(scene.constructOperator({
+          operatorName: 'alembicSetTime',
           parameterLayout: [
-            'controller.localTime',
-            'self.sample'
+            'self.time',
+            'controller.localTime'
           ],
-          entryFunctionName: 'alembicSetSample',
-          srcFile: 'FABRIC_ROOT/SceneGraph/KL/loadAlembic.kl',
-          async: false
-        }),0);
-        animationController.pub.setTimeRange(FABRIC.RT.vec2(0, resourceLoadNode.pub.getNumSamples() / 30.0));
+          entryFunctionName: 'alembicSetTime',
+          srcFile: 'FABRIC_ROOT/SceneGraph/KL/loadAlembic.kl'
+        }));
+    
+        animationController.pub.setTimeRange(timeRange);
       }
     });
     

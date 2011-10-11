@@ -115,13 +115,45 @@ $(document).ready(function() {
           materialNode: scene.constructNode('FlatMaterial')
       });
 
-  var light = scene.constructNode('PointLight', { position: FABRIC.RT.vec3(10, 30, 100).scale(3) });
+  var light = scene.constructNode('PointLight', { position: FABRIC.RT.vec3(10, 10, 4).scale(30) });
 
-  var phongMaterial = scene.constructNode('PhongMaterial', {
-    diffuseColor: FABRIC.RT.rgb(0.5, 0.5, 0.5, 1),
+  var greyMaterial = scene.constructNode('PhongMaterial', {
+    diffuseColor: FABRIC.RT.rgb(0.7, 0.7, 0.7, 1),
     specularColor: FABRIC.RT.rgb(0.15, 0.15, 0.15, 1),
     lightNode: light,
   });
+  var blackMaterial = scene.constructNode('PhongMaterial', {
+    diffuseColor: FABRIC.RT.rgb(0.05, 0.05, 0.05, 1),
+    specularColor: FABRIC.RT.rgb(0.15, 0.15, 0.15, 1),
+    lightNode: light,
+  });
+  var greenMaterial = scene.constructNode('PhongMaterial', {
+    diffuseColor: FABRIC.RT.rgb(0.1, 0.7, 0.1, 1),
+    specularColor: FABRIC.RT.rgb(0.15, 0.15, 0.15, 1),
+    lightNode: light,
+  });
+  
+  // materials
+  var materialLookup = {};
+  materialLookup["/r_legC_GEOXfo/r_legC_GEO"] = greyMaterial;
+  materialLookup["/r_legBPneumatic_GEOXfo/r_legBPneumatic_GEO"] = blackMaterial;
+  materialLookup["/r_legB_GEOXfo/r_legB_GEO"] = greyMaterial;
+  materialLookup["/r_legAPneumaticTop_GEOXfo/r_legAPneumaticTop_GEO"] = blackMaterial;
+  materialLookup["/r_legAPneumaticBottom_GEOXfo/r_legAPneumaticBottom_GEO"] = blackMaterial;
+  materialLookup["/r_legA_GEOXfo/r_legA_GEO"] = greyMaterial;
+  materialLookup["/r_foot_GEOXfo/r_foot_GEO"] = blackMaterial;
+  materialLookup["/m_soldier_GEOXfo/m_soldier_GEO"] = greenMaterial;
+  materialLookup["/m_head_GEOXfo/m_head_GEO"] = greyMaterial;
+  materialLookup["/m_gunHolder_GEOXfo/m_gunHolder_GEO"] = greyMaterial;
+  materialLookup["/m_gun_GEOXfo/m_gun_GEO"] = blackMaterial;
+  materialLookup["/m_base_GEOXfo/m_base_GEO"] = greyMaterial;
+  materialLookup["/l_legC_GEOXfo/l_legC_GEO"] = greyMaterial;
+  materialLookup["/l_legBPneumatic_GEOXfo/l_legBPneumatic_GEO"] = blackMaterial;
+  materialLookup["/l_legB_GEOXfo/l_legB_GEO"] = greyMaterial;
+  materialLookup["/l_legAPneumaticTop_GEOXfo/l_legAPneumaticTop_GEO"] = blackMaterial;
+  materialLookup["/l_legAPneumaticBottom_GEOXfo/l_legAPneumaticBottom_GEO"] = blackMaterial;
+  materialLookup["/l_legA_GEOXfo/l_legA_GEO"] = greyMaterial
+  materialLookup["/l_foot_GEOXfo/l_foot_GEO"] = blackMaterial;
   
   // create the alembic content, and fire the load once it is loaded
   var resourceName = 'walker';
@@ -139,7 +171,7 @@ $(document).ready(function() {
           var inst = scene.constructNode('Instance', {
             transformNode: assets[resourceName].getCorrespondingTransform(name),
             geometryNode: assets[resourceName].getParsedNodes()[name],
-            materialNode: phongMaterial
+            materialNode: materialLookup[name]
           });
         }
         else if(assets[resourceName].getParsedNodes()[name].isTypeOf('Camera')) {
@@ -147,6 +179,7 @@ $(document).ready(function() {
           // add the camera as an option to the list
           cameraListHtml += "<option value='"+name+"'>"+name.substring(name.lastIndexOf('/')+1,1000)+"</option>"
         }
+        
         $('#cameralist').html(cameraListHtml).change( function(ui) {
           var cameraName = $('#cameralist').attr('value');
           if(cameraName == 'userCamera')
@@ -155,6 +188,7 @@ $(document).ready(function() {
             viewport.setCameraNode(assets[resourceName].getParsedNodes()[$('#cameralist').attr('value')]);
           viewport.redraw();
         });
+        
       }
       
       $('#loadingDialog').dialog('close');

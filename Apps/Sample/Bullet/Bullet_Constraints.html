@@ -86,15 +86,15 @@ $(document).ready(function() {
 
   // Create a camera to draw the scene from
   var camera = scene.constructNode('TargetCamera', {
-      position: FABRIC.RT.vec3(0, 3, 12).scale(2),
-      target: FABRIC.RT.vec3(0, 0, 0),
+      position: new FABRIC.RT.Vec3(0, 3, 12).multiplyScalar(2),
+      target: new FABRIC.RT.Vec3(0, 0, 0),
       nearDistance: 0.1,
       farDistance: 200
     });
   scene.constructNode('CameraManipulator', { targetNode: camera });
   viewport.setCameraNode(camera);
 
-  var light = scene.constructNode('PointLight', { position: FABRIC.RT.vec3(420.0, 1000.0, 600.0) });
+  var light = scene.constructNode('PointLight', { position: new FABRIC.RT.Vec3(420.0, 1000.0, 600.0) });
 
   // create a simulation world
   var bulletWorldNode = scene.constructNode('BulletWorldNode');
@@ -147,7 +147,7 @@ $(document).ready(function() {
             shapeName: 'Sphere',
             rigidBody: new FABRIC.RT.BulletRigidBody({
               transform: FABRIC.RT.xfo({
-                tr: FABRIC.RT.vec3(0,3.0 + i * 2.0 * radius,0),
+                tr: new FABRIC.RT.Vec3(0,3.0 + i * 2.0 * radius,0),
               }),
               friction: 0.3,
               restitution: 0.7,
@@ -168,8 +168,8 @@ $(document).ready(function() {
             bulletWorldNode.addConstraint(
               'BallSocket'+i,
               FABRIC.RT.BulletConstraint.createPoint2Point({
-                pivotA: FABRIC.RT.xfo({tr: FABRIC.RT.vec3(0,radius,0)}),
-                pivotB: FABRIC.RT.xfo({tr: FABRIC.RT.vec3(0,-radius,0)}),
+                pivotA: FABRIC.RT.xfo({tr: new FABRIC.RT.Vec3(0,radius,0)}),
+                pivotB: FABRIC.RT.xfo({tr: new FABRIC.RT.Vec3(0,-radius,0)}),
               }),
              'Sphere'+(i-1),
              'Sphere'+i);
@@ -183,7 +183,7 @@ $(document).ready(function() {
         for(var i=0;i<numInstances;i++) {
           bodies.push(new FABRIC.RT.BulletRigidBody({
             transform: FABRIC.RT.xfo({
-              tr: FABRIC.RT.vec3(0,3.0 + i * 2.0 * radius,0),
+              tr: new FABRIC.RT.Vec3(0,3.0 + i * 2.0 * radius,0),
             }),
             friction: 0.3,
             restitution: 0.7,
@@ -216,8 +216,8 @@ $(document).ready(function() {
           constraints.push(FABRIC.RT.BulletConstraint.createPoint2Point({
             indexA: i,
             indexB: i+1,
-            pivotA: FABRIC.RT.xfo({tr: FABRIC.RT.vec3(0,radius,0)}),
-            pivotB: FABRIC.RT.xfo({tr: FABRIC.RT.vec3(0,-radius,0)}),
+            pivotA: FABRIC.RT.xfo({tr: new FABRIC.RT.Vec3(0,radius,0)}),
+            pivotB: FABRIC.RT.xfo({tr: new FABRIC.RT.Vec3(0,-radius,0)}),
           }));
         }
         

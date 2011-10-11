@@ -114,13 +114,13 @@ FABRIC.SceneGraph.registerNodeType('Transform', {
       // create the operator to convert the matrices into a texture
       dgnode.addMember('textureMatrix', 'Mat44');
       dgnode.bindings.append(scene.constructOperator( {
-          operatorName: 'calcGlobalMatrix',
+          operatorName: 'calcGlobalTransposedMatrix',
           srcFile: 'FABRIC_ROOT/SceneGraph/KL/calcGlobalXfo.kl',
           parameterLayout: [
             'self.globalXfo',
             'self.textureMatrix'
           ],
-          entryFunctionName: 'calcGlobalMatrix'
+          entryFunctionName: 'calcGlobalTransposedMatrix'
         }));
 
       textureNode = scene.constructNode('TransformTexture', {transformNode: transformNode.pub, dynamic: dynamic});

@@ -6,11 +6,11 @@ FABRIC.RT.BulletWorld = function(options) {
   if(!options)
     options = {};
   this.localData = null;
-  this.gravity = options.gravity ? options.gravity : FABRIC.RT.vec3(0,-40,0);
+  this.gravity = options.gravity ? options.gravity : new FABRIC.RT.Vec3(0,-40,0);
   this.step = 0;
   this.substeps = options.substeps ? options.substeps : 3;
   this.hit = false;
-  this.hitPosition = FABRIC.RT.vec3(0,0,0);
+  this.hitPosition = new FABRIC.RT.Vec3(0,0,0);
 };
 
 FABRIC.RT.BulletWorld.prototype = {
@@ -62,7 +62,7 @@ FABRIC.RT.BulletShape.prototype = {
 
 FABRIC.RT.BulletShape.createBox = function(halfExtends) {
   if(halfExtends == undefined) {
-    halfExtends = FABRIC.RT.vec3(1.0,1.0,1.0);
+    halfExtends = new FABRIC.RT.Vec3(1.0,1.0,1.0);
   }
   var shape = new FABRIC.RT.BulletShape();
   shape.type = FABRIC.RT.BulletShape.BULLET_BOX_SHAPE;
@@ -84,7 +84,7 @@ FABRIC.RT.BulletShape.createSphere = function(radius) {
 
 FABRIC.RT.BulletShape.createPlane = function(normal) {
   if(normal == undefined) {
-    normal = FABRIC.RT.vec3(0.0,1.0,0.0);
+    normal = new FABRIC.RT.Vec3(0.0,1.0,0.0);
   }
   var shape = new FABRIC.RT.BulletShape();
   shape.type = FABRIC.RT.BulletShape.BULLET_PLANE_SHAPE;
@@ -123,8 +123,8 @@ FABRIC.RT.BulletForce = function(options) {
   if(!options)
     options = {};
   this.name = options.name ? options.name : 'Force';
-  this.origin = options.origin != undefined ? options.origin : FABRIC.RT.vec3(0,0,0);
-  this.direction = options.direction != undefined ? options.direction : FABRIC.RT.vec3(0,1,0);
+  this.origin = options.origin != undefined ? options.origin : new FABRIC.RT.Vec3(0,0,0);
+  this.direction = options.direction != undefined ? options.direction : new FABRIC.RT.Vec3(0,1,0);
   this.radius = options.radius != undefined ? options.radius : 1.5;
   this.factor = options.factor != undefined ? options.factor : 100.0;
   this.useTorque = options.useTorque != undefined ? options.useTorque : true;
@@ -207,7 +207,7 @@ FABRIC.SceneGraph.registerNodeType('BulletWorldNode', {
     scene.assignDefaults(options, {
       createGroundPlane: true,
       connectToSceneTime: true,
-      gravity: FABRIC.RT.vec3(0,-40,0),
+      gravity: new FABRIC.RT.Vec3(0,-40,0),
       substeps: 3
     });
     
@@ -462,8 +462,8 @@ FABRIC.SceneGraph.registerNodeType('BulletWorldNode', {
 
       // create a shape
       // create the ground rigid body
-      var groundTrans = FABRIC.RT.xfo({tr: FABRIC.RT.vec3(0,-1000,0)});
-      bulletWorldNode.pub.addShape('Ground',FABRIC.RT.BulletShape.createBox(FABRIC.RT.vec3(1000,1000,1000)));
+      var groundTrans = FABRIC.RT.xfo({tr: new FABRIC.RT.Vec3(0,-1000,0)});
+      bulletWorldNode.pub.addShape('Ground',FABRIC.RT.BulletShape.createBox(new FABRIC.RT.Vec3(1000,1000,1000)));
       bulletWorldNode.pub.addRigidBody('Ground',new FABRIC.RT.BulletRigidBody({mass: 0, transform: groundTrans}),'Ground');
       
       var instanceNode = scene.constructNode('Instance', {
@@ -672,7 +672,7 @@ FABRIC.SceneGraph.registerNodeType('BulletForceManipulator', {
     var mouseDownScreenPos, viewportNode;
     var getCameraValues = function(evt) {
       viewportNode = evt.viewportNode;
-      mouseDownScreenPos = FABRIC.RT.vec2(evt.screenX, evt.screenY);
+      mouseDownScreenPos = FABRIC.RT.Vec2(evt.screenX, evt.screenY);
       viewportNode = evt.viewportNode;
       cameraXfo = evt.cameraNode.getTransformNode().getGlobalXfo();
       swaxis = cameraXfo.ori.getXaxis();
@@ -705,12 +705,12 @@ FABRIC.SceneGraph.registerNodeType('BulletForceManipulator', {
       }
 
       var ray = viewportNode.calcRayFromMouseEvent(evt);
-      var newHitPosition = ray.start.add(ray.direction.scale(hitDistance));
+      var newHitPosition = ray.start.add(ray.direction.multiplyScalar(hitDistance));
       force.origin = hitPosition;
       force.direction = newHitPosition.subtract(hitPosition);
       force.enabled = true;
       bulletWorldNode.pub.setMouseForce([force]);
-      hitPosition = hitPosition.add(newHitPosition.subtract(hitPosition).scale(0.1));
+      hitPosition = hitPosition.add(newHitPosition.subtract(hitPosition).multiplyScalar(0.1));
 
       evt.stopPropagation();
       viewportNode.redraw();

@@ -82,7 +82,7 @@ FABRIC.SceneGraph.registerNodeType('UVViewport', {
     var dgnode = offscreenNode.getDGNode();
     dgnode.addMember('queryToggle','Boolean', false);
     dgnode.addMember('queryPos','Vec2');
-    dgnode.addMember('querySize','Vec2', FABRIC.RT.vec2(1,1));
+    dgnode.addMember('querySize','Vec2', new FABRIC.RT.Vec2(1,1));
     dgnode.addMember('queryPixels','Color[]');
     /*
     dgnode.bindings.append(scene.constructOperator({
@@ -189,10 +189,10 @@ FABRIC.SceneGraph.registerNodeType('PaintPlaneInstance', {
     
     // get the center of the triangles object
     var cameraXfo = cameraTransformNode.pub.getGlobalXfo();
-    var center = FABRIC.RT.vec3(0,0,-options.planeDistance);
+    var center = new FABRIC.RT.Vec3(0,0,-options.planeDistance);
     var planeXfo = cameraXfo.project(FABRIC.RT.xfo({
       tr: center,
-      ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(1,0,0), Math.HALF_PI)
+      ori: new FABRIC.RT.Quat().setFromAxisAndAngle(new FABRIC.RT.Vec3(1,0,0), Math.HALF_PI)
     }));
     
     // compute the width and height of the plane
@@ -420,8 +420,8 @@ $(document).ready(function() {
 
   // Create a camera to draw the scene from
   var camera = scene.constructNode('TargetCamera', {
-    position: FABRIC.RT.vec3(20, 20, 20),
-    target: FABRIC.RT.vec3(0, 0, 0),
+    position: new FABRIC.RT.Vec3(20, 20, 20),
+    target: new FABRIC.RT.Vec3(0, 0, 0),
     nearDistance: 0.01,
     farDistance: 1000
   });
@@ -436,7 +436,7 @@ $(document).ready(function() {
     mainViewportNode: viewport
   });
 
-  var light = scene.constructNode('PointLight', { position: FABRIC.RT.vec3(10000, 10000, 10000) });
+  var light = scene.constructNode('PointLight', { position: new FABRIC.RT.Vec3(10000, 10000, 10000) });
 
   var cameraManipulator = scene.constructNode("CameraManipulator", { targetNode:camera } );
 
@@ -742,8 +742,8 @@ $(document).ready(function() {
       step: 0.5
     }).bind('slide',
       function(event, ui) {
-        var pos = FABRIC.RT.vec3(10000,10000,10000);
-        var rot = FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(0,1,0), Math.degToRad(ui.value));
+        var pos = new FABRIC.RT.Vec3(10000,10000,10000);
+        var rot = new FABRIC.RT.Quat().setFromAxisAndAngle(new FABRIC.RT.Vec3(0,1,0), Math.degToRad(ui.value));
         pos = rot.rotateVector(pos);
         light.setPosition(pos);
         scene.redrawAllWindows();

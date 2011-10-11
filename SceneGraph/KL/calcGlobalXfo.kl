@@ -10,6 +10,6 @@ operator calcGlobalXfo(io Xfo localXfo, io Xfo parentGlobalXfo, io Xfo globalXfo
   globalXfo = parentGlobalXfo * localXfo;
 }
 
-operator calcGlobalMatrix(io Xfo globalXfo, io Mat44 globalMat) {
-  globalMat = Mat44(globalXfo);
+operator calcGlobalTransposedMatrix(io Xfo globalXfo, io Mat44 globalMat) {
+  globalMat = globalXfo.toMat44().transpose();
 }

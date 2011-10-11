@@ -21,10 +21,12 @@ function decodeLDRImageData(
     case'png':
     case'image/png':
       FabricPNGDecode(resource.data.data(), resource.data.dataSize(), imageWidth, imageHeight, imageLDR);
+      resource.data.resize(0);
       break;
     case'tga':
     case'image/tga':
       FabricTGADecode(resource.data.data(), resource.data.dataSize(), imageWidth, imageHeight, imageLDR);
+      resource.data.resize(0);
       break;
   }
 }
@@ -42,10 +44,12 @@ function decodeHDRImageData(
     case'hdr':
     case'image/hdr':
       FabricHDRDecode(resource.data.data(), resource.data.dataSize(), imageWidth, imageHeight, imageHDR);
+      resource.data.resize(0);
       break;
     case'exr':
     case'image/exr':
       FabricHDRDecode(resource.data.data(), resource.data.dataSize(), imageWidth, imageHeight, imageHDR);
+      resource.data.resize(0);
       break;
   }
 }

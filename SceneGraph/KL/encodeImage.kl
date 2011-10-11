@@ -17,7 +17,8 @@ operator encodeImageLDR(
   switch (ext) {
     case'png':
     case'image/png':
-      FabricPNGEncode(imageWidth, imageHeight, imageLDR, resource.data);
+      //report("imageWidth: "+imageWidth+", imageHeight: "+imageHeight+", imageLDR.size(): "+imageLDR.dataSize());
+      FabricPNGEncode(imageWidth, imageHeight, imageLDR.data(), resource.data);
       resource.extension = 'png';
       resource.mimeType = 'image/png';
       break;

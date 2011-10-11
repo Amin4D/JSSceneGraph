@@ -149,6 +149,11 @@ FABRIC.SceneGraph.registerNodeType('Geometry', {
       buffer.bufferUsage = FABRIC.SceneGraph.OpenGLConstants.GL_DYNAMIC_DRAW;
       redrawEventHandler.setData(name + 'Buffer', 0, buffer);
     };
+    geometryNode.pub.setAttributeStatic = function(name) {
+      var buffer = redrawEventHandler.getData(name + 'Buffer');
+      buffer.bufferUsage = FABRIC.SceneGraph.OpenGLConstants.GL_STATIC_DRAW;
+      redrawEventHandler.setData(name + 'Buffer', 0, buffer);
+    };
     geometryNode.pub.getUniformValue = function(name) {
       return uniformsdgnode.getData(name);
     };
@@ -212,7 +217,7 @@ FABRIC.SceneGraph.registerNodeType('GeometryDataCopy', {
                 ' provide the same behavior as the operator stacks you would find in a traditional DCC application like 3dsmax/Maya/Softimage.',
   parentNodeDesc: 'Geometry',
   optionsDesc: {
-    geometryNode: 'The original data copy to use as the bases of this geometries data. '
+    baseGeometryNode: 'The original data copy to use as the bases of this geometries data. '
   },
   factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
@@ -264,6 +269,128 @@ FABRIC.SceneGraph.registerNodeType('GeometryDataCopy', {
     return geometryDataCopyNode;
   }});
 
+FABRIC.SceneGraph.registerNodeType('InstancedGeometry', {
+  briefDesc: 'The InstancedGeometry node is created using an existing Geometry node, and is used to copy the geometry multiple times.',
+  detailedDesc: 'When performing instance drawing, GLSL based instancing can cause compatibility issues. By copying the geometry,' +
+                ' several times, and introducing a new instanceID vertex attribute, we can draw instances by utilizing more RAM but '+
+                ' being compatible with most graphic cards.',
+  parentNodeDesc: 'Geometry',
+  optionsDesc: {
+    baseGeometryNode: 'The original geometry to use as the bases of this geometry instance copy.',
+    baseGeometryType: 'The type of the original geometry node.',
+    nbInstances: 'The number of instances to use.',
+    instancedAttributes: 'The names of the vertex attributes to instantiate.'
+  },
+  factoryFn: function(options, scene) {
+    scene.assignDefaults(options, {
+        baseGeometryNode: undefined,
+        baseGeometryType: 'Triangles',
+        nbInstances: 1,
+        instancedAttributes: ['positions'] 
+      });
+    
+    if(!options.baseGeometryNode){
+      throw 'A baseGeometryNode must be specified'
+    }
+    if (!options.baseGeometryNode.isTypeOf('Geometry')) {
+      throw ('Incorrect type assignment. Must assign a Geometry');
+    }
+    if (!options.baseGeometryType) {
+      throw ('You have to specify a baseGeometryType for this constructor!');
+    }
+    
+    var baseGeometryNode = scene.getPrivateInterface(options.baseGeometryNode);
+    var geometryInstancingNode = scene.constructNode(options.baseGeometryType, options);
+    
+    geometryInstancingNode.getUniformsDGNode().setDependency(baseGeometryNode.getUniformsDGNode(), 'parentuniforms');
+    geometryInstancingNode.getUniformsDGNode().setDependency(baseGeometryNode.getAttributesDGNode(), 'parentattributes');
+    geometryInstancingNode.getAttributesDGNode().setDependency(baseGeometryNode.getUniformsDGNode(), 'parentuniforms');
+    geometryInstancingNode.getAttributesDGNode().setDependency(baseGeometryNode.getAttributesDGNode(), 'parentattributes');
+    
+    geometryInstancingNode.getUniformsDGNode().addMember('nbInstances','Size',options.nbInstances);
+
+    // The instancing node must always have a multiple of the count on the attributes node of the original.
+    geometryInstancingNode.getAttributesDGNode().bindings.append( scene.constructOperator({
+      operatorName: 'instantiateCount',
+      srcFile: 'FABRIC_ROOT/SceneGraph/KL/geometryInstancing.kl',
+      entryFunctionName: 'instantiateCount',
+      parameterLayout: [
+        'parentattributes.count',
+        'self.newCount',
+        'uniforms.nbInstances'
+      ],
+      preProcessorDefinitions: {
+        DATA_TYPE: 'Vec3'
+      },
+    }));
+    
+    // The instancing node must use a multiple of the indices
+    geometryInstancingNode.getUniformsDGNode().bindings.append( scene.constructOperator({
+      operatorName: 'instantiateIndices',
+      srcFile: 'FABRIC_ROOT/SceneGraph/KL/geometryInstancing.kl',
+      entryFunctionName: 'instantiateIndices',
+      parameterLayout: [
+        'parentuniforms.indices',
+        'self.indices',
+        'self.nbInstances',
+        'parentattributes.count'
+      ],
+      preProcessorDefinitions: {
+        DATA_TYPE: 'Vec3'
+      },
+    }));
+ 
+    // setup the instanceIDs
+    geometryInstancingNode.pub.addVertexAttributeValue('instanceIDs','Integer',{ genVBO:true });
+    geometryInstancingNode.getAttributesDGNode().bindings.append( scene.constructOperator({
+      operatorName: 'instantiateInstanceIDs',
+      srcFile: 'FABRIC_ROOT/SceneGraph/KL/geometryInstancing.kl',
+      entryFunctionName: 'instantiateInstanceIDs',
+      parameterLayout: [
+        'self.index',
+        'parentattributes.count',
+        'self.instanceIDs'
+      ],
+      preProcessorDefinitions: {
+        DATA_TYPE: 'Vec3'
+      },
+    }));
+    geometryInstancingNode.pub.setAttributeStatic('instanceIDs');
+
+    // now instantiate all attributes
+    geometryInstancingNode.pub.instantiateAttribute = function(attrName) {
+      var members = baseGeometryNode.getAttributesDGNode().getMembers();
+      if(members[attrName] == undefined)
+        throw('Vertex Attribute \''+attrName+'\' is not defined on baseGeometryNode!')
+      
+      var existingMembers = geometryInstancingNode.getAttributesDGNode().getMembers();
+      if(!existingMembers[attrName])
+        geometryInstancingNode.getAttributesDGNode().addMember(attrName,members[attrName].type);
+      geometryInstancingNode.getAttributesDGNode().bindings.append( scene.constructOperator({
+        operatorName: 'instantiate'+attrName[0].toUpperCase() + attrName.substr(1),
+        srcFile: 'FABRIC_ROOT/SceneGraph/KL/geometryInstancing.kl',
+        entryFunctionName: 'instantiateAttribute',
+        parameterLayout: [
+          'self.index',
+          'parentattributes.count',
+          'parentattributes.'+attrName+'<>',
+          'self.'+attrName
+        ],
+        preProcessorDefinitions: {
+          DATA_TYPE: members[attrName].type,
+          DATA_NAME: attrName
+        },
+      }));
+    }
+    for(var i=0;i<options.instancedAttributes.length;i++)
+      geometryInstancingNode.pub.instantiateAttribute(options.instancedAttributes[i]);
+
+    geometryInstancingNode.pub.getBaseGeometry = function(){
+      return baseGeometryNode.pub;
+    }
+    
+    return geometryInstancingNode;
+  }});
 
 FABRIC.SceneGraph.registerNodeType('Points', {
   briefDesc: 'The Points node defines a renderable points geometry type.',
@@ -546,7 +673,14 @@ FABRIC.SceneGraph.registerNodeType('Instance', {
     redrawEventHandler.setScope('instance', dgnode);
 
     var bindToSceneGraph = function() {
-      redrawEventHandler.setScope('transform', transformNode.getDGNode());
+      
+      // check if we have a sliced transform!
+      if(options.transformNodeIndex == undefined && transformNode.getDGNode().getCount() > 1) {
+        options.transformNodeIndex = 0
+      }
+      
+      var transformdgnode = transformNode.getDGNode();
+      redrawEventHandler.setScope('transform', transformdgnode);
       var preProcessorDefinitions = {
               MODELMATRIX_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('modelMatrix'),
               MODELMATRIXINVERSE_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('modelMatrixInverse'),
@@ -559,7 +693,7 @@ FABRIC.SceneGraph.registerNodeType('Instance', {
               MODELVIEW_MATRIX_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('modelViewMatrix'),
               MODELVIEWPROJECTION_MATRIX_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('modelViewProjectionMatrix')
             };
-      if(!options.transformNodeIndex){
+      if(options.transformNodeIndex == undefined){
         redrawEventHandler.preDescendBindings.append(scene.constructOperator({
             operatorName: 'loadModelProjectionMatrices',
             srcFile: 'FABRIC_ROOT/SceneGraph/KL/loadModelProjectionMatrices.kl',
@@ -575,18 +709,18 @@ FABRIC.SceneGraph.registerNodeType('Instance', {
       }else{
         redrawEventHandler.addMember('transformNodeIndex', 'Size', options.transformNodeIndex);
         redrawEventHandler.preDescendBindings.append(scene.constructOperator({
-            operatorName: 'loadIndexedModelProjectionMatrices',
-            srcFile: 'FABRIC_ROOT/SceneGraph/KL/loadModelProjectionMatrices.kl',
-            entryFunctionName: 'loadIndexedModelProjectionMatrices',
-            preProcessorDefinitions: preProcessorDefinitions,
-            parameterLayout: [
-              'shader.shaderProgram',
-              'transform.' + transformNodeMember + '<>',
-              'self.transformNodeIndex',
-              'camera.cameraMat44',
-              'camera.projectionMat44'
-            ]
-          }));
+          operatorName: 'loadIndexedModelProjectionMatrices',
+          srcFile: 'FABRIC_ROOT/SceneGraph/KL/loadModelProjectionMatrices.kl',
+          entryFunctionName: 'loadIndexedModelProjectionMatrices',
+          preProcessorDefinitions: preProcessorDefinitions,
+          parameterLayout: [
+            'shader.shaderProgram',
+            'transform.' + transformNodeMember + '<>',
+            'self.transformNodeIndex',
+            'camera.cameraMat44',
+            'camera.projectionMat44'
+          ]
+        }));
       }
       ///////////////////////////////////////////////
       // Ray Cast Event Handling
@@ -594,18 +728,26 @@ FABRIC.SceneGraph.registerNodeType('Instance', {
         options.enableRaycasting &&
         geometryNode.getRayIntersectionOperator
       ) {
-        var raycastOperator = geometryNode.getRayIntersectionOperator(transformNodeMember);
-        raycastEventHandler = instanceNode.constructEventHandlerNode('Raycast');
-        raycastEventHandler.setScope('geometry_uniforms', geometryNode.getUniformsDGNode());
-        raycastEventHandler.setScope('geometry_attributes', geometryNode.getAttributesDGNode());
-        raycastEventHandler.setScope('boundingbox', geometryNode.getBoundingBoxDGNode());
-        raycastEventHandler.setScope('transform', transformNode.getDGNode());
-        raycastEventHandler.setScope('instance', dgnode);
-        // The selector will return the node bound with the given binding name.
-        raycastEventHandler.setSelector('instance', raycastOperator);
-
-        // the sceneRaycastEventHandler propogates the event throughtout the scene.
-        scene.getSceneRaycastEventHandler().appendChildEventHandler(raycastEventHandler);
+        // check if this is a sliced transform node
+        if(transformNode.getRaycastEventHandler) {
+          // In some cases, the transform node can provide raycasting services.
+          // For example, the bullet Transfrom node is associated with a geometry,
+          // and can provide the raycast. 
+          scene.getSceneRaycastEventHandler().appendChildEventHandler(transformNode.getRaycastEventHandler());
+        } else {
+          var raycastOperator = geometryNode.getRayIntersectionOperator(transformNodeMember);
+          raycastEventHandler = instanceNode.constructEventHandlerNode('Raycast');
+          raycastEventHandler.setScope('geometry_uniforms', geometryNode.getUniformsDGNode());
+          raycastEventHandler.setScope('geometry_attributes', geometryNode.getAttributesDGNode());
+          raycastEventHandler.setScope('boundingbox', geometryNode.getBoundingBoxDGNode());
+          raycastEventHandler.setScope('transform', transformNode.getDGNode());
+          raycastEventHandler.setScope('instance', dgnode);
+          // The selector will return the node bound with the given binding name.
+          raycastEventHandler.setSelector('instance', raycastOperator);
+  
+          // the sceneRaycastEventHandler propogates the event throughtout the scene.
+          scene.getSceneRaycastEventHandler().appendChildEventHandler(raycastEventHandler);
+        }
       }
     }
 

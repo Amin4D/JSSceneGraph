@@ -259,7 +259,7 @@ $(document).ready(function() {
       maxehrow,
       layoutMap;
   
-  var loadCoreObjects = function(){
+  var layoutGraph = function( layoutDanglingNodes ){
     
     eventsMap = {};
     eventHandlersMap = {};
@@ -272,6 +272,8 @@ $(document).ready(function() {
       
     for(var i in allNamedObjects){
       if(!allNamedObjects[ i ].getType){
+        // This object is an operator and does not need to be laid out.
+        delete allNamedObjects[ i ];
         continue;
       }
       var type = allNamedObjects[ i ].getType();
@@ -290,7 +292,9 @@ $(document).ready(function() {
     var layoutDGNodes = function(dgnode, parentPos){
       var name = dgnode.getName();
       var pos = parentPos.subtract(new FABRIC.Vec2(1, 0));
-      if(!dgcolumns[pos.x]) dgcolumns[pos.x] = 0;
+      if(!dgcolumns[pos.x]){
+        dgcolumns[pos.x] = 0;
+      }
       if(layoutMap[name]){
         if(layoutMap[name].x > pos.x){
           dgcolumns[pos.x]++;
@@ -310,41 +314,108 @@ $(document).ready(function() {
       }
     }
     
+    
+    var layoutDanglingDGNodes = function(dgnode){
+      var name = dgnode.getName();
+      if(layoutMap[name]){
+        return layoutMap[name];
+      }
+      var parentPos, pos;
+      var dependencies = dgnode.getDependencies();
+      for(var i in dependencies){
+        var parentName = dependencies[i].getName();
+        if(!layoutMap[parentName])
+          layoutDanglingDGNodes(dependencies[i]);
+        if(layoutMap[parentName]){
+          parentPos = layoutMap[parentName];
+        }
+      }
+      if(!parentPos){
+        pos = FABRIC.vec2(1, 0);
+      }else{
+        pos = parentPos.add(FABRIC.vec2(1, 0));
+      }
+      
+      if(!dgcolumns[pos.x]){
+        dgcolumns[pos.x] = 0;
+      }
+      dgcolumns[pos.x]++;
+      pos.y = dgcolumns[pos.x];
+      layoutMap[name] = pos;
+      return pos;
+    }
+    
     var layoutEventHandlers = function(children, parentPos){
-      if(children.length > 0){
-        for(var j=0; j < children.length; j++){
-          var eventHandler = children[j];
-          var name = eventHandler.getName();
-          var pos = parentPos.add(new FABRIC.Vec2(1, 0));
-          if(!ehcolumns[pos.x]) ehcolumns[pos.x] = 0;
-          if(layoutMap[name]){
-            if( layoutMap[name].x < pos.x){
-              ehcolumns[pos.x]++;
-              // Re-assign the handler to the new column;
-              layoutMap[name].x = pos.x;
-              layoutMap[name].y = ehcolumns[pos.x];
-            }
+      for(var j=0; j < children.length; j++){
+        var eventHandler = children[j];
+        var name = eventHandler.getName();
+        var pos = parentPos.add(new FABRIC.Vec2(1, 0));
+        if(!ehcolumns[pos.x]) ehcolumns[pos.x] = 0;
+        if(layoutMap[name]){
+          if( layoutMap[name].x < pos.x){
+            ehcolumns[pos.x]++;
+            // Re-assign the handler to the new column;
+            layoutMap[name].x = pos.x;
+            layoutMap[name].y = ehcolumns[pos.x];
+          }
+        }else{
+          // nodes are inline with parent nodes. 
+          if(ehcolumns[pos.x] < parentPos.y){
+            ehcolumns[pos.x] = parentPos.y;
           }else{
-            // nodes are inline with parent nodes. 
-            if(ehcolumns[pos.x] < parentPos.y){
-              ehcolumns[pos.x] = parentPos.y;
-            }else{
-              ehcolumns[pos.x]++;
-            }
-            pos.y = ehcolumns[pos.x];
-            layoutMap[name] = pos;
+            ehcolumns[pos.x]++;
           }
-          if(maxehrow < layoutMap[name].y){
-            maxehrow = layoutMap[name].y;
-          }
-          layoutEventHandlers(eventHandler.getChildEventHandlers(), layoutMap[name]);
-          var scopes = eventHandler.getScopes();
-          for(var i in scopes){
-            layoutDGNodes(scopes[i], layoutMap[name])
-          }
+          pos.y = ehcolumns[pos.x];
+          layoutMap[name] = pos;
+        }
+        if(maxehrow < layoutMap[name].y){
+          maxehrow = layoutMap[name].y;
+        }
+        layoutEventHandlers(eventHandler.getChildEventHandlers(), layoutMap[name]);
+        var scopes = eventHandler.getScopes();
+        for(var i in scopes){
+          layoutDGNodes(scopes[i], layoutMap[name])
         }
       }
     }
+    
+    var layoutDanglingEventHandlers = function(eventHandler){
+      var name = eventHandler.getName();
+      var children = eventHandler.getChildEventHandlers();
+      var pos, childPos;
+      for(var j=0; j < children.length; j++){
+        var childEventHandler = children[j];
+        var childName = childEventHandler.getName();
+        if(!layoutMap[childName])
+          layoutDanglingEventHandlers(childEventHandler);
+        if(layoutMap[childName]){
+          childPos = layoutMap[childName];
+        }
+      }
+      if(!childPos){
+        childPos = FABRIC.vec2(ehcolumns.length-1, 0);
+      }
+      var pos = childPos.subtract(FABRIC.vec2(1, 0));
+      if(!ehcolumns[pos.x]) ehcolumns[pos.x] = 0;
+      
+      // nodes are inline with parent nodes. 
+      if(ehcolumns[pos.x] < childPos.y){
+        ehcolumns[pos.x] = childPos.y;
+      }else{
+        ehcolumns[pos.x]++;
+      }
+      pos.y = ehcolumns[pos.x];
+      layoutMap[name] = pos;
+          
+      if(maxehrow < layoutMap[name].y){
+        maxehrow = layoutMap[name].y;
+      }
+      var scopes = eventHandler.getScopes();
+      for(var i in scopes){
+        layoutDGNodes(scopes[i], layoutMap[name])
+      }
+    }
+    
     
     ehcolumns[0] = 0;
     for(var i in eventsMap){
@@ -357,9 +428,23 @@ $(document).ready(function() {
       layoutMap[i] = new FABRIC.Vec2(0, row);
       layoutEventHandlers(eventsMap[i].getEventHandlers(), layoutMap[i]);
     }
+    
+    if(layoutDanglingNodes){
+      for(var i in nodesMap){
+        if(!layoutMap[i]){
+          layoutDanglingDGNodes(nodesMap[i]);
+        }
+      }
+      
+      for(var i in eventHandlersMap){
+        if(!layoutMap[i]){
+          layoutDanglingEventHandlers(eventHandlersMap[i]);
+        }
+      }
+    }
   }
   
-  loadCoreObjects();
+  layoutGraph(false);
   
   var graphWidth = $('#graph').width();
   var graphHeight = $('#graph').height();
@@ -544,12 +629,11 @@ $(document).ready(function() {
     
     var graphSpacing = new FABRIC.Vec2(240, 100);
     
-    for(var i in layoutMap){
-      var corenode = allNamedObjects[i];
+    for(var i in allNamedObjects){
       if(!layoutMap[i]){
-        console.warn("Missing Layout information:" + i);
         continue;
       }
+      var corenode = allNamedObjects[i];
       var name = corenode.getName();
       var type = corenode.getType();
       var pos = layoutMap[name];
@@ -644,23 +728,29 @@ $(document).ready(function() {
   
   var redisplayGraph = function(){
     // TODO: figure out why I can't set the button to be checked by default.
-    displayGraph(!$('#displayEventHandlers').attr('checked'), !$('#displayDependencyGraph').attr('checked'), true)
+    displayGraph(!$('#displayEventHandlers').attr('checked'),
+                 !$('#displayDependencyGraph').attr('checked'),
+                 true)
   }
   
   $('#rebuild').button()
       .click(function() {
-        loadCoreObjects();
+        layoutGraph();
         redisplayGraph();
       });
-  $('#displayEventHandlers').button()
-      .click(function() {
-        redisplayGraph();
-      });
-  $('#displayDependencyGraph').button()
-      .click(function() {
-        redisplayGraph();
-      });
-      
+    
+  $("#displayEventHandlers").change(function() {
+    redisplayGraph();
+  });
+  
+  $("#displayDependencyGraph").change(function() {
+    redisplayGraph();
+  });
+  
+  $("#displayDanglingNodes").change(function() {
+    layoutGraph( $("#displayDanglingNodes").is(":checked"));
+    redisplayGraph();
+  });
   displayGraph(true, true);
 });
 
@@ -684,10 +774,11 @@ $(document).ready(function() {
         <div id="sidebar">
           <div class="box">
             <h2>OPTIONS</h2>
-            <div class="content" id="keyframeTracks">
-              <button id="rebuild" style="margin-top:10px;">Rebuild</button>
-              <input type="checkbox" id="displayEventHandlers" /><label for="displayEventHandlers" style="margin-top:10px;" >Display Event Handlers</label>
-              <input type="checkbox" id="displayDependencyGraph"/><label for="displayDependencyGraph" style="margin-top:10px;" >Display Dependency Graph</label>
+            <div class="content" id="displayFilters">
+              <button id="rebuild" >Rebuild</button><br>
+              <input type="checkbox" id="displayEventHandlers" style="margin-top:10px;" /><label for="displayEventHandlers" style="margin-top:10px;" >Display Event Handlers</label><br>
+              <input type="checkbox" id="displayDependencyGraph"/><label for="displayDependencyGraph" style="margin-top:10px;" >Display Dependency Graph</label><br>
+              <input type="checkbox" id="displayDanglingNodes"/><label for="displayDanglingNodes" style="margin-top:10px;" >Display Dangling Nodes</label><br>
             </div><!--content-->
           </div><!--box-->
           <div class="box">

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <shader>
-  <name>PhongInstancingMaterial</name>
+  <name>PhongInstancingExtMaterial</name>
   
   <uniforms>
     <uniform name="u_lightPosition" constant="lightPosition" type="Vec3" owner="light"/>
@@ -14,12 +14,10 @@
     <uniform name="u_materialSpecularColor" constant="specularColor" type="Color" defaultValue="FABRIC.RT.rgba(0.5,0.5,0.5,1)"/>
     <uniform name="u_materialShininess" constant="shininess" type="Scalar" defaultValue="20.0"/>
     
-    <uniform name="u_modelViewProjectionMatrix" constant="modelViewProjectionMatrix" type="Mat44" owner="instance"/>
-    <uniform name="u_modelMatrix" constant="modelMatrix" type="Mat44" owner="instance"/>
     <uniform name="u_viewMatrix" constant="viewMatrix" type="Mat44" owner="instance"/>
     <uniform name="u_projectionMatrix" constant="projectionMatrix" type="Mat44" owner="instance"/>
-    
-    <uniform name="u_instanceTransforms" constant="instanceTransforms" type="Mat44[]" owner="material" />
+
+		<uniform name="u_samplerTransformMap" constant="transformTexture" type="Integer" owner="texture"/>
   </uniforms>
   
   <attributes>
@@ -30,36 +28,70 @@
   <lights>
     <light type="Light" binding="light"/>
   </lights>
-  
-  <preprocessordirectives>
-    <preprocessordirective name="NUM_INSTANCES" binding="numInstances"/>
-  </preprocessordirectives>
+
+	<textures>
+		<texture binding="transformTexture"/>
+	</textures>
   
   <vertexshader>
     <source>
       <![CDATA[
+      #version 140
+
       uniform mat4 u_modelViewProjectionMatrix;
       uniform mat4 u_viewMatrix;
       uniform mat4 u_projectionMatrix;
       uniform mat4 u_modelMatrix;
       uniform vec4 u_lightPosition;
+      uniform sampler2D u_samplerTransformMap;
       
-      
-      uniform mat4 u_instanceTransforms[NUM_INSTANCES];
-      
-      attribute vec4 a_position;
-      attribute vec3 a_normal;
+      in vec4 a_position;
+      in vec3 a_normal;
+      in int a_instanceID;
 
-      varying vec3 normal;
-      varying vec3 lightDir;
-      varying vec3 viewDir;
-      
+      out vec3 normal;
+      out vec3 lightDir;
+      out vec3 viewDir;
+
+      mat3 inverseAndTransposeMat33(in mat3 m)
+      {
+        float det = m[0].x * m[1].y * m[2].z
+                  + m[0].y * m[1].z * m[2].x
+                  + m[0].z * m[1].x * m[2].y
+                  - m[0].x * m[1].z * m[2].y
+                  - m[0].y * m[1].x * m[2].z
+                  - m[0].z * m[1].y * m[2].x;
+        float invDet = 1.0 / det;
+
+        mat3 result;
+
+        result[0].x = (m[1].y * m[2].z - m[1].z * m[2].y) * invDet;
+        result[1].x = (m[0].z * m[2].y - m[0].y * m[2].z) * invDet;
+        result[2].x = (m[0].y * m[1].z - m[0].z * m[1].y) * invDet;
+
+        result[0].y = (m[1].z * m[2].x - m[1].x * m[2].z) * invDet;
+        result[1].y = (m[0].x * m[2].z - m[0].z * m[2].x) * invDet;
+        result[2].y = (m[0].z * m[1].x - m[0].x * m[1].z) * invDet;
+
+        result[0].z = (m[1].x * m[2].y - m[1].y * m[2].x) * invDet;
+        result[1].z = (m[0].y * m[2].x - m[0].x * m[2].y) * invDet;
+        result[2].z = (m[0].x * m[1].y - m[0].y * m[1].x) * invDet;
+        return result;
+      }
 
       void main(){
-	mat4 modelViewMatrix = u_viewMatrix * u_instanceTransforms[gl_InstanceID] * u_modelMatrix;
-	mat4 modelViewProjectionMatrix = u_projectionMatrix * modelViewMatrix;
-      
-	mat3 normalMatrix = transpose(inverse(mat3(modelViewMatrix[0].xyz, modelViewMatrix[1].xyz, modelViewMatrix[2].xyz)));
+        int instanceID = gl_InstanceID;
+        float factor = 1.0 / 512.0;
+        int x = (instanceID % 128) * 4;
+        float y = float(instanceID) / 128.0;
+        mat4 mvp = mat4(texture2D(u_samplerTransformMap,vec2(x,y) * factor),
+            texture2D(u_samplerTransformMap,vec2(x+1,y) * factor),
+            texture2D(u_samplerTransformMap,vec2(x+2,y) * factor),
+            texture2D(u_samplerTransformMap,vec2(x+3,y) * factor));
+
+        mat4 modelViewMatrix = u_viewMatrix * mvp;
+        mat4 modelViewProjectionMatrix = u_projectionMatrix * modelViewMatrix;
+        mat3 normalMatrix = inverseAndTransposeMat33(mat3(modelViewMatrix[0].xyz, modelViewMatrix[1].xyz, modelViewMatrix[2].xyz));
     
         normal = normalMatrix * a_normal;
         vec4 modelCameraPosition = modelViewMatrix * a_position;

@@ -205,7 +205,8 @@ FABRIC.SceneGraph.registerNodeType('PaintManipulator', {
       aspectRatio,
       paintableNodes = [],
       paintableNodePaintHandlers = [],
-      enabled = options.enabled;
+      enabled = options.enabled,
+      brushSize = options.brushSize;
 
     scene.addEventHandlingFunctions(paintManipulatorNode);
     
@@ -214,7 +215,7 @@ FABRIC.SceneGraph.registerNodeType('PaintManipulator', {
     paintEventHandler.addMember('aspectRatio', 'Scalar');
     paintEventHandler.addMember('brushPos', 'Vec3');
     
-    paintEventHandler.addMember('brushSize', 'Scalar', options.brushSize);
+    paintEventHandler.addMember('brushSize', 'Scalar', brushSize);
     paintManipulatorNode.addMemberInterface(paintEventHandler, 'brushSize', true);
 
     paintEventHandler.setScopeName('paintData');
@@ -244,16 +245,26 @@ FABRIC.SceneGraph.registerNodeType('PaintManipulator', {
       paintEventHandler.setData('aspectRatio', aspectRatio);
       return paintEvent.select('CollectedPoints');
     };
+    
+    paintManipulatorNode.pub.setBrushSize = function(val){
+      brushSize = val;
+      paintEventHandler.setData('brushSize', brushSize);
+    }
+    paintManipulatorNode.pub.getBrushSize = function(){
+      return brushSize;
+    }
 
     var resizePaintBrushFn = function(evt) {
       if(!enabled){
         return;
       }
-      options.brushSize += evt.wheelDelta * 0.0001 * options.brushScaleSpeed;
-      options.brushSize = Math.max(options.brushSize, 0.01);
-      paintEventHandler.setData('brushSize', options.brushSize);
+      brushSize += evt.wheelDelta * 0.0001 * options.brushScaleSpeed;
+      brushSize = Math.max(brushSize, 0.01);
+      paintEventHandler.setData('brushSize', brushSize);
       evt.stopPropagation();
       evt.viewportNode.redraw();
+      
+      paintManipulatorNode.pub.fireEvent('brushsizechanged', { brushSize:brushSize });
     }
     scene.pub.addEventListener('mousewheel', resizePaintBrushFn);
 
@@ -288,7 +299,7 @@ FABRIC.SceneGraph.registerNodeType('PaintManipulator', {
       brushShapeTransform.pub.setGlobalXfo(new FABRIC.RT.Xfo({
           tr: brushPos,
           ori: new FABRIC.RT.Quat().setFromAxisAndAngle(new FABRIC.RT.Vec3(1, 0, 0), Math.HALF_PI),
-          sc: new FABRIC.RT.Vec3(options.brushSize / aspectRatio, options.brushSize, options.brushSize)
+          sc: new FABRIC.RT.Vec3(brushSize / aspectRatio, brushSize, brushSize)
         }));
     }
 

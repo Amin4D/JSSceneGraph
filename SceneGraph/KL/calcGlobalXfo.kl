@@ -3,8 +3,13 @@
 // Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
 //
 use Xfo;
+use Mat44;
 
 operator calcGlobalXfo(io Xfo localXfo, io Xfo parentGlobalXfo, io Xfo globalXfo) {
   //report( "calcGlobalXfo\n" );
   globalXfo = parentGlobalXfo * localXfo;
+}
+
+operator calcGlobalMatrix(io Xfo globalXfo, io Mat44 globalMat) {
+  globalMat = Mat44(globalXfo);
 }

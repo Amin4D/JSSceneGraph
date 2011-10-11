@@ -919,7 +919,8 @@ FABRIC.SceneGraph.registerNodeType('Viewport', {
         backgroundColor: FABRIC.RT.rgb(0.5, 0.5, 0.5),
         postProcessEffect: undefined,
         rayIntersectionThreshold: 0.2,
-        polygonMode: -1
+        polygonMode: -1,
+        checkOpenGL2Support: true
       });
 
     if (!options.windowElement) {
@@ -972,7 +973,14 @@ FABRIC.SceneGraph.registerNodeType('Viewport', {
         // during the 1st redraw.
         viewportNode.pub.getOpenGLVersion = fabricwindow.getOpenGLVersion;
         viewportNode.pub.getGlewSupported = fabricwindow.getGlewSupported;
-        fabricwindow.show();
+        viewportNode.pub.show = function(){ fabricwindow.show(); };
+        viewportNode.pub.hide = function(){ fabricwindow.hide(); };
+        
+        if(options.checkOpenGL2Support && !fabricwindow.getGlewSupported('GL_VERSION_2_0')){
+          alert('ERROR: Your graphics driver does not support OpenGL 2.0, which is required to run Fabric.')
+        }else{
+          fabricwindow.show();
+        }
         return true;
       }
     });
@@ -1040,6 +1048,11 @@ FABRIC.SceneGraph.registerNodeType('Viewport', {
     }
 
     // private interface
+    
+    viewportNode.getElementCoords = function(evt) {
+      return getElementCoords(evt);
+    };
+    
     viewportNode.getWindowElement = function() {
       return windowElement;
     };
@@ -1414,6 +1427,7 @@ FABRIC.SceneGraph.registerNodeType('ResourceLoad', {
     }
 
     var onLoadSuccessCallbackFunction = function(node) {
+      lastLoadCallbackURL = resourceLoadNode.pub.getUrl();
       onLoadCallbackFunction(onloadSuccessCallbacks);
     }
     var onLoadProgressCallbackFunction = function(node, progress) {

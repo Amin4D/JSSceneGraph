@@ -421,7 +421,7 @@ FABRIC.SceneGraph.registerNodeType('MuscleSkinDeformation', {
     
     deformedSkin.getAttributesDGNode().bindings.append(scene.constructOperator({
       operatorName: 'setVertexColorByWeight',
-      srcFile: './KL/skin.kl',
+      srcFile: './KL/Skin.kl',
       entryFunctionName: 'setVertexColorByWeight',
       parameterLayout: [
         'boundskin.stickWeight<>',

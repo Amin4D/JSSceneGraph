@@ -12,7 +12,6 @@ operator genVBO(
   io DATA_TYPE bufferData[],
   io OGLBuffer buffer
 ) {
-//  report("genVBO  " + buffer.name + ":" + buffer.bufferID +" elementCount:" + buffer.elementCount );
   buffer.genBuffer(bufferData.data(), bufferData.dataSize(), bufferData.size());
 }
 

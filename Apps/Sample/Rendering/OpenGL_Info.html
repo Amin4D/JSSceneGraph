@@ -36,26 +36,32 @@ $(document).ready(function() {
   var context = FABRIC.createContext();
   var window = context.createWindow(document.getElementById('FabricContainer'));
   
-  // create html for the types
-  var html = "<b>OpenGL Information</b><br>";
+  // A 1 ms pause is provided so that the browser can redraw, 
+  // and set up the openGL context. 
+  setTimeout( function(){
+    
+    // create html for the types
+    var html = "<b>OpenGL Information</b><br>";
+    
+    // ask for the opengl version
+    html += "<br>OpenGL Version Number: <i>"+window.getOpenGLVersion()+"</i><br>";
+    
+    var features = [
+      'GL_VERSION_1_4 GL_ARB_point_sprite',
+      'GL_ARB_fragment_program',
+      'GL_EXT_draw_instanced',
+      'GL_ARB_tessellation_shader',
+      'GL_VERSION_4_0',
+      'WGL_ARB_pbuffer'
+    ];
+    for(var i=0;i<features.length;i++) {
+      html += "<br>"+features[i]+": <i>"+window.getGlewSupported(features[i])+"</i>";
+    }
+    
+    // output the html to the div
+    $("#output").html(html);
   
-  // ask for the opengl version
-  html += "<br>OpenGL Version Number: <i>"+window.getOpenGLVersion()+"</i><br>";
-  
-  var features = [
-    'GL_VERSION_1_4 GL_ARB_point_sprite',
-    'GL_ARB_fragment_program',
-    'GL_EXT_draw_instanced',
-    'GL_ARB_tessellation_shader',
-    'GL_VERSION_4_0',
-    'WGL_ARB_pbuffer'
-  ];
-  for(var i=0;i<features.length;i++) {
-    html += "<br>"+features[i]+": <i>"+window.getGlewSupported(features[i])+"</i>";
-  }
-  
-  // output the html to the div
-  $("#output").html(html);
+  }, 1)
 });
 
 </script>

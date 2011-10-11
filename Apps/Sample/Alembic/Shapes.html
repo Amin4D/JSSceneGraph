@@ -30,7 +30,6 @@
     <script type="text/javascript" src="../../../SceneGraph/RT/OGLShaderProgram.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/RT/OGLTexture2D.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/RT/OGLBuffer.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/RT/AlembicHandle.js" charset="utf-8"></script>
 
     <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Geometry.js" charset="utf-8"></script>
@@ -120,8 +119,6 @@ FABRIC.SceneGraph.registerNodeType('ShapeMixer', {
     }
     code += "}\n"
     
-    console.log(code);
-    
     var parameterLayout = [
       'self.positions',
       'self.original_positions',
@@ -132,8 +129,6 @@ FABRIC.SceneGraph.registerNodeType('ShapeMixer', {
       parameterLayout.push('shapeMixer.'+name);
       parameterLayout.push(name+".positions<>");
     }
-
-    console.log(parameterLayout);
 
     attributesdgnode.bindings.append(scene.constructOperator({
       operatorName: 'mixShapes',

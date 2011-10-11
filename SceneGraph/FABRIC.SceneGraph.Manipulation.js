@@ -1196,7 +1196,7 @@ FABRIC.SceneGraph.registerNodeType('PivotRotationManipulator', {
       }
 
       dragXfo = dragStartXFo.clone();
-      dragXfo.ori = dragXfo.ori.multiply(new FABRIC.RT.Quat().setFromAxisAndAngle(normal, angle));
+      dragXfo.ori = new FABRIC.RT.Quat().setFromAxisAndAngle(normal, angle).multiply(dragXfo.ori);
       dragXfo.tr = dragXfo.tr.add(movement);
       manipulatorNode.setTargetGlobalXfo(dragXfo);
     }

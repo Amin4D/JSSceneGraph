@@ -40,21 +40,21 @@ FABRIC.SceneGraph.registerNodeType('AlembicLoadNode', {
       }
     }
 
-    resourceloaddgnode.addMember('archiveID', 'Integer',-1);
+    resourceloaddgnode.addMember('handle', 'AlembicHandle');
+    resourceloaddgnode.addMember('time', 'Scalar', 0);
     resourceloaddgnode.addMember('identifiers', 'String[]');
-    resourceloaddgnode.addMember('sample', 'Integer', 0);
-    resourceloaddgnode.addMember('numSamples', 'Integer', 0);
     
-    resourceLoadNode.addMemberInterface(resourceloaddgnode, 'sample', true);
-    resourceLoadNode.addMemberInterface(resourceloaddgnode, 'numSamples', false);
+    resourceLoadNode.addMemberInterface(resourceloaddgnode, 'time', true);
+    resourceLoadNode.pub.getTimeRange = function() {
+      return resourceloaddgnode.getData('handle',0).timeRange;
+    };
     
     resourceloaddgnode.bindings.append(scene.constructOperator({
       operatorName: 'alembicLoad',
       parameterLayout: [
         'self.url', //For debugging only
         'self.resource',
-        'self.archiveID',
-        'self.numSamples'
+        'self.handle'
       ],
       entryFunctionName: 'alembicLoad',
       srcFile: 'FABRIC_ROOT/SceneGraph/KL/loadAlembic.kl',
@@ -64,7 +64,7 @@ FABRIC.SceneGraph.registerNodeType('AlembicLoadNode', {
     resourceloaddgnode.bindings.append(scene.constructOperator({
       operatorName: 'alembicGetIdentifiers',
       parameterLayout: [
-        'self.archiveID',
+        'self.handle',
         'self.identifiers'
       ],
       entryFunctionName: 'alembicGetIdentifiers',
@@ -109,6 +109,7 @@ FABRIC.SceneGraph.registerNodeType('AlembicLoadNode', {
         var names = identifier.split('/');
         var name = names[names.length-1];
         var type = parts[1];
+        var numSamples = parseInt(parts[2]);
         objects[identifier] = type;
         
         // check if we have a parent transform
@@ -121,25 +122,28 @@ FABRIC.SceneGraph.registerNodeType('AlembicLoadNode', {
         if(type == 'PolyMesh') {
           
           var trianglesNode = scene.constructNode('Triangles', { uvSets: 1, createBoundingBoxNode: true } );
-          trianglesNode
-          trianglesNode.pub.setAttributeDynamic('positions');
-          trianglesNode.pub.setAttributeDynamic('normals');
-          trianglesNode.pub.setAttributeDynamic('uvs0');
           parsedNodes[identifier] = trianglesNode.pub;
 
           // retrieve thd dgnodes
           var uniformsdgnode = trianglesNode.getUniformsDGNode();
           uniformsdgnode.addMember('identifier','String',identifier);
           uniformsdgnode.addMember('uvsLoaded','Boolean',false);
+          uniformsdgnode.addMember('alembicTime','Scalar',0);
+          trianglesNode.getTimeDrivenDGNode = function() {
+            return this.getUniformsDGNode();
+          }
           uniformsdgnode.setDependency(resourceloaddgnode,'alembic');
           var attributesdgnode = trianglesNode.getAttributesDGNode();
           attributesdgnode.setDependency(resourceloaddgnode,'alembic');
+
+          // create a function to access the number of sample of this node
+          trianglesNode.pub.getNumSamples = (function(value) { return function() { return value; }; })(numSamples);
           
           // setup the parse operators
           uniformsdgnode.bindings.append(scene.constructOperator({
             operatorName: 'alembicParsePolyMeshUniforms',
             parameterLayout: [
-              'alembic.archiveID',
+              'alembic.handle',
               'self.identifier',
               'self.indices'
             ],
@@ -150,7 +154,7 @@ FABRIC.SceneGraph.registerNodeType('AlembicLoadNode', {
           attributesdgnode.bindings.append(scene.constructOperator({
             operatorName: 'alembicParsePolyMeshCount',
             parameterLayout: [
-              'alembic.archiveID',
+              'alembic.handle',
               'uniforms.identifier',
               'self.newCount'
             ],
@@ -161,9 +165,9 @@ FABRIC.SceneGraph.registerNodeType('AlembicLoadNode', {
           attributesdgnode.bindings.append(scene.constructOperator({
             operatorName: 'alembicParsePolyMeshAttributes',
             parameterLayout: [
-              'alembic.archiveID',
+              'alembic.handle',
               'uniforms.identifier',
-              'alembic.sample',
+              'uniforms.alembicTime',
               'self.positions<>',
               'self.normals<>',
               'uniforms.uvsLoaded',
@@ -176,27 +180,27 @@ FABRIC.SceneGraph.registerNodeType('AlembicLoadNode', {
         else if(type == 'Camera') {
           
           var transformNode = parsedNodes[parentIdentifier];
-          /*
-          var cameraNode = scene.constructNode('TargetCamera', {
-            position: FABRIC.RT.vec3(10, 20, 20),
-            target: FABRIC.RT.vec3(0, 0, 0)
-          });
-          */
-
           var cameraNode = scene.constructNode('Camera', { transformNode: transformNode } );
           parsedNodes[identifier] = cameraNode.pub;
 
           var dgnode = cameraNode.getDGNode();
-          dgnode.setDependency(resourceloaddgnode,'alembic');
           dgnode.addMember('identifier','String',identifier);
+          dgnode.addMember('alembicTime','Scalar',0);
+          cameraNode.getTimeDrivenDGNode = function() {
+            return this.getDGNode();
+          }
+          dgnode.setDependency(resourceloaddgnode,'alembic');
           
+          // create a function to access the number of sample of this node
+          cameraNode.pub.getNumSamples = (function(value) { return function() { return value; }; })(numSamples);
+
           // setup the parse operators
           dgnode.bindings.insert(scene.constructOperator({
             operatorName: 'alembicParseCamera',
             parameterLayout: [
-              'alembic.archiveID',
+              'alembic.handle',
               'self.identifier',
-              'alembic.sample',
+              'self.alembicTime',
               'self.nearDistance',
               'self.farDistance',
               'self.fovY'
@@ -213,15 +217,22 @@ FABRIC.SceneGraph.registerNodeType('AlembicLoadNode', {
           // have the transform be driven by the parser
           var dgnode = transformNode.getDGNode();
           dgnode.addMember('identifier','String',identifier);
+          dgnode.addMember('alembicTime','Scalar',0);
+          transformNode.getTimeDrivenDGNode = function() {
+            return this.getDGNode();
+          };
           dgnode.setDependency(resourceloaddgnode,'alembic');
+
+          // create a function to access the number of sample of this node
+          transformNode.pub.getNumSamples = (function(value) { return function() { return value; }; })(numSamples);
 
           // create the parser operator
           dgnode.bindings.append(scene.constructOperator({
             operatorName: 'alembicParseXform',
             parameterLayout: [
-              'alembic.archiveID',
+              'alembic.handle',
               'self.identifier',
-              'alembic.sample',
+              'self.alembicTime',
               'self.globalXfo'
             ],
             entryFunctionName: 'alembicParseXform',
@@ -235,26 +246,42 @@ FABRIC.SceneGraph.registerNodeType('AlembicLoadNode', {
       }
       
       // setup the timerange
-      if(resourceLoadNode.pub.getNumSamples() > 1) {
+      var timeRange = resourceLoadNode.pub.getTimeRange();
+      if(timeRange.x < timeRange.y) {
         // create an animation controller for the sample
         var animationController = scene.constructNode('AnimationController');
         resourceLoadNode.pub.getAnimationController = function() {
           return animationController.pub;
         };
+
         var animationControllerDGNode = animationController.getDGNode();
-        resourceloaddgnode.setDependency(animationControllerDGNode,'controller');
-    
-        resourceloaddgnode.bindings.insert(scene.constructOperator({
-          operatorName: 'alembicSetSample',
-          parameterLayout: [
-            'controller.localTime',
-            'self.sample'
-          ],
-          entryFunctionName: 'alembicSetSample',
-          srcFile: 'FABRIC_ROOT/SceneGraph/KL/loadAlembic.kl',
-          async: false
-        }),0);
-        animationController.pub.setTimeRange(FABRIC.RT.vec2(0, resourceLoadNode.pub.getNumSamples() / 30.0));
+        
+        // loop over each parsed node
+        for(var name in parsedNodes) {
+          var node = scene.getPrivateInterface(parsedNodes[name]);
+          if(node.pub.getNumSamples() <= 1)
+            continue;
+          var dgnode = node.getTimeDrivenDGNode();
+          dgnode.setDependency(animationControllerDGNode,'controller');
+          dgnode.bindings.insert(scene.constructOperator({
+            operatorName: 'alembicSetTime',
+            parameterLayout: [
+              'self.alembicTime',
+              'controller.localTime'
+            ],
+            entryFunctionName: 'alembicSetTime',
+            srcFile: 'FABRIC_ROOT/SceneGraph/KL/loadAlembic.kl'
+          }),0);
+          
+          // if the node is a triangles node
+          if(node.pub.isTypeOf('Triangles')) {
+            node.pub.setAttributeDynamic('positions');
+            node.pub.setAttributeDynamic('normals');
+            node.pub.setAttributeDynamic('uvs0');
+          }
+        }
+
+        animationController.pub.setTimeRange(timeRange);
       }
     });
     

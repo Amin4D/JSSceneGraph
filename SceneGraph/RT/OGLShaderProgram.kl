@@ -37,8 +37,8 @@ function Integer OGLShaderProgram.createAndCompileShader(OGLShaderSource shaders
   infoLen.resize(1);
   glGetShaderiv(shaderID, GL_INFO_LOG_LENGTH, infoLen);
 
-  if (infoLen[0] > 0) {
-    if (compiled[0] > 0) {
+  if (infoLen[0] > 1) {// > 1: some drivers report 1 byte strings containing '\0' (should not be treated as warning)
+    if (compiled[0] > 1) {
       report(this.name + ' : Shader compilation succeeded with warnings:');
     }
     var String infoLog;
@@ -190,7 +190,7 @@ function OGLShaderProgram.createProgramFromShaders() {
       glGetProgramiv(this.programId, GL_INFO_LOG_LENGTH, infoLen);
 
       if (infoLen.size() > 0 && infoLen[0] > 1) {
-        if (linked.size() > 0 || linked[0] > 0) {
+        if (linked.size() > 0 || linked[0] > 1) {
           report(this.name + ' : Program linking succeeded, with warnings:');
         }
         var Size bufferSize[];
@@ -482,7 +482,7 @@ function OGLShaderProgram.loadMat33Uniform(
   }
   if (location != - 1) {
     var Mat33 values[];
-    values.push(value);
+    values.push(value.transpose());
     glUniformMatrix3fv(location, 1, false, values);
   }
   else{
@@ -503,7 +503,7 @@ function OGLShaderProgram.loadMat44Uniform(
       this.validateUniformBinding(location, value.dataSize());
     }
     var Mat44 values[];
-    values.push(value);
+    values.push(value.transpose());
     glUniformMatrix4fv(location, 1, false, values);
   }
   else{
@@ -511,7 +511,7 @@ function OGLShaderProgram.loadMat44Uniform(
   }
 }
 
-function OGLShaderProgram.loadMat44UniformArray(
+function OGLShaderProgram.loadMat44TransposedUniformArray(
   Integer location,
   io Mat44 values[] /* PT 28-06-11 I'm not sure why values is an l-value in the following call */
 ) {

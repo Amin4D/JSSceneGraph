@@ -37,7 +37,7 @@
   <vertexshader>
     <source>
       <![CDATA[
-
+      #version 140
       uniform mat4 u_modelViewProjectionMatrix;
       uniform mat4 u_viewMatrix;
       uniform mat4 u_projectionMatrix;
@@ -45,13 +45,39 @@
       uniform vec4 u_lightPosition;
       uniform sampler2D u_samplerTransformMap;
       
-      attribute vec4 a_position;
-      attribute vec3 a_normal;
-      attribute int a_instanceID;
+      in vec4 a_position;
+      in vec3 a_normal;
+      in int a_instanceID;
 
-      varying vec3 normal;
-      varying vec3 lightDir;
-      varying vec3 viewDir;
+      out vec3 normal;
+      out vec3 lightDir;
+      out vec3 viewDir;
+
+      mat3 inverseAndTransposeMat33(in mat3 m)
+      {
+        float det = m[0].x * m[1].y * m[2].z
+                  + m[0].y * m[1].z * m[2].x
+                  + m[0].z * m[1].x * m[2].y
+                  - m[0].x * m[1].z * m[2].y
+                  - m[0].y * m[1].x * m[2].z
+                  - m[0].z * m[1].y * m[2].x;
+        float invDet = 1.0 / det;
+
+        mat3 result;
+
+        result[0].x = (m[1].y * m[2].z - m[1].z * m[2].y) * invDet;
+        result[1].x = (m[0].z * m[2].y - m[0].y * m[2].z) * invDet;
+        result[2].x = (m[0].y * m[1].z - m[0].z * m[1].y) * invDet;
+
+        result[0].y = (m[1].z * m[2].x - m[1].x * m[2].z) * invDet;
+        result[1].y = (m[0].x * m[2].z - m[0].z * m[2].x) * invDet;
+        result[2].y = (m[0].z * m[1].x - m[0].x * m[1].z) * invDet;
+
+        result[0].z = (m[1].x * m[2].y - m[1].y * m[2].x) * invDet;
+        result[1].z = (m[0].y * m[2].x - m[0].x * m[2].y) * invDet;
+        result[2].z = (m[0].x * m[1].y - m[0].y * m[1].x) * invDet;
+        return result;
+      }
 
       void main(){
         int instanceID = a_instanceID;
@@ -65,7 +91,7 @@
 
         mat4 modelViewMatrix = u_viewMatrix * mvp;
         mat4 modelViewProjectionMatrix = u_projectionMatrix * modelViewMatrix;
-        mat3 normalMatrix = transpose(inverse(mat3(modelViewMatrix[0].xyz, modelViewMatrix[1].xyz, modelViewMatrix[2].xyz)));
+        mat3 normalMatrix = inverseAndTransposeMat33(mat3(modelViewMatrix[0].xyz, modelViewMatrix[1].xyz, modelViewMatrix[2].xyz));
     
         normal = normalMatrix * a_normal;
         vec4 modelCameraPosition = modelViewMatrix * a_position;

@@ -15,7 +15,7 @@ function Scalar clamp(in Scalar val, in Scalar minval, in Scalar maxval){
   return (val < minval ? minval : (val > maxval ? maxval : val));
 }
 
-function Scalar lerp(in Scalar val1, in Scalar val2, in Scalar t){
+function Scalar linearInterpolate(in Scalar val1, in Scalar val2, in Scalar t){
   return val1 + ((val2 - val1) * t);
 }
 
@@ -36,7 +36,7 @@ function Scalar calcPolarElipse(
 function Vec3 evalBSpline( Vec3 p1, Vec3 p2, Vec3 p3, Vec3 p4, Scalar t ){
   Vec3 a0, a1, a2, a3;
 
-  a0 = ( p1.neg() + (p2 * 3.0) - (p3 * 3.0) + p4)/6.0;
+  a0 = ( p1.negate() + (p2 * 3.0) - (p3 * 3.0) + p4)/6.0;
   a1 = ((p1 * 3.0) - (p2 * 6.0) + (p3 * 3.0))/6.0;
   a2 = ((p1 * -3.0) + (p3 * 3.0))/6.0;
   a3 = ( p1 + (p2 * 4.0) + p3 )/6.0;
@@ -53,26 +53,39 @@ function Vec3 evalPiecewiseBSpline(
 ){
   Vec3 p;
   t = u * Scalar(xfos.size() - 1);
-  if( t < Scalar(xfos.size() - 1) ){
+  if( t < 0.0 ){
+     i = 0;
+     t = 0.0;
+     return xfos[ 0 ].tr;
+  }
+  if( t >= Scalar(xfos.size() - 1) ){
+    i = xfos.size() - 2;
+    t = 1.0;
+    return xfos[ xfos.size() - 1 ].tr;
+  }
+  else{
     i = Integer(floor( t ));
     t = t - Scalar(i);
   }
-  else{
-    i = xfos.size() - 2;
-    t = 1.0;
-  }
-
+    
+  Vec3 result;
   if( i == 0 ){
-    p = xfos[ i ].tr + ( xfos[ i ].tr - xfos[ i + 1 ].tr );
-    return evalBSpline( p, xfos[ i ].tr, xfos[ i + 1 ].tr, xfos[ i + 2 ].tr, t );
+    if ( i + 2 < xfos.size() ) {
+      p = xfos[ i ].tr + ( xfos[ i ].tr - xfos[ i + 1 ].tr );
+      result = evalBSpline( p, xfos[ i ].tr, xfos[ i + 1 ].tr, xfos[ i + 2 ].tr, t );
+    }
   }
   else if( i == ( xfos.size() - 2 ) ){
-    p = xfos[ i + 1 ].tr + ( xfos[ i + 1 ].tr - xfos[ i ].tr );
-    return evalBSpline( xfos[ i - 1 ].tr, xfos[ i ].tr, xfos[ i + 1 ].tr, p, t );
+    if ( i >= 1 && i + 1 < xfos.size() ) {
+      p = xfos[ i + 1 ].tr + ( xfos[ i + 1 ].tr - xfos[ i ].tr );
+      result = evalBSpline( xfos[ i - 1 ].tr, xfos[ i ].tr, xfos[ i + 1 ].tr, p, t );
+    }
   }
   else{
-    return evalBSpline( xfos[ i - 1 ].tr, xfos[ i ].tr, xfos[ i + 1 ].tr, xfos[ i + 2 ].tr, t );
+    if ( i > 0 && i + 2 < xfos.size() )
+      result = evalBSpline( xfos[ i - 1 ].tr, xfos[ i ].tr, xfos[ i + 1 ].tr, xfos[ i + 2 ].tr, t );
   }
+  return result;
 }
 
 
@@ -251,7 +264,16 @@ operator deformMuscleVolume(
   
   Vec3 frameoffsetvec = parentpositions[index] * volumePixel.r * compressionFactor;
   frameoffsetvec.x = 0.0;
-  Quat frame = xfos[i].ori.nlerp( xfos[i+1].ori, t );
+  Quat frame;
+  if(i<0){
+    frame = xfos[0].ori;
+  }
+  else if (i < (xfos.size-1)){
+    frame = xfos[i].ori.nlerp( xfos[i+1].ori, t );
+  }
+  else{
+    frame = xfos[xfos.size-1].ori;
+  }
   normal = frame.rotateVector( frameoffsetvec );
   position = corepos + normal;
   normal.setUnit();
@@ -503,7 +525,7 @@ function Boolean positionToMuscleUV(
     if( testCoplanarity( pos, p1, p2, p3, Vec3(0.0, 0.0, 0.0), v1, v2, v3, outFraction ) ){
       ///////////////////////////////////////////
       // To calculate the v value, we need to reference the linear segments only
-      outCorePos = p1.lerp( p4, outFraction );
+      outCorePos = p1.linearInterpolate( p4, outFraction );
       outCoreDir = pos - outCorePos;
       outUV.x = ( Scalar(i) + outFraction ) / Scalar( xfos.size() - 1 );
       
@@ -522,8 +544,8 @@ function Boolean positionToMuscleUV(
       
       // The UV coordinates of the muscle wrap at the -y axis.
       // The 'up' side of the muscle is +y with a V value of 0.5.
-      yaxis = yaxisStart.lerp( yaxisEnd, outFraction ).unit();
-      zaxis = zaxisStart.lerp( zaxisEnd, outFraction );
+      yaxis = yaxisStart.linearInterpolate( yaxisEnd, outFraction ).unit();
+      zaxis = zaxisStart.linearInterpolate( zaxisEnd, outFraction );
       Scalar angle = outCoreDir.angleTo( yaxis );
       if( outCoreDir.dot( zaxis ) < 0.0 ){
         angle = -angle;
@@ -751,7 +773,7 @@ function Vec3 positionToMuscleSurfacePosition(
     return pos;
   }
   Scalar fract = (abs(biNormalProjLen) - bnlen1)/(bnlen2 - bnlen1);
-  Scalar vdelta =  lerp(vdelta1, vdelta2, fract);
+  Scalar vdelta =  linearInterpolate(vdelta1, vdelta2, fract);
   
   v = orthoNormalVvalue + vdelta;
   if(v  > 1.0)  v -= 1.0;

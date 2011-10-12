@@ -71,8 +71,8 @@ $(document).ready(function() {
   
   // Create a camera to draw the scene from
   var camera = scene.constructNode('TargetCamera', {
-      position: FABRIC.RT.vec3(30, 50, 100),
-      target: FABRIC.RT.vec3(0, 0, 0)
+      position: new FABRIC.RT.Vec3(30, 50, 100),
+      target: new FABRIC.RT.Vec3(0, 0, 0)
     });
 
   scene.constructNode('CameraManipulator', { targetNode: camera });
@@ -80,7 +80,7 @@ $(document).ready(function() {
   viewport.setCameraNode(camera);
   viewport.addPostProcessEffectShader(scene.constructNode('EdgeDetectionPostProcessEffect'));
   
-  var light = scene.constructNode('PointLight', { position: FABRIC.RT.vec3(420.0, 1000.0, 600.0) });
+  var light = scene.constructNode('PointLight', { position: new FABRIC.RT.Vec3(420.0, 1000.0, 600.0) });
 
 
   var greyFlatMaterial = scene.constructNode('FlatMaterial', {
@@ -119,7 +119,7 @@ $(document).ready(function() {
   scene.constructNode('Instance', {
       transformNode: scene.constructNode('Transform', {
         hierarchical: false,
-        globalXfo: FABRIC.RT.xfo({ tr: FABRIC.RT.vec3(-20, 15, -10) })
+        globalXfo: new FABRIC.RT.Xfo({ tr: new FABRIC.RT.Vec3(-20, 15, -10) })
       }),
       geometryNode: scene.constructNode('Cuboid', {
         length: 15,
@@ -133,7 +133,7 @@ $(document).ready(function() {
   scene.constructNode('Instance', {
       transformNode: scene.constructNode('Transform', {
         hierarchical: false,
-        globalXfo: FABRIC.RT.xfo({ tr: FABRIC.RT.vec3(0, 15, 0) })
+        globalXfo: new FABRIC.RT.Xfo({ tr: new FABRIC.RT.Vec3(0, 15, 0) })
       }),
       geometryNode: scene.constructNode('Cone', {
         radius: 10.0,
@@ -147,7 +147,7 @@ $(document).ready(function() {
   scene.constructNode('Instance', {
       transformNode: scene.constructNode('Transform', {
         hierarchical: false,
-        globalXfo: FABRIC.RT.xfo({ tr: FABRIC.RT.vec3(20, 10, 20) })
+        globalXfo: new FABRIC.RT.Xfo({ tr: new FABRIC.RT.Vec3(20, 10, 20) })
       }),
       geometryNode: scene.constructNode('Sphere', {
         radius: 10,

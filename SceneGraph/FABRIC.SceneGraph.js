@@ -1071,16 +1071,21 @@ FABRIC.SceneGraph.registerNodeType('Viewport', {
       var browserZoom = fabricwindow.windowNode.getData('width') / evt.target.clientWidth;
       if (evt.offsetX) {
         // Webkit
-        return FABRIC.RT.vec2(Math.floor(evt.offsetX*browserZoom), Math.floor(evt.offsetY*browserZoom));
+        return new FABRIC.RT.Vec2(Math.floor(evt.offsetX*browserZoom), Math.floor(evt.offsetY*browserZoom));
       }
       else if (evt.layerX) {
         // Firefox
-        return FABRIC.RT.vec2(Math.floor(evt.layerX*browserZoom), Math.floor(evt.layerY*browserZoom));
+        return new FABRIC.RT.Vec2(Math.floor(evt.layerX*browserZoom), Math.floor(evt.layerY*browserZoom));
       }
       throw("Unsupported Browser");
     }
 
     // private interface
+    
+    viewportNode.getElementCoords = function(evt) {
+      return getElementCoords(evt);
+    };
+    
     viewportNode.getWindowElement = function() {
       return windowElement;
     };
@@ -1191,6 +1196,7 @@ FABRIC.SceneGraph.registerNodeType('Viewport', {
       viewPortRayCastDgNode.setData('x', elementCoords.x);
       viewPortRayCastDgNode.setData('y', elementCoords.y);
       var nodes = viewPortRaycastEvent.select('RayIntersection');
+      
       var result = {
         rayData: viewPortRayCastDgNode.getData('ray')
       };
@@ -1454,6 +1460,7 @@ FABRIC.SceneGraph.registerNodeType('ResourceLoad', {
     }
 
     var onLoadSuccessCallbackFunction = function(node) {
+      lastLoadCallbackURL = resourceLoadNode.pub.getUrl();
       onLoadCallbackFunction(onloadSuccessCallbacks);
     }
     var onLoadProgressCallbackFunction = function(node, progress) {
@@ -1517,7 +1524,12 @@ FABRIC.SceneGraph.registerNodeType('ResourceLoad', {
     }
 
     if (options.url) {
-      resourceLoadNode.pub.setUrl(options.url);
+      // check if the url has a handle
+      if(options.url.folderHandle) {
+        dgnode.getResourceFromFile('resource', options.url);
+      } else {
+        resourceLoadNode.pub.setUrl(options.url);
+      }
     }
 
     return resourceLoadNode;
@@ -1602,7 +1614,7 @@ FABRIC.SceneGraph.registerNodeType('Camera', {
 
       dgnode.bindings.append(scene.constructOperator({
         operatorName: 'loadXfo',
-        srcCode: 'use Xfo, Mat44; operator loadXfo(io Xfo xfo, io Mat44 mat44){ mat44 = Mat44(xfo); mat44 = mat44.inverse(); }',
+        srcCode: 'use Xfo, Mat44; operator loadXfo(io Xfo xfo, io Mat44 mat44){ mat44 = xfo.toMat44().inverse(); }',
         entryFunctionName: 'loadXfo',
         parameterLayout: [
           'transform.' + transformNodeMember,
@@ -1639,12 +1651,12 @@ FABRIC.SceneGraph.registerNodeType('FreeCamera', {
   },
   factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
-        position: FABRIC.RT.vec3(1, 0, 0),
-        orientation: FABRIC.RT.quat()
+        position: new FABRIC.RT.Vec3(1, 0, 0),
+        orientation: new FABRIC.RT.Quat()
       });
 
     options.transformNode = scene.constructNode('Transform', {
-      globalXfo: FABRIC.RT.xfo({ tr: options.position, ori: options.orientation })
+      globalXfo: new FABRIC.RT.Xfo({ tr: options.position, ori: options.orientation })
     });
 
     var freeCameraNode = scene.constructNode('Camera', options);
@@ -1663,7 +1675,7 @@ FABRIC.SceneGraph.registerNodeType('TargetCamera', {
   },
   factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
-        target: FABRIC.RT.vec3(0, 0, 0)
+        target: new FABRIC.RT.Vec3(0, 0, 0)
       });
 
     options.transformNode = scene.pub.constructNode('AimTransform', {
@@ -1677,7 +1689,7 @@ FABRIC.SceneGraph.registerNodeType('TargetCamera', {
     targetCameraNode.getDGNode().bindings.append(scene.constructOperator({
       operatorName: 'loadFocalDist',
       srcCode: 'use Xfo, Vec3; operator loadFocalDist(io Xfo xfo, io Vec3 target, io Scalar focalDist){' +
-      '  focalDist = xfo.tr.dist(target);' +
+      '  focalDist = xfo.tr.distanceTo(target);' +
       '}',
       entryFunctionName: 'loadFocalDist',
       parameterLayout: [

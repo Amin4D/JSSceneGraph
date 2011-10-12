@@ -105,8 +105,8 @@
 	background-color: #222;
 	bottom:0;
 	left:0;
-	right:0;
-	height:95px;
+	right:250px;
+	height:125px;
 	border-top: solid 1px #000;
 	}
 	#timeControls .box{
@@ -259,7 +259,7 @@
 
 /* SIDEBAR
 -------------------------------------------------------------------- */
-#indexpage{
+#indexpage {
 	position:relative;
 	right:0;
 	top:0;
@@ -287,6 +287,7 @@
 		border: solid 1px #000;
 		}
 		#indexpage .box .content{
+			overflow:scroll;
 			padding: 10px;
 			font: normal 13px/100% Arial, Helvetica, sans-serif;
 			color: #999;
@@ -300,14 +301,3 @@
 			-webkit-box-shadow: rgba(0, 0, 0, 0.8) 0px 0px 3px;
 			border: solid 1px #000;
 		}
-
-
-
-.indexPageLI{
-  margin-top:5px;
-}
-.indexPageContent{
-  font: normal 13px/100% Arial, Helvetica, sans-serif;
-  color: #999;
-  line-height: 120%;
-}

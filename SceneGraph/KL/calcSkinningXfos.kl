@@ -11,6 +11,6 @@ operator calcSkinningXfos(io Xfo pose[], io Bone bones[], io Xfo xfos[]) {
   }
   xfos.resize(pose.size());
   for (var Integer i = 0; i < pose.size(); i++) {
-    xfos[i] = pose[i].project(bones[i].referencePose.inv());
+    xfos[i] = pose[i] * bones[i].referencePose.inverse();
   }
 }

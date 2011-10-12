@@ -73,15 +73,15 @@ $(document).ready(function() {
   
   // Create a camera to draw the scene from
   var camera = scene.constructNode('TargetCamera', {
-      position: FABRIC.RT.vec3(40, 70, 100),
-      target: FABRIC.RT.vec3(0, 0, 0)
+      position: new FABRIC.RT.Vec3(40, 70, 100),
+      target: new FABRIC.RT.Vec3(0, 0, 0)
     });
 
   scene.constructNode("CameraManipulator", { targetNode:camera } );
 
   viewport.setCameraNode(camera);
 
-  var light = scene.constructNode('PointLight', { position: FABRIC.RT.vec3(420.0, 1000.0, 600.0) });
+  var light = scene.constructNode('PointLight', { position: new FABRIC.RT.Vec3(420.0, 1000.0, 600.0) });
   var sphere = scene.constructNode('Sphere', { radius: 10, detail: 10, needUVs: true, tangentsFromUV: 0 });
 
   // Flat Shader
@@ -92,7 +92,7 @@ $(document).ready(function() {
   var inst = scene.constructNode('Instance', {
       transformNode: scene.constructNode('Transform', {
           hierarchical: false,
-          globalXfo: FABRIC.RT.xfo({ tr: FABRIC.RT.vec3(-30, 0, 0) })
+          globalXfo: new FABRIC.RT.Xfo({ tr: new FABRIC.RT.Vec3(-30, 0, 0) })
         }),
       geometryNode: sphere,
       materialNode: flatMaterial
@@ -111,7 +111,7 @@ $(document).ready(function() {
   scene.constructNode('Instance', {
       transformNode: scene.constructNode('Transform', {
           hierarchical: false,
-          globalXfo: FABRIC.RT.xfo({ tr: FABRIC.RT.vec3(-10, 0, 0) })
+          globalXfo: new FABRIC.RT.Xfo({ tr: new FABRIC.RT.Vec3(-10, 0, 0) })
         }),
       geometryNode: sphere,
       materialNode: phongMaterial
@@ -124,7 +124,7 @@ $(document).ready(function() {
   scene.constructNode('Instance', {
       transformNode: scene.constructNode('Transform', {
         hierarchical: false,
-        globalXfo: FABRIC.RT.xfo({ tr: FABRIC.RT.vec3(10, 0, 0) })
+        globalXfo: new FABRIC.RT.Xfo({ tr: new FABRIC.RT.Vec3(10, 0, 0) })
       }),
       geometryNode: sphere,
       materialNode: flatTexturedMaterial
@@ -141,7 +141,7 @@ $(document).ready(function() {
   scene.constructNode('Instance', {
       transformNode: scene.constructNode('Transform', {
           hierarchical: false,
-          globalXfo: FABRIC.RT.xfo({ tr: FABRIC.RT.vec3(30, 0, 0) })
+          globalXfo: new FABRIC.RT.Xfo({ tr: new FABRIC.RT.Vec3(30, 0, 0) })
         }),
       geometryNode: sphere,
       materialNode: phongBumpReflectMaterial
@@ -154,7 +154,7 @@ $(document).ready(function() {
   scene.constructNode('Instance', {
       transformNode: scene.constructNode('Transform', {
         hierarchical: false,
-        globalXfo: FABRIC.RT.xfo({ tr: FABRIC.RT.vec3(30, 0, 0) })
+        globalXfo: new FABRIC.RT.Xfo({ tr: new FABRIC.RT.Vec3(30, 0, 0) })
       }),
       geometryNode: sphere,
       materialNode: scene.constructNode('NormalMaterial', {
@@ -183,12 +183,13 @@ $(document).ready(function() {
   scene.constructNode('Instance', {
       transformNode: scene.constructNode('Transform', {
           hierarchical: false,
-          globalXfo: FABRIC.RT.xfo({ tr: FABRIC.RT.vec3(50, 0, 0) })
+          globalXfo: new FABRIC.RT.Xfo({ tr: new FABRIC.RT.Vec3(50, 0, 0) })
         }),
       geometryNode: sphere,
       materialNode: transparentMaterial
     });
-
+  
+  
   $('#loadingDialog').dialog({
     modal: true
   });

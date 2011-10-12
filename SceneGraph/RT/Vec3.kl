@@ -3,11 +3,10 @@
 // Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
 //
 
+use Math;
 
 function Vec3(Scalar x, Scalar y, Scalar z) {
-  this.x = x;
-  this.y = y;
-  this.z = z;
+  this.set(x, y, z);
 }
 
 function Vec3.set(Scalar x, Scalar y, Scalar z) {
@@ -18,6 +17,21 @@ function Vec3.set(Scalar x, Scalar y, Scalar z) {
 
 function Vec3.setNull() {
   this.x = this.y = this.z = 0.0;
+}
+
+function Boolean Vec3.equal (in Vec3 other) {
+  return this.x == other.x && this.y == other.y && this.z == other.z;
+}
+
+function Boolean Vec3.almostEqual(in Vec3 other, in Scalar precision) {
+  return
+      (abs(this.x - other.x) < precision) &&
+      (abs(this.y - other.y) < precision) &&
+      (abs(this.z - other.z) < precision);
+}
+
+function Boolean Vec3.almostEqual(in Vec3 other) {
+  return this.almostEqual(other, PRECISION);
 }
 
 function Vec3 + (Vec3 a, Vec3 b) {
@@ -57,15 +71,19 @@ function Vec3. *= (Vec3 other) {
 }
 
 function Vec3 / (Vec3 a, Vec3 b) {
+  if( Math_badDivisor( b.x ) )//Perf: check first to avoid building the report string
+    Math_reportBadDivisor( b.x, "Vec3.divide: b.x" );
+  if( Math_badDivisor( b.y ) )
+    Math_reportBadDivisor( b.y, "Vec3.divide: b.y" );
+  if( Math_badDivisor( b.z ) )
+    Math_reportBadDivisor( b.z, "Vec3.divide: b.z" );
   return Vec3(a.x / b.x, a.y / b.y, a.z / b.z);
 }
 
-function Vec3 / (Scalar a, Vec3 b) {
-  return Vec3(a / b.x, a / b.y, a / b.z);
-}
-
 function Vec3 / (Vec3 a, Scalar b) {
-  return Vec3(a.x / b, a.y / b, a.z / b);
+  if( Math_badDivisor( b ) )//Perf: check first to avoid building the report string
+    Math_reportBadDivisor( b, "Vec3.divide" );
+  return a * (1.0 / b);
 }
 
 function Vec3. /= (Scalar other) {
@@ -76,40 +94,22 @@ function Vec3. /= (Vec3 other) {
   this = this / other;
 }
 
-function Vec3 Vec3.neg() {
+function Vec3 Vec3.negate() {
   return Vec3(-this.x, -this.y, -this.z);
 }
 
-function Vec3 Vec3.inv() {
-  return Vec3(1.0 / this.x, 1.0 / this.y, 1.0 / this.z);
+function Vec3 Vec3.inverse() {
+  if( Math_badDivisor( this.x ) )//Perf: check first to avoid building the report string
+    Math_reportBadDivisor( this.x, "Vec3.inverse: this.x" );
+  if( Math_badDivisor( this.y ) )
+    Math_reportBadDivisor( this.y, "Vec3.inverse: this.y" );
+  if( Math_badDivisor( this.z ) )
+    Math_reportBadDivisor( this.z, "Vec3.inverse: this.z" );
+  return Vec3(1.0/this.x, 1.0/this.y, 1.0/this.z);
 }
 
 function Scalar Vec3.dot(Vec3 other) {
   return this.x * other.x + this.y * other.y + this.z * other.z;
-}
-
-function Scalar Vec3.normSq() {
-  return this.dot(this);
-}
-
-function Scalar Vec3.norm() {
-  return sqrt(this.normSq());
-}
-
-function Scalar Vec3.length() {
-  return sqrt(this.normSq());
-}
-
-function Vec3 Vec3.unit() {
-  var Scalar n = this.norm();
-  if (n > 0.0) {
-    return this / n;
-  }
-  return this;
-}
-
-function Vec3.setUnit() {
-  this = this.unit();
 }
 
 function Vec3 Vec3.cross(in Vec3 other) {
@@ -120,79 +120,90 @@ function Vec3 Vec3.cross(in Vec3 other) {
   );
 }
 
-// TODO: Depricate the ambiguous function
-function Scalar Vec3.angle(in Vec3 other) {
-  return acos(this.dot(other));
+function Scalar Vec3.lengthSquared() {
+  return this.dot(this);
+}
+
+function Scalar Vec3.length() {
+  return sqrt(this.lengthSquared());
+}
+
+function Vec3 Vec3.unit() {
+  Scalar n = this.length();
+  if( Math_badDivisor( n ) )//Perf: check first to avoid building the report string
+    Math_reportBadDivisor( n, "Vec3.unit" );
+  return this / n;
+}
+
+//TODO: uncomment when some 'mutable' keyword is implemented //Note: setUnit returns the previous length
+function /*Scalar*/ Vec3.setUnit() {
+  Scalar n = this.length();
+  if( Math_badDivisor( n ) )//Perf: check first to avoid building the report string
+    Math_reportBadDivisor( n, "Vec3.setUnit" );
+  this /= n;
+  //return n;
+}
+
+function Vec3 Vec3.clamp(in Vec3 min, in Vec3 max) {
+  return Vec3(
+    (this.x < min.x ? min.x : (this.x > max.x ? max.x : this.x)),
+    (this.y < min.y ? min.y : (this.y > max.y ? max.y : this.y)),
+    (this.z < min.z ? min.z : (this.z > max.z ? max.z : this.z))
+  );
+}
+
+//Note: expects both vectors to be units (else use angleTo)
+function Scalar Vec3.unitsAngleTo(in Vec3 other) {
+  Scalar acosAngle = Math_clamp(this.dot(other), -1.0, 1.0);
+  return acos(acosAngle);
 }
 
 function Scalar Vec3.angleTo(in Vec3 other) {
-  return acos(this.dot(other));
+  return this.unit().unitsAngleTo(other.unit());
 }
 
-function Scalar Vec3.distSq(in Vec3 other) {
-  var Vec3 v;
-  v = this - other;
-  return v.normSq();
+function Scalar Vec3.distanceTo(in Vec3 other) {
+  return (this - other).length();
 }
 
-function Scalar Vec3.dist(in Vec3 other) {
-  return sqrt(this.distSq(other));
-}
-
-function Vec3 Vec3.max(in Vec3 other) {
-  var Vec3 v;
-  v.x = this.x > other.x ? this.x : other.x;
-  v.y = this.y > other.y ? this.y : other.y;
-  v.z = this.z > other.z ? this.z : other.z;
-  return v;
-}
-
-function Vec3 Vec3.min(in Vec3 other) {
-  var Vec3 v;
-  v.x = this.x < other.x ? this.x : other.x;
-  v.y = this.y < other.y ? this.y : other.y;
-  v.z = this.z < other.z ? this.z : other.z;
-  return v;
-}
-
-function Vec3 Vec3.lerp(in Vec3 other, in Scalar t) {
+function Vec3 Vec3.linearInterpolate(in Vec3 other, in Scalar t) {
   return this + ((other - this) * t);
 }
 
 function Scalar distFromPointToLine(in Vec3 P, in Vec3 lineP0, in Vec3 lineP1) {
-  var Vec3 v, w, Pb;
-  var Scalar c1, c2, b;
+  Vec3 v, w, Pb;
+  Scalar c1, c2, b;
   v = lineP1 - lineP0;
   w = P - lineP0;
 
   c1 = w.dot(v);
   c2 = v.dot(v);
   if(c2 == 0.0){
-    return P.dist(lineP0);
+    return P.distanceTo(lineP0);
   }
   b = c1 / c2;
 
   Pb = lineP0 + b * v;
-  return P.dist(Pb);
+  return P.distanceTo(Pb);
 }
 
 function Scalar distFromPointToSegment(in Vec3 P, in Vec3 segmentP0, in Vec3 segmentP1) {
-  var Vec3 v, w, Pb;
-  var Scalar c1, c2, b;
+  Vec3 v, w, Pb;
+  Scalar c1, c2, b;
   v = segmentP1 - segmentP0;
   w = P - segmentP0;
 
   c1 = w.dot(v);
   if (c1 <= 0) {
-    return P.dist(segmentP0);
+    return P.distanceTo(segmentP0);
   }
   c2 = v.dot(v);
   if (c2 <= c1) {
-    return P.dist(segmentP1);
+    return P.distanceTo(segmentP1);
   }
   b = c1 / c2;
   Pb = segmentP0 + b * v;
-  return P.dist(Pb);
+  return P.distanceTo(Pb);
 }
 
 // dist3D_Line_to_Line():
@@ -214,7 +225,7 @@ function Scalar distanceFromLineToLine(
   d = u.dot(w);
   e = v.dot(w);
   if(a == 0.0 && c == 0.0){
-    return l1_p0.dist(l2_p0);
+    return l1_p0.distanceTo(l2_p0);
   }
   if(a == 0.0){
     return distFromPointToLine(l1_p0, l2_p0, l2_p1);
@@ -242,6 +253,6 @@ function Scalar distanceFromLineToLine(
   // get the difference of the two closest points
   dP = w + (l1_t * u) - (l2_t * v);
 
-  return dP.norm(); // return the closest distance
+  return dP.length(); // return the closest distance
 }
 

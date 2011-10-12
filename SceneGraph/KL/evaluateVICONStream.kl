@@ -31,7 +31,7 @@ operator viconReceivePositionsAndColors(
   if (positions.size() * 3 == viconPositions.size()) {
     for (var Size i = 0; i < positions.size(); i++) {
       var Vec3 newPos(viconPositions[i * 3 + 0] * scale, viconPositions[i * 3 + 1] * scale, viconPositions[i * 3 + 2] * scale);
-      var Scalar dist = (positions[i] - newPos).norm() - minDistance;
+      var Scalar dist = (positions[i] - newPos).length() - minDistance;
       if (dist < 0.0)
         dist = 0.0;
       positions[i] = newPos;
@@ -118,8 +118,8 @@ operator viconProjectBones(
       bones[i].referencePose.ori = Mat33(target.unit(), upvector.unit(), helper.unit()).transpose();
 
       bones[i].referencePose.tr = root;
-      bones[i].length = target.norm();
-      bones[i].radius = 0.05; //upvector.norm() * 0.33;
+      bones[i].length = target.length();
+      bones[i].radius = 0.05; //upvector.length() * 0.33;
     }
   }
 }

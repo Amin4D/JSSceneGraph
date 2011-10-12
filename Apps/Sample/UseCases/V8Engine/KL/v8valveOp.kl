@@ -42,7 +42,8 @@ operator valveOp(
   valveXfo = initialValveXfo;  
   valveXfo.tr = valveXfo.tr + Vec3( sin(valveLifterAngle) * (lift*1.5), cos(valveLifterAngle) * (lift*1.5), 0);
 
-  Quat rock = axisAndAngleToQuat( Vec3(0,0,1), lift * 0.03 );
+  Quat rock;
+  rock.setFromAxisAndAngle( Vec3(0,0,1), lift * 0.03 );
   rockerXfo = initialRockerXfo;  
   rockerXfo.ori *= rock;
 
@@ -64,9 +65,9 @@ operator valveOp(
   var Scalar lifterLength = 60;
   var Vec3 v1, v2(0,-1,0);
   v1 = (valveLifterXfo.tr + Vec3( sin(valveLifterAngle) * lifterLength, cos(valveLifterAngle) * lifterLength, 0)) - pushrodXfo.tr;
-  var Vec3 axis = crossProd(v1,v2).normalize();
+  var Vec3 axis = crossProd(v1,v2).unit();
   var Scalar angle = acos(dotProd(v1,v2));
 // I screwed up the agle somehow so just hard coded it for now. 
-  pushrodXfo.ori = axisAndAngleToQuat( axis, 0.7 );
+  pushrodXfo.ori.setFromAxisAndAngle( axis, 0.7 );
 
 }

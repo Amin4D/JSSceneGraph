@@ -29,7 +29,6 @@
     <script type="text/javascript" src="../../../SceneGraph/RT/Euler.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/RT/OGLShaderProgram.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/RT/OGLTexture2D.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/RT/OGLTextureCube.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/RT/OGLBuffer.js" charset="utf-8"></script>
 
     <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.js" charset="utf-8"></script>
@@ -58,7 +57,6 @@ s.parentNode.insertBefore(ga, s);
  })();
 
 </script>
-
     <script type="text/javascript">
 $(document).ready(function() {
 
@@ -75,59 +73,41 @@ $(document).ready(function() {
     }
   });  
 
-  $('#importModel').button().change(function(e) {
-      // TODO: Enable file importing
-        console.log($(this).val());
-      var assets = scene.importAssetFile($(this).val());
-      for (i in assets) {
-        assets[i].setMaterialNode(redMaterial);
-        drawNode.setGeometryNode(assets[i]);
-      }
-
-      var errors = scene.getErrors();
-      if (errors.length > 0) {
-        throw (errors.toString());
-      }
-    });
-
   var scene = FABRIC.SceneGraph.createScene();
   var viewport = scene.constructNode('Viewport', { windowElement: document.getElementById('FabricContainer') });
 
+  viewport.setBackgroundTextureImage(scene.constructNode('Image', {
+    url: '../BasicDemos/Resources/fabric-demo-gradient.png'
+  }));
+  
   // Create a camera to draw the scene from
   var camera = scene.constructNode('TargetCamera', {
       nearDistance: 1,
       farDistance: 2000,
-      position: FABRIC.RT.vec3(-.2, 1, 1).scale(18),
-      target: FABRIC.RT.vec3(0, .2, 0).scale(13),
+      position: FABRIC.RT.vec3(.2, .5, 1).scale(7.5),
+      target: FABRIC.RT.vec3(1.5, 2, 0).scale(1),
     });
 
   scene.constructNode('CameraManipulator', { targetNode: camera });
   viewport.setCameraNode(camera);
 
-  viewport.setBackgroundTextureImage(scene.constructNode('Image', {
-    url: '../BasicDemos/Resources/fabric-demo-gradient.png'
-  }));
-
   var light = scene.constructNode('PointLight', { position: FABRIC.RT.vec3(10, 30, 100).scale(3) });
 
-  var cubeTextureMap = scene.constructNode('CubeMap', {
-        urls: [
-          '../BasicDemos/Resources/cubemap_opensea/opensea_positive_x.png',
-          '../BasicDemos/Resources/cubemap_opensea/opensea_negative_x.png',
-          '../BasicDemos/Resources/cubemap_opensea/opensea_positive_y.png',
-          '../BasicDemos/Resources/cubemap_opensea/opensea_negative_y.png',
-          '../BasicDemos/Resources/cubemap_opensea/opensea_positive_z.png',
-          '../BasicDemos/Resources/cubemap_opensea/opensea_negative_z.png'
-        ]
-      });
-  
-  var phongMaterial = scene.constructNode('PhongMaterial', {
-    diffuseColor: FABRIC.RT.rgb(1.0, 0.1, 0.1, 1),
+  // load our custom shader
+  FABRIC.SceneGraph.defineEffectFromFile('ElephantMaterial', 'ElephantShader.xml');
+
+  var occlusionTexture = scene.constructNode('Image', { url: 'Models/samplehold_elephant_ambocc.png' });
+  var normalTexture = scene.constructNode('Image', { url: 'Models/samplehold_elephant_normalM.png' });
+
+  var elephantMaterial = scene.constructNode('ElephantMaterial', {
+    diffuseTextureNode: occlusionTexture,
+    normalTextureNode: normalTexture,
+    shininess: 20,
     lightNode: light,
   });
   
   // create the alembic content, and fire the load once it is loaded
-  var resourceName = 'softbodies';
+  var resourceName = 'samplehold_elephant_proxy';
   var assets = scene.importAssetFile('Models/'+resourceName+'.abc', {
     dependentNode: viewport,
     onLoadSuccessCallback: function(){
@@ -136,46 +116,20 @@ $(document).ready(function() {
       for(var name in assets[resourceName].getParsedNodes()) {
         if(assets[resourceName].getParsedNodes()[name].isTypeOf('Triangles'))
         {
-          scene.constructNode('Instance', {
+          assets[resourceName].getParsedNodes()[name]
+          var inst = scene.constructNode('Instance', {
             transformNode: assets[resourceName].getCorrespondingTransform(name),
             geometryNode: assets[resourceName].getParsedNodes()[name],
-            materialNode: phongMaterial
+            materialNode: elephantMaterial
           });
         }
       }
+      
       $('#loadingDialog').dialog('close');
       viewport.redraw();
     }
   });
 
-  $('#play').button()
-    .click(function() {
-      var options;
-      if ($(this).text() == 'Play') {
-        $(this).button('option', {
-          label: 'Pause',
-          icons: {
-            primary: 'ui-icon-pause'
-          }
-        });
-        scene.animation.play( function(){
-          assets[resourceName].setSample(parseInt(scene.animation.getTime() * 30.0));
-        });
-      } else {
-        $(this).button('option', {
-          label: 'Play',
-          icons: {
-            primary: 'ui-icon-play'
-          }
-        });
-        scene.animation.pause();
-      }
-    });
-  $('#step').button()
-    .click(function() {
-      scene.animation.step();
-    });
-  
   $('#loadingDialog').dialog({
     modal: true
   });
@@ -217,17 +171,17 @@ $(document).ready(function() {
             <h2>INFO</h2>
             <div class="content">
               Alembic Viewer.<br>
-              The tori meshes in this sample have been exported from Autodesk Softimage,
-              where they have been simulated with a physics simulator. This demo shows the
-              performance of several objects been streamed in from the same Alembic file.
+              The model seen in this sample has been created by <a href="http://www.sampleandhold.co.uk" target=_NEW>http://www.sampleandhold.co.uk</a>.
+              We use a combination of normal mapping and ambient occlusion based shading to create the illusion of the complexity of the original
+              high resolution mesh while limiting the decoded complexity to 10.000 triangles.<br><br>
+              The custom shader creates two different effects, a specular based on one side of the model,
+              an occlusion based on on the other side. Turn the camera to inspect it!
             </div><!--content-->
           </div><!--box-->
 
                   <div class="box">
                     <h2>CONTROLS</h2>
                     <div class="content">
-                        <button id="play" style="margin-top:10px;">Play</button>
-                        <button id="step" style="margin-top:10px;">Step</button>
                     </div><!--content-->
                 </div><!--box-->
         </div><!--sidebar-->

@@ -21,16 +21,22 @@ function Mat44 asymmetricPerspectiveFrustum(
   return result;
 }
 
+
+// Taken from http://www.geeks3d.com/20090729/howto-perspective-projection-matrix-in-opengl/
 function Mat44 symmetricPerspectiveFrustum(
-  Scalar w, Scalar h,
-  Scalar n, Scalar f
+  Scalar width, Scalar height,
+  Scalar near, Scalar far
 ) {
-  var Scalar d = f - n;
+  var Scalar d = far - near;
+  var Scalar q = -(far + near) / d;
+  var Scalar qn = -2.0 * (far * near) / d;
+  var Scalar w = 2.0 * (near / width);
+  var Scalar h = 2.0 * (near / height);
   var Mat44 result(
-    2.0 * n / w, 0.0, 0.0, 0.0,
-    0.0, 2.0 * n / h, 0.0, 0.0,
-    0.0, 0.0, -(f + n) / d, - 1.0,
-  0.0, 0.0, -(2.0 * f * n) / d, 0.0);
+    w, 0.0, 0.0, 0.0,
+    0.0, h, 0.0, 0.0,
+    0.0, 0.0, q, qn,
+    0.0, 0.0, -1.0, 0.0);
   return result;
 }
 

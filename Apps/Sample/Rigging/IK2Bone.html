@@ -79,8 +79,8 @@ $(document).ready(function() {
 
   // Create a camera to draw the scene from
   var camera = scene.constructNode('TargetCamera', {
-      position: FABRIC.RT.vec3(0, 6, 10).scale(2.5),
-      target: FABRIC.RT.vec3(0, 12, 0),
+      position: new FABRIC.RT.Vec3(0, 6, 10).multiplyScalar(2.5),
+      target: new FABRIC.RT.Vec3(0, 12, 0),
       roll: 0,
       nearDistance: 0.001,
       farDistance: 20000
@@ -103,15 +103,15 @@ $(document).ready(function() {
   var skeletonNode = scene.constructNode('CharacterSkeleton');
   skeletonNode.addBone({name: 'root'});
 
-  var xfo = FABRIC.RT.xfo({
-      ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(0, 0, 1), Math.degToRad(-45)),
-      tr: FABRIC.RT.vec3(0, 20, 0)
+  var xfo = new FABRIC.RT.Xfo({
+      ori: new FABRIC.RT.Quat().setFromAxisAndAngle(new FABRIC.RT.Vec3(0, 0, 1), Math.degToRad(-45)),
+      tr: new FABRIC.RT.Vec3(0, 20, 0)
     });
   skeletonNode.addBone({name: 'firstBone', referencePose: xfo, length: 6, parent: 'root'});
 
-  xfo = FABRIC.RT.xfo({
-      ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(0, 0, 1), Math.degToRad(-145)),
-      tr: xfo.tr.add(xfo.ori.rotateVector(FABRIC.RT.vec3(6, 0, 0)))
+  xfo = new FABRIC.RT.Xfo({
+      ori: new FABRIC.RT.Quat().setFromAxisAndAngle(new FABRIC.RT.Vec3(0, 0, 1), Math.degToRad(-145)),
+      tr: xfo.tr.add(xfo.ori.rotateVector(new FABRIC.RT.Vec3(6, 0, 0)))
     });
   skeletonNode.addBone({name: 'secondBone', referencePose: xfo, length: 4, parent: 'firstBone' });
 
@@ -196,14 +196,14 @@ $(document).ready(function() {
   // create the bone debug drawing for the second rig
   scene.constructNode("CharacterSkeletonDebug",{
       characterRigNode:rigNode2,
-      offsetpose:FABRIC.RT.xfo({tr:FABRIC.RT.vec3(-12.0,0.0,0.0)}),
+      offsetpose:new FABRIC.RT.Xfo({tr:new FABRIC.RT.Vec3(-12.0,0.0,0.0)}),
       color:FABRIC.RT.rgba(0.4,0.4,0.4,1.0)
     });
 
   // create a debug drawing for the inverse resolved variables
   scene.constructNode("CharacterRigDebug",{
       characterRigNode:rigNode2,
-      offsetpose:FABRIC.RT.xfo({tr:FABRIC.RT.vec3(-12.0,0.0,0.0)}),
+      offsetpose:new FABRIC.RT.Xfo({tr:new FABRIC.RT.Vec3(-12.0,0.0,0.0)}),
       color:FABRIC.RT.rgba(1.0,0.0,0.0,1.0),
       size: 5.0
     });

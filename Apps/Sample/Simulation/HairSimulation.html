@@ -72,9 +72,9 @@ FABRIC.SceneGraph.registerNodeType('Hair', {
       characterMeshNode: undefined,
       count: 50,
       segments: 14,
-      length: FABRIC.RT.vec2(1,1.5),
-      stiffness: FABRIC.RT.vec2(0.2,0.5),
-      gravity: FABRIC.RT.vec2(0.2,0.5),
+      length: new FABRIC.RT.Vec2(1,1.5),
+      stiffness: new FABRIC.RT.Vec2(0.2,0.5),
+      gravity: new FABRIC.RT.Vec2(0.2,0.5),
       rootColorMin: FABRIC.RT.rgba(0.0, 0.05, 1.0, 1.0),
       rootColorMax: FABRIC.RT.rgba(0.0, 0.45, 1.0, 1.0),
       tipColorMin: FABRIC.RT.rgba(0.2, 0.25, 1.0, 1.0),
@@ -256,8 +256,8 @@ $(document).ready(function() {
 
   // Create a camera to draw the scene from
   var camera = scene.constructNode('TargetCamera', {
-      position: FABRIC.RT.vec3(0, 10, 12).scale(0.5),
-      target: FABRIC.RT.vec3(0, 2, 0),
+      position: new FABRIC.RT.Vec3(0, 10, 12).multiplyScalar(0.5),
+      target: new FABRIC.RT.Vec3(0, 2, 0),
       nearDistance: 0.1,
       farDistance: 200
     });
@@ -266,7 +266,7 @@ $(document).ready(function() {
 
   viewport.setCameraNode(camera);
 
-  var light = scene.constructNode('PointLight', { position: FABRIC.RT.vec3(420.0, 1000.0, 600.0) });
+  var light = scene.constructNode('PointLight', { position: new FABRIC.RT.Vec3(420.0, 1000.0, 600.0) });
 
   var hairMaterial = scene.constructNode('HairMaterial', {
     lightNode: light,
@@ -284,21 +284,21 @@ $(document).ready(function() {
   var rigInstanceNode = assetNodes.polymshCharacterInstance;
 
   var materialNode = scene.constructNode('PhongSkinningMaterial', {
-      lightNode: scene.constructNode('PointLight', { position: FABRIC.RT.vec3(420.0, 1000.0, 600.0) }),
+      lightNode: scene.constructNode('PointLight', { position: new FABRIC.RT.Vec3(420.0, 1000.0, 600.0) }),
       diffuseColor: FABRIC.RT.rgba(0.3, 0.45, 1.0, 1.0),
       numBones: rigNode.getSkeletonNode().getNumBones()
     });
   rigInstanceNode.setMaterialNode(materialNode);
 
-  assetNodes.polymshController.setTimeRange(FABRIC.RT.vec2(0, 5));
+  assetNodes.polymshController.setTimeRange(new FABRIC.RT.Vec2(0, 5));
 
   var hairGeometry = scene.constructNode('Hair', {
       characterMeshNode: assetNodes.geometries_0,
       characterRigNode: assetNodes.polymshCharacterRig,
       segments: 5,
-      length: FABRIC.RT.vec2(0.5,1),
-      stiffness: FABRIC.RT.vec2(0.75,1.5),
-      gravity: FABRIC.RT.vec2(0.4,0.6),
+      length: new FABRIC.RT.Vec2(0.5,1),
+      stiffness: new FABRIC.RT.Vec2(0.75,1.5),
+      gravity: new FABRIC.RT.Vec2(0.4,0.6),
       count: 25000
     });
 

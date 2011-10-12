@@ -34,12 +34,6 @@
     <script type="text/javascript" src="../../../SceneGraph/RT/OGLShaderProgram.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/RT/OGLBuffer.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/RT/OGLTexture2D.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/RT/BulletShape.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/RT/BulletRigidBody.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/RT/BulletSoftBody.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/RT/BulletWorld.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/RT/BulletConstraint.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/RT/BulletForce.js" charset="utf-8"></script>
 
     <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Geometry.js" charset="utf-8"></script>
@@ -58,6 +52,7 @@
 
 $(document).ready(function() {
   
+  
   $('#play').button({
       text: true,
       icons: {
@@ -75,6 +70,12 @@ $(document).ready(function() {
   });
   
   var scene = FABRIC.SceneGraph.createScene();
+  
+  
+  $('#loadingDialog').dialog({
+    modal: true
+  });
+  
   var viewport = scene.constructNode('Viewport', {
     enableRaycasting: true,
     windowElement: document.getElementById('FabricContainer')
@@ -86,15 +87,15 @@ $(document).ready(function() {
 
   // Create a camera to draw the scene from
   var camera = scene.constructNode('TargetCamera', {
-      position: FABRIC.RT.vec3(0, 3, 12).scale(2),
-      target: FABRIC.RT.vec3(0, 0, 0),
+      position: new FABRIC.RT.Vec3(0, 3, 12).multiplyScalar(2),
+      target: new FABRIC.RT.Vec3(0, 0, 0),
       nearDistance: 0.1,
       farDistance: 200
     });
   scene.constructNode('CameraManipulator', { targetNode: camera });
   viewport.setCameraNode(camera);
 
-  var light = scene.constructNode('PointLight', { position: FABRIC.RT.vec3(420.0, 1000.0, 600.0) });
+  var light = scene.constructNode('PointLight', { position: new FABRIC.RT.Vec3(420.0, 1000.0, 600.0) });
 
   // create a simulation world
   var bulletWorldNode = scene.constructNode('BulletWorldNode');
@@ -112,7 +113,6 @@ $(document).ready(function() {
     height: 2.0
   });
 
-  
   // create a force manipulator
   var manipulatorNode = scene.constructNode('BulletForceManipulator', {
     bulletWorldNode: bulletWorldNode,
@@ -120,11 +120,7 @@ $(document).ready(function() {
     radius: 3.0,
     useFalloff: false
   });
-
   
-  $('#loadingDialog').dialog({
-    modal: true
-  });
   
   FABRIC.appendOnResolveAsyncTaskCallback(function(label, nbRemaining, doneWeight, totalWeight) {
     
@@ -150,9 +146,9 @@ $(document).ready(function() {
             shapeName: 'Box',
             rigidBody: new FABRIC.RT.BulletRigidBody({
               transform: FABRIC.RT.xfo({
-                tr: FABRIC.RT.vec3(0,3.0 + i * 0.6,0),
-                ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(1,1,0),0.1),
-                sc: FABRIC.RT.vec3(2.0,0.2,1.8).scale(1.0),
+                tr: new FABRIC.RT.Vec3(0,3.0 + i * 0.6,0),
+                ori: new FABRIC.RT.Quat().setFromAxisAndAngle(new FABRIC.RT.Vec3(1,1,0),0.1),
+                sc: new FABRIC.RT.Vec3(2.0,0.2,1.8).multiplyScalar(1.0),
               }),
               friction: 0.8,
               restitution: 0.7
@@ -170,9 +166,9 @@ $(document).ready(function() {
         for(var i=0;i<512;i++) {
           bodies.push(new FABRIC.RT.BulletRigidBody({
             transform: FABRIC.RT.xfo({
-              tr: FABRIC.RT.vec3(0,3.0 + i * 0.6,0),
-              ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(1,1,0),0.1),
-              sc: FABRIC.RT.vec3(2.0,0.2,1.8).scale(1.0),
+              tr: new FABRIC.RT.Vec3(0,3.0 + i * 0.6,0),
+              ori: new FABRIC.RT.Quat().setFromAxisAndAngle(new FABRIC.RT.Vec3(1,1,0),0.1),
+              sc: new FABRIC.RT.Vec3(2.0,0.2,1.8).multiplyScalar(1.0),
             }),
             friction: 0.8,
             restitution: 0.7
@@ -281,7 +277,13 @@ $(document).ready(function() {
 
           <div class="box">
             <h2>INFO</h2>
-              <div class="content" id="infoContent">
+            <div class="content" id="infoContent">
+              Fabric's Bullet Physics integration allows to create large scale physics
+              simulations and run them at interactive framerates. In this sample we simply
+              create a pile of boxes, when then fall down and collide. The sample uses
+              only one collision shape for all rigid bodies. With a graphics adapter supporting
+              OpenGL 3.2+, hardware based instancing will be used.<br>
+              You can click and drag on the rigidbodies to introduce a force to the simulation.
             </div><!--content-->
           </div><!--box-->
           <div class="box">

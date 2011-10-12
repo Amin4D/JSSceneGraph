@@ -2,6 +2,7 @@
 // Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
 //
 
+use Math;
 use CollectedPoints;
 use Mat33;
 use Mat44;
@@ -30,20 +31,20 @@ operator paintVertexColors(
   io Color vertexColors<>
 ) {
   select = true;
-  Mat44 modelMatrix = globalXfo;
-  Mat44 modelViewProjectionMatrix = modelMatrix * cameraMatrix * projectionMatrix;
+  Mat44 modelMatrix = globalXfo.toMat44();
+  Mat44 modelViewProjectionMatrix = projectionMatrix * cameraMatrix * modelMatrix;
   Mat33 normalMatrix = modelViewProjectionMatrix.upperLeft().inverse().transpose();
 
   for (var Integer i = 0; i < positions.size(); i++) {
-    Vec3 n = normals[i] * normalMatrix;
+    Vec3 n = normalMatrix * normals[i];
     if (n.z > 0) {
       continue;
     }
-    Vec3 v = positions[i] * modelViewProjectionMatrix;
+    Vec3 v = modelViewProjectionMatrix * positions[i];
     Vec3 delta = v - brushPos;
     delta.x *= aspectRatio;
     delta.z *= 0.0;
-    Scalar dist = delta.norm();
+    Scalar dist = delta.length();
 
     if (dist < brushSize) {
       collectedPoints.distances.push(dist);
@@ -53,19 +54,18 @@ operator paintVertexColors(
 
   // Rather than returning the data back to JavaScript, we process them here,
   // calculating the new vertex color values based on thier distances from the paint brush
-  var Scalar Pi = 3.141592653589793238462643;
   
   switch(paintMode){
     case 0:
       for (var Integer i = 0; i < collectedPoints.points.size(); i++) {
-        Scalar weight = ((cos(Pi * (collectedPoints.distances[i] / brushSize)) * 0.5) + 0.5) * brushStrength;
+    Scalar weight = (cos(PI * (collectedPoints.distances[i] / brushSize)) * 0.5) + 0.5;
         Integer vertexId = collectedPoints.points[i];
         vertexColors[vertexId] = vertexColors[vertexId].lerp(brushColor, weight);
       }
       break;
     case 1:
       for (var Integer i = 0; i < collectedPoints.points.size(); i++) {
-        Scalar weight = ((cos(Pi * (collectedPoints.distances[i] / brushSize)) * 0.5) + 0.5) * brushStrength;
+        Scalar weight = ((cos(PI * (collectedPoints.distances[i] / brushSize)) * 0.5) + 0.5) * brushStrength;
         Integer vertexId = collectedPoints.points[i];
         vertexColors[vertexId] = vertexColors[vertexId].lerp(baseColor, weight);
       }
@@ -75,7 +75,7 @@ operator paintVertexColors(
       Scalar weights[];
       Scalar totalWeight = 0.0;
       for (var Integer i = 0; i < collectedPoints.points.size(); i++) {
-        Scalar weight = ((cos(Pi * (collectedPoints.distances[i] / brushSize)) * 0.5) + 0.5) * brushStrength;
+        Scalar weight = ((cos(PI * (collectedPoints.distances[i] / brushSize)) * 0.5) + 0.5) * brushStrength;
         Integer vertexId = collectedPoints.points[i];
         averageColor += vertexColors[vertexId] * weight;
         totalWeight += weight;

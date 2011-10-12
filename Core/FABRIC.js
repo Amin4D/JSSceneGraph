@@ -55,12 +55,15 @@ FABRIC = (function() {
     document.body.appendChild(embedTag);
     
     var context = embedTag.wrapFabricClient(embedTag, function(s) { console.log(s); } );
+
+    //Enable math warnings (comment out this line if you don't want them)
+    Math.verboseLogFunction = function(s){console.log(s);};
     
     ///////////////////////////////////////////////////////////
     // Check the currently installed version.
     // TODO: This code will be removed once we get to the end of beta.
     var version = context.build.getPureVersion().split('.');
-    var requiredVersion = [1,0,12];
+    var requiredVersion = [1,0,13];
     var cmpVersions = function (lhs, rhs) {
       if (lhs[0] < rhs[0])
         return -1;

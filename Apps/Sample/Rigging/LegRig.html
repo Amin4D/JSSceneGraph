@@ -81,8 +81,8 @@ $(document).ready(function() {
   
   // Create a camera to draw the scene from
   var camera = scene.constructNode('TargetCamera', {
-      position: FABRIC.RT.vec3(0, 14, 14),
-      target: FABRIC.RT.vec3(0, 6, 0),
+      position: new FABRIC.RT.Vec3(0, 14, 14),
+      target: new FABRIC.RT.Vec3(0, 6, 0),
       roll: 0,
       nearDistance: 0.001,
       farDistance: 20000
@@ -104,27 +104,27 @@ $(document).ready(function() {
   var skeletonNode = scene.constructNode('CharacterSkeleton');
   skeletonNode.addBone({name: 'root'});
 
-  var xfo = FABRIC.RT.xfo({
-      ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(0, 0, 1), Math.degToRad(-75)),
-        tr: FABRIC.RT.vec3(0, 11, 0)
+  var xfo = new FABRIC.RT.Xfo({
+      ori: new FABRIC.RT.Quat().setFromAxisAndAngle(new FABRIC.RT.Vec3(0, 0, 1), Math.degToRad(-75)),
+        tr: new FABRIC.RT.Vec3(0, 11, 0)
     });
   skeletonNode.addBone({name: 'thighBone', referencePose: xfo, length: 6, parent: 'root'});
 
-  xfo = FABRIC.RT.xfo({
-      ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(0, 0, 1), Math.degToRad(-115)),
-      tr: xfo.tr.add(xfo.ori.rotateVector(FABRIC.RT.vec3(6, 0, 0)))
+  xfo = new FABRIC.RT.Xfo({
+      ori: new FABRIC.RT.Quat().setFromAxisAndAngle(new FABRIC.RT.Vec3(0, 0, 1), Math.degToRad(-115)),
+      tr: xfo.tr.add(xfo.ori.rotateVector(new FABRIC.RT.Vec3(6, 0, 0)))
     });
   skeletonNode.addBone({name: 'calfBone', referencePose: xfo, length: 5, parent: 'thighBone' });
 
-  xfo = FABRIC.RT.xfo({
-      ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(0, 0, 1), Math.degToRad(-20)),
-      tr: xfo.tr.add(xfo.ori.rotateVector(FABRIC.RT.vec3(5, 0, 0)))
+  xfo = new FABRIC.RT.Xfo({
+      ori: new FABRIC.RT.Quat().setFromAxisAndAngle(new FABRIC.RT.Vec3(0, 0, 1), Math.degToRad(-20)),
+      tr: xfo.tr.add(xfo.ori.rotateVector(new FABRIC.RT.Vec3(5, 0, 0)))
     });
   skeletonNode.addBone({name: 'ankleBone', referencePose: xfo, length: 1.5, parent: 'calfBone' });
 
-  xfo = FABRIC.RT.xfo({
-      ori: FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(0, 0, 1), 0),
-      tr: xfo.tr.add(xfo.ori.rotateVector(FABRIC.RT.vec3(1.5, 0, 0)))
+  xfo = new FABRIC.RT.Xfo({
+      ori: new FABRIC.RT.Quat().setFromAxisAndAngle(new FABRIC.RT.Vec3(0, 0, 1), 0),
+      tr: xfo.tr.add(xfo.ori.rotateVector(new FABRIC.RT.Vec3(1.5, 0, 0)))
     });
   skeletonNode.addBone({name: 'toeBone', referencePose: xfo, length: 1.5, parent: 'ankleBone' });
 

@@ -144,7 +144,7 @@
                     p2 = gl_TessCoord.z * tc_lightdir[2];
                     te_lightdir = normalize(p0 + p1 + p2);
                   
-                    gl_Position = u_modelViewProjectionMatrix * vec4(te_position, 1);
+                    gl_Position = u_modelViewProjectionMatrix * vec4(te_position, 1.0);
                   }
     </source>
 	</tessevalshader>
@@ -178,7 +178,7 @@
                     //g_normal = te_normal[2];
                     g_lightdir = te_lightdir[2];
                     g_patchdistance = te_patchdistance[2];
-                    g_tridistance = vec3(0, 0, 1);
+                    g_tridistance = vec3(0.0, 0.0, 1.0);
                     g_texcoord = te_texcoord[2];
                     gl_Position = gl_in[2].gl_Position;
                     EmitVertex();
@@ -186,7 +186,7 @@
                     //g_normal = te_normal[1];
                     g_lightdir = te_lightdir[1];
                     g_patchdistance = te_patchdistance[1];
-                    g_tridistance = vec3(0, 1, 0);
+                    g_tridistance = vec3(0.0, 1.0, 0.0);
                     g_texcoord = te_texcoord[1];
                     gl_Position = gl_in[1].gl_Position;
                     EmitVertex();
@@ -194,7 +194,7 @@
                     //g_normal = te_normal[0];
                     g_lightdir = te_lightdir[0];
                     g_patchdistance = te_patchdistance[0];
-                    g_tridistance = vec3(1, 0, 0);
+                    g_tridistance = vec3(1.0, 0.0, 0.0);
                     g_texcoord = te_texcoord[0];
                     gl_Position = gl_in[0].gl_Position;
                     EmitVertex();
@@ -224,8 +224,8 @@
                   float amplify(float d, float scale, float offset)
                   {
                     d = scale * d + offset;
-                    d = clamp(d, 0, 1);
-                    d = 1 - exp2(-2*d*d);
+                    d = clamp(d, 0.0, 1.0);
+                    d = 1 - exp2(-2.0 * d * d);
                     return d;
                   }
                   
@@ -233,7 +233,7 @@
                   {
                     float d1 = min(min(triDistance.x, triDistance.y), triDistance.z);
                     float d2 = min(min(patchDistance.x, patchDistance.y), patchDistance.z);
-                    return amplify(d1, 75, -0.5) * amplify(d2, 70, -0.5);
+                    return amplify(d1, 75.0, -0.5) * amplify(d2, 70.0, -0.5);
                   }
                   
                   void main()

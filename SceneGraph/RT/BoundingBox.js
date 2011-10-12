@@ -8,8 +8,8 @@
  * @constructor
  */
 FABRIC.RT.BoundingBox = function() {
-  this.min = FABRIC.RT.vec3();
-  this.max = FABRIC.RT.vec3();
+  this.min = new FABRIC.RT.Vec3();
+  this.max = new FABRIC.RT.Vec3();
 };
 
 FABRIC.appendOnCreateContextCallback(function(context) {

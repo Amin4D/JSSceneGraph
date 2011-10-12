@@ -136,6 +136,7 @@ $(document).ready(function() {
           inst.setMaterialNode(wireMaterial);
         }
       }
+      
       $('#loadingDialog').dialog('close');
       viewport.redraw();
     }
@@ -151,9 +152,7 @@ $(document).ready(function() {
             primary: 'ui-icon-pause'
           }
         });
-        scene.animation.play( function(){
-          assets[resourceName].setSample(parseInt(scene.animation.getTime() * 30.0));
-        });
+        scene.animation.play();
       } else {
         $(this).button('option', {
           label: 'Play',

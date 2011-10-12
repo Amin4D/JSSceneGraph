@@ -112,7 +112,7 @@ $(document).ready(function() {
 
       // create the camera
       var nodes = assets.frog.getParsedNodes();
-      viewport.setCameraNode(assets.frog.getParsedNodes()['/Camera/CameraShape']);
+      viewport.setCameraNode(assets.frog.getParsedNodes()['/CameraXfo/Camera']);
 
       var materialNode = scene.constructNode('PhongTextureSimpleMaterial', {
         diffuseTextureNode: scene.constructNode('Image', { url: 'Models/frog_diffuse.png' }),
@@ -123,11 +123,11 @@ $(document).ready(function() {
       });
 
       scene.constructNode('Instance', {
-        transformNode: assets.frog.getParsedNodes()['/low'],
-        geometryNode: assets.frog.getParsedNodes()['/low/lowShape'],
+        transformNode: assets.frog.getParsedNodes()['/lowXfo'],
+        geometryNode: assets.frog.getParsedNodes()['/lowXfo/low'],
         materialNode: materialNode
       });
-
+      
       $('#loadingDialog').dialog('close');
       viewport.redraw();
     }
@@ -143,9 +143,7 @@ $(document).ready(function() {
             primary: 'ui-icon-pause'
           }
         });
-        scene.animation.play( function(){
-          assets.frog.setSample(parseInt(scene.animation.getTime() * 30.0));
-        });
+        scene.animation.play();
       } else {
         $(this).button('option', {
           label: 'Play',

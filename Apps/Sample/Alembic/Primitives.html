@@ -29,7 +29,6 @@
     <script type="text/javascript" src="../../../SceneGraph/RT/Euler.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/RT/OGLShaderProgram.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/RT/OGLTexture2D.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/RT/OGLTextureCube.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/RT/OGLBuffer.js" charset="utf-8"></script>
 
     <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.js" charset="utf-8"></script>
@@ -62,129 +61,62 @@ s.parentNode.insertBefore(ga, s);
     <script type="text/javascript">
 $(document).ready(function() {
 
-  $('#play').button({
-      text: true,
-      icons: {
-        primary: 'ui-icon-play'
-      }
-    });
-  $('#step').button({
-    text: true,
-    icons: {
-      primary: 'ui-icon-step'
-    }
-  });  
-
-  $('#importModel').button().change(function(e) {
-      // TODO: Enable file importing
-        console.log($(this).val());
-      var assets = scene.importAssetFile($(this).val());
-      for (i in assets) {
-        assets[i].setMaterialNode(redMaterial);
-        drawNode.setGeometryNode(assets[i]);
-      }
-
-      var errors = scene.getErrors();
-      if (errors.length > 0) {
-        throw (errors.toString());
-      }
-    });
-
   var scene = FABRIC.SceneGraph.createScene();
   var viewport = scene.constructNode('Viewport', { windowElement: document.getElementById('FabricContainer') });
-
-  // Create a camera to draw the scene from
-  var camera = scene.constructNode('TargetCamera', {
-      nearDistance: 1,
-      farDistance: 2000,
-      position: FABRIC.RT.vec3(-.2, 1, 1).scale(18),
-      target: FABRIC.RT.vec3(0, .2, 0).scale(13),
-    });
-
-  scene.constructNode('CameraManipulator', { targetNode: camera });
-  viewport.setCameraNode(camera);
 
   viewport.setBackgroundTextureImage(scene.constructNode('Image', {
     url: '../BasicDemos/Resources/fabric-demo-gradient.png'
   }));
 
+  // Create a camera to draw the scene from
+  var camera = scene.constructNode('TargetCamera', {
+      nearDistance: 1,
+      farDistance: 2000,
+      position: FABRIC.RT.vec3(10,10,10),
+      target: FABRIC.RT.vec3(0, 0, 0),
+    });
+
+  scene.constructNode('CameraManipulator', { targetNode: camera });
+  viewport.setCameraNode(camera);
+
   var light = scene.constructNode('PointLight', { position: FABRIC.RT.vec3(10, 30, 100).scale(3) });
 
-  var cubeTextureMap = scene.constructNode('CubeMap', {
-        urls: [
-          '../BasicDemos/Resources/cubemap_opensea/opensea_positive_x.png',
-          '../BasicDemos/Resources/cubemap_opensea/opensea_negative_x.png',
-          '../BasicDemos/Resources/cubemap_opensea/opensea_positive_y.png',
-          '../BasicDemos/Resources/cubemap_opensea/opensea_negative_y.png',
-          '../BasicDemos/Resources/cubemap_opensea/opensea_positive_z.png',
-          '../BasicDemos/Resources/cubemap_opensea/opensea_negative_z.png'
-        ]
-      });
-  
   var phongMaterial = scene.constructNode('PhongMaterial', {
-    diffuseColor: FABRIC.RT.rgb(1.0, 0.1, 0.1, 1),
+    diffuseColor: FABRIC.RT.rgb(0.5, 0.5, 0.5, 1),
     lightNode: light,
   });
-  
-  // create the alembic content, and fire the load once it is loaded
-  var resourceName = 'softbodies';
-  var assets = scene.importAssetFile('Models/'+resourceName+'.abc', {
-    dependentNode: viewport,
-    onLoadSuccessCallback: function(){
-      
-      // loop over all assets and create an instance
-      for(var name in assets[resourceName].getParsedNodes()) {
-        if(assets[resourceName].getParsedNodes()[name].isTypeOf('Triangles'))
-        {
-          scene.constructNode('Instance', {
-            transformNode: assets[resourceName].getCorrespondingTransform(name),
-            geometryNode: assets[resourceName].getParsedNodes()[name],
-            materialNode: phongMaterial
-          });
-        }
-      }
-      $('#loadingDialog').dialog('close');
-      viewport.redraw();
-    }
-  });
-
-  $('#play').button()
-    .click(function() {
-      var options;
-      if ($(this).text() == 'Play') {
-        $(this).button('option', {
-          label: 'Pause',
-          icons: {
-            primary: 'ui-icon-pause'
-          }
-        });
-        scene.animation.play( function(){
-          assets[resourceName].setSample(parseInt(scene.animation.getTime() * 30.0));
-        });
-      } else {
-        $(this).button('option', {
-          label: 'Play',
-          icons: {
-            primary: 'ui-icon-play'
-          }
-        });
-        scene.animation.pause();
-      }
-    });
-  $('#step').button()
-    .click(function() {
-      scene.animation.step();
-    });
   
   $('#loadingDialog').dialog({
     modal: true
   });
+
+  // create the alembic content, and fire the load once it is loaded
+  var resourceName = 'primitives';
+  var assets = scene.importAssetFile('Models/'+resourceName+'.abc', {
+    dependentNode: viewport
+  });
+
+  assets[resourceName].addOnLoadSuccessCallback(function(){
+    // loop over all assets and create an instance
+    for(var name in assets[resourceName].getParsedNodes()) {
+      if(assets[resourceName].getParsedNodes()[name].isTypeOf('Triangles'))
+      {
+        scene.constructNode('Instance', {
+          transformNode: assets[resourceName].getCorrespondingTransform(name),
+          geometryNode: assets[resourceName].getParsedNodes()[name],
+          materialNode: phongMaterial
+        });
+      }
+    }
+    $('#loadingDialog').dialog('close');
+    viewport.redraw();
+  });
+
   FABRIC.appendOnResolveAsyncTaskCallback(function(label, nbRemaining, doneWeight, totalWeight) {
     $('#loadingProgressBar').progressbar({
       value: (1.0-(doneWeight/totalWeight))*100
     });
     if (nbRemaining===0) {
-      viewport.redraw();
       var errors = scene.getErrors();
       if (errors.length > 0) {
         throw (errors.toString());
@@ -217,19 +149,11 @@ $(document).ready(function() {
             <h2>INFO</h2>
             <div class="content">
               Alembic Viewer.<br>
-              The tori meshes in this sample have been exported from Autodesk Softimage,
-              where they have been simulated with a physics simulator. This demo shows the
-              performance of several objects been streamed in from the same Alembic file.
+              The cube seen in this sample is loaded using the Alembic.IO file format. This illustrates the most
+              simple case of using a powerful streamable 3d format inside Fabric.
             </div><!--content-->
           </div><!--box-->
 
-                  <div class="box">
-                    <h2>CONTROLS</h2>
-                    <div class="content">
-                        <button id="play" style="margin-top:10px;">Play</button>
-                        <button id="step" style="margin-top:10px;">Step</button>
-                    </div><!--content-->
-                </div><!--box-->
         </div><!--sidebar-->
       </div> <!--editor-->
     </div><!--wrapper-->

@@ -57,9 +57,21 @@ s.parentNode.insertBefore(ga, s);
  })();
 
 </script>
-
     <script type="text/javascript">
 $(document).ready(function() {
+
+  $('#play').button({
+      text: true,
+      icons: {
+        primary: 'ui-icon-play'
+      }
+    });
+  $('#step').button({
+    text: true,
+    icons: {
+      primary: 'ui-icon-step'
+    }
+  });  
 
   var scene = FABRIC.SceneGraph.createScene();
   var viewport = scene.constructNode('Viewport', { windowElement: document.getElementById('FabricContainer') });
@@ -67,13 +79,13 @@ $(document).ready(function() {
   viewport.setBackgroundTextureImage(scene.constructNode('Image', {
     url: '../BasicDemos/Resources/fabric-demo-gradient.png'
   }));
-
+  
   // Create a camera to draw the scene from
   var camera = scene.constructNode('TargetCamera', {
       nearDistance: 1,
       farDistance: 2000,
-      position: FABRIC.RT.vec3(10,10,10),
-      target: FABRIC.RT.vec3(0, 0, 0),
+      position: FABRIC.RT.vec3(.2, .5, 1).scale(7.5),
+      target: FABRIC.RT.vec3(1.5, 2, 0).scale(1),
     });
 
   scene.constructNode('CameraManipulator', { targetNode: camera });
@@ -81,42 +93,52 @@ $(document).ready(function() {
 
   var light = scene.constructNode('PointLight', { position: FABRIC.RT.vec3(10, 30, 100).scale(3) });
 
-  var phongMaterial = scene.constructNode('PhongMaterial', {
-    diffuseColor: FABRIC.RT.rgb(0.5, 0.5, 0.5, 1),
+  // load our custom shader
+  FABRIC.SceneGraph.defineEffectFromFile('ElephantMaterial', 'ElephantShader.xml');
+
+  var occlusionTexture = scene.constructNode('Image', { url: 'Models/samplehold_elephant_ambocc.png' });
+  var normalTexture = scene.constructNode('Image', { url: 'Models/samplehold_elephant_normalM.png' });
+
+  var elephantMaterial = scene.constructNode('ElephantMaterial', {
+    diffuseTextureNode: occlusionTexture,
+    normalTextureNode: normalTexture,
+    shininess: 20,
     lightNode: light,
   });
   
+  // create the alembic content, and fire the load once it is loaded
+  var resourceName = 'samplehold_elephant_proxy';
+  var assets = scene.importAssetFile('Models/'+resourceName+'.abc', {
+    dependentNode: viewport,
+    onLoadSuccessCallback: function(){
+      
+      // loop over all assets and create an instance
+      for(var name in assets[resourceName].getParsedNodes()) {
+        if(assets[resourceName].getParsedNodes()[name].isTypeOf('Triangles'))
+        {
+          assets[resourceName].getParsedNodes()[name]
+          var inst = scene.constructNode('Instance', {
+            transformNode: assets[resourceName].getCorrespondingTransform(name),
+            geometryNode: assets[resourceName].getParsedNodes()[name],
+            materialNode: elephantMaterial
+          });
+        }
+      }
+      
+      $('#loadingDialog').dialog('close');
+      viewport.redraw();
+    }
+  });
+
   $('#loadingDialog').dialog({
     modal: true
   });
-
-  // create the alembic content, and fire the load once it is loaded
-  var resourceName = 'cube';
-  var assets = scene.importAssetFile('Models/'+resourceName+'.abc', {
-    dependentNode: viewport
-  });
-
-  assets[resourceName].addOnLoadSuccessCallback(function(){
-    // loop over all assets and create an instance
-    for(var name in assets[resourceName].getParsedNodes()) {
-      if(assets[resourceName].getParsedNodes()[name].isTypeOf('Triangles'))
-      {
-        scene.constructNode('Instance', {
-          transformNode: assets[resourceName].getCorrespondingTransform(name),
-          geometryNode: assets[resourceName].getParsedNodes()[name],
-          materialNode: phongMaterial
-        });
-      }
-    }
-    $('#loadingDialog').dialog('close');
-    viewport.redraw();
-  });
-
   FABRIC.appendOnResolveAsyncTaskCallback(function(label, nbRemaining, doneWeight, totalWeight) {
     $('#loadingProgressBar').progressbar({
       value: (1.0-(doneWeight/totalWeight))*100
     });
     if (nbRemaining===0) {
+      viewport.redraw();
       var errors = scene.getErrors();
       if (errors.length > 0) {
         throw (errors.toString());
@@ -149,11 +171,19 @@ $(document).ready(function() {
             <h2>INFO</h2>
             <div class="content">
               Alembic Viewer.<br>
-              The cube seen in this sample is loaded using the Alembic.IO file format. This illustrates the most
-              simple case of using a powerful streamable 3d format inside Fabric.
+              The model seen in this sample has been created by <a href="http://www.sampleandhold.co.uk" target=_NEW>http://www.sampleandhold.co.uk</a>.
+              We use a combination of normal mapping and ambient occlusion based shading to create the illusion of the complexity of the original
+              high resolution mesh while limiting the decoded complexity to 10.000 triangles.<br><br>
+              The custom shader creates two different effects, a specular based on one side of the model,
+              an occlusion based on on the other side. Turn the camera to inspect it!
             </div><!--content-->
           </div><!--box-->
 
+                  <div class="box">
+                    <h2>CONTROLS</h2>
+                    <div class="content">
+                    </div><!--content-->
+                </div><!--box-->
         </div><!--sidebar-->
       </div> <!--editor-->
     </div><!--wrapper-->

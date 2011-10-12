@@ -3,45 +3,35 @@
 // Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
 //
 
-/**
- * Function to determine if an object is a valid vec4.
- * @param {object} vec4 The vec4 object to validate.
- * @return {boolean} true if the given object is a valid vec4.
- */
-FABRIC.RT.isVec4 = function(vec4) {
-  return typeof vec4 === 'object' &&
-    'x' in vec4 &&
-    typeof vec4.x === 'number' &&
-    'y' in vec4 &&
-    typeof vec4.y === 'number' &&
-    'z' in vec4 &&
-    typeof vec4.z === 'number' &&
-    't' in vec4 &&
-    typeof vec4.t === 'number';
+//determine if an object is a valid Vec4.
+FABRIC.RT.isVec4 = function(t) {
+  return t && t.getType &&
+         t.getType() === 'FABRIC.RT.Vec4';
 };
 
-/**
- * Constructor for a vec4 object.
- * @constructor
- * @param {number} x The x component.
- * @param {number} y The y component.
- * @param {number} z The z component.
- * @param {number} t The t component.
- */
-FABRIC.RT.Vec4 = function(x, y, z, t) {
-  if (typeof x === 'number' && typeof y === 'number' && typeof z === 'number' && typeof t === 'number') {
-    this.x = x;
-    this.y = y;
-    this.z = z;
-    this.t = t;
+//Constructor:
+//  Supported args:
+//    (none)
+//    x, y, z, t
+//    Vec4
+FABRIC.RT.Vec4 = function() {
+  if (arguments.length == 4 &&
+      FABRIC.RT.isScalar(arguments[0]) && 
+      FABRIC.RT.isScalar(arguments[1]) && 
+      FABRIC.RT.isScalar(arguments[2]) && 
+      FABRIC.RT.isScalar(arguments[3]) ) {
+    this.x = arguments[0];
+    this.y = arguments[1];
+    this.z = arguments[2];
+    this.t = arguments[3];
   }
-  else if (FABRIC.RT.isVec3(x) && y === undefined && z === undefined && t === undefined) {
-    this.x = x.x;
-    this.y = x.y;
-    this.z = x.z;
-    this.t = x.t;
+  else if (arguments.length == 1 && FABRIC.RT.isVec4(arguments[0])) {
+    this.x = arguments[0].x;
+    this.y = arguments[0].y;
+    this.z = arguments[0].z;
+    this.t = arguments[0].t;
   }
-  else if (x === undefined && y === undefined && z === undefined && t === undefined) {
+  else if (arguments.length == 0) {
     this.x = 0;
     this.y = 0;
     this.z = 0;
@@ -50,37 +40,38 @@ FABRIC.RT.Vec4 = function(x, y, z, t) {
   else throw'new Vec4: invalid arguments';
   };
 
-/**
- * Overloaded Constructor for a vec4 object.
- * @param {number} x The x component.
- * @param {number} y The y component.
- * @param {number} z The z component.
- * @param {number} t The t component.
- * @return {object} The created vec4 object.
- */
-FABRIC.RT.vec4 = function(x, y, z, t) {
-  return new FABRIC.RT.Vec4(x, y, z, t);
-};
-
 FABRIC.RT.Vec4.prototype = {
-  set: function(x, y, z, t) {
-    this.x = x; this.y = y; this.z = z; this.t = t;
+
+  //set: see constructor for supported args
+  set: function() {
+    FABRIC.RT.Vec4.apply(this, arguments);
     return this;
   },
-  // Returns true if the vector is equal to the argument
-  eql: function(v) {
-    return (FABRIC.RT.isVec4(v) &&
-      (Math.abs(this.x - v.x) < Math.PRECISION) &&
-      (Math.abs(this.y - v.y) < Math.PRECISION) &&
-      (Math.abs(this.z - v.z) < Math.PRECISION) &&
-      (Math.abs(this.t - v.t) < Math.PRECISION));
+
+  setNull: function(x, y, z, t) {
+    this.x = 0; this.y = 0; this.z = 0; this.t = 0;
+    return this;
   },
 
-  scale: function(s) {
-    return new FABRIC.RT.Vec4(this.x * s, this.y * s, this.z * s, this.t * s);
+  equal: function(v) {
+    var result = //JS bug: if the condition is directly returned it is wrong (??)
+      this.x === v.x &&
+      this.y === v.y &&
+      this.z === v.z &&
+      this.t === v.t;
+    return result;
   },
-  scaleInPlace: function(s) {
-    this.x *= s; this.y *= s; this.z *= s; this.t *= s;
+
+  almostEqual: function(v, precision) {
+    if (precision === undefined) {
+      precision = Math.PRECISION;
+    }
+    var result = //JS bug: if the condition is directly returned it is wrong (??)
+      (Math.abs(this.x - v.x) < precision) &&
+      (Math.abs(this.y - v.y) < precision) &&
+      (Math.abs(this.z - v.z) < precision) &&
+      (Math.abs(this.t - v.t) < precision);
+    return result;
   },
 
   // Returns the result of adding the argument to the vector
@@ -88,162 +79,131 @@ FABRIC.RT.Vec4.prototype = {
     return new FABRIC.RT.Vec4(this.x + v.x, this.y + v.y, this.z + v.z, this.t + v.t);
   },
 
-  addInPlace: function(v) {
-    this.x += v.x; this.y += v.y; this.z += v.z; this.t += v.t;
-    return this;
-  },
-
   subtract: function(v) {
     return new FABRIC.RT.Vec4(this.x - v.x, this.y - v.y, this.z - v.z, this.t - v.t);
   },
 
-  subInPlace: function(v) {
-    this.x -= v.x; this.y -= v.y; this.z -= v.z; this.t -= v.t;
-    return this;
-  },
-
   multiply: function(v) {
-    if (typeof v == 'number') {
-      return new FABRIC.RT.Vec4(this.x * v, this.y * v, this.z * v, this.t * v);
-    }else if (FABRIC.RT.isVec4(v)) {
-      return new FABRIC.RT.Vec4(this.x * v.x, this.y * v.y, this.z * v.z, this.t * v.t);
-    }else {
-      throw'Incorrect param type for Multiply';
-      }
+    return new FABRIC.RT.Vec4(this.x * v.x, this.y * v.y, this.z * v.z, this.t * v.t);
   },
 
-  mulInPlace: function(v) {
-    if (typeof v == 'number') {
-      this.x *= v; this.y *= v; this.z *= v; this.t *= v;
-    }else if (FABRIC.RT.isVec4(v)) {
-      this.x *= v.x; this.y *= v.y; this.z *= v.z; this.t *= v.t;
-    }else {
-      throw'Incorrect param type for Multiply';
-      }
-    return this;
+  multiplyScalar: function(s) {
+    return new FABRIC.RT.Vec4(this.x * s, this.y * s, this.z * s, this.t * s);
   },
 
   divide: function(v) {
-    return this.multiply(1.0 / v);
+    if( Math.verboseLogFunction ) {
+      Math.checkDivisor(v.x, 'Vec4.divide v.x');
+      Math.checkDivisor(v.y, 'Vec4.divide v.y');
+      Math.checkDivisor(v.z, 'Vec4.divide v.z');
+      Math.checkDivisor(v.t, 'Vec4.divide v.t');
+    }
+    return new FABRIC.RT.Vec4(this.x / v.x, this.y / v.y, this.z / v.z, this.t / v.t);
   },
 
-  divInPlace: function(v) {
-    return this.mulInPlace(1.0 / v);
+  divideScalar: function(s) {
+    Math.checkDivisor(s, 'Vec4.divideScalar');
+    return this.multiplyScalar(1.0 / s);
   },
 
-  negate: function(v) {
+  negate: function() {
     return new FABRIC.RT.Vec4(-this.x, - this.y, - this.z, - this.t);
   },
 
-  negateInPlace: function(v) {
-    this.x = - this.x;
-    this.y = - this.y;
-    this.z = - this.z;
-    this.t = - this.t;
+  inverse: function() {
+    if( Math.verboseLogFunction ) {
+      Math.checkDivisor(this.x, 'Vec4.inverse this.x');
+      Math.checkDivisor(this.y, 'Vec4.inverse this.y');
+      Math.checkDivisor(this.z, 'Vec4.inverse this.z');
+      Math.checkDivisor(this.t, 'Vec4.inverse this.t');
+    }
+    return new FABRIC.RT.Vec4(1.0/this.x, 1.0/this.y, 1.0/this.z, 1.0/this.t);
   },
 
-  // Returns the scalar product of the vector with the argument
-  // Both vectors must have equal dimensionality
   dot: function(v) {
     return (this.x * v.x) + (this.y * v.y) + (this.z * v.z) + (this.t * v.t);
   },
 
-  getAngleTo: function(v) {
-    return Math.acos(this.dot(v));
-  },
-
-  // Returns the length ('length') of the vector
   length: function() {
     return Math.sqrt(this.dot(this));
-  },
-  norm: function() {
-    return length();
   },
 
   lengthSquared: function() {
     return this.dot(this);
   },
 
-  // Normalized this vector and returns the previous length
-  normalize: function() {
+  unit: function() {
     var len = this.length();
-    if (len === 0) {
-      return 0;
-    }
-    this.mulInPlace(1.0 / len);
+    Math.checkDivisor(len, 'Vec4.unit');
+    return this.divideScalar(len);
+  },
+
+  //Note: setUnit returns the previous length
+  setUnit: function() {
+    var len = this.length();
+    Math.checkDivisor(len, 'Vec4.setUnit');
+    var invLen = 1.0 / len;
+    this.x *= invLen;
+    this.y *= invLen;
+    this.z *= invLen;
+    this.t *= invLen;
     return len;
   },
 
-  // Returns a copy of the vector
+  clamp: function(min, max) {
+    return new FABRIC.RT.Vec4(
+      (this.x < min.x ? min.x : (this.x > max.x ? max.x : this.x)),
+      (this.y < min.y ? min.y : (this.y > max.y ? max.y : this.y)),
+      (this.z < min.z ? min.z : (this.z > max.z ? max.z : this.z)),
+      (this.t < min.t ? min.t : (this.t > max.t ? max.t : this.t))
+    );
+  },
+
+  makeHomogeneousVec3: function() {
+    if( this.t != 1.0 ) {
+      Math.checkDivisor(this.t, 'Vec3.makeHomogeneousVec3');
+      var invT = 1.0 / this.t;
+      return new FABRIC.RT.Vec3(this.x * invT, this.y * invT, this.z * invT);
+    }
+    else
+      return new FABRIC.RT.Vec3(this.x, this.y, this.z);
+  },
+
+  //Note: expects both vectors to be units (else use angleTo)
+  unitsAngleTo: function(v) {
+    var acosAngle = Math.clamp(this.dot(v), -1.0, 1.0);
+    return Math.acos(acosAngle);
+  },
+
+  angleTo: function(v) {
+    return this.unit().unitsAngleTo(v.unit());
+  },
+
+  distanceTo: function(other) {
+    return this.subtract(other).length();
+  },
+
+  linearInterpolate: function(other, s) {
+    return this.add(other.subtract(this).multiplyScalar(s));
+  },
+
   clone: function() {
     return (new FABRIC.RT.Vec4(this.x, this.y, this.z, this.t));
   },
 
   toString: function() {
-    return 'FABRIC.RT.vec4(' + this.x + ',' + this.y + ',' + this.z + ',' + this.t + ')';
+    return 'FABRIC.RT.Vec4(' + this.x + ',' + this.y + ',' + this.z + ',' + this.t + ')';
   },
   getType: function() {
     return 'FABRIC.RT.Vec4';
-  },
-  displayGUI: function($parentDiv, changeHandlerFn) {
-    var val = this;
-    var fn = function() {
-      changeHandlerFn(val);
-    }
-    var size = 22;
-    var $xWidget = $('<input type="number" style="width:' + size + '%" value="' + this.x + '"/>').bind(
-      'change', function(event, ui) {
-        val.x = parseFloat($(this).val()); fn();
-    });
-    var $yWidget = $('<input type="number" style="width:' + size + '%" value="' + this.y + '"/>').bind(
-      'change', function(event, ui) {
-        val.y = parseFloat($(this).val()); fn();
-    });
-    var $zWidget = $('<input type="number" style="width:' + size + '%" value="' + this.y + '"/>').bind(
-      'change', function(event, ui) {
-        val.z = parseFloat($(this).val()); fn();
-    });
-    var $tWidget = $('<input type="number" style="width:' + size + '%" value="' + this.y + '"/>').bind(
-      'change', function(event, ui) {
-        val.t = parseFloat($(this).val()); fn();
-    });
-
-    $parentDiv.append($xWidget);
-    $parentDiv.append($yWidget);
-    $parentDiv.append($zWidget);
-    $parentDiv.append($tWidget);
-    var refreshFn = function(val) {
-      $xWidget.val(val.x);
-      $yWidget.val(val.y);
-      $zWidget.val(val.z);
-      $tWidget.val(val.t);
-    };
-    return refreshFn;
   }
 };
 
-/**
- * Overloaded Constructor for a vec4
- * @return {object} A preset vec4 for the x axis.
- */
+//Vec4 constants
+FABRIC.RT.Vec4.origin = new FABRIC.RT.Vec4(0, 0, 0, 0);
 FABRIC.RT.Vec4.xAxis = new FABRIC.RT.Vec4(1, 0, 0, 0);
-
-/**
- * Overloaded Constructor for a vec4
- * @return {object} A preset vec4 for the y axis.
- */
 FABRIC.RT.Vec4.yAxis = new FABRIC.RT.Vec4(0, 1, 0, 0);
-
-/**
- * Overloaded Constructor for a vec4
- * @return {object} A preset vec4 for the z axis.
- */
 FABRIC.RT.Vec4.zAxis = new FABRIC.RT.Vec4(0, 0, 1, 0);
-
-/**
- * Overloaded Constructor for a vec4
- * @return {object} A preset vec4 for the t axis.
- */
 FABRIC.RT.Vec4.tAxis = new FABRIC.RT.Vec4(0, 0, 0, 1);
 
 FABRIC.appendOnCreateContextCallback(function(context) {

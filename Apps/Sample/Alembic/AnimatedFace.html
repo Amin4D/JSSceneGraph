@@ -99,14 +99,14 @@ $(document).ready(function() {
   var camera = scene.constructNode('TargetCamera', {
       nearDistance: 1,
       farDistance: 2000,
-      position: FABRIC.RT.vec3(.2, 5, 1).scale(13.5),
-      target: FABRIC.RT.vec3(0, 5, 0).scale(13.5),
+      position: new FABRIC.RT.Vec3(.2, 5, 1).multiplyScalar(13.5),
+      target: new FABRIC.RT.Vec3(0, 5, 0).multiplyScalar(13.5),
     });
 
   scene.constructNode('CameraManipulator', { targetNode: camera });
   viewport.setCameraNode(camera);
 
-  var light = scene.constructNode('PointLight', { position: FABRIC.RT.vec3(10, 30, 100).scale(3) });
+  var light = scene.constructNode('PointLight', { position: new FABRIC.RT.Vec3(10, 30, 100).multiplyScalar(3) });
 
   var phongMaterial = scene.constructNode('PhongMaterial', {
     diffuseColor: FABRIC.RT.rgb(0.5, 0.5, 0.5, 1),

@@ -75,7 +75,7 @@ operator simulateFlock(
   // Narrow Phase Interaction Detection
   neighborDistances.resize(neighborIndices.size());
   for (i = 0; i < neighborIndices.size; i++) {
-    neighborDistances[i] = position.dist(previousframe_positions[neighborIndices[i]]);
+    neighborDistances[i] = position.distanceTo(previousframe_positions[neighborIndices[i]]);
   }
   
   debugDraw.reset();
@@ -86,13 +86,13 @@ operator simulateFlock(
   // Goal Seek
   {
     var Vec3 goalDir = goal - position;
-    var Scalar goalDist = goalDir.norm();
+    var Scalar goalDist = goalDir.length();
 
     if (goalDist < neighborInfluenceRange) {
-      velocity = velocity.lerp(Vec3(0.0, 0.0, 0.0), 0.1);
+      velocity = velocity.linearInterpolate(Vec3(0.0, 0.0, 0.0), 0.1);
     }
     else {
-      velocity = velocity.lerp(goalDir * (0.05 / goalDist), 0.1);
+      velocity = velocity.linearInterpolate(goalDir * (0.05 / goalDist), 0.1);
     }
   }
 

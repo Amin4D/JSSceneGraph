@@ -23,7 +23,7 @@ FABRIC.SceneGraph.registerNodeType('CharacterMesh', {
       operatorName: 'loadSkinningMatrices',
       srcFile: 'FABRIC_ROOT/SceneGraph/KL/loadSkinningMatrices.kl',
       preProcessorDefinitions: {
-        SKINNING_MATRICIES_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('skinningMatrices')
+        SKINNING_MATRICES_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('skinningMatrices')
       },
       entryFunctionName: 'loadSkinningMatrices',
       parameterLayout: [
@@ -147,7 +147,7 @@ FABRIC.SceneGraph.registerNodeType('CharacterSkeleton', {
         }
         else {
           var refPose = bones[boneOptions.parent].referencePose;
-          boneOptions.referenceLocalPose = refPose.projectInv(boneOptions.referencePose);
+          boneOptions.referenceLocalPose = refPose.inverse().multiply(boneOptions.referencePose);
         }
       }
       else if (!boneOptions.referencePose && boneOptions.referenceLocalPose) {
@@ -155,7 +155,7 @@ FABRIC.SceneGraph.registerNodeType('CharacterSkeleton', {
           boneOptions.referencePose = boneOptions.referenceLocalPose;
         }
         else {
-          boneOptions.referencePose = bones[boneOptions.parent].referencePose.project(boneOptions.referenceLocalPose);
+          boneOptions.referencePose = boneOptions.referenceLocalPose.multiply(bones[boneOptions.parent].referencePose);
         }
       }
 
@@ -496,7 +496,7 @@ FABRIC.SceneGraph.registerNodeType('CharacterRigDebug', {
       dynamic: true,
       color: FABRIC.RT.rgba(0.0, 1.0, 1.0, 1.0),
       size: 5.0,
-      offsetpose: FABRIC.RT.xfo(),
+      offsetpose: new FABRIC.RT.Xfo(),
       constructInstanceNode: true
       });
 

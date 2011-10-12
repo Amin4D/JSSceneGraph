@@ -78,8 +78,8 @@ $(document).ready(function() {
 
   // create a camera, to be able to see something
   var camera = scene.constructNode('TargetCamera', {
-      position: FABRIC.RT.vec3(15, 15, 15),
-      target: FABRIC.RT.vec3(0, 3, 0),
+      position: new FABRIC.RT.Vec3(15, 15, 15),
+      target: new FABRIC.RT.Vec3(0, 3, 0),
       nearDistance: 0.1,
       farDistance: 200
     });
@@ -121,7 +121,7 @@ $(document).ready(function() {
 
   // create a light node  
   var light = scene.constructNode('PointLight', {
-    position: FABRIC.RT.vec3(-20,100,100)
+    position: new FABRIC.RT.Vec3(-20,100,100)
   });
 
   // create a material node

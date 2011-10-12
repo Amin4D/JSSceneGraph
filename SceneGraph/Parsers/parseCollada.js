@@ -12,6 +12,21 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
   //  console.warn(warningText);
   }
   
+    
+  var makeRT = (function() {
+    var ctor;
+    function RT(args) {
+      return ctor.apply(this, args);
+    }
+    return function() {
+      ctor = arguments[0];
+      var rt = new RT(arguments[1]);
+      rt.__proto__ = ctor.prototype;
+      return rt;
+    }
+  })();
+    
+    
   //////////////////////////////////////////////////////////////////////////////
   // Collada File Parsing Functions
 
@@ -361,6 +376,7 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
       joints: []
     };
     var child = node.firstElementChild;
+    
     while(child){
       switch (child.nodeName) {
         case 'bind_shape_matrix':
@@ -371,8 +387,9 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
               float_array.push(parseFloat(text_array[i]));
             }
           }
-          var matrix44 = FABRIC.RT.mat44.apply(undefined, float_array);
-          skin.bind_shape_matrix = matrix44.transpose();
+          
+          var matrix44 = makeRT(FABRIC.RT.Mat44, float_array);
+          skin.bind_shape_matrix = matrix44;//.transpose();
           break;
         case 'source':
           skin.sources[child.getAttribute('id')] = parseSource(child);
@@ -458,7 +475,7 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
       name:  node.getAttribute('name'),
       type:  node.getAttribute('type'),
       instance_geometry: undefined,
-      xfo: FABRIC.RT.xfo(),
+      xfo: new FABRIC.RT.Xfo(),
       children:[]
     };
     if(parentId){
@@ -471,27 +488,27 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
         case 'translate': {
           var sid = child.getAttribute('sid');
           var str = child.textContent.split(new RegExp("\\s+"));
-          var tr = FABRIC.RT.vec3(parseFloat(str[0]), parseFloat(str[1]), parseFloat(str[2]));
-          nodeData.xfo = nodeData.xfo.multiply(FABRIC.RT.xfo({tr:tr}));
+          var tr = new FABRIC.RT.Vec3(parseFloat(str[0]), parseFloat(str[1]), parseFloat(str[2]));
+          nodeData.xfo = nodeData.xfo.multiply(new FABRIC.RT.Xfo({tr:tr}));
           break;
         }
         case 'rotate': {
           var sid = child.getAttribute('sid');
           var str = child.textContent.split(new RegExp("\\s+"));
-          var q = FABRIC.RT.Quat.makeFromAxisAndAngle(
-                    FABRIC.RT.vec3(
+          var q = new FABRIC.RT.Quat().setFromAxisAndAngle(
+                    new FABRIC.RT.Vec3(
                       parseFloat(str[0]),
                       parseFloat(str[1]),
                       parseFloat(str[2])),
                     Math.degToRad(parseFloat(str[3])));
-          nodeData.xfo = nodeData.xfo.multiply(FABRIC.RT.xfo({ori:q}));
+          nodeData.xfo = nodeData.xfo.multiply(new FABRIC.RT.Xfo({ori:q}));
           break;
         }
         case 'scale': {
           var sid = child.getAttribute('sid');
           var str = child.textContent.split(new RegExp("\\s+"));
-          var sc = FABRIC.RT.vec3(parseFloat(str[0]), parseFloat(str[1]), parseFloat(str[2]));
-          nodeData.xfo = nodeData.xfo.multiply(FABRIC.RT.xfo({sc:sc}));
+          var sc = new FABRIC.RT.Vec3(parseFloat(str[0]), parseFloat(str[1]), parseFloat(str[2]));
+          nodeData.xfo = nodeData.xfo.multiply(new FABRIC.RT.Xfo({sc:sc}));
           break;
         }
         case 'instance_geometry':
@@ -616,7 +633,7 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
   //////////////////////////////////////////////////////////////////////////////
   // SceneGraph Construction
   /*
-  var defaultLight = scene.constructNode('PointLight', { position: FABRIC.RT.vec3(420.0, 1000.0, 600.0) });
+  var defaultLight = scene.constructNode('PointLight', { position: new FABRIC.RT.Vec3(420.0, 1000.0, 600.0) });
   var defaultMaterial = scene.constructNode('PhongMaterial', {
       diffuseColor: FABRIC.RT.rgb(0.8, 0, 0, 1),
       lightNode: defaultLight
@@ -648,14 +665,14 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
         case 'VERTEX':
           meshTriangleSourceData.positions = {
             source: meshData.sources[meshData.vertices.source.slice(1)],
-            constructorFn: FABRIC.RT.vec3
+            constructorFn: FABRIC.RT.Vec3
           };
           processedData.geometryData.positions = [];
           break;
         case 'NORMAL':
           meshTriangleSourceData.normals = {
             source: meshData.sources[sourceName],
-            constructorFn: FABRIC.RT.vec3
+            constructorFn: FABRIC.RT.Vec3
           };
           processedData.geometryData.normals = [];
           break;
@@ -663,7 +680,7 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
           var uvset = 'uvs' + numUVsets;
           meshTriangleSourceData[uvset] = {
             source: meshData.sources[sourceName],
-            constructorFn: FABRIC.RT.vec2
+            constructorFn: FABRIC.RT.Vec2
           };
           processedData.geometryData[uvset] = [];
           processedData.constructionOptions.tangentsFromUV = numUVsets;
@@ -679,6 +696,7 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
     var indicesMapping = {};
     var vcount = 0;
     var vid = 0;
+    
     for(var tid=0; tid<numTriangles; tid++){
       for(var j=0; j<3; j++){
         var attributeDataIndices = trianglesData.indices.slice( vid*attrcount, (vid*attrcount) + attrcount );
@@ -693,7 +711,7 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
             var elementid = attributeDataIndices[vattrid];
             var sourceData = getSourceData(meshTriangleSourceData[inputid].source, elementid);
             var constructorFn = meshTriangleSourceData[inputid].constructorFn;
-            processedData.geometryData[inputid].push(constructorFn.apply(undefined, sourceData));
+            processedData.geometryData[inputid].push(makeRT(constructorFn, sourceData));
             vattrid++;
           }
           processedData.geometryData.indices.push(vcount);
@@ -774,7 +792,7 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
       }
       boneOptions.referenceLocalPose = nodeData.xfo;
       if (boneOptions.parent !== -1) {
-        boneOptions.referencePose = bones[boneOptions.parent].referencePose.project(nodeData.xfo);
+        boneOptions.referencePose = bones[boneOptions.parent].referencePose.multiply(nodeData.xfo);
 
         // set the length of the parent bone based on the child bone local offset.
         if(nodeData.xfo.tr.x > (Math.abs(nodeData.xfo.tr.y) + Math.abs(nodeData.xfo.tr.z)) &&
@@ -805,7 +823,7 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
       name:controllerName+"Skeleton",
       calcReferenceLocalPose: false,
       calcReferenceGlobalPose: false,
-      calcInvMatricies: false
+      calcInvMatrices: false
     });
     skeletonNode.setBones(bones);
     
@@ -1102,8 +1120,8 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
     var invmatrices = [];
     for (var j = 0; j < jointDataSource.data.length; j++) {
       var bindPoseValues = getSourceData(bindPoseDataSource, j);
-      var mat = FABRIC.RT.mat44.apply(undefined, bindPoseValues).transpose();
-      invmatrices[j] = controllerData.bind_shape_matrix.mul(mat);
+      var mat = makeRT(FABRIC.RT.Mat44, bindPoseValues);//.transpose();
+      invmatrices[j] = mat.multiply(controllerData.bind_shape_matrix);
     }
     characterMeshNode.setInvMatrices(invmatrices, jointRemapping);
     
@@ -1179,7 +1197,7 @@ FABRIC.SceneGraph.registerParser('dae', function(scene, assetFile, options) {
           // TODO: materialNode =
         }
         /*
-        var xfo = FABRIC.RT.xfo();
+        var xfo = new FABRIC.RT.Xfo();
         xfo.setFromMat44(controllerNodes.controllerNodes.bind_shape_matrix);
         var transformNode = scene.constructNode('Transform', {
           hierarchical: false,

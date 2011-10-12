@@ -178,8 +178,8 @@ FABRIC.SceneGraph.registerNodeType('AlembicLoadNode', {
           var transformNode = parsedNodes[parentIdentifier];
           /*
           var cameraNode = scene.constructNode('TargetCamera', {
-            position: FABRIC.RT.vec3(10, 20, 20),
-            target: FABRIC.RT.vec3(0, 0, 0)
+            position: new FABRIC.RT.Vec3(10, 20, 20),
+            target: new FABRIC.RT.Vec3(0, 0, 0)
           });
           */
 
@@ -254,7 +254,7 @@ FABRIC.SceneGraph.registerNodeType('AlembicLoadNode', {
           srcFile: 'FABRIC_ROOT/SceneGraph/KL/loadAlembic.kl',
           async: false
         }),0);
-        animationController.pub.setTimeRange(FABRIC.RT.vec2(0, resourceLoadNode.pub.getNumSamples() / 30.0));
+        animationController.pub.setTimeRange(new FABRIC.RT.Vec2(0, resourceLoadNode.pub.getNumSamples() / 30.0));
       }
     });
     

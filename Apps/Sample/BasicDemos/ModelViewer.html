@@ -89,8 +89,8 @@ $(document).ready(function() {
  camera = scene.constructNode('TargetCamera', {
       nearDistance: 1,
       farDistance: 20,
-      target: FABRIC.RT.vec3(-10, -1.2, -0.15),
-      position: FABRIC.RT.vec3(-1.8, 4.77, 7.93)
+      target: new FABRIC.RT.Vec3(-10, -1.2, -0.15),
+      position: new FABRIC.RT.Vec3(-1.8, 4.77, 7.93)
     });
 
   scene.constructNode('CameraManipulator', { targetNode: camera });
@@ -99,7 +99,7 @@ $(document).ready(function() {
 
   var assets = scene.importAssetFile('Models/cow.obj');
   
-  var light = scene.constructNode('PointLight', { position: FABRIC.RT.vec3(420.0, 1000.0, 600.0) });
+  var light = scene.constructNode('PointLight', { position: new FABRIC.RT.Vec3(420.0, 1000.0, 600.0) });
   var phongMaterial = scene.constructNode('PhongMaterial', {
       diffuseColor: FABRIC.RT.rgb(0.8, 0, 0, 1),
       lightNode: light
@@ -108,7 +108,7 @@ $(document).ready(function() {
   scene.constructNode('Instance', {
       transformNode: scene.constructNode('Transform', {
           hierarchical: false,
-          globalXfo: FABRIC.RT.xfo({ tr: FABRIC.RT.vec3(-10, 0, 0) })
+          globalXfo: new FABRIC.RT.Xfo({ tr: new FABRIC.RT.Vec3(-10, 0, 0) })
         }),
       geometryNode: assets.cow,
       materialNode: phongMaterial

@@ -164,7 +164,7 @@ $(document).ready(function() {
       parentMember: 'pose',
       parentMemberIndex: skeleton.getBoneIndex('foot_'+prefixes[i]),
       radius: 0.5,
-      drawOverlayed: true
+      drawOverlaid: true
     });
   }
   
@@ -177,14 +177,14 @@ $(document).ready(function() {
     parentMember: 'pose',
     parentMemberIndex: skeleton.getBoneIndex('hip'),
     radius: 2.5,
-    drawOverLayed: true
+    drawOverlaid: true
   });
   scene.constructNode('ScreenTranslationManipulator', {
     parentNode: rig,
     parentMember: 'pose',
     parentMemberIndex: skeleton.getBoneIndex('hip'),
     radius: 1.25,
-    drawOverLayed: true
+    drawOverlaid: true
   });
   scene.constructNode('3AxisRotationManipulator', {
     parentNode: rig,
@@ -194,7 +194,7 @@ $(document).ready(function() {
     targetMember: fksolver.getLocalXfoMemberName(),
     targetMemberIndex: 0, 
     radius: 1.5,
-    drawOverlayed: true
+    drawOverlaid: true
   });
 
   $('#toggleVisibility').button()

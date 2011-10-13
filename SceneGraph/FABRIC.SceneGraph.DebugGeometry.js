@@ -132,7 +132,7 @@ FABRIC.SceneGraph.registerNodeType('DebugGeometryDraw', {
       ]
     }));
     
-    var vertexColorsMaterial = scene.constructNode('VertexColorMaterial', { drawOverlayed: true });
+    var vertexColorsMaterial = scene.constructNode('VertexColorMaterial', { drawOverlaid: true });
     vertexColorsMaterial.getRedrawEventHandler().appendChildEventHandler(redrawEventHandler);
     
     return debugGeometryDraw;

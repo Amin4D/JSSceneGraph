@@ -659,12 +659,9 @@ FABRIC.SceneGraph.registerNodeType('Instance', {
         constructDefaultTransformNode: true,
         geometryNode: undefined,
         enableRaycasting: false,
-        enableDrawing: true,
-        enableShadowCasting: false
+        enableDrawing: true
       });
-    // TODO: once the 'selector' system can be replaced with JavaScript event
-    // generation from KL, then we can eliminate this dgnode. It currently serves
-    // no other purpose. 
+    
     var instanceNode = scene.constructNode('SceneGraphNode', options),
       dgnode = instanceNode.constructDGNode('DGNode'),
       redrawEventHandler = instanceNode.constructEventHandlerNode('Redraw'),
@@ -688,17 +685,17 @@ FABRIC.SceneGraph.registerNodeType('Instance', {
       var transformdgnode = transformNode.getDGNode();
       redrawEventHandler.setScope('transform', transformdgnode);
       var preProcessorDefinitions = {
-              MODELMATRIX_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('modelMatrix'),
-              MODELMATRIXINVERSE_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('modelMatrixInverse'),
-              VIEWMATRIX_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('viewMatrix'),
-              CAMERAMATRIX_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('cameraMatrix'),
-              CAMERAPOS_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('cameraPos'),
-              PROJECTIONMATRIX_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('projectionMatrix'),
-              PROJECTIONMATRIXINV_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('projectionMatrixInv'),
-              NORMALMATRIX_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('normalMatrix'),
-              MODELVIEW_MATRIX_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('modelViewMatrix'),
-              MODELVIEWPROJECTION_MATRIX_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('modelViewProjectionMatrix')
-            };
+        MODELMATRIX_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('modelMatrix'),
+        MODELMATRIXINVERSE_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('modelMatrixInverse'),
+        VIEWMATRIX_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('viewMatrix'),
+        CAMERAMATRIX_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('cameraMatrix'),
+        CAMERAPOS_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('cameraPos'),
+        PROJECTIONMATRIX_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('projectionMatrix'),
+        PROJECTIONMATRIXINV_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('projectionMatrixInv'),
+        NORMALMATRIX_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('normalMatrix'),
+        MODELVIEW_MATRIX_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('modelViewMatrix'),
+        MODELVIEWPROJECTION_MATRIX_ATTRIBUTE_ID: FABRIC.SceneGraph.getShaderParamID('modelViewProjectionMatrix')
+      };
       if(options.transformNodeIndex == undefined){
         redrawEventHandler.preDescendBindings.append(scene.constructOperator({
             operatorName: 'loadModelProjectionMatrices',
@@ -871,9 +868,6 @@ FABRIC.SceneGraph.registerNodeType('Instance', {
     }
     if (options.materialNode) {
       instanceNode.pub.setMaterialNode(options.materialNode);
-    }
-    if (options.enableShadowCasting) {
-      instanceNode.pub.setIsShadowCasting(true);
     }
     return instanceNode;
   }

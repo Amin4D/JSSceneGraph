@@ -444,7 +444,10 @@ FABRIC.SceneGraph.registerNodeType('Manipulator', {
       manipulating = false,
       color = options.color,
       highlightColor = options.highlightcolor,
-      material = scene.pub.constructNode('FlatMaterial', { color: options.color, drawOverlayed: options.drawOverLayed });
+      material = scene.pub.constructNode('FlatMaterial', {
+        color: options.color,
+        drawOverlaid: options.drawOverlaid
+      });
 
     var parentNode = options.parentNode;
     if (parentNode && parentNode.isTypeOf('Instance')) {
@@ -966,17 +969,17 @@ FABRIC.SceneGraph.registerNodeType('ScreenTranslationManipulator', {
   optionsDesc: {
     radius: 'The size of the screen space translation Manipulator.',
     name: 'The name of the screen space translation Manipulator.',
-    drawOverLayed: 'If set to true the Manipulator will be drawn overlayed.'
+    drawOverLaid: 'If set to true the Manipulator will be drawn overlaid.'
   },
   factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
         radius: 0.5,
         name: 'ScreenTranslationManipulator',
-        drawOverLayed: true
+        drawOverLaid: true
       });
 
     if (!options.geometryNode) {
-      options.geometryNode = scene.pub.constructNode('Sphere', {radius: options.radius, detail: 8.0});
+      options.geometryNode = scene.pub.constructNode('Sphere', { radius: options.radius, detail: 8.0 });
     }
     var manipulatorNode = scene.constructNode('Manipulator', options);
 

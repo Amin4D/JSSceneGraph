@@ -269,6 +269,7 @@ FABRIC.SceneGraph.registerNodeType('GeometryDataCopy', {
     return geometryDataCopyNode;
   }});
 
+/*
 FABRIC.SceneGraph.registerNodeType('InstancedGeometry', {
   briefDesc: 'The InstancedGeometry node is created using an existing Geometry node, and is used to copy the geometry multiple times.',
   detailedDesc: 'When performing instance drawing, GLSL based instancing can cause compatibility issues. By copying the geometry,' +
@@ -391,6 +392,7 @@ FABRIC.SceneGraph.registerNodeType('InstancedGeometry', {
     
     return geometryInstancingNode;
   }});
+*/
 
 FABRIC.SceneGraph.registerNodeType('Points', {
   briefDesc: 'The Points node defines a renderable points geometry type.',
@@ -427,6 +429,7 @@ FABRIC.SceneGraph.registerNodeType('Points', {
           parameterLayout: [
             'raycastData.ray',
             'raycastData.threshold',
+            'instance.drawToggle',
             'transform.' + transformNodeMember,
             'geometry_attributes.positions<>',
             'boundingbox.min',
@@ -476,6 +479,7 @@ FABRIC.SceneGraph.registerNodeType('Lines', {
           parameterLayout: [
             'raycastData.ray',
             'raycastData.threshold',
+            'instance.drawToggle',
             'transform.' + transformNodeMember,
             'geometry_attributes.positions<>',
             'geometry_uniforms.indices',
@@ -526,6 +530,7 @@ FABRIC.SceneGraph.registerNodeType('LineStrip', {
           parameterLayout: [
             'raycastData.ray',
             'raycastData.threshold',
+            'instance.drawToggle',
             'transform.' + transformNodeMember,
             'geometry_attributes.positions<>',
             'geometry_uniforms.indices',
@@ -578,6 +583,7 @@ FABRIC.SceneGraph.registerNodeType('Triangles', {
           entryFunctionName: 'rayIntersectTriangles',
           parameterLayout: [
             'raycastData.ray',
+            'instance.drawToggle',
             'transform.' + transformNodeMember,
             'geometry_attributes.positions<>',
             'geometry_uniforms.indices',

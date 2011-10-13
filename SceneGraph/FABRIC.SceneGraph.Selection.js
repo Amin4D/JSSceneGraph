@@ -170,7 +170,18 @@ FABRIC.SceneGraph.registerManagerType('SelectionManipulationManager', {
       rotationManipulators: [],
       translationManipulators: []
       });
-    
+    var rotationManipulators = options.rotationManipulators;
+    var translationManipulators = options.translationManipulators;
+    var toggleRotatonManipulatorsDisplay = function(drawToggle){
+      for(var i=0; i<rotationManipulators.length; i++){
+        rotationManipulators[i].setDrawToggle(drawToggle);
+      }
+    }
+    var toggleTranslationManipulatorsDisplay = function(drawToggle){
+      for(var i=0; i<translationManipulators.length; i++){
+        translationManipulators[i].setDrawToggle(drawToggle);
+      }
+    }
     // Construct a 'Transform' node that is used as the parent of the Maipulators.
     // This transform node aligns its self with the average of the selected objects.
     // an event is fired on the node when it is manipulated, and it uses this
@@ -179,6 +190,8 @@ FABRIC.SceneGraph.registerManagerType('SelectionManipulationManager', {
       name: 'SelectionManipulationManagerGroupTransform',
       hierarchical: false
     } );
+    
+    
     var selectionManager = options.selectionManager;
     var operatorAssigned = false;
     var generatedOperators = {};
@@ -216,28 +229,20 @@ FABRIC.SceneGraph.registerManagerType('SelectionManipulationManager', {
         operatorAssigned = false;
       }
       if(evt.selection.length==0){
-        for(var i=0; i<options.rotationManipulators.length; i++){
-          options.rotationManipulators[i].setDrawToggle(false);
-        }
-        for(var i=0; i<options.translationManipulators.length; i++){
-          options.translationManipulators[i].setDrawToggle(false);
-        }
+        toggleRotatonManipulatorsDisplay(false);
+        toggleTranslationManipulatorsDisplay(false);
       }
       else{
-        
-        for(var i=0; i<options.rotationManipulators.length; i++){
-          options.rotationManipulators[i].setDrawToggle(true);
-        }
-        for(var i=0; i<options.translationManipulators.length; i++){
-          options.translationManipulators[i].setDrawToggle(true);
-        }
+        toggleRotatonManipulatorsDisplay(true);
+        toggleTranslationManipulatorsDisplay(true);
         
         for(var i=0; i<evt.selection.length; i++){
           var obj = scene.getPrivateInterface(evt.selection[i].getTransformNode());
           groupTransform.getDGNode().setDependency(obj.getDGNode(), 'obj'+i);
         }
         for(var i=evt.selection.length; i<prevSelectionCount; i++){
-        //  groupTransform.getDGNode().setDependency(undefined, 'obj'+i);
+          // TODO: uncomment this once we have removeDependency
+        //  groupTransform.getDGNode().removeDependency('obj'+i);
         }
         groupTransform.getDGNode().bindings.append(generateTransformOperator(evt.selection));
         prevSelectionCount = evt.selection.length;
@@ -267,7 +272,7 @@ FABRIC.SceneGraph.registerManagerType('SelectionManipulationManager', {
       }
     };
     
-    if(options.rotationManipulators.length == 0){
+    if(rotationManipulators.length == 0){
       var rotManip = scene.pub.constructNode('RotationManipulator', {
           name: options.name + 'RotateYaxisManipulator',
           color: FABRIC.RT.rgb(0, 0.8, 0, 1),
@@ -277,9 +282,9 @@ FABRIC.SceneGraph.registerManagerType('SelectionManipulationManager', {
         });
       rotManip.addEventListener('dragstart', dragStartFn);
       rotManip.addEventListener('drag', dragFn);
-      options.rotationManipulators.push(rotManip);
+      rotationManipulators.push(rotManip);
     }
-    if(options.translationManipulators.length == 0){
+    if(translationManipulators.length == 0){
       var transManip1 = scene.pub.constructNode('LinearTranslationManipulator', {
           name: options.name + 'TranslateYaxisManipulator',
           color: FABRIC.RT.rgb(0, 0.8, 0),
@@ -290,7 +295,7 @@ FABRIC.SceneGraph.registerManagerType('SelectionManipulationManager', {
         });
       transManip1.addEventListener('dragstart', dragStartFn);
       transManip1.addEventListener('drag', dragFn);
-      options.translationManipulators.push(transManip1);
+      translationManipulators.push(transManip1);
       
       var transManip2 = scene.pub.constructNode('ScreenTranslationManipulator', {
           name: options.name + 'ScreenTranslationManipulator',
@@ -302,41 +307,30 @@ FABRIC.SceneGraph.registerManagerType('SelectionManipulationManager', {
         });
       transManip2.addEventListener('dragstart', dragStartFn);
       transManip2.addEventListener('drag', dragFn);
-      options.translationManipulators.push(transManip2);
+      translationManipulators.push(transManip2);
     }
+    
     var selectionManipulationManager = {
       pub:{
         setMode: function(mode){
           switch(mode){
-            case 0:
-              for(vari=0; i<options.rotationManipulators.length; i++){
-                options.rotationManipulators[i].setDrawToggle(false);
-              }
-              for(vari=0; i<options.translationManipulators.length; i++){
-                options.translationManipulators[i].setDrawToggle(false);
-              }
-              break
-            case 1:
-              for(vari=0; i<options.rotationManipulators.length; i++){
-                options.rotationManipulators[i].setDrawToggle(true);
-              }
-              for(vari=0; i<options.translationManipulators.length; i++){
-                options.translationManipulators[i].setDrawToggle(false);
-              }
-              break
-            case 2:
-              for(vari=0; i<options.rotationManipulators.length; i++){
-                options.rotationManipulators[i].setDrawToggle(false);
-              }
-              for(vari=0; i<options.translationManipulators.length; i++){
-                options.translationManipulators[i].setDrawToggle(true);
-              }
-              break
+          case 0:
+            toggleRotatonManipulatorsDisplay(false);
+            toggleTranslationManipulatorsDisplay(false);
+            break
+          case 1:
+            toggleRotatonManipulatorsDisplay(true);
+            toggleTranslationManipulatorsDisplay(false);
+            break
+          case 2:
+            toggleRotatonManipulatorsDisplay(false);
+            toggleTranslationManipulatorsDisplay(true);
+            break
           }
         }
       }
     }
-    
+    selectionManipulationManager.pub.setMode(0);
     return selectionManipulationManager;
   }});
 

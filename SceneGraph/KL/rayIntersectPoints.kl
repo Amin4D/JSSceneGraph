@@ -8,11 +8,15 @@ operator rayIntersectPoints(
   io RayIntersection intersection,
   io Ray ray,
   io Scalar threshold,
+  io Boolean drawToggle,
   io Xfo globalXfo,
   io Vec3 positions[],
   io Vec3 bboxmin,
   io Vec3 bboxmax
 ) {
+  if(!drawToggle){
+    return;
+  }
   Mat44 globalMat44 = globalXfo.toMat44();
   intersection.distance = 1.0e20;
   var Vec3 ray_P2 = rayOri + rayDir;

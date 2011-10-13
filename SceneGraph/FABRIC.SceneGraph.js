@@ -542,12 +542,14 @@ FABRIC.SceneGraph = {
       // We store a map of arrays of event listener functions.
       var eventListeners = {};
       obj.pub.addEventListener = function(type, fn) {
+        if(!fn) throw "Listener Function not provided";
         if (!eventListeners[type]) {
           eventListeners[type] = [];
         }
         eventListeners[type].push(fn);
       };
       obj.pub.removeEventListener = function(type, fn) {
+        if(!fn) throw "Listener Function not provided";
         if (eventListeners[type]) {
           var id = eventListeners[type].indexOf(fn);
           if (id !== -1) {

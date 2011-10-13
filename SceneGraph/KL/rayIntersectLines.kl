@@ -14,12 +14,16 @@ operator rayIntersectLines(
   io RayIntersection intersection,
   io Ray ray,
   io Scalar threshold,
+  io Boolean drawToggle,
   io Xfo globalXfo,
   io Vec3 positions<>,
   io Integer indices[],
   io Vec3 bboxmin,
   io Vec3 bboxmax
 ) {
+  if(!drawToggle){
+    return;
+  }
   Mat44 globalMat44 = globalXfo.toMat44();
   Mat44 invGlobalMat44 = globalMat44.inverse();
   Ray objRay;
@@ -56,12 +60,16 @@ operator rayIntersectLineStrip(
   io RayIntersection intersection,
   io Ray ray,
   io Scalar threshold,
+  io Boolean drawToggle,
   io Xfo globalXfo,
   io Vec3 positions[],
   io Integer indices[],
   io Vec3 bboxmin,
   io Vec3 bboxmax
 ) {
+  if(!drawToggle){
+    return;
+  }
   Mat44 globalMat44 = globalXfo.toMat44();
   Mat44 invGlobalMat44 = globalMat44.inverse();
   Ray objRay;

@@ -13,12 +13,12 @@ operator rayIntersectPoints(
   io Vec3 bboxmin,
   io Vec3 bboxmax
 ) {
-  Mat44 globalMat44 = globalXfo;
+  Mat44 globalMat44 = globalXfo.toMat44();
   intersection.distance = 1.0e20;
   var Vec3 ray_P2 = rayOri + rayDir;
   for (var Integer i = 0; i < positions.size(); i++) {
-    var Vec3 vert = positions[i] * globalMat44;
-    var Scalar thisDist = ray.distToPoint(vert, rayOri, ray_P2);
+    var Vec3 vert = globalMat44 * positions[i];
+    var Scalar thisDist = ray.distanceToPoint(vert, rayOri, ray_P2);
     if (thisDist < threshold) {
       select = true;
       if (thisDist < intersection.distance) {

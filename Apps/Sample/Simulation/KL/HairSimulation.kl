@@ -104,27 +104,27 @@ operator simulateHair(
     Scalar weight = boneWeights[index].x;
     Size bone = Size(boneIds[index].x);
     
-    position = pose[bone].transform(localposition[index]) * weight;
-    normal = pose[bone].ori.transform(localnormal[index]) * weight;
+    position = pose[bone].transformVector(localposition[index]) * weight;
+    normal = pose[bone].ori.rotateVector(localnormal[index]) * weight;
 
     weight = boneWeights[rootIndex].y;
     if(weight > 0.00001)
     {
       bone = Size(boneIds[rootIndex].y);
-      position += pose[bone].transform(localposition[index]) * weight;
-      normal += pose[bone].ori.transform(localnormal[index]) * weight;
+      position += pose[bone].transformVector(localposition[index]) * weight;
+      normal += pose[bone].ori.rotateVector(localnormal[index]) * weight;
       weight = boneWeights[rootIndex].z;
       if(weight > 0.00001)
       {
         bone = Size(boneIds[rootIndex].z);
-        position += pose[bone].transform(localposition[index]) * weight;
-        normal += pose[bone].ori.transform(localnormal[index]) * weight;
+        position += pose[bone].transformVector(localposition[index]) * weight;
+        normal += pose[bone].ori.rotateVector(localnormal[index]) * weight;
         weight = boneWeights[rootIndex].t;
         if(weight > 0.00001)
         {
           bone = Size(boneIds[rootIndex].t);
-          position += pose[bone].transform(localposition[index]) * weight;
-          normal += pose[bone].ori.transform(localnormal[index]) * weight;
+          position += pose[bone].transformVector(localposition[index]) * weight;
+          normal += pose[bone].ori.rotateVector(localnormal[index]) * weight;
         }
       }
     }
@@ -135,7 +135,7 @@ operator simulateHair(
     position += prevnormal * stiffness[index];
     position.y -= gravity[index] * segmentlength[index];
     normal = (position - prevposition);
-    var Scalar length = normal.norm();
+    var Scalar length = normal.length();
     if(length > 0.0001)
     {
       normal *= segmentlength[index] / length;

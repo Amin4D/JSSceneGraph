@@ -86,15 +86,15 @@ $(document).ready(function() {
 
   // Create a camera to draw the scene from
   var camera = scene.constructNode('TargetCamera', {
-      position: FABRIC.RT.vec3(0, 3, 12).scale(3),
-      target: FABRIC.RT.vec3(0, 2, 0),
+      position: new FABRIC.RT.Vec3(0, 3, 12).multiplyScalar(3),
+      target: new FABRIC.RT.Vec3(0, 2, 0),
       nearDistance: 0.1,
       farDistance: 200
     });
   scene.constructNode('CameraManipulator', { targetNode: camera });
   viewport.setCameraNode(camera);
 
-  var light = scene.constructNode('PointLight', { position: FABRIC.RT.vec3(420.0, 1000.0, 600.0) });
+  var light = scene.constructNode('PointLight', { position: new FABRIC.RT.Vec3(420.0, 1000.0, 600.0) });
 
   var phongMaterial = scene.constructNode('PhongMaterial', {
     diffuseColor: FABRIC.RT.rgb(0.0, 0.0, 1.0),
@@ -144,7 +144,7 @@ $(document).ready(function() {
             shapeName: 'Cow',
             rigidBody: new FABRIC.RT.BulletRigidBody({
               transform: FABRIC.RT.xfo({
-                tr: FABRIC.RT.vec3(0,3.0 + i * 8.0, 0)
+                tr: new FABRIC.RT.Vec3(0,3.0 + i * 8.0, 0)
               }),
               friction: 0.8,
               restitution: 0.7
@@ -165,7 +165,7 @@ $(document).ready(function() {
         for(var i=0;i<25;i++) {
           bodies.push(new FABRIC.RT.BulletRigidBody({
             transform: FABRIC.RT.xfo({
-              tr: FABRIC.RT.vec3(0,3.0 + i * 8.0, 0)
+              tr: new FABRIC.RT.Vec3(0,3.0 + i * 8.0, 0)
             }),
             friction: 0.8,
             restitution: 0.7

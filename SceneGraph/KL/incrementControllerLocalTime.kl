@@ -36,7 +36,7 @@ operator incrementControllerLocalTime(
     case 0: // Linear
       break;
     case 1: // Loop
-      localTime = timerange.x + ((localTime-timerange.x) % (timerange.y-timerange.x));
+      localTime = timerange.x + abs((localTime-timerange.x) % (timerange.y-timerange.x));
       break;
     case 2: // Clamp
       localTime = timerange.x;

@@ -39,7 +39,7 @@ operator raycastBulletWorld(
   if(world.hit) {
     select = true;
     intersection.point = world.hitPosition;
-    intersection.distance = (ray.start - world.hitPosition).norm();
+    intersection.distance = (ray.start - world.hitPosition).length();
   }
 }
 

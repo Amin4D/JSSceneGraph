@@ -30,7 +30,6 @@
     <script type="text/javascript" src="../../../SceneGraph/RT/OGLShaderProgram.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/RT/OGLTexture2D.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/RT/OGLBuffer.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/RT/AlembicHandle.js" charset="utf-8"></script>
 
     <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.Geometry.js" charset="utf-8"></script>
@@ -120,8 +119,6 @@ FABRIC.SceneGraph.registerNodeType('ShapeMixer', {
     }
     code += "}\n"
     
-    console.log(code);
-    
     var parameterLayout = [
       'self.positions',
       'self.original_positions',
@@ -132,8 +129,6 @@ FABRIC.SceneGraph.registerNodeType('ShapeMixer', {
       parameterLayout.push('shapeMixer.'+name);
       parameterLayout.push(name+".positions<>");
     }
-
-    console.log(parameterLayout);
 
     attributesdgnode.bindings.append(scene.constructOperator({
       operatorName: 'mixShapes',
@@ -182,14 +177,14 @@ $(document).ready(function() {
   var camera = scene.constructNode('TargetCamera', {
       nearDistance: 1,
       farDistance: 2000,
-      position: FABRIC.RT.vec3(1, 2, 6),
-      target: FABRIC.RT.vec3(0, 1.3, 0),
+      position: new FABRIC.RT.Vec3(1, 2, 6),
+      target: new FABRIC.RT.Vec3(0, 1.3, 0),
     });
 
   scene.constructNode('CameraManipulator', { targetNode: camera });
   viewport.setCameraNode(camera);
 
-  var light = scene.constructNode('PointLight', { position: FABRIC.RT.vec3(10, 30, 100).scale(3) });
+  var light = scene.constructNode('PointLight', { position: new FABRIC.RT.Vec3(10, 30, 100).multiplyScalar(3) });
 
   $('#loadingDialog').dialog({
     modal: true
@@ -204,9 +199,9 @@ $(document).ready(function() {
   assets[resourceName].addOnLoadSuccessCallback(function(){
       
       var shaderColor = {
-        '/head/headShape': FABRIC.RT.rgb(1.0, 0.6, 0.0, 1),
-        '/l_eye/l_eyeShape': FABRIC.RT.rgb(0.0, 0.0, 0.0, 1),
-        '/r_eye/r_eyeShape': FABRIC.RT.rgb(0.0, 0.0, 0.0, 1)
+        '/headXfo/head': FABRIC.RT.rgb(1.0, 0.6, 0.0, 1),
+        '/l_eyeXfo/l_eye': FABRIC.RT.rgb(0.0, 0.0, 0.0, 1),
+        '/r_eyeXfo/r_eye': FABRIC.RT.rgb(0.0, 0.0, 0.0, 1)
       };
       
       // loop over all assets and create an instance
@@ -229,12 +224,12 @@ $(document).ready(function() {
       var shapes = {};
       for(var i=0;i<shapeNames.length;i++) {
         var name = shapeNames[i];
-        shapes[name] = assets[resourceName].getParsedNodes()['/'+name+'/'+name+'Shape'];
+        shapes[name] = assets[resourceName].getParsedNodes()['/'+name+'Xfo/'+name];
       }
       
       // construct the shape mixer
       var mixer = scene.constructNode('ShapeMixer', {
-        target: assets[resourceName].getParsedNodes()['/head/headShape'],
+        target: assets[resourceName].getParsedNodes()['/headXfo/head'],
         shapes: shapes
       });
       

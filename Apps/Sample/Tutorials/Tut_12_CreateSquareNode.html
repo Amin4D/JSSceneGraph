@@ -70,10 +70,10 @@ FABRIC.SceneGraph.registerNodeType('Square', {
     
     attributes.setCount(4);
     var attributesData = attributes.getBulkData();
-    attributesData.positions[0] = FABRIC.RT.vec3(-1,0,-1);
-    attributesData.positions[1] = FABRIC.RT.vec3(1,0,-1);
-    attributesData.positions[2] = FABRIC.RT.vec3(1,0,1);
-    attributesData.positions[3] = FABRIC.RT.vec3(-1,0,1);
+    attributesData.positions[0] = new FABRIC.RT.Vec3(-1,0,-1);
+    attributesData.positions[1] = new FABRIC.RT.Vec3(1,0,-1);
+    attributesData.positions[2] = new FABRIC.RT.Vec3(1,0,1);
+    attributesData.positions[3] = new FABRIC.RT.Vec3(-1,0,1);
     
     var uniformsData = uniforms.getBulkData();
     uniformsData.indices[0].push(0);
@@ -102,8 +102,8 @@ FABRIC.SceneGraph.registerNodeType('Square', {
 
   // create a camera, to be able to see something
   var camera = scene.constructNode('TargetCamera', {
-      position: FABRIC.RT.vec3(15, 15, 15),
-      target: FABRIC.RT.vec3(0, 0, 0)
+      position: new FABRIC.RT.Vec3(15, 15, 15),
+      target: new FABRIC.RT.Vec3(0, 0, 0)
     });
   viewport.setCameraNode(camera);
   
@@ -117,7 +117,7 @@ FABRIC.SceneGraph.registerNodeType('Square', {
   // create a transform node
   var transform = scene.constructNode('Transform', {
     hierarchical: false,
-    globalXfo: FABRIC.RT.xfo({ tr: FABRIC.RT.vec3(0, 2, 0) })
+    globalXfo: new FABRIC.RT.Xfo({ tr: new FABRIC.RT.Vec3(0, 2, 0) })
   })
   
   // create a geometry node

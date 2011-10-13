@@ -57,9 +57,36 @@ s.parentNode.insertBefore(ga, s);
  })();
 
 </script>
-
     <script type="text/javascript">
 $(document).ready(function() {
+
+  $('#play').button({
+      text: true,
+      icons: {
+        primary: 'ui-icon-play'
+      }
+    });
+  $('#step').button({
+    text: true,
+    icons: {
+      primary: 'ui-icon-step'
+    }
+  });  
+
+  $('#importModel').button().change(function(e) {
+      // TODO: Enable file importing
+        console.log($(this).val());
+      var assets = scene.importAssetFile($(this).val());
+      for (i in assets) {
+        assets[i].setMaterialNode(redMaterial);
+        drawNode.setGeometryNode(assets[i]);
+      }
+
+      var errors = scene.getErrors();
+      if (errors.length > 0) {
+        throw (errors.toString());
+      }
+    });
 
   var scene = FABRIC.SceneGraph.createScene();
   var viewport = scene.constructNode('Viewport', { windowElement: document.getElementById('FabricContainer') });
@@ -72,51 +99,138 @@ $(document).ready(function() {
   var camera = scene.constructNode('TargetCamera', {
       nearDistance: 1,
       farDistance: 2000,
-      position: FABRIC.RT.vec3(10,10,10),
-      target: FABRIC.RT.vec3(0, 0, 0),
+      position: new FABRIC.RT.Vec3(.2, 1, 1).multiplyScalar(20),
+      target: new FABRIC.RT.Vec3(0, 1, 0).multiplyScalar(8),
     });
 
   scene.constructNode('CameraManipulator', { targetNode: camera });
   viewport.setCameraNode(camera);
 
-  var light = scene.constructNode('PointLight', { position: FABRIC.RT.vec3(10, 30, 100).scale(3) });
+  scene.constructNode('Instance', {
+          geometryNode: scene.constructNode('Grid', {
+              size_x: 120.0,
+              size_z: 120.0,
+              sections_x: 32,
+              sections_z: 32 }),
+          materialNode: scene.constructNode('FlatMaterial')
+      });
 
-  var phongMaterial = scene.constructNode('PhongMaterial', {
-    diffuseColor: FABRIC.RT.rgb(0.5, 0.5, 0.5, 1),
+  var light = scene.constructNode('PointLight', { position: new FABRIC.RT.Vec3(10, 10, 4).multiplyScalar(30) });
+
+  var greyMaterial = scene.constructNode('PhongMaterial', {
+    diffuseColor: FABRIC.RT.rgb(0.7, 0.7, 0.7, 1),
+    specularColor: FABRIC.RT.rgb(0.15, 0.15, 0.15, 1),
     lightNode: light,
   });
+  var blackMaterial = scene.constructNode('PhongMaterial', {
+    diffuseColor: FABRIC.RT.rgb(0.05, 0.05, 0.05, 1),
+    specularColor: FABRIC.RT.rgb(0.15, 0.15, 0.15, 1),
+    lightNode: light,
+  });
+  var greenMaterial = scene.constructNode('PhongMaterial', {
+    diffuseColor: FABRIC.RT.rgb(0.1, 0.7, 0.1, 1),
+    specularColor: FABRIC.RT.rgb(0.15, 0.15, 0.15, 1),
+    lightNode: light,
+  });
+  
+  // materials
+  var materialLookup = {};
+  materialLookup["/r_legC_GEOXfo/r_legC_GEO"] = greyMaterial;
+  materialLookup["/r_legBPneumatic_GEOXfo/r_legBPneumatic_GEO"] = blackMaterial;
+  materialLookup["/r_legB_GEOXfo/r_legB_GEO"] = greyMaterial;
+  materialLookup["/r_legAPneumaticTop_GEOXfo/r_legAPneumaticTop_GEO"] = blackMaterial;
+  materialLookup["/r_legAPneumaticBottom_GEOXfo/r_legAPneumaticBottom_GEO"] = blackMaterial;
+  materialLookup["/r_legA_GEOXfo/r_legA_GEO"] = greyMaterial;
+  materialLookup["/r_foot_GEOXfo/r_foot_GEO"] = blackMaterial;
+  materialLookup["/m_soldier_GEOXfo/m_soldier_GEO"] = greenMaterial;
+  materialLookup["/m_head_GEOXfo/m_head_GEO"] = greyMaterial;
+  materialLookup["/m_gunHolder_GEOXfo/m_gunHolder_GEO"] = greyMaterial;
+  materialLookup["/m_gun_GEOXfo/m_gun_GEO"] = blackMaterial;
+  materialLookup["/m_base_GEOXfo/m_base_GEO"] = greyMaterial;
+  materialLookup["/l_legC_GEOXfo/l_legC_GEO"] = greyMaterial;
+  materialLookup["/l_legBPneumatic_GEOXfo/l_legBPneumatic_GEO"] = blackMaterial;
+  materialLookup["/l_legB_GEOXfo/l_legB_GEO"] = greyMaterial;
+  materialLookup["/l_legAPneumaticTop_GEOXfo/l_legAPneumaticTop_GEO"] = blackMaterial;
+  materialLookup["/l_legAPneumaticBottom_GEOXfo/l_legAPneumaticBottom_GEO"] = blackMaterial;
+  materialLookup["/l_legA_GEOXfo/l_legA_GEO"] = greyMaterial
+  materialLookup["/l_foot_GEOXfo/l_foot_GEO"] = blackMaterial;
+  
+  // create the alembic content, and fire the load once it is loaded
+  var resourceName = 'walker';
+  var assets = scene.importAssetFile('Models/'+resourceName+'.abc', {
+    dependentNode: viewport,
+    onLoadSuccessCallback: function(){
+
+      // init the camera's html      
+      var cameraListHtml = "<option value='userCamera'>Free Camera</option>";
+      
+      // loop over all assets and create an instance
+      for(var name in assets[resourceName].getParsedNodes()) {
+        if(assets[resourceName].getParsedNodes()[name].isTypeOf('Triangles'))
+        {
+          var inst = scene.constructNode('Instance', {
+            transformNode: assets[resourceName].getCorrespondingTransform(name),
+            geometryNode: assets[resourceName].getParsedNodes()[name],
+            materialNode: materialLookup[name]
+          });
+        }
+        else if(assets[resourceName].getParsedNodes()[name].isTypeOf('Camera')) {
+          
+          // add the camera as an option to the list
+          cameraListHtml += "<option value='"+name+"'>"+name.substring(name.lastIndexOf('/')+1,1000)+"</option>"
+        }
+        
+        $('#cameralist').html(cameraListHtml).change( function(ui) {
+          var cameraName = $('#cameralist').attr('value');
+          if(cameraName == 'userCamera')
+            viewport.setCameraNode(camera);
+          else
+            viewport.setCameraNode(assets[resourceName].getParsedNodes()[$('#cameralist').attr('value')]);
+          viewport.redraw();
+        });
+        
+      }
+      
+      $('#loadingDialog').dialog('close');
+      viewport.redraw();
+    }
+  });
+
+  $('#play').button()
+    .click(function() {
+      var options;
+      if ($(this).text() == 'Play') {
+        $(this).button('option', {
+          label: 'Pause',
+          icons: {
+            primary: 'ui-icon-pause'
+          }
+        });
+        scene.animation.play();
+      } else {
+        $(this).button('option', {
+          label: 'Play',
+          icons: {
+            primary: 'ui-icon-play'
+          }
+        });
+        scene.animation.pause();
+      }
+    });
+  $('#step').button()
+    .click(function() {
+      scene.animation.step();
+    });
   
   $('#loadingDialog').dialog({
     modal: true
   });
-
-  // create the alembic content, and fire the load once it is loaded
-  var resourceName = 'cube';
-  var assets = scene.importAssetFile('Models/'+resourceName+'.abc', {
-    dependentNode: viewport
-  });
-
-  assets[resourceName].addOnLoadSuccessCallback(function(){
-    // loop over all assets and create an instance
-    for(var name in assets[resourceName].getParsedNodes()) {
-      if(assets[resourceName].getParsedNodes()[name].isTypeOf('Triangles'))
-      {
-        scene.constructNode('Instance', {
-          transformNode: assets[resourceName].getCorrespondingTransform(name),
-          geometryNode: assets[resourceName].getParsedNodes()[name],
-          materialNode: phongMaterial
-        });
-      }
-    }
-    $('#loadingDialog').dialog('close');
-    viewport.redraw();
-  });
-
   FABRIC.appendOnResolveAsyncTaskCallback(function(label, nbRemaining, doneWeight, totalWeight) {
     $('#loadingProgressBar').progressbar({
       value: (1.0-(doneWeight/totalWeight))*100
     });
     if (nbRemaining===0) {
+      viewport.redraw();
       var errors = scene.getErrors();
       if (errors.length > 0) {
         throw (errors.toString());
@@ -149,11 +263,21 @@ $(document).ready(function() {
             <h2>INFO</h2>
             <div class="content">
               Alembic Viewer.<br>
-              The cube seen in this sample is loaded using the Alembic.IO file format. This illustrates the most
-              simple case of using a powerful streamable 3d format inside Fabric.
+              The model in this demo has been exported from Autodesk Maya. Switch cameras by clicking
+              on the select list below.
             </div><!--content-->
           </div><!--box-->
 
+                  <div class="box">
+                    <h2>CONTROLS</h2>
+                    <div class="content">
+                        <button id="play" style="margin-top:10px;">Play</button>
+                        <button id="step" style="margin-top:10px;">Step</button>
+                        <select multi size=3 id='cameralist' style='width: 100px; margin-top: 10px'>
+                          <option value='userCamera'>Free Camera</option>
+                        </select>
+                    </div><!--content-->
+                </div><!--box-->
         </div><!--sidebar-->
       </div> <!--editor-->
     </div><!--wrapper-->

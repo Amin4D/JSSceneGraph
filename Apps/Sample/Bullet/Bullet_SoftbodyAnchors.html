@@ -89,8 +89,8 @@ $(document).ready(function() {
 
   // Create a camera to draw the scene from
   var camera = scene.constructNode('TargetCamera', {
-      position: FABRIC.RT.vec3(0, 3, 12).scale(3),
-      target: FABRIC.RT.vec3(0, 2, 0),
+      position: new FABRIC.RT.Vec3(0, 3, 12).multiplyScalar(3),
+      target: new FABRIC.RT.Vec3(0, 2, 0),
       nearDistance: 0.1,
       farDistance: 200
     });
@@ -126,8 +126,8 @@ $(document).ready(function() {
       shapeName: 'Box',
       rigidBody: new FABRIC.RT.BulletRigidBody({
         transform: FABRIC.RT.xfo({
-          tr: FABRIC.RT.vec3(-8,10,0),
-          sc: FABRIC.RT.vec3(1.0,1.0,1.0).scale(0.5),
+          tr: new FABRIC.RT.Vec3(-8,10,0),
+          sc: new FABRIC.RT.Vec3(1.0,1.0,1.0).multiplyScalar(0.5),
         }),
         friction: 0.8,
         restitution: 0.7,
@@ -144,8 +144,8 @@ $(document).ready(function() {
       shapeName: 'Box',
       rigidBody: new FABRIC.RT.BulletRigidBody({
         transform: FABRIC.RT.xfo({
-          tr: FABRIC.RT.vec3(8,10,0),
-          sc: FABRIC.RT.vec3(1.0,1.0,1.0).scale(0.5),
+          tr: new FABRIC.RT.Vec3(8,10,0),
+          sc: new FABRIC.RT.Vec3(1.0,1.0,1.0).multiplyScalar(0.5),
         }),
         friction: 0.8,
         restitution: 0.7,
@@ -179,7 +179,7 @@ $(document).ready(function() {
       var softBodyNode = bulletWorldNode.addSoftBody('Cow',new FABRIC.RT.BulletSoftBody({
         trianglesNode: parsedNodes['/polymsh/polymshShape'],
         transform: FABRIC.RT.xfo({
-          tr: FABRIC.RT.vec3(0,10,0),
+          tr: new FABRIC.RT.Vec3(0,10,0),
         }),
         recover: 0.01,
         //conservation: 0.6,

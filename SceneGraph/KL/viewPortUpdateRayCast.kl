@@ -26,20 +26,17 @@ operator viewPortUpdateRayCast(
   // Transform the origin from camera local to world space
   var Mat44 camInv = camera.inverse();
 
-  ray.start = Vec3(0.0, 0.0, 0.0) * camInv;
+  ray.start = camInv * Vec3(0.0, 0.0, 0.0);
 
   // Get the projected window coordinate on the near plane
   // See http://www.songho.ca/opengl/gl_projectionmatrix.html
   // for details.
   var Mat44 projInv = projection.inverse();
 
-  ray.direction = Vec3(sx, - sy, - 1.0) * projInv;
+  ray.direction = projInv * Vec3(sx, - sy, - 1.0);
 
   // And from projection space to camera local.
   // - We nuke the translation part since we're transforming a vector.
-  camInv.row3.x = 0.0;
-  camInv.row3.y = 0.0;
-  camInv.row3.z = 0.0;
-  ray.direction = ray.direction * camInv;
-  ray.direction = ray.direction.unit();
+  camInv.zeroTranslation();
+  ray.direction = (camInv * ray.direction).unit();
 }

@@ -31,11 +31,11 @@ operator cylinderOp(
   pistonPosition.z = axialShift;
 
   pistonxfo.tr = pistonPosition;
-  pistonxfo.ori = axisAndAngleToQuat( Vec3( 0.0, 0.0, 1.0 ), -cylinderAngle );
+  pistonxfo.ori.setFromAxisAndAngle( Vec3( 0.0, 0.0, 1.0 ), -cylinderAngle );
 
   conrodxfo.tr = pistonPosition;
 
   var Scalar conrodAngle = 1.57079633 - acos( sin( phase ) * crankArmLength / conrodLength );
 
-  conrodxfo.ori = axisAndAngleToQuat( Vec3( 0.0, 0.0, 1.0 ), -(cylinderAngle - conrodAngle) );
+  conrodxfo.ori.setFromAxisAndAngle( Vec3( 0.0, 0.0, 1.0 ), -(cylinderAngle - conrodAngle) );
 }

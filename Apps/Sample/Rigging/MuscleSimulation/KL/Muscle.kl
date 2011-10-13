@@ -85,13 +85,13 @@ operator simulateMuscle(
       envelopedXfos[i].tr += xfo.tr * pointEnvelopWeights[i].y;
       envelopedXfos[i].ori += xfo.ori * pointEnvelopWeights[i].y;
     }
-    envelopedXfos[i].ori.normalize();
+    envelopedXfos[i].ori.setUnit();
   }
   
   // Measure the distance from the 2 anchor points of the muscle.
   // Use this to look up the curve and calculate the current contraction of the muscle
-  Scalar contractionFactor = envelopedXfos[0].tr.dist(envelopedXfos[envelopedXfos.size()-1].tr) /
-                               initialXfos[0].tr.dist(initialXfos[initialXfos.size()-1].tr);
+  Scalar contractionFactor = envelopedXfos[0].tr.distanceTo(envelopedXfos[envelopedXfos.size()-1].tr) /
+                               initialXfos[0].tr.distanceTo(initialXfos[initialXfos.size()-1].tr);
   Integer keyIndex = 0;
   contractionFactor = evaluateKeyframeAnimationTrack(contractionCurve, contractionFactor, keyIndex);
   
@@ -115,8 +115,8 @@ operator simulateMuscle(
       // When under contraction, we remove gravity.
       // Its a bit of a hack to exagerate the strength of the contraction
       simulatedXfos[i].tr += gravityDisp + (simulatedXfos[i].tr - pointPositionsPrevUpdate[i]);
-      simulatedXfos[i].tr = envelopedXfos[i].tr.lerp(simulatedXfos[i].tr, flexibilityWeights[i]);
-      simulatedXfos[i].ori = envelopedXfos[i].ori.nlerp(simulatedXfos[i].ori, flexibilityWeights[i]);
+      simulatedXfos[i].tr = envelopedXfos[i].tr.linearInterpolate(simulatedXfos[i].tr, flexibilityWeights[i]);
+      simulatedXfos[i].ori = envelopedXfos[i].ori.linearInterpolate(simulatedXfos[i].ori, flexibilityWeights[i]);
     }
   }
   
@@ -154,15 +154,16 @@ operator simulateMuscle(
   /////////////////////////////////////////////////
   // Frame Alignement
   // Align the quaternions to the muscle segments
+  Quat q;
   for(i=0; i<simulatedXfos.size(); i++){
     if(i==0){
-    //  simulatedXfos[i].ori = envelopedXfos[i].ori * makeQuatFrom2Vectors( envelopedXfos[i].ori.rotateVector(Vec3(1.0, 0.0, 0.0)),
+    //  simulatedXfos[i].ori = envelopedXfos[i].ori * q.setFrom2Vectors( envelopedXfos[i].ori.rotateVector(Vec3(1.0, 0.0, 0.0)),
     //                                             (simulatedXfos[i+1].tr - simulatedXfos[i].tr).unit());
     }else if(i==(simulatedXfos.size()-1)){
-    //  simulatedXfos[i].ori = envelopedXfos[i].ori * makeQuatFrom2Vectors( envelopedXfos[i].ori.rotateVector(Vec3(1.0, 0.0, 0.0)),
+    //  simulatedXfos[i].ori = envelopedXfos[i].ori * q.setFrom2Vectors( envelopedXfos[i].ori.rotateVector(Vec3(1.0, 0.0, 0.0)),
     //                                             (simulatedXfos[i].tr - simulatedXfos[i-1].tr).unit());
     }else{
-      simulatedXfos[i].ori = envelopedXfos[i].ori * makeQuatFrom2Vectors( envelopedXfos[i].ori.rotateVector(Vec3(1.0, 0.0, 0.0)),
+      simulatedXfos[i].ori = envelopedXfos[i].ori * q.setFrom2Vectors( envelopedXfos[i].ori.rotateVector(Vec3(1.0, 0.0, 0.0)),
                                                  (simulatedXfos[i+1].tr - simulatedXfos[i-1].tr).unit());
     }
   }
@@ -174,12 +175,12 @@ operator simulateMuscle(
   for(i=0; i<simulatedXfos.size(); i++){
     Scalar compression = 0.0;
     if(i>0){
-      compression += (simulatedXfos[i].tr.dist(simulatedXfos[i-1].tr) / segmentLengths[i-1]);
+      compression += (simulatedXfos[i].tr.distanceTo(simulatedXfos[i-1].tr) / segmentLengths[i-1]);
     }else{
       compression += 1.0;
     }
     if(i<simulatedXfos.size()-1){
-      compression += (simulatedXfos[i].tr.dist(simulatedXfos[i+1].tr) / segmentLengths[i]);
+      compression += (simulatedXfos[i].tr.distanceTo(simulatedXfos[i+1].tr) / segmentLengths[i]);
     }else{
       compression += 1.0;
     }

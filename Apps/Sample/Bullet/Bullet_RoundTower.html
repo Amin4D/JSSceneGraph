@@ -85,15 +85,15 @@ $(document).ready(function() {
 
   // Create a camera to draw the scene from
   var camera = scene.constructNode('TargetCamera', {
-      position: FABRIC.RT.vec3(0, 8, 12).scale(4),
-      target: FABRIC.RT.vec3(0, 6.5, 0),
+      position: new FABRIC.RT.Vec3(0, 8, 12).multiplyScalar(4),
+      target: new FABRIC.RT.Vec3(0, 6.5, 0),
       nearDistance: 0.1,
       farDistance: 200
     });
   scene.constructNode('CameraManipulator', { targetNode: camera });
   viewport.setCameraNode(camera);
 
-  var light = scene.constructNode('PointLight', { position: FABRIC.RT.vec3(420.0, 1000.0, 600.0) });
+  var light = scene.constructNode('PointLight', { position: new FABRIC.RT.Vec3(420.0, 1000.0, 600.0) });
 
   // create a simulation world
   var bulletWorldNode = scene.constructNode('BulletWorldNode');
@@ -140,16 +140,16 @@ $(document).ready(function() {
         
         for(var j=0;j<32;j++) {
           for(var i=0;i<8;i++) {
-            var ori = FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(0,1,0),j * 0.2 + 2.0 * 3.14 * (i / 8));
+            var ori = new FABRIC.RT.Quat().setFromAxisAndAngle(new FABRIC.RT.Vec3(0,1,0),j * 0.2 + 2.0 * 3.14 * (i / 8));
             
             var nonslicedTransform = scene.constructNode('BulletRigidBodyTransform', {
               bulletWorldNode: bulletWorldNode,
               shapeName: 'Box',
               rigidBody: new FABRIC.RT.BulletRigidBody({
                   transform: FABRIC.RT.xfo({
-                    tr: ori.rotateVector(FABRIC.RT.vec3(0,0.5 + j,3.0)),
+                    tr: ori.rotateVector(new FABRIC.RT.Vec3(0,0.5 + j,3.0)),
                     ori: ori,
-                    sc: FABRIC.RT.vec3(1.0,0.5,0.5).scale(1.0),
+                    sc: new FABRIC.RT.Vec3(1.0,0.5,0.5).multiplyScalar(1.0),
                   }),
                   friction: 0.8,
                   restitution: 0.7
@@ -169,12 +169,12 @@ $(document).ready(function() {
         
         for(var j=0;j<32;j++) {
           for(var i=0;i<16;i++) {
-            var ori = FABRIC.RT.Quat.makeFromAxisAndAngle(FABRIC.RT.vec3(0,1,0),j * 0.2 + 2.0 * 3.14 * (i / 16));
+            var ori = new FABRIC.RT.Quat().setFromAxisAndAngle(new FABRIC.RT.Vec3(0,1,0),j * 0.2 + 2.0 * 3.14 * (i / 16));
             bodies.push(new FABRIC.RT.BulletRigidBody({
               transform: FABRIC.RT.xfo({
-                tr: ori.rotateVector(FABRIC.RT.vec3(0,0.5 + j,6.0)),
+                tr: ori.rotateVector(new FABRIC.RT.Vec3(0,0.5 + j,6.0)),
                 ori: ori,
-                sc: FABRIC.RT.vec3(1.0,0.5,0.5).scale(1.0),
+                sc: new FABRIC.RT.Vec3(1.0,0.5,0.5).multiplyScalar(1.0),
               }),
               friction: 0.8,
               restitution: 0.7

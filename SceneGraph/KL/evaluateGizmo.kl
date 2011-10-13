@@ -30,13 +30,13 @@ operator evaluateGizmo(
     // in the space of the parent to get the manipulator globalXfo.
     var Xfo target;
     if (targetIndex == - 1) {
-      parent = targetSingle * parent;
+      parent = parent * targetSingle;
     }
     else {
-      parent = targetArray[targetIndex] * parent;
+      parent = parent * targetArray[targetIndex];
     }
   }
-  globalXfo = localXfo * parent;
+  globalXfo = parent * localXfo;
   //  report("evaluateGizmo:end");
 }
 
@@ -47,7 +47,7 @@ operator bindGizmoToXfo(
   io Xfo localXfo,
   io Xfo parentSpace,
 ){
-  globalXfo = localXfo * parentSpace;
+  globalXfo = parentSpace * localXfo;
 }
 
 operator bindGizmoToXfoArray(
@@ -57,8 +57,8 @@ operator bindGizmoToXfoArray(
   io Xfo spaces[],
   io Integer parentIndex,
 ){
-//  globalXfo = localXfo * targetXfo * spaces[ parentIndex ];
-  globalXfo = targetXfo * spaces[ parentIndex ];
+//  globalXfo = spaces[ parentIndex ] * targetXfo * localXfo;
+  globalXfo = spaces[ parentIndex ] * targetXfo;
 }
 
 */

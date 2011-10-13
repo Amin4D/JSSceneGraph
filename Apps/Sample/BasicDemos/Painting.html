@@ -1,16 +1,16 @@
-<html xmlns="http://www.w3.org/1999/xhtml"> 
-  <!--
-    Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
-    -->
-  <head> 
+<!DOCTYPE html>
+<html lang="en">
+ <head>
+  <meta charset="utf-8">  
+<!--    Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.    -->
     <title>FABRIC - Painting</title> 
     
-    <meta charset="utf-8"/>    
     <script type="text/javascript" src="../../../ThirdParty/jQuery/jquery-1.4.2.min.js"></script>
     <script type="text/javascript" src="../../../ThirdParty/jQuery/jquery-ui-1.8.5.custom.min.js"></script>
 
     <link type="text/css" href="../../../ThirdParty/jQuery/css/fabric/main.css" rel="stylesheet" />
     <link type="text/css" href="../../../ThirdParty/jQuery/css/fabric/jquery-ui-1.8.16.custom.css" rel="stylesheet" />
+
     <script type="text/javascript" src="../../../ThirdParty/jQuery/colorpicker/js/colorpicker.js"></script>
     <link href="../../../ThirdParty/jQuery/colorpicker/css/colorpicker.css" rel="stylesheet" type="text/css" />
 
@@ -291,6 +291,13 @@ $(document).ready(function() {
 
 });
 
+// jQuert UI Styling classes
+$(document).ready(function() {
+	$(".box").addClass("ui-widget");
+	$(".box h2").addClass("ui-widget-header ui-corner-all");
+	$(".content").addClass("ui-widget-content");
+});
+
 </script>
 
   </head> 
@@ -308,7 +315,7 @@ $(document).ready(function() {
         
           <div class="box ui-widget">
             <h2  class="ui-widget-header ui-corner-all">INFO</h2>
-            <div class="content">
+            <div class="content ui-widget-content">
               Vertex Map Painting.<br>
               The painting interface is built using event hanlders, and it very similar to ray casting.
               With ray casting, we return the intersection data back to JavaScript, whereas with painting,
@@ -319,8 +326,8 @@ $(document).ready(function() {
             </div><!--content-->
           </div><!--box-->
 
-                <div class="box ui-widget">
-                    <h2 class="ui-widget-header ui-corner-all">CONTROLS</h2>
+                <div class="box">
+                    <h2>CONTROLS</h2>
                     <div class="content">
                       
                       <span id="paintModeSet" style="margin-bottom: 10px;">

@@ -217,7 +217,7 @@ $(document).ready(function() {
     $("#selectable").append('<li class="ui-widget-content" id="'+i+'">'+i+'</li>');
   }
   $( "#selectable" ).selectable({
-    selected: function(event, ui) {
+    stop: function(event, ui) {
       var selection = [];
       var selectedChildren = $("#selectable").children('.ui-selected');
       for(var i=0; i<selectedChildren.length; i++){

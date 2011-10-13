@@ -59,7 +59,7 @@ FABRIC.SceneGraph.registerNodeType('CameraManipulator', {
     var cameraPos, cameraTarget, cameraOffset, cameraXfo, upaxis, swaxis, focalDist;
     var mouseDownScreenPos, viewportNode;
     var getCameraValues = function(evt) {
-      mouseDownScreenPos = new FABRIC.RT.Vec2(evt.screenX, evt.screenY);
+      mouseDownScreenPos = evt.mouseScreenPos;
       viewportNode = evt.viewportNode;
       cameraXfo = evt.cameraNode.getTransformNode().getGlobalXfo();
       cameraPos = cameraXfo.tr;
@@ -78,19 +78,16 @@ FABRIC.SceneGraph.registerNodeType('CameraManipulator', {
         getCameraValues(evt);
         document.addEventListener('mousemove', dragOrbitFn, false);
         document.addEventListener('mouseup', releaseOrbitFn, false);
-        evt.stopPropagation();
       }
       else if (evt.button === 1) {
         getCameraValues(evt);
         document.addEventListener('mousemove', dragPanFn, false);
         document.addEventListener('mouseup', releasePanFn, false);
-        evt.stopPropagation();
       }
       else if (evt.button === 2) {
         getCameraValues(evt);
         document.addEventListener('mousemove', dragZoomFn, false);
         document.addEventListener('mouseup', releaseZoomFn, false);
-        evt.stopPropagation();
       }
     }
     cameraNode.addEventListener('mousedown', mouseDownFn);
@@ -99,13 +96,12 @@ FABRIC.SceneGraph.registerNodeType('CameraManipulator', {
       if(!enabled){
         return;
       }
-      var mouseDragScreenPos = new FABRIC.RT.Vec2(evt.screenX, evt.screenY);
-      var mouseDragScreenDelta = mouseDownScreenPos.subtract(mouseDragScreenPos);
+      var mouseDragScreenDelta = evt.mouseScreenPos.subtract(mouseDownScreenPos);
       var newcameraXfo = cameraXfo.clone();
-      var arbit = new FABRIC.RT.Quat().setFromAxisAndAngle(new FABRIC.RT.Vec3(0,1,0), mouseDragScreenDelta.x * options.orbitRate);
+      var arbit = new FABRIC.RT.Quat().setFromAxisAndAngle(new FABRIC.RT.Vec3(0,1,0), mouseDragScreenDelta.x * -options.orbitRate);
       newcameraXfo.ori = arbit.multiply(newcameraXfo.ori);
       
-      var pitch = new FABRIC.RT.Quat().setFromAxisAndAngle(newcameraXfo.ori.getXaxis(), mouseDragScreenDelta.y * options.orbitRate);
+      var pitch = new FABRIC.RT.Quat().setFromAxisAndAngle(newcameraXfo.ori.getXaxis(), mouseDragScreenDelta.y * -options.orbitRate);
       newcameraXfo.ori = pitch.multiply(newcameraXfo.ori);
       
       var newCameraOffset = arbit.rotateVector(cameraOffset);
@@ -127,8 +123,7 @@ FABRIC.SceneGraph.registerNodeType('CameraManipulator', {
       if(!enabled){
         return;
       }
-      var mouseDragScreenPos = new FABRIC.RT.Vec2(evt.screenX, evt.screenY);
-      var mouseDragScreenDelta = mouseDragScreenPos.subtract(mouseDownScreenPos);
+      var mouseDragScreenDelta = evt.mouseScreenPos.subtract(mouseDownScreenPos);
       var dragDist = upaxis.multiplyScalar(mouseDragScreenDelta.y)
                            .add(swaxis.multiplyScalar(-mouseDragScreenDelta.x))
                            .multiplyScalar(focalDist * 0.001);
@@ -153,7 +148,7 @@ FABRIC.SceneGraph.registerNodeType('CameraManipulator', {
       if(!enabled){
         return;
       }
-      var mouseDragScreenDelta = evt.screenX - mouseDownScreenPos.x;
+      var mouseDragScreenDelta = evt.mouseScreenPos.x - mouseDownScreenPos.x;
       
       var zoomDist = cameraNode.getFocalDistance() * -options.mouseDragZoomRate * mouseDragScreenDelta;
       var newcameraXfo = cameraXfo.clone();
@@ -690,7 +685,7 @@ FABRIC.SceneGraph.registerNodeType('Manipulator', {
     var mouseDownScreenPos, mouseDrag, viewportNode;
     var dragFn = function(evt) {
       evt.mouseDownScreenPos = mouseDownScreenPos;
-      evt.mouseDragScreenPos = new FABRIC.RT.Vec2(evt.screenX, evt.screenY);
+      evt.mouseDragScreenPos = evt.mouseScreenPos;
       evt.mouseDragScreenDelta = evt.mouseDragScreenPos.subtract(mouseDownScreenPos);
       manipulatorNode.pub.fireEvent('drag', evt);
       evt.stopPropagation();
@@ -711,7 +706,7 @@ FABRIC.SceneGraph.registerNodeType('Manipulator', {
         manipulatorGlobals.manipulating = true;
         highlightNode();
         viewportNode = evt.viewportNode;
-        evt.mouseDownScreenPos = mouseDownScreenPos = new FABRIC.RT.Vec2(evt.screenX, evt.screenY);
+        evt.mouseDownScreenPos = mouseDownScreenPos = evt.mouseScreenPos;
         manipulatorNode.pub.fireEvent('dragstart', evt);
         document.addEventListener('mousemove', dragFn, false);
         document.addEventListener('mouseup', releaseFn, false);

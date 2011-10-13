@@ -672,7 +672,7 @@ FABRIC.SceneGraph.registerNodeType('BulletForceManipulator', {
     var mouseDownScreenPos, viewportNode;
     var getCameraValues = function(evt) {
       viewportNode = evt.viewportNode;
-      mouseDownScreenPos = FABRIC.RT.Vec2(evt.screenX, evt.screenY);
+      mouseDownScreenPos = evt.mouseScreenPos;
       viewportNode = evt.viewportNode;
       cameraXfo = evt.cameraNode.getTransformNode().getGlobalXfo();
       swaxis = cameraXfo.ori.getXaxis();

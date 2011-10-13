@@ -281,6 +281,7 @@ FABRIC.SceneGraph = {
         throw ('Node Constructor not Registered:' + type);
       }
       options = (options ? options : {});
+      if(!options.type) options.type = type;
       var sceneGraphNode = FABRIC.SceneGraph.nodeDescriptions[type].factoryFn(options, scene);
       if (!sceneGraphNode) {
         throw (' Factory function method must return an object');
@@ -1257,6 +1258,7 @@ FABRIC.SceneGraph.registerNodeType('Viewport', {
       var mouseOverNodeData;
       var propagateEvent = true;
       var bindEventProperties = function(evt) {
+        evt.mouseScreenPos  = getElementCoords(evt);
         evt.scene = scene.pub;
         evt.viewportNode = viewportNode.pub;
         if (cameraNode) {
@@ -1374,9 +1376,11 @@ FABRIC.SceneGraph.registerNodeType('Viewport', {
           return;
         }
         var mousewheelFn = function(evt) {
+          if(evt.detail) evt.wheelDelta = evt.detail * -50;
           fireEvent('mousewheel', evt);
         }
         document.addEventListener('mousewheel', mousewheelFn, false);
+        document.addEventListener('DOMMouseScroll', mousewheelFn, false);
         var deactivateMousewheelFn = function(evt) {
           windowElement.removeEventListener('mouseout', deactivateMousewheelFn, false);
           document.removeEventListener('mousewheel', mousewheelFn, false);

@@ -775,6 +775,10 @@ FABRIC.SceneGraph.registerNodeType('VolumeSlices', {
     volumeSlicesNode.pub.addUniformValue('max', 'Vec3', options.max);
     volumeSlicesNode.pub.addUniformValue('nbSlices', 'Size', options.nbSlices);
 
+    volumeSlicesNode.pub.setAttributeDynamic('positions');
+    volumeSlicesNode.pub.setAttributeDynamic('normals');
+    volumeSlicesNode.pub.setAttributeDynamic('indices');
+
     // getters and setters
     var uniforms = volumeSlicesNode.getUniformsDGNode();
     volumeSlicesNode.addMemberInterface(uniforms, 'min', true);

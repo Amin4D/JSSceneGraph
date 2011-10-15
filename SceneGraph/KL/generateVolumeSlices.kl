@@ -24,6 +24,8 @@ operator generateVolumeSlices(
   if(volSize.x < PRECISION || volSize.y < PRECISION || volSize.z < PRECISION)
     return;
 
+  Vec3 invVolSize = volSize.inverse();
+
   report( "generateVolumeSlices\n" );
   report( "nbSlices: " + nbSlices + "\n" );
   report( "camera: " + camera + "\n");
@@ -117,20 +119,6 @@ operator generateVolumeSlices(
   report "Order: " + pointDepthOrder;
 
   //constant cube topology
-  Size edges[12][2];
-  edges[0][0] = 0;edges[0][1] = 1;
-  edges[1][0] = 1;edges[1][1] = 5;
-  edges[2][0] = 5;edges[2][1] = 4;
-  edges[3][0] = 4;edges[3][1] = 0;
-  edges[4][0] = 0;edges[4][1] = 2;
-  edges[5][0] = 1;edges[5][1] = 3;
-  edges[6][0] = 5;edges[6][1] = 7;
-  edges[7][0] = 4;edges[7][1] = 6;
-  edges[8][0] = 2;edges[8][1] = 3;
-  edges[9][0] = 3;edges[9][1] = 7;
-  edges[10][0] = 7;edges[10][1] = 6;
-  edges[11][0] = 6;edges[11][1] = 2;
-
   Size pointCCWEdges[8][3];
   pointCCWEdges[0][0] = 0;pointCCWEdges[0][1] = 4;pointCCWEdges[0][2] = 3;
   pointCCWEdges[1][0] = 0;pointCCWEdges[1][1] = 1;pointCCWEdges[1][2] = 2;
@@ -141,40 +129,34 @@ operator generateVolumeSlices(
   pointCCWEdges[6][0] = 7;pointCCWEdges[6][1] = 11;pointCCWEdges[6][2] = 10;
   pointCCWEdges[7][0] = 6;pointCCWEdges[7][1] = 10;pointCCWEdges[7][2] = 9;
 
-  Vec3 edgeDir[12];
-  edgeDir[0] = edgeDir[8] = Vec3(1.0,0.0,0.0);
-  edgeDir[1] = edgeDir[9] = Vec3(0.0,0.0,1.0);
-  edgeDir[2] = edgeDir[10] = Vec3(-1.0,0.0,0.0);
-  edgeDir[3] = edgeDir[11] = Vec3(0.0,0.0,-1.0);
-  edgeDir[4] = edgeDir[5] = edgeDir[6] = edgeDir[7] = Vec3(0.0,1.0,0.0);
+  Vec3 edgeAxis[12];
+  edgeAxis[0] = edgeAxis[8] = edgeAxis[2] = edgeAxis[10] = 0;
+  edgeAxis[4] = edgeAxis[5] = edgeAxis[6] = edgeAxis[7] = 1;
+  edgeAxis[1] = edgeAxis[9] = edgeAxis[3] = edgeAxis[11] = 2;
 
-  Vec3 edgeInvLen[12];
-  edgeInvLen[0] = edgeInvLen[8] = edgeInvLen[1] = edgeInvLen[9] = 1.0 / volSize.x;
-  edgeInvLen[2] = edgeInvLen[10] = edgeInvLen[3] = edgeInvLen[11] = 1.0 / volSize.y;
-  edgeInvLen[4] = edgeInvLen[5] = edgeInvLen[6] = edgeInvLen[7] = 1.0 / volSize.z;
+  Scalar axisSteps[3];
+  Scalar axisTexCoordSteps[3];
+  Scalar axisInvLen[3];
 
-  Scalar edgeSteps[12];
-  Boolean edgeMarks[12];
-
-  //Align edges with cam inverse direction
-  for(i = 0; i < 12; ++i){
-    Scalar dot = edgeDir[i].dot(camDir);
-    if(dot > 0){
-      edgeDir[i].negate();
-    }
-    else
-      dot = -dot;
-
+  for(i = 0; i < 3; ++i){
+    Scalar dot = camDir.component(i);
     if(dot > DIVIDEPRECISION)
-      edgeSteps[i] = step / dot;
-    //Else: don't care, perpendicular edges will never be sampled
-    edgeMarks[i] = false;
+      axisSteps[i] = step / dot;
+    else
+      axisSteps[i] = 1;//in fact we won't use it...
+    axisInvLen[i] = 1.0 / volSize.component(i);
+    axisTexCoordSteps[i] = axisSteps[i] * axisInvLen[i];
   }
 
   Size nbEdges = 0;
   Size currEdges[10];//Use stack alloc to optimize memory cache; will never be more than 10
-  Vec3 currEdgePos[10], currEdgeDeltaPos[10];
-  Vec3 currEdgeTexCoord[10], currEdgeDeltaTexCoord[10];
+  Scalar currEdgePos[10][3];//Note: we use 3 scalars instead of Vec3 to avoid the many 'ifs' of the component methods
+  Scalar currEdgeTexCoord[10][3];
+
+  Boolean edgeMarks[12];
+  for(i = 0; i < 12; ++i){
+    edgeMarks[i] = false;
+  }
 
   Size nextPointIndex = 0;
   Size currSlice = 0;
@@ -241,13 +223,19 @@ operator generateVolumeSlices(
       for( i = 0; i<nbEdgesToInsert; ++i) {
         Size edge = edgesToInsert[i];
         Size index = i+insertPos;
-        Scalar edgeStep = edgeSteps[edge];
         currEdges[index] = edge;
-        Vec3 edgeStartVec = ((nextPointDepth - currDepth) * invStep * edgeStep) * edgeDir[edge];
-        currEdgePos[index] = points[nextPoint] + edgeStartVec;
-        currEdgeDeltaPos[index] = edgeStep*edgeDir[edge];
-        currEdgeTexCoord[index] = texCoords[nextPoint] + edgeInvLen[edge]*edgeStartVec;
-        currEdgeDeltaTexCoord[index] = (edgeStep*edgeInvLen[edge])*edgeDir[edge];
+
+        currEdgePos[index][0] = points[nextPoint].x;
+        currEdgePos[index][1] = points[nextPoint].y;
+        currEdgePos[index][2] = points[nextPoint].z;
+        currEdgeTexCoord[index][0] = texCoords[nextPoint].x;
+        currEdgeTexCoord[index][1] = texCoords[nextPoint].y;
+        currEdgeTexCoord[index][2] = texCoords[nextPoint].z;
+
+        Size axisIndex = edgeAxis[edge];
+        Scalar edgeStartDeltaStep = (nextPointDepth - currDepth) * invStep * axisSteps[axisIndex];
+        currEdgePos[index][axisIndex] += edgeStartDeltaStep;
+        currEdgeTexCoord[index][axisIndex] += edgeStartDeltaStep * axisInvLen[axisIndex];
       }
     }
 
@@ -260,12 +248,13 @@ operator generateVolumeSlices(
 
     //Add & increment positions & textures coordinates
     for(i = 0; i < nbEdges; ++i) {
-      positions<currPosIndex> = currEdgePos[i];
-      normals<currPosIndex> = currEdgeTexCoord[i];
+      positions<currPosIndex> = Vec3(currEdgePos[i][0], currEdgePos[i][1], currEdgePos[i][2]);
+      normals<currPosIndex> = Vec3(currEdgeTexCoord[i][0], currEdgeTexCoord[i][1], currEdgeTexCoord[i][2]);
       ++currPosIndex;
 
-      currEdgePos[i] += currEdgeDeltaPos[i];
-      currEdgeTexCoord[i] += currEdgeDeltaTexCoord[i];
+      Size axisIndex = edgeAxis[i];
+      currEdgePos[i][axisIndex] += axisSteps[axisIndex];
+      currEdgeTexCoord[i][axisIndex] += axisTexCoordSteps[axisIndex];
     }
 
     currDepth += step;

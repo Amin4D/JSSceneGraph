@@ -74,6 +74,28 @@ FABRIC.RT.Vec4.prototype = {
     return result;
   },
 
+  component: function(i) {
+    if(i == 0)
+      return this.x;
+    else if(i == 1)
+      return this.y;
+    else if(i == 2)
+      return this.z;
+    else
+      return this.t;
+  },
+
+  setComponent: function(i, v) {
+    if(i == 0)
+      this.x = v;
+    else if(i == 1)
+      this.y = v;
+    else if(i == 2)
+      this.z = v;
+    else
+      this.t = v;
+  },
+
   // Returns the result of adding the argument to the vector
   add: function(v) {
     return new FABRIC.RT.Vec4(this.x + v.x, this.y + v.y, this.z + v.z, this.t + v.t);

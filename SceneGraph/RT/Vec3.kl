@@ -34,6 +34,24 @@ function Boolean Vec3.almostEqual(in Vec3 other) {
   return this.almostEqual(other, PRECISION);
 }
 
+function Scalar Vec3.component( Size i ) {
+  if(i == 0)
+    return this.x;
+  else if(i == 1)
+    return this.y;
+  else
+    return this.z;
+}
+
+function Vec3.setComponent( Size i, Scalar v ) {
+  if(i == 0)
+    this.x = v;
+  else if(i == 1)
+    this.y = v;
+  else
+    this.z = v;
+}
+
 function Vec3 + (Vec3 a, Vec3 b) {
   return Vec3(a.x + b.x, a.y + b.y, a.z + b.z);
 }

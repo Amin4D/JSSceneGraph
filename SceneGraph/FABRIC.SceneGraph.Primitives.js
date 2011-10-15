@@ -752,6 +752,71 @@ FABRIC.SceneGraph.registerNodeType('Teapot', {
     return teapotNode;
   }});
 
+FABRIC.SceneGraph.registerNodeType('VolumeSlices', {
+  briefDesc: '',
+  detailedDesc: '',
+  parentNodeDesc: 'Triangles',
+  optionsDesc: {
+    min: 'Volume bbox min Vec3',
+    max: 'Volume bbox max Vec3',
+    nbSlices: 'The number of slices to be generated.',
+    cameraNode: 'The cameraNode being used',
+    transformNode: 'The transformNode for the volume instance'
+  },
+  factoryFn: function(options, scene) {
+    scene.assignDefaults(options, {
+        min: new FABRIC.RT.Vec3(-1.0, -1.0, -1.0),
+        max: new FABRIC.RT.Vec3(1.0, 1.0, 1.0),
+        nbSlices: 20
+      });
+
+    var volumeSlicesNode = scene.constructNode('Triangles', options);
+    volumeSlicesNode.pub.addUniformValue('min', 'Vec3', options.min);
+    volumeSlicesNode.pub.addUniformValue('max', 'Vec3', options.max);
+    volumeSlicesNode.pub.addUniformValue('nbSlices', 'Size', options.nbSlices);
+
+    // getters and setters
+    var uniforms = volumeSlicesNode.getUniformsDGNode();
+    volumeSlicesNode.addMemberInterface(uniforms, 'min', true);
+    volumeSlicesNode.addMemberInterface(uniforms, 'max', true);
+    volumeSlicesNode.addMemberInterface(uniforms, 'nbSlices', true);
+
+    var attributes = volumeSlicesNode.getAttributesDGNode();
+    var cameraNode = scene.getPrivateInterface(options.cameraNode);
+    var transformNode = scene.getPrivateInterface(options.transformNode);
+    attributes.setDependency(cameraNode.getDGNode(), 'camera');
+    attributes.setDependency(transformNode.getDGNode(), 'transform');
+
+    volumeSlicesNode.setGeneratorOps([
+      //Upper bound for count: 10 per slices (6 with volume bbox cropping, plus 4 for view volume cropping)
+      scene.constructOperator({
+        operatorName: 'setVolumeSlicesVertexCount',
+        srcCode: 'operator setVolumeSlicesVertexCount(io Size nbSlices, io Size count){count = nbSlices*10;}',
+        entryFunctionName: 'setVolumeSlicesVertexCount',
+        parameterLayout: [
+          'uniforms.nbSlices',
+          'self.newCount'
+        ]
+      }),
+      scene.constructOperator({
+        operatorName: 'generateVolumeSlices',
+        srcFile: 'FABRIC_ROOT/SceneGraph/KL/generateVolumeSlices.kl',
+        entryFunctionName: 'generateVolumeSlices',
+        parameterLayout: [
+          'uniforms.min',
+          'uniforms.max',
+          'uniforms.nbSlices',
+          'transform.globalXfo',
+          'camera.cameraMat44',
+          'camera.projectionMat44',
+          'uniforms.indices',
+          'self.positions<>',
+          'self.normals<>' //We encode the 3D texture in the normals
+        ]
+      })
+    ]);
+    return volumeSlicesNode;
+  }});
 
 
 

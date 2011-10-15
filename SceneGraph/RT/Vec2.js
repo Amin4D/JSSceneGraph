@@ -62,6 +62,20 @@ FABRIC.RT.Vec2.prototype = {
     return result;
   },
 
+  component: function(i) {
+    if(i == 0)
+      return this.x;
+    else
+      return this.y;
+  },
+
+  setComponent: function(i, v) {
+    if(i == 0)
+      this.x = v;
+    else
+      this.y = v;
+  },
+
   // Returns the result of adding the argument to the vector
   add: function(v) {
     return new FABRIC.RT.Vec2(this.x + v.x, this.y + v.y);

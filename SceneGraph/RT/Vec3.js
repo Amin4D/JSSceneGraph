@@ -68,6 +68,24 @@ FABRIC.RT.Vec3.prototype = {
     return result;
   },
 
+  component: function(i) {
+    if(i == 0)
+      return this.x;
+    else if(i == 1)
+      return this.y;
+    else
+      return this.z;
+  },
+
+  setComponent: function(i, v) {
+    if(i == 0)
+      this.x = v;
+    else if(i == 1)
+      this.y = v;
+    else
+      this.z = v;
+  },
+
   // Returns the result of adding the argument to the vector
   add: function(v) {
     return new FABRIC.RT.Vec3(this.x + v.x, this.y + v.y, this.z + v.z);

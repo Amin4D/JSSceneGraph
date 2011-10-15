@@ -3,7 +3,7 @@
 //
 
 use Vec3, Mat44;
-
+/*
 operator viewPortUpdateRayCast(
   io Mat44 camera,
   io Mat44 projection,
@@ -39,4 +39,4 @@ operator viewPortUpdateRayCast(
   // - We nuke the translation part since we're transforming a vector.
   camInv.zeroTranslation();
   ray.direction = (camInv * ray.direction).unit();
-}
+}*/

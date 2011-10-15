@@ -32,6 +32,20 @@ function Boolean Vec2.almostEqual(in Vec2 other) {
   return this.almostEqual(other, PRECISION);
 }
 
+function Scalar Vec2.component( Size i ) {
+  if(i == 0)
+    return this.x;
+  else
+    return this.y;
+}
+
+function Vec3.setComponent( Size i, Scalar v ) {
+  if(i == 0)
+    this.x = v;
+  else
+    this.y = v;
+}
+
 function Vec2 + (Vec2 a, Vec2 b) {
   return Vec2(a.x + b.x, a.y + b.y);
 }

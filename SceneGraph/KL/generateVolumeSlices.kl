@@ -7,6 +7,8 @@ use Xfo;
 operator generateVolumeSlices(
   io Vec3 volumeMin,
   io Vec3 volumeMax,
+  io Vec3 textureMin,
+  io Vec3 textureMax,
   io Size nbSlices,
   io Xfo volumeXfo,
   io Mat44 camera,
@@ -47,20 +49,24 @@ operator generateVolumeSlices(
   Vec3 biasedCamDir = ((camYPos - camRange[0]).unit() * 0.25 + camDir).unit();
 
   //Find the camera-aligned slice depth
-  Vec3 volume[2];
-  volume[0] = volumeMin;
-  volume[1] = volumeMax;
+  Vec3 volumeBBox[2];
+  volumeBBox[0] = volumeMin;
+  volumeBBox[1] = volumeMax;
+
+  Vec3 textureBBox[2];
+  textureBBox[0] = textureMin;
+  textureBBox[1] = textureMax;
 
   Vec3 camVolBBox[2];
   Size i, j, k;
   for(i = 0; i <3; ++i) {
     if(camDir.component(i) < 0) {
-      camVolBBox[1].setComponent(i, volume[0].component(i));
-      camVolBBox[0].setComponent(i, volume[1].component(i));
+      camVolBBox[1].setComponent(i, volumeBBox[0].component(i));
+      camVolBBox[0].setComponent(i, volumeBBox[1].component(i));
     }
     else {
-      camVolBBox[0].setComponent(i, volume[0].component(i));
-      camVolBBox[1].setComponent(i, volume[1].component(i));
+      camVolBBox[0].setComponent(i, volumeBBox[0].component(i));
+      camVolBBox[1].setComponent(i, volumeBBox[1].component(i));
     }
   }
   Scalar depthRange[2];
@@ -84,8 +90,8 @@ operator generateVolumeSlices(
   for(i = 0; i < 2; ++i) {
     for(j = 0; j < 2; ++j) {
       for(k = 0; k < 2; ++k) {
-        points[index].set(volume[k].x, volume[j].y, volume[i].z);
-        texCoords[index].set(Scalar(i), Scalar(j), Scalar(k));
+        points[index].set(volumeBBox[k].x, volumeBBox[j].y, volumeBBox[i].z);
+        texCoords[index].set(textureBBox[k].x, textureBBox[j].y, textureBBox[i].z);
         pointsDepth[index] = (points[index]-camRange[0]).dot(camDir);
         pointDepthOrder[index] = index;
         ++index;
@@ -154,13 +160,13 @@ operator generateVolumeSlices(
     else
       axisSteps[i] = 1;//in fact we won't use it...
     axisInvLen[i] = 1.0 / volSize.component(i);
-    axisTexCoordSteps[i] = axisSteps[i] * axisInvLen[i];
+    axisTexCoordSteps[i] = axisSteps[i] * axisInvLen[i] * (textureBBox[1].component(i) - textureBBox[0].component(i));
   }
 
   Size nbEdges = 0;
-  Size currEdges[10];//Use stack alloc to optimize memory cache; will never be more than 10
-  Scalar currEdgePos[10][3];//Note: we use 3 scalars instead of Vec3 to avoid the many 'ifs' of the component methods
-  Scalar currEdgeTexCoord[10][3];
+  Size currEdges[8];//Use stack alloc to optimize memory cache; will never be more than 8 (and in theory 6, but we'll leave place for intermediary growth)
+  Scalar currEdgePos[8][3];//Note: we use 3 scalars instead of Vec3 to avoid the many 'ifs' of the component methods
+  Scalar currEdgeTexCoord[8][3];
 
   Boolean edgeMarks[12];
   for(i = 0; i < 12; ++i){

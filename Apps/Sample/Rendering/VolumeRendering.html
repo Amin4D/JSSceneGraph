@@ -86,7 +86,7 @@ $(document).ready(function() {
     hierarchical: false,
     globalXfo: new FABRIC.RT.Xfo({ tr: new FABRIC.RT.Vec3(0, 0, 0) })
   });
-  var volume = scene.constructNode('VolumeSlices', { nbSlices: 100, cameraNode: camera, transformNode: transform, min: new FABRIC.RT.Vec3(-5.0, -7.0, -10.0), max: new FABRIC.RT.Vec3(5.0, 7.0, 10.0) });
+  var volume = scene.constructNode('VolumeSlices', { nbSlices: 100, cameraNode: camera, transformNode: transform, bboxMin: new FABRIC.RT.Vec3(-5, -7, -10), bboxMax: new FABRIC.RT.Vec3(5, 7, 10), textureMin: new FABRIC.RT.Vec3(0.5, 0.5, 0.5), textureMax: new FABRIC.RT.Vec3(1, 1, 1) });
   
   var flatMaterial = scene.constructNode('FlatMaterial', {
       color: FABRIC.RT.rgb(0.8, 0, 0, 1)

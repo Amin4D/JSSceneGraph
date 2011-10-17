@@ -942,8 +942,7 @@ FABRIC.SceneGraph.registerNodeType('Viewport', {
           parameterLayout: [
             'window.width',
             'window.height',
-            'viewPort.backgroundColor',
-            'viewPort.polygonMode'
+            'viewPort.backgroundColor'
           ]
         }));
 

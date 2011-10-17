@@ -139,7 +139,8 @@ FABRIC.SceneGraph.registerNodeType('OffscreenViewport', {
         'camera.nearDistance',
         'camera.farDistance',
         'camera.fovY',
-        'camera.orthographic'
+        'camera.orthographic',
+        'camera.screenOffset'
       ]
     }));
 

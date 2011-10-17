@@ -757,28 +757,22 @@ FABRIC.SceneGraph.registerNodeType('VolumeSlices', {
   detailedDesc: '',
   parentNodeDesc: 'Triangles',
   optionsDesc: {
-    bboxMin: 'Volume bbox min Vec3',
-    bboxMax: 'Volume bbox max Vec3',
-    textureMin: 'Cropped texture min coord',
-    textureMax: 'Cropped texture max coord',
+    cropMin: 'Crop min param (0 to 1 for XYZ)',
+    cropMax: 'Crop max param (0 to 1 for XYZ)',
     nbSlices: 'The number of slices to be generated.',
     cameraNode: 'The cameraNode being used',
     transformNode: 'The transformNode for the volume instance'
   },
   factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
-        bboxMin: new FABRIC.RT.Vec3(-1.0, -1.0, -1.0),
-        bboxMax: new FABRIC.RT.Vec3(1.0, 1.0, 1.0),
-        textureMin: new FABRIC.RT.Vec3(0.0, 0.0, 0.0),
-        textureMax: new FABRIC.RT.Vec3(1.0, 1.0, 1.0),
+        cropMin: new FABRIC.RT.Vec3(0.0, 0.0, 0.0),
+        cropMax: new FABRIC.RT.Vec3(1.0, 1.0, 1.0),
         nbSlices: 20
       });
 
     var volumeSlicesNode = scene.constructNode('Triangles', options);
-    volumeSlicesNode.pub.addUniformValue('bboxMin', 'Vec3', options.bboxMin);
-    volumeSlicesNode.pub.addUniformValue('bboxMax', 'Vec3', options.bboxMax);
-    volumeSlicesNode.pub.addUniformValue('textureMin', 'Vec3', options.textureMin);
-    volumeSlicesNode.pub.addUniformValue('textureMax', 'Vec3', options.textureMax);
+    volumeSlicesNode.pub.addUniformValue('cropMin', 'Vec3', options.cropMin);
+    volumeSlicesNode.pub.addUniformValue('cropMax', 'Vec3', options.cropMax);
     volumeSlicesNode.pub.addUniformValue('nbSlices', 'Size', options.nbSlices);
 
     volumeSlicesNode.pub.setAttributeDynamic('positions');
@@ -787,10 +781,8 @@ FABRIC.SceneGraph.registerNodeType('VolumeSlices', {
 
     // getters and setters
     var uniforms = volumeSlicesNode.getUniformsDGNode();
-    volumeSlicesNode.addMemberInterface(uniforms, 'bboxMin', true);
-    volumeSlicesNode.addMemberInterface(uniforms, 'bboxMax', true);
-    volumeSlicesNode.addMemberInterface(uniforms, 'textureMin', true);
-    volumeSlicesNode.addMemberInterface(uniforms, 'textureMax', true);
+    volumeSlicesNode.addMemberInterface(uniforms, 'cropMin', true);
+    volumeSlicesNode.addMemberInterface(uniforms, 'cropMax', true);
     volumeSlicesNode.addMemberInterface(uniforms, 'nbSlices', true);
 
     var attributes = volumeSlicesNode.getAttributesDGNode();
@@ -815,10 +807,8 @@ FABRIC.SceneGraph.registerNodeType('VolumeSlices', {
         srcFile: 'FABRIC_ROOT/SceneGraph/KL/generateVolumeSlices.kl',
         entryFunctionName: 'generateVolumeSlices',
         parameterLayout: [
-          'uniforms.bboxMin',
-          'uniforms.bboxMax',
-          'uniforms.textureMin',
-          'uniforms.textureMax',
+          'uniforms.cropMin',
+          'uniforms.cropMax',
           'uniforms.nbSlices',
           'transform.globalXfo',
           'camera.cameraMat44',

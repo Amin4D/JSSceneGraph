@@ -2,7 +2,7 @@
 // Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
 //
 
-use Mat44;
+use Mat44, Vec2;
 
 function Mat44 asymmetricPerspectiveFrustum(
   Scalar l, Scalar r,
@@ -25,7 +25,8 @@ function Mat44 asymmetricPerspectiveFrustum(
 // Taken from http://www.geeks3d.com/20090729/howto-perspective-projection-matrix-in-opengl/
 function Mat44 symmetricPerspectiveFrustum(
   Scalar width, Scalar height,
-  Scalar near, Scalar far
+  Scalar near, Scalar far,
+  Scalar centerX, Scalar centerY
 ) {
   var Scalar d = far - near;
   var Scalar q = -(far + near) / d;
@@ -33,8 +34,8 @@ function Mat44 symmetricPerspectiveFrustum(
   var Scalar w = 2.0 * (near / width);
   var Scalar h = 2.0 * (near / height);
   var Mat44 result(
-    w, 0.0, 0.0, 0.0,
-    0.0, h, 0.0, 0.0,
+    w, 0.0, -centerX, 0.0,
+    0.0, h, -centerY, 0.0,
     0.0, 0.0, q, qn,
     0.0, 0.0, -1.0, 0.0);
   return result;
@@ -77,7 +78,8 @@ operator updateCameraProjection(
   io Scalar near,
   io Scalar far,
   io Scalar fovY,
-  io Boolean orthographic
+  io Boolean orthographic,
+  io Vec2 screenOffset
 ) {
 //  report( "updateCameraProjection\n" );
 
@@ -89,7 +91,7 @@ operator updateCameraProjection(
   if (!orthographic) {
     var Scalar frustumH = (tan(fovY / 2) * near) * 2.0;
     var Scalar frustumW = frustumH * aspectRatio;
-    projectionMat44 = symmetricPerspectiveFrustum(frustumW, frustumH, near, far);
+    projectionMat44 = symmetricPerspectiveFrustum(frustumW, frustumH, near, far, screenOffset.x, screenOffset.y);
   }
   else {
     var Scalar frustumH = (tan(fovY / 2) * near) * 30.0; // [PT] this value was 150.0, but I have no idea why. It made my orthoraphic camers zoom right out. I changed it for the Google demo.

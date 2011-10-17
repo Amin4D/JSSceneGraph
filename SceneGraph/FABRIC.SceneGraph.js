@@ -1513,7 +1513,8 @@ FABRIC.SceneGraph.registerNodeType('Camera', {
     fovY: 'The vertical (Y) field of view angle for this camera.',
     focalDistance: 'The focal distance for the camera.',
     orthographic: 'Set to true the camera is rendered in orthographic more, otherwise perspective mode is used.',
-    transformNode: 'The type of transformNode to use, typically \'Transform\''
+    transformNode: 'The type of transformNode to use, typically \'Transform\'',
+    screenOffset: 'Viewport center offset'
   },
   factoryFn: function(options, scene) {
 
@@ -1523,7 +1524,8 @@ FABRIC.SceneGraph.registerNodeType('Camera', {
         fovY: Math.degToRad(60),
         focalDistance: 160,
         orthographic: false,
-        transformNode: 'Transform'
+        transformNode: 'Transform',
+        screenOffset: new FABRIC.RT.Vec2(0.0, 0.0)
       });
 
     var cameraNode = scene.constructNode('SceneGraphNode', options),
@@ -1539,6 +1541,7 @@ FABRIC.SceneGraph.registerNodeType('Camera', {
     dgnode.addMember('cameraMat44', 'Mat44');
     dgnode.addMember('orthographic', 'Boolean', options.orthographic);
     dgnode.addMember('projectionMat44', 'Mat44');
+    dgnode.addMember('screenOffset', 'Vec2', options.screenOffset);
 
     redrawEventHandler.setScope('camera', dgnode);
 
@@ -1553,7 +1556,8 @@ FABRIC.SceneGraph.registerNodeType('Camera', {
         'camera.nearDistance',
         'camera.farDistance',
         'camera.fovY',
-        'camera.orthographic'
+        'camera.orthographic',
+        'camera.screenOffset'
       ]
     }));
 

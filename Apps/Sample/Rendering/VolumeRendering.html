@@ -58,6 +58,134 @@ s.parentNode.insertBefore(ga, s);
 </script>
 
     <script type="text/javascript">
+
+FABRIC.SceneGraph.registerNodeType('3DTextureGenerator', {
+  briefDesc: '',
+  detailedDesc: '',
+  parentNodeDesc: 'Scene',
+  optionsDesc: {
+  },
+  factoryFn: function(options, scene) {
+    scene.assignDefaults(options, {
+        resolution: 128
+      });
+
+    var generatorNode = scene.constructNode('SceneGraphNode', options);
+    var dgnode = generatorNode.constructDGNode('DGNode');
+
+    dgnode.addMember('resolution', 'Size', options.resolution );
+    dgnode.addMember('width', 'Size' );
+    dgnode.addMember('height', 'Size' );
+    dgnode.addMember('depth', 'Size' );
+    dgnode.addMember('opacityVoxels', 'Byte[]');
+    dgnode.addMember('weightedGradientsVoxels', 'RGBA[]');
+
+    generatorNode.addMemberInterface(dgnode, 'resolution', true);
+    generatorNode.addMemberInterface(dgnode, 'width');
+    generatorNode.addMemberInterface(dgnode, 'height');
+    generatorNode.addMemberInterface(dgnode, 'depth');
+
+    dgnode.bindings.append(scene.constructOperator({
+      operatorName: 'generate3DTexture',
+      parameterLayout: [
+        'self.resolution',
+        'self.width',
+        'self.height',
+        'self.depth',
+        'self.opacityVoxels',
+        'self.weightedGradientsVoxels'
+      ],
+      entryFunctionName: 'generate3DTexture',
+      srcFile: 'KL/3DTextureUtils.kl'
+    }));
+
+    return generatorNode;
+  }
+});
+
+FABRIC.SceneGraph.registerNodeType('Texture2DSliceDisplay', {
+  briefDesc: '',
+  detailedDesc: '',
+  parentNodeDesc: 'Scene',
+  optionsDesc: {
+    sourceImageNode: 'The source 3D image node',
+    tl: 'Top left screenspace coord',
+    br: 'Bottom right screenspace coord',
+    sliceRatio: 'Slice ratio (0 to 1) along sliceAxis',
+    sliceAxis: 'Slice axis (0=X, 1=Y, 2=Z) along which the image is extracted',
+    opacityElseGradientWeight: 'Show opacity, else will be gradient weight'
+  },
+
+  factoryFn: function(options, scene) {
+    scene.assignDefaults(options, {
+        tl: new FABRIC.RT.Vec2(-1.0, 1.0),
+        br: new FABRIC.RT.Vec2(1.0, -1.0),
+        sliceRatio: 0.5,
+        sliceAxis: 0,
+        opacityElseGradientWeight: true
+      });
+
+    options.wantHDR = false;
+    options.createDgNode = true;
+    options.createResourceLoadNode = false;
+    options.createLoadTextureEventHandler = true;
+
+    var sliceDisplayNode = scene.constructNode('Image', options);
+    var dgnode = sliceDisplayNode.getDGNode();
+
+    dgnode.addMember('sliceRatio', 'Scalar', options.sliceRatio );
+    dgnode.addMember('sliceAxis', 'Size', options.sliceAxis );
+    dgnode.addMember('opacityElseGradientWeight', 'Boolean', options.opacityElseGradientWeight );
+
+    var sourceImageNode = scene.getPrivateInterface(options.sourceImageNode);
+    dgnode.setDependency(sourceImageNode.getDGNode(), 'source');
+
+    dgnode.bindings.append(scene.constructOperator({
+      operatorName: 'slice3DTexture',
+      parameterLayout: [
+        'self.sliceRatio',
+        'self.sliceAxis',
+        'self.opacityElseGradientWeight',
+        'source.width',
+        'source.height',
+        'source.depth',
+        'source.opacityVoxels',
+        'source.weightedGradientsVoxels',
+        'self.width',
+        'self.height',
+        'self.pixels'
+      ],
+      entryFunctionName: 'slice3DTexture',
+      srcFile: 'KL/3DTextureUtils.kl'
+    }));
+
+    var postDrawEventHandler = sliceDisplayNode.constructEventHandlerNode('PostDraw');
+    var toto = sliceDisplayNode.getRedrawEventHandler();
+    postDrawEventHandler.appendChildEventHandler(sliceDisplayNode.getRedrawEventHandler());//ICI
+    scene.getScenePostRedrawEventHandler().appendChildEventHandler(postDrawEventHandler);
+
+    postDrawEventHandler.addMember('tl', 'Vec2', options.tl );
+    postDrawEventHandler.addMember('br', 'Vec2', options.br );
+
+    postDrawEventHandler.setScopeName('textureStub');
+    postDrawEventHandler.addMember('textureUnit', 'Integer', 0);
+    postDrawEventHandler.addMember('program', 'Integer', 0);
+    postDrawEventHandler.postDescendBindings.append(
+      scene.constructOperator({
+          operatorName: 'drawTexture',
+          srcFile: 'FABRIC_ROOT/SceneGraph/KL/drawTexture.kl',
+          entryFunctionName: 'drawTextureAt',
+          parameterLayout: [
+            'self.tl',
+            'self.br',
+            'self.textureUnit',
+            'self.program'
+          ]
+        }
+    ));
+    return sliceDisplayNode;
+  }
+});
     
 $(document).ready(function() {
   
@@ -74,7 +202,8 @@ $(document).ready(function() {
   // Create a camera to draw the scene from
   var camera = scene.constructNode('TargetCamera', {
       position: new FABRIC.RT.Vec3(0, 0, 20),
-      target: new FABRIC.RT.Vec3(0, 0, 0)
+      target: new FABRIC.RT.Vec3(0, 0, 0),
+      screenOffset: new FABRIC.RT.Vec2(-0.25, 0.0)
     });
 
   scene.constructNode("CameraManipulator", { targetNode:camera } );
@@ -86,8 +215,15 @@ $(document).ready(function() {
     hierarchical: false,
     globalXfo: new FABRIC.RT.Xfo({ tr: new FABRIC.RT.Vec3(0, 0, 0) })
   });
-  var volume = scene.constructNode('VolumeSlices', { nbSlices: 100, cameraNode: camera, transformNode: transform, bboxMin: new FABRIC.RT.Vec3(-5, -7, -10), bboxMax: new FABRIC.RT.Vec3(5, 7, 10), textureMin: new FABRIC.RT.Vec3(0.5, 0.5, 0.5), textureMax: new FABRIC.RT.Vec3(1, 1, 1) });
-  
+
+  var volume = scene.constructNode('VolumeSlices', { nbSlices: 100, cameraNode: camera, transformNode: transform, cropMin: new FABRIC.RT.Vec3(0, 0, 0), cropMax: new FABRIC.RT.Vec3(1, 1, 1) });
+
+  var textureGen = scene.constructNode('3DTextureGenerator');
+  var texture2DSlice = [];
+  texture2DSlice[0] = scene.constructNode('Texture2DSliceDisplay', {tl: new FABRIC.RT.Vec2(0.5, 1.0), br: new FABRIC.RT.Vec2(1.0, 1.0/3.0), sourceImageNode: textureGen, sliceRatio: 0.5, sliceAxis : 0});
+  texture2DSlice[1] = scene.constructNode('Texture2DSliceDisplay', {tl: new FABRIC.RT.Vec2(0.5, 1.0/3.0), br: new FABRIC.RT.Vec2(1.0, -1.0/3.0), sourceImageNode: textureGen, sliceRatio: 0.5, sliceAxis : 1});
+  texture2DSlice[2] = scene.constructNode('Texture2DSliceDisplay', {tl: new FABRIC.RT.Vec2(0.5, -1.0/3.0), br: new FABRIC.RT.Vec2(1.0, -1.0), sourceImageNode: textureGen, sliceRatio: 0.5, sliceAxis : 2});
+
   var flatMaterial = scene.constructNode('FlatMaterial', {
       color: FABRIC.RT.rgb(0.8, 0, 0, 1)
     });

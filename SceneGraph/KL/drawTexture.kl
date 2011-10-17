@@ -138,3 +138,12 @@ operator drawTextureFullScreen(
   Vec2 br(1.0, -1.0);
   drawTexture(textureUnit, program, tl, br, true);
 }
+
+operator drawTextureAt(
+  io Vec2 tl,
+  io Vec2 br,
+  io Integer textureUnit,
+  io Integer program
+) {
+  drawTexture(textureUnit, program, tl, br, true);
+}

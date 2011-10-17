@@ -1,0 +1,148 @@
+//
+// Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
+//
+
+use RGBA, Vec3;
+
+operator generate3DTexture(
+  io Size resolution,
+  io Size width,
+  io Size heigth,
+  io Size depth,
+  io Byte opacityVoxels[],
+  io RGBA weightedGradientsVoxels[]
+){
+  width = resolution;
+  heigth = resolution;
+  depth = resolution;
+
+  opacityVoxels.resize(width*heigth*depth);
+  weightedGradientsVoxels.resize(width*heigth*depth);
+
+  if(resolution == 0)
+    resolution = 1;
+
+  //test: 1/3 opaque sphere with 1/2 size 2/3 opaque sphere.
+  //A = opacity
+  //RGB = gradient
+
+  Size i,j,k,l;
+  Size index = 0;
+  Vec3 delta(2.0 / Scalar(width), 2.0 / Scalar(heigth), 2.0 / Scalar(depth));
+  Vec3 currPos;
+
+  Scalar gradientThreshold = 1.5 / Scalar(resolution);
+
+  Scalar sphereRadius[3], sphereOpacity[3];
+  sphereRadius[0] = 0.9; sphereOpacity[0] = 0.25;
+  sphereRadius[1] = 0.6; sphereOpacity[1] = 0.5;
+  sphereRadius[2] = 0.3; sphereOpacity[2] = 0.75;
+
+  currPos.z = -1.0;
+  for(i = 0; i < depth; ++i) {
+    currPos.y = -1.0;
+    for(j = 0; j < heigth; ++j) {
+      currPos.x = -1.0;
+      for(k = 0; k < width; ++k) {
+
+        Scalar distToCenter = currPos.length();
+        Scalar opacity = 0.0;
+        for(l = 3; --l; ) {
+          if(distToCenter < sphereRadius[l]) {
+            opacity = sphereOpacity[l];
+            break;
+          }
+        }
+        opacityVoxels[index] = Byte(opacity*255.99);
+
+        Vec3 gradient = currPos;
+        if(distToCenter > DIVIDEPRECISION)
+          gradient /= distToCenter;
+
+        Scalar gradientWeight = 0.0;
+
+        for(l = 3; --l; ) {
+          Scalar sphereDist = abs(distToCenter - sphereRadius[l]);
+          if(sphereDist < gradientThreshold) {
+            gradientWeight = 1.0;// - sphereDist / gradientThreshold;
+            break;
+          }
+        }
+
+        weightedGradientsVoxels[index].r = Byte(gradient.x*255.99);
+        weightedGradientsVoxels[index].g = Byte(gradient.y*255.99);
+        weightedGradientsVoxels[index].b = Byte(gradient.z*255.99);
+        weightedGradientsVoxels[index].a = Byte(gradientWeight*255.99);
+
+        currPos.x += delta.x;
+        ++index;
+      }
+      currPos.y += delta.y;
+    }
+    currPos.z += delta.z;
+  }
+}
+
+operator slice3DTexture(
+  io Scalar sliceRatio,
+  io Size sliceAxis,
+  io Boolean opacityElseGradientWeight,
+  io Size sourceWidth,
+  io Size sourceHeight,
+  io Size sourceDepth,
+  io Byte sourceOpacityVoxels[],
+  io RGBA sourceWeightedGradientsVoxels[],
+  io Size width,
+  io Size height,
+  io RGBA pixels[]
+){
+  Size start, dim1Delta, dim2Delta, dim1, dim2;
+  if(sliceAxis == 0) {
+    start = sliceRatio*sourceWidth;
+    if(start == sourceWidth)
+      start = sourceWidth-1;
+    dim1Delta = sourceWidth*sourceHeight;
+    dim2Delta = sourceWidth;
+    dim1 = sourceDepth;
+    dim2 = sourceHeight;
+  }
+  else if(sliceAxis == 1) {
+    start = sliceRatio*sourceHeight;
+    if(start == sourceHeight)
+      start = sourceHeight-1;
+    start *= sourceWidth;
+    dim1Delta = 1;
+    dim2Delta = sourceWidth*sourceHeight;
+    dim1 = sourceWidth;
+    dim2 = sourceDepth;
+  }
+  else {
+    start = sliceRatio*sourceDepth;
+    if(start == sourceDepth)
+      start = sourceDepth-1;
+    start *= sourceWidth*sourceHeight;
+    dim1Delta = 1;
+    dim2Delta = sourceWidth;
+    dim1 = sourceWidth;
+    dim2 = sourceHeight;
+  }
+
+  Size i, j, dim2offset = start, dest, target = 0;
+  width = dim1;
+  height = dim2;
+  pixels.resize(dim1 * dim2);
+
+  for( i = 0; i < dim2; ++i ) {
+    Size offset = dim2offset;
+    for( j = 0; j < dim1; ++j ) {
+      Byte value;
+      if(opacityElseGradientWeight)
+        value = sourceOpacityVoxels[offset];
+      else
+        value = sourceWeightedGradientsVoxels[offset].a;
+      pixels[target++] = RGBA(value, value, value, Byte(255));
+      offset += dim1Delta;
+    }
+    dim2offset += dim2Delta;
+  }
+}

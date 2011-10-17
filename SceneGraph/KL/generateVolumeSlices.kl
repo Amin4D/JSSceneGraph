@@ -5,10 +5,8 @@
 use Xfo;
 
 operator generateVolumeSlices(
-  io Vec3 volumeMin,
-  io Vec3 volumeMax,
-  io Vec3 textureMin,
-  io Vec3 textureMax,
+  io Vec3 cropMin,
+  io Vec3 cropMax,
   io Size nbSlices,
   io Xfo volumeXfo,
   io Mat44 camera,
@@ -27,7 +25,10 @@ operator generateVolumeSlices(
   if(nbSlices == 0)
     return;
 
+  Vec3 volumeMin = cropMin * 2.0 + Vec3(-1.0, -1.0, -1.0);
+  Vec3 volumeMax = cropMax * 2.0 + Vec3(-1.0, -1.0, -1.0);
   Vec3 volSize = volumeMax - volumeMin;
+
   if(volSize.x < PRECISION || volSize.y < PRECISION || volSize.z < PRECISION)
     return;
 
@@ -54,8 +55,8 @@ operator generateVolumeSlices(
   volumeBBox[1] = volumeMax;
 
   Vec3 textureBBox[2];
-  textureBBox[0] = textureMin;
-  textureBBox[1] = textureMax;
+  textureBBox[0] = cropMin;
+  textureBBox[1] = cropMax;
 
   Vec3 camVolBBox[2];
   Size i, j, k;

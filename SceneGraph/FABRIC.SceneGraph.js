@@ -905,8 +905,7 @@ FABRIC.SceneGraph.registerNodeType('Viewport', {
     mouseMoveEvents: 'Set to true this enables the mouse move event',
     backgroundColor: 'The background color of the viewport used for glClearColor',
     postProcessEffect: 'An optional PostProcessEffect node to be used after drawing the viewport, undefined if None.',
-    rayIntersectionThreshold: 'The treshold of raycast intersections, typicall below 1.0',
-    polygonMode: 'The mode for polygon drawing. This can be used with GL_LINE for example to draw everything as lines, -1 for default.'
+    rayIntersectionThreshold: 'The treshold of raycast intersections, typicall below 1.0'
   },
   factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
@@ -919,7 +918,6 @@ FABRIC.SceneGraph.registerNodeType('Viewport', {
         backgroundColor: FABRIC.RT.rgb(0.5, 0.5, 0.5),
         postProcessEffect: undefined,
         rayIntersectionThreshold: 0.2,
-        polygonMode: -1,
         checkOpenGL2Support: true
       });
 
@@ -934,7 +932,6 @@ FABRIC.SceneGraph.registerNodeType('Viewport', {
       redrawEventHandler = viewportNode.constructEventHandlerNode('Redraw');
       
     dgnode.addMember('backgroundColor', 'Color', options.backgroundColor);
-    dgnode.addMember('polygonMode', 'Integer', options.polygonMode);
 
     redrawEventHandler.setScope('viewPort', dgnode);
 

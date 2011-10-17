@@ -147,7 +147,7 @@ $(document).ready(function() {
   });
   
   viewport.setBackgroundTextureImage(scene.constructNode('Image', {
-    url: 'Resources/fabric-demo-gradient-bright.png'
+    url: 'Resources/fabric-demo-gradient.png'
   }));
 
   // Create a camera to draw the scene from
@@ -312,7 +312,7 @@ $(document).ready(function() {
           <div id="FabricContainer"></div> 
         </div><!--viewer-->
         <div id="sidebar">
-        
+          <h2 class="box">&larr; <a href="../../../index.html">back to Demo list</a></h2>
           <div class="box ui-widget">
             <h2  class="ui-widget-header ui-corner-all">INFO</h2>
             <div class="content ui-widget-content">
@@ -329,7 +329,6 @@ $(document).ready(function() {
                 <div class="box">
                     <h2>CONTROLS</h2>
                     <div class="content">
-                      
                       <span id="paintModeSet" style="margin-bottom: 10px;">
                         <input type="radio" id="paintModeAdd" name="paintMode" checked="checked" /><label for="paintModeAdd">Add</label>
                         <input type="radio" id="paintModeSubtract" name="paintMode" /><label for="paintModeSubtract">Subtract</label>

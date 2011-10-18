@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<shader>
+	<name>HairTextureMaterial</name>
+	<uniforms>
+		<uniform name="u_lightPosition" constant="lightPosition" owner="light" type="Vec3"/>
+		<uniform name="u_modelViewProjectionMatrix" constant="modelViewProjectionMatrix" owner="instance" type="Mat44"/>
+		<uniform name="u_modelViewMatrix" constant="modelViewMatrix"  owner="instance" type="Mat44"/>
+		<uniform name="u_normalMatrix" constant="normalMatrix"  owner="instance" type="Mat33"/>
+		<uniform name="u_materialSpecularColor" constant="specularColor" type="Color" defaultValue="FABRIC.RT.rgba(1.0,1.0,1.0,1.0)"/>
+		<uniform name="u_samplerDiffuseMap" constant="diffuseTexture" type="Integer" owner="texture"/>
+	</uniforms>
+	<attributes>
+		<attribute name="a_position" binding="positions"/>
+		<attribute name="a_texCoord" binding="uvs0"/>
+		<attribute name="a_tangent" binding="tangents"/>
+	</attributes>
+
+	<textures>
+		<texture binding="diffuseTexture"/>
+	</textures>
+	
+	<vertexshader>
+		<source>
+			uniform mat4 u_modelViewProjectionMatrix;
+			uniform mat4 u_modelViewMatrix;
+			uniform mat3 u_normalMatrix;
+			uniform vec4 u_lightPosition;
+
+			attribute vec4 a_position;
+			attribute vec4 a_texCoord;
+      attribute vec3 a_tangent;
+
+			varying vec3 lightDir;
+			varying vec3 viewDir;
+      varying vec3 tangent;
+
+			void main(){
+				gl_TexCoord[0].xy = a_texCoord.xy;
+
+				vec4 modelCameraPosition = u_modelViewMatrix * a_position;
+        tangent = u_normalMatrix * a_tangent;
+        
+				lightDir = vec3(u_lightPosition - modelCameraPosition);
+
+				viewDir = vec3(-modelCameraPosition);
+				gl_Position = u_modelViewProjectionMatrix * a_position;
+			}
+			
+		</source>
+	</vertexshader>
+	
+	<fragmentshader>
+		<source>
+			
+			uniform vec4 u_materialSpecularColor;
+
+			varying vec3 lightDir;
+			varying vec3 viewDir;
+      varying vec3 tangent;
+
+			uniform sampler2D u_samplerDiffuseMap;
+      
+			
+			void main(){
+      
+        vec3 N = normalize(tangent);
+        vec3 L = normalize(lightDir);
+        vec3 V = normalize(viewDir);
+        float td = clamp(1.0 + dot(N,L),0.5,1.0);
+        float nd = 1.0 - abs(dot(N,V));
+        nd = nd * nd * nd * nd * nd;
+      
+				gl_FragColor = td * (texture2D( u_samplerDiffuseMap, gl_TexCoord[0].st ) * (1.0 - nd) + u_materialSpecularColor * nd);
+			}
+
+		</source>
+	</fragmentshader>
+</shader>

@@ -241,7 +241,7 @@ FABRIC.SceneGraph.registerNodeType('AlembicLoadNode', {
         }
         else if(type == 'Points') {
           
-          var pointsNode = scene.constructNode('Points', { createBoundingBoxNode: true, size: 4.0 } );
+          var pointsNode = scene.constructNode('Points', { createBoundingBoxNode: true } );
           parsedNodes[identifier] = pointsNode.pub;
 
           // retrieve thd dgnodes
@@ -285,6 +285,81 @@ FABRIC.SceneGraph.registerNodeType('AlembicLoadNode', {
               'self.colors<>'
             ],
             entryFunctionName: 'alembicParsePointsAttributes',
+            srcFile: 'FABRIC_ROOT/SceneGraph/KL/loadAlembic.kl'
+          }));
+        }
+        else if(type == 'Curves') {
+          
+          var linesNode = scene.constructNode('Lines', { createBoundingBoxNode: true } );
+          parsedNodes[identifier] = linesNode.pub;
+
+          // retrieve thd dgnodes
+          var uniformsdgnode = linesNode.getUniformsDGNode();
+          uniformsdgnode.addMember('identifier','String',identifier);
+          uniformsdgnode.addMember('uvsLoaded','Boolean',false);
+          uniformsdgnode.addMember('alembicTime','Scalar',0);
+          linesNode.getTimeDrivenDGNodeNames = function() {
+            return ['UniformsDGNode'];
+          }
+          uniformsdgnode.setDependency(resourceloaddgnode,'alembic');
+          var attributesdgnode = linesNode.getAttributesDGNode();
+          attributesdgnode.setDependency(resourceloaddgnode,'alembic');
+
+          linesNode.pub.addVertexAttributeValue('tangents','Vec3',{ genVBO:true });
+          linesNode.pub.addVertexAttributeValue('sizes','Scalar',{ genVBO:true });
+          linesNode.pub.addVertexAttributeValue('colors','Color',{ genVBO:true });
+          linesNode.pub.addVertexAttributeValue('uvs0','Vec2',{ genVBO:true });
+
+          // create a function to access the number of sample of this node
+          linesNode.pub.getNumSamples = (function(value) { return function() { return value; }; })(numSamples);
+          
+          // setup the parse operators
+          uniformsdgnode.bindings.append(scene.constructOperator({
+            operatorName: 'alembicParseCurvesUniforms',
+            parameterLayout: [
+              'alembic.handle',
+              'self.identifier',
+              'self.indices'
+            ],
+            entryFunctionName: 'alembicParseCurvesUniforms',
+            srcFile: 'FABRIC_ROOT/SceneGraph/KL/loadAlembic.kl'
+          }));
+          
+          attributesdgnode.bindings.append(scene.constructOperator({
+            operatorName: 'alembicParseCurvesCount',
+            parameterLayout: [
+              'alembic.handle',
+              'uniforms.identifier',
+              'self.newCount'
+            ],
+            entryFunctionName: 'alembicParseCurvesCount',
+            srcFile: 'FABRIC_ROOT/SceneGraph/KL/loadAlembic.kl'
+          }));
+          
+          attributesdgnode.bindings.append(scene.constructOperator({
+            operatorName: 'alembicParseCurvesAttributes',
+            parameterLayout: [
+              'alembic.handle',
+              'uniforms.identifier',
+              'uniforms.alembicTime',
+              'self.positions<>',
+              'self.sizes<>',
+              'uniforms.uvsLoaded',
+              'self.uvs0<>',
+              'self.colors<>'
+            ],
+            entryFunctionName: 'alembicParseCurvesAttributes',
+            srcFile: 'FABRIC_ROOT/SceneGraph/KL/loadAlembic.kl'
+          }));
+
+          attributesdgnode.bindings.append(scene.constructOperator({
+            operatorName: 'alembicCurvesComputeTangents',
+            parameterLayout: [
+              'uniforms.indices',
+              'self.positions<>',
+              'self.tangents<>'
+            ],
+            entryFunctionName: 'alembicCurvesComputeTangents',
             srcFile: 'FABRIC_ROOT/SceneGraph/KL/loadAlembic.kl'
           }));
         }
@@ -335,6 +410,13 @@ FABRIC.SceneGraph.registerNodeType('AlembicLoadNode', {
             node.pub.setAttributeDynamic('positions');
             node.pub.setAttributeDynamic('sizes');
             node.pub.setAttributeDynamic('colors');
+          }
+          else if(node.pub.isTypeOf('Curves')) {
+            node.pub.setAttributeDynamic('positions');
+            node.pub.setAttributeDynamic('normals');
+            node.pub.setAttributeDynamic('sizes');
+            node.pub.setAttributeDynamic('colors');
+            node.pub.setAttributeDynamic('uvs0');
           }
         }
 

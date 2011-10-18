@@ -86,13 +86,14 @@ $(document).ready(function() {
 
   // create the scene grid
   scene.constructNode('Instance', {
-          geometryNode: scene.constructNode('Grid', {
-              size_x: 40.0,
-              size_z: 40.0,
-              sections_x: 20,
-              sections_z: 20 }),
-          materialNode: scene.constructNode('FlatMaterial')
-      });
+    geometryNode: scene.constructNode('Grid', {
+      size_x: 40.0,
+      size_z: 40.0,
+      sections_x: 20,
+      sections_z: 20
+    }),
+    materialNode: scene.constructNode('FlatMaterial')
+  });
 
   var assets = scene.importAssetFile('Resources/tuscany_static.dae', {});
 
@@ -102,8 +103,7 @@ $(document).ready(function() {
   var bones = skeleton.getBones();
   
   // set the bone lengths
-  for(var i=0;i<bones.length;i++)
-  {
+  for(var i=0;i<bones.length;i++){
     if(bones[i].name.substr(0,4) == "foot"){
       bones[i].length = 2.0;
     } else if(bones[i].name.substr(0,3) == "leg"){
@@ -121,12 +121,12 @@ $(document).ready(function() {
   });
 
   var material = scene.constructNode('PhongBumpReflectSkinningMaterial', {
-      diffuseTextureNode: scene.constructNode('Image', { url: 'Resources/tuscany_d.png' }),
-      specularTextureNode: scene.constructNode('Image', { url: 'Resources/tuscany_s.png' }),
-      normalTextureNode: scene.constructNode('Image', { url: 'Resources/tuscany_n.png' }),
-      lightNode: light,
-      numBones: skeleton.getNumBones()
-    });
+    diffuseTextureNode: scene.constructNode('Image', { url: 'Resources/tuscany_d.png' }),
+    specularTextureNode: scene.constructNode('Image', { url: 'Resources/tuscany_s.png' }),
+    normalTextureNode: scene.constructNode('Image', { url: 'Resources/tuscany_n.png' }),
+    lightNode: light,
+    numBones: skeleton.getNumBones()
+  });
   assets.tuscanyCharacterInstance.setMaterialNode(material);
 
   var debug = scene.constructNode('CharacterSkeletonDebug', {
@@ -147,11 +147,11 @@ $(document).ready(function() {
   }
 
   $('#toggleVisibility').button()
-    .click(function() {
-      var toggle = !debugInstance.getDrawToggle();
-      debugInstance.setDrawToggle(toggle);
-      viewport.redraw();
-    });
+  .click(function() {
+    var toggle = !debugInstance.getDrawToggle();
+    debugInstance.setDrawToggle(toggle);
+    viewport.redraw();
+  });
 
   $('#loadingDialog').dialog({
     modal: true
@@ -196,7 +196,7 @@ $(document).ready(function() {
           <div class="box">
             <h2>CONTROLS</h2>
             <div class="content">
-              <button id="toggleVisibility">Toggle Visibility</button>
+              <input type="checkbox" id="toggleVisibility" /><label for="toggleVisibility">Toggle Visibility</label>
             </div><!--content-->
           </div><!--box-->
         </div><!--sidebar-->

@@ -172,8 +172,14 @@ $(document).ready(function() {
   });  // Wait for all the operators to be compiled. 
 });
 
-</script>
+// jQuert UI Styling classes
+$(document).ready(function() {
+  $(".box").addClass("ui-widget");
+  $(".box h2").addClass("ui-widget-header ui-corner-all");
+  $(".content").addClass("ui-widget-content");
+});
 
+</script>
   </head> 
   <body>
     <div id="loadingDialog" title="Loading...">
@@ -190,7 +196,7 @@ $(document).ready(function() {
           <div class="box">
             <h2>CONTROLS</h2>
             <div class="content">
-              <button id="toggleVisibility" style="margin-top:30px;">Toggle Visibility</button>
+              <button id="toggleVisibility">Toggle Visibility</button>
             </div><!--content-->
           </div><!--box-->
         </div><!--sidebar-->

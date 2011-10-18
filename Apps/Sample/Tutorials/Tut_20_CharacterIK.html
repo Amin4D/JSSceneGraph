@@ -222,8 +222,14 @@ $(document).ready(function() {
   });  // Wait for all the operators to be compiled. 
 });
 
-</script>
+// jQuert UI Styling classes
+$(document).ready(function() {
+  $(".box").addClass("ui-widget");
+  $(".box h2").addClass("ui-widget-header ui-corner-all");
+  $(".content").addClass("ui-widget-content");
+});
 
+</script>
   </head> 
   <body>
     <div id="loadingDialog" title="Loading...">

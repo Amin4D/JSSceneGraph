@@ -70,29 +70,30 @@ $(document).ready(function() {
   // create the first scenegraph node, the viewport
   var viewport = scene.constructNode('Viewport', {
     windowElement: document.getElementById('FabricContainer'),
-    backgroundColor: FABRIC.RT.rgb(0.0, 0.05, 0.15),
+    backgroundColor: FABRIC.RT.rgb(0.8, 0.8, 0.8),
     enableRaycasting: true
   });
 
   // create a camera, to be able to see something
   var camera = scene.constructNode('TargetCamera', {
-      position: new FABRIC.RT.Vec3(15, 15, 15),
-      target: new FABRIC.RT.Vec3(6, 3, 0),
-      nearDistance: 0.1,
-      farDistance: 200
-    });
+    position: new FABRIC.RT.Vec3(15, 15, 15),
+    target: new FABRIC.RT.Vec3(6, 3, 0),
+    nearDistance: 0.1,
+    farDistance: 200
+  });
   viewport.setCameraNode(camera);
   scene.constructNode("CameraManipulator", { targetNode:camera } );
 
   // create the scene grid
   scene.constructNode('Instance', {
-          geometryNode: scene.constructNode('Grid', {
-              size_x: 40.0,
-              size_z: 40.0,
-              sections_x: 20,
-              sections_z: 20 }),
-          materialNode: scene.constructNode('FlatMaterial')
-      });
+    geometryNode: scene.constructNode('Grid', {
+      size_x: 40.0,
+      size_z: 40.0,
+      sections_x: 20,
+      sections_z: 20
+    }),
+    materialNode: scene.constructNode('FlatMaterial')
+  });
 
   var assets = scene.importAssetFile('Resources/tuscany_static.dae', {});
 
@@ -102,8 +103,7 @@ $(document).ready(function() {
   var bones = skeleton.getBones();
   
   // set the bone lengths
-  for(var i=0;i<bones.length;i++)
-  {
+  for(var i=0;i<bones.length;i++){
     if(bones[i].name.substr(0,4) == "foot"){
       bones[i].length = 2.0;
     } else if(bones[i].name.substr(0,3) == "leg"){
@@ -129,12 +129,12 @@ $(document).ready(function() {
 
   // create a material node
   var material = scene.constructNode('PhongBumpReflectMaterial', {
-      diffuseTextureNode: scene.constructNode('Image', { url: 'Resources/tuscany_d.png' }),
-      specularTextureNode: scene.constructNode('Image', { url: 'Resources/tuscany_s.png' }),
-      normalTextureNode: scene.constructNode('Image', { url: 'Resources/tuscany_n.png' }),
-      lightNode: light,
-      numBones: skeleton.getNumBones()
-    });
+    diffuseTextureNode: scene.constructNode('Image', { url: 'Resources/tuscany_d.png' }),
+    specularTextureNode: scene.constructNode('Image', { url: 'Resources/tuscany_s.png' }),
+    normalTextureNode: scene.constructNode('Image', { url: 'Resources/tuscany_n.png' }),
+    lightNode: light,
+    numBones: skeleton.getNumBones()
+  });
 
   // draw a phong version of the couch
   assets.tuscanyCharacterInstance.setMaterialNode(material);

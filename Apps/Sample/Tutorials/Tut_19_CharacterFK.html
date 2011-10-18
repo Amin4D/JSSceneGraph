@@ -71,7 +71,7 @@ $(document).ready(function() {
   // create the first scenegraph node, the viewport
   var viewport = scene.constructNode('Viewport', {
     windowElement: document.getElementById('FabricContainer'),
-    backgroundColor: FABRIC.RT.rgb(0.0, 0.05, 0.15),
+    backgroundColor: FABRIC.RT.rgb(0.8, 0.8, 0.8),
     enableRaycasting: true
   });
 
@@ -87,13 +87,14 @@ $(document).ready(function() {
 
   // create the scene grid
   scene.constructNode('Instance', {
-          geometryNode: scene.constructNode('Grid', {
-              size_x: 40.0,
-              size_z: 40.0,
-              sections_x: 20,
-              sections_z: 20 }),
-          materialNode: scene.constructNode('FlatMaterial')
-      });
+    geometryNode: scene.constructNode('Grid', {
+      size_x: 40.0,
+      size_z: 40.0,
+      sections_x: 20,
+      sections_z: 20
+    }),
+    materialNode: scene.constructNode('FlatMaterial')
+  });
 
   var assets = scene.importAssetFile('Resources/tuscany_static.dae', {});
 

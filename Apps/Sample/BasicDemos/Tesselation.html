@@ -71,10 +71,10 @@ $(document).ready(function() {
   
   // Create a camera to draw the scene from
   var camera = scene.constructNode('TargetCamera', {
-      nearDistance: 0.1,
-      farDistance: 500,
-      position: new FABRIC.RT.Vec3(0, 5, 10).multiplyScalar(2.0)
-    });
+    nearDistance: 0.1,
+    farDistance: 500,
+    position: new FABRIC.RT.Vec3(0, 5, 10).multiplyScalar(2.0)
+  });
 
   scene.constructNode("CameraManipulator", { targetNode:camera } );
 
@@ -86,22 +86,22 @@ $(document).ready(function() {
   var depthTexture = scene.constructNode('Image', { url: 'Resources/bricks_depth.png' });
   
   var tesselationMaterial = scene.constructNode('PhongTesselationMaterial', {
-      color: FABRIC.RT.rgb(0.7, 0.7, 0.7, 1),
-      wireColor: FABRIC.RT.rgb(0, 0, 0, 1),
-      wireOpacity: 1.0,
-      lightNode: light,
-      depthTextureNode: depthTexture
-    });
+    color: FABRIC.RT.rgb(0.7, 0.7, 0.7, 1),
+    wireColor: FABRIC.RT.rgb(0, 0, 0, 1),
+    wireOpacity: 1.0,
+    lightNode: light,
+    depthTextureNode: depthTexture
+  });
 
   assetNodes.sphere.setMaterialNode(tesselationMaterial);
   
   $('#tesselationlevel')
   .slider({
-      min: 1.0,
-      max: 64.0,
-      step: 1.0,
-      value: tesselationMaterial.getTesselationInner(),
-    })
+    min: 1.0,
+    max: 64.0,
+    step: 1.0,
+    value: tesselationMaterial.getTesselationInner(),
+  })
   .bind('slide',
     function(event, ui) {
       tesselationMaterial.setTesselationInner(ui.value);
@@ -111,11 +111,11 @@ $(document).ready(function() {
 
   $('#wireopacity')
   .slider({
-      min: 0.0,
-      max: 1.0,
-      step: 0.01,
-      value: tesselationMaterial.getWireOpacity(),
-    })
+    min: 0.0,
+    max: 1.0,
+    step: 0.01,
+    value: tesselationMaterial.getWireOpacity(),
+  })
   .bind('slide',
     function(event, ui) {
       tesselationMaterial.setWireOpacity(ui.value);

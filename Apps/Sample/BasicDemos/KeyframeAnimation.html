@@ -61,11 +61,13 @@ s.parentNode.insertBefore(ga, s);
 
     
     <script type="text/javascript">
-$(document).ready(function() { var $globalTimeSlider = $('#globalTime').slider({
-        min: 0.0,
-        max: 100.0,
-        step: 0.01
-      });
+$(document).ready(function() {
+  
+  var $globalTimeSlider = $('#globalTime').slider({
+      min: 0.0,
+      max: 100.0,
+      step: 0.01
+    });
 
   $('#curveEditor').button();
 
@@ -100,6 +102,20 @@ $(document).ready(function() { var $globalTimeSlider = $('#globalTime').slider({
     diffuseColor: FABRIC.RT.rgb(0, 0.8, 0, 1),
     lightNode: light
   });
+  
+  // create the scene grid
+  scene.constructNode('Instance', {
+    geometryNode: scene.constructNode('Grid', {
+      size_x: 140.0,
+      size_z: 140.0,
+      sections_x: 20,
+      sections_z: 20
+    }),
+    materialNode: scene.constructNode('FlatMaterial', {
+      color: new FABRIC.RT.rgb(0.3,0.3,0.3,1.0)
+    } )
+  });
+  
   var cube = scene.constructNode('Cuboid', {
     length: 15,
     width: 15,
@@ -123,14 +139,16 @@ $(document).ready(function() { var $globalTimeSlider = $('#globalTime').slider({
   } );
   linearPosKeyframeTrackNode.setTrackCount(2);
   var key = FABRIC.Animation.linearKeyframe;
-  linearPosKeyframeTrackNode.setTrackData(1, { name: 'PosX',
-                        color: FABRIC.RT.rgb(1, 0, 0),
-                        keys: [key(0, 0), key(10, 20), key(20, -5), key(50, -5), key(75, 50), key(100, 0)]
-                      });
-  linearPosKeyframeTrackNode.setTrackData(0, { name: 'PosY',
-                        color: FABRIC.RT.rgb(1, 0, 0),
-                        keys: [key(0, 0), key(50, 0), key(75, 20), key(100, 0)]
-                      });
+  linearPosKeyframeTrackNode.setTrackData(1, {
+    name: 'PosX',
+    color: FABRIC.RT.rgb(1, 0, 0),
+    keys: [key(0, 0), key(10, 20), key(20, -5), key(50, -5), key(75, 50), key(100, 0)]
+  });
+  linearPosKeyframeTrackNode.setTrackData(0, {
+    name: 'PosY',
+    color: FABRIC.RT.rgb(1, 0, 0),
+    keys: [key(0, 0), key(50, 0), key(75, 20), key(100, 0)]
+  });
 
   var linearAnimationEvaluatorNode = scene.constructNode('AnimationEvaluator', {
     name:'LinearPosAnimationEvaluator' ,
@@ -160,26 +178,28 @@ $(document).ready(function() { var $globalTimeSlider = $('#globalTime').slider({
   } );
   bezierPosKeyframeTrackNode.setTrackCount(2);
   var key = FABRIC.Animation.bezierKeyframe;
-  bezierPosKeyframeTrackNode.setTrackData(0, { name: 'PosX',
-                        color: FABRIC.RT.rgb(1, 0, 0),
-                        keys: [
-                             key(0, -20, null, new FABRIC.RT.Vec2(3, 0)),
-                            key(10, 0, new FABRIC.RT.Vec2(-3, 0), new FABRIC.RT.Vec2(3, 0)),
-                            key(20, 20, new FABRIC.RT.Vec2(-3, 0), new FABRIC.RT.Vec2(10, 0)),
-                            key(50, 0, new FABRIC.RT.Vec2(-10, 0), new FABRIC.RT.Vec2(7, 0)),
-                            key(75, -20, new FABRIC.RT.Vec2(-7, 0), null)
-                          ]
-                      });
-  bezierPosKeyframeTrackNode.setTrackData(1, { name: 'PosY',
-                        color: FABRIC.RT.rgb(1, 0, 0),
-                        keys: [
-                             key(0, 0, null, new FABRIC.RT.Vec2(3, 0)),
-                            key(10, 20, new FABRIC.RT.Vec2(-3, 0), new FABRIC.RT.Vec2(3, 0)),
-                            key(20, 0, new FABRIC.RT.Vec2(-3, 0), new FABRIC.RT.Vec2(10, 0)),
-                            key(50, -20, new FABRIC.RT.Vec2(-10, 0), new FABRIC.RT.Vec2(7, 0)),
-                            key(75, 0, new FABRIC.RT.Vec2(-7, 0), null)
-                          ]
-                      });
+  bezierPosKeyframeTrackNode.setTrackData(0, {
+    name: 'PosX',
+    color: FABRIC.RT.rgb(1, 0, 0),
+    keys: [
+      key(0, -20, null, new FABRIC.RT.Vec2(3, 0)),
+      key(10, 0, new FABRIC.RT.Vec2(-3, 0), new FABRIC.RT.Vec2(3, 0)),
+      key(20, 20, new FABRIC.RT.Vec2(-3, 0), new FABRIC.RT.Vec2(10, 0)),
+      key(50, 0, new FABRIC.RT.Vec2(-10, 0), new FABRIC.RT.Vec2(7, 0)),
+      key(75, -20, new FABRIC.RT.Vec2(-7, 0), null)
+    ]
+  });
+  bezierPosKeyframeTrackNode.setTrackData(1, {
+    name: 'PosY',
+    color: FABRIC.RT.rgb(1, 0, 0),
+    keys: [
+      key(0, 0, null, new FABRIC.RT.Vec2(3, 0)),
+      key(10, 20, new FABRIC.RT.Vec2(-3, 0), new FABRIC.RT.Vec2(3, 0)),
+      key(20, 0, new FABRIC.RT.Vec2(-3, 0), new FABRIC.RT.Vec2(10, 0)),
+      key(50, -20, new FABRIC.RT.Vec2(-10, 0), new FABRIC.RT.Vec2(7, 0)),
+      key(75, 0, new FABRIC.RT.Vec2(-7, 0), null)
+    ]
+  });
 
   var bezierAnimationEvaluatorNode = scene.constructNode('AnimationEvaluator', {
     name:'BezierPosKeyAnimationTrack' ,
@@ -209,25 +229,27 @@ $(document).ready(function() { var $globalTimeSlider = $('#globalTime').slider({
   } );
   bezierEulerKeyframeTrackNode.setTrackCount(2);
   var key = FABRIC.Animation.bezierKeyframe;
-  bezierEulerKeyframeTrackNode.setTrackData(0, { name: 'EulerX',
-                        color: FABRIC.RT.rgb(1, 0, 0),
-                        keys: [
-                          key(0, 0, null, new FABRIC.RT.Vec2(3, 0)),
-                          key(10, 0, new FABRIC.RT.Vec2(-3, 0), new FABRIC.RT.Vec2(3, 0)),
-                          key(20, 2, new FABRIC.RT.Vec2(-3, 0), new FABRIC.RT.Vec2(10, 0)),
-                          key(50, 2, new FABRIC.RT.Vec2(-10, 0), new FABRIC.RT.Vec2(7, 0)),
-                          key(75, 0, new FABRIC.RT.Vec2(-7, 0), null)
-                        ]
-                      });
-  bezierEulerKeyframeTrackNode.setTrackData(1, { name: 'EulerY',
-                        color: FABRIC.RT.rgb(0, 1, 0),
-                        keys: [
-                           key(0, 0, null, new FABRIC.RT.Vec2(3, 0)),
-                          key(20, 0, new FABRIC.RT.Vec2(-3, 0), new FABRIC.RT.Vec2(10, 0)),
-                          key(50, -2, new FABRIC.RT.Vec2(-10, 0), new FABRIC.RT.Vec2(7, 0)),
-                          key(75, 0, new FABRIC.RT.Vec2(-7, 0), null)
-                        ]
-                      });
+  bezierEulerKeyframeTrackNode.setTrackData(0, {
+    name: 'EulerX',
+    color: FABRIC.RT.rgb(1, 0, 0),
+    keys: [
+      key(0, 0, null, new FABRIC.RT.Vec2(3, 0)),
+      key(10, 0, new FABRIC.RT.Vec2(-3, 0), new FABRIC.RT.Vec2(3, 0)),
+      key(20, 2, new FABRIC.RT.Vec2(-3, 0), new FABRIC.RT.Vec2(10, 0)),
+      key(50, 2, new FABRIC.RT.Vec2(-10, 0), new FABRIC.RT.Vec2(7, 0)),
+      key(75, 0, new FABRIC.RT.Vec2(-7, 0), null)
+    ]
+  });
+  bezierEulerKeyframeTrackNode.setTrackData(1, {
+    name: 'EulerY',
+    color: FABRIC.RT.rgb(0, 1, 0),
+    keys: [
+       key(0, 0, null, new FABRIC.RT.Vec2(3, 0)),
+      key(20, 0, new FABRIC.RT.Vec2(-3, 0), new FABRIC.RT.Vec2(10, 0)),
+      key(50, -2, new FABRIC.RT.Vec2(-10, 0), new FABRIC.RT.Vec2(7, 0)),
+      key(75, 0, new FABRIC.RT.Vec2(-7, 0), null)
+    ]
+  });
 
   var bezierAnimationEvaluatorNode = scene.constructNode('AnimationEvaluator', {
     name:'EulerBezierKeyAnimationTrack' ,

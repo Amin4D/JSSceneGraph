@@ -72,9 +72,9 @@ $(document).ready(function() {
   
   // Create a camera to draw the scene from
   var camera = scene.constructNode('TargetCamera', {
-      position: new FABRIC.RT.Vec3(40, 70, 100),
-      target: new FABRIC.RT.Vec3(0, 0, 0)
-    });
+    position: new FABRIC.RT.Vec3(40, 70, 100),
+    target: new FABRIC.RT.Vec3(0, 0, 0)
+  });
 
   scene.constructNode("CameraManipulator", { targetNode:camera } );
 
@@ -85,108 +85,108 @@ $(document).ready(function() {
 
   // Flat Shader
   var flatMaterial = scene.constructNode('FlatMaterial', {
-      color: FABRIC.RT.rgb(0.8, 0, 0, 1)
-    });
+    color: FABRIC.RT.rgb(0.8, 0, 0, 1)
+  });
 
   var inst = scene.constructNode('Instance', {
-      transformNode: scene.constructNode('Transform', {
-          hierarchical: false,
-          globalXfo: new FABRIC.RT.Xfo({ tr: new FABRIC.RT.Vec3(-30, 0, 0) })
-        }),
-      geometryNode: sphere,
-      materialNode: flatMaterial
-    });
-  
+    transformNode: scene.constructNode('Transform', {
+        hierarchical: false,
+        globalXfo: new FABRIC.RT.Xfo({ tr: new FABRIC.RT.Vec3(-30, 0, 0) })
+      }),
+    geometryNode: sphere,
+    materialNode: flatMaterial
+  });
+
   inst.setMaterialNode( scene.constructNode('WireframeMaterial', {
-      color: FABRIC.RT.rgb(0.8, 0.6, 0.6, 1)
-    }) );
+    color: FABRIC.RT.rgb(0.3, 0.3, 0.3, 1)
+  }));
   
   // Phong Shader
   var phongMaterial = scene.constructNode('PhongMaterial', {
-      diffuseColor: FABRIC.RT.rgb(0.8, 0, 0, 1),
-      lightNode: light
-    });
+    diffuseColor: FABRIC.RT.rgb(0.8, 0, 0, 1),
+    lightNode: light
+  });
 
   scene.constructNode('Instance', {
-      transformNode: scene.constructNode('Transform', {
-          hierarchical: false,
-          globalXfo: new FABRIC.RT.Xfo({ tr: new FABRIC.RT.Vec3(-10, 0, 0) })
-        }),
-      geometryNode: sphere,
-      materialNode: phongMaterial
-    });
+    transformNode: scene.constructNode('Transform', {
+      hierarchical: false,
+      globalXfo: new FABRIC.RT.Xfo({ tr: new FABRIC.RT.Vec3(-10, 0, 0) })
+    }),
+    geometryNode: sphere,
+    materialNode: phongMaterial
+  });
 
   // Flat Textured Shader
   var flatTexturedMaterial = scene.constructNode('FlatTextureMaterial', {
-      textureNode: scene.constructNode('Image', { url: 'Resources/earth.png' })
-    });
+    textureNode: scene.constructNode('Image', { url: 'Resources/earth.png' })
+  });
   scene.constructNode('Instance', {
-      transformNode: scene.constructNode('Transform', {
-        hierarchical: false,
-        globalXfo: new FABRIC.RT.Xfo({ tr: new FABRIC.RT.Vec3(10, 0, 0) })
-      }),
-      geometryNode: sphere,
-      materialNode: flatTexturedMaterial
-    });
+    transformNode: scene.constructNode('Transform', {
+      hierarchical: false,
+      globalXfo: new FABRIC.RT.Xfo({ tr: new FABRIC.RT.Vec3(10, 0, 0) })
+    }),
+    geometryNode: sphere,
+    materialNode: flatTexturedMaterial
+  });
 
   // Normal Mapped Shader
   var phongBumpReflectMaterial = scene.constructNode('PhongBumpReflectMaterial', {
-      diffuseTextureNode: scene.constructNode('Image', { url: 'Resources/brick_d.png' }),
-      specularTextureNode: scene.constructNode('Image', { url: 'Resources/brick_s.png' }),
-      normalTextureNode: scene.constructNode('Image', { url: 'Resources/brick_n.png' }),
-      lightNode: light
-    });
+    diffuseTextureNode: scene.constructNode('Image', { url: 'Resources/brick_d.png' }),
+    specularTextureNode: scene.constructNode('Image', { url: 'Resources/brick_s.png' }),
+    normalTextureNode: scene.constructNode('Image', { url: 'Resources/brick_n.png' }),
+    lightNode: light
+  });
 
   scene.constructNode('Instance', {
-      transformNode: scene.constructNode('Transform', {
-          hierarchical: false,
-          globalXfo: new FABRIC.RT.Xfo({ tr: new FABRIC.RT.Vec3(30, 0, 0) })
-        }),
-      geometryNode: sphere,
-      materialNode: phongBumpReflectMaterial
-    });
+    transformNode: scene.constructNode('Transform', {
+      hierarchical: false,
+      globalXfo: new FABRIC.RT.Xfo({ tr: new FABRIC.RT.Vec3(30, 0, 0) })
+    }),
+    geometryNode: sphere,
+    materialNode: phongBumpReflectMaterial
+  });
 
   // Normal Geometry Shader
   // The Normal Material uses geometry shaders to generate
   // lines from the polygon mesh. This material will not render
   // on machines that do not support geometry shaders.
   scene.constructNode('Instance', {
-      transformNode: scene.constructNode('Transform', {
-        hierarchical: false,
-        globalXfo: new FABRIC.RT.Xfo({ tr: new FABRIC.RT.Vec3(30, 0, 0) })
-      }),
-      geometryNode: sphere,
-      materialNode: scene.constructNode('NormalMaterial', {
-          color: FABRIC.RT.rgb(0.8, .8, 0.8, 1)
-        })
-    });
+    transformNode: scene.constructNode('Transform', {
+      hierarchical: false,
+      globalXfo: new FABRIC.RT.Xfo({ tr: new FABRIC.RT.Vec3(30, 0, 0) })
+    }),
+    geometryNode: sphere,
+    materialNode: scene.constructNode('NormalMaterial', {
+      color: FABRIC.RT.rgb(0.3, .3, 0.3, 1)
+    })
+  });
   
   // Transparency Shader
   var cubeTextureMap = scene.constructNode('CubeMap', {
-        urls: [
-          'Resources/cubemap_opensea/opensea_positive_x.png',
-          'Resources/cubemap_opensea/opensea_negative_x.png',
-          'Resources/cubemap_opensea/opensea_positive_y.png',
-          'Resources/cubemap_opensea/opensea_negative_y.png',
-          'Resources/cubemap_opensea/opensea_positive_z.png',
-          'Resources/cubemap_opensea/opensea_negative_z.png'
-        ]
-      });
+    urls: [
+      'Resources/cubemap_opensea/opensea_positive_x.png',
+      'Resources/cubemap_opensea/opensea_negative_x.png',
+      'Resources/cubemap_opensea/opensea_positive_y.png',
+      'Resources/cubemap_opensea/opensea_negative_y.png',
+      'Resources/cubemap_opensea/opensea_positive_z.png',
+      'Resources/cubemap_opensea/opensea_negative_z.png'
+    ]
+  });
   
   var transparentMaterial = scene.constructNode('GlassMaterial', {
-      diffuseColor: FABRIC.RT.rgba(0.0, 0.75, 1, 0.25),
-      cubeMapTextureNode: cubeTextureMap,
-      lightNode: light
-    });
+    diffuseColor: FABRIC.RT.rgba(0.0, 0.75, 1, 0.25),
+    cubeMapTextureNode: cubeTextureMap,
+    lightNode: light
+  });
 
   scene.constructNode('Instance', {
-      transformNode: scene.constructNode('Transform', {
-          hierarchical: false,
-          globalXfo: new FABRIC.RT.Xfo({ tr: new FABRIC.RT.Vec3(50, 0, 0) })
-        }),
-      geometryNode: sphere,
-      materialNode: transparentMaterial
-    });
+    transformNode: scene.constructNode('Transform', {
+      hierarchical: false,
+      globalXfo: new FABRIC.RT.Xfo({ tr: new FABRIC.RT.Vec3(50, 0, 0) })
+    }),
+    geometryNode: sphere,
+    materialNode: transparentMaterial
+  });
   
   
   $('#loadingDialog').dialog({

@@ -126,7 +126,9 @@ $(document).ready(function() {
       size_z: 40.0,
       sections_x: 20,
       sections_z: 20 }),
-    materialNode: scene.constructNode('FlatMaterial')
+    materialNode: scene.constructNode('FlatMaterial', {
+      color: new FABRIC.RT.rgb(0.3,0.3,0.3,1.0)
+    } )
   });
   
   assetNodes.Biped_Nulls_UpperBodyController.setTimeRange(new FABRIC.RT.Vec2(0, 2.5));

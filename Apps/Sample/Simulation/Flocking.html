@@ -78,6 +78,7 @@ $(document).ready(function() {
       primary: 'ui-icon-step'
     }
   });
+  $('#openDebugger').button();
   
   try{
     if(localStorage && localStorage.getItem("flockParams")){
@@ -269,6 +270,10 @@ $(document).ready(function() {
         flockParams.displayDebugging = displayDebugging;
         storeFlockParams();
       });
+      $('#openDebugger').button()
+        .click(function() {
+          FABRIC.displayDebugger();
+        });
       
       setInterval(function() {
           document.getElementById('frameRate').childNodes[0].data = 'Frame Rate:' + viewport.getFPS().toFixed(2);
@@ -324,6 +329,7 @@ $(document).ready(function() {
               </select>
               </br>
               <input type="checkbox" id="displayDebugging" style="margin-top:10px;"/><label for="displayDebugging">Display Debugging:</label>
+              <button id="openDebugger">Open Debugger</button>
             </div><!--content-->
           </div><!--box-->
         

@@ -11,6 +11,6 @@ operator evaluatePoseOffsets(io Mat44 bonematrices[], io Mat44 invmatrices[], io
   }
   bonematrices.resize(pose.size());
   for (Integer i = 0; i < bonematrices.size(); i++) {
-    bonematrices[i] = invmatrices[i] * Mat44(pose[i]);
+    bonematrices[i] = invmatrices[i] * pose[i].toMat44();
   }
 }

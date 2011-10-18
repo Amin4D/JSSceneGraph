@@ -33,7 +33,7 @@ function Quad(in Vec3 positions[], in Integer i00, in Integer i01, in Integer i1
   this.indices[1][1] = i11;
 
   // Compute the face normal from the diagonals
-  var Vec3 d0, d1;
+  Vec3 d0, d1;
 
   d0 = positions[i11] - positions[i00];
   d1 = positions[i10] - positions[i01];
@@ -50,42 +50,59 @@ function computeNormals(
   io Vec3 positions[],
   io Vec3 normals[]
 ) {
-  var Quad q[];
+  Quad q[];
 
   // Break patches into quads
-  for (var Size i = 0; i < p.size(); i++) {
-    for (var Size j = 0; j < 3; j++) {
-      for (var Size k = 0; k < 3; k++) {
+  for (Size i = 0; i < p.size(); i++) {
+    for (Size j = 0; j < 3; j++) {
+      for (Size k = 0; k < 3; k++) {
         q.push(Quad(positions, p[i].indices[j][k], p[i].indices[j][k + 1], p[i].indices[j + 1][k], p[i].indices[j + 1][k + 1]));
       }
     }
   }
 
-  var Adjacency a[];
+  Adjacency a[];
   a.resize(positions.size());
 
   // Build adjacency information
-  for (var Size i = 0; i < q.size(); i++) {
-    for (var Size j = 0; j < 2; j++) {
-      for (var Size k = 0; k < 2; k++) {
+  for (Size i = 0; i < q.size(); i++) {
+    for (Size j = 0; j < 2; j++) {
+      for (Size k = 0; k < 2; k++) {
         a[q[i].indices[j][k]].qidx.push(Integer(i));
       }
     }
   }
   // Compute vertex normals from surrounding face normals
   normals.resize(positions.size());
-  for (var Size i = 0; i < a.size(); i++) {
-    var Vec3 avgn(0.0, 0.0, 0.0);
+  for (Size i = 0; i < a.size(); i++) {
+    Vec3 avgn(0.0, 0.0, 0.0);
 
-    for (var Size j = 0; j < a[i].qidx.size(); j++)
+    for (Size j = 0; j < a[i].qidx.size(); j++)
       avgn += q[a[i].qidx[j]].normal;
 
-    if (avgn.norm() > 0.0)
+    if (avgn.length() > 0.0)
       avgn.setUnit();
 
     normals[i] = avgn;
   }
 }
+
+function Vec3 maxVec(in Vec3 a, in Vec3 b) {
+  Vec3 v;
+  v.x = a.x > b.x ? a.x : b.x;
+  v.y = a.y > b.y ? a.y : b.y;
+  v.z = a.z > b.z ? a.z : b.z;
+  return v;
+}
+
+function Vec3 minVec(in Vec3 a, in Vec3 b) {
+  Vec3 v;
+  v.x = a.x < b.x ? a.x : b.x;
+  v.y = a.y < b.y ? a.y : b.y;
+  v.z = a.z < b.z ? a.z : b.z;
+  return v;
+}
+
 
 function getTeapotHull(
   io Patch p[],
@@ -159,17 +176,17 @@ function getTeapotHull(
   positions.push(Vec3(-1.42500, 0.00000, - 0.00000)); positions.push(Vec3(-1.50000, 0.15000, 0.84000)); positions.push(Vec3(-0.84000, 0.15000, 1.50000)); positions.push(Vec3(0.00000, 0.15000, 1.50000)); positions.push(Vec3(-1.50000, 0.07500, 0.84000)); positions.push(Vec3(-0.84000, 0.07500, 1.50000)); positions.push(Vec3(0.00000, 0.07500, 1.50000)); positions.push(Vec3(-1.42500, 0.00000, 0.79800)); positions.push(Vec3(-0.79800, 0.00000, 1.42500)); positions.push(Vec3(0.00000, 0.00000, 1.42500));
   positions.push(Vec3(0.84000, 0.15000, 1.50000)); positions.push(Vec3(1.50000, 0.15000, 0.84000)); positions.push(Vec3(0.84000, 0.07500, 1.50000)); positions.push(Vec3(1.50000, 0.07500, 0.84000)); positions.push(Vec3(0.79800, 0.00000, 1.42500)); positions.push(Vec3(1.42500, 0.00000, 0.79800));
 
-  // Center on teapot's median point
-  var Vec3 vmin, vmax, vmid;
+  // Center on teapot's bbox center
+  Vec3 vmin, vmax, vmid;
   vmin.setNull();
   vmax.setNull();
-  for (var Size i = 0; i < positions.size(); i++) {
-    vmin = vmin.min(positions[i]);
-    vmax = vmax.max(positions[i]);
+  for (Size i = 0; i < positions.size(); i++) {
+    vmin = minVec(vmin, positions[i]);
+    vmax = maxVec(vmax, positions[i]);
   }
 
   vmid = (vmin + vmax) * 0.5;
-  for (var Size i = 0; i < positions.size(); i++)
+  for (Size i = 0; i < positions.size(); i++)
     positions[i] -= vmid;
 
   computeNormals(p, positions, normals);
@@ -189,28 +206,28 @@ operator subdividePatch(
   in Boolean genTex
 ) {
   // Compute the basis function
-  var Scalar b[][4];
+  Scalar b[][4];
   b.resize(nb_points);
 
-  for (var Integer i = 0; i < nb_points; i++) {
-    var Scalar u = Scalar(i) / Scalar(nb_points - 1);
+  for (Integer i = 0; i < nb_points; i++) {
+    Scalar u = Scalar(i) / Scalar(nb_points - 1);
     b[i][0] = (1 - u) * (1 - u) * (1 - u);
     b[i][1] = 3.0 * u * (1 - u) * (1 - u);
     b[i][2] = 3.0 * u * u * (1 - u);
     b[i][3] = u * u * u;
   }
 
-  var Vec2 pt[4][4];
+  Vec2 pt[4][4];
   if (genTex) {
-    for (var Integer i = 0; i < 4; i++) {
-      for (var Integer j = 0; j < 4; j++) {
+    for (Integer i = 0; i < 4; i++) {
+      for (Integer j = 0; j < 4; j++) {
         pt[i][j] = Vec2(1.0 - (Scalar(j) / 3.0), Scalar(i) / 3.0);
       }
     }
   }
 
-  var Vec3 rv[][4], rn[][4];
-  var Vec2 rt[][4];
+  Vec3 rv[][4], rn[][4];
+  Vec2 rt[][4];
   rv.resize(nb_points);
   rn.resize(nb_points);
 
@@ -219,8 +236,8 @@ operator subdividePatch(
   }
 
   // Create smoothed control curves along the U iso lines
-  for (var Integer i = 0; i < nb_points; i++) {
-    for (var Integer j = 0; j < 4; j++) {
+  for (Integer i = 0; i < nb_points; i++) {
+    for (Integer j = 0; j < 4; j++) {
       rv[i][j] =
         b[i][0] * pv[p.indices[j][0]] +
         b[i][1] * pv[p.indices[j][1]] +
@@ -244,9 +261,9 @@ operator subdividePatch(
 
   // Create a smooth surface from the smoothed control
   // curves along the V iso lines.
-  var Integer offset = voff;
-  for (var Integer i = 0; i < nb_points; i++) {
-    for (var Integer j = 0; j < nb_points; j++) {
+  Integer offset = voff;
+  for (Integer i = 0; i < nb_points; i++) {
+    for (Integer j = 0; j < nb_points; j++) {
       positions[voff] =
         b[i][0] * rv[j][0] +
         b[i][1] * rv[j][1] +
@@ -271,9 +288,9 @@ operator subdividePatch(
     }
   }
 
-  for (var Integer i = 0; i < (nb_points - 1); i++) {
-    for (var Integer j = 0; j < (nb_points - 1); j++) {
-      var Integer c0, c1, c2, c3;
+  for (Integer i = 0; i < (nb_points - 1); i++) {
+    for (Integer j = 0; j < (nb_points - 1); j++) {
+      Integer c0, c1, c2, c3;
       c0 = i * nb_points + j;
       c1 = i * nb_points + j + 1;
       c2 = (i + 1) * nb_points + j;
@@ -300,10 +317,10 @@ function generateTeapotBase(
   io Vec3 normals<>,
   io Vec2 uvs<>
 ) {
-  var Integer nb_points = (detail >= 0) ? (detail + 2) : 2;
+  Integer nb_points = (detail >= 0) ? (detail + 2) : 2;
 
-  var Patch tp[];
-  var Vec3 tv[], tn[];
+  Patch tp[];
+  Vec3 tv[], tn[];
 
   getTeapotHull(tp, tv, tn);
 
@@ -314,19 +331,18 @@ function generateTeapotBase(
 //  }
   indices.resize(tp.size() * (nb_points - 1) * (nb_points - 1) * 6);
 
-  var Size voff = 0.0, idxoff = 0;
-  for (var Size i = 0; i < tp.size(); i++) {
+  Size voff = 0.0, idxoff = 0;
+  for (Size i = 0; i < tp.size(); i++) {
     subdividePatch(tp[i], tv, tn, positions, normals, uvs, indices, voff, idxoff, nb_points, genTex);
   }
-  var Scalar maxV = 0.0;
-  for (var Size i = 0; i < positions.size(); i++) {
-    if (positions[i].norm() > maxV) {
-      maxV = positions[i].norm();
+  Scalar maxV = 0.0;
+  for (Size i = 0; i < positions.size(); i++) {
+    if (positions[i].length() > maxV) {
+      maxV = positions[i].length();
     }
   }
-  var Scalar scale = (size / maxV) * 2.0;
-
-  for (var Size i = 0; i < positions.size(); i++) {
+  Scalar scale = (size / maxV) * 2.0;
+  for (Size i = 0; i < positions.size(); i++) {
     positions[i] *= scale;
   }
 }
@@ -336,9 +352,9 @@ operator setTeapotVertexCount(
   io Integer detail,
   io Size newCount
 ) {
-  var Integer nb_points = (detail >= 0) ? (detail + 2) : 2;
-  var Patch tp[];
-  var Vec3 tv[], tn[];
+  Integer nb_points = (detail >= 0) ? (detail + 2) : 2;
+  Patch tp[];
+  Vec3 tv[], tn[];
   getTeapotHull(tp, tv, tn);
 
   newCount = tp.size() * nb_points * nb_points;

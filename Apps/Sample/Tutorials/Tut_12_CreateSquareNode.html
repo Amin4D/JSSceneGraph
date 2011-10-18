@@ -1,15 +1,16 @@
-<html xmlns="http://www.w3.org/1999/xhtml"> 
+<!DOCTYPE html>
+<html lang="en">
+ <head>
+  <meta charset="utf-8">  
   <!--
     Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
     -->
-  <head> 
     <title>FABRIC - Tutorial 12 - Create Square Node</title> 
     
-    <meta charset="iso-8859-1"/>
-    <link href="../../../themes/default/style.css" rel="stylesheet" type="text/css" />
-    <link href="../../../themes/default/viewer.css" rel="stylesheet" type="text/css" />
+    <link type="text/css" href="../../../ThirdParty/jQuery/css/fabric/main.css" rel="stylesheet" />
+    <link type="text/css" href="../../../ThirdParty/jQuery/css/fabric/jquery-ui-1.8.16.custom.css" rel="stylesheet" />
 
-    <script type="text/javascript" src="../../../ThirdParty/jQuery/jquery-1.4.2.min.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/jQuery/jquery-1.6.2.min.js"></script>
 
     <script type="text/javascript" src="../../../Core/FABRIC.js" charset="utf-8"></script>
 
@@ -70,10 +71,10 @@ FABRIC.SceneGraph.registerNodeType('Square', {
     
     attributes.setCount(4);
     var attributesData = attributes.getBulkData();
-    attributesData.positions[0] = FABRIC.RT.vec3(-1,0,-1);
-    attributesData.positions[1] = FABRIC.RT.vec3(1,0,-1);
-    attributesData.positions[2] = FABRIC.RT.vec3(1,0,1);
-    attributesData.positions[3] = FABRIC.RT.vec3(-1,0,1);
+    attributesData.positions[0] = new FABRIC.RT.Vec3(-1,0,-1);
+    attributesData.positions[1] = new FABRIC.RT.Vec3(1,0,-1);
+    attributesData.positions[2] = new FABRIC.RT.Vec3(1,0,1);
+    attributesData.positions[3] = new FABRIC.RT.Vec3(-1,0,1);
     
     var uniformsData = uniforms.getBulkData();
     uniformsData.indices[0].push(0);
@@ -102,8 +103,8 @@ FABRIC.SceneGraph.registerNodeType('Square', {
 
   // create a camera, to be able to see something
   var camera = scene.constructNode('TargetCamera', {
-      position: FABRIC.RT.vec3(15, 15, 15),
-      target: FABRIC.RT.vec3(0, 0, 0)
+      position: new FABRIC.RT.Vec3(15, 15, 15),
+      target: new FABRIC.RT.Vec3(0, 0, 0)
     });
   viewport.setCameraNode(camera);
   
@@ -117,7 +118,7 @@ FABRIC.SceneGraph.registerNodeType('Square', {
   // create a transform node
   var transform = scene.constructNode('Transform', {
     hierarchical: false,
-    globalXfo: FABRIC.RT.xfo({ tr: FABRIC.RT.vec3(0, 2, 0) })
+    globalXfo: new FABRIC.RT.Xfo({ tr: new FABRIC.RT.Vec3(0, 2, 0) })
   })
   
   // create a geometry node
@@ -149,9 +150,6 @@ FABRIC.SceneGraph.registerNodeType('Square', {
   </head> 
   <body>
     <div id="wrapper">
-      <ul id="nav">
-        <li><a href="#" id="fabric-logo"><img src="../../../themes/default/_img/projects/fabric-logo.png" /></a></li>
-      </ul>
       <div id="editor">
         <div id="viewer">
           <div id="FabricContainer"></div> 

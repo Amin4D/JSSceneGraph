@@ -54,8 +54,7 @@ FABRIC.SceneGraph.registerNodeType('Transform', {
         }
         if (parentTransformNode) {
           var parentXfo = parentTransformNode.getGlobalXfo();
-          parentXfo.invertInPlace();
-          val.preMultiplyInPlace(parentXfo);
+          val = val.multiply(parentXfo.inverse());
           dgnode.setData('localXfo', val);
         }
         else {
@@ -115,13 +114,13 @@ FABRIC.SceneGraph.registerNodeType('Transform', {
       // create the operator to convert the matrices into a texture
       dgnode.addMember('textureMatrix', 'Mat44');
       dgnode.bindings.append(scene.constructOperator( {
-          operatorName: 'calcGlobalMatrix',
+          operatorName: 'calcGlobalTransposedMatrix',
           srcFile: 'FABRIC_ROOT/SceneGraph/KL/calcGlobalXfo.kl',
           parameterLayout: [
             'self.globalXfo',
             'self.textureMatrix'
           ],
-          entryFunctionName: 'calcGlobalMatrix'
+          entryFunctionName: 'calcGlobalTransposedMatrix'
         }));
 
       textureNode = scene.constructNode('TransformTexture', {transformNode: transformNode.pub, dynamic: dynamic});
@@ -201,27 +200,18 @@ FABRIC.SceneGraph.registerNodeType('AimTransform', {
   },
   factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
-        target: FABRIC.RT.vec3(0, 0, 0)
+        target: new FABRIC.RT.Vec3(0, 0, 0)
       });
     
     if(options.position && options.target){
-      options.globalXfo = FABRIC.RT.xfo({ tr: options.position });
-      
-      var dirVec = options.position.subtract(options.target);
-      var vec1 = options.globalXfo.ori.getZaxis();
-      var vec2 = dirVec.unit();
-      options.globalXfo.ori = FABRIC.RT.Quat.makeFrom2Vectors(FABRIC.RT.vec3(0, 0, 1) , vec2, true);
-      vec1 = options.globalXfo.ori.getYaxis();
-      vec2 = dirVec.cross(FABRIC.RT.vec3(0, 1, 0) ).cross(dirVec).unit();
-      options.globalXfo.ori.postMultiplyInPlace( FABRIC.RT.Quat.makeFrom2Vectors(vec1, vec2, true));
-      
-/*
+      options.globalXfo = new FABRIC.RT.Xfo({ tr: options.position });
       var zaxis = options.position.subtract(options.target).unit();
-      var yaxis = zaxis.cross(FABRIC.RT.vec3(0, 1, 0) ).cross(zaxis).unit();
+      var yaxis = zaxis.cross(new FABRIC.RT.Vec3(0, 1, 0) ).cross(zaxis).unit();
       var xaxis = yaxis.cross(zaxis).unit();
-      options.globalXfo = FABRIC.RT.xfo({ tr: options.position });
-      options.globalXfo.ori.setFromMat33(FABRIC.RT.mat33(xaxis, yaxis, zaxis));
-*/  }
+      options.globalXfo = new FABRIC.RT.Xfo({ tr: options.position });
+      var mat = new FABRIC.RT.Mat33(xaxis, yaxis, zaxis).transpose();
+      options.globalXfo.ori.setFromMat33(mat);
+    }
 
     var aimTransformNode = scene.constructNode('Transform', options);
     var dgnode = aimTransformNode.getDGNode();

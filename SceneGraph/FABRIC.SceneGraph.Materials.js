@@ -88,7 +88,7 @@ FABRIC.SceneGraph.registerNodeType('Image', {
         return resourceLoadNode ? resourceLoadNode.pub.isLoaded() : false;
       };
     } else {
-      if(options.createDgNode && options.initImage){
+      if(options.createDgNode && options.initImage && options.width && options.height){
         dgnode.addMember('color', 'RGBA', options.color);
         dgnode.addMember('initiated', 'Boolean', false);
         dgnode.bindings.append(scene.constructOperator({
@@ -1412,7 +1412,7 @@ FABRIC.SceneGraph.registerNodeType('ScreenGrab', {
 
     screenGrabEventHandler = screenGrabNode.constructEventHandlerNode('ScreenGrab');
     screenGrabEventHandler.addMember('width', 'Size');
-    screenGrabEventHandler.addMember('heigth', 'Size');
+    screenGrabEventHandler.addMember('height', 'Size');
     screenGrabEventHandler.addMember('pixels', 'RGBA[]');
     screenGrabEventHandler.addMember('resource', 'FabricResource');
 
@@ -1422,12 +1422,10 @@ FABRIC.SceneGraph.registerNodeType('ScreenGrab', {
       entryFunctionName: 'grabViewport',
       parameterLayout: [
             'self.width',
-            'self.heigth',
+            'self.height',
             'self.pixels'
           ]
     }));
-
-    scene.getScenePostRedrawEventHandler().appendChildEventHandler(screenGrabEventHandler);
 
     screenGrabEventHandler.postDescendBindings.append(scene.constructOperator({
       operatorName: 'encodeImage',
@@ -1435,11 +1433,13 @@ FABRIC.SceneGraph.registerNodeType('ScreenGrab', {
       entryFunctionName: 'encodeImageLDR',
       parameterLayout: [
             'self.width',
-            'self.heigth',
+            'self.height',
             'self.pixels',
             'self.resource'
           ]
     }));
+
+    scene.getScenePostRedrawEventHandler().appendChildEventHandler(screenGrabEventHandler);
 
     screenGrabNode.pub.saveAs = function() {
       try {

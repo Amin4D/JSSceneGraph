@@ -1,18 +1,17 @@
-<html xmlns="http://www.w3.org/1999/xhtml"> 
+<!DOCTYPE html>
+<html lang="en">
+ <head>
+  <meta charset="utf-8">  
   <!--
     Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
     -->
-  <head> 
     <title>FABRIC - Shadow Casting Lights</title> 
     
-    <meta charset="iso-8859-1"/>
-    <link href="../../../themes/default/style.css" rel="stylesheet" type="text/css" />
-    <link href="../../../themes/default/viewer.css" rel="stylesheet" type="text/css" />
+    <link type="text/css" href="../../../ThirdParty/jQuery/css/fabric/main.css" rel="stylesheet" />
+    <link type="text/css" href="../../../ThirdParty/jQuery/css/fabric/jquery-ui-1.8.16.custom.css" rel="stylesheet" />
     
-    <script type="text/javascript" src="../../../ThirdParty/jQuery/jquery-1.4.2.min.js"></script>
-    <script type="text/javascript" src="../../../ThirdParty/jQuery/jquery-ui-1.8.5.custom.min.js"></script>
-
-    <link type="text/css" href="../../../ThirdParty/jQuery/css/vader/jquery-ui-1.8.5.custom.css" rel="stylesheet" />
+    <script type="text/javascript" src="../../../ThirdParty/jQuery/jquery-1.6.2.min.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/jQuery/jquery-ui-1.8.16.custom.min.js"></script>
 
     <script type="text/javascript" src="../../../Core/FABRIC.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/RT/Math.js" charset="utf-8"></script>
@@ -76,20 +75,20 @@ $(document).ready(function() {
   
   // Create a camera to draw the scene from
   var camera = scene.constructNode('TargetCamera', {
-    position: FABRIC.RT.vec3(30, 30, 0),
-    target: FABRIC.RT.vec3(2, 0, -3)
+    position: new FABRIC.RT.Vec3(30, 30, 0),
+    target: new FABRIC.RT.Vec3(2, 0, -3)
   });
 
   scene.constructNode("CameraManipulator", { targetNode:camera } );
   viewport.setCameraNode(camera);
 
   var spotLightNode = scene.constructNode('SpotLight', {
-    position: FABRIC.RT.vec3(10, 20, 5),
-    target: FABRIC.RT.vec3(0, 2, -6),
+    position: new FABRIC.RT.Vec3(10, 20, 5),
+    target: new FABRIC.RT.Vec3(0, 2, -6),
     coneAngle: Math.degToRad(80.0),
     farDistance: 60,
     castShadows: true,
-    displayShadowDebug: false,
+    displayShadowDebug: true,
     display: true
   });
 
@@ -109,7 +108,7 @@ $(document).ready(function() {
   scene.constructNode('Instance', {
       transformNode: scene.constructNode('Transform', {
         hierarchical: false,
-        globalXfo: FABRIC.RT.xfo({ tr: FABRIC.RT.vec3(0, 3.8, -16) })
+        globalXfo: new FABRIC.RT.Xfo({ tr: new FABRIC.RT.Vec3(0, 3.8, -16) })
       }),
       geometryNode: scene.constructNode('Teapot', { size: 4 }),
     })
@@ -119,7 +118,7 @@ $(document).ready(function() {
   scene.constructNode('Instance', {
       transformNode: scene.constructNode('Transform', {
         hierarchical: false,
-        globalXfo: FABRIC.RT.xfo({ tr: FABRIC.RT.vec3(0, 2, -5) })
+        globalXfo: new FABRIC.RT.Xfo({ tr: new FABRIC.RT.Vec3(0, 2, -5) })
       }),
       geometryNode: scene.constructNode('Cuboid', {
         length: 4,
@@ -133,7 +132,7 @@ $(document).ready(function() {
   scene.constructNode('Instance', {
       transformNode: scene.constructNode('Transform', {
         hierarchical: false,
-        globalXfo: FABRIC.RT.xfo({ tr: FABRIC.RT.vec3(-10, 0, -10) })
+        globalXfo: new FABRIC.RT.Xfo({ tr: new FABRIC.RT.Vec3(-10, 0, -10) })
       }),
       geometryNode: scene.constructNode('Plane', { length: 50, width: 50, doubleSided: false })
     })
@@ -159,6 +158,13 @@ $(document).ready(function() {
   
 });
 
+// jQuert UI Styling classes
+$(document).ready(function() {
+  $(".box").addClass("ui-widget");
+  $(".box h2").addClass("ui-widget-header ui-corner-all");
+  $(".content").addClass("ui-widget-content");
+});
+
 </script>
 
   </head> 
@@ -168,15 +174,12 @@ $(document).ready(function() {
       <div id="loadingProgressBar" class="ui-progressbar-value"></div>
     </div>
     <div id="wrapper">
-      <ul id="nav">
-        <li><a href="#" id="fabric-logo"><img src="../../../themes/default/_img/projects/fabric-logo.png" /></a></li>
-      </ul>
       <div id="editor">
         <div id="viewer">
           <div id="FabricContainer"></div> 
         </div><!--viewer-->
         <div id="sidebar">
-          
+          <h2 class="box">&larr; <a href="../../../index.html">back to Demo list</a></h2>
           <div class="box">
             <h2>INFO</h2>
             <div class="content">

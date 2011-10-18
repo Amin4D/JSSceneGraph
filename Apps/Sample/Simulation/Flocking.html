@@ -5,14 +5,11 @@
   <head> 
     <title>FABRIC - Flocking</title> 
     
-    <meta charset="iso-8859-1"/>
-    <link href="../../../themes/default/style.css" rel="stylesheet" type="text/css" />
-    <link href="../../../themes/default/viewer.css" rel="stylesheet" type="text/css" />
+    <link type="text/css" href="../../../ThirdParty/jQuery/css/fabric/main.css" rel="stylesheet" />
+    <link type="text/css" href="../../../ThirdParty/jQuery/css/fabric/jquery-ui-1.8.16.custom.css" rel="stylesheet" />
     
-    <script type="text/javascript" src="../../../ThirdParty/jQuery/jquery-1.4.2.min.js"></script>
-    <script type="text/javascript" src="../../../ThirdParty/jQuery/jquery-ui-1.8.5.custom.min.js"></script>
-
-    <link type="text/css" href="../../../ThirdParty/jQuery/css/vader/jquery-ui-1.8.5.custom.css" rel="stylesheet" />
+    <script type="text/javascript" src="../../../ThirdParty/jQuery/jquery-1.6.2.min.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/jQuery/jquery-ui-1.8.16.custom.min.js"></script>
 
     <script type="text/javascript" src="../../../Core/FABRIC.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/RT/Math.js" charset="utf-8"></script>
@@ -100,32 +97,32 @@ $(document).ready(function() {
   var numAgents, gridSize, cameraPos;
   switch(flockParams.sceneSize){
     case 'tiny':
-      cameraPos = FABRIC.RT.vec3(20, 30, -40).scale(0.1);
+      cameraPos = new FABRIC.RT.Vec3(20, 30, -40).multiplyScalar(0.1);
       numAgents = 10;
       gridSize = 6;
       break;
     case 'small':
-      cameraPos = FABRIC.RT.vec3(20, 30, -40).scale(0.2);
+      cameraPos = new FABRIC.RT.Vec3(20, 30, -40).multiplyScalar(0.2);
       numAgents = 100;
       gridSize = 10;
       break;
     case 'medium':
-      cameraPos = FABRIC.RT.vec3(20, 30, -40).scale(0.5);
+      cameraPos = new FABRIC.RT.Vec3(20, 30, -40).multiplyScalar(0.5);
       numAgents = 2000;
       gridSize = 30;
       break;
     case 'huge':
-      cameraPos = FABRIC.RT.vec3(20, 30, -40).scale(1.0);
+      cameraPos = new FABRIC.RT.Vec3(20, 30, -40).multiplyScalar(1.0);
       numAgents = 10000;
       gridSize = 100;
       break;
     case 'massive':
-      cameraPos = FABRIC.RT.vec3(20, 30, -40).scale(10);
+      cameraPos = new FABRIC.RT.Vec3(20, 30, -40).multiplyScalar(10);
       numAgents = 100000;
       gridSize = 400;
       break;
     case 'insane':
-      cameraPos = FABRIC.RT.vec3(20, 30, -40).scale(10);
+      cameraPos = new FABRIC.RT.Vec3(20, 30, -40).multiplyScalar(10);
       numAgents = 2000000;
       gridSize = 800;
       break;
@@ -147,10 +144,10 @@ $(document).ready(function() {
     url: '../BasicDemos/Resources/fabric-demo-gradient.png'
   }));
 
-  var light = scene.constructNode('PointLight', { position: FABRIC.RT.vec3(420.0, 1000.0, 600.0) });
+  var light = scene.constructNode('PointLight', { position: new FABRIC.RT.Vec3(420.0, 1000.0, 600.0) });
   // Create a camera to draw the scene from
   var camera = scene.constructNode('TargetCamera', {
-      target: FABRIC.RT.vec3(0, 0, 0),
+      target: new FABRIC.RT.Vec3(0, 0, 0),
       position: cameraPos,
       nearDistance: 1,
       farDistance: 1000
@@ -199,7 +196,7 @@ $(document).ready(function() {
   var groundPlaneInstance = scene.constructNode("Instance", {
       transformNode:scene.constructNode("Transform", {
         hierarchical:false,
-        globalXfo:FABRIC.RT.xfo({ tr:FABRIC.RT.vec3(0, -0.3, 0) })
+        globalXfo:new FABRIC.RT.Xfo({ tr:new FABRIC.RT.Vec3(0, -0.3, 0) })
       }),
       geometryNode:groundPlane,
       materialNode:groundMaterial,
@@ -281,6 +278,13 @@ $(document).ready(function() {
   
 });
 
+// jQuert UI Styling classes
+$(document).ready(function() {
+  $(".box").addClass("ui-widget");
+  $(".box h2").addClass("ui-widget-header ui-corner-all");
+  $(".content").addClass("ui-widget-content");
+});
+
 </script>
 
   </head> 
@@ -290,15 +294,12 @@ $(document).ready(function() {
       <div id="loadingProgressBar" class="ui-progressbar-value"></div>
     </div>
     <div id="wrapper">
-      <ul id="nav">
-        <li><a href="#" id="fabric-logo"><img src="../../../themes/default/_img/projects/fabric-logo.png" /></a></li>
-      </ul>
       <div id="editor">
         <div id="viewer">
           <div id="FabricContainer"></div> 
         </div><!--viewer-->
         <div id="sidebar">
-        
+          <h2 class="box">&larr; <a href="../../../index.html">back to Demo list</a></h2>
           <div class="box">
             <h2>INFO</h2>
               <div class="content">

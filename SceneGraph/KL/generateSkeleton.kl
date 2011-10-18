@@ -40,7 +40,7 @@ operator generateSkeleton(
     }else{
       nbAxes++;
     }
-    finalPose[i] = offsetpose.project(pose[i]);
+    finalPose[i] =  pose[i];//offsetpose * pose[i];
   }
 
   var Integer nbPos = (nbBones * 12) + (nbAxes * 6);
@@ -65,27 +65,27 @@ operator generateSkeleton(
     
     if (bones[i].length <= 0.0) {
       indices[offset] = offset;
-      positions[offset] = xfo.transform(Vec3(boneradius * -2.0, 0.0, 0.0));
+      positions[offset] = xfo.transformVector(Vec3(boneradius * -2.0, 0.0, 0.0));
       offset++;
       indices[offset] = offset;
-      positions[offset] = xfo.transform(Vec3(boneradius * 2.0, 0.0, 0.0));
+      positions[offset] = xfo.transformVector(Vec3(boneradius * 2.0, 0.0, 0.0));
       offset++;
       indices[offset] = offset;
-      positions[offset] = xfo.transform(Vec3(0.0, boneradius * -2.0, 0.0));
+      positions[offset] = xfo.transformVector(Vec3(0.0, boneradius * -2.0, 0.0));
       offset++;
       indices[offset] = offset;
-      positions[offset] = xfo.transform(Vec3(0.0, boneradius * 2.0, 0.0));
+      positions[offset] = xfo.transformVector(Vec3(0.0, boneradius * 2.0, 0.0));
       offset++;
       indices[offset] = offset;
-      positions[offset] = xfo.transform(Vec3(0.0, 0.0, boneradius * -2.0));
+      positions[offset] = xfo.transformVector(Vec3(0.0, 0.0, boneradius * -2.0));
       offset++;
       indices[offset] = offset;
-      positions[offset] = xfo.transform(Vec3(0.0, 0.0, boneradius * 2.0));
+      positions[offset] = xfo.transformVector(Vec3(0.0, 0.0, boneradius * 2.0));
       offset++;
       continue;
     }
 
-    tip = xfo.transform(Vec3(bones[i].length * xfo.sc.x, 0.0, 0.0));
+    tip = xfo.transformVector(Vec3(bones[i].length * xfo.sc.x, 0.0, 0.0));
     center = xfo.tr * 0.8 + tip * 0.2;
 
     // create a line along positive z
@@ -93,7 +93,7 @@ operator generateSkeleton(
     positions[offset] = xfo.tr;
     offset++;
     indices[offset] = offset;
-    positions[offset] = center + xfo.ori.transform(z * bones[i].radius * xfo.sc.z);
+    positions[offset] = center + xfo.ori.rotateVector(z * bones[i].radius * xfo.sc.z);
     offset++;
     indices[offset] = offset;
     positions[offset] = positions[offset - 1];
@@ -107,7 +107,7 @@ operator generateSkeleton(
     positions[offset] = xfo.tr;
     offset++;
     indices[offset] = offset;
-    positions[offset] = center - xfo.ori.transform(z * bones[i].radius * xfo.sc.z);
+    positions[offset] = center - xfo.ori.rotateVector(z * bones[i].radius * xfo.sc.z);
     offset++;
     indices[offset] = offset;
     positions[offset] = positions[offset - 1];
@@ -121,7 +121,7 @@ operator generateSkeleton(
     positions[offset] = xfo.tr;
     offset++;
     indices[offset] = offset;
-    positions[offset] = center + xfo.ori.transform(y * bones[i].radius * xfo.sc.y);
+    positions[offset] = center + xfo.ori.rotateVector(y * bones[i].radius * xfo.sc.y);
     offset++;
     indices[offset] = offset;
     positions[offset] = positions[offset - 1];

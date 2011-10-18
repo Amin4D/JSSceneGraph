@@ -1,19 +1,18 @@
-<html xmlns="http://www.w3.org/1999/xhtml"> 
+<!DOCTYPE html>
+<html lang="en">
+ <head>
+  <meta charset="utf-8">  
   <!--
     Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
     -->
-  <head> 
     <title>FABRIC - Keyframe Animation</title> 
     
-    <meta charset="iso-8859-1"/>
-    <link href="../../../themes/default/style.css" rel="stylesheet" type="text/css" />
-    <link href="../../../themes/default/viewer.css" rel="stylesheet" type="text/css" />
-    
-    <script type="text/javascript" src="../../../ThirdParty/jQuery/jquery-1.4.2.min.js"></script>
-    <script type="text/javascript" src="../../../ThirdParty/jQuery/jquery-ui-1.8.5.custom.min.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/jQuery/jquery-1.6.2.min.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/jQuery/jquery-ui-1.8.16.custom.min.js"></script>
 
-    <link type="text/css" href="../../../ThirdParty/jQuery/css/vader/jquery-ui-1.8.5.custom.css" rel="stylesheet" />
-
+    <link type="text/css" href="../../../ThirdParty/jQuery/css/fabric/main.css" rel="stylesheet" />
+    <link type="text/css" href="../../../ThirdParty/jQuery/css/fabric/jquery-ui-1.8.16.custom.css" rel="stylesheet" />
+	
     <script type="text/javascript" src="../../../Core/FABRIC.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/RT/Math.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/RT/RGBA.js" charset="utf-8"></script>
@@ -81,8 +80,8 @@ $(document).ready(function() { var $globalTimeSlider = $('#globalTime').slider({
   
   // Create a camera to draw the scene from
   var camera = scene.constructNode('TargetCamera', {
-    position: FABRIC.RT.vec3(60, 80, 100),
-    target: FABRIC.RT.vec3(0, 0, 0)
+    position: new FABRIC.RT.Vec3(60, 80, 100),
+    target: new FABRIC.RT.Vec3(0, 0, 0)
   });
 
   scene.constructNode('CameraManipulator', { targetNode: camera });
@@ -91,7 +90,7 @@ $(document).ready(function() { var $globalTimeSlider = $('#globalTime').slider({
 
   // Scene
   var light = scene.constructNode('PointLight', {
-    position: FABRIC.RT.vec3(420.0, 1000.0, 600.0)
+    position: new FABRIC.RT.Vec3(420.0, 1000.0, 600.0)
   });
   var redMaterial = scene.constructNode('PhongMaterial', {
     diffuseColor: FABRIC.RT.rgb(0.8, 0, 0, 1),
@@ -108,7 +107,7 @@ $(document).ready(function() { var $globalTimeSlider = $('#globalTime').slider({
   });
 
   var animationControllerNode = scene.constructNode('AnimationController', {
-      timeRange: FABRIC.RT.vec2(0, 100)
+      timeRange: new FABRIC.RT.Vec2(0, 100)
     });
 
   // Note on bounding values
@@ -139,7 +138,7 @@ $(document).ready(function() { var $globalTimeSlider = $('#globalTime').slider({
     animationTrackNode: linearPosKeyframeTrackNode
   });
 
-  var xfo = FABRIC.RT.xfo({ tr: FABRIC.RT.vec3(-50, 0, 0) });
+  var xfo = new FABRIC.RT.Xfo({ tr: new FABRIC.RT.Vec3(-50, 0, 0) });
   var linearAnimatedTransformNode = scene.constructNode('Transform', {
     hierarchical: false,
     globalXfo: xfo
@@ -164,21 +163,21 @@ $(document).ready(function() { var $globalTimeSlider = $('#globalTime').slider({
   bezierPosKeyframeTrackNode.setTrackData(0, { name: 'PosX',
                         color: FABRIC.RT.rgb(1, 0, 0),
                         keys: [
-                             key(0, -20, null, FABRIC.RT.vec2(3, 0)),
-                            key(10, 0, FABRIC.RT.vec2(-3, 0), FABRIC.RT.vec2(3, 0)),
-                            key(20, 20, FABRIC.RT.vec2(-3, 0), FABRIC.RT.vec2(10, 0)),
-                            key(50, 0, FABRIC.RT.vec2(-10, 0), FABRIC.RT.vec2(7, 0)),
-                            key(75, -20, FABRIC.RT.vec2(-7, 0), null)
+                             key(0, -20, null, new FABRIC.RT.Vec2(3, 0)),
+                            key(10, 0, new FABRIC.RT.Vec2(-3, 0), new FABRIC.RT.Vec2(3, 0)),
+                            key(20, 20, new FABRIC.RT.Vec2(-3, 0), new FABRIC.RT.Vec2(10, 0)),
+                            key(50, 0, new FABRIC.RT.Vec2(-10, 0), new FABRIC.RT.Vec2(7, 0)),
+                            key(75, -20, new FABRIC.RT.Vec2(-7, 0), null)
                           ]
                       });
   bezierPosKeyframeTrackNode.setTrackData(1, { name: 'PosY',
                         color: FABRIC.RT.rgb(1, 0, 0),
                         keys: [
-                             key(0, 0, null, FABRIC.RT.vec2(3, 0)),
-                            key(10, 20, FABRIC.RT.vec2(-3, 0), FABRIC.RT.vec2(3, 0)),
-                            key(20, 0, FABRIC.RT.vec2(-3, 0), FABRIC.RT.vec2(10, 0)),
-                            key(50, -20, FABRIC.RT.vec2(-10, 0), FABRIC.RT.vec2(7, 0)),
-                            key(75, 0, FABRIC.RT.vec2(-7, 0), null)
+                             key(0, 0, null, new FABRIC.RT.Vec2(3, 0)),
+                            key(10, 20, new FABRIC.RT.Vec2(-3, 0), new FABRIC.RT.Vec2(3, 0)),
+                            key(20, 0, new FABRIC.RT.Vec2(-3, 0), new FABRIC.RT.Vec2(10, 0)),
+                            key(50, -20, new FABRIC.RT.Vec2(-10, 0), new FABRIC.RT.Vec2(7, 0)),
+                            key(75, 0, new FABRIC.RT.Vec2(-7, 0), null)
                           ]
                       });
 
@@ -188,7 +187,7 @@ $(document).ready(function() { var $globalTimeSlider = $('#globalTime').slider({
     animationTrackNode: bezierPosKeyframeTrackNode
   });
 
-  var xfo = FABRIC.RT.xfo({ tr: FABRIC.RT.vec3(0, 0, 0) });
+  var xfo = new FABRIC.RT.Xfo({ tr: new FABRIC.RT.Vec3(0, 0, 0) });
   var bezierAnimatedTransformNode = scene.constructNode('Transform', {
     hierarchical: false,
     globalXfo: xfo
@@ -213,20 +212,20 @@ $(document).ready(function() { var $globalTimeSlider = $('#globalTime').slider({
   bezierEulerKeyframeTrackNode.setTrackData(0, { name: 'EulerX',
                         color: FABRIC.RT.rgb(1, 0, 0),
                         keys: [
-                          key(0, 0, null, FABRIC.RT.vec2(3, 0)),
-                          key(10, 0, FABRIC.RT.vec2(-3, 0), FABRIC.RT.vec2(3, 0)),
-                          key(20, 2, FABRIC.RT.vec2(-3, 0), FABRIC.RT.vec2(10, 0)),
-                          key(50, 2, FABRIC.RT.vec2(-10, 0), FABRIC.RT.vec2(7, 0)),
-                          key(75, 0, FABRIC.RT.vec2(-7, 0), null)
+                          key(0, 0, null, new FABRIC.RT.Vec2(3, 0)),
+                          key(10, 0, new FABRIC.RT.Vec2(-3, 0), new FABRIC.RT.Vec2(3, 0)),
+                          key(20, 2, new FABRIC.RT.Vec2(-3, 0), new FABRIC.RT.Vec2(10, 0)),
+                          key(50, 2, new FABRIC.RT.Vec2(-10, 0), new FABRIC.RT.Vec2(7, 0)),
+                          key(75, 0, new FABRIC.RT.Vec2(-7, 0), null)
                         ]
                       });
   bezierEulerKeyframeTrackNode.setTrackData(1, { name: 'EulerY',
                         color: FABRIC.RT.rgb(0, 1, 0),
                         keys: [
-                           key(0, 0, null, FABRIC.RT.vec2(3, 0)),
-                          key(20, 0, FABRIC.RT.vec2(-3, 0), FABRIC.RT.vec2(10, 0)),
-                          key(50, -2, FABRIC.RT.vec2(-10, 0), FABRIC.RT.vec2(7, 0)),
-                          key(75, 0, FABRIC.RT.vec2(-7, 0), null)
+                           key(0, 0, null, new FABRIC.RT.Vec2(3, 0)),
+                          key(20, 0, new FABRIC.RT.Vec2(-3, 0), new FABRIC.RT.Vec2(10, 0)),
+                          key(50, -2, new FABRIC.RT.Vec2(-10, 0), new FABRIC.RT.Vec2(7, 0)),
+                          key(75, 0, new FABRIC.RT.Vec2(-7, 0), null)
                         ]
                       });
 
@@ -236,7 +235,7 @@ $(document).ready(function() { var $globalTimeSlider = $('#globalTime').slider({
     animationTrackNode: bezierEulerKeyframeTrackNode
   });
 
-  var xfo = FABRIC.RT.xfo({ tr: FABRIC.RT.vec3(50, 0, 0) });
+  var xfo = new FABRIC.RT.Xfo({ tr: new FABRIC.RT.Vec3(50, 0, 0) });
   var bezierAnimatedTransformNode = scene.constructNode('Transform', {
     hierarchical: false,
     globalXfo: xfo
@@ -285,6 +284,13 @@ $(document).ready(function() { var $globalTimeSlider = $('#globalTime').slider({
   
 });
 
+// jQuert UI Styling classes
+$(document).ready(function() {
+	$(".box").addClass("ui-widget");
+	$(".box h2").addClass("ui-widget-header ui-corner-all");
+	$(".content").addClass("ui-widget-content");
+});
+
 </script>
 
   </head> 
@@ -294,14 +300,13 @@ $(document).ready(function() { var $globalTimeSlider = $('#globalTime').slider({
       <div id="loadingProgressBar" class="ui-progressbar-value"></div>
     </div>
     <div id="wrapper">
-      <ul id="nav">
-        <li><a href="#" id="fabric-logo"><img src="../../../themes/default/_img/projects/fabric-logo.png" /></a></li>
-      </ul>
+
       <div id="editor">
         <div id="viewer">
           <div id="FabricContainer"></div> 
         </div><!--viewer-->
         <div id="sidebar">
+          <h2 class="box">&larr; <a href="../../../index.html">back to Demo list</a></h2>
           <div class="box">
             <h2>INFO</h2>
               <div class="content">

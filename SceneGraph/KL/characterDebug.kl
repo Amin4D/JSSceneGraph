@@ -8,14 +8,14 @@ operator clearDebugXfos(io Xfo debugPose[]) {
 }
 
 operator pushDebugXfo(io Xfo debugPose[], io Xfo xf, io Xfo pose[], io Integer parent) {
-  debugPose.push(pose[parent].project(xf));
+  debugPose.push(pose[parent] * xf);
 }
 
 operator generateDebugPoints(io Xfo debugPose[], io Xfo offset, io Vec3 positions[], io Color colors[], io Color color) {
   positions.resize(debugPose.size());
   colors.resize(debugPose.size());
   for (var Integer i = 0; i < debugPose.size(); i++) {
-    positions[i] = offset.transform(debugPose[i].tr);
+    positions[i] = offset.transformVector(debugPose[i].tr);
     colors[i] = color;
   }
 }

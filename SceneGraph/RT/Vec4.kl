@@ -3,11 +3,10 @@
 // Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
 //
 
+use Math, Vec3;
+
 function Vec4(Scalar x, Scalar y, Scalar z, Scalar t) {
-  this.x = x;
-  this.y = y;
-  this.z = z;
-  this.t = t;
+  this.set(x, y, z, t);
 }
 
 function Vec4.set(Scalar x, Scalar y, Scalar z, Scalar t) {
@@ -19,6 +18,22 @@ function Vec4.set(Scalar x, Scalar y, Scalar z, Scalar t) {
 
 function Vec4.setNull() {
   this.x = this.y = this.z = this.t = 0.0;
+}
+
+function Boolean Vec4.equal (in Vec4 other) {
+  return this.x == other.x && this.y == other.y && this.z == other.z && this.t == other.t;
+}
+
+function Boolean Vec4.almostEqual(in Vec4 other, in Scalar precision) {
+  return
+      (abs(this.x - other.x) < precision) &&
+      (abs(this.y - other.y) < precision) &&
+      (abs(this.z - other.z) < precision) &&
+      (abs(this.t - other.t) < precision);
+}
+
+function Boolean Vec4.almostEqual(in Vec4 other) {
+  return this.almostEqual(other, PRECISION);
 }
 
 function Vec4 + (Vec4 a, Vec4 b) {
@@ -58,15 +73,21 @@ function Vec4. *= (Vec4 other) {
 }
 
 function Vec4 / (Vec4 a, Vec4 b) {
+  if( Math_badDivisor( b.x ) )//Perf: check first to avoid building the report string
+    Math_reportBadDivisor( b.x, "Vec4.divide: b.x" );
+  if( Math_badDivisor( b.y ) )
+    Math_reportBadDivisor( b.y, "Vec4.divide: b.y" );
+  if( Math_badDivisor( b.z ) )
+    Math_reportBadDivisor( b.z, "Vec4.divide: b.z" );
+  if( Math_badDivisor( b.t ) )
+    Math_reportBadDivisor( b.t, "Vec4.divide: b.t" );
   return Vec4(a.x / b.x, a.y / b.y, a.z / b.z, a.t / b.t);
 }
 
-function Vec4 / (Scalar a, Vec4 b) {
-  return Vec4(a / b.x, a / b.y, a / b.z, a / b.t);
-}
-
 function Vec4 / (Vec4 a, Scalar b) {
-  return Vec4(a.x / b, a.y / b, a.z / b, a.t / b);
+  if( Math_badDivisor( b ) )//Perf: check first to avoid building the report string
+    Math_reportBadDivisor( b, "Vec4.divide" );
+  return a * (1.0 / b);
 }
 
 function Vec4. /= (Scalar other) {
@@ -77,52 +98,84 @@ function Vec4. /= (Vec4 other) {
   this = this / other;
 }
 
-function Vec4 Vec4.neg() {
+function Vec4 Vec4.negate() {
   return Vec4(-this.x, - this.y, - this.z, - this.t);
+}
+
+function Vec4 Vec4.inverse() {
+  if( Math_badDivisor( this.x ) )//Perf: check first to avoid building the report string
+    Math_reportBadDivisor( this.x, "Vec4.inverse: this.x" );
+  if( Math_badDivisor( this.y ) )
+    Math_reportBadDivisor( this.y, "Vec4.inverse: this.y" );
+  if( Math_badDivisor( this.z ) )
+    Math_reportBadDivisor( this.z, "Vec4.inverse: this.z" );
+  if( Math_badDivisor( this.t ) )
+    Math_reportBadDivisor( this.t, "Vec4.inverse: this.t" );
+  return Vec4(1.0/this.x, 1.0/this.y, 1.0/this.z, 1.0/this.t);
 }
 
 function Scalar Vec4.dot(in Vec4 other) {
   return this.x * other.x + this.y * other.y + this.z * other.z + this.t * other.t;
 }
 
-function Scalar Vec4.normSq() {
+function Scalar Vec4.lengthSquared() {
   return this.dot(this);
 }
 
-function Scalar Vec4.norm() {
-  return sqrt(this.normSq());
+function Scalar Vec4.length() {
+  return sqrt(this.lengthSquared());
 }
 
 function Vec4 Vec4.unit() {
-  var Scalar n = this.norm();
-  if (n > 0.0)
-    return this / n;
-  return this;
+  Scalar n = this.length();
+  if( Math_badDivisor( n ) )//Perf: check first to avoid building the report string
+    Math_reportBadDivisor( n, "Vec4.unit" );
+  return this / n;
 }
 
-function Vec4.setUnit() {
-  this = this.unit();
+//TODO: uncomment when some 'mutable' keyword is implemented //Note: setUnit returns the previous length
+function /*Scalar*/ Vec4.setUnit() {
+  Scalar n = this.length();
+  if( Math_badDivisor( n ) )//Perf: check first to avoid building the report string
+    Math_reportBadDivisor( n, "Vec4.setUnit" );
+  this /= n;
+  //return n;
 }
 
-function Vec4 Vec4.max(in Vec4 other) {
-  var Vec4 v;
-  v.x = this.x > other.x ? this.x : other.x;
-  v.y = this.y > other.y ? this.y : other.y;
-  v.z = this.z > other.z ? this.z : other.z;
-  v.t = this.t > other.t ? this.t : other.t;
-  return v;
+function Vec4 Vec4.clamp(in Vec4 min, in Vec4 max) {
+  return Vec4(
+    (this.x < min.x ? min.x : (this.x > max.x ? max.x : this.x)),
+    (this.y < min.y ? min.y : (this.y > max.y ? max.y : this.y)),
+    (this.z < min.z ? min.z : (this.z > max.z ? max.z : this.z)),
+    (this.t < min.t ? min.t : (this.t > max.t ? max.t : this.t))
+  );
 }
 
-function Vec4 Vec4.min(in Vec4 other) {
-  var Vec4 v;
-  v.x = this.x < other.x ? this.x : other.x;
-  v.y = this.y < other.y ? this.y : other.y;
-  v.z = this.z < other.z ? this.z : other.z;
-  v.t = this.t < other.t ? this.t : other.t;
-  return v;
+//Note: expects both vectors to be units (else use angleTo)
+function Scalar Vec4.unitsAngleTo(in Vec4 other) {
+  Scalar acosAngle = Math_clamp(this.dot(other), -1.0, 1.0);
+  return acos(acosAngle);
 }
 
+function Scalar Vec4.angleTo(in Vec4 other) {
+  return this.unit().unitsAngleTo(other.unit());
+}
 
-function Vec4 Vec4.lerp(in Vec4 other, in Scalar t) {
+function Scalar Vec4.distanceTo(in Vec4 other) {
+  return (this - other).length();
+}
+
+function Vec4 Vec4.linearInterpolate(in Vec4 other, in Scalar t) {
   return this + ((other - this) * t);
+}
+
+function Vec3 Vec4.makeHomogeneousVec3() {
+  if( this.t != 1.0 ) {
+    if( Math_badDivisor( this.t ) )//Perf: check first to avoid building the report string
+      Math_reportBadDivisor( this.t, "Vec4.makeHomogeneousVec3" );
+    Scalar invT = 1.0 / this.t;
+    return Vec3(this.x * invT, this.y * invT, this.z * invT);
+  }
+  else
+    return Vec3(this.x, this.y, this.z);
 }

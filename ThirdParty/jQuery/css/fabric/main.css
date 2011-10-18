@@ -160,8 +160,27 @@ ul#tools li a#btn-select{
 
 /* DEMO-LIST
 -------------------------------------------------------------------- */
+.divider {
+  background: url(./images/line-divider.png) no-repeat center top;
+  clear: both;
+  height: 20px;
+  margin: 0 -20px;
+}
+
+.introduction {
+  float:left;
+  width:350px;
+  margin-bottom:20px;
+}
+.supported-browsers {
+  float:left;
+  width:390px;
+  margin-top:25px;
+  padding-left:50px;
+}
 
 .demo-list {
+  clear:both;
   margin-left: 15px;
   column-count: 3;
   column-gap: 20px;

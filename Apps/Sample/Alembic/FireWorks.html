@@ -1,12 +1,12 @@
-<!DOCTYPE html>
-<html lang="en">
- <head>
-  <meta charset="utf-8">  
+<html xmlns="http://www.w3.org/1999/xhtml"> 
   <!--
     Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
     -->
+  <head> 
     <title>FABRIC - Alembic Viewer</title> 
     
+    <meta charset="iso-8859-1"/>
+
     <link type="text/css" href="../../../ThirdParty/jQuery/css/fabric/main.css" rel="stylesheet" />
     <link type="text/css" href="../../../ThirdParty/jQuery/css/fabric/jquery-ui-1.8.16.custom.css" rel="stylesheet" />
     
@@ -78,13 +78,13 @@ $(document).ready(function() {
   viewport.setBackgroundTextureImage(scene.constructNode('Image', {
     url: '../BasicDemos/Resources/fabric-demo-gradient.png'
   }));
-  
+
   // Create a camera to draw the scene from
   var camera = scene.constructNode('TargetCamera', {
-      nearDistance: 1,
+      nearDistance: 0.1,
       farDistance: 2000,
-      position: new FABRIC.RT.Vec3(.2, .5, 1).multiplyScalar(7.5),
-      target: new FABRIC.RT.Vec3(1.5, 2, 0).multiplyScalar(1),
+      position: new FABRIC.RT.Vec3(.2, 1, 1).multiplyScalar(55),
+      target: new FABRIC.RT.Vec3(0, 7, 0).multiplyScalar(4),
     });
 
   scene.constructNode('CameraManipulator', { targetNode: camera });
@@ -92,34 +92,26 @@ $(document).ready(function() {
 
   var light = scene.constructNode('PointLight', { position: new FABRIC.RT.Vec3(10, 30, 100).multiplyScalar(3) });
 
-  // load our custom shader
-  FABRIC.SceneGraph.defineEffectFromFile('ElephantMaterial', 'ElephantShader.xml');
-
-  var occlusionTexture = scene.constructNode('Image', { url: 'Models/samplehold_elephant_ambocc.png' });
-  var normalTexture = scene.constructNode('Image', { url: 'Models/samplehold_elephant_normalM.png' });
-
-  var elephantMaterial = scene.constructNode('ElephantMaterial', {
-    diffuseTextureNode: occlusionTexture,
-    normalTextureNode: normalTexture,
-    shininess: 20,
-    lightNode: light,
-  });
+  var pointMaterial = scene.constructNode('PointFlatMaterial', {
+      prototypeMaterialType: 'PointMaterial',
+      pointSize: 6.0 ,
+      color: FABRIC.RT.rgb(0.75, 0.0, 0.0)
+    });
   
   // create the alembic content, and fire the load once it is loaded
-  var resourceName = 'samplehold_elephant_proxy';
+  var resourceName = 'fireworks';
   var assets = scene.importAssetFile('Models/'+resourceName+'.abc', {
     dependentNode: viewport,
     onLoadSuccessCallback: function(){
       
       // loop over all assets and create an instance
       for(var name in assets[resourceName].getParsedNodes()) {
-        if(assets[resourceName].getParsedNodes()[name].isTypeOf('Triangles'))
+        if(assets[resourceName].getParsedNodes()[name].isTypeOf('Points'))
         {
-          assets[resourceName].getParsedNodes()[name]
           var inst = scene.constructNode('Instance', {
             transformNode: assets[resourceName].getCorrespondingTransform(name),
             geometryNode: assets[resourceName].getParsedNodes()[name],
-            materialNode: elephantMaterial
+            materialNode: pointMaterial
           });
         }
       }
@@ -129,6 +121,32 @@ $(document).ready(function() {
     }
   });
 
+  $('#play').button()
+    .click(function() {
+      var options;
+      if ($(this).text() == 'Play') {
+        $(this).button('option', {
+          label: 'Pause',
+          icons: {
+            primary: 'ui-icon-pause'
+          }
+        });
+        scene.animation.play();
+      } else {
+        $(this).button('option', {
+          label: 'Play',
+          icons: {
+            primary: 'ui-icon-play'
+          }
+        });
+        scene.animation.pause();
+      }
+    });
+  $('#step').button()
+    .click(function() {
+      scene.animation.step();
+    });
+  
   $('#loadingDialog').dialog({
     modal: true
   });
@@ -148,13 +166,6 @@ $(document).ready(function() {
   
 });
 
-// jQuert UI Styling classes
-$(document).ready(function() {
-  $(".box").addClass("ui-widget");
-  $(".box h2").addClass("ui-widget-header ui-corner-all");
-  $(".content").addClass("ui-widget-content");
-});
-
 </script>
 
   </head> 
@@ -170,18 +181,24 @@ $(document).ready(function() {
         </div><!--viewer-->
         <div id="sidebar">
           <h2 class="box">&larr; <a href="../../../index.html">back to Demo list</a></h2>
+          
           <div class="box">
             <h2>INFO</h2>
             <div class="content">
               Alembic Viewer.<br>
-              The model seen in this sample has been created by <a href="http://www.sampleandhold.co.uk" target=_NEW>http://www.sampleandhold.co.uk</a>.
-              We use a combination of normal mapping and ambient occlusion based shading to create the illusion of the complexity of the original
-              high resolution mesh while limiting the decoded complexity to 10.000 triangles.<br><br>
-              The custom shader creates two different effects, a specular based on one side of the model,
-              an occlusion based on on the other side. Turn the camera to inspect it!
+              The particles seen in this sample has been exported from Autodesk Softimage,
+              the particle attributes are transported across, motion is being smoothly
+              interpolated based on the playback rate.
             </div><!--content-->
           </div><!--box-->
 
+                  <div class="box">
+                    <h2>CONTROLS</h2>
+                    <div class="content">
+                        <button id="play" style="margin-top:10px;">Play</button>
+                        <button id="step" style="margin-top:10px;">Step</button>
+                    </div><!--content-->
+                </div><!--box-->
         </div><!--sidebar-->
       </div> <!--editor-->
     </div><!--wrapper-->

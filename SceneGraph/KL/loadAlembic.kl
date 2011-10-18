@@ -83,3 +83,72 @@ operator alembicParsePolyMeshAttributes(
     handle.parsePolyMeshAttributes(identifier,time,vertices,normals,uvsLoaded,uvs);
   }
 }
+
+operator alembicParsePointsCount(
+  io AlembicHandle handle,
+  io String identifier,
+  io Scalar time,
+  io Size count
+) {
+  handle.parsePointsCount(identifier,time,count);
+}
+
+operator alembicParsePointsAttributes(
+  io AlembicHandle handle,
+  io String identifier,
+  io Scalar time,
+  io Vec3 vertices<>,
+  io Scalar sizes<>,
+  io Color colors<>
+) {
+  if(vertices.size() > 0){
+    handle.parsePointsAttributes(identifier,time,vertices,sizes,colors);
+  }
+}
+
+operator alembicParseCurvesCount(
+  io AlembicHandle handle,
+  io String identifier,
+  io Size count
+) {
+  if(count <= 1){
+    handle.parseCurvesCount(identifier,count);
+  }
+}
+
+operator alembicParseCurvesUniforms(
+  io AlembicHandle handle,
+  io String identifier,
+  io Integer indices[]
+) {
+  if(indices.size() == 0){
+    handle.parseCurvesUniforms(identifier,indices);
+  }
+}
+
+operator alembicParseCurvesAttributes(
+  io AlembicHandle handle,
+  io String identifier,
+  io Scalar time,
+  io Vec3 vertices<>,
+  io Scalar sizes<>,
+  io Boolean uvsLoaded,
+  io Vec2 uvs<>,
+  io Color colors<>
+) {
+  if(vertices.size() > 0){
+    handle.parseCurvesAttributes(identifier,time,vertices,sizes,uvsLoaded,uvs,colors);
+  }
+}
+
+operator alembicCurvesComputeTangents(
+  io Integer indices[],
+  io Vec3 vertices<>,
+  io Vec3 tangents<>
+) {
+  for(Size i=0;i<indices.size();i+=2)
+  {
+    tangents[indices[i]] = (vertices[indices[i]] - vertices[indices[i+1]]).unit();
+    tangents[indices[i+1]] = tangents[indices[i]];
+  }
+}

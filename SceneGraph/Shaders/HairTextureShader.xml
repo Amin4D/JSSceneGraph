@@ -59,17 +59,15 @@
       varying vec3 tangent;
 
 			uniform sampler2D u_samplerDiffuseMap;
-      
 			
 			void main(){
       
         vec3 N = normalize(tangent);
         vec3 L = normalize(lightDir);
         vec3 V = normalize(viewDir);
-        float td = clamp(1.0 + dot(N,L),0.5,1.0);
-        float nd = 1.0 - abs(dot(N,V));
+        float td = clamp(0.7 + dot(N,L),0.5,1.0);
+        float nd = 1.0 - clamp(abs(dot(N,V)),0.5,1.0);
         nd = nd * nd * nd * nd * nd;
-      
 				gl_FragColor = td * (texture2D( u_samplerDiffuseMap, gl_TexCoord[0].st ) * (1.0 - nd) + u_materialSpecularColor * nd);
 			}
 

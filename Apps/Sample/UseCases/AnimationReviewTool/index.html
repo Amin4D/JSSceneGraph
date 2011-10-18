@@ -53,13 +53,10 @@
 }  
 #viewer {
   right:400px;
+  bottom:125px;
 }
 #timeControls {
-  right:400px;
-}
-
-#FabricContainer{
-  bottom:125;
+  right:390px;
 }
 
 
@@ -1067,7 +1064,6 @@ $(document).ready(function() {
           <div id="FabricContainer"></div> 
         </div><!--viewer-->
         <div id="sidebar">
-          <p class="box">&larr; <a href="../../../../index.html">back to Demo list</a></p>
           <div class="box">
             <h2>Scene</h2>
             <div class="content">
@@ -1084,8 +1080,8 @@ $(document).ready(function() {
                 <select multi size=5 id='planelist' style='width: 200px'>
                 </select>
                 <div id='planeblend' style="margin-top:10px;"></div>
-                 <p id="brushColor"></p>
-                        
+                <p id="brushColor"></p>
+                
                 <label for="brushOpacity" >Brush Opacity:</label>
                 <div id='brushOpacity' style="margin-top:10px;"></div>
                 
@@ -1094,6 +1090,7 @@ $(document).ready(function() {
             </div><!--content-->
           </div><!--box-->
         </div><!--sidebar-->
+        
         <div id="timeControls">
           <div class="box">
             <h2>Playback</h2>
@@ -1103,6 +1100,7 @@ $(document).ready(function() {
             </div><!--content-->
           </div><!--box-->
         </div><!--timeControls-->
+        
       </div> <!--editor-->
     </div><!--wrapper-->
   </body> 

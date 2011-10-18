@@ -313,8 +313,7 @@ ul#tools li a#btn-select{
   padding:0;
 }
 #timeControls .box h2{
-  padding: 10px;
-  margin: 0;
+  padding: 5px 10px 1px;
 }
 #timeControls .box .content{
   padding: 10px;

@@ -129,8 +129,8 @@ FABRIC.SceneGraph.registerNodeType('AlembicLoadNode', {
           uniformsdgnode.addMember('identifier','String',identifier);
           uniformsdgnode.addMember('uvsLoaded','Boolean',false);
           uniformsdgnode.addMember('alembicTime','Scalar',0);
-          trianglesNode.getTimeDrivenDGNode = function() {
-            return this.getUniformsDGNode();
+          trianglesNode.getTimeDrivenDGNodeNames = function() {
+            return ['UniformsDGNode'];
           }
           uniformsdgnode.setDependency(resourceloaddgnode,'alembic');
           var attributesdgnode = trianglesNode.getAttributesDGNode();
@@ -186,8 +186,8 @@ FABRIC.SceneGraph.registerNodeType('AlembicLoadNode', {
           var dgnode = cameraNode.getDGNode();
           dgnode.addMember('identifier','String',identifier);
           dgnode.addMember('alembicTime','Scalar',0);
-          cameraNode.getTimeDrivenDGNode = function() {
-            return this.getDGNode();
+          cameraNode.getTimeDrivenDGNodeNames = function() {
+            return ['DGNode'];
           }
           dgnode.setDependency(resourceloaddgnode,'alembic');
           
@@ -218,8 +218,8 @@ FABRIC.SceneGraph.registerNodeType('AlembicLoadNode', {
           var dgnode = transformNode.getDGNode();
           dgnode.addMember('identifier','String',identifier);
           dgnode.addMember('alembicTime','Scalar',0);
-          transformNode.getTimeDrivenDGNode = function() {
-            return this.getDGNode();
+          transformNode.getTimeDrivenDGNodeNames = function() {
+            return ['DGNode'];
           };
           dgnode.setDependency(resourceloaddgnode,'alembic');
 
@@ -236,6 +236,55 @@ FABRIC.SceneGraph.registerNodeType('AlembicLoadNode', {
               'self.globalXfo'
             ],
             entryFunctionName: 'alembicParseXform',
+            srcFile: 'FABRIC_ROOT/SceneGraph/KL/loadAlembic.kl'
+          }));
+        }
+        else if(type == 'Points') {
+          
+          var pointsNode = scene.constructNode('Points', { createBoundingBoxNode: true, size: 4.0 } );
+          parsedNodes[identifier] = pointsNode.pub;
+
+          // retrieve thd dgnodes
+          var uniformsdgnode = pointsNode.getUniformsDGNode();
+          uniformsdgnode.addMember('identifier','String',identifier);
+          uniformsdgnode.addMember('uvsLoaded','Boolean',false);
+          uniformsdgnode.addMember('alembicTime','Scalar',0);
+          pointsNode.getTimeDrivenDGNodeNames = function() {
+            return ['UniformsDGNode'];
+          }
+          uniformsdgnode.setDependency(resourceloaddgnode,'alembic');
+          var attributesdgnode = pointsNode.getAttributesDGNode();
+          attributesdgnode.setDependency(resourceloaddgnode,'alembic');
+          pointsNode.pub.addVertexAttributeValue('sizes','Scalar',{ genVBO:true });
+          pointsNode.pub.addVertexAttributeValue('colors','Color',{ genVBO:true });
+
+          // create a function to access the number of sample of this node
+          pointsNode.pub.getNumSamples = (function(value) { return function() { return value; }; })(numSamples);
+          
+          // setup the parse operators
+          attributesdgnode.bindings.append(scene.constructOperator({
+            operatorName: 'alembicParsePointsCount',
+            parameterLayout: [
+              'alembic.handle',
+              'uniforms.identifier',
+              'uniforms.alembicTime',
+              'self.newCount'
+            ],
+            entryFunctionName: 'alembicParsePointsCount',
+            srcFile: 'FABRIC_ROOT/SceneGraph/KL/loadAlembic.kl'
+          }));
+          
+          attributesdgnode.bindings.append(scene.constructOperator({
+            operatorName: 'alembicParsePointsAttributes',
+            parameterLayout: [
+              'alembic.handle',
+              'uniforms.identifier',
+              'uniforms.alembicTime',
+              'self.positions<>',
+              'self.sizes<>',
+              'self.colors<>'
+            ],
+            entryFunctionName: 'alembicParsePointsAttributes',
             srcFile: 'FABRIC_ROOT/SceneGraph/KL/loadAlembic.kl'
           }));
         }
@@ -261,23 +310,31 @@ FABRIC.SceneGraph.registerNodeType('AlembicLoadNode', {
           var node = scene.getPrivateInterface(parsedNodes[name]);
           if(node.pub.getNumSamples() <= 1)
             continue;
-          var dgnode = node.getTimeDrivenDGNode();
-          dgnode.setDependency(animationControllerDGNode,'controller');
-          dgnode.bindings.insert(scene.constructOperator({
-            operatorName: 'alembicSetTime',
-            parameterLayout: [
-              'self.alembicTime',
-              'controller.localTime'
-            ],
-            entryFunctionName: 'alembicSetTime',
-            srcFile: 'FABRIC_ROOT/SceneGraph/KL/loadAlembic.kl'
-          }),0);
+          var dgnodeNames = node.getTimeDrivenDGNodeNames();
+          for(var i=0;i<dgnodeNames.length;i++) {
+            var dgnode = node['get'+dgnodeNames[i]]();
+            dgnode.setDependency(animationControllerDGNode,'controller');
+            dgnode.bindings.insert(scene.constructOperator({
+              operatorName: 'alembicSetTime',
+              parameterLayout: [
+                'self.alembicTime',
+                'controller.localTime'
+              ],
+              entryFunctionName: 'alembicSetTime',
+              srcFile: 'FABRIC_ROOT/SceneGraph/KL/loadAlembic.kl'
+            }),0);
+          }
           
-          // if the node is a triangles node
+          // make attributes dynamic if we are animated
           if(node.pub.isTypeOf('Triangles')) {
             node.pub.setAttributeDynamic('positions');
             node.pub.setAttributeDynamic('normals');
             node.pub.setAttributeDynamic('uvs0');
+          }
+          else if(node.pub.isTypeOf('Points')) {
+            node.pub.setAttributeDynamic('positions');
+            node.pub.setAttributeDynamic('sizes');
+            node.pub.setAttributeDynamic('colors');
           }
         }
 

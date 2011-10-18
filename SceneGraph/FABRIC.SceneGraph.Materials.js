@@ -1337,6 +1337,8 @@ FABRIC.SceneGraph.defineEffectFromFile('WireframeMaterial', 'FABRIC_ROOT/SceneGr
 
 FABRIC.SceneGraph.defineEffectFromFile('OutlineShader', 'FABRIC_ROOT/SceneGraph/Shaders/OutlineShader.xml');
 
+FABRIC.SceneGraph.defineEffectFromFile('PointFlatMaterial', 'FABRIC_ROOT/SceneGraph/Shaders/PointFlatShader.xml');
+
 
 FABRIC.SceneGraph.registerNodeType('BloomPostProcessEffect', {
   briefDesc: 'The BloomPostProcessEffect node draws a bloom effect after the viewport has been drawn.',

@@ -83,3 +83,25 @@ operator alembicParsePolyMeshAttributes(
     handle.parsePolyMeshAttributes(identifier,time,vertices,normals,uvsLoaded,uvs);
   }
 }
+
+operator alembicParsePointsCount(
+  io AlembicHandle handle,
+  io String identifier,
+  io Scalar time,
+  io Size count
+) {
+  handle.parsePointsCount(identifier,time,count);
+}
+
+operator alembicParsePointsAttributes(
+  io AlembicHandle handle,
+  io String identifier,
+  io Scalar time,
+  io Vec3 vertices<>,
+  io Scalar sizes<>,
+  io Color colors<>
+) {
+  if(vertices.size() > 0){
+    handle.parsePointsAttributes(identifier,time,vertices,sizes,colors);
+  }
+}

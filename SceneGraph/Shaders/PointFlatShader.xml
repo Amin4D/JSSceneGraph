@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<shader>
+  <name>PointFlatMaterial</name>
+  <uniforms>
+    <uniform name="u_modelViewProjectionMatrix" constant="modelViewProjectionMatrix" type="Mat44" owner="instance"/>
+  </uniforms>
+  <attributes>
+    <attribute name="a_position" binding="positions"/>
+    <attribute name="a_color" binding="colors"/>
+  </attributes>
+  
+  <vertexshader>
+    <source>
+      <![CDATA[
+    
+      uniform mat4 u_modelViewProjectionMatrix;
+      attribute vec4 a_position;
+      attribute vec4 a_color;
+      
+      varying vec4 color;
+      
+      void main(){
+        gl_Position = u_modelViewProjectionMatrix * a_position;
+        color = a_color;
+      }
+
+      ]]>
+    </source>
+  </vertexshader>
+  
+  <fragmentshader>
+    <source>
+      <![CDATA[
+      
+      varying vec4 color;
+
+      void main(){
+        gl_FragColor = color;
+      }
+
+      ]]>
+    </source>
+  </fragmentshader>
+</shader>

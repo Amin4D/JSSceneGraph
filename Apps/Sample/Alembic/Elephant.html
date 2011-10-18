@@ -83,14 +83,14 @@ $(document).ready(function() {
   var camera = scene.constructNode('TargetCamera', {
       nearDistance: 1,
       farDistance: 2000,
-      position: FABRIC.RT.vec3(.2, .5, 1).scale(7.5),
-      target: FABRIC.RT.vec3(1.5, 2, 0).scale(1),
+      position: new FABRIC.RT.Vec3(.2, .5, 1).multiplyScalar(7.5),
+      target: new FABRIC.RT.Vec3(1.5, 2, 0).multiplyScalar(1),
     });
 
   scene.constructNode('CameraManipulator', { targetNode: camera });
   viewport.setCameraNode(camera);
 
-  var light = scene.constructNode('PointLight', { position: FABRIC.RT.vec3(10, 30, 100).scale(3) });
+  var light = scene.constructNode('PointLight', { position: new FABRIC.RT.Vec3(10, 30, 100).multiplyScalar(3) });
 
   // load our custom shader
   FABRIC.SceneGraph.defineEffectFromFile('ElephantMaterial', 'ElephantShader.xml');
@@ -182,11 +182,6 @@ $(document).ready(function() {
             </div><!--content-->
           </div><!--box-->
 
-                  <div class="box">
-                    <h2>CONTROLS</h2>
-                    <div class="content">
-                    </div><!--content-->
-                </div><!--box-->
         </div><!--sidebar-->
       </div> <!--editor-->
     </div><!--wrapper-->

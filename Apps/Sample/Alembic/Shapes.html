@@ -275,7 +275,7 @@ $(document).ready(function() {
   </head> 
   <body>
     <div id="loadingDialog" title="Loading...">
-      <h4 id="loadingDesc" style="margin-bottom: 10px">Downloading Alembic File.<br>This may take some time.</h4>
+      <h4 id="loadingDesc">Downloading Alembic File.<br>This may take some time.</h4>
       <div id="loadingProgressBar" class="ui-progressbar-value"></div>
     </div>
     <div id="wrapper">
@@ -284,7 +284,7 @@ $(document).ready(function() {
           <div id="FabricContainer"></div> 
         </div><!--viewer-->
         <div id="sidebar">
-          <h2 class="box">&larr; <a href="../../../index.html">back to Demo list</a></h2>
+          <p class="box">&larr; <a href="../../../index.html">back to Demo list</a></p>
           <div class="box">
             <h2>INFO</h2>
             <div class="content">
@@ -293,28 +293,29 @@ $(document).ready(function() {
               which are actually just several meshes.
             </div><!--content-->
           </div><!--box-->
-
                   <div class="box">
                     <h2>CONTROLS</h2>
                     <div class="content">
-                        <div>Brows Squeeze:</div>
-                        <div id='head_brow_squeeze' style="margin-top:10px;"></div>
-                        <div>Brows Down:</div>
-                        <div id='head_browdown' style="margin-top:10px;"></div>
-                        <div>Brows Up:</div>
-                        <div id='head_browup' style="margin-top:10px;"></div>
-                        <div>Lower Eyelid Down:</div>
-                        <div id='head_eyelidlow_up' style="margin-top:10px;"></div>
-                        <div>Upper Eyelid Down:</div>
-                        <div id='head_eyelidup_down' style="margin-top:10px;"></div>
-                        <div>Upper Eyelid Up:</div>
-                        <div id='head_eyelidup_up' style="margin-top:10px;"></div>
-                        <div>Frown:</div>
-                        <div id='head_frown' style="margin-top:10px;"></div>
-                        <div>Kiss:</div>
-                        <div id='head_kiss' style="margin-top:10px;"></div>
-                        <div>Smile:</div>
-                        <div id='head_smile' style="margin-top:10px;"></div>
+                      <ul class="control-list">
+                        <li>Brows Squeeze:</li>
+                        <li id='head_brow_squeeze'></li>
+                        <li>Brows Down:</li>
+                        <li id='head_browdown'></li>
+                        <li>Brows Up:</li>
+                        <li id='head_browup'></li>
+                        <li>Lower Eyelid Down:</li>
+                        <li id='head_eyelidlow_up'></li>
+                        <li>Upper Eyelid Down:</li>
+                        <li id='head_eyelidup_down'></li>
+                        <li>Upper Eyelid Up:</li>
+                        <li id='head_eyelidup_up'></li>
+                        <li>Frown:</li>
+                        <li id='head_frown'></li>
+                        <li>Kiss:</li>
+                        <li id='head_kiss'></li>
+                        <li>Smile:</li>
+                        <li id='head_smile'></li>
+                      </ul>
                     </div><!--content-->
                 </div><!--box-->
         </div><!--sidebar-->

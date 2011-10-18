@@ -52,6 +52,10 @@ h1 {
   padding: 20px 0 10px;
 }
 
+h2 {
+  font: 200 18px/1.5 "Myriad Pro", Myriad, Helvetica, "Lucida Grande", Arial, sans-serif;
+}
+
 ul, p {
   padding: 10px 0;
 }
@@ -167,9 +171,10 @@ ul#tools li a#btn-select{
 	-webkit-column-gap: 20px;  
 }
 
-.demo-list details ul {
+.demo-list article ul {
   list-style: circle;
   margin-left: 30px;
+  padding-top: 0;
 }
 
 .demo-list summary {
@@ -191,12 +196,9 @@ ul#tools li a#btn-select{
   bottom:0;
   left:0;
   right:0;
-  top:0px;
-  overflow:scroll;
+  top:0;
 }
 
-/* Viewer
--------------------------------------------------------------------- */
 #viewer{
   position:absolute;
   left:0;
@@ -227,6 +229,9 @@ ul#tools li a#btn-select{
   bottom:0;
 }
 
+#loadingDesc {
+   margin-bottom: 10px;
+}
 
 /* SIDEBAR
 -------------------------------------------------------------------- */
@@ -237,19 +242,44 @@ ul#tools li a#btn-select{
   top:0;
   bottom:0;
 }
+
+#sidebar p {
+  padding: 5px 0;
+}
+
 #sidebar .box{
   margin:10px;
-  padding:0;
 }
 #sidebar .box h2{
-  padding: 10px 10px 10px 10px;
-  margin: 0 0 0 0;
+  padding: 5px 10px 1px;
 }
 #sidebar .box .content{
   padding: 10px;
 }
 
+.control-list {
+  padding:0;
+}
 
+.control-list li {
+  margin-bottom: 5px;
+}
+
+.control-list li:nth-child(2n) {
+  margin-bottom: 15px;
+}
+
+#sidebar .box .button-controls {
+  padding:6px;
+}
+
+#curveEditor {
+  margin-top:30px;
+}
+
+#globalTime {
+  margin-top:10px;
+}
 
 #timeControls
 {

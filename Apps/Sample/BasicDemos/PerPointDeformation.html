@@ -111,6 +111,8 @@ $(document).ready(function() {
       }
     });
 
+  $('#openDebugger').button();
+  
   var scene = FABRIC.SceneGraph.createScene();
   var viewport = scene.constructNode('Viewport', {
     enableRaycasting: false,
@@ -171,6 +173,10 @@ $(document).ready(function() {
       if (errors.length > 0) {
         throw (errors.toString());
       }
+      $('#openDebugger').button()
+        .click(function() {
+          FABRIC.displayDebugger();
+        });
       viewport.redraw();
       return true;
     }
@@ -201,6 +207,7 @@ $(document).ready(function() {
         </div><!--viewer-->
         <div id="sidebar">
           <p class="box">&larr; <a href="../../../index.html">back to Demo list</a></p>
+          
           <div class="box">
             <h2>INFO</h2>
             <div class="content">
@@ -212,13 +219,14 @@ $(document).ready(function() {
             </div><!--content-->
           </div><!--box-->
 
-                <div class="box">
-                    <h2>CONTROLS</h2>
-                    <div class="content">
-                        <div>Twist Amount:</div>
-                        <div id='twistAmount' style="margin-top:10px;"></div>
-                    </div><!--content-->
-                </div><!--box-->
+          <div class="box">
+            <h2>CONTROLS</h2>
+            <div class="content">
+              <div>Twist Amount:</div>
+              <div id='twistAmount' style="margin-top:10px;"></div>
+              <button id="openDebugger" style="margin-top:10px;">Open Debugger</button>
+            </div><!--content-->
+          </div><!--box-->
             
         </div><!--sidebar-->
       </div> <!--editor-->

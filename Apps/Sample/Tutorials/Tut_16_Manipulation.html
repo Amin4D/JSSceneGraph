@@ -116,10 +116,10 @@ $(document).ready(function() {
 
   // create an instance, using the material, the transform and the geometry
   var instance = scene.constructNode('Instance', {
-      transformNode: transform, 
-      geometryNode: cone,
-      materialNode: material
-    });
+    transformNode: transform, 
+    geometryNode: cone,
+    materialNode: material
+  });
   
   // create a manipulator for the cone
   scene.constructNode('3AxisTranslationManipulator', {

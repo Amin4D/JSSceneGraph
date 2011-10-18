@@ -70,9 +70,9 @@ $(document).ready(function() {
 
   // create a camera, to be able to see something
   var camera = scene.constructNode('TargetCamera', {
-      position: new FABRIC.RT.Vec3(15, 15, 15),
-      target: new FABRIC.RT.Vec3(0, 0, 0)
-    });
+    position: new FABRIC.RT.Vec3(15, 15, 15),
+    target: new FABRIC.RT.Vec3(0, 0, 0)
+  });
   viewport.setCameraNode(camera);
   scene.constructNode("CameraManipulator", { targetNode:camera } );
 
@@ -96,10 +96,10 @@ $(document).ready(function() {
 
   // create an instance, using the material, the transform and the geometry
   scene.constructNode('Instance', {
-      transformNode: transform, 
-      geometryNode: Teapot,
-      materialNode: material
-    });
+    transformNode: transform, 
+    geometryNode: Teapot,
+    materialNode: material
+  });
   
   // Wait for all the operators to be compiled. 
   FABRIC.appendOnResolveAsyncTaskCallback(function(label, nbRemaining, doneWeight, totalWeight) {

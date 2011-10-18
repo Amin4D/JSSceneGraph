@@ -87,13 +87,14 @@ $(document).ready(function() {
 
   // create the scene grid
   scene.constructNode('Instance', {
-          geometryNode: scene.constructNode('Grid', {
-              size_x: 40.0,
-              size_z: 40.0,
-              sections_x: 20,
-              sections_z: 20 }),
-          materialNode: scene.constructNode('FlatMaterial')
-      });
+    geometryNode: scene.constructNode('Grid', {
+      size_x: 40.0,
+      size_z: 40.0,
+      sections_x: 20,
+      sections_z: 20
+    }),
+    materialNode: scene.constructNode('FlatMaterial')
+  });
 
   var assets = scene.importAssetFile('Resources/tuscany_static.dae', {});
 
@@ -103,8 +104,7 @@ $(document).ready(function() {
   var bones = skeleton.getBones();
   
   // set the bone lengths
-  for(var i=0;i<bones.length;i++)
-  {
+  for(var i=0;i<bones.length;i++){
     if(bones[i].name.substr(0,4) == "foot"){
       bones[i].length = 2.0;
       // change the parent
@@ -125,12 +125,12 @@ $(document).ready(function() {
 
   // create a material node
   var material = scene.constructNode('PhongBumpReflectSkinningMaterial', {
-      diffuseTextureNode: scene.constructNode('Image', { url: 'Resources/tuscany_d.png' }),
-      specularTextureNode: scene.constructNode('Image', { url: 'Resources/tuscany_s.png' }),
-      normalTextureNode: scene.constructNode('Image', { url: 'Resources/tuscany_n.png' }),
-      lightNode: light,
-      numBones: skeleton.getNumBones()
-    });
+    diffuseTextureNode: scene.constructNode('Image', { url: 'Resources/tuscany_d.png' }),
+    specularTextureNode: scene.constructNode('Image', { url: 'Resources/tuscany_s.png' }),
+    normalTextureNode: scene.constructNode('Image', { url: 'Resources/tuscany_n.png' }),
+    lightNode: light,
+    numBones: skeleton.getNumBones()
+  });
 
   // draw a phong version of the couch
   assets.tuscanyCharacterInstance.setMaterialNode(material);
@@ -178,6 +178,7 @@ $(document).ready(function() {
     radius: 2.5,
     drawOverLayed: true
   });
+  
   scene.constructNode('ScreenTranslationManipulator', {
     parentNode: rig,
     parentMember: 'pose',
@@ -185,6 +186,7 @@ $(document).ready(function() {
     radius: 1.25,
     drawOverLayed: true
   });
+  
   scene.constructNode('3AxisRotationManipulator', {
     parentNode: rig,
     parentMember: 'pose',
@@ -246,7 +248,7 @@ $(document).ready(function() {
           <div class="box">
             <h2>CONTROLS</h2>
             <div class="content">
-              <button id="toggleVisibility" style="margin-top:30px;">Toggle Visibility</button>
+              <input type="checkbox" id="toggleVisibility" /><label for="toggleVisibility">Toggle Visibility</label>
             </div><!--content-->
           </div><!--box-->
         </div><!--sidebar-->

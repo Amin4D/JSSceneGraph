@@ -104,8 +104,7 @@ $(document).ready(function() {
   var bones = skeleton.getBones();
   
   // set the bone lengths
-  for(var i=0;i<bones.length;i++)
-  {
+  for(var i=0;i<bones.length;i++){
     if(bones[i].name.substr(0,4) == "foot"){
       bones[i].length = 2.0;
     } else if(bones[i].name.substr(0,3) == "leg"){
@@ -124,12 +123,12 @@ $(document).ready(function() {
 
   // create a material node
   var material = scene.constructNode('PhongBumpReflectSkinningMaterial', {
-      diffuseTextureNode: scene.constructNode('Image', { url: 'Resources/tuscany_d.png' }),
-      specularTextureNode: scene.constructNode('Image', { url: 'Resources/tuscany_s.png' }),
-      normalTextureNode: scene.constructNode('Image', { url: 'Resources/tuscany_n.png' }),
-      lightNode: light,
-      numBones: skeleton.getNumBones()
-    });
+    diffuseTextureNode: scene.constructNode('Image', { url: 'Resources/tuscany_d.png' }),
+    specularTextureNode: scene.constructNode('Image', { url: 'Resources/tuscany_s.png' }),
+    normalTextureNode: scene.constructNode('Image', { url: 'Resources/tuscany_n.png' }),
+    lightNode: light,
+    numBones: skeleton.getNumBones()
+  });
 
   // draw a phong version of the couch
   assets.tuscanyCharacterInstance.setMaterialNode(material);
@@ -220,7 +219,7 @@ $(document).ready(function() {
           <div class="box">
             <h2>CONTROLS</h2>
             <div class="content">
-              <button id="toggleVisibility">Toggle Visibility</button>
+              <input type="checkbox" id="toggleVisibility" /><label for="toggleVisibility">Toggle Visibility</label>
             </div><!--content-->
           </div><!--box-->
         </div><!--sidebar-->

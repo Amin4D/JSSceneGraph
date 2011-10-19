@@ -304,7 +304,11 @@ ul#tools li a#btn-select{
 }
 
 #sidebar .box .button-controls {
-  padding:6px;
+  padding:5px;
+}
+
+#sidebar .box .button-controls button {
+  margin:5px;
 }
 
 #curveEditor {

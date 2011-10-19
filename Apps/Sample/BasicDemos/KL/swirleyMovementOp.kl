@@ -2,10 +2,13 @@
 //
 // Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
 //
+use Vec3;
 
 operator swirleyMovementOp(io Scalar ms, io Integer id, io Xfo baseXfo, io Xfo xfo) {
-  //  report("swirleyMovementOp(%f, %f, %f)\n", xfo.tr.x, baseXfo.tr.y, baseXfo.tr.z );
-  xfo.tr = baseXfo.tr;
-  xfo.tr.x += sin((ms * 5) + (id * 0.2)) * 3.0;
-  xfo.tr.y += cos(ms * 1.30) * 3.0; ;
+  
+  xfo.tr = baseXfo.tr + Vec3(sin((ms * 5) + (id * 0.2)) * 3.0, cos(ms * 1.30) * 3.0, 0.0);
+  
+  // The following line will log te message to the console.
+  //  report("swirleyMovementOp :" + xfo.tr);
 }
+

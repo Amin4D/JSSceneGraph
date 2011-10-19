@@ -285,6 +285,14 @@ $(document).ready(function() {
     $sliders3D[i].bind('slide', sliders3DBindFunction(i) );
   }
 
+  $("#displayGradientWeight").attr('checked', false).change(function() {
+    var displayGradientWeight = $('#displayGradientWeight').attr('checked');
+    for( i = 0; i < 3; ++i ) {
+      texture2DSlice[i].setOpacityElseGradientWeight(!displayGradientWeight);
+    }
+    viewport.redraw();
+  });
+
   $('#loadingDialog').dialog({
     modal: true
   });
@@ -345,15 +353,16 @@ $(document).ready(function() {
           <div class="box">
             <h2>Volume cropping</h2>
             <div class="content">
-              <label for="rangeX3D" >X range:</label>
+              <label for="rangeX3D" >X:</label>
               <div id='rangeX3D' style="margin-top:10px;"></div>
-              <label for="rangeY3D" >Y range:</label>
+              <label for="rangeY3D" >Y:</label>
               <div id='rangeY3D' style="margin-top:10px;"></div>
-              <label for="rangeZ3D" >Z range:</label>
+              <label for="rangeZ3D" >Z:</label>
               <div id='rangeZ3D' style="margin-top:10px;"></div>
             </div><!--content-->
             <h2>Axis slices</h2>
             <div class="content">
+              <input type="checkbox" id="displayGradientWeight" style="margin-top:10px;" /><label for="displayGradientWeight" style="margin-top:10px;" >Display gradient weight</label><br>
               <label for="xRatio" >X:</label>
               <div id='xRatio' style="margin-top:10px;"></div>
               <label for="yRatio" >Y:</label>

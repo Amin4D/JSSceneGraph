@@ -179,7 +179,7 @@ FABRIC.SceneGraph.registerNodeType('AnimationController', {
     var dgnode = animationControllerNode.constructDGNode('DGNode');
     dgnode.addMember('timeControl', 'Integer', options.timeControl);
     dgnode.addMember('playbackRate', 'Scalar', options.playbackRate);
-    dgnode.addMember('localTime', 'Scalar');
+    dgnode.addMember('localTime', 'Scalar', options.timeRange.x);
     dgnode.addMember('timeRange', 'Vec2', options.timeRange);
     dgnode.addMember('outOfRange', 'Integer', options.outOfRange);
     

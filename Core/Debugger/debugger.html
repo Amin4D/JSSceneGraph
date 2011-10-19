@@ -1,20 +1,14 @@
-﻿<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd"> 
+﻿<!DOCTYPE html>
 <html>
   <head>
-/*
- *  Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
- */
-  <meta http-equiv="Content-Language" content="en" />
-  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta charset="utf-8">  
   <title>FABRIC Debugger</title>
     
-    <link href="../../themes/default/style.css" rel="stylesheet" type="text/css" />
-    <link href="../../themes/default/viewer.css" rel="stylesheet" type="text/css" />
-    
-    <script type="text/javascript" src="../../ThirdParty/jQuery/jquery-1.4.2.min.js"></script>
+    <script type="text/javascript" src="../../ThirdParty/jQuery/jquery-1.6.2.min.js"></script>
     <script type="text/javascript" src="../../ThirdParty/jQuery/jquery-ui-1.8.16.custom.min.js"></script>
 
-    <link type="text/css" href="../../ThirdParty/jQuery/css/vader/jquery-ui-1.8.5.custom.css" rel="stylesheet" />
+    <link type="text/css" href="../../ThirdParty/jQuery/css/fabric/main.css" rel="stylesheet" />
+    <link type="text/css" href="../../ThirdParty/jQuery/css/fabric/jquery-ui-1.8.16.custom.css" rel="stylesheet" />
 
     <script type="text/javascript" src="../FABRIC.js" charset="utf-8"></script>
     <script type="text/javascript" src="../Vec2.js" charset="utf-8"></script>
@@ -24,14 +18,12 @@
     
     <style type="text/css">
     
-
-
 #graph{
-	position:absolute;
-	left:0;
-	right:251px;
-	top:0;
-	bottom:0;
+  position:absolute;
+  left:0;
+  right:251px;
+  top:0;
+  bottom:0;
   background: #d3d3d3;
 }
 
@@ -41,7 +33,6 @@ rect.EditorButton {
   stroke-opacity:0.85;
   stroke-width:0.5;
 }
-
 
 rect.EventCatcher {
   fill-opacity:0.0;
@@ -53,7 +44,6 @@ circle.EventCatcher {
   stroke-opacity:0.0;
   stroke-width:0.0;
 }
-
 
 rect.Shadow {
   fill-opacity:0.25;
@@ -71,13 +61,11 @@ g.Pressed {
   stroke-width:2.5;
 }
 
-
 g.Button {
   stroke:black;
   stroke-opacity:0.75;
   stroke-width:0.5;
 }
-
 
 text.ButtonLabel {
   font-family:Helvetica;
@@ -101,8 +89,6 @@ rect.Node {
   fill-opacity:0.75;
 }
 
-
-
 text.NodeLabel {
   font-family:Helvetica;
   font-size:8pt;
@@ -112,7 +98,6 @@ text.NodeLabel {
   stroke-opacity:0.0;
   cursor:move;
 }
-
 
 
 /* ===================================================== */
@@ -128,7 +113,6 @@ text.PortLabel {
   cursor:move;
 }
 
-
 circle.DFGNodePort {
   fill-opacity:0.95;
   stroke-opacity:0.4;
@@ -140,7 +124,6 @@ circle.Highlighted {
   stroke:white;
   stroke-opacity:0.6;
 }
-
 
 
 /* ===================================================== */
@@ -727,22 +710,17 @@ $(document).ready(function() {
   
   var redisplayGraph = function(){
     // TODO: figure out why I can't set the button to be checked by default.
-    displayGraph(!$('#displayEventHandlers').attr('checked'),
-                 !$('#displayDependencyGraph').attr('checked'),
+    displayGraph($('#displayEventHandlers').attr('checked'),
+                 $('#displayDependencyGraph').attr('checked'),
                  true)
   }
   
-  $('#rebuild').button()
-      .click(function() {
-        layoutGraph();
-        redisplayGraph();
-      });
     
-  $("#displayEventHandlers").change(function() {
+  $("#displayEventHandlers").attr('checked', true).change(function() {
     redisplayGraph();
   });
   
-  $("#displayDependencyGraph").change(function() {
+  $("#displayDependencyGraph").attr('checked', true).change(function() {
     redisplayGraph();
   });
   
@@ -754,41 +732,44 @@ $(document).ready(function() {
 });
 
 
+// jQuert UI Styling classes
+$(document).ready(function() {
+	$(".box").addClass("ui-widget");
+	$(".box h2").addClass("ui-widget-header ui-corner-all");
+	$(".content").addClass("ui-widget-content");
+});
+
 
     </script>
 
 
 
-  </head> 
+  </head>
+  
   <body>
     <div id="wrapper">
-      <ul id="nav">
-        <li><a href="#" id="fabric-logo"><img src="../../themes/default/_img/projects/fabric-logo.png" /></a></li>
-      </ul>
       <div id="editor">
-        
         <div id="graph">
         </div><!--graph-->
-        
         <div id="sidebar">
-          <p class="box">&larr; <a href="../../../index.html">back to Demo list</a></p>
           <div class="box">
             <h2>OPTIONS</h2>
             <div class="content" id="displayFilters">
-              <button id="rebuild" >Rebuild</button><br>
               <input type="checkbox" id="displayEventHandlers" style="margin-top:10px;" /><label for="displayEventHandlers" style="margin-top:10px;" >Display Event Handlers</label><br>
               <input type="checkbox" id="displayDependencyGraph"/><label for="displayDependencyGraph" style="margin-top:10px;" >Display Dependency Graph</label><br>
               <input type="checkbox" id="displayDanglingNodes"/><label for="displayDanglingNodes" style="margin-top:10px;" >Display Dangling Nodes</label><br>
             </div><!--content-->
           </div><!--box-->
+          
           <div class="box">
             <h2>ERRORS</h2>
             <div class="content" id="errorDisplay">
-            </div><!--content-->
+            </div><!--content- ->
           </div><!--box-->
+            
         </div><!--sidebar-->
-        
       </div> <!--editor-->
     </div><!--wrapper-->
   </body> 
-</html>
+  </html>
+

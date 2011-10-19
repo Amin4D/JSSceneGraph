@@ -975,6 +975,10 @@ FABRIC.SceneGraph.registerNodeType('Viewport', {
         viewportNode.pub.getGlewSupported = fabricwindow.getGlewSupported;
         viewportNode.pub.show = function(){ fabricwindow.show(); };
         viewportNode.pub.hide = function(){ fabricwindow.hide(); };
+
+        viewportNode.pub.getWidth = function(){ return fabricwindow.windowNode.getData('width'); };
+        viewportNode.pub.getHeight = function(){ return fabricwindow.windowNode.getData('height'); };
+        viewportNode.pub.getGlewSupported = fabricwindow.getGlewSupported;
         
         if(options.checkOpenGL2Support && !fabricwindow.getGlewSupported('GL_VERSION_2_0')){
           alert('ERROR: Your graphics driver does not support OpenGL 2.0, which is required to run Fabric.')
@@ -1542,6 +1546,13 @@ FABRIC.SceneGraph.registerNodeType('Camera', {
     dgnode.addMember('orthographic', 'Boolean', options.orthographic);
     dgnode.addMember('projectionMat44', 'Mat44');
     dgnode.addMember('screenOffset', 'Vec2', options.screenOffset);
+
+    cameraNode.addMemberInterface(dgnode, 'nearDistance', true);
+    cameraNode.addMemberInterface(dgnode, 'farDistance', true);
+    cameraNode.addMemberInterface(dgnode, 'fovY', true);
+    cameraNode.addMemberInterface(dgnode, 'focalDistance', true);
+    cameraNode.addMemberInterface(dgnode, 'orthographic', true);
+    cameraNode.addMemberInterface(dgnode, 'screenOffset', true);
 
     redrawEventHandler.setScope('camera', dgnode);
 

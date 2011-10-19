@@ -167,6 +167,9 @@ FABRIC.SceneGraph.registerNodeType('Texture2DSliceDisplay', {
     postDrawEventHandler.addMember('tl', 'Vec2', options.tl );
     postDrawEventHandler.addMember('br', 'Vec2', options.br );
 
+    sliceDisplayNode.addMemberInterface(postDrawEventHandler, 'tl', true);
+    sliceDisplayNode.addMemberInterface(postDrawEventHandler, 'br', true);
+
     postDrawEventHandler.setScopeName('textureStub');
     postDrawEventHandler.addMember('textureUnit', 'Integer', 0);
     postDrawEventHandler.addMember('program', 'Integer', 0);
@@ -213,16 +216,16 @@ $(document).ready(function() {
   var light = scene.constructNode('PointLight', { position: new FABRIC.RT.Vec3(420.0, 1000.0, 600.0) });
   var transform =  scene.constructNode('Transform', {
     hierarchical: false,
-    globalXfo: new FABRIC.RT.Xfo({ tr: new FABRIC.RT.Vec3(0, 0, 0) })
+    globalXfo: new FABRIC.RT.Xfo({ tr: new FABRIC.RT.Vec3(0, 0, 0), sc: new FABRIC.RT.Vec3(5.0, 5.0, 5.0) })
   });
 
   var volume = scene.constructNode('VolumeSlices', { nbSlices: 100, cameraNode: camera, transformNode: transform, cropMin: new FABRIC.RT.Vec3(0, 0, 0), cropMax: new FABRIC.RT.Vec3(1, 1, 1) });
 
   var textureGen = scene.constructNode('3DTextureGenerator');
   var texture2DSlice = [];
-  texture2DSlice[0] = scene.constructNode('Texture2DSliceDisplay', {tl: new FABRIC.RT.Vec2(0.5, 1.0), br: new FABRIC.RT.Vec2(1.0, 1.0/3.0), sourceImageNode: textureGen, sliceRatio: 0.5, sliceAxis : 0});
-  texture2DSlice[1] = scene.constructNode('Texture2DSliceDisplay', {tl: new FABRIC.RT.Vec2(0.5, 1.0/3.0), br: new FABRIC.RT.Vec2(1.0, -1.0/3.0), sourceImageNode: textureGen, sliceRatio: 0.5, sliceAxis : 1});
-  texture2DSlice[2] = scene.constructNode('Texture2DSliceDisplay', {tl: new FABRIC.RT.Vec2(0.5, -1.0/3.0), br: new FABRIC.RT.Vec2(1.0, -1.0), sourceImageNode: textureGen, sliceRatio: 0.5, sliceAxis : 2});
+  texture2DSlice[0] = scene.constructNode('Texture2DSliceDisplay', {tl: new FABRIC.RT.Vec2(2.0/3.0, 1.0), br: new FABRIC.RT.Vec2(1.0, 1.0/3.0), sourceImageNode: textureGen, sliceRatio: 0.5, sliceAxis : 0});
+  texture2DSlice[1] = scene.constructNode('Texture2DSliceDisplay', {tl: new FABRIC.RT.Vec2(2.0/3.0, 1.0/3.0), br: new FABRIC.RT.Vec2(1.0, -1.0/3.0), sourceImageNode: textureGen, sliceRatio: 0.5, sliceAxis : 1});
+  texture2DSlice[2] = scene.constructNode('Texture2DSliceDisplay', {tl: new FABRIC.RT.Vec2(2.0/3.0, -1.0/3.0), br: new FABRIC.RT.Vec2(1.0, -1.0), sourceImageNode: textureGen, sliceRatio: 0.5, sliceAxis : 2});
 
   var flatMaterial = scene.constructNode('FlatMaterial', {
       color: FABRIC.RT.rgb(0.8, 0, 0, 1)
@@ -247,11 +250,18 @@ $(document).ready(function() {
       if (errors.length > 0) {
         throw (errors.toString());
       }
-      
-      if(!viewport.getGlewSupported('GL_EXT_geometry_shader4')){
-        console.log("the shader that is drawping the normals will not display on this machine, because it does not support geometry shaders");
+
+      var aspectRatio = viewport.getWidth() / viewport.getHeight();
+      var sliceViewWidth = (2.0/3.0) / aspectRatio;
+
+      for( var i = 0; i < 3; ++i ) {
+        var tl = texture2DSlice[i].getTl();
+        tl.x = 1.0 - sliceViewWidth;
+        texture2DSlice[i].setTl(tl);
       }
-  
+
+      camera.setScreenOffset(new FABRIC.RT.Vec2(-sliceViewWidth/2.0, 0.0));
+
       viewport.redraw();
       return true;
     }
@@ -278,13 +288,23 @@ $(document).ready(function() {
         <div id="sidebar">
           
           <div class="box">
-            <h2>INFO</h2>
+            <h2>3D view</h2>
             <div class="content">
-              Materials.<br>
-              This sample shows the creation of several materials through FABRIC's JavaScript based SceneGraph.
-              All Materials are implemented using GLSL shaders, from Constant, Phong, Textures, Normal Mapping
-              to Geometry Shaders for drawing the normals of the last object. Check out the source code of this
-              page to see how this works.
+              <label for="minX3D" >X start:</label>
+              <div id='minX3D' style="margin-top:10px;"></div>
+              <label for="maxX3D" >X end:</label>
+              <div id='maxX3D' style="margin-top:10px;"></div>
+              <label for="minY3D" >Y start:</label>
+              <div id='minY3D' style="margin-top:10px;"></div>
+              <label for="maxY3D" >Y end:</label>
+              <div id='maxY3D' style="margin-top:10px;"></div>
+              <label for="minZ3D" >Z start:</label>
+              <div id='minZ3D' style="margin-top:10px;"></div>
+              <label for="maxZ3D" >Z end:</label>
+              <div id='maxZ3D' style="margin-top:10px;"></div>
+            </div><!--content-->
+            <h2>2D views</h2>
+            <div class="content">
             </div><!--content-->
           </div><!--box-->
             

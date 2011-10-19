@@ -1,19 +1,18 @@
-<html xmlns="http://www.w3.org/1999/xhtml"> 
+<!DOCTYPE html>
+<html lang="en">
+ <head>
+  <meta charset="utf-8">  
   <!--
     Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
     -->
-  <head> 
     <title>FABRIC - Keyframe Animation</title> 
     
-    <meta charset="iso-8859-1"/>
-    <link href="../../../themes/default/style.css" rel="stylesheet" type="text/css" />
-    <link href="../../../themes/default/viewer.css" rel="stylesheet" type="text/css" />
-    
-    <script type="text/javascript" src="../../../ThirdParty/jQuery/jquery-1.4.2.min.js"></script>
-    <script type="text/javascript" src="../../../ThirdParty/jQuery/jquery-ui-1.8.5.custom.min.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/jQuery/jquery-1.6.2.min.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/jQuery/jquery-ui-1.8.16.custom.min.js"></script>
 
-    <link type="text/css" href="../../../ThirdParty/jQuery/css/vader/jquery-ui-1.8.5.custom.css" rel="stylesheet" />
-
+    <link type="text/css" href="../../../ThirdParty/jQuery/css/fabric/main.css" rel="stylesheet" />
+    <link type="text/css" href="../../../ThirdParty/jQuery/css/fabric/jquery-ui-1.8.16.custom.css" rel="stylesheet" />
+	
     <script type="text/javascript" src="../../../Core/FABRIC.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/RT/Math.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/RT/RGBA.js" charset="utf-8"></script>
@@ -62,11 +61,13 @@ s.parentNode.insertBefore(ga, s);
 
     
     <script type="text/javascript">
-$(document).ready(function() { var $globalTimeSlider = $('#globalTime').slider({
-        min: 0.0,
-        max: 100.0,
-        step: 0.01
-      });
+$(document).ready(function() {
+  
+  var $globalTimeSlider = $('#globalTime').slider({
+      min: 0.0,
+      max: 100.0,
+      step: 0.01
+    });
 
   $('#curveEditor').button();
 
@@ -101,6 +102,20 @@ $(document).ready(function() { var $globalTimeSlider = $('#globalTime').slider({
     diffuseColor: FABRIC.RT.rgb(0, 0.8, 0, 1),
     lightNode: light
   });
+  
+  // create the scene grid
+  scene.constructNode('Instance', {
+    geometryNode: scene.constructNode('Grid', {
+      size_x: 140.0,
+      size_z: 140.0,
+      sections_x: 20,
+      sections_z: 20
+    }),
+    materialNode: scene.constructNode('FlatMaterial', {
+      color: new FABRIC.RT.rgb(0.3,0.3,0.3,1.0)
+    } )
+  });
+  
   var cube = scene.constructNode('Cuboid', {
     length: 15,
     width: 15,
@@ -124,14 +139,16 @@ $(document).ready(function() { var $globalTimeSlider = $('#globalTime').slider({
   } );
   linearPosKeyframeTrackNode.setTrackCount(2);
   var key = FABRIC.Animation.linearKeyframe;
-  linearPosKeyframeTrackNode.setTrackData(1, { name: 'PosX',
-                        color: FABRIC.RT.rgb(1, 0, 0),
-                        keys: [key(0, 0), key(10, 20), key(20, -5), key(50, -5), key(75, 50), key(100, 0)]
-                      });
-  linearPosKeyframeTrackNode.setTrackData(0, { name: 'PosY',
-                        color: FABRIC.RT.rgb(1, 0, 0),
-                        keys: [key(0, 0), key(50, 0), key(75, 20), key(100, 0)]
-                      });
+  linearPosKeyframeTrackNode.setTrackData(1, {
+    name: 'PosX',
+    color: FABRIC.RT.rgb(1, 0, 0),
+    keys: [key(0, 0), key(10, 20), key(20, -5), key(50, -5), key(75, 50), key(100, 0)]
+  });
+  linearPosKeyframeTrackNode.setTrackData(0, {
+    name: 'PosY',
+    color: FABRIC.RT.rgb(1, 0, 0),
+    keys: [key(0, 0), key(50, 0), key(75, 20), key(100, 0)]
+  });
 
   var linearAnimationEvaluatorNode = scene.constructNode('AnimationEvaluator', {
     name:'LinearPosAnimationEvaluator' ,
@@ -161,26 +178,28 @@ $(document).ready(function() { var $globalTimeSlider = $('#globalTime').slider({
   } );
   bezierPosKeyframeTrackNode.setTrackCount(2);
   var key = FABRIC.Animation.bezierKeyframe;
-  bezierPosKeyframeTrackNode.setTrackData(0, { name: 'PosX',
-                        color: FABRIC.RT.rgb(1, 0, 0),
-                        keys: [
-                             key(0, -20, null, new FABRIC.RT.Vec2(3, 0)),
-                            key(10, 0, new FABRIC.RT.Vec2(-3, 0), new FABRIC.RT.Vec2(3, 0)),
-                            key(20, 20, new FABRIC.RT.Vec2(-3, 0), new FABRIC.RT.Vec2(10, 0)),
-                            key(50, 0, new FABRIC.RT.Vec2(-10, 0), new FABRIC.RT.Vec2(7, 0)),
-                            key(75, -20, new FABRIC.RT.Vec2(-7, 0), null)
-                          ]
-                      });
-  bezierPosKeyframeTrackNode.setTrackData(1, { name: 'PosY',
-                        color: FABRIC.RT.rgb(1, 0, 0),
-                        keys: [
-                             key(0, 0, null, new FABRIC.RT.Vec2(3, 0)),
-                            key(10, 20, new FABRIC.RT.Vec2(-3, 0), new FABRIC.RT.Vec2(3, 0)),
-                            key(20, 0, new FABRIC.RT.Vec2(-3, 0), new FABRIC.RT.Vec2(10, 0)),
-                            key(50, -20, new FABRIC.RT.Vec2(-10, 0), new FABRIC.RT.Vec2(7, 0)),
-                            key(75, 0, new FABRIC.RT.Vec2(-7, 0), null)
-                          ]
-                      });
+  bezierPosKeyframeTrackNode.setTrackData(0, {
+    name: 'PosX',
+    color: FABRIC.RT.rgb(1, 0, 0),
+    keys: [
+      key(0, -20, null, new FABRIC.RT.Vec2(3, 0)),
+      key(10, 0, new FABRIC.RT.Vec2(-3, 0), new FABRIC.RT.Vec2(3, 0)),
+      key(20, 20, new FABRIC.RT.Vec2(-3, 0), new FABRIC.RT.Vec2(10, 0)),
+      key(50, 0, new FABRIC.RT.Vec2(-10, 0), new FABRIC.RT.Vec2(7, 0)),
+      key(75, -20, new FABRIC.RT.Vec2(-7, 0), null)
+    ]
+  });
+  bezierPosKeyframeTrackNode.setTrackData(1, {
+    name: 'PosY',
+    color: FABRIC.RT.rgb(1, 0, 0),
+    keys: [
+      key(0, 0, null, new FABRIC.RT.Vec2(3, 0)),
+      key(10, 20, new FABRIC.RT.Vec2(-3, 0), new FABRIC.RT.Vec2(3, 0)),
+      key(20, 0, new FABRIC.RT.Vec2(-3, 0), new FABRIC.RT.Vec2(10, 0)),
+      key(50, -20, new FABRIC.RT.Vec2(-10, 0), new FABRIC.RT.Vec2(7, 0)),
+      key(75, 0, new FABRIC.RT.Vec2(-7, 0), null)
+    ]
+  });
 
   var bezierAnimationEvaluatorNode = scene.constructNode('AnimationEvaluator', {
     name:'BezierPosKeyAnimationTrack' ,
@@ -210,25 +229,27 @@ $(document).ready(function() { var $globalTimeSlider = $('#globalTime').slider({
   } );
   bezierEulerKeyframeTrackNode.setTrackCount(2);
   var key = FABRIC.Animation.bezierKeyframe;
-  bezierEulerKeyframeTrackNode.setTrackData(0, { name: 'EulerX',
-                        color: FABRIC.RT.rgb(1, 0, 0),
-                        keys: [
-                          key(0, 0, null, new FABRIC.RT.Vec2(3, 0)),
-                          key(10, 0, new FABRIC.RT.Vec2(-3, 0), new FABRIC.RT.Vec2(3, 0)),
-                          key(20, 2, new FABRIC.RT.Vec2(-3, 0), new FABRIC.RT.Vec2(10, 0)),
-                          key(50, 2, new FABRIC.RT.Vec2(-10, 0), new FABRIC.RT.Vec2(7, 0)),
-                          key(75, 0, new FABRIC.RT.Vec2(-7, 0), null)
-                        ]
-                      });
-  bezierEulerKeyframeTrackNode.setTrackData(1, { name: 'EulerY',
-                        color: FABRIC.RT.rgb(0, 1, 0),
-                        keys: [
-                           key(0, 0, null, new FABRIC.RT.Vec2(3, 0)),
-                          key(20, 0, new FABRIC.RT.Vec2(-3, 0), new FABRIC.RT.Vec2(10, 0)),
-                          key(50, -2, new FABRIC.RT.Vec2(-10, 0), new FABRIC.RT.Vec2(7, 0)),
-                          key(75, 0, new FABRIC.RT.Vec2(-7, 0), null)
-                        ]
-                      });
+  bezierEulerKeyframeTrackNode.setTrackData(0, {
+    name: 'EulerX',
+    color: FABRIC.RT.rgb(1, 0, 0),
+    keys: [
+      key(0, 0, null, new FABRIC.RT.Vec2(3, 0)),
+      key(10, 0, new FABRIC.RT.Vec2(-3, 0), new FABRIC.RT.Vec2(3, 0)),
+      key(20, 2, new FABRIC.RT.Vec2(-3, 0), new FABRIC.RT.Vec2(10, 0)),
+      key(50, 2, new FABRIC.RT.Vec2(-10, 0), new FABRIC.RT.Vec2(7, 0)),
+      key(75, 0, new FABRIC.RT.Vec2(-7, 0), null)
+    ]
+  });
+  bezierEulerKeyframeTrackNode.setTrackData(1, {
+    name: 'EulerY',
+    color: FABRIC.RT.rgb(0, 1, 0),
+    keys: [
+       key(0, 0, null, new FABRIC.RT.Vec2(3, 0)),
+      key(20, 0, new FABRIC.RT.Vec2(-3, 0), new FABRIC.RT.Vec2(10, 0)),
+      key(50, -2, new FABRIC.RT.Vec2(-10, 0), new FABRIC.RT.Vec2(7, 0)),
+      key(75, 0, new FABRIC.RT.Vec2(-7, 0), null)
+    ]
+  });
 
   var bezierAnimationEvaluatorNode = scene.constructNode('AnimationEvaluator', {
     name:'EulerBezierKeyAnimationTrack' ,
@@ -285,23 +306,29 @@ $(document).ready(function() { var $globalTimeSlider = $('#globalTime').slider({
   
 });
 
+// jQuert UI Styling classes
+$(document).ready(function() {
+	$(".box").addClass("ui-widget");
+	$(".box h2").addClass("ui-widget-header ui-corner-all");
+	$(".content").addClass("ui-widget-content");
+});
+
 </script>
 
   </head> 
   <body>
     <div id="loadingDialog" title="Loading...">
-      <h4 id="loadingDesc" style="margin-bottom: 10px"></h4>
+      <h4 id="loadingDesc"></h4>
       <div id="loadingProgressBar" class="ui-progressbar-value"></div>
     </div>
     <div id="wrapper">
-      <ul id="nav">
-        <li><a href="#" id="fabric-logo"><img src="../../../themes/default/_img/projects/fabric-logo.png" /></a></li>
-      </ul>
+
       <div id="editor">
         <div id="viewer">
           <div id="FabricContainer"></div> 
         </div><!--viewer-->
         <div id="sidebar">
+          <p class="box">&larr; <a href="../../../index.html">back to Demo list</a></p>
           <div class="box">
             <h2>INFO</h2>
               <div class="content">
@@ -316,8 +343,8 @@ $(document).ready(function() { var $globalTimeSlider = $('#globalTime').slider({
                     <h2>CONTROLS</h2>
                     <div class="content">
                         <div>Global Time:</div>
-                        <div id="globalTime" style="margin-top:10px;"></div>
-                 <button id="curveEditor" style="margin-top:30px;">Open Curve Editor</button>
+                        <div id="globalTime"></div>
+                        <button id="curveEditor">Open Curve Editor</button>
                     </div><!--content-->
                 </div><!--box-->
     

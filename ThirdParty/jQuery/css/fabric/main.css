@@ -1,0 +1,426 @@
+/*
+*  Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
+*/
+
+@charset "utf-8";
+/* CSS Document */
+
+/* RESET ALL STYLES
+-------------------------------------------------------------------- */
+html, body, div, span, applet, object, iframe,
+h1, h2, h3, h4, h5, h6, p, blockquote, pre,
+a, abbr, acronym, address, big, cite, code,
+del, dfn, em, font, img, ins, kbd, q, s, samp,
+small, strike, strong, sub, sup, tt, var,
+b, u, i, center,
+dl, dt, dd, ol, ul, li,
+fieldset, label, legend,
+table, caption, tbody, tfoot, thead, tr, th, td {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  vertical-align: baseline;
+  background: transparent;
+}
+article, aside, details, figcaption, figure, footer, header, hgroup, nav, section { display: block; }
+ol, ul {
+  list-style: none;
+}
+blockquote, q {
+  quotes: none;
+}
+blockquote:before, blockquote:after,
+q:before, q:after {
+  content: '';
+  content: none;
+}
+
+/* HTML
+-------------------------------------------------------------------- */
+body {
+  background: white url(images/bg-page.jpg) repeat left top;
+  font:14px/1.5 "Trebuchet MS", Helvetica, Arial, sans-serif;
+}
+
+.clear{
+  clear:both;
+}
+
+h1 {
+  font: 200 28px/1.5 "Myriad Pro", Myriad, Helvetica, "Lucida Grande", Arial, sans-serif;
+  padding: 10px 0;
+}
+
+h2 {
+  font: 200 18px/1.5 "Myriad Pro", Myriad, Helvetica, "Lucida Grande", Arial, sans-serif;
+}
+
+ul, p {
+  padding: 10px 0;
+}
+
+
+/* LAYOUT
+-------------------------------------------------------------------- */
+#wrapper{
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  /* I am not sure why the min with is here. 
+  and it blocked me onthe node inspector
+  min-width: 950px;
+  */
+}
+
+.page-wrapper {
+  margin: 20px auto;
+  width: 880px;
+  padding: 0 40px;
+}
+
+.content-wrapper {
+  margin-top:20px;
+  padding: 20px 40px;
+  background: white;
+  border: solid 1px #CCC;
+  box-shadow: 0 1px 5px #ccc;
+}
+
+#eula {
+  height: 300px;
+  overflow-y: scroll;
+  margin-top:5px;
+  padding: 5px 15px;
+  resize: vertical;
+  border: solid 1px #CCC;
+  box-shadow: inset 0 1px 3px #bebebe;
+  background: white url(images/bg-page.jpg) repeat left top;
+}
+
+#install {
+  margin-top: 20px;
+}
+
+/* TOOLS
+-------------------------------------------------------------------- */
+ul#tools{
+  float: left;
+  width: 100%;
+  height: 6px;
+  display: block;
+  margin: 0px;
+  padding: 0 0 0 5px;
+  list-style: none;
+  background-color: #222;
+  background-image: url(_img/subnav-bg.jpg);
+  box-shadow: rgba(0,0,0, 0.1) 0px 0px 8px;
+  -moz-box-shadow: rgba(0,0,0, 0.1) 0px 0px 8px;
+  -webkit-box-shadow: rgba(0,0,0, 0.1) 0px 0px 8px;
+  border-bottom: solid 1px #111;
+}
+ul#tools li{
+  display: inline;
+  margin: 0px;
+  padding: 0px;
+  list-style: none;
+  font: bold 12px/100% Arial, Helvetica, sans-serif;
+  color:#fff;
+  line-height: 16px;
+}
+ul#tools li a{
+  float: left;
+  border: 0;
+  margin: 6px 2px 5px 2px;
+  padding: 8px 10px 8px 25px;
+  text-decoration: none;
+  border-right: solid 1px #111;
+  border-bottom: solid 1px #111;
+  color: #666;
+  background-repeat: no-repeat;
+  background-color:#222;
+  -moz-border-radius: 5px;
+  -webkit-border-radius: 5px;
+}
+ul#tools li a:hover{
+  background-color: #444;
+  color: #fff;
+}
+ul#tools li a:active{
+  background-color: #111;
+  color: #fff;
+  border-left: solid 1px #000;
+  border-top: solid 1px #000;
+  border-right: 0px;
+  border-bottom: 0px;
+}
+ul#tools li a#btn-undo{
+  background-image:url(_img/icons/icon-tools-undo.png);
+  background-position: 5px 8px
+}
+ul#tools li a#btn-redo{
+  background-image:url(_img/icons/icon-tools-redo.png);
+  background-position: 5px 8px
+}
+ul#tools li a#btn-move{
+  background-image:url(_img/icons/icon-tools-move.png);
+  background-position: 5px 8px
+}
+ul#tools li a#btn-select{
+  background-image:url(_img/icons/icon-tools-select.png);
+  background-position: 7px 8px
+}
+
+/* DEMO-LIST
+-------------------------------------------------------------------- */
+.divider {
+  background: url(./images/line-divider.png) no-repeat center top;
+  clear: both;
+  height: 20px;
+  margin: 0 -20px;
+}
+
+.introduction {
+  float:left;
+  width:350px;
+  margin-bottom:20px;
+}
+.supported-browsers {
+  float:left;
+  width:390px;
+  margin-top:25px;
+  padding-left:50px;
+}
+
+.demo-list {
+  clear:both;
+  margin-left: 15px;
+  column-count: 3;
+  column-gap: 20px;
+	-moz-column-count: 3;
+	-moz-column-gap: 20px;
+	-webkit-column-count: 3;
+	-webkit-column-gap: 20px;  
+}
+
+.demo-list article ul {
+  list-style: circle;
+  margin-left: 30px;
+  padding-top: 0;
+}
+
+.demo-list summary {
+  cursor:pointer;
+  font-weight:bold;
+}
+
+.demo-list li {
+  margin-top:5px;
+}
+.demo-list a {
+  text-decoration: underline;
+}
+
+/* Viewer
+-------------------------------------------------------------------- */
+#editor{
+  position:fixed;
+  bottom:0;
+  left:0;
+  right:0;
+  top:0;
+}
+
+#viewer{
+  position:absolute;
+  left:0;
+  right:251px;
+  top:0;
+  bottom:0;
+  /*min-width:960px;*/
+}
+
+#FabricContainer
+{
+  margin:0 auto;
+  position:absolute;
+  top:0;	
+  right:0;
+  left:0;
+  bottom:0;
+}
+
+
+#FabricLetterboxContainer
+{
+  margin:0 auto;
+  position:absolute;
+  top:0;
+  right:0;
+  left:0;
+  bottom:0;
+}
+
+#loadingDesc {
+   margin-bottom: 10px;
+}
+
+/* SIDEBAR
+-------------------------------------------------------------------- */
+#sidebar{
+  width: 250px;
+  position:absolute;
+  right:0;
+  top:0;
+  bottom:0;
+}
+
+#sidebar p {
+  padding: 5px 0;
+}
+
+#sidebar .box{
+  margin:10px;
+}
+#sidebar .box h2{
+  padding: 5px 10px 1px;
+}
+#sidebar .box .content{
+  padding: 10px;
+}
+
+.control-list {
+  padding:0;
+}
+
+.control-list li {
+  margin-bottom: 5px;
+}
+
+.control-list li:nth-child(2n) {
+  margin-bottom: 15px;
+}
+
+#sidebar .box .button-controls {
+  padding:6px;
+}
+
+#curveEditor {
+  margin-top:30px;
+}
+
+#globalTime {
+  margin-top:10px;
+}
+
+#timeControls
+{
+  position:fixed;
+  bottom:0;
+  left:0;
+  right:250px;
+  height:125px;
+}
+#timeControls .box{
+  margin:10px;
+  padding:0;
+}
+#timeControls .box h2{
+  padding: 5px 10px 1px;
+}
+#timeControls .box .content{
+  padding: 10px;
+}
+
+/* TOOLBAR
+-------------------------------------------------------------------- */
+#toolbar
+{
+  position:fixed;
+  top:0;
+  left:0;
+  right:0;
+  height:35px;
+}
+#toolbar .box{
+  margin:10px;
+  padding:0;
+}
+#toolbar .box h2{
+  padding: 10px 10px 10px 10px;
+  margin: 0 0 0 0;
+  font: bold 15px/100% Arial, Helvetica, sans-serif;
+  letter-spacing: -1px;
+  color: #CCC;
+  background-image:url(_img/box-bg.gif);
+  -moz-border-radius-topleft: 6px;
+  -moz-border-radius-topright: 6px;
+  -webkit-border-top-left-radius: 6px;
+  -webkit-border-top-right-radius: 6px;
+  -moz-box-shadow: rgba(0,0,0, 0.8) 0px 0px 3px;
+  -webkit-box-shadow: rgba(0, 0, 0, 0.8) 0px 0px 3px;
+  border: solid 1px #000;
+}
+#toolbar .box .content{
+  padding: 10px;
+  font: normal 13px/100% Arial, Helvetica, sans-serif;
+  color: #999;
+  line-height: 120%;
+  background-color: #111;
+  -moz-border-radius-bottomright: 6px;
+  -moz-border-radius-bottomleft: 6px;
+  -webkit-border-bottom-right-radius: 6px;
+  -webkit-border-bottom-left-radius: 6px;
+  -moz-box-shadow: rgba(0,0,0, 0.8) 0px 0px 3px;
+  -webkit-box-shadow: rgba(0, 0, 0, 0.8) 0px 0px 3px;
+  border: solid 1px #000;
+}
+
+
+
+
+/* INSPECTOR
+-------------------------------------------------------------------- */
+#nodeInspector{
+  width: 100%;
+  right:0;
+  top:0;
+  bottom:0;
+  background-color: #222;
+  border-left: solid 1px #111;
+}
+#nodeInspector .box{
+  margin:10px;
+  padding:0;
+}
+#nodeInspector .box h2{
+  padding: 10px 10px 10px 10px;
+  margin: 0 0 0 0;
+  font: bold 15px/100% Arial, Helvetica, sans-serif;
+  letter-spacing: -1px;
+  color: #CCC;
+  background-image:url(_img/box-bg.gif);
+  -moz-border-radius-topleft: 6px;
+  -moz-border-radius-topright: 6px;
+  -webkit-border-top-left-radius: 6px;
+  -webkit-border-top-right-radius: 6px;
+  -moz-box-shadow: rgba(0,0,0, 0.8) 0px 0px 3px;
+  -webkit-box-shadow: rgba(0, 0, 0, 0.8) 0px 0px 3px;
+  border: solid 1px #000;
+}
+#nodeInspector .box .content{
+  padding: 10px;
+  font: normal 13px/100% Arial, Helvetica, sans-serif;
+  color: #999;
+  line-height: 120%;
+  background-color: #111;
+  -moz-border-radius-bottomright: 6px;
+  -moz-border-radius-bottomleft: 6px;
+  -webkit-border-bottom-right-radius: 6px;
+  -webkit-border-bottom-left-radius: 6px;
+  -moz-box-shadow: rgba(0,0,0, 0.8) 0px 0px 3px;
+  -webkit-box-shadow: rgba(0, 0, 0, 0.8) 0px 0px 3px;
+  border: solid 1px #000;
+}

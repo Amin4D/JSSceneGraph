@@ -1,18 +1,17 @@
-<html xmlns="http://www.w3.org/1999/xhtml"> 
+<!DOCTYPE html>
+<html lang="en">
+ <head>
+  <meta charset="utf-8">  
   <!--
     Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
     -->
-  <head> 
     <title>FABRIC - Primitives</title> 
-    
-    <meta charset="iso-8859-1"/>
-    <link href="../../../themes/default/style.css" rel="stylesheet" type="text/css" />
-    <link href="../../../themes/default/viewer.css" rel="stylesheet" type="text/css" />
-    
-    <script type="text/javascript" src="../../../ThirdParty/jQuery/jquery-1.4.2.min.js"></script>
-    <script type="text/javascript" src="../../../ThirdParty/jQuery/jquery-ui-1.8.5.custom.min.js"></script>
+        
+    <script type="text/javascript" src="../../../ThirdParty/jQuery/jquery-1.6.2.min.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/jQuery/jquery-ui-1.8.16.custom.min.js"></script>
 
-    <link type="text/css" href="../../../ThirdParty/jQuery/css/vader/jquery-ui-1.8.5.custom.css" rel="stylesheet" />
+    <link type="text/css" href="../../../ThirdParty/jQuery/css/fabric/main.css" rel="stylesheet" />
+    <link type="text/css" href="../../../ThirdParty/jQuery/css/fabric/jquery-ui-1.8.16.custom.css" rel="stylesheet" />
 
     <script type="text/javascript" src="../../../Core/FABRIC.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/RT/Math.js" charset="utf-8"></script>
@@ -71,15 +70,17 @@ $(document).ready(function() {
   }));
   // Create a camera to draw the scene from
   var camera = scene.constructNode('TargetCamera', {
-      position: new FABRIC.RT.Vec3(40, 70, 100),
-      target: new FABRIC.RT.Vec3(0, 0, 0)
-    });
+    position: new FABRIC.RT.Vec3(40, 70, 100),
+    target: new FABRIC.RT.Vec3(0, 0, 0)
+  });
 
   scene.constructNode('CameraManipulator', { targetNode: camera });
 
   viewport.setCameraNode(camera);
 
-  var light = scene.constructNode('PointLight', { position: new FABRIC.RT.Vec3(420.0, 1000.0, 600.0) });
+  var light = scene.constructNode('PointLight', {
+    position: new FABRIC.RT.Vec3(420.0, 1000.0, 600.0)
+  });
 
   var redFlatMaterial = scene.constructNode('FlatMaterial', {
     color: FABRIC.RT.rgb(0.8, 0, 0)
@@ -108,7 +109,7 @@ $(document).ready(function() {
   });
   
   var wireframeMaterial = scene.constructNode('WireframeMaterial', {
-    color: FABRIC.RT.rgb(0.2, 0.2, 0.2, 1)
+    color: FABRIC.RT.rgb(0.3, 0.3, 0.3, 0.5)
   });
   var normalMaterial = scene.constructNode('NormalMaterial', {
     color: FABRIC.RT.rgb(0.2, 0.2, 0.2, 1)
@@ -116,189 +117,187 @@ $(document).ready(function() {
   
   // Cross
   scene.constructNode('Instance', {
-      transformNode: scene.constructNode('Transform', {
-        hierarchical: false,
-        globalXfo: new FABRIC.RT.Xfo({ tr: new FABRIC.RT.Vec3(-30, 0, 20) })
-      }),
-      geometryNode: scene.constructNode('Cross', {
-        size: 7.0
-      }),
-      materialNode: redFlatMaterial
-    });
+    transformNode: scene.constructNode('Transform', {
+      hierarchical: false,
+      globalXfo: new FABRIC.RT.Xfo({ tr: new FABRIC.RT.Vec3(-30, 0, 20) })
+    }),
+    geometryNode: scene.constructNode('Cross', {
+      size: 7.0
+    }),
+    materialNode: redFlatMaterial
+  });
 
   // Circle
   scene.constructNode('Instance', {
-      transformNode: scene.constructNode('Transform', {
-        hierarchical: false,
-        globalXfo: new FABRIC.RT.Xfo({ tr: new FABRIC.RT.Vec3(-10, 0, 20) })
-      }),
-      geometryNode: scene.constructNode('Circle', {
-        radius: 7
-      }),
-      materialNode: greenFlatMaterial
-    });
+    transformNode: scene.constructNode('Transform', {
+      hierarchical: false,
+      globalXfo: new FABRIC.RT.Xfo({ tr: new FABRIC.RT.Vec3(-10, 0, 20) })
+    }),
+    geometryNode: scene.constructNode('Circle', {
+      radius: 7
+    }),
+    materialNode: greenFlatMaterial
+  });
 
   // Rectangle
   scene.constructNode('Instance', {
-      transformNode: scene.constructNode('Transform', {
-        hierarchical: false,
-        globalXfo: new FABRIC.RT.Xfo({ tr: new FABRIC.RT.Vec3(10, 0, 20) })
-      }),
-      geometryNode: scene.constructNode('Rectangle', {
-        length: 7,
-        width: 3
-      }),
-      materialNode: blueFlatMaterial
-    });
+    transformNode: scene.constructNode('Transform', {
+      hierarchical: false,
+      globalXfo: new FABRIC.RT.Xfo({ tr: new FABRIC.RT.Vec3(10, 0, 20) })
+    }),
+    geometryNode: scene.constructNode('Rectangle', {
+      length: 7,
+      width: 3
+    }),
+    materialNode: blueFlatMaterial
+  });
 
   // Axes
   scene.constructNode('Instance', {
-      transformNode: scene.constructNode('Transform', {
-        hierarchical: false,
-        globalXfo: new FABRIC.RT.Xfo({ tr: new FABRIC.RT.Vec3(30, 0, 20) })
-      }),
-      geometryNode: scene.constructNode('Axes', {
-        size: 7.0
-      }),
-      materialNode: blueFlatMaterial
-    });
+    transformNode: scene.constructNode('Transform', {
+      hierarchical: false,
+      globalXfo: new FABRIC.RT.Xfo({ tr: new FABRIC.RT.Vec3(30, 0, 20) })
+    }),
+    geometryNode: scene.constructNode('Axes', {
+      size: 7.0
+    }),
+    materialNode: blueFlatMaterial
+  });
 
   // Grid
   scene.constructNode('Instance', {
-      transformNode: scene.constructNode('Transform', {
-        hierarchical: false,
-        globalXfo: new FABRIC.RT.Xfo({ tr: new FABRIC.RT.Vec3(50, 0, 20) })
-      }),
-      geometryNode: scene.constructNode('Grid', {
-          size_x: 15.0,
-          size_z: 15.0,
-          sections_x: 5,
-          sections_y: 1,
-          sections_z: 5
-        }),
-      materialNode: greyFlatMaterial
-    });
+    transformNode: scene.constructNode('Transform', {
+      hierarchical: false,
+      globalXfo: new FABRIC.RT.Xfo({ tr: new FABRIC.RT.Vec3(50, 0, 20) })
+    }),
+    geometryNode: scene.constructNode('Grid', {
+      size_x: 15.0,
+      size_z: 15.0,
+      sections_x: 5,
+      sections_y: 1,
+      sections_z: 5
+    }),
+    materialNode: greyFlatMaterial
+  });
 
   // BoundingBox
   scene.constructNode('Instance', {
-      transformNode: scene.constructNode('Transform', {
-        hierarchical: false,
-        globalXfo: new FABRIC.RT.Xfo({ tr: new FABRIC.RT.Vec3(70, 0, 20) })
-      }),
-      geometryNode: scene.constructNode('BoundingBox', {
-        length: 7,
-        width: 3
-      }),
-      materialNode: blueFlatMaterial
-    });
+    transformNode: scene.constructNode('Transform', {
+      hierarchical: false,
+      globalXfo: new FABRIC.RT.Xfo({ tr: new FABRIC.RT.Vec3(70, 0, 20) })
+    }),
+    geometryNode: scene.constructNode('BoundingBox', {
+      length: 7,
+      width: 3
+    }),
+    materialNode: blueFlatMaterial
+  });
 
   // Phong Plane
   scene.constructNode('Instance', {
-      transformNode: scene.constructNode('Transform', {
-        hierarchical: false,
-        globalXfo: new FABRIC.RT.Xfo({ tr: new FABRIC.RT.Vec3(-70, 0, 0) })
-      }),
-      geometryNode: scene.constructNode('Plane', {
-        length: 15,
-        width: 15,
-        lengthSections: 3,
-        widthSections: 3
-      }),
-      materialNode: greenPhongMaterial
-    })
-    .setMaterialNode( wireframeMaterial );
+    transformNode: scene.constructNode('Transform', {
+      hierarchical: false,
+      globalXfo: new FABRIC.RT.Xfo({ tr: new FABRIC.RT.Vec3(-70, 0, 0) })
+    }),
+    geometryNode: scene.constructNode('Plane', {
+      length: 15,
+      width: 15,
+      lengthSections: 3,
+      widthSections: 3
+    }),
+    materialNode: greenPhongMaterial
+  })
+  .setMaterialNode( wireframeMaterial );
 
   // Phong Cuboid
   scene.constructNode('Instance', {
-      transformNode: scene.constructNode('Transform', {
-        hierarchical: false,
-        globalXfo: new FABRIC.RT.Xfo({ tr: new FABRIC.RT.Vec3(-50, 0, 0) })
-      }),
-      geometryNode: scene.constructNode('Cuboid', {
-        length: 15,
-        width: 15,
-        height: 15
-      }),
-      materialNode: redPhongMaterial
-    })
-    .setMaterialNode( wireframeMaterial );
+    transformNode: scene.constructNode('Transform', {
+      hierarchical: false,
+      globalXfo: new FABRIC.RT.Xfo({ tr: new FABRIC.RT.Vec3(-50, 0, 0) })
+    }),
+    geometryNode: scene.constructNode('Cuboid', {
+      length: 15,
+      width: 15,
+      height: 15
+    }),
+    materialNode: redPhongMaterial
+  })
+  .setMaterialNode( wireframeMaterial );
 
   // Phong Cone
   scene.constructNode('Instance', {
-      transformNode: scene.constructNode('Transform', {
-        hierarchical: false,
-        globalXfo: new FABRIC.RT.Xfo({ tr: new FABRIC.RT.Vec3(-30, 0, 0) })
-      }),
-      geometryNode: scene.constructNode('Cone', {
-        radius: 4.0,
-        height: 16.0,
-        detail: 10
-      }),
-      materialNode: greenPhongMaterial
-    })
-    .setMaterialNode( wireframeMaterial );
+    transformNode: scene.constructNode('Transform', {
+      hierarchical: false,
+      globalXfo: new FABRIC.RT.Xfo({ tr: new FABRIC.RT.Vec3(-30, 0, 0) })
+    }),
+    geometryNode: scene.constructNode('Cone', {
+      radius: 4.0,
+      height: 16.0,
+      detail: 10
+    }),
+    materialNode: greenPhongMaterial
+  })
+  .setMaterialNode( wireframeMaterial );
 
   // Phong Sphere
   scene.constructNode('Instance', {
-      transformNode: scene.constructNode('Transform', {
-        hierarchical: false,
-        globalXfo: new FABRIC.RT.Xfo({ tr: new FABRIC.RT.Vec3(-10, 0, 0) })
-      }),
-      geometryNode: scene.constructNode('Sphere', {
-        radius: 10,
-        detail: 10
-      }),
-      materialNode: bluePhongMaterial
-    })
-    .setMaterialNode( wireframeMaterial );
+    transformNode: scene.constructNode('Transform', {
+      hierarchical: false,
+      globalXfo: new FABRIC.RT.Xfo({ tr: new FABRIC.RT.Vec3(-10, 0, 0) })
+    }),
+    geometryNode: scene.constructNode('Sphere', {
+      radius: 10,
+      detail: 10
+    }),
+    materialNode: bluePhongMaterial
+  })
+  .setMaterialNode( wireframeMaterial );
 
   // Phong Torus
   scene.constructNode('Instance', {
-      transformNode: scene.constructNode('Transform', {
-        hierarchical: false,
-        globalXfo: new FABRIC.RT.Xfo({ tr: new FABRIC.RT.Vec3(10, 0, 0) })
-      }),
-      geometryNode: scene.constructNode('Torus', {
-        inner_radius: 3.0,
-        outer_radius: 6.0,
-        detail: 10
-      }),
-      materialNode: greenPhongMaterial
-    })
-    .setMaterialNode( wireframeMaterial );
+    transformNode: scene.constructNode('Transform', {
+      hierarchical: false,
+      globalXfo: new FABRIC.RT.Xfo({ tr: new FABRIC.RT.Vec3(10, 0, 0) })
+    }),
+    geometryNode: scene.constructNode('Torus', {
+      inner_radius: 3.0,
+      outer_radius: 6.0,
+      detail: 10
+    }),
+    materialNode: greenPhongMaterial
+  })
+  .setMaterialNode( wireframeMaterial );
 
   // Phong Cylinder
   scene.constructNode('Instance', {
-      transformNode: scene.constructNode('Transform', {
-        hierarchical: false,
-        globalXfo: new FABRIC.RT.Xfo({ tr: new FABRIC.RT.Vec3(30, 0, 0) })
-      }),
-      geometryNode: scene.constructNode('Cylinder', {
-        radius: 4.0,
-        height: 16.0,
-        sides: 24,
-        loops: 2,
-        caps: true
-      }),
-      materialNode: redPhongMaterial 
-    })
-    .setMaterialNode( wireframeMaterial );/*
-    .setMaterialNode( normalMaterial );
-    */
+    transformNode: scene.constructNode('Transform', {
+      hierarchical: false,
+      globalXfo: new FABRIC.RT.Xfo({ tr: new FABRIC.RT.Vec3(30, 0, 0) })
+    }),
+    geometryNode: scene.constructNode('Cylinder', {
+      radius: 4.0,
+      height: 16.0,
+      sides: 24,
+      loops: 2,
+      caps: true
+    }),
+    materialNode: redPhongMaterial 
+  })
+  .setMaterialNode( wireframeMaterial );
 
   // Phong Teapot
   scene.constructNode('Instance', {
-      transformNode: scene.constructNode('Transform', {
-        hierarchical: false,
-        globalXfo: new FABRIC.RT.Xfo({ tr: new FABRIC.RT.Vec3(50, 0, 0) })
-      }),
-      geometryNode: scene.constructNode('Teapot', {
-        size: 7,
-        detail: 10
-      }),
-      materialNode: bluePhongMaterial
-    })
-    .setMaterialNode( wireframeMaterial );
+    transformNode: scene.constructNode('Transform', {
+      hierarchical: false,
+      globalXfo: new FABRIC.RT.Xfo({ tr: new FABRIC.RT.Vec3(50, 0, 0) })
+    }),
+    geometryNode: scene.constructNode('Teapot', {
+      size: 7,
+      detail: 10
+    }),
+    materialNode: bluePhongMaterial
+  })
+  .setMaterialNode( wireframeMaterial );
 
   $('#loadingDialog').dialog({
     modal: true
@@ -320,24 +319,29 @@ $(document).ready(function() {
   
 });
 
+// jQuert UI Styling classes
+$(document).ready(function() {
+	$(".box").addClass("ui-widget");
+	$(".box h2").addClass("ui-widget-header ui-corner-all");
+	$(".content").addClass("ui-widget-content");
+});
+
 </script>
 
   </head> 
   <body>
     <div id="loadingDialog" title="Loading...">
-      <h4 id="loadingDesc" style="margin-bottom: 10px"></h4>
+      <h4 id="loadingDesc"></h4>
       <div id="loadingProgressBar" class="ui-progressbar-value"></div>
     </div>
     <div id="wrapper">
-      <ul id="nav">
-        <li><a href="#" id="fabric-logo"><img src="../../../themes/default/_img/projects/fabric-logo.png" /></a></li>
-      </ul>
+
       <div id="editor">
         <div id="viewer">
           <div id="FabricContainer"></div> 
         </div><!--viewer-->
         <div id="sidebar">
-
+          <p class="box">&larr; <a href="../../../index.html">back to Demo list</a></p>
           <div class="box">
             <h2>INFO</h2>
               <div class="content">

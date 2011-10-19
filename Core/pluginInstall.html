@@ -1,64 +1,26 @@
-
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd"> 
-<html>
+<!DOCTYPE html>
+<html lang="en">
   <head>
-  <meta http-equiv="Content-Language" content="en" />
-  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-  <title>FABRIC Plugin Install</title>
+    <meta charset="utf-8">  
+    <title>FABRIC Plugin Install</title>
+      
+    <link type="text/css" href="../ThirdParty/jQuery/css/fabric/main.css" rel="stylesheet" />
+    <link type="text/css" href="../ThirdParty/jQuery/css/fabric/jquery-ui-1.8.16.custom.css" rel="stylesheet" />
     
-    <meta charset="iso-8859-1"/>
-    <link href="../themes/default/style.css" rel="stylesheet" type="text/css" />
-    <link href="../themes/default/viewer.css" rel="stylesheet" type="text/css" />
-    
-    <script type="text/javascript" src="../ThirdParty/jQuery/jquery-1.4.2.min.js"></script>
-    <script type="text/javascript" src="../ThirdParty/jQuery/jquery-ui-1.8.5.custom.min.js"></script>
-
-    <link type="text/css" href="../ThirdParty/jQuery/css/vader/jquery-ui-1.8.5.custom.css" rel="stylesheet" />
+    <script type="text/javascript" src="../ThirdParty/jQuery/jquery-1.6.2.min.js"></script>    <script type="text/javascript" src="../ThirdParty/jQuery/jquery-ui-1.8.16.custom.min.js"></script>
     
     <link rel="stylesheet" href="../ThirdParty/CodeMirror-2.11/lib/codemirror.css">
     <script src="../ThirdParty/CodeMirror-2.11/lib/codemirror.js"></script>
     <link rel="stylesheet" href="../ThirdParty/CodeMirror-2.11/theme/default.css">
     <script src="../ThirdParty/CodeMirror-2.11/mode/javascript/javascript.js"></script>
-
-
-    <style type="text/css">
-
-      #eulaContainer{
-        position:absolute;
-        left:10px;
-        right:10px;
-        top:10px;
-        bottom:50px;
-        padding:5px 7px 5px 5px; 
-      }
-      #eula{
-        display:block;
-        width:99%;
-        height:93%;
-        padding:0.5%;
-        margin:0;
-        border:1px solid #f0f040;
-        background-color:#fffff0;
-        overflow:auto;
-      }
-      
-      #install{
-        position:absolute;
-        right:10px;
-        bottom:10px;
-      }
-      
-
-    </style>
+  
   </head>
 
-    <script>
+  <script>
     
 $(document).ready(function() {
   
   $('#install').button({ disabled: true });
-  
-  $('#eula').attr("disabled", "disabled");
   
   var BrowserDetect = {
     init: function () {
@@ -257,83 +219,75 @@ $(document).ready(function() {
 
 </script>
 
-  <body>
-    <div id="wrapper">
-      <ul id="nav">
-        <li><a href="#" id="fabric-logo"><img src="../themes/default/_img/projects/fabric-logo.png" /></a></li>
-      </ul>
-      <div id="editor">
+<body>
+  <section class=page-wrapper> 
+    <header>
+      <a href=http://fabric-engine.com/ title="Fabric Engine Home Page" >
+        <img src="http://fabric-engine.com/wp-content/themes/fabric_engine/images/fabric-logo.png" alt="Fabric Engine"  width="300" height="100" />
+      </a>
+    </header>
+    <div class=content-wrapper>
+      <h1>Fabric Engine END-USER License Agreement</h1>
+      <article id="eula">
+        <p>PLEASE READ THE FOLLOWING SOFTWARE LICENSE AGREEMENT ("AGREEMENT") CAREFULLY. THIS AGREEMENT FORMS A LEGALLY BINDING AGREEMENT BETWEEN YOU, THE INDIVIDUAL OR ENTITY THAT DOWNLOADED OR INSTALLED THE SOFTWARE ("YOU") AND FABRIC TECHNOLOGIES INC. ("FABRIC TECHNOLOGIES"). BY CLICKING THE "I ACCEPT THE TERMS OF THIS LICENSE" BUTTON DURING SOFTWARE INSTALLATION OR BY USING THE SOFTWARE PROVIDED WITH THIS AGREEMENT, YOU ACCEPT AND AGREE TO BE BOUND BY THE TERMS AND CONDITIONS OF THIS AGREEMENT. IF YOU DO NOT AGREE WITH THE TERMS OF THIS AGREEMENT, YOU SHOULD NOT INSTALL OR USE THE SOFTWARE, AND YOU SHOULD PROMPTLY DESTROY ALL COPIES OF THE SOFTWARE THAT YOU DOWNLOADED OR COPIED.</p>
         
-        <div id="eulaContainer">
-        <textarea id="eula" name="eula" rows="100" cols="150">
-
-Fabric Engine END-USER License Agreement
-
-PLEASE READ THE FOLLOWING SOFTWARE LICENSE AGREEMENT ("AGREEMENT") CAREFULLY. THIS AGREEMENT FORMS A LEGALLY BINDING AGREEMENT BETWEEN YOU, THE INDIVIDUAL OR ENTITY THAT DOWNLOADED OR INSTALLED THE SOFTWARE ("YOU") AND FABRIC TECHNOLOGIES INC. ("FABRIC TECHNOLOGIES"). BY CLICKING THE "I ACCEPT THE TERMS OF THIS LICENSE" BUTTON DURING SOFTWARE INSTALLATION OR BY USING THE SOFTWARE PROVIDED WITH THIS AGREEMENT, YOU ACCEPT AND AGREE TO BE BOUND BY THE TERMS AND CONDITIONS OF THIS AGREEMENT. IF YOU DO NOT AGREE WITH THE TERMS OF THIS AGREEMENT, YOU SHOULD NOT INSTALL OR USE THE SOFTWARE, AND YOU SHOULD PROMPTLY DESTROY ALL COPIES OF THE SOFTWARE THAT YOU DOWNLOADED OR COPIED.
-
-This Agreement does not grant you the right to use the Software to develop software. Should you wish to obtain a development license, please click here http://www-dev.fabric-engine.com/join-beta/ to access our Development Center Page where you will be able to obtain and/or purchase a development license.
-
-Amendment to the Agreement.
-Fabric Technologies may amend this Agreement or any section of this Agreement, in whole or in part, at any time. Each such amendment will (i) be communicated to you at least 30 days before its coming into force; (ii) set out the new section, or an amended section along with the section as it read formerly; (iii) set out the date the amendment comes into force; and (iv) if the amendment entails an increase in your obligations or a reduction in Fabric Technologies obligations, give you the right to refuse any amendment and terminate this Agreement without cost, penalty or cancellation indemnity by sending Fabric Technologies a notice to that effect no later than 30 days after the amendment comes into force. In order to send such a notice, click on the "I Do Not Agree" when the amendment is communicated to you. Refusing an amendment entails the termination of this Agreement and requires you to destroy all copies of the Software in your possession.
-
-Grant of License.
-Subject to the terms and conditions of this Agreement, Fabric Technologies grants you a non-exclusive license to install and run the object code version of the software provided with this Agreement (the "Software"), on one (1) of your computers, and to use the Software on that computer for your own internal and personal purposes. You agree that you shall not use the Software in any other manner. You shall not install the Software on any externally accessible server; allow any other computer, terminal or device to access or use the Software; or install or use the Software concurrently on more than one computer. You shall not copy the Software except to make one copy for backup purposes. You shall not sublicense the rights under this Agreement, rent or lease the Software, or give anyone else access to the Software.
-
-Copyright.
-You acknowledge that Fabric Technologies or its licensors own all copyright and all other intellectual property rights relating to the Software and that no title to the Software or such intellectual property rights is transferred to you. You will not acquire any rights to the Software except the limited license to use the Software as expressly set forth above and Fabric Technologies and its licensors retain all other rights. You agree not to alter or remove the copyright notice or any other notices of proprietary rights, that appear on and in the Software. In the event Fabric Technologies provides you services in relation to the Software, including without limitation support or installation services, all right, title and interest in the work product of the services shall vest exclusively in Fabric Technologies.
-
-Restrictions; Reverse Engineering; Modification.
-You agree not to reverse engineer, decompile, or disassemble the Software in whole or in part, or otherwise reconstruct or discover any source code to the Software, or attempt to do so, except and only to the extent that such activity cannot be restricted under applicable law. You agree not to translate or modify the Software in any way or create derivative works of the Software, or attempt to do so. You agree not to use the Software on a service bureau, application service provider, or time sharing basis. 
-
-Transfer of License.
-You may not assign or transfer your rights or obligations under this Agreement, except that you may assign the Agreement to a successor to your business that results from (i) a sale of all or substantially all of your assets, or (ii) a merger or similar transaction, provided that the assignee agrees in writing to be bound by this Agreement and provided that you transfer all copies of the Software and related documentation to the third party or destroy any copies not transferred. Fabric Technologies may assign, transfer or novate this Agreement freely without notice to you.
-
-Reporting and Privacy Policy.
-The Software may report automatically information such as your Software serial number and Software version number and information about errors experienced in the course of your use of the Software, without notice. This information may be associated with personally identifiable information acquired by Fabric Technologies. By using the Software you consent to the collection of such information. The information and this Agreement are subject to the terms and conditions of the Fabric Technologies privacy policy ("Privacy Policy" http://www-dev.fabric-engine.com/privacy/). The terms and conditions of the Privacy Policy are incorporated herein by reference, and you hereby agree to such terms. Fabric Technologies reserves the right to modify the terms of the Privacy Policy from time to time, and your continued use of the Software shall indicate its agreement to such changes.
-
-Term.
-The license granted by this Agreement shall continue until terminated, as provided in this Agreement. Either party may terminate this Agreement at any time. You agree, upon any termination of this Agreement, to destroy all copies of the Software in your possession. If the Agreement is terminated, the sections related to copyright, liability, disclaimer of warranty shall remain in effect, in addition to other sections that by their terms are intended to survive.
-
-DISCLAIMER OF OTHER WARRANTIES.
-TO THE FULLEST EXTENT ALLOWED BY LAW, THE SOFTWARE IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND. FABRIC TECHNOLOGIES, AND ITS LICENSORS AND SUPPLIERS, HEREBY DISCLAIM ALL WARRANTIES, WHETHER EXPRESS, IMPLIED, STATUTORY OR OTHERWISE, INCLUDING WITHOUT LIMITATION, THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE, AND NON-INFRINGEMENT. FABRIC TECHNOLOGIES DOES NOT WARRANT THAT THE SOFTWARE WILL OPERATE WITHOUT ERROR OR INTERRUPTION.
-
-Limitation of Liability.
-TO THE FULLEST EXTENT ALLOWED BY LAW, IN NO EVENT SHALL FABRIC TECHNOLOGIES (OR ITS SUPPLIERS OR LICENSORS) BE LIABLE TO YOU OR ANY OTHER PARTY FOR ANY INDIRECT, SPECIAL, INCIDENTAL OR CONSEQUENTIAL DAMAGES OF ANY KIND, INCLUDING WITHOUT LIMITATION LOSS OF PROFITS, LOSS OF USE, BUSINESS INTERRUPTION, LOSS OF DATA, OR COST OF COVER, WHETHER ALLEGED AS A BREACH OF CONTRACT, WRONGFUL CONDUCT OR OTHERWISE, INCLUDING WITHOUT LIMITATION NEGLIGENCE, ARISING OUT OF OR RELATED TO THIS AGREEMENT EVEN IF FABRIC TECHNOLOGIES (OR ITS SUPPLIERS OR LICENSORS) HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES. IN NO EVENT WILL FABRIC TECHNOLOGIES (OR ITS LICENSORS OR SUPPLIERS) AGGREGATE LIABILITY ARISING OUT OF OR IN CONNECTION WITH THIS AGREEMENT EXCEED FIVE DOLLARS (US$5.00). YOU ARE SOLELY RESPONSIBLE FOR BACKING UP ALL DATA ASSOCIATED WITH THE USE OF THE SOFTWARE, AND FABRIC TECHNOLOGIES (AND ITS LICENSORS AND SUPPLIERS) SHALL NOT BE LIABLE FOR ERRORS IN DATA CAUSED BY THE SOFTWARE.
-
-Indemnification.
-You agree to defend, indemnify and hold harmless Fabric Technologies, its officers, directors, affiliates, employees and agents from and against any claims, liabilities, damages, losses, and expenses, including, without limitation, reasonable legal and accounting fees, arising out of or in any way connected with your use of the Software.
-
-Support.
-You acknowledge that Fabric Technologies shall not be obligated to provide support or maintenance related to your use of the Software. A separate written agreement is necessary to receive such services.
-
-Severability.
-In the event any provision of this Agreement is determined to be invalid or unenforceable, that provision shall be enforced to the maximum extent permitted and the parties agree that the other provisions of this Agreement shall not be affected and shall continue to be enforced. The Parties agree that this Agreement is the entire agreement between you and Fabric Technologies relating to its subject matter and it supersedes any prior agreements, representations, or communications, whether written or oral, relating to that subject matter.
-
-Choice of Law and Venue.
-This Agreement shall be governed by the laws applicable in the province of Quebec, Canada, without respect to its conflicts of law rules. The Parties agree that this Agreement shall not be governed by the United Nations Convention on Contracts for the International Sale of Goods. The parties agree that any suit or proceeding arising out of or relating to this Agreement will be brought only in the Province of Quebec, district of Montreal, and each shall submit to the exclusive personal and subject matter jurisdiction and venue of such courts.
-
-Export.
-You agree not to export or re-export the Software or related technology without the appropriate Canadian, US and other foreign government clearance.
-
-Waiver.
-No term or provision hereof will be considered waived by either Party, and no breach excused by either party, unless such waiver or consent is in writing signed by both Parties. No consent by either party to, or waiver of, a breach by either party, whether express or implied, will constitute a consent to, waiver of, or excuse of any other, different, or subsequent breach by either Party.
-
-Relationship of Parties.
-There is no relationship of agency, partnership, joint venture, employment or franchise between the parties. Neither party has the authority to bind the other or to incur any obligation on its behalf. No other party except Fabric Technologies and you shall be construed as a third party beneficiary to this Agreement or in privity to enforce the provisions of this Agreement at law or in equity.
-
-Language.
-You have expressly requested that this Agreement be drawn up in English. Vous avez expressement demande que ce contrat soit rediges en anglais.
-
-        </textarea>
-        </div><!--code-->
+        <p>This Agreement does not grant you the right to use the Software to develop software. Should you wish to obtain a development license, please click here http://www-dev.fabric-engine.com/join-beta/ to access our Development Center Page where you will be able to obtain and/or purchase a development license.</p>
         
-        <div id="bottomToolbar">
-                 <button id="install" style="margin-top:10px;">Accept the END-USER LICENSE AGREEMENT and Install</button>
-        </div><!--bottomToolbar-->
-      </div> <!--editor-->
-    </div><!--wrapper-->
-
-
-  </body>
-  
+        <h3>Amendment to the Agreement.</h3>
+        Fabric Technologies may amend this Agreement or any section of this Agreement, in whole or in part, at any time. Each such amendment will (i) be communicated to you at least 30 days before its coming into force; (ii) set out the new section, or an amended section along with the section as it read formerly; (iii) set out the date the amendment comes into force; and (iv) if the amendment entails an increase in your obligations or a reduction in Fabric Technologies obligations, give you the right to refuse any amendment and terminate this Agreement without cost, penalty or cancellation indemnity by sending Fabric Technologies a notice to that effect no later than 30 days after the amendment comes into force. In order to send such a notice, click on the "I Do Not Agree" when the amendment is communicated to you. Refusing an amendment entails the termination of this Agreement and requires you to destroy all copies of the Software in your possession.
+        
+        <h3>Grant of License.</h3>
+        <p>Subject to the terms and conditions of this Agreement, Fabric Technologies grants you a non-exclusive license to install and run the object code version of the software provided with this Agreement (the "Software"), on one (1) of your computers, and to use the Software on that computer for your own internal and personal purposes. You agree that you shall not use the Software in any other manner. You shall not install the Software on any externally accessible server; allow any other computer, terminal or device to access or use the Software; or install or use the Software concurrently on more than one computer. You shall not copy the Software except to make one copy for backup purposes. You shall not sublicense the rights under this Agreement, rent or lease the Software, or give anyone else access to the Software.
+        
+        <h3>Copyright.</h3>
+        <p>You acknowledge that Fabric Technologies or its licensors own all copyright and all other intellectual property rights relating to the Software and that no title to the Software or such intellectual property rights is transferred to you. You will not acquire any rights to the Software except the limited license to use the Software as expressly set forth above and Fabric Technologies and its licensors retain all other rights. You agree not to alter or remove the copyright notice or any other notices of proprietary rights, that appear on and in the Software. In the event Fabric Technologies provides you services in relation to the Software, including without limitation support or installation services, all right, title and interest in the work product of the services shall vest exclusively in Fabric Technologies.</h3>
+        
+        <h3>Restrictions; Reverse Engineering; Modification.</h3>
+        <p>You agree not to reverse engineer, decompile, or disassemble the Software in whole or in part, or otherwise reconstruct or discover any source code to the Software, or attempt to do so, except and only to the extent that such activity cannot be restricted under applicable law. You agree not to translate or modify the Software in any way or create derivative works of the Software, or attempt to do so. You agree not to use the Software on a service bureau, application service provider, or time sharing basis. 
+        
+        <h3>Transfer of License.</h3>
+        <p>You may not assign or transfer your rights or obligations under this Agreement, except that you may assign the Agreement to a successor to your business that results from (i) a sale of all or substantially all of your assets, or (ii) a merger or similar transaction, provided that the assignee agrees in writing to be bound by this Agreement and provided that you transfer all copies of the Software and related documentation to the third party or destroy any copies not transferred. Fabric Technologies may assign, transfer or novate this Agreement freely without notice to you.
+        
+        <h3>Reporting and Privacy Policy.</h3>
+        <p>The Software may report automatically information such as your Software serial number and Software version number and information about errors experienced in the course of your use of the Software, without notice. This information may be associated with personally identifiable information acquired by Fabric Technologies. By using the Software you consent to the collection of such information. The information and this Agreement are subject to the terms and conditions of the Fabric Technologies privacy policy ("Privacy Policy" http://www-dev.fabric-engine.com/privacy/). The terms and conditions of the Privacy Policy are incorporated herein by reference, and you hereby agree to such terms. Fabric Technologies reserves the right to modify the terms of the Privacy Policy from time to time, and your continued use of the Software shall indicate its agreement to such changes.
+        
+        <h3>Term.</h3>
+        <p>The license granted by this Agreement shall continue until terminated, as provided in this Agreement. Either party may terminate this Agreement at any time. You agree, upon any termination of this Agreement, to destroy all copies of the Software in your possession. If the Agreement is terminated, the sections related to copyright, liability, disclaimer of warranty shall remain in effect, in addition to other sections that by their terms are intended to survive.
+        
+        <h3>DISCLAIMER OF OTHER WARRANTIES.</h3>
+        <p>TO THE FULLEST EXTENT ALLOWED BY LAW, THE SOFTWARE IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND. FABRIC TECHNOLOGIES, AND ITS LICENSORS AND SUPPLIERS, HEREBY DISCLAIM ALL WARRANTIES, WHETHER EXPRESS, IMPLIED, STATUTORY OR OTHERWISE, INCLUDING WITHOUT LIMITATION, THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE, AND NON-INFRINGEMENT. FABRIC TECHNOLOGIES DOES NOT WARRANT THAT THE SOFTWARE WILL OPERATE WITHOUT ERROR OR INTERRUPTION.
+        
+        <h3>Limitation of Liability.</h3>
+        <p>TO THE FULLEST EXTENT ALLOWED BY LAW, IN NO EVENT SHALL FABRIC TECHNOLOGIES (OR ITS SUPPLIERS OR LICENSORS) BE LIABLE TO YOU OR ANY OTHER PARTY FOR ANY INDIRECT, SPECIAL, INCIDENTAL OR CONSEQUENTIAL DAMAGES OF ANY KIND, INCLUDING WITHOUT LIMITATION LOSS OF PROFITS, LOSS OF USE, BUSINESS INTERRUPTION, LOSS OF DATA, OR COST OF COVER, WHETHER ALLEGED AS A BREACH OF CONTRACT, WRONGFUL CONDUCT OR OTHERWISE, INCLUDING WITHOUT LIMITATION NEGLIGENCE, ARISING OUT OF OR RELATED TO THIS AGREEMENT EVEN IF FABRIC TECHNOLOGIES (OR ITS SUPPLIERS OR LICENSORS) HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES. IN NO EVENT WILL FABRIC TECHNOLOGIES (OR ITS LICENSORS OR SUPPLIERS) AGGREGATE LIABILITY ARISING OUT OF OR IN CONNECTION WITH THIS AGREEMENT EXCEED FIVE DOLLARS (US$5.00). YOU ARE SOLELY RESPONSIBLE FOR BACKING UP ALL DATA ASSOCIATED WITH THE USE OF THE SOFTWARE, AND FABRIC TECHNOLOGIES (AND ITS LICENSORS AND SUPPLIERS) SHALL NOT BE LIABLE FOR ERRORS IN DATA CAUSED BY THE SOFTWARE.
+        
+        <h3>Indemnification.</h3>
+        <p>You agree to defend, indemnify and hold harmless Fabric Technologies, its officers, directors, affiliates, employees and agents from and against any claims, liabilities, damages, losses, and expenses, including, without limitation, reasonable legal and accounting fees, arising out of or in any way connected with your use of the Software.
+        
+        <h3>Support.</h3>
+        <p>You acknowledge that Fabric Technologies shall not be obligated to provide support or maintenance related to your use of the Software. A separate written agreement is necessary to receive such services.
+        
+        <h3>Severability.</h3>
+        <p>In the event any provision of this Agreement is determined to be invalid or unenforceable, that provision shall be enforced to the maximum extent permitted and the parties agree that the other provisions of this Agreement shall not be affected and shall continue to be enforced. The Parties agree that this Agreement is the entire agreement between you and Fabric Technologies relating to its subject matter and it supersedes any prior agreements, representations, or communications, whether written or oral, relating to that subject matter.
+        
+        <h3>Choice of Law and Venue.</h3>
+        <p>This Agreement shall be governed by the laws applicable in the province of Quebec, Canada, without respect to its conflicts of law rules. The Parties agree that this Agreement shall not be governed by the United Nations Convention on Contracts for the International Sale of Goods. The parties agree that any suit or proceeding arising out of or relating to this Agreement will be brought only in the Province of Quebec, district of Montreal, and each shall submit to the exclusive personal and subject matter jurisdiction and venue of such courts.
+        
+        <h3>Export.</h3>
+        <p>You agree not to export or re-export the Software or related technology without the appropriate Canadian, US and other foreign government clearance.
+        
+        <h3>Waiver.</h3>
+        <p>No term or provision hereof will be considered waived by either Party, and no breach excused by either party, unless such waiver or consent is in writing signed by both Parties. No consent by either party to, or waiver of, a breach by either party, whether express or implied, will constitute a consent to, waiver of, or excuse of any other, different, or subsequent breach by either Party.
+        
+        <h3>Relationship of Parties.</h3>
+        <p>There is no relationship of agency, partnership, joint venture, employment or franchise between the parties. Neither party has the authority to bind the other or to incur any obligation on its behalf. No other party except Fabric Technologies and you shall be construed as a third party beneficiary to this Agreement or in privity to enforce the provisions of this Agreement at law or in equity.
+        
+        <h3>Language.</h3>
+        <p>You have expressly requested that this Agreement be drawn up in English. Vous avez expressement demande que ce contrat soit rediges en anglais.
+      </article>
+      <div id="bottomToolbar">
+               <button id="install">Accept the END-USER LICENSE AGREEMENT and Install</button>
+      </div><!--bottomToolbar-->
+    </div><!--content-wrapper-->
+  </section>
+</body>
 </html>

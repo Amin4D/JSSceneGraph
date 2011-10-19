@@ -216,7 +216,7 @@ FABRIC.SceneGraph.registerNodeType('CharacterSkeletonDebug', {
 
     scene.assignDefaults(options, {
       boneradius: 1.0,
-      color: FABRIC.RT.rgba(1.0, 1.0, 1.0, 1.0),
+      color: FABRIC.RT.rgba(0.2, 0.2, 0.73, 1.0),
       drawOverlayed: true
       });
 

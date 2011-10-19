@@ -127,6 +127,7 @@ FABRIC.SceneGraph.registerNodeType('Texture2DSliceDisplay', {
 
     options.wantHDR = false;
     options.createDgNode = true;
+    options.forceRefresh = true;
     options.createResourceLoadNode = false;
     options.createLoadTextureEventHandler = true;
 
@@ -136,6 +137,10 @@ FABRIC.SceneGraph.registerNodeType('Texture2DSliceDisplay', {
     dgnode.addMember('sliceRatio', 'Scalar', options.sliceRatio );
     dgnode.addMember('sliceAxis', 'Size', options.sliceAxis );
     dgnode.addMember('opacityElseGradientWeight', 'Boolean', options.opacityElseGradientWeight );
+
+    sliceDisplayNode.addMemberInterface(dgnode, 'sliceRatio', true);
+    sliceDisplayNode.addMemberInterface(dgnode, 'sliceAxis', true);
+    sliceDisplayNode.addMemberInterface(dgnode, 'opacityElseGradientWeight', true);
 
     var sourceImageNode = scene.getPrivateInterface(options.sourceImageNode);
     dgnode.setDependency(sourceImageNode.getDGNode(), 'source');
@@ -191,7 +196,18 @@ FABRIC.SceneGraph.registerNodeType('Texture2DSliceDisplay', {
 });
     
 $(document).ready(function() {
-  
+  var i, j;
+  var $sliders3D = [
+      $('#rangeX3D').slider({min: 0, max: 1, step: 0.005, range: true, values: [0,1] }),
+      $('#rangeY3D').slider({min: 0, max: 1, step: 0.005, range: true, values: [0,1] }),
+      $('#rangeZ3D').slider({min: 0, max: 1, step: 0.005, range: true, values: [0,1] })
+  ];
+  var $sliders2D = [
+    $('#xRatio').slider({min: 0, max: 1, step: 0.005 }),
+    $('#yRatio').slider({min: 0, max: 1, step: 0.005 }),
+    $('#zRatio').slider({min: 0, max: 1, step: 0.005 })
+  ];
+
   var scene = FABRIC.SceneGraph.createScene();
   var viewport = scene.constructNode('Viewport', {
     windowElement: document.getElementById('FabricContainer'),
@@ -237,6 +253,38 @@ $(document).ready(function() {
       materialNode: flatMaterial
     });
 
+  var sliders2DBindFunction = function(index) {
+    var sliderIndex = index;
+    return function(event, ui) {
+        texture2DSlice[sliderIndex].setSliceRatio(ui.value);
+        viewport.redraw();
+        return true;
+      };
+  };
+
+  var sliders3DBindFunction = function(index) {
+    var sliderIndex = index;
+    return function(event, ui) {
+        var min = volume.getCropMin(), max = volume.getCropMax();
+        min.setComponent( sliderIndex, ui.values[0] );
+        max.setComponent( sliderIndex, ui.values[1] );
+        volume.setCropMin(min);
+        volume.setCropMax(max);
+        viewport.redraw();
+        return true;
+      };
+  };
+
+  for( i = 0; i < 3; ++i ) {
+    $sliders2D[i].slider('value', texture2DSlice[i].getSliceRatio());
+    $sliders2D[i].bind('slide', sliders2DBindFunction(i) );
+
+    var cropMax = volume.getCropMax();
+    var cropMin = volume.getCropMin();
+    $sliders3D[i].slider('option', 'values', [cropMin.component(i), cropMax.component(i)]);
+    $sliders3D[i].bind('slide', sliders3DBindFunction(i) );
+  }
+
   $('#loadingDialog').dialog({
     modal: true
   });
@@ -254,7 +302,7 @@ $(document).ready(function() {
       var aspectRatio = viewport.getWidth() / viewport.getHeight();
       var sliceViewWidth = (2.0/3.0) / aspectRatio;
 
-      for( var i = 0; i < 3; ++i ) {
+      for( i = 0; i < 3; ++i ) {
         var tl = texture2DSlice[i].getTl();
         tl.x = 1.0 - sliceViewWidth;
         texture2DSlice[i].setTl(tl);
@@ -267,6 +315,13 @@ $(document).ready(function() {
     }
   });
   
+});
+
+// jQuert UI Styling classes
+$(document).ready(function() {
+	$(".box").addClass("ui-widget");
+	$(".box h2").addClass("ui-widget-header ui-corner-all");
+	$(".content").addClass("ui-widget-content");
 });
 
 </script>
@@ -288,23 +343,23 @@ $(document).ready(function() {
         <div id="sidebar">
           
           <div class="box">
-            <h2>3D view</h2>
+            <h2>Volume cropping</h2>
             <div class="content">
-              <label for="minX3D" >X start:</label>
-              <div id='minX3D' style="margin-top:10px;"></div>
-              <label for="maxX3D" >X end:</label>
-              <div id='maxX3D' style="margin-top:10px;"></div>
-              <label for="minY3D" >Y start:</label>
-              <div id='minY3D' style="margin-top:10px;"></div>
-              <label for="maxY3D" >Y end:</label>
-              <div id='maxY3D' style="margin-top:10px;"></div>
-              <label for="minZ3D" >Z start:</label>
-              <div id='minZ3D' style="margin-top:10px;"></div>
-              <label for="maxZ3D" >Z end:</label>
-              <div id='maxZ3D' style="margin-top:10px;"></div>
+              <label for="rangeX3D" >X range:</label>
+              <div id='rangeX3D' style="margin-top:10px;"></div>
+              <label for="rangeY3D" >Y range:</label>
+              <div id='rangeY3D' style="margin-top:10px;"></div>
+              <label for="rangeZ3D" >Z range:</label>
+              <div id='rangeZ3D' style="margin-top:10px;"></div>
             </div><!--content-->
-            <h2>2D views</h2>
+            <h2>Axis slices</h2>
             <div class="content">
+              <label for="xRatio" >X:</label>
+              <div id='xRatio' style="margin-top:10px;"></div>
+              <label for="yRatio" >Y:</label>
+              <div id='yRatio' style="margin-top:10px;"></div>
+              <label for="zRatio" >Z:</label>
+              <div id='zRatio' style="margin-top:10px;"></div>
             </div><!--content-->
           </div><!--box-->
             

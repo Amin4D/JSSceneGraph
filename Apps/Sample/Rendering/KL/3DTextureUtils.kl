@@ -47,7 +47,7 @@ operator generate3DTexture(
 
         Scalar distToCenter = currPos.length();
         Scalar opacity = 0.0;
-        for(l = 3; --l; ) {
+        for(l = 3; l--; ) {
           if(distToCenter < sphereRadius[l]) {
             opacity = sphereOpacity[l];
             break;
@@ -61,7 +61,7 @@ operator generate3DTexture(
 
         Scalar gradientWeight = 0.0;
 
-        for(l = 3; --l; ) {
+        for(l = 3; l--; ) {
           Scalar sphereDist = abs(distToCenter - sphereRadius[l]);
           if(sphereDist < gradientThreshold) {
             gradientWeight = 1.0;// - sphereDist / gradientThreshold;

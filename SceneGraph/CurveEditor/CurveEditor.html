@@ -4,16 +4,13 @@
   <meta http-equiv="Content-Language" content="en" />
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
   <title>FABRIC Curve Editor</title>
-    
-    <meta charset="iso-8859-1"/>
-    <link href="../../themes/default/style.css" rel="stylesheet" type="text/css" />
-    <link href="../../themes/default/viewer.css" rel="stylesheet" type="text/css" />
-    
-    <script type="text/javascript" src="../../ThirdParty/jQuery/jquery-1.4.2.min.js"></script>
-    <script type="text/javascript" src="../../ThirdParty/jQuery/jquery-ui-1.8.5.custom.min.js"></script>
+  
+    <script type="text/javascript" src="../../ThirdParty/jQuery/jquery-1.6.2.min.js"></script>
+    <script type="text/javascript" src="../../ThirdParty/jQuery/jquery-ui-1.8.16.custom.min.js"></script>
 
-    <link type="text/css" href="../../ThirdParty/jQuery/css/vader/jquery-ui-1.8.5.custom.css" rel="stylesheet" />
-
+    <link type="text/css" href="../../ThirdParty/jQuery/css/fabric/main.css" rel="stylesheet" />
+    <link type="text/css" href="../../ThirdParty/jQuery/css/fabric/jquery-ui-1.8.16.custom.css" rel="stylesheet" />
+    
     <script type="text/javascript" src="../../Core/FABRIC.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../Core/Vec2.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../Core/Color.js" charset="utf-8"></script>
@@ -27,10 +24,7 @@ $(document).ready(function() {
   if(!keyframeTrackNode){
     alert("this page must be opened from a running demo, passing it the correct keyframeTrackNode");
   }
-  
-  var windowWidth = $('#viewer').width();
-  var windowHeight = $('#viewer').height();
-  var curveEditor = constructCurveEditor('viewer', keyframeTrackNode);
+  var curveEditor = constructCurveEditor('curveContainer', keyframeTrackNode);
   
   window.onresize = function () {
     curveEditor.resize();
@@ -38,27 +32,35 @@ $(document).ready(function() {
   
 });
 
+
+// jQuert UI Styling classes
+$(document).ready(function() {
+	$(".box").addClass("ui-widget");
+	$(".box h2").addClass("ui-widget-header ui-corner-all");
+	$(".content").addClass("ui-widget-content");
+});
+
     </script>
 
   </head> 
   <body>
     <div id="wrapper">
-      <ul id="nav">
-        <li><a href="#" id="fabric-logo"><img src="../../themes/default/_img/projects/fabric-logo.png" /></a></li>
-      </ul>
       <div id="editor">
         
         <div id="viewer">
+          <div id="curveContainer">
+          </div>
         </div><!--viewer-->
         
         <div id="sidebar">
+          <!--
           <div class="box">
             <h2>INFO</h2>
               <div class="content">
                 KeyFrame Animation.<br>
                 Hold 'Alt' to break the key handles.
-              </div><!--content-->
-          </div><!--box-->
+              </div><!--content- ->
+          </div>box-->
           <div class="box">
             <h2>KEYFRAME TRACKS</h2>
             <div class="content" id="keyframeTracks">

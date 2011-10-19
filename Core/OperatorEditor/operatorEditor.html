@@ -6,14 +6,12 @@
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
   <title>FABRIC Operator Editor</title>
     
-    <meta charset="iso-8859-1"/>
-    <link href="../../themes/default/style.css" rel="stylesheet" type="text/css" />
-    <link href="../../themes/default/viewer.css" rel="stylesheet" type="text/css" />
-    
-    <script type="text/javascript" src="../../ThirdParty/jQuery/jquery-1.4.2.min.js"></script>
-    <script type="text/javascript" src="../../ThirdParty/jQuery/jquery-ui-1.8.5.custom.min.js"></script>
+    <script type="text/javascript" src="../../ThirdParty/jQuery/jquery-1.6.2.min.js"></script>
+    <script type="text/javascript" src="../../ThirdParty/jQuery/jquery-ui-1.8.16.custom.min.js"></script>
 
-    <link type="text/css" href="../../ThirdParty/jQuery/css/vader/jquery-ui-1.8.5.custom.css" rel="stylesheet" />
+    <link type="text/css" href="../../ThirdParty/jQuery/css/fabric/main.css" rel="stylesheet" />
+    <link type="text/css" href="../../ThirdParty/jQuery/css/fabric/jquery-ui-1.8.16.custom.css" rel="stylesheet" />
+    
 
     <script type="text/javascript" src="../FABRIC.js" charset="utf-8"></script>
     
@@ -23,43 +21,45 @@
     <script src="../../ThirdParty/CodeMirror-2.11/mode/javascript/javascript.js"></script>
 
     <style type="text/css">
-      .CodeMirror {
-        position:absolute;
-        left:10px;
-        right:10px;
-        top:10px;
-        bottom:50px;
-        border-top: 1px solid black;
-        border-bottom: 1px solid black;
-        background: #f0fcff;
-      }
-      .CodeMirror-scroll {
-        height: 100%; overflow-y: auto; overflow-x: auto;
-      }
-      .activeline {background: #f0fcff !important;}
-      
-      
-      #codeContainer{
-        position:absolute;
-        left:10px;
-        right:10px;
-        top:10px;
-        bottom:50px;
-      }
-      #code{
-        position:absolute;
-        left:10px;
-        right:10px;
-        top:10px;
-        bottom:10px;
-        resize: none;
-      }
-      
-      #recompile{
-        position:absolute;
-        right:10px;
-        bottom:10px;
-      }
+    
+.CodeMirror {
+  position:absolute;
+  left:10px;
+  right:10px;
+  top:10px;
+  bottom:50px;
+  border-top: 1px solid black;
+  border-bottom: 1px solid black;
+  background: #f0fcff;
+}
+.CodeMirror-scroll {
+  height: 100%; overflow-y: auto; overflow-x: auto;
+}
+.activeline {background: #f0fcff !important;}
+
+
+#codeContainer{
+  position:absolute;
+  left:5px;
+  right:5px;
+  top:5px;
+  bottom:5px;
+}
+
+#code{
+  position:absolute;
+  left:10px;
+  right:10px;
+  top:10px;
+  bottom:10px;
+  resize: none;
+}
+
+#recompile{
+  position:absolute;
+  right:10px;
+  bottom:10px;
+}
 
     </style>
   </head>
@@ -97,63 +97,67 @@ $(document).ready(function() {
   });
   
   $('#recompile').button()
-      .click(function() {
-        var code = editor.getValue();
-        try{
-          operator.setSourceCode(code);
-          FABRIC.flush();
-        }catch(e){
-          alert(e);
+  .click(function() {
+    var code = editor.getValue();
+    try{
+      operator.setSourceCode(code);
+      FABRIC.flush();
+    }catch(e){
+      alert(e);
+    }
+      
+    descDiags = function(fullCode, diags) {
+      var fullCodeLines = fullCode.split('\n');
+      var desc = 'Error compiling operator\n';
+      for (var i = 0; i < diags.length; ++i) {
+        if (i == 16) {
+          desc += '(' + (diags.length - i) + ' more diagnostic(s) omitted)\n';
+          break;
         }
-          
-        descDiags = function(fullCode, diags) {
-          var fullCodeLines = fullCode.split('\n');
-          var desc = 'Error compiling operator\n';
-          for (var i = 0; i < diags.length; ++i) {
-            if (i == 16) {
-              desc += '(' + (diags.length - i) + ' more diagnostic(s) omitted)\n';
-              break;
-            }
-            desc += diags[i].line + ':' + diags[i].column + ': ' + diags[i].level + ': ' + diags[i].desc + '\n';
-            var line = diags[i].line - 1;
-            for (var j = line - 6; j <= line + 6; ++j) {
-              if (j >= 0 && j < fullCodeLines.length) {
-                if (j == line)
-                  desc += '>>>\t';
-                else
-                  desc += '\t';
-                desc += '' + fullCodeLines[j] + '\n';
-              }
-            }
+        desc += diags[i].line + ':' + diags[i].column + ': ' + diags[i].level + ': ' + diags[i].desc + '\n';
+        var line = diags[i].line - 1;
+        for (var j = line - 6; j <= line + 6; ++j) {
+          if (j >= 0 && j < fullCodeLines.length) {
+            if (j == line)
+              desc += '>>>\t';
+            else
+              desc += '\t';
+            desc += '' + fullCodeLines[j] + '\n';
           }
-          return desc;
-        };
-
-        var diagnostics = operator.getDiagnostics();
-        if (diagnostics.length > 0) {
-          var message = descDiags(operator.getSourceCode(), diagnostics);
-          alert(message);
-       //   compliationErrors.setValue(message);
-       //   $( "#compliationErrorDialog" ).dialog( "open" );
         }
-      });
+      }
+      return desc;
+    };
+
+    var diagnostics = operator.getDiagnostics();
+    if (diagnostics.length > 0) {
+      var message = descDiags(operator.getSourceCode(), diagnostics);
+      alert(message);
+   //   compliationErrors.setValue(message);
+   //   $( "#compliationErrorDialog" ).dialog( "open" );
+    }
+  });
   
   $("#compliationErrorDialog").dialog({
-      autoOpen: false,
-      width: window.innerWidth * 0.75,
-      height: window.innerHeight * 0.85,
-      modal: true
-    });
+    autoOpen: false,
+    width: window.innerWidth * 0.75,
+    height: window.innerHeight * 0.85,
+    modal: true
+  });
   
+});
+
+// jQuert UI Styling classes
+$(document).ready(function() {
+	$(".box").addClass("ui-widget");
+	$(".box h2").addClass("ui-widget-header ui-corner-all");
+	$(".content").addClass("ui-widget-content");
 });
 
 </script>
 
   <body>
     <div id="wrapper">
-      <ul id="nav">
-        <li><a href="#" id="fabric-logo"><img src="../../themes/default/_img/projects/fabric-logo.png" /></a></li>
-      </ul>
       <div id="editor">
         
         <div id="codeContainer">
@@ -161,7 +165,7 @@ $(document).ready(function() {
         </div><!--code-->
         
         <div id="bottomToolbar">
-                 <button id="recompile" style="margin-top:10px;">Recompile</button>
+          <button id="recompile" style="margin-top:10px;">Recompile</button>
         </div><!--bottomToolbar-->
       </div> <!--editor-->
     </div><!--wrapper-->

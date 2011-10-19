@@ -5,14 +5,11 @@
   <head> 
     <title>FABRIC - Flocking</title> 
     
-    <meta charset="iso-8859-1"/>
-    <link href="../../../themes/default/style.css" rel="stylesheet" type="text/css" />
-    <link href="../../../themes/default/viewer.css" rel="stylesheet" type="text/css" />
+    <link type="text/css" href="../../../ThirdParty/jQuery/css/fabric/main.css" rel="stylesheet" />
+    <link type="text/css" href="../../../ThirdParty/jQuery/css/fabric/jquery-ui-1.8.16.custom.css" rel="stylesheet" />
     
-    <script type="text/javascript" src="../../../ThirdParty/jQuery/jquery-1.4.2.min.js"></script>
-    <script type="text/javascript" src="../../../ThirdParty/jQuery/jquery-ui-1.8.5.custom.min.js"></script>
-
-    <link type="text/css" href="../../../ThirdParty/jQuery/css/vader/jquery-ui-1.8.5.custom.css" rel="stylesheet" />
+    <script type="text/javascript" src="../../../ThirdParty/jQuery/jquery-1.6.2.min.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/jQuery/jquery-ui-1.8.16.custom.min.js"></script>
 
     <script type="text/javascript" src="../../../Core/FABRIC.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/RT/Math.js" charset="utf-8"></script>
@@ -81,6 +78,7 @@ $(document).ready(function() {
       primary: 'ui-icon-step'
     }
   });
+  $('#openDebugger').button();
   
   try{
     if(localStorage && localStorage.getItem("flockParams")){
@@ -272,6 +270,10 @@ $(document).ready(function() {
         flockParams.displayDebugging = displayDebugging;
         storeFlockParams();
       });
+      $('#openDebugger').button()
+        .click(function() {
+          FABRIC.displayDebugger();
+        });
       
       setInterval(function() {
           document.getElementById('frameRate').childNodes[0].data = 'Frame Rate:' + viewport.getFPS().toFixed(2);
@@ -281,24 +283,28 @@ $(document).ready(function() {
   
 });
 
+// jQuert UI Styling classes
+$(document).ready(function() {
+  $(".box").addClass("ui-widget");
+  $(".box h2").addClass("ui-widget-header ui-corner-all");
+  $(".content").addClass("ui-widget-content");
+});
+
 </script>
 
   </head> 
   <body>
     <div id="loadingDialog" title="Loading...">
-      <h4 id="loadingDesc" style="margin-bottom: 10px"></h4>
+      <h4 id="loadingDesc"></h4>
       <div id="loadingProgressBar" class="ui-progressbar-value"></div>
     </div>
     <div id="wrapper">
-      <ul id="nav">
-        <li><a href="#" id="fabric-logo"><img src="../../../themes/default/_img/projects/fabric-logo.png" /></a></li>
-      </ul>
       <div id="editor">
         <div id="viewer">
           <div id="FabricContainer"></div> 
         </div><!--viewer-->
         <div id="sidebar">
-        
+          <p class="box">&larr; <a href="../../../index.html">back to Demo list</a></p>
           <div class="box">
             <h2>INFO</h2>
               <div class="content">
@@ -310,8 +316,8 @@ $(document).ready(function() {
           <div class="box">
             <h2>CONTROLS</h2>
             <div class="content">
-              <button id="play" style="margin-top:10px;">Play</button>
-              <button id="step" style="margin-top:10px;">Step</button>
+              <button id="play">Play</button>
+              <button id="step">Step</button>
               </br>
               <label for="numAgents" style="margin-top:10px;">Num Agents:</label>
               <select id='numAgents' style="margin-top:10px;">
@@ -323,6 +329,7 @@ $(document).ready(function() {
               </select>
               </br>
               <input type="checkbox" id="displayDebugging" style="margin-top:10px;"/><label for="displayDebugging">Display Debugging:</label>
+              <button id="openDebugger">Open Debugger</button>
             </div><!--content-->
           </div><!--box-->
         

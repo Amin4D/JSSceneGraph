@@ -1,18 +1,17 @@
-<html xmlns="http://www.w3.org/1999/xhtml"> 
+<!DOCTYPE html>
+<html lang="en">
+ <head>
+  <meta charset="utf-8">  
   <!--
     Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
     -->
-  <head> 
     <title>FABRIC - Bullet Softbody Anchors</title> 
     
-    <meta charset="iso-8859-1"/>
-    <link href="../../../themes/default/style.css" rel="stylesheet" type="text/css" />
-    <link href="../../../themes/default/viewer.css" rel="stylesheet" type="text/css" />
+    <link type="text/css" href="../../../ThirdParty/jQuery/css/fabric/main.css" rel="stylesheet" />
+    <link type="text/css" href="../../../ThirdParty/jQuery/css/fabric/jquery-ui-1.8.16.custom.css" rel="stylesheet" />
     
-    <script type="text/javascript" src="../../../ThirdParty/jQuery/jquery-1.4.2.min.js"></script>
-    <script type="text/javascript" src="../../../ThirdParty/jQuery/jquery-ui-1.8.5.custom.min.js"></script>
-
-    <link type="text/css" href="../../../ThirdParty/jQuery/css/vader/jquery-ui-1.8.5.custom.css" rel="stylesheet" />
+    <script type="text/javascript" src="../../../ThirdParty/jQuery/jquery-1.6.2.min.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/jQuery/jquery-ui-1.8.16.custom.min.js"></script>
 
     <script type="text/javascript" src="../../../Core/FABRIC.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/RT/Math.js" charset="utf-8"></script>
@@ -168,60 +167,36 @@ $(document).ready(function() {
     radius: 0.75
   });
 
-  // import the cow  
-  var assets = scene.importAssetFile('../Alembic/Models/cow.abc', {
-    dependentNode: viewport
-  });
+  var torusNode = scene.constructNode('Torus', {detail: 24});
 
-  assets['cow'].addOnLoadSuccessCallback(function(){
-      // add a softbody to the sim
-      var parsedNodes = assets['cow'].getParsedNodes();
-      var softBodyNode = bulletWorldNode.addSoftBody('Cow',new FABRIC.RT.BulletSoftBody({
-        trianglesNode: parsedNodes['/polymsh/polymshShape'],
-        transform: FABRIC.RT.xfo({
-          tr: new FABRIC.RT.Vec3(0,10,0),
-        }),
-        recover: 0.01,
-        //conservation: 0.6,
-        pressure: 5,
-        piterations: 4,
-      }));
-      
-      scene.constructNode('Instance', {
-        geometryNode: softBodyNode,
-        materialNode: phongMaterial
-      });
-      
-      bulletWorldNode.addAnchor('toCubeA',new FABRIC.RT.BulletAnchor({
-          softBodyNodeIndices: [1941, 1943, 1951, 1959, 1966, 1988, 1990, 2729, 2731, 2732, 2733, 2734,
-                                2735, 2736, 2737, 2738, 2739, 2740, 2741, 2742, 2743, 2744, 2745, 2746,
-                                2747, 2748, 2749, 2750, 2751, 2752, 2753, 2754, 2755, 2756, 2757, 2758,
-                                2759, 2760, 2761, 2762, 2763, 2764, 2765, 2766, 2767, 2768, 2769, 2770,
-                                2771, 2772, 2773, 2774, 2775, 2776, 2777, 2778, 2779, 2780, 2781, 2782,
-                                2783, 2784, 2785, 2786, 2787, 2788, 2789, 2790, 2791, 2792, 2793, 2794,
-                                2795, 2796, 2797, 2798, 2799, 2812, 1973, 1982, 1984, 1986, 2806]
-        }),
-        'CubeA',
-        'Cow'
-      );
-      bulletWorldNode.addAnchor('toCubeB',new FABRIC.RT.BulletAnchor({
-          softBodyNodeIndices: [0, 1, 2, 21, 22, 23, 24, 25, 26, 29, 30, 33, 34, 35, 36, 37, 38, 39,
-                                43, 44, 45, 46, 61, 62, 63, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75,
-                                76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 150, 151,
-                                152, 153, 154, 155, 156, 157, 160, 161, 162, 1014, 1015, 1016, 1021, 1022,
-                                1023, 1024, 1025, 1026, 1027, 1028, 1029, 1030, 1031, 1033, 1034, 1035, 1036,
-                                1037, 1038, 1039, 1040, 1041, 1042, 1043, 1046, 1047, 1048, 1051, 1052, 1053,
-                                1054, 1055, 1058, 1060, 1061, 1062, 1064, 1075, 1076, 1082, 1083, 2107, 2108,
-                                2109, 2110, 2114, 2115, 2116, 2117, 2118, 2119, 2120, 2121, 2122, 2123, 2124,
-                                2125, 2126, 2127, 2128, 2129, 2130, 2131, 2135, 2136]
-        }),
-        'CubeB',
-        'Cow'
-      );
-      
-      $('#loadingDialog').dialog('close');
-      viewport.redraw();
-    });
+  var softBodyNode = bulletWorldNode.addSoftBody('Torus',new FABRIC.RT.BulletSoftBody({
+    trianglesNode: torusNode,
+    transform: FABRIC.RT.xfo({
+      tr: new FABRIC.RT.Vec3(0,10,0),
+    }),
+    recover: 0.01,
+    pressure: 5,
+    piterations: 4,
+  }));
+  
+  scene.constructNode('Instance', {
+    geometryNode: softBodyNode,
+    materialNode: phongMaterial
+  });
+  
+  bulletWorldNode.addAnchor('toCubeB',new FABRIC.RT.BulletAnchor({
+      softBodyNodeIndices: [701,702,703,704,705,706]
+    }),
+    'CubeA',
+    'Torus'
+  );
+
+  bulletWorldNode.addAnchor('toCubeA',new FABRIC.RT.BulletAnchor({
+      softBodyNodeIndices: [0,1,2,3,4,5,6,7,8]
+    }),
+    'CubeB',
+    'Torus'
+  );
 
   FABRIC.appendOnResolveAsyncTaskCallback(function(label, nbRemaining, doneWeight, totalWeight) {
     $('#loadingProgressBar').progressbar({
@@ -284,24 +259,28 @@ $(document).ready(function() {
   });
 });
 
+// jQuert UI Styling classes
+$(document).ready(function() {
+  $(".box").addClass("ui-widget");
+  $(".box h2").addClass("ui-widget-header ui-corner-all");
+  $(".content").addClass("ui-widget-content");
+});
+
 </script>
 
   </head> 
   <body>
     <div id="loadingDialog" title="Loading...">
-      <h4 id="loadingDesc" style="margin-bottom: 10px"></h4>
+      <h4 id="loadingDesc"></h4>
       <div id="loadingProgressBar" class="ui-progressbar-value"></div>
     </div>
     <div id="wrapper">
-      <ul id="nav">
-        <li><a href="#" id="fabric-logo"><img src="../../../themes/default/_img/projects/fabric-logo.png" /></a></li>
-      </ul>
       <div id="editor">
         <div id="viewer">
           <div id="FabricContainer"></div> 
         </div><!--viewer-->
         <div id="sidebar">
-
+          <p class="box">&larr; <a href="../../../index.html">back to Demo list</a></p>
           <div class="box">
             <h2>INFO</h2>
               <div class="content">
@@ -315,10 +294,10 @@ $(document).ready(function() {
           </div><!--box-->
           <div class="box">
             <h2>CONTROLS</h2>
-            <div class="content">
-              <button id="play" style="margin-top:10px;">Play</button>
-              <button id="step" style="margin-top:10px;">Step</button>
-              <button id="reset" style="margin-top:10px;">Reset</button>
+            <div class="content button-controls">
+              <button id="play">Play</button>
+              <button id="step">Step</button>
+              <button id="reset">Reset</button>
             </div><!--content-->
           </div><!--box-->
           

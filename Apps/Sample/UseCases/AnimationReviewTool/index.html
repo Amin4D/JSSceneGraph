@@ -1,20 +1,20 @@
-<html xmlns="http://www.w3.org/1999/xhtml"> 
+<!DOCTYPE html>
+<html lang="en">
+ <head>
+  <meta charset="utf-8">  
   <!--
     Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
     -->
-  <head> 
     <title>FABRIC - Alembic Animation Review Tool</title> 
     
-    <meta charset="iso-8859-1"/>
-    <link href="../../../../themes/default/style.css" rel="stylesheet" type="text/css" />
-    <link href="../../../../themes/default/viewer.css" rel="stylesheet" type="text/css" />
+    <link type="text/css" href="../../../../ThirdParty/jQuery/css/fabric/main.css" rel="stylesheet" />
+    <link type="text/css" href="../../../../ThirdParty/jQuery/css/fabric/jquery-ui-1.8.16.custom.css" rel="stylesheet" />
     
-    <script type="text/javascript" src="../../../../ThirdParty/jQuery/jquery-1.4.2.min.js"></script>
-    <script type="text/javascript" src="../../../../ThirdParty/jQuery/jquery-ui-1.8.5.custom.min.js"></script>
-    <script type="text/javascript" src="../../../../ThirdParty/jQuery/colorpicker/js/colorpicker.js"></script>
-
-    <link type="text/css" href="../../../../ThirdParty/jQuery/css/vader/jquery-ui-1.8.5.custom.css" rel="stylesheet" />
     <link href="../../../../ThirdParty/jQuery/colorpicker/css/colorpicker.css" rel="stylesheet" type="text/css" />
+
+    <script type="text/javascript" src="../../../../ThirdParty/jQuery/jquery-1.6.2.min.js"></script>
+    <script type="text/javascript" src="../../../../ThirdParty/jQuery/jquery-ui-1.8.16.custom.min.js"></script>
+    <script type="text/javascript" src="../../../../ThirdParty/jQuery/colorpicker/js/colorpicker.js"></script>
 
     <script type="text/javascript" src="../../../../Core/FABRIC.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../../SceneGraph/RT/Math.js" charset="utf-8"></script>
@@ -53,13 +53,10 @@
 }  
 #viewer {
   right:400px;
+  bottom:125px;
 }
 #timeControls {
-  right:400px;
-}
-
-#FabricContainer{
-  bottom:125;
+  right:390px;
 }
 
 
@@ -1043,21 +1040,25 @@ $(document).ready(function() {
   
 });
 
+// jQuert UI Styling classes
+$(document).ready(function() {
+  $(".box").addClass("ui-widget");
+  $(".box h2").addClass("ui-widget-header ui-corner-all");
+  $(".content").addClass("ui-widget-content");
+});
+
 </script>
 
   </head> 
   <body>
     <div id="loadingDialog" title="Loading...">
-      <h4 id="loadingDesc" style="margin-bottom: 10px">Downloading Alembic File.<br>This may take some time.</h4>
+      <h4 id="loadingDesc">Downloading Alembic File.<br>This may take some time.</h4>
       <div id="loadingProgressBar" class="ui-progressbar-value"></div>
     </div>
     <div id="instructionsDialog" title="Instructions">
       Hold down 'shift' to paint.
     </div>
     <div id="wrapper">
-      <ul id="nav">
-        <li><a href="#" id="fabric-logo"><img src="../../../../themes/default/_img/projects/fabric-logo.png" /></a></li>
-      </ul>
       <div id="editor">
         <div id="viewer">
           <div id="FabricContainer"></div> 
@@ -1079,8 +1080,8 @@ $(document).ready(function() {
                 <select multi size=5 id='planelist' style='width: 200px'>
                 </select>
                 <div id='planeblend' style="margin-top:10px;"></div>
-                 <p id="brushColor"></p>
-                        
+                <p id="brushColor"></p>
+                
                 <label for="brushOpacity" >Brush Opacity:</label>
                 <div id='brushOpacity' style="margin-top:10px;"></div>
                 
@@ -1089,6 +1090,7 @@ $(document).ready(function() {
             </div><!--content-->
           </div><!--box-->
         </div><!--sidebar-->
+        
         <div id="timeControls">
           <div class="box">
             <h2>Playback</h2>
@@ -1098,6 +1100,7 @@ $(document).ready(function() {
             </div><!--content-->
           </div><!--box-->
         </div><!--timeControls-->
+        
       </div> <!--editor-->
     </div><!--wrapper-->
   </body> 

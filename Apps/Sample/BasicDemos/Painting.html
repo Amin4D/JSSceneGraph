@@ -262,7 +262,7 @@ $(document).ready(function() {
       });
   $( "#brushStrengthValue" ).val( $( "#brushStrengthSlider" ).slider( "value" ) * 100 + '%' );
 
-  $('#colorpickerHolder2').ColorPicker({
+  $('#brushColor').ColorPicker({
       flat: true,
       color: { r: brushColor.r * 255, g: brushColor.g * 255, b: brushColor.b * 255} ,
       onChange: function(hsb, hex, rgb) {
@@ -346,7 +346,7 @@ $(document).ready(function() {
             <!--  </p> -->
               <div id="brushStrengthSlider" style="margin-bottom: 10px; margin-top: 2px"></div>
               
-              <p id="colorpickerHolder2" style="margin-bottom: 10px; margin-top: 10px"></p>
+              <p id="brushColor" style="margin-bottom: 10px; margin-top: 10px"></p>
             </div><!--content-->
               
           </div><!--box-->

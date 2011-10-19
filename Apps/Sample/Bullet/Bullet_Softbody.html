@@ -106,35 +106,23 @@ $(document).ready(function() {
   // create a simulation world
   var bulletWorldNode = scene.constructNode('BulletWorldNode');
 
+  var torusNode = scene.constructNode('Torus', {detail: 24});
 
-  // import the cow  
-  var assets = scene.importAssetFile('../Alembic/Models/cow.abc', {
-    dependentNode: viewport,
+  var softBodyNode = bulletWorldNode.addSoftBody('Torus',new FABRIC.RT.BulletSoftBody({
+    trianglesNode: torusNode,
+    transform: FABRIC.RT.xfo({
+      tr: new FABRIC.RT.Vec3(0,16,0),
+      ori: new FABRIC.RT.Quat().setFromAxisAndAngle(new FABRIC.RT.Vec3(1,-1,0),190)
+    }),
+    recover: 0.01,
+    pressure: 5,
+    piterations: 4,
+  }));
+  
+  scene.constructNode('Instance', {
+    geometryNode: softBodyNode,
+    materialNode: phongMaterial
   });
-
-  assets['cow'].addOnLoadSuccessCallback(function(){
-      // add a softbody to the sim
-      var parsedNodes = assets['cow'].getParsedNodes();
-      var softBodyNode = bulletWorldNode.addSoftBody('Cow'+i,new FABRIC.RT.BulletSoftBody({
-        trianglesNode: parsedNodes['/polymsh/polymshShape'],
-        transform: FABRIC.RT.xfo({
-          tr: new FABRIC.RT.Vec3(0,10,0),
-          ori: new FABRIC.RT.Quat().setFromAxisAndAngle(new FABRIC.RT.Vec3(1,-1,0),190)
-        }),
-        recover: 0.01,
-        //conservation: 0.6,
-        pressure: 5,
-        piterations: 4,
-      }));
-      
-      scene.constructNode('Instance', {
-        geometryNode: softBodyNode,
-        materialNode: phongMaterial
-      });
-      
-      $('#loadingDialog').dialog('close');
-      viewport.redraw();
-    });
 
   FABRIC.appendOnResolveAsyncTaskCallback(function(label, nbRemaining, doneWeight, totalWeight) {
     $('#loadingProgressBar').progressbar({

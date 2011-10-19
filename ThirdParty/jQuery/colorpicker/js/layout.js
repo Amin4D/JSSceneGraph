@@ -9,17 +9,17 @@
 		}
 		showTab.apply(currentTab.get(0));
 		$('#colorpickerHolder').ColorPicker({flat: true});
-		$('#colorpickerHolder2').ColorPicker({
+		$('#brushColor').ColorPicker({
 			flat: true,
 			color: '#00ff00',
 			onSubmit: function(hsb, hex, rgb) {
 				$('#colorSelector2 div').css('backgroundColor', '#' + hex);
 			}
 		});
-		$('#colorpickerHolder2>div').css('position', 'absolute');
+		$('#brushColor>div').css('position', 'absolute');
 		var widt = false;
 		$('#colorSelector2').bind('click', function() {
-			$('#colorpickerHolder2').stop().animate({height: widt ? 0 : 173}, 500);
+			$('#brushColor').stop().animate({height: widt ? 0 : 173}, 500);
 			widt = !widt;
 		});
 		$('#colorpickerField1, #colorpickerField2, #colorpickerField3').ColorPicker({

@@ -169,11 +169,11 @@ operator simulateFlock(
       var Integer neighborId = neighborIndices[i];
       var Scalar neighborDist = neighborDistances[i];
       if( neighborDist > 0.0 && neighborDist < neighborInfluenceRange){
-        debugDraw.drawLine(position, position + ((previousframe_positions[neighborId]-position) * 0.45), Color(1.0, 0.75, 0.5, 1.0));
+        debugDraw.drawLine(position, position + ((previousframe_positions[neighborId]-position) * 0.47), Color(0.0, 0.25, 0.75, 1.0));
       }
     }
     
     debugDraw.drawLine(previousframe_positions[index], position, Color(0.75, 0.0, 0.0, 1.0));
-    debugDraw.drawCircle(Xfo(previousframe_positions[index], Quat()), neighborInfluenceRange, Color(1.0, 0.25, 0.25, 1.0));
+    debugDraw.drawCircle(Xfo(previousframe_positions[index], Quat()), neighborInfluenceRange, Color(1.0, 0.25, 0.0, 0.5));
   }
 }

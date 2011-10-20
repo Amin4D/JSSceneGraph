@@ -629,6 +629,7 @@ FABRIC.createSVGRootElem = function(domRootID) {
       var self = this;
       var activateZoomFn = function(evt) {
         var zoomFn = function(evt) {
+          if(evt.detail != undefined) evt.wheelDelta = evt.detail * -5;
           var currentZoom = (options.delegateZoomObj ? options.delegateZoomObj : self).scale();
           evt.zoomfactor = currentZoom + ((evt.wheelDelta * (options.zoomRate / 1000)) * currentZoom);
           (options.delegateZoomObj ? options.delegateZoomObj : self).scale(Math.max(evt.zoomfactor, 0.1));
@@ -638,6 +639,7 @@ FABRIC.createSVGRootElem = function(domRootID) {
           evt.stopPropagation();
         }
         document.addEventListener('mousewheel', zoomFn, false);
+        document.addEventListener('DOMMouseScroll', zoomFn, false);
         var deactivateZoomFn = function(evt) {
           self.elem.removeEventListener('mouseout', deactivateZoomFn, false);
           document.removeEventListener('mousewheel', zoomFn, false);

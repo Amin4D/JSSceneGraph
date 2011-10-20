@@ -108,30 +108,32 @@ $(document).ready(function() {
   // create the alembic content, and fire the load once it is loaded
   var resourceName = 'samplehold_elephant_proxy';
   var assets = scene.importAssetFile('Models/'+resourceName+'.abc', {
-    dependentNode: viewport,
-    onLoadSuccessCallback: function(){
-      
-      // loop over all assets and create an instance
-      for(var name in assets[resourceName].getParsedNodes()) {
-        if(assets[resourceName].getParsedNodes()[name].isTypeOf('Triangles'))
-        {
-          assets[resourceName].getParsedNodes()[name]
-          var inst = scene.constructNode('Instance', {
-            transformNode: assets[resourceName].getCorrespondingTransform(name),
-            geometryNode: assets[resourceName].getParsedNodes()[name],
-            materialNode: elephantMaterial
-          });
-        }
-      }
-      
-      $('#loadingDialog').dialog('close');
-      viewport.redraw();
-    }
+    dependentNode: viewport
   });
 
   $('#loadingDialog').dialog({
     modal: true
   });
+  
+  assets[resourceName].addOnLoadSuccessCallback(function(){
+      
+    // loop over all assets and create an instance
+    for(var name in assets[resourceName].getParsedNodes()) {
+      if(assets[resourceName].getParsedNodes()[name].isTypeOf('Triangles'))
+      {
+        assets[resourceName].getParsedNodes()[name]
+        var inst = scene.constructNode('Instance', {
+          transformNode: assets[resourceName].getCorrespondingTransform(name),
+          geometryNode: assets[resourceName].getParsedNodes()[name],
+          materialNode: elephantMaterial
+        });
+      }
+    }
+      
+    $('#loadingDialog').dialog('close');
+    viewport.redraw();
+  });
+
   FABRIC.appendOnResolveAsyncTaskCallback(function(label, nbRemaining, doneWeight, totalWeight) {
     $('#loadingProgressBar').progressbar({
       value: (1.0-(doneWeight/totalWeight))*100

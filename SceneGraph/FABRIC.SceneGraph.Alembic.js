@@ -21,13 +21,8 @@ FABRIC.SceneGraph.registerNodeType('AlembicLoadNode', {
   factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
       removeParsersOnLoad: false,
-      dependentNode: undefined,
-      onLoadSuccessCallback: undefined
+      dependentNode: undefined
     });
-
-    // remember the original onLoadSuccessCallback
-    var prevOnLoadSuccessCallback = options.onLoadSuccessCallback;
-    options.onLoadSuccessCallback = undefined;
 
     var resourceLoadNode = scene.constructNode('ResourceLoad', options),
       resourceloaddgnode = resourceLoadNode.getDGLoadNode();
@@ -423,11 +418,6 @@ FABRIC.SceneGraph.registerNodeType('AlembicLoadNode', {
         animationController.pub.setTimeRange(timeRange);
       }
     });
-    
-    // also add the original on load callback
-    if (prevOnLoadSuccessCallback != undefined)
-      resourceLoadNode.pub.addOnLoadSuccessCallback(prevOnLoadSuccessCallback)
-
     
     return resourceLoadNode;
   }

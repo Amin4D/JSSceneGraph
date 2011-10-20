@@ -1369,17 +1369,11 @@ FABRIC.SceneGraph.registerNodeType('ResourceLoad', {
                 'Note that operators can dynamically modify the URL.',
   parentNodeDesc: 'SceneGraphNode',
   optionsDesc: {
-    onLoadSuccessCallback: 'A callback that will be fired once the resource has loaded successfully.',
-    onLoadProgressCallback: 'A callback that will be fired after some load progress.',
-    onLoadFailureCallback: 'A callback that will be fired if the resource cannot load.',
     blockRedrawingTillResourceIsLoaded: 'If set to true redrawing will be blocked until the resource is loaded.',
     redrawOnLoad: 'If set to true, the viewport will fire a redraw once the resource has been loaded.'
   },
   factoryFn: function(options, scene) {
     scene.assignDefaults(options, {
-      onLoadSuccessCallback: undefined,
-      onLoadProgressCallback: undefined,
-      onLoadFailureCallback: undefined,
       blockRedrawingTillResourceIsLoaded:true,
       redrawOnLoad: true
     });
@@ -1473,18 +1467,6 @@ FABRIC.SceneGraph.registerNodeType('ResourceLoad', {
     resourceLoadNode.pub.getDGLoadNode = function() {
       return dgnode;
     };
-
-    if (options.onLoadSuccessCallback) {
-      resourceLoadNode.pub.addOnLoadSuccessCallback(options.onLoadSuccessCallback);
-    }
-
-    if (options.onLoadProgressCallback) {
-      resourceLoadNode.pub.addOnLoadProgressCallback(options.onLoadProgressCallback);
-    }
-
-    if (options.onLoadFailureCallback) {
-      resourceLoadNode.pub.addOnLoadFailureCallback(options.onLoadFailureCallback);
-    }
 
     if (options.url) {
       // check if the url has a handle

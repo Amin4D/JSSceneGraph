@@ -149,6 +149,147 @@ FABRIC.SceneGraph.registerNodeType('Image', {
     return imageNode;
   }});
 
+FABRIC.SceneGraph.registerNodeType('Image3D', {
+  briefDesc: 'The Image node holds 3D image data, and optionally creates an URL image loader and an OpenGL texture.',
+  detailedDesc: 'The Image node holds generic image data (members: pixels, width, height, depth), which might be color or grayscale, LDR or HDR. ' +
+                'If \'options.createResourceLoadNode\', an URL-based image loader will be incorporated, and currently supports ' +
+                '(todo) image formats. If \'options.createLoadTextureEventHandler\', an OpenGL 3D texture ' +
+                'will be created from the image.',
+  parentNodeDesc: 'Texture',
+  optionsDesc: {
+    format: 'Pixel format. Currently supported: RGBA, Byte, Color, Scalar.',
+    createDgNode: 'If this is set to true the Image node will contain a dgnode to store the pixel data.',
+    createResourceLoadNode: 'Set to true this flag will enable the Image node to load a texture off a resource load node.',
+    createLoadTextureEventHandler: 'If the image uses a ResouceLoadNode and this flag is set, it will create an EventHandler for the Image being loaded.',
+    width: 'The width of the empty Image',
+    height: 'The height of the empty Image',
+    depth: 'The depth of the empty Image',
+    color: 'The standard color for the empty Image',
+    url: 'The URL to load the Image from'
+  },
+  factoryFn: function(options, scene) {
+    scene.assignDefaults(options, {
+      format: 'RGBA',
+      createDgNode: false,
+      createResourceLoadNode: false,
+      createLoadTextureEventHandler: true,
+      initImage: true,
+      width: 128,
+      height: 128,
+      depth: 128,
+      url: undefined
+    });
+    if(options.color === undefined) {
+      if(options.format === 'RGBA')
+        options.color = new FABRIC.RT.RGBA(0,0,0,0);
+      else if(options.format === 'Color')
+        options.color = new FABRIC.RT.Color(0,0,0,0);
+      else
+        options.color = 0;
+    }
+    
+    var imageNode = scene.constructNode('Texture', options);
+    if(options.createDgNode){
+      var dgnode = imageNode.constructDGNode('DGNode')
+      dgnode.addMember('width', 'Size', options.width);
+      dgnode.addMember('height', 'Size', options.height);
+      dgnode.addMember('depth', 'Size', options.depth);
+      dgnode.addMember('pixels', options.format + '[]');
+  
+      imageNode.addMemberInterface(dgnode, 'width');
+      imageNode.addMemberInterface(dgnode, 'height');
+      imageNode.addMemberInterface(dgnode, 'depth');
+    }
+
+    //options.createResourceLoadNode: TODO
+    if (options.createResourceLoadNode) {/*
+      var resourceLoadNode = scene.constructNode('ResourceLoad', options);
+      var resourceloaddgnode = resourceLoadNode.getDGLoadNode();
+      if(options.createDgNode){
+        dgnode.setDependency(resourceloaddgnode, 'resource');
+        dgnode.bindings.append(scene.constructOperator({
+          operatorName: (options.wantHDR ? 'loadImageHDR' : 'loadImageLDR'),
+          parameterLayout: [
+            'resource.resource',
+            'self.width',
+            'self.height',
+            'self.pixels'
+          ],
+          entryFunctionName: (options.wantHDR ? 'loadImageHDR' : 'loadImageLDR'),
+          srcFile: 'FABRIC_ROOT/SceneGraph/KL/loadTexture.kl'
+        }));
+      };
+
+      imageNode.pub.getResourceLoadNode = function() {
+        return resourceLoadNode.pub;
+      };
+
+      imageNode.pub.isImageLoaded = function() {
+        return resourceLoadNode ? resourceLoadNode.pub.isLoaded() : false;
+      };*/
+    } else {
+      if(options.createDgNode && options.initImage && options.width && options.height && options.depth){
+        dgnode.addMember('color', options.format, options.color);
+        dgnode.addMember('initiated', 'Boolean', false);
+        dgnode.bindings.append(scene.constructOperator({
+          operatorName: 'initImageFrom' + options.format,
+          parameterLayout: [
+            'self.width',
+            'self.height',
+            'self.depth',
+            'self.color',
+            'self.pixels',
+            'self.initiated'
+          ],
+          entryFunctionName: 'initImageFrom' + options.format,
+          srcFile: 'FABRIC_ROOT/SceneGraph/KL/load3DTexture.kl'
+        }));
+      };
+    }
+
+    if (options.createLoadTextureEventHandler) {
+      // Construct the handler for loading the image into texture memory.
+      var redrawEventHandler = imageNode.constructEventHandlerNode('Redraw');
+      var oglTexture = FABRIC.RT.oglTexture3D();
+      redrawEventHandler.addMember('oglTexture3D', 'OGLTexture3D', oglTexture);
+      if(options.createDgNode){
+        redrawEventHandler.setScope('image', dgnode);
+        redrawEventHandler.preDescendBindings.append(scene.constructOperator({
+          operatorName: 'bindTexture3D',
+          srcFile: 'FABRIC_ROOT/SceneGraph/KL/load3DTexture.kl',
+          entryFunctionName: 'bind' + options.format + 'Texture3D',
+          parameterLayout: [
+            'image.width',
+            'image.height',
+            'image.depth',
+            'image.pixels',
+            'self.oglTexture3D',
+            'textureStub.textureUnit'
+          ]
+        }));
+      }
+/*      else if(options.createResourceLoadNode){
+        redrawEventHandler.setScope('resource', resourceloaddgnode);
+        redrawEventHandler.preDescendBindings.append(scene.constructOperator({
+          operatorName: 'loadAndBindTextureLDR',
+          srcFile: 'FABRIC_ROOT/SceneGraph/KL/loadTexture.kl',
+          entryFunctionName: 'loadAndBindTextureLDR',
+          parameterLayout: [
+            'resource.resource',
+            'self.oglTexture2D',
+            'textureStub.textureUnit'
+          ]
+        }));
+      }*/
+    }
+
+/*    imageNode.pub.getURL = function() {
+      return resourceLoadNode ? resourceLoadNode.pub.getUrl() : '';
+    };*/
+
+    return imageNode;
+  }});
+
 FABRIC.SceneGraph.registerNodeType('CubeMap', {
   briefDesc: 'The CubeMap node contains 6 Image nodes which can be used to texture with cubic mapping. ',
   detailedDesc: 'The CubeMap node contains 6 Image nodes which can be used to texture with cubic mapping. ' +

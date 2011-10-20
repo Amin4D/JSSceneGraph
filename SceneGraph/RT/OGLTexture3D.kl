@@ -1,0 +1,97 @@
+//
+// Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
+//
+
+use FabricOGL;
+
+function OGLTexture3D.configure(
+  Size width,
+  Size height,
+  Size depth,
+  Data pixels,
+  Size nbPixels,
+  io Integer textureUnit
+) {
+  if(nbPixels > 0){
+    if(this.bufferID == 0){
+      var Size buffers[];
+      buffers.resize(1);
+      glGenTextures(1, buffers);
+      this.bufferID = buffers[0];
+    }
+    glActiveTexture(GL_TEXTURE0 + textureUnit);
+    glBindTexture(GL_TEXTURE_3D, this.bufferID);
+    
+    //Generate the texture
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    if (nbPixels == (width * height * depth))
+      glTexImage3D(GL_TEXTURE_3D, 0, this.glInternalFormat, width, height, depth, 0, this.glFormat, this.glType, pixels);
+
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, this.textureMinFilter);
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, this.textureMaxFilter);
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, this.wrapS);
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, this.wrapT);
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, this.wrapR);
+
+    this.nbPixels = nbPixels;
+  }
+}
+
+
+function OGLTexture3D.bind(io Integer textureUnit){
+//  report("OGLTexture3D.bind bufferID:"+this.bufferID + " textureUnit:"+textureUnit  + " nbPixels:"+ this.nbPixels );
+  glActiveTexture(GL_TEXTURE0 + textureUnit);
+  glBindTexture(GL_TEXTURE_3D, this.bufferID);
+}
+
+function OGLTexture3D.bindRGBAImage(
+  io Size width,
+  io Size height,
+  io Size depth,
+  io RGBA bitmap[],
+  io Integer textureUnit
+) {
+  if (this.bufferID == 0 || this.forceRefresh) {
+    this.configure(width, height, depth, bitmap.data(), bitmap.size(), textureUnit);
+  }
+  this.bind(textureUnit);
+}
+
+function OGLTexture3D.bindByteImage(
+  io Size width,
+  io Size height,
+  io Size depth,
+  io Byte bitmap[],
+  io Integer textureUnit
+) {
+  if (this.bufferID == 0 || this.forceRefresh) {
+    this.configure(width, height, depth, bitmap.data(), bitmap.size(), textureUnit);
+  }
+  this.bind(textureUnit);
+}
+
+function OGLTexture3D.bindColorImage(
+  io Size width,
+  io Size height,
+  io Size depth,
+  io Color bitmap[],
+  io Integer textureUnit
+) {
+  if (this.bufferID == 0 || this.forceRefresh) {
+    this.configure(width, height, depth, bitmap.data(), bitmap.size(), textureUnit);
+  }
+  this.bind(textureUnit);
+}
+
+function OGLTexture3D.bindScalarImage(
+  io Size width,
+  io Size height,
+  io Size depth,
+  io Scalar bitmap[],
+  io Integer textureUnit
+) {
+  if (this.bufferID == 0 || this.forceRefresh) {
+    this.configure(width, height, depth, bitmap.data(), bitmap.size(), textureUnit);
+  }
+  this.bind(textureUnit);
+}

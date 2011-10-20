@@ -29,7 +29,7 @@
     <script type="text/javascript" src="../../../SceneGraph/RT/Euler.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/RT/OGLShaderProgram.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/RT/OGLTexture2D.js" charset="utf-8"></script>
-    <script type="text/javascript" src="../../../SceneGraph/RT/OGLTextureCube.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../../SceneGraph/RT/OGLTexture3D.js" charset="utf-8"></script>
     <script type="text/javascript" src="../../../SceneGraph/RT/OGLBuffer.js" charset="utf-8"></script>
 
     <script type="text/javascript" src="../../../SceneGraph/FABRIC.SceneGraph.js" charset="utf-8"></script>
@@ -70,36 +70,52 @@ FABRIC.SceneGraph.registerNodeType('3DTextureGenerator', {
         resolution: 128
       });
 
-    var generatorNode = scene.constructNode('SceneGraphNode', options);
-    var dgnode = generatorNode.constructDGNode('DGNode');
+    options.name = '3DTextureGenerator_Opacity';
+    options.format = 'Byte';
+    options.createDgNode = true;
+    var generatorNodeOpacity = scene.constructNode('Image3D', options);
+    var dgnodeOpacity = generatorNodeOpacity.getDGNode();
 
-    dgnode.addMember('resolution', 'Size', options.resolution );
-    dgnode.addMember('width', 'Size' );
-    dgnode.addMember('height', 'Size' );
-    dgnode.addMember('depth', 'Size' );
-    dgnode.addMember('opacityVoxels', 'Byte[]');
-    dgnode.addMember('weightedGradientsVoxels', 'RGBA[]');
+    dgnodeOpacity.addMember('resolution', 'Size', options.resolution );
+    generatorNodeOpacity.addMemberInterface(dgnodeOpacity, 'resolution', true);
 
-    generatorNode.addMemberInterface(dgnode, 'resolution', true);
-    generatorNode.addMemberInterface(dgnode, 'width');
-    generatorNode.addMemberInterface(dgnode, 'height');
-    generatorNode.addMemberInterface(dgnode, 'depth');
-
-    dgnode.bindings.append(scene.constructOperator({
-      operatorName: 'generate3DTexture',
+    dgnodeOpacity.bindings.append(scene.constructOperator({
+      operatorName: 'generate3DTextureOpacity',
       parameterLayout: [
         'self.resolution',
         'self.width',
         'self.height',
         'self.depth',
-        'self.opacityVoxels',
-        'self.weightedGradientsVoxels'
+        'self.pixels'
       ],
-      entryFunctionName: 'generate3DTexture',
+      entryFunctionName: 'generate3DTextureOpacity',
       srcFile: 'KL/3DTextureUtils.kl'
     }));
 
-    return generatorNode;
+    options.name = '3DTextureGenerator_Gradient';
+    options.format = 'RGBA';
+    options.color = undefined;
+    var generatorNodeGradient = scene.constructNode('Image3D', options);
+    var dgnodeGradient = generatorNodeGradient.getDGNode();
+    dgnodeGradient.setDependency(dgnodeOpacity, 'opacity');
+
+    dgnodeGradient.bindings.append(scene.constructOperator({
+      operatorName: 'generate3DTextureGradient',
+      parameterLayout: [
+        'opacity.resolution',
+        'self.width',
+        'self.height',
+        'self.depth',
+        'self.pixels'
+      ],
+      entryFunctionName: 'generate3DTextureGradient',
+      srcFile: 'KL/3DTextureUtils.kl'
+    }));
+
+    generatorNodeOpacity.getOpacityDGNode = function(){return dgnodeOpacity;};
+    generatorNodeOpacity.getGradientDGNode = function(){return dgnodeGradient;};
+
+    return generatorNodeOpacity;
   }
 });
 
@@ -143,19 +159,20 @@ FABRIC.SceneGraph.registerNodeType('Texture2DSliceDisplay', {
     sliceDisplayNode.addMemberInterface(dgnode, 'opacityElseGradientWeight', true);
 
     var sourceImageNode = scene.getPrivateInterface(options.sourceImageNode);
-    dgnode.setDependency(sourceImageNode.getDGNode(), 'source');
-
+    dgnode.setDependency(sourceImageNode.getOpacityDGNode(), 'sourceOpacity');
+    dgnode.setDependency(sourceImageNode.getGradientDGNode(), 'sourceGradient');
+    
     dgnode.bindings.append(scene.constructOperator({
       operatorName: 'slice3DTexture',
       parameterLayout: [
         'self.sliceRatio',
         'self.sliceAxis',
         'self.opacityElseGradientWeight',
-        'source.width',
-        'source.height',
-        'source.depth',
-        'source.opacityVoxels',
-        'source.weightedGradientsVoxels',
+        'sourceOpacity.width',
+        'sourceOpacity.height',
+        'sourceOpacity.depth',
+        'sourceOpacity.pixels',
+        'sourceGradient.pixels',
         'self.width',
         'self.height',
         'self.pixels'
@@ -165,8 +182,7 @@ FABRIC.SceneGraph.registerNodeType('Texture2DSliceDisplay', {
     }));
 
     var postDrawEventHandler = sliceDisplayNode.constructEventHandlerNode('PostDraw');
-    var toto = sliceDisplayNode.getRedrawEventHandler();
-    postDrawEventHandler.appendChildEventHandler(sliceDisplayNode.getRedrawEventHandler());//ICI
+    postDrawEventHandler.appendChildEventHandler(sliceDisplayNode.getRedrawEventHandler());
     scene.getScenePostRedrawEventHandler().appendChildEventHandler(postDrawEventHandler);
 
     postDrawEventHandler.addMember('tl', 'Vec2', options.tl );
@@ -242,7 +258,7 @@ $(document).ready(function() {
   texture2DSlice[0] = scene.constructNode('Texture2DSliceDisplay', {tl: new FABRIC.RT.Vec2(2.0/3.0, 1.0), br: new FABRIC.RT.Vec2(1.0, 1.0/3.0), sourceImageNode: textureGen, sliceRatio: 0.5, sliceAxis : 0});
   texture2DSlice[1] = scene.constructNode('Texture2DSliceDisplay', {tl: new FABRIC.RT.Vec2(2.0/3.0, 1.0/3.0), br: new FABRIC.RT.Vec2(1.0, -1.0/3.0), sourceImageNode: textureGen, sliceRatio: 0.5, sliceAxis : 1});
   texture2DSlice[2] = scene.constructNode('Texture2DSliceDisplay', {tl: new FABRIC.RT.Vec2(2.0/3.0, -1.0/3.0), br: new FABRIC.RT.Vec2(1.0, -1.0), sourceImageNode: textureGen, sliceRatio: 0.5, sliceAxis : 2});
-
+  
   var flatMaterial = scene.constructNode('FlatMaterial', {
       color: FABRIC.RT.rgb(0.8, 0, 0, 1)
     });
@@ -252,7 +268,7 @@ $(document).ready(function() {
       geometryNode: volume,
       materialNode: flatMaterial
     });
-
+    
   var sliders2DBindFunction = function(index) {
     var sliderIndex = index;
     return function(event, ui) {
@@ -292,7 +308,7 @@ $(document).ready(function() {
     }
     viewport.redraw();
   });
-
+  
   $('#loadingDialog').dialog({
     modal: true
   });

@@ -1,0 +1,145 @@
+//
+// Copyright 2010-2011 Fabric Technologies Inc. All rights reserved.
+//
+
+use OGLTexture3D;
+use OGLShaderProgram;
+
+operator bindRGBATexture3D(
+  io Size width,
+  io Size height,
+  io Size depth,
+  io RGBA bitmap[],
+  io OGLTexture3D oglTexture3D,
+  io Integer textureUnit
+) {
+  oglTexture3D.bindRGBAImage(width, height, depth, bitmap, textureUnit);
+}
+
+operator bindByteTexture3D(
+  io Size width,
+  io Size height,
+  io Size depth,
+  io Byte bitmap[],
+  io OGLTexture3D oglTexture3D,
+  io Integer textureUnit
+) {
+  oglTexture3D.bindByteImage(width, height, depth, bitmap, textureUnit);
+}
+
+operator bindColorTexture3D(
+  io Size width,
+  io Size height,
+  io Size depth,
+  io Color bitmap[],
+  io OGLTexture3D oglTexture3D,
+  io Integer textureUnit
+) {
+  oglTexture3D.bindColorImage(width, height, depth, bitmap, textureUnit);
+}
+
+operator bindScalarTexture3D(
+  io Size width,
+  io Size height,
+  io Size depth,
+  io Scalar bitmap[],
+  io OGLTexture3D oglTexture3D,
+  io Integer textureUnit
+) {
+  oglTexture3D.bindScalarImage(width, height, depth, bitmap, textureUnit);
+}
+
+// This operator takes a resource, decodes it, and immediately
+// uploads it to the GPU. This simplifies the graph, because 
+// a node is not created to store the data in main memory. 
+/*operator loadAndBindTextureLDR(
+  io FabricResource resource,
+  io OGLTexture2D oglTexture2D,
+  io Integer textureUnit
+) {
+//  report("loadAndBindTextureLDR -> textureUnit:" + textureUnit);
+  if(resource.data.size() == 0)
+    return;
+  if(oglTexture2D.bufferID == 0 || oglTexture2D.forceRefresh){
+    Size width, height;
+    RGBA imageLDR[];
+    decodeLDRImageData(resource, width, height, imageLDR);
+    oglTexture2D.configure(width, height, imageLDR.data(), imageLDR.size(), textureUnit);
+    var Data NULL;
+    resource.data.resize(0);
+  }
+  oglTexture2D.bind(textureUnit);
+}*/
+
+operator unbindTextures(
+  io Size numTextures
+){
+  for(Integer i=0; i<numTextures; i++){
+    glActiveTexture(GL_TEXTURE0 + i);
+    glBindTexture(GL_TEXTURE_3D, 0);
+  }
+}
+
+operator initImageFromRGBA(
+  io Size width,
+  io Size height,
+  io Size depth,
+  io RGBA color,
+  io RGBA pixels[],
+  io Boolean initiated
+) {
+  if(!initiated) {
+    pixels.resize(width * height * depth);
+    for(Size i=0;i<pixels.size();i++)
+      pixels[i] = color;
+    initiated = true;
+  }
+}
+
+operator initImageFromByte(
+  io Size width,
+  io Size height,
+  io Size depth,
+  io Byte color,
+  io Byte pixels[],
+  io Boolean initiated
+) {
+  if(!initiated) {
+    pixels.resize(width * height * depth);
+    for(Size i=0;i<pixels.size();i++)
+      pixels[i] = color;
+    initiated = true;
+  }
+}
+
+operator initImageFromColor(
+  io Size width,
+  io Size height,
+  io Size depth,
+  io Color color,
+  io Color pixels[],
+  io Boolean initiated
+) {
+  if(!initiated) {
+    pixels.resize(width * height * depth);
+    for(Size i=0;i<pixels.size();i++)
+      pixels[i] = color;
+    initiated = true;
+  }
+}
+
+operator initImageFromScalar(
+  io Size width,
+  io Size height,
+  io Size depth,
+  io Scalar color,
+  io Scalar pixels[],
+  io Boolean initiated
+) {
+  if(!initiated) {
+    pixels.resize(width * height * depth);
+    for(Size i=0;i<pixels.size();i++)
+      pixels[i] = color;
+    initiated = true;
+  }
+}

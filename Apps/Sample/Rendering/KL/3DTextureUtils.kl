@@ -4,20 +4,24 @@
 
 use RGBA, Vec3;
 
-operator generate3DTexture(
+function generate3DTexture(
   io Size resolution,
   io Size width,
   io Size heigth,
   io Size depth,
   io Byte opacityVoxels[],
-  io RGBA weightedGradientsVoxels[]
+  io RGBA weightedGradientsVoxels[],
+  Boolean generateOpacity,
+  Boolean generateGradient
 ){
   width = resolution;
   heigth = resolution;
   depth = resolution;
 
-  opacityVoxels.resize(width*heigth*depth);
-  weightedGradientsVoxels.resize(width*heigth*depth);
+  if(generateOpacity)
+    opacityVoxels.resize(width*heigth*depth);
+  if(generateGradient)
+    weightedGradientsVoxels.resize(width*heigth*depth);
 
   if(resolution == 0)
     resolution = 1;
@@ -46,33 +50,40 @@ operator generate3DTexture(
       for(k = 0; k < width; ++k) {
 
         Scalar distToCenter = currPos.length();
-        Scalar opacity = 0.0;
-        for(l = 3; l--; ) {
-          if(distToCenter < sphereRadius[l]) {
-            opacity = sphereOpacity[l];
-            break;
+
+        if(generateOpacity)
+        {
+          Scalar opacity = 0.0;
+          for(l = 3; l--; ) {
+            if(distToCenter < sphereRadius[l]) {
+              opacity = sphereOpacity[l];
+              break;
+            }
           }
-        }
-        opacityVoxels[index] = Byte(opacity*255.99);
-
-        Vec3 gradient = currPos;
-        if(distToCenter > DIVIDEPRECISION)
-          gradient /= distToCenter;
-
-        Scalar gradientWeight = 0.0;
-
-        for(l = 3; l--; ) {
-          Scalar sphereDist = abs(distToCenter - sphereRadius[l]);
-          if(sphereDist < gradientThreshold) {
-            gradientWeight = 1.0;// - sphereDist / gradientThreshold;
-            break;
-          }
+          opacityVoxels[index] = Byte(opacity*255.99);
         }
 
-        weightedGradientsVoxels[index].r = Byte(gradient.x*255.99);
-        weightedGradientsVoxels[index].g = Byte(gradient.y*255.99);
-        weightedGradientsVoxels[index].b = Byte(gradient.z*255.99);
-        weightedGradientsVoxels[index].a = Byte(gradientWeight*255.99);
+        if(generateGradient)
+        {
+          Vec3 gradient = currPos;
+          if(distToCenter > DIVIDEPRECISION)
+            gradient /= distToCenter;
+
+          Scalar gradientWeight = 0.0;
+
+          for(l = 3; l--; ) {
+            Scalar sphereDist = abs(distToCenter - sphereRadius[l]);
+            if(sphereDist < gradientThreshold) {
+              gradientWeight = 1.0;// - sphereDist / gradientThreshold;
+              break;
+            }
+          }
+
+          weightedGradientsVoxels[index].r = Byte(gradient.x*255.99);
+          weightedGradientsVoxels[index].g = Byte(gradient.y*255.99);
+          weightedGradientsVoxels[index].b = Byte(gradient.z*255.99);
+          weightedGradientsVoxels[index].a = Byte(gradientWeight*255.99);
+        }
 
         currPos.x += delta.x;
         ++index;
@@ -81,6 +92,28 @@ operator generate3DTexture(
     }
     currPos.z += delta.z;
   }
+}
+
+operator generate3DTextureOpacity(
+  io Size resolution,
+  io Size width,
+  io Size heigth,
+  io Size depth,
+  io Byte opacityVoxels[]
+){
+  RGBA dummy[];
+  generate3DTexture( resolution, width, heigth, depth, opacityVoxels, dummy, true, false);
+}
+
+operator generate3DTextureGradient(
+  io Size resolution,
+  io Size width,
+  io Size heigth,
+  io Size depth,
+  io RGBA weightedGradientsVoxels[],
+){
+  Byte dummy[];
+  generate3DTexture( resolution, width, heigth, depth, dummy, weightedGradientsVoxels, false, true);
 }
 
 operator slice3DTexture(

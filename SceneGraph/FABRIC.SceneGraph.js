@@ -1337,9 +1337,11 @@ FABRIC.SceneGraph.registerNodeType('Viewport', {
           return;
         }
         var mousewheelFn = function(evt) {
+          if(evt.detail) evt.wheelDelta = evt.detail * -50;
           fireEvent('mousewheel', evt);
         }
         document.addEventListener('mousewheel', mousewheelFn, false);
+        document.addEventListener('DOMMouseScroll', mousewheelFn, false);
         var deactivateMousewheelFn = function(evt) {
           windowElement.removeEventListener('mouseout', deactivateMousewheelFn, false);
           document.removeEventListener('mousewheel', mousewheelFn, false);

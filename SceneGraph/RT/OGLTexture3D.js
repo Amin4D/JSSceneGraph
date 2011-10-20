@@ -16,11 +16,32 @@ FABRIC.RT.OGLTexture3D = function(glInternalFormat, glFormat, glType) {
   this.forceRefresh = false;
 };
 
-FABRIC.RT.oglTexture3D = function(){
+FABRIC.RT.oglTexture3D_RGBA = function(){
   return new FABRIC.RT.OGLTexture3D(
     FABRIC.SceneGraph.OpenGLConstants.GL_RGBA8,
     FABRIC.SceneGraph.OpenGLConstants.GL_RGBA,
     FABRIC.SceneGraph.OpenGLConstants.GL_UNSIGNED_BYTE);
+}
+
+FABRIC.RT.oglTexture3D_Byte = function(){
+  return new FABRIC.RT.OGLTexture3D(
+    FABRIC.SceneGraph.OpenGLConstants.GL_INTENSITY8,
+    FABRIC.SceneGraph.OpenGLConstants.GL_LUMINANCE,
+    FABRIC.SceneGraph.OpenGLConstants.GL_UNSIGNED_BYTE);
+}
+
+FABRIC.RT.oglTexture3D_Color = function(){
+  return new FABRIC.RT.OGLTexture3D(
+    FABRIC.SceneGraph.OpenGLConstants.GL_RGBA32F,
+    FABRIC.SceneGraph.OpenGLConstants.GL_RGBA,
+    FABRIC.SceneGraph.OpenGLConstants.GL_FLOAT);
+}
+
+FABRIC.RT.oglTexture3D_Scalar = function(){
+  return new FABRIC.RT.OGLTexture3D(
+    FABRIC.SceneGraph.OpenGLConstants.GL_INTENSITY32F_ARB,
+    FABRIC.SceneGraph.OpenGLConstants.GL_LUMINANCE,
+    FABRIC.SceneGraph.OpenGLConstants.GL_FLOAT);
 }
         
 FABRIC.appendOnCreateContextCallback(function(context) {

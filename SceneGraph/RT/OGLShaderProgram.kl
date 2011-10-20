@@ -69,7 +69,6 @@ function Integer OGLShaderProgram.createAndCompileShader(OGLShaderSource shaders
 function OGLShaderProgram.logShaderParameters() {
   var String name, typeName;
   var Integer i, j;
-
   for (i = 0; i < this.uniformValues.size(); i++) {
     this.uniformValues[i].location = glGetUniformLocation(this.programId, this.uniformValues[i].name);
     if (this.uniformValues[i].location == - 1) {

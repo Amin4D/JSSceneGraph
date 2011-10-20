@@ -95,7 +95,8 @@ FABRIC.SceneGraph.registerNodeType('3DTextureGenerator', {
     options.name = '3DTextureGenerator_Gradient';
     options.format = 'RGBA';
     options.color = undefined;
-    var generatorNodeGradient = scene.constructNode('Image3D', options);
+    var generatorNodeGradientPub = scene.pub.constructNode('Image3D', options);
+    var generatorNodeGradient = scene.getPrivateInterface(generatorNodeGradientPub);
     var dgnodeGradient = generatorNodeGradient.getDGNode();
     dgnodeGradient.setDependency(dgnodeOpacity, 'opacity');
 
@@ -114,6 +115,8 @@ FABRIC.SceneGraph.registerNodeType('3DTextureGenerator', {
 
     generatorNodeOpacity.getOpacityDGNode = function(){return dgnodeOpacity;};
     generatorNodeOpacity.getGradientDGNode = function(){return dgnodeGradient;};
+
+    generatorNodeOpacity.pub.getGradientNode = function(){return generatorNodeGradientPub;};
 
     return generatorNodeOpacity;
   }
@@ -233,7 +236,7 @@ $(document).ready(function() {
   viewport.setBackgroundTextureImage(scene.constructNode('Image', {
     url: '../BasicDemos/Resources/fabric-demo-gradient.png'
   }));
-  
+
   // Create a camera to draw the scene from
   var camera = scene.constructNode('TargetCamera', {
       position: new FABRIC.RT.Vec3(0, 0, 20),
@@ -242,7 +245,6 @@ $(document).ready(function() {
     });
 
   scene.constructNode("CameraManipulator", { targetNode:camera } );
-
   viewport.setCameraNode(camera);
 
   var light = scene.constructNode('PointLight', { position: new FABRIC.RT.Vec3(420.0, 1000.0, 600.0) });
@@ -258,15 +260,18 @@ $(document).ready(function() {
   texture2DSlice[0] = scene.constructNode('Texture2DSliceDisplay', {tl: new FABRIC.RT.Vec2(2.0/3.0, 1.0), br: new FABRIC.RT.Vec2(1.0, 1.0/3.0), sourceImageNode: textureGen, sliceRatio: 0.5, sliceAxis : 0});
   texture2DSlice[1] = scene.constructNode('Texture2DSliceDisplay', {tl: new FABRIC.RT.Vec2(2.0/3.0, 1.0/3.0), br: new FABRIC.RT.Vec2(1.0, -1.0/3.0), sourceImageNode: textureGen, sliceRatio: 0.5, sliceAxis : 1});
   texture2DSlice[2] = scene.constructNode('Texture2DSliceDisplay', {tl: new FABRIC.RT.Vec2(2.0/3.0, -1.0/3.0), br: new FABRIC.RT.Vec2(1.0, -1.0), sourceImageNode: textureGen, sliceRatio: 0.5, sliceAxis : 2});
-  
-  var flatMaterial = scene.constructNode('FlatMaterial', {
-      color: FABRIC.RT.rgb(0.8, 0, 0, 1)
+
+  var volumeMaterial = scene.constructNode('VolumeMaterial', {
+      //parentEventHandler: scene.getSceneRedrawTransparentObjectsEventHandler(),
+      opacityTextureNode: textureGen
+//      gradientTextureNode: textureGen.getGradientNode(),
+//      lightNode: light
     });
 
   scene.constructNode('Instance', {
       transformNode:transform,
       geometryNode: volume,
-      materialNode: flatMaterial
+      materialNode: volumeMaterial
     });
     
   var sliders2DBindFunction = function(index) {
@@ -294,13 +299,13 @@ $(document).ready(function() {
   for( i = 0; i < 3; ++i ) {
     $sliders2D[i].slider('value', texture2DSlice[i].getSliceRatio());
     $sliders2D[i].bind('slide', sliders2DBindFunction(i) );
-
+    
     var cropMax = volume.getCropMax();
     var cropMin = volume.getCropMin();
     $sliders3D[i].slider('option', 'values', [cropMin.component(i), cropMax.component(i)]);
     $sliders3D[i].bind('slide', sliders3DBindFunction(i) );
   }
-
+  
   $("#displayGradientWeight").attr('checked', false).change(function() {
     var displayGradientWeight = $('#displayGradientWeight').attr('checked');
     for( i = 0; i < 3; ++i ) {
@@ -322,7 +327,7 @@ $(document).ready(function() {
       if (errors.length > 0) {
         throw (errors.toString());
       }
-
+      
       var aspectRatio = viewport.getWidth() / viewport.getHeight();
       var sliceViewWidth = (2.0/3.0) / aspectRatio;
 
@@ -333,7 +338,7 @@ $(document).ready(function() {
       }
 
       camera.setScreenOffset(new FABRIC.RT.Vec2(-sliceViewWidth/2.0, 0.0));
-
+      
       viewport.redraw();
       return true;
     }

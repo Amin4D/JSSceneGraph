@@ -250,12 +250,22 @@ FABRIC.SceneGraph.registerNodeType('Image3D', {
     if (options.createLoadTextureEventHandler) {
       // Construct the handler for loading the image into texture memory.
       var redrawEventHandler = imageNode.constructEventHandlerNode('Redraw');
-      var oglTexture = FABRIC.RT.oglTexture3D();
+      var oglTexture;
+
+      if(options.format === 'Byte')
+         oglTexture = FABRIC.RT.oglTexture3D_Byte();
+      else if(options.format === 'Color')
+         oglTexture = FABRIC.RT.oglTexture3D_Color();
+      else if(options.format === 'Scalar')
+         oglTexture = FABRIC.RT.oglTexture3D_Scalar();
+      else
+         oglTexture = FABRIC.RT.oglTexture3D_RGBA();
+
       redrawEventHandler.addMember('oglTexture3D', 'OGLTexture3D', oglTexture);
       if(options.createDgNode){
         redrawEventHandler.setScope('image', dgnode);
         redrawEventHandler.preDescendBindings.append(scene.constructOperator({
-          operatorName: 'bindTexture3D',
+          operatorName: 'bind' + options.format + 'Texture3D',
           srcFile: 'FABRIC_ROOT/SceneGraph/KL/load3DTexture.kl',
           entryFunctionName: 'bind' + options.format + 'Texture3D',
           parameterLayout: [
@@ -1480,6 +1490,8 @@ FABRIC.SceneGraph.defineEffectFromFile('WireframeMaterial', 'FABRIC_ROOT/SceneGr
 FABRIC.SceneGraph.defineEffectFromFile('OutlineShader', 'FABRIC_ROOT/SceneGraph/Shaders/OutlineShader.xml');
 
 FABRIC.SceneGraph.defineEffectFromFile('PointFlatMaterial', 'FABRIC_ROOT/SceneGraph/Shaders/PointFlatShader.xml');
+
+FABRIC.SceneGraph.defineEffectFromFile('VolumeMaterial', 'FABRIC_ROOT/SceneGraph/Shaders/VolumeShader.xml');
 
 
 FABRIC.SceneGraph.registerNodeType('BloomPostProcessEffect', {

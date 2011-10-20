@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<shader>
+	<name>VolumeMaterial</name>
+	
+  <uniforms>
+    <uniform name="u_modelViewProjectionMatrix" constant="modelViewProjectionMatrix" type="Mat44" owner="instance"/>
+  </uniforms>
+
+  <attributes>
+		<attribute name="a_position" binding="positions"/>
+    <attribute name="a_normal" binding="normals"/>
+  </attributes>
+
+  <lights>
+	</lights>
+
+	<textures>
+    <texture binding="opacityTexture"/>
+  </textures>
+
+  <openglstateparams>
+    <enableOptions>
+      <option>GL_BLEND</option>
+    </enableOptions>
+    <blendModeSfactor>GL_SRC_ALPHA</blendModeSfactor>
+    <blendModeDfactor>GL_ONE_MINUS_SRC_ALPHA</blendModeDfactor>
+  </openglstateparams>
+
+  <vertexshader>
+		<source>
+			<![CDATA[
+			uniform mat4 u_modelViewProjectionMatrix;
+/*			uniform mat4 u_modelViewMatrix;
+			uniform vec4 u_lightPosition;
+	*/		
+			attribute vec4 a_position;
+			attribute vec3 a_normal;
+/*
+			varying vec3 lightDir;
+			varying vec3 viewDir;
+*/
+			void main()
+			{
+				gl_TexCoord[0].xyz = a_normal.xyz;
+
+/*				vec4 modelCameraPosition = u_modelViewMatrix * a_position;
+				lightDir = vec3(u_lightPosition - modelCameraPosition);
+				viewDir = vec3(-modelCameraPosition);*/
+				gl_Position = u_modelViewProjectionMatrix * a_position;
+			}
+			]]>
+		</source>
+	</vertexshader>
+	
+	<fragmentshader>
+		<source>
+			<![CDATA[
+/*			uniform int u_lightType;
+			uniform vec3 u_lightDir;
+			uniform vec4 u_lightColor;
+			uniform float u_lightCosCutoff;
+			uniform mat3 u_normalMatrix;
+
+			uniform float u_materialShininess;
+			uniform vec4 u_materialAmbientColor;
+*/
+			uniform sampler3D u_samplerOpacityMap;
+//			uniform sampler3D u_samplerGradientMap;
+/*			
+			varying vec3 lightDir;
+			varying vec3 viewDir;
+*/
+			]]>
+			<![CDATA[
+
+			void main(){
+/*				vec3 Ln = normalize(lightDir);
+				vec3 Vn = normalize(viewDir);
+*/
+        float blendFactor = 0.05;
+				gl_FragColor = vec4(1.0, 1.0, 1.0, texture3D( u_samplerOpacityMap, gl_TexCoord[0].xyz) * blendFactor );
+			}
+			]]>
+		</source>
+	</fragmentshader>
+</shader>

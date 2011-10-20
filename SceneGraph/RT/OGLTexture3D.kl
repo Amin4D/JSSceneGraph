@@ -19,14 +19,14 @@ function OGLTexture3D.configure(
       glGenTextures(1, buffers);
       this.bufferID = buffers[0];
     }
+    glEnable(GL_TEXTURE_3D);
     glActiveTexture(GL_TEXTURE0 + textureUnit);
     glBindTexture(GL_TEXTURE_3D, this.bufferID);
-    
+
     //Generate the texture
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
     if (nbPixels == (width * height * depth))
       glTexImage3D(GL_TEXTURE_3D, 0, this.glInternalFormat, width, height, depth, 0, this.glFormat, this.glType, pixels);
-
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, this.textureMinFilter);
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, this.textureMaxFilter);
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, this.wrapS);
@@ -39,7 +39,6 @@ function OGLTexture3D.configure(
 
 
 function OGLTexture3D.bind(io Integer textureUnit){
-//  report("OGLTexture3D.bind bufferID:"+this.bufferID + " textureUnit:"+textureUnit  + " nbPixels:"+ this.nbPixels );
   glActiveTexture(GL_TEXTURE0 + textureUnit);
   glBindTexture(GL_TEXTURE_3D, this.bufferID);
 }

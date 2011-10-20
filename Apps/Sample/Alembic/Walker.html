@@ -154,46 +154,51 @@ $(document).ready(function() {
   materialLookup["/l_legA_GEOXfo/l_legA_GEO"] = greyMaterial
   materialLookup["/l_foot_GEOXfo/l_foot_GEO"] = blackMaterial;
   
+  $('#loadingDialog').dialog({
+    modal: true
+  });
+
   // create the alembic content, and fire the load once it is loaded
   var resourceName = 'walker';
   var assets = scene.importAssetFile('Models/'+resourceName+'.abc', {
-    dependentNode: viewport,
-    onLoadSuccessCallback: function(){
-
-      // init the camera's html      
-      var cameraListHtml = "<option value='userCamera'>Free Camera</option>";
-      
-      // loop over all assets and create an instance
-      for(var name in assets[resourceName].getParsedNodes()) {
-        if(assets[resourceName].getParsedNodes()[name].isTypeOf('Triangles'))
-        {
-          var inst = scene.constructNode('Instance', {
-            transformNode: assets[resourceName].getCorrespondingTransform(name),
-            geometryNode: assets[resourceName].getParsedNodes()[name],
-            materialNode: materialLookup[name]
-          });
-        }
-        else if(assets[resourceName].getParsedNodes()[name].isTypeOf('Camera')) {
-          
-          // add the camera as an option to the list
-          cameraListHtml += "<option value='"+name+"'>"+name.substring(name.lastIndexOf('/')+1,1000)+"</option>"
-        }
-        
-        $('#cameralist').html(cameraListHtml).change( function(ui) {
-          var cameraName = $('#cameralist').attr('value');
-          if(cameraName == 'userCamera')
-            viewport.setCameraNode(camera);
-          else
-            viewport.setCameraNode(assets[resourceName].getParsedNodes()[$('#cameralist').attr('value')]);
-          viewport.redraw();
-        });
-        
-      }
-      
-      $('#loadingDialog').dialog('close');
-      viewport.redraw();
-    }
+    dependentNode: viewport
   });
+
+  assets[resourceName].addOnLoadSuccessCallback(function(){
+    // init the camera's html      
+    var cameraListHtml = "<option value='userCamera'>Free Camera</option>";
+      
+    // loop over all assets and create an instance
+    for(var name in assets[resourceName].getParsedNodes()) {
+      if(assets[resourceName].getParsedNodes()[name].isTypeOf('Triangles'))
+      {
+        var inst = scene.constructNode('Instance', {
+          transformNode: assets[resourceName].getCorrespondingTransform(name),
+          geometryNode: assets[resourceName].getParsedNodes()[name],
+          materialNode: materialLookup[name]
+        });
+      }
+      else if(assets[resourceName].getParsedNodes()[name].isTypeOf('Camera')) {
+          
+        // add the camera as an option to the list
+        cameraListHtml += "<option value='"+name+"'>"+name.substring(name.lastIndexOf('/')+1,1000)+"</option>"
+      }
+        
+      $('#cameralist').html(cameraListHtml).change( function(ui) {
+        var cameraName = $('#cameralist').attr('value');
+        if(cameraName == 'userCamera')
+          viewport.setCameraNode(camera);
+        else
+          viewport.setCameraNode(assets[resourceName].getParsedNodes()[$('#cameralist').attr('value')]);
+        viewport.redraw();
+      });
+        
+    }
+      
+    $('#loadingDialog').dialog('close');
+    viewport.redraw();
+  });
+
 
   $('#play').button()
     .click(function() {
@@ -221,9 +226,6 @@ $(document).ready(function() {
       scene.animation.step();
     });
   
-  $('#loadingDialog').dialog({
-    modal: true
-  });
   FABRIC.appendOnResolveAsyncTaskCallback(function(label, nbRemaining, doneWeight, totalWeight) {
     $('#loadingProgressBar').progressbar({
       value: (1.0-(doneWeight/totalWeight))*100

@@ -575,69 +575,68 @@ $(document).ready(function() {
   var timeRange = undefined;
   var loadAlembicAsset = function(url) {
     var assets = scene.importAssetFile(url, {
-      dependentNode: viewport,
-      onLoadSuccessCallback: function(){
-  
-        // get the first asset name
-        var assetName = undefined;
-        for(var name in assets) {
-          assetName = name;
-          break;
-        }
-        
-        resourceLoadNode = assets[assetName];
-        var parsedNodes = resourceLoadNode.getParsedNodes();
-
-        // setup html for the object and camera list        
-        var cameraListHtml = "<option value='userCamera'>Free Camera</option>";
-        
-        // setup the animation time
-        timeRange = resourceLoadNode.getAnimationController().getTimeRange();
-        $('#localtime').slider({
-            min: timeRange.x,
-            max: timeRange.y,
-            step: 0.01
-        });
-        
-        // loop over all assets and create an instance
-        for(var name in parsedNodes) {
-          var parsedNode = parsedNodes[name];
-          if(parsedNode.isTypeOf('Triangles')) {
-            parsedInstances[name] = scene.constructNode('Instance', {
-              transformNode: resourceLoadNode.getCorrespondingTransform(name),
-              geometryNode: parsedNode,
-              materialNode: phongMaterial
-            });
-          }
-          else if(parsedNode.isTypeOf('Camera')) {
-            
-            // create a primitive for this camera
-            parsedCameras[name] = scene.constructNode('Instance', {
-              transformNode: parsedNode.getTransformNode(),
-              geometryNode: cameraPrimitive,
-              materialNode: cameraMaterial
-            });
-
-            // add the camera as an option to the list
-            cameraListHtml += "<option value='"+name+"'>"+name.substring(name.lastIndexOf('/')+1,1000)+"</option>"
-            
-          }
-        }
-        
-        // attach an on-select event to the camera list 
-        $('#cameralist').html(cameraListHtml).change( function(ui) {
-          switchCamera($('#cameralist').attr('value'));
-        });
-        
-        // now let's switch the camera
-        for(var name in parsedCameras) {
-          switchCamera(name);
-          break;
-        }
-
-        //$('#loadingDialog').dialog('close');
-        viewport.redraw();
+      dependentNode: viewport
+    });
+    assets['frog'].addOnLoadSuccessCallback(function(){
+      // get the first asset name
+      var assetName = undefined;
+      for(var name in assets) {
+        assetName = name;
+        break;
       }
+        
+      resourceLoadNode = assets[assetName];
+      var parsedNodes = resourceLoadNode.getParsedNodes();
+
+      // setup html for the object and camera list        
+      var cameraListHtml = "<option value='userCamera'>Free Camera</option>";
+        
+      // setup the animation time
+      timeRange = resourceLoadNode.getAnimationController().getTimeRange();
+      $('#localtime').slider({
+          min: timeRange.x,
+          max: timeRange.y,
+          step: 0.01
+      });
+        
+      // loop over all assets and create an instance
+      for(var name in parsedNodes) {
+        var parsedNode = parsedNodes[name];
+        if(parsedNode.isTypeOf('Triangles')) {
+          parsedInstances[name] = scene.constructNode('Instance', {
+            transformNode: resourceLoadNode.getCorrespondingTransform(name),
+            geometryNode: parsedNode,
+            materialNode: phongMaterial
+          });
+        }
+        else if(parsedNode.isTypeOf('Camera')) {
+            
+          // create a primitive for this camera
+          parsedCameras[name] = scene.constructNode('Instance', {
+            transformNode: parsedNode.getTransformNode(),
+            geometryNode: cameraPrimitive,
+            materialNode: cameraMaterial
+          });
+
+          // add the camera as an option to the list
+          cameraListHtml += "<option value='"+name+"'>"+name.substring(name.lastIndexOf('/')+1,1000)+"</option>"
+            
+        }
+      }
+        
+      // attach an on-select event to the camera list 
+      $('#cameralist').html(cameraListHtml).change( function(ui) {
+        switchCamera($('#cameralist').attr('value'));
+      });
+        
+      // now let's switch the camera
+      for(var name in parsedCameras) {
+        switchCamera(name);
+        break;
+      }
+
+      //$('#loadingDialog').dialog('close');
+      viewport.redraw();
     });
   };
   

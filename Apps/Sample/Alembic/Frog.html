@@ -104,32 +104,36 @@ $(document).ready(function() {
           materialNode: scene.constructNode('FlatMaterial')
       });
   
+  $('#loadingDialog').dialog({
+    modal: true
+  });
+
   // create the alembic content, and fire the load once it is loaded
-    var assets = scene.importAssetFile('Models/frog.abc', {
-    dependentNode: viewport,
-    onLoadSuccessCallback: function() {
+  var assets = scene.importAssetFile('Models/frog.abc', {
+    dependentNode: viewport
+  });
 
-      // create the camera
-      var nodes = assets.frog.getParsedNodes();
-      viewport.setCameraNode(assets.frog.getParsedNodes()['/CameraXfo/Camera']);
+  assets['frog'].addOnLoadSuccessCallback(function(){
+    // create the camera
+    var nodes = assets.frog.getParsedNodes();
+    viewport.setCameraNode(assets.frog.getParsedNodes()['/CameraXfo/Camera']);
 
-      var materialNode = scene.constructNode('PhongTextureSimpleMaterial', {
-        diffuseTextureNode: scene.constructNode('Image', { url: 'Models/frog_diffuse.png' }),
-        lightNode: scene.constructNode('PointLight', {
-          position: new FABRIC.RT.Vec3(100, 100, 0)
-        }),
-        specularColor: FABRIC.RT.rgba(0.2,0.2,0.2,1)
-      });
+    var materialNode = scene.constructNode('PhongTextureSimpleMaterial', {
+      diffuseTextureNode: scene.constructNode('Image', { url: 'Models/frog_diffuse.png' }),
+      lightNode: scene.constructNode('PointLight', {
+        position: new FABRIC.RT.Vec3(100, 100, 0)
+      }),
+      specularColor: FABRIC.RT.rgba(0.2,0.2,0.2,1)
+    });
 
-      scene.constructNode('Instance', {
-        transformNode: assets.frog.getParsedNodes()['/lowXfo'],
-        geometryNode: assets.frog.getParsedNodes()['/lowXfo/low'],
-        materialNode: materialNode
-      });
+    scene.constructNode('Instance', {
+      transformNode: assets.frog.getParsedNodes()['/lowXfo'],
+      geometryNode: assets.frog.getParsedNodes()['/lowXfo/low'],
+      materialNode: materialNode
+    });
       
-      $('#loadingDialog').dialog('close');
-      viewport.redraw();
-    }
+    $('#loadingDialog').dialog('close');
+    viewport.redraw();
   });
   
   $('#play').button()
@@ -158,9 +162,6 @@ $(document).ready(function() {
       scene.animation.step();
     });
 
-  $('#loadingDialog').dialog({
-    modal: true
-  });
   FABRIC.appendOnResolveAsyncTaskCallback(function(label, nbRemaining, doneWeight, totalWeight) {
     $('#loadingProgressBar').progressbar({
       value: (1.0-(doneWeight/totalWeight))*100

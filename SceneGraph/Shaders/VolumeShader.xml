@@ -78,7 +78,23 @@
 				vec3 Vn = normalize(viewDir);
 */
         float blendFactor = 0.05;
-				gl_FragColor = vec4(1.0, 1.0, 1.0, texture3D( u_samplerOpacityMap, gl_TexCoord[0].xyz) * blendFactor );
+        float opacity = 0.0;
+
+        opacity = texture3D( u_samplerOpacityMap, gl_TexCoord[0].xyz).r;
+
+/*
+        vec3 coord = (gl_TexCoord[0].xyz - vec3(0.5, 0.5, 0.5))*2.0;
+        float n = sqrt(coord.x*coord.x + coord.y*coord.y + coord.z*coord.z);
+        
+        if( n < 0.3 )
+          opacity = 0.75;
+        else if( n < 0.6 )
+          opacity = 0.5;
+        else if( n < 0.9 )
+          opacity = 0.25;
+*/
+
+				gl_FragColor = vec4(1.0, 1.0, 1.0, opacity * blendFactor );
 			}
 			]]>
 		</source>

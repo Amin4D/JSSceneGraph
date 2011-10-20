@@ -247,7 +247,7 @@ $(document).ready(function() {
   scene.constructNode("CameraManipulator", { targetNode:camera } );
   viewport.setCameraNode(camera);
 
-  var light = scene.constructNode('PointLight', { position: new FABRIC.RT.Vec3(420.0, 1000.0, 600.0) });
+//  var light = scene.constructNode('PointLight', { position: new FABRIC.RT.Vec3(420.0, 1000.0, 600.0) });
   var transform =  scene.constructNode('Transform', {
     hierarchical: false,
     globalXfo: new FABRIC.RT.Xfo({ tr: new FABRIC.RT.Vec3(0, 0, 0), sc: new FABRIC.RT.Vec3(5.0, 5.0, 5.0) })

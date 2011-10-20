@@ -11,9 +11,9 @@ operator drawTriangles(
   io OGLBuffer indicesBuffer,
   io Boolean drawToggle
 ) {
-//  if(shaderProgram.debug){
+  if(shaderProgram.debug){
     report("drawTriangles:"+shaderProgram.name);
-//  }
+  }
   if (drawToggle && shaderProgram.programId != 0) {
     shaderProgram.preDraw();
     

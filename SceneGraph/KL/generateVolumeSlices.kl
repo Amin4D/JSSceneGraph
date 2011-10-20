@@ -90,7 +90,10 @@ operator generateVolumeSlices(
   if(abs(depth) < relativePrecision)
     return;
 
-  Scalar step = depth / Scalar(nbSlices);
+  //Use volSize.length() so it's orientation agnostic
+  //This means that it won't exactly be "nbSlices"
+  Scalar step = volSize.length() / Scalar(nbSlices);
+  Size actualNbSlices = Size( depth / step );
   Scalar invStep = 1.0 / step;
 
   Vec3 points[8], texCoords[8];
@@ -188,7 +191,7 @@ operator generateVolumeSlices(
   Scalar currDepth = depthRange[1] - step*0.5;//back to front
   Integer currPosIndex = 0;
 
-  while(currSlice < nbSlices) {//Rely on slice instead of currDepth in case of important numerical imprecision
+  while(currSlice < actualNbSlices) {//Rely on slice instead of currDepth in case of important numerical imprecision
     while(true) {
       //Adjust currEdges if applicable:
       //  For each point that gets passed, add its next adjacent edges.
@@ -295,3 +298,4 @@ operator generateVolumeSlices(
     ++currSlice;
   }
 }
+
